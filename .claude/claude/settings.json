@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": ["*"]          // 全ツール許可
+  },
+  "cleanupPeriodDays": 30,  // チャットログ保持日数
+  "env": {
+    "ANTHROPIC_API_KEY": "${env:ANTHROPIC_API_KEY}",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "4096"
+  },
+  "defaultMode": "allowEdits",
+  "includeCoAuthoredBy": false
+}

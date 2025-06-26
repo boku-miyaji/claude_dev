@@ -1,0 +1,10 @@
+{
+  "remote.extensionKind": {
+    // built-in をホスト側で動かす（Markdown: Open Preview 用）
+    "ms-vscode.markdown-language-features": ["ui"],
+    // 追加した 2 つもホストで動かす
+    "yzhang.markdown-all-in-one": ["ui"],
+    "shd101wyy.markdown-preview-enhanced": ["ui"]
+  }
+}
+

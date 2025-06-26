@@ -1,0 +1,28 @@
+name: GitHub Issue-Projects Sync
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+  project_card:
+    types: [created, moved, deleted]
+
+permissions:
+  issues: write
+  projects: write
+
+jobs:
+  sync-issue-to-project:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Sync Issue to Project
+        uses: actions/add-to-project@v0.5.0
+        with:
+          project-url: https://github.com/users/${{ github.repository_owner }}/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Set Project Status
+        if: github.event.action == 'closed'
+        run: |
+          echo "Issue closed - updating project status"
+          # Add logic to update project item status to "Done"
