@@ -1,0 +1,12 @@
+# claude runtime files
+.claude/projects/
+.claude/todos/
+.claude/ide/
+.claude/statsig/
+.claude/.credentials.json
+
+# application folder
+*app*
+
+# others
+.cache

@@ -1,25 +1,12 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(npm install:*)",
-      "Bash(mkdir:*)",
-      "Bash(npm run dev:*)",
-      "Bash(npm uninstall:*)",
-      "Bash(pkill:*)",
-      "Bash(git add:*)",
-      "Bash(git push:*)",
-      "Bash(git checkout:*)",
-      "Bash(rm:*)",
-      "Bash(npm start)",
-      "Bash(PORT=8081 npm start)",
-      "Bash(kill:*)",
-      "Bash(grep:*)",
-      "Bash(node:*)",
-      "Bash(lsof -i :8080)",
-      "Bash(curl:*)",
-      "Bash(grep -n \"function loadCostsAnalysis\" /Users/miyajiyuuta/claude_dev/youtube_translater/public/index.html)",
-      "Bash(ls:*)"
-    ],
-    "deny": []
-  }
+    "allow": ["*"]          // 全ツール許可
+  },
+  "cleanupPeriodDays": 30,  // チャットログ保持日数
+  "env": {
+    "ANTHROPIC_API_KEY": "${env:ANTHROPIC_API_KEY}",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "4096"
+  },
+  "defaultMode": "allowEdits",
+  "includeCoAuthoredBy": false
 }
