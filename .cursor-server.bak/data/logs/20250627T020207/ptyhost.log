@@ -1,1 +1,0 @@
-2025-06-27 02:02:08.147 [error] Failed to set sticky bit on /tmp/node-cursor-zsh: Error: ENOENT: no such file or directory, chmod '/tmp/node-cursor-zsh'
