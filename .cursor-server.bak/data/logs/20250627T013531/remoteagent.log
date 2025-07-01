@@ -1,0 +1,61 @@
+2025-06-27 01:35:31.988 [info] 
+
+
+
+
+2025-06-27 01:35:31.991 [info] Installing extensions...
+2025-06-27 01:35:31.992 [info] Extension host agent started.
+2025-06-27 01:35:32.558 [info] [127.0.0.1][de980d6c][ManagementConnection] New connection established.
+2025-06-27 01:35:32.583 [info] Installing extensions...
+2025-06-27 01:35:32.968 [info] [127.0.0.1][18e86ca7][ExtensionHostConnection] New connection established.
+2025-06-27 01:35:32.983 [info] [127.0.0.1][18e86ca7][ExtensionHostConnection] <375> Launched Extension Host Process.
+2025-06-27 01:35:59.034 [info] [127.0.0.1][de980d6c][ManagementConnection] The client has disconnected gracefully, so the connection will be disposed.
+2025-06-27 01:36:02.296 [info] [127.0.0.1][65c09dc5][ManagementConnection] New connection established.
+2025-06-27 01:36:02.313 [info] Installing extensions...
+2025-06-27 01:36:02.504 [info] [127.0.0.1][b84aee06][ExtensionHostConnection] New connection established.
+2025-06-27 01:36:02.511 [info] [127.0.0.1][b84aee06][ExtensionHostConnection] <542> Launched Extension Host Process.
+2025-06-27 01:37:46.698 [error] [network] #1: https://marketplace.cursorapi.com/_apis/public/gallery/extensionquery - error POST AggregateError [ETIMEDOUT]: 
+2025-06-27 01:37:46.709 [error] Error while installing extensions: AggregateError [ETIMEDOUT]: 
+2025-06-27 01:37:46.710 [error] Failed: AggregateError [ETIMEDOUT]: 
+    at Mc.J (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:172042)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Mc.H (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:168096)
+    at async Mc.D (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:163587)
+    at async Mc.getExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:162747)
+    at async tl.j (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:74:1261)
+    at async tl.g (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:36898)
+    at async tl.installExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:35615)
+2025-06-27 01:37:50.786 [error] [network] #2: https://api2.cursor.sh/extensions-control - error GET AggregateError [ETIMEDOUT]: 
+2025-06-27 01:37:50.788 [error] [network] #3: https://marketplace.cursorapi.com/_apis/public/gallery/extensionquery - error POST AggregateError [ETIMEDOUT]: 
+2025-06-27 01:37:50.789 [error] Error while installing extensions: AggregateError [ETIMEDOUT]: 
+2025-06-27 01:37:50.789 [error] Failed: AggregateError [ETIMEDOUT]: 
+    at Mc.J (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:172042)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Mc.H (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:168096)
+    at async Mc.D (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:163587)
+    at async Mc.getExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:162747)
+    at async tl.j (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:74:1261)
+    at async tl.g (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:36898)
+    at async tl.installExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:35615)
+    at async j_.q (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:90793)
+    at async j_.k (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:89688)
+    at async j_.scanExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:89549)
+    at async T_.call (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:92504)
+2025-06-27 01:38:19.461 [error] [network] #4: https://marketplace.cursorapi.com/_apis/public/gallery/extensionquery - error POST AggregateError [ETIMEDOUT]: 
+2025-06-27 01:38:19.466 [error] Error while installing extensions: AggregateError [ETIMEDOUT]: 
+2025-06-27 01:38:19.470 [error] Failed: AggregateError [ETIMEDOUT]: 
+    at Mc.J (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:172042)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Mc.H (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:168096)
+    at async Mc.D (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:163587)
+    at async Mc.getExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:162747)
+    at async tl.j (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:74:1261)
+    at async tl.g (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:36898)
+    at async tl.installExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:35615)
+    at async j_.q (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:90793)
+    at async j_.k (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:89688)
+    at async j_.scanExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:89549)
+    at async T_.call (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:92504)
+2025-06-27 01:39:24.350 [info] [127.0.0.1][65c09dc5][ManagementConnection] The client has disconnected gracefully, so the connection will be disposed.
+2025-06-27 01:39:24.390 [info] [127.0.0.1][b84aee06][ExtensionHostConnection] <542> Extension Host Process exited with code: 0, signal: null.
+2025-06-27 01:39:24.391 [info] Cancelling previous shutdown timeout

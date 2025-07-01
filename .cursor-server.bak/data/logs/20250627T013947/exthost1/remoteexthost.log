@@ -1,0 +1,5 @@
+2025-06-27 01:42:05.378 [info] Extension host with pid 359 started
+2025-06-27 01:42:05.379 [info] Lock '/home/node/.cursor-server/data/User/workspaceStorage/fbee6362fa0cbcac2aca7821fd5e1f50/vscode.lock': Lock acquired.
+2025-06-27 01:44:12.183 [info] Extension host terminating: received terminate message from renderer
+2025-06-27 01:44:12.186 [info] Lock '/home/node/.cursor-server/data/User/workspaceStorage/fbee6362fa0cbcac2aca7821fd5e1f50/vscode.lock': Marking the lockfile as scheduled to be released in 6000 ms.
+2025-06-27 01:44:12.189 [info] Extension host with pid 359 exiting with code 0

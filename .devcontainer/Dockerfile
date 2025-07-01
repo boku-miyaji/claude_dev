@@ -27,7 +27,9 @@ RUN apt update && apt install -y less \
   bat \
   fd-find \
   ripgrep \
-  tldr
+  tldr \
+  lsof \
+  ffmpeg
 
 # Ensure default node user has access to /usr/local/share
 RUN mkdir -p /usr/local/share/npm-global && \
@@ -70,18 +72,16 @@ ENV SHELL=/bin/zsh
 RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.2.0/zsh-in-docker.sh)" -- \
   -p git \
   -p fzf \
+  -p https://github.com/marlonrichert/zsh-autocomplete \
   -p https://github.com/zsh-users/zsh-autosuggestions \
   -p https://github.com/zsh-users/zsh-syntax-highlighting \
-  -a "source /usr/share/doc/fzf/examples/key-bindings.zsh" \
-  -a "source /usr/share/doc/fzf/examples/completion.zsh" \
-  -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
-  -a "export HISTFILE=/commandhistory/.zsh_history" \
-  -a "ZSH_AUTOSUGGEST_STRATEGY=(history completion)" \
-  -a "ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20" \
   -x
 
 # Install Claude
 RUN npm install -g @anthropic-ai/claude-code
+
+# install ccusage
+RUN npm install -g ccusage
 
 # Copy and set up firewall script
 COPY init-firewall.sh /usr/local/bin/
@@ -89,4 +89,13 @@ USER root
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
   chmod 0440 /etc/sudoers.d/node-firewall
+
+# sudo を導入済みなら apt install 行は不要
+RUN echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-node-fullsudo \
+ && chmod 0440 /etc/sudoers.d/90-node-fullsudo
+
+ RUN echo 'node:node' | chpasswd
+
+# もとの non-root ユーザーに戻す
 USER node
+

@@ -6,10 +6,7 @@
       "TZ": "${localEnv:TZ:Asia/Tokyo}"
     }
   },
-  "runArgs": [
-    "--cap-add=NET_ADMIN",
-    "--cap-add=NET_RAW"
-  ],
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -40,14 +37,22 @@
   "userEnvProbe": "loginInteractiveShell",
   "mounts": [
     "source=claude-code-bashhistory,target=/commandhistory,type=volume",
-    "source=${localWorkspaceFolder}/.claude,target=/home/node/.claude,type=bind,consistency=consistent"
+    "source=${localWorkspaceFolder}/.claude,target=/home/node/.claude,type=bind,consistency=consistent",
+    "source=${localEnv:HOME}/.zshrc,target=/home/node/.zshrc,type=bind,consistency=consistent,readonly",
+    "source=${localEnv:HOME}/.p10k.zsh,target=/home/node/.p10k.zsh,type=bind,consistency=consistent,readonly",
+    "source=${localEnv:HOME}/.config/gh,target=/home/node/.config/gh,type=bind,consistency=consistent"
   ],
   "remoteEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
     "POWERLEVEL9K_DISABLE_GITSTATUS": "true"
   },
+  "containerEnv": {
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}"
+  },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=consistent",
   "workspaceFolder": "/workspace",
-  "postCreateCommand": "sudo /usr/local/bin/init-firewall.sh"
+  "forwardPorts": [8080]
+  // cursorのchat機能が使えないので、ファイアウォールの設定をしない 。
+  // "postCreateCommand": "sudo /usr/local/bin/init-firewall.sh"
 }

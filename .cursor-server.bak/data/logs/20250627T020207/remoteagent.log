@@ -1,0 +1,42 @@
+2025-06-27 02:02:07.088 [info] 
+
+
+
+
+2025-06-27 02:02:07.092 [info] Installing extensions...
+2025-06-27 02:02:07.093 [info] Extension host agent started.
+2025-06-27 02:02:07.588 [info] [127.0.0.1][d3f7a01f][ManagementConnection] New connection established.
+2025-06-27 02:02:07.620 [info] Installing extensions...
+2025-06-27 02:02:07.700 [info] [127.0.0.1][75b5ce72][ExtensionHostConnection] New connection established.
+2025-06-27 02:02:07.720 [info] [127.0.0.1][75b5ce72][ExtensionHostConnection] <364> Launched Extension Host Process.
+2025-06-27 02:04:24.163 [error] [network] #3: https://marketplace.cursorapi.com/_apis/public/gallery/extensionquery - error POST AggregateError [ETIMEDOUT]: 
+2025-06-27 02:04:24.177 [error] Error while installing extensions: AggregateError [ETIMEDOUT]: 
+2025-06-27 02:04:24.177 [error] Failed: AggregateError [ETIMEDOUT]: 
+    at Mc.J (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:172042)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Mc.H (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:168096)
+    at async Mc.D (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:163587)
+    at async Mc.getExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:162747)
+    at async tl.j (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:74:1261)
+    at async tl.g (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:36898)
+    at async tl.installExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:35615)
+    at async j_.q (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:90793)
+    at async j_.k (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:89688)
+    at async j_.scanExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:89549)
+    at async T_.call (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:171:92504)
+2025-06-27 02:04:24.182 [error] [network] #2: https://api2.cursor.sh/extensions-control - error GET AggregateError [ETIMEDOUT]: 
+2025-06-27 02:04:24.186 [error] [network] #1: https://marketplace.cursorapi.com/_apis/public/gallery/extensionquery - error POST AggregateError [ETIMEDOUT]: 
+2025-06-27 02:04:24.186 [error] Error while installing extensions: AggregateError [ETIMEDOUT]: 
+2025-06-27 02:04:24.187 [error] Failed: AggregateError [ETIMEDOUT]: 
+    at Mc.J (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:172042)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Mc.H (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:168096)
+    at async Mc.D (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:163587)
+    at async Mc.getExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:46:162747)
+    at async tl.j (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:74:1261)
+    at async tl.g (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:36898)
+    at async tl.installExtensions (file:///home/node/.cursor-server/bin/5b19bac7a947f54e4caa3eb7e4c5fbf832389850/out/server-main.js:73:35615)
+2025-06-27 02:07:07.104 [info] New EH opened, aborting shutdown
+2025-06-27 02:10:45.894 [info] [127.0.0.1][d3f7a01f][ManagementConnection] The client has disconnected gracefully, so the connection will be disposed.
+2025-06-27 02:10:45.929 [info] [127.0.0.1][75b5ce72][ExtensionHostConnection] <364> Extension Host Process exited with code: 0, signal: null.
+2025-06-27 02:10:45.932 [info] Last EH closed, waiting before shutting down

@@ -1,0 +1,5 @@
+2025-06-27 01:33:21.190 [info] Extension host with pid 496 started
+2025-06-27 01:33:21.197 [info] Lock '/home/node/.cursor-server/data/User/workspaceStorage/cab0154e3f272ddcebab0e772b187d73/vscode.lock': Lock acquired.
+2025-06-27 01:35:04.776 [info] Extension host terminating: received terminate message from renderer
+2025-06-27 01:35:04.778 [info] Lock '/home/node/.cursor-server/data/User/workspaceStorage/cab0154e3f272ddcebab0e772b187d73/vscode.lock': Marking the lockfile as scheduled to be released in 6000 ms.
+2025-06-27 01:35:04.781 [info] Extension host with pid 496 exiting with code 0

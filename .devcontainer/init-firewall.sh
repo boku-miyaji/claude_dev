@@ -53,6 +53,12 @@ domains=(
   sentry.io
   statsig.anthropic.com
   statsig.com
+  api.openai.com
+  auth.openai.com
+  cdn.openai.com
+  api.cursor.dev
+  chat.cursor.dev
+  cdn.anthropic.com
 )
 
 for d in "${domains[@]}"; do
