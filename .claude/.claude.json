@@ -11,9 +11,9 @@
   },
   "tipsHistory": {
     "new-user-warmup": 1,
-    "ide-hotkey": 5,
-    "terminal-setup": 5,
-    "shift-enter": 7,
+    "ide-hotkey": 19,
+    "terminal-setup": 19,
+    "shift-enter": 19,
     "memory-command": 10,
     "theme-command": 12,
     "prompt-queue": 12,
@@ -26,7 +26,9 @@
     "drag-and-drop-images": 19,
     "double-esc": 19,
     "continue": 19,
-    "custom-commands": 19
+    "custom-commands": 19,
+    "shift-tab": 19,
+    "custom-agents": 19
   },
   "userID": "490a85b216033891ec6e134c7811c5eb5890af627dd866d91b05ddcd725c39b7",
   "firstStartTime": "2025-07-10T13:14:53.002Z",
@@ -526,6 +528,26 @@
     "/workspace": {
       "allowedTools": [],
       "history": [
+        {
+          "display": "候補は追加できています。投票ができない",
+          "pastedContents": {}
+        },
+        {
+          "display": "セッション管理もなにもボタンもないし、何も入力できない",
+          "pastedContents": {}
+        },
+        {
+          "display": "どの画面で候補追加できる？候補管理でなにも入力できないです",
+          "pastedContents": {}
+        },
+        {
+          "display": "投票する候補が作成できていないです。なににとうひょうすればいいの？リストで候補を作成して、それに対して投票できるようにしたい。",
+          "pastedContents": {}
+        },
+        {
+          "display": "fail create sessionとなります。",
+          "pastedContents": {}
+        },
         {
           "display": "ぽーとは3000ではなく3002にして。docなどもいろいろちゃんと更新して",
           "pastedContents": {}
