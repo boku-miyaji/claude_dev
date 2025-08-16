@@ -529,6 +529,10 @@
       "allowedTools": [],
       "history": [
         {
+          "display": "リクエスト制限に達しましたとでました。なぜ？",
+          "pastedContents": {}
+        },
+        {
           "display": "投票したら、invalid ballot dataというエラーがでます。",
           "pastedContents": {}
         },
