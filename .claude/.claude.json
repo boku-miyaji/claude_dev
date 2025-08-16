@@ -23,7 +23,8 @@
     "install-github-app": 17,
     "status-line": 19,
     "permissions": 19,
-    "drag-and-drop-images": 19
+    "drag-and-drop-images": 19,
+    "double-esc": 19
   },
   "userID": "490a85b216033891ec6e134c7811c5eb5890af627dd866d91b05ddcd725c39b7",
   "firstStartTime": "2025-07-10T13:14:53.002Z",
@@ -523,6 +524,10 @@
     "/workspace": {
       "allowedTools": [],
       "history": [
+        {
+          "display": "npm install したらエラーでました。",
+          "pastedContents": {}
+        },
         {
           "display": "サーバー起動などの方法も含めたREADMEを作成して",
           "pastedContents": {}
