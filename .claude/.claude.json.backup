@@ -24,7 +24,8 @@
     "status-line": 19,
     "permissions": 19,
     "drag-and-drop-images": 19,
-    "double-esc": 19
+    "double-esc": 19,
+    "continue": 19
   },
   "userID": "490a85b216033891ec6e134c7811c5eb5890af627dd866d91b05ddcd725c39b7",
   "firstStartTime": "2025-07-10T13:14:53.002Z",
@@ -524,6 +525,10 @@
     "/workspace": {
       "allowedTools": [],
       "history": [
+        {
+          "display": "ぽーとは3000ではなく3002にして。docなどもいろいろちゃんと更新して",
+          "pastedContents": {}
+        },
         {
           "display": "❯ npm run db:push\n\n> app-wish-draft@0.1.0 db:push\n> prisma db push\n\nPrisma schema loaded from prisma/schema.prisma\nDatasource \"db\": PostgreSQL database\n\nError: Prisma schema validation - (get-config wasm)\nError code: P1012\nerror: Environment variable not found: DATABASE_URL.\n  -->  prisma/schema.prisma:10\n   | \n 9 |   provider = \"postgresql\"\n10 |   url      = env(\"DATABASE_URL\")\n   | ",
           "pastedContents": {}
