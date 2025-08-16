@@ -13,7 +13,7 @@
     "new-user-warmup": 1,
     "ide-hotkey": 19,
     "terminal-setup": 19,
-    "shift-enter": 7,
+    "shift-enter": 19,
     "memory-command": 10,
     "theme-command": 12,
     "prompt-queue": 12,
@@ -528,6 +528,10 @@
     "/workspace": {
       "allowedTools": [],
       "history": [
+        {
+          "display": "投票したら、invalid ballot dataというエラーがでます。",
+          "pastedContents": {}
+        },
         {
           "display": "候補は追加できています。投票ができない",
           "pastedContents": {}

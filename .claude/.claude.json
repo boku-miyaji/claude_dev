@@ -16,7 +16,7 @@
     "shift-enter": 19,
     "memory-command": 10,
     "theme-command": 12,
-    "prompt-queue": 12,
+    "prompt-queue": 19,
     "enter-to-steer-in-relatime": 13,
     "todo-list": 14,
     "# for memory": 16,
@@ -528,6 +528,10 @@
     "/workspace": {
       "allowedTools": [],
       "history": [
+        {
+          "display": "投票したら、invalid ballot dataというエラーがでます。",
+          "pastedContents": {}
+        },
         {
           "display": "候補は追加できています。投票ができない",
           "pastedContents": {}
