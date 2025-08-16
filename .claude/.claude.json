@@ -529,6 +529,10 @@
       "allowedTools": [],
       "history": [
         {
+          "display": "投票するを押すとfailed to submit voteがでます。",
+          "pastedContents": {}
+        },
+        {
           "display": "投票するとすると’session not foundがでます。",
           "pastedContents": {}
         },
