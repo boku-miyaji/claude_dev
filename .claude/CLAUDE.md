@@ -1,5 +1,11 @@
 <!-- グローバル規約とルール定義。プロジェクト側に CLAUDE.md がある場合はこちらがフォールバックになります -->
 
+### :robot: LLM Agent Rules
+
+- [ultrathink] 実装する前に必ず設計をする。
+- [ultrathink] 実装する際はテストコードを作成し、デグレがないことを確認できるようにする。
+- 実装したら必ず commit する。
+
 ### :memo: コーディング規約（抜粋）
 
 - コードコメントは **英語**で書く
@@ -12,14 +18,3 @@
 1. テストは追加されているか
 2. 破壊的変更がある場合、README / MIGRATION に記載したか
 3. 新規依存は license & size を確認したか
-
-### :robot: LLM Agent Rules
-
-```mdc
-#import https://raw.githubusercontent.com/steipete/agent-rules/main/global-rules.mdc
-```
-
-### :bulb: ベストプラクティス
-
-- 大きな変更は `/flow:spawn-sparc architect` で設計レビューを先に通す
-- push 前に `/monitor:token --plan max10` を実行してトークン使用量を確認

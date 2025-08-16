@@ -13,7 +13,11 @@ description: |
   • Push: LOCAL_*.yamlのドラフト → GitHub Issue作成
 ---
 
-## 実行手順 🤖
+## 引数
+
+$ARGUMENTS
+
+## 実行手順
 
 1. **引数検証と GitHub 認証確認**
 
@@ -52,7 +56,7 @@ description: |
 
    - Issue 詳細（title, body, labels, state, 日時）を取得
    - CLOSED な Issue は対応するローカルファイルを削除してスキップ
-     対応する `tasks/design/{Issue ID}_\*.md`, `tasks/pr/{Issue ID}_\*.md` も削除する
+     **対応する `tasks/design/{Issue ID}_\*.md`, `tasks/pr/{Issue ID}_\*.md` も削除する**
    - OPEN な Issue のみ処理を続行
 
 3. **ファイル作成・更新判定**

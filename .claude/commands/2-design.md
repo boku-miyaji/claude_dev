@@ -10,7 +10,11 @@ description: |
   After that, update the original YAML to reflect the new state and document path.
 ---
 
-## Steps for Claude 🤖
+## 引数
+
+$ARGUMENTS
+
+## 実行手順
 
 1. **引数検証と準備**
 

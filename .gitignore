@@ -10,6 +10,7 @@
 
 # others
 .cache
+tasks*
 
 # cursor server backup - keep local but don't track
 .cursor-server.bak/
