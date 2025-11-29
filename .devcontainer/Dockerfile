@@ -96,6 +96,25 @@ RUN echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-node-fullsudo \
 
  RUN echo 'node:node' | chpasswd
 
+# Python 3.11とpipをインストール
+RUN apt update && apt install -y \
+    python3.11 \
+    python3.11-dev \
+    python3.11-venv \
+    python3-pip \
+    && ln -sf /usr/bin/python3.11 /usr/bin/python3 \
+    && ln -sf /usr/bin/python3 /usr/bin/python
+
+
+# node userにPython環境のアクセス権を付与
+RUN chown -R node:node /usr/local/lib/python3.11
+
 # もとの non-root ユーザーに戻す
 USER node
+
+# uv を公式インストーラでインストール(pipはだめ)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# PATH を通す（コンテナ全体で有効）
+ENV PATH="/home/node/.local/bin:${PATH}"
 
