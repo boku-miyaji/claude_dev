@@ -52,15 +52,6 @@ Claude Code内で以下のコマンドを実行：
 /plugin install commit-commands@claude-plugins-official
 ```
 
-### 3. プラグインマーケットプレイスの初期化（オプション）
-
-Gitサブモジュールを使用している場合：
-
-```bash
-cd .claude/plugins/marketplaces
-git submodule update --init --recursive
-```
-
 ## 🔧 利用可能なコマンド
 
 ### ドキュメント管理
