@@ -1,0 +1,105 @@
+{
+  "version": 2,
+  "plugins": {
+    "document-skills@anthropic-agent-skills": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/anthropic-agent-skills/document-skills/unknown",
+        "version": "unknown",
+        "installedAt": "2026-01-07T12:18:43.406Z",
+        "lastUpdated": "2026-01-07T12:18:43.406Z",
+        "isLocal": true
+      }
+    ],
+    "frontend-design@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/frontend-design/b97f6eadd929",
+        "version": "b97f6eadd929",
+        "installedAt": "2026-01-07T12:54:54.553Z",
+        "lastUpdated": "2026-01-07T12:56:05.151Z",
+        "isLocal": true
+      }
+    ],
+    "context7@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/context7/b97f6eadd929",
+        "version": "b97f6eadd929",
+        "installedAt": "2026-01-07T12:58:36.018Z",
+        "lastUpdated": "2026-01-07T13:09:41.956Z",
+        "isLocal": true
+      }
+    ],
+    "serena@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/serena/b97f6eadd929",
+        "version": "b97f6eadd929",
+        "installedAt": "2026-01-07T13:00:59.145Z",
+        "lastUpdated": "2026-01-07T13:09:41.957Z",
+        "isLocal": true
+      }
+    ],
+    "pr-review-toolkit@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/b97f6eadd929",
+        "version": "b97f6eadd929",
+        "installedAt": "2026-01-07T13:01:18.329Z",
+        "lastUpdated": "2026-01-07T13:09:41.958Z",
+        "isLocal": true
+      }
+    ],
+    "github@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/github/b97f6eadd929",
+        "version": "b97f6eadd929",
+        "installedAt": "2026-01-07T13:01:28.812Z",
+        "lastUpdated": "2026-01-07T13:09:41.958Z",
+        "isLocal": true
+      }
+    ],
+    "code-review@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/code-review/b97f6eadd929",
+        "version": "b97f6eadd929",
+        "installedAt": "2026-01-07T13:01:39.462Z",
+        "lastUpdated": "2026-01-07T13:09:41.959Z",
+        "isLocal": true
+      }
+    ],
+    "security-guidance@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/security-guidance/b97f6eadd929",
+        "version": "b97f6eadd929",
+        "installedAt": "2026-01-07T13:01:48.792Z",
+        "lastUpdated": "2026-01-07T13:09:41.960Z",
+        "isLocal": true
+      }
+    ],
+    "supabase@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/supabase/b97f6eadd929",
+        "version": "b97f6eadd929",
+        "installedAt": "2026-01-07T13:01:55.514Z",
+        "lastUpdated": "2026-01-07T13:09:41.960Z",
+        "isLocal": true
+      }
+    ],
+    "commit-commands@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/commit-commands/b97f6eadd929",
+        "version": "b97f6eadd929",
+        "installedAt": "2026-01-07T13:02:05.228Z",
+        "lastUpdated": "2026-01-07T13:09:41.961Z",
+        "isLocal": true
+      }
+    ]
+  }
+}
