@@ -50,18 +50,18 @@ source $PLUG_PREFIX/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Tab: autosuggestion(薄い提案)があれば確定、なければ通常補完
+# Tab: autosuggestion(薄い提案)があれば確定、なければ候補一覧を表示（挿入しない）
 _tab_accept_or_complete() {
   if [[ -n "$POSTDISPLAY" ]]; then
     zle autosuggest-accept
   else
-    zle .expand-or-complete
+    zle list-choices
   fi
 }
 zle -N _tab_accept_or_complete
 bindkey '^I' _tab_accept_or_complete
 
-# 逃げ道：必ず通常補完したい場合
+# 逃げ道：必ず通常補完したい場合（候補を挿入）
 bindkey '^X^I' .expand-or-complete
 
 # History settings for devcontainer
