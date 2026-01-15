@@ -50,19 +50,13 @@ source $PLUG_PREFIX/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Tab: autosuggestion(薄い提案)があれば確定、なければ候補一覧を表示（挿入しない）
-_tab_accept_or_complete() {
-  if [[ -n "$POSTDISPLAY" ]]; then
-    zle autosuggest-accept
-  else
-    zle list-choices
-  fi
-}
-zle -N _tab_accept_or_complete
-bindkey '^I' _tab_accept_or_complete
+# Tab: 共通部分まで補完して候補一覧を表示（autosuggestionは無視）
+bindkey '^I' expand-or-complete
 
-# 逃げ道：必ず通常補完したい場合（候補を挿入）
-bindkey '^X^I' .expand-or-complete
+# autosuggestionを確定したい場合は右矢印キーまたはEnd
+bindkey '^[[C' autosuggest-accept   # 右矢印
+bindkey '^[OC' autosuggest-accept   # 右矢印（別のターミナル）
+bindkey '^E' autosuggest-accept     # Ctrl+E (End)
 
 # History settings for devcontainer
 export HISTFILE=/commandhistory/.zsh_history
