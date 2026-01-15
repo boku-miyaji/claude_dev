@@ -8,36 +8,49 @@ fi
 # Path to your Oh My Zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
-# Set name of the theme to load
+# Set name of the theme to load --- if set to "random", it will
+# load a random theme each time Oh My Zsh is loaded, in which case,
+# to know which specific one was loaded, run: echo $RANDOM_THEME
+# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # Which plugins would you like to load?
-plugins=(git fzf)
+# Standard plugins can be found in $ZSH/plugins/
+# Custom plugins may be added to $ZSH_CUSTOM/plugins/
+# Example format: plugins=(rails git textmate ruby lighthouse)
+# Add wisely, as too many plugins slow down shell startup.
+plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
-# Autosuggestion strategy: completion first, then history
+# 履歴より completion を優先（実在チェック寄り）
 ZSH_AUTOSUGGEST_STRATEGY=(completion history)
 
-# Don't auto-insert first completion candidate
+# 複数候補で先頭候補を勝手に挿入しない
 unsetopt MENU_COMPLETE
 unsetopt AUTO_MENU
 
-# Show list of candidates but don't insert
+# 複数候補なら一覧表示は出す（挿入はしない）
 setopt AUTO_LIST
 setopt LIST_AMBIGUOUS
 
-# Plugin prefix for DevContainer
-PLUG_PREFIX="$ZSH/custom/plugins"
 
-# Load plugins
+if command -v brew >/dev/null 2>&1; then
+  PLUG_PREFIX="$(brew --prefix)/share"          # macOS: /opt/homebrew/share
+else
+  PLUG_PREFIX="$ZSH/custom/plugins"                     # DevContainer: ~/.oh-my-zsh/custom
+fi
+#----------------------------------------------------------
+
+# Plugins
 source $PLUG_PREFIX/zsh-autosuggestions/zsh-autosuggestions.zsh
+# source $PLUG_PREFIX/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 source $PLUG_PREFIX/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Tab: accept autosuggestion if present, otherwise normal completion
+# Tab: autosuggestion(薄い提案)があれば確定、なければ通常補完
 _tab_accept_or_complete() {
   if [[ -n "$POSTDISPLAY" ]]; then
     zle autosuggest-accept
@@ -48,7 +61,7 @@ _tab_accept_or_complete() {
 zle -N _tab_accept_or_complete
 bindkey '^I' _tab_accept_or_complete
 
-# Escape route: force normal completion
+# 逃げ道：必ず通常補完したい場合
 bindkey '^X^I' .expand-or-complete
 
 # History settings for devcontainer
