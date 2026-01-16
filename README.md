@@ -1,6 +1,6 @@
 # Claude Dev Repository
 
-開発用のClaude Code設定とカスタムコマンド集
+開発用の Claude Code 設定とカスタムコマンド集
 
 ## 📦 セットアップ
 
@@ -11,7 +11,7 @@ git clone git@github.com:boku-miyaji/claude_dev.git
 cd claude_dev
 ```
 
-### 2. Claude Codeプラグインのセットアップ
+### 2. Claude Code プラグインのセットアップ
 
 このプロジェクトでは以下のプラグインを使用しています：
 
@@ -22,22 +22,22 @@ bash .claude/setup-plugins.sh
 
 #### 推奨プラグイン一覧
 
-| プラグイン | マーケットプレイス | 用途 |
-|-----------|------------------|------|
-| document-skills | anthropic-agent-skills | ドキュメント作成支援 |
-| frontend-design | claude-plugins-official | フロントエンド設計 |
-| context7 | claude-plugins-official | ライブラリドキュメント検索 |
-| serena | claude-plugins-official | セマンティックコード編集 |
-| pr-review-toolkit | claude-plugins-official | PRレビュー支援 |
-| github | claude-plugins-official | GitHub連携 |
-| code-review | claude-plugins-official | コードレビュー |
-| security-guidance | claude-plugins-official | セキュリティガイダンス |
-| supabase | claude-plugins-official | Supabase連携 |
-| commit-commands | claude-plugins-official | コミット支援 |
+| プラグイン        | マーケットプレイス      | 用途                       |
+| ----------------- | ----------------------- | -------------------------- |
+| document-skills   | anthropic-agent-skills  | ドキュメント作成支援       |
+| frontend-design   | claude-plugins-official | フロントエンド設計         |
+| context7          | claude-plugins-official | ライブラリドキュメント検索 |
+| serena            | claude-plugins-official | セマンティックコード編集   |
+| pr-review-toolkit | claude-plugins-official | PR レビュー支援            |
+| github            | claude-plugins-official | GitHub 連携                |
+| code-review       | claude-plugins-official | コードレビュー             |
+| security-guidance | claude-plugins-official | セキュリティガイダンス     |
+| supabase          | claude-plugins-official | Supabase 連携              |
+| commit-commands   | claude-plugins-official | コミット支援               |
 
 #### 手動インストール方法
 
-Claude Code内で以下のコマンドを実行：
+Claude Code 内で以下のコマンドを実行：
 
 ```
 /plugin install document-skills@anthropic-agent-skills
@@ -68,17 +68,17 @@ Claude Code内で以下のコマンドを実行：
 
 ### タスク管理ワークフロー
 
-| コマンド | 説明 |
-|---------|------|
-| `/1-1-create-task` | ローカルタスクファイル作成 |
-| `/1-2-sync_tasks` | GitHub Issues同期 |
-| `/2-design` | 設計書作成 |
-| `/3-implement` | 実装 |
-| `/4-reimplement` | 再実装 |
-| `/5-update-pr` | PR更新 |
-| `/6-push-pr` | PR作成・プッシュ |
-| `/backward-commit` | コミット取り消し |
-| `/workflow_overview_review` | ワークフロー全体レビュー |
+| コマンド                    | 説明                       |
+| --------------------------- | -------------------------- |
+| `/1-1-create-task`          | ローカルタスクファイル作成 |
+| `/1-2-sync_tasks`           | GitHub Issues 同期         |
+| `/2-design`                 | 設計書作成                 |
+| `/3-implement`              | 実装                       |
+| `/4-reimplement`            | 再実装                     |
+| `/5-update-pr`              | PR 更新                    |
+| `/6-push-pr`                | PR 作成・プッシュ          |
+| `/backward-commit`          | コミット取り消し           |
+| `/workflow_overview_review` | ワークフロー全体レビュー   |
 
 詳細は [.claude/commands/README.md](.claude/commands/README.md) を参照。
 
@@ -109,7 +109,7 @@ Claude Code内で以下のコマンドを実行：
 └── README.md               # このファイル
 ```
 
-## 🔒 Git管理ポリシー
+## 🔒 Git 管理ポリシー
 
 ### 管理するファイル
 
@@ -140,11 +140,11 @@ Claude Code内で以下のコマンドを実行：
 2. 機能ブランチを作成 (`git checkout -b feature/amazing-feature`)
 3. 変更をコミット (`git commit -m 'feat: add amazing feature'`)
 4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
-5. Pull Requestを作成
+5. Pull Request を作成
 
 ### コミット規約
 
-Conventional Commitsを使用：
+Conventional Commits を使用：
 
 - `feat:` - 新機能
 - `fix:` - バグ修正

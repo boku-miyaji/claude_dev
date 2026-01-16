@@ -1,12 +1,12 @@
 {
-  "name": "Claude Code Sandbox (CPU)",
-  "build": {
-    "dockerfile": "Dockerfile-cpu",
-    "args": {
-      "TZ": "${localEnv:TZ:Asia/Tokyo}"
-    }
-  },
-  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  "name": "Claude Code Sandbox (CPU) with Docker Compose",
+
+  // Use Docker Compose
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+
+  // Customizations
   "customizations": {
     "vscode": {
       "extensions": [
@@ -37,22 +37,26 @@
       }
     }
   },
+
+  // Remote user
   "remoteUser": "node",
   "userEnvProbe": "loginInteractiveShell",
-  "mounts": [
-    "source=claude-code-bashhistory,target=/commandhistory,type=volume",
-    "source=${localWorkspaceFolder}/.claude,target=/home/node/.claude,type=bind,consistency=consistent"
-  ],
-  "remoteEnv": {
-    "NODE_OPTIONS": "--max-old-space-size=4096",
-    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
-    "POWERLEVEL9K_DISABLE_GITSTATUS": "true",
-    "USE_GPU": "false"
+
+  // Forward ports from both containers
+  "forwardPorts": [3000, 8080],
+
+  // Port attributes
+  "portsAttributes": {
+    "3000": {
+      "label": "Frontend Dev Server",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "API Server",
+      "onAutoForward": "silent"
+    }
   },
-  "containerEnv": {
-    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}"
-  },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=consistent",
-  "workspaceFolder": "/workspace",
-  "forwardPorts": [8080]
+
+  // Post-create command (runs after container is created)
+  "postCreateCommand": "echo 'Development environment ready! API server is running on http://api-server:8080'"
 }

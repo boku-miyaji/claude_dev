@@ -6,10 +6,7 @@
       "TZ": "${localEnv:TZ:Asia/Tokyo}"
     }
   },
-  "runArgs": [
-    "--cap-add=NET_ADMIN",
-    "--cap-add=NET_RAW"
-  ],
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -18,7 +15,8 @@
         "eamodio.gitlens",
         "ms-python.python",
         "ms-python.isort",
-        "ms-python.black-formatter"
+        "ms-python.black-formatter",
+        "anthropic.claude-code"
       ],
       "settings": {
         "editor.formatOnSave": true,
@@ -58,4 +56,3 @@
   "workspaceFolder": "/workspace",
   "forwardPorts": [8080]
 }
-
