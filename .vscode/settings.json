@@ -5,6 +5,25 @@
     // 追加した 2 つもホストで動かす
     "yzhang.markdown-all-in-one": ["ui"],
     "shd101wyy.markdown-preview-enhanced": ["ui"]
-  }
+  },
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#f529c4",
+    "activityBar.background": "#f529c4",
+    "activityBar.foreground": "#e7e7e7",
+    "activityBar.inactiveForeground": "#e7e7e799",
+    "activityBarBadge.background": "#a4d50a",
+    "activityBarBadge.foreground": "#15202b",
+    "commandCenter.border": "#e7e7e799",
+    "sash.hoverBorder": "#f529c4",
+    "statusBar.background": "#e10aad",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#f529c4",
+    "statusBarItem.remoteBackground": "#e10aad",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#e10aad",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#e10aad99",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.remoteColor": "#e10aad"
 }
-

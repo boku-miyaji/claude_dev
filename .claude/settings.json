@@ -1,7 +1,19 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "mcp__notion__notion-create-pages",
+      "mcp__notion__notion-update-page",
+      "mcp__notion__notion-update-database",
+      "mcp__notion__notion-create-database",
+      "mcp__notion__notion-move-pages",
+      "mcp__notion__notion-duplicate-page",
+      "mcp__notion__notion-create-comment"
+    ]
+  },
   "env": {
-    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "30000"
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "30000",
+    "CLAUDE_CODE_DISABLE_TELEMETRY": "1"
   },
   "permissions": {
     "allow": [

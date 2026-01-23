@@ -1,18 +1,39 @@
-# claude runtime files
+# claude - session state (DO NOT TRACK)
+.claude/.claude.json
+.claude/.claude.json.backup
+.claude/.claude.json.corrupted.*
+
+# claude - credentials (SENSITIVE - DO NOT TRACK)
+.claude/.credentials.json
+.claude/.credentials.json.*
+
+# claude - local settings
+.claude/settings.local.json
+.claude/security_warnings_state_*.json
+.claude/session-env/
+
+# claude - runtime directories
 .claude/projects/
 .claude/todos/
 .claude/ide/
 .claude/statsig/
-.claude/.credentials.json
-
-# claude cache and runtime (ignore)
 .claude/cache/
 .claude/debug/
 .claude/file-history/
 .claude/history.jsonl
 .claude/shell-snapshots/
 .claude/stats-cache.json
+
+# claude - plugins (local state)
 .claude/plugins/cache/
+.claude/plugins/installed_plugins.json
+.claude/plugins/known_marketplaces.json
+.claude/plugins/install-counts-cache.json
+.claude/plugins/marketplaces/
+
+# claude - local knowledge and plans
+.claude/knowledge/
+.claude/plans/
 
 # application folder
 *app*
