@@ -1,0 +1,110 @@
+# 回路設計支援システム要件定義セッション
+metadata:
+  date: "2025-01-11"
+  project: "circuit_diagram"
+  topic: "要件定義書の構造化と組織学習機能の追加"
+
+decisions:
+  - id: "DEC-001"
+    context: "仕様書の構造化形式を選択"
+    question: "どのような構造化形式を希望するか"
+    answer: "ユースケース中心型"
+    reasoning: "開発者向けで、機能の流れが分かりやすい"
+
+  - id: "DEC-002"
+    context: "仕様書の対象読者"
+    question: "誰向けの仕様書か"
+    answer: "開発者向け"
+    reasoning: "技術的な詳細を含め、実装の指針となる形式"
+
+  - id: "DEC-003"
+    context: "追加情報の要否"
+    question: "追加で含めたい情報は何か"
+    answer: "スコープ外の明記"
+    reasoning: "何をやらないかを明確にして期待値を合わせる"
+
+  - id: "DEC-004"
+    context: "組織学習の対象"
+    question: "何を学習対象にするか"
+    answer: "プロンプト改善 + ナレッジベース蓄積（プロセス自体は変えない）"
+    reasoning: "プロセスは標準化されたものを維持しつつ、内容を改善していく"
+
+  - id: "DEC-005"
+    context: "改善の反映タイミング"
+    question: "いつ改善を反映するか"
+    answer: "即時反映（A/Bテスト）"
+    reasoning: "新旧を並行運用して効果を検証できる"
+
+  - id: "DEC-006"
+    context: "評価基準"
+    question: "何を基準にプロンプトを評価するか"
+    answer: "明示的評価 + 修正量の組み合わせ"
+    reasoning: "ユーザーの主観的評価と客観的な修正量の両方を考慮"
+
+  - id: "DEC-007"
+    context: "バージョン管理"
+    question: "プロンプトのロールバック機能は必要か"
+    answer: "必要（安全に戻せるように）"
+    reasoning: "改善が逆効果だった場合のリスクヘッジ"
+
+  - id: "DEC-008"
+    context: "標準化対象"
+    question: "何を標準化したいか"
+    answer: "すべて（仕様決めの項目、判断基準、レビューチェックポイント）"
+    reasoning: "現在は社員ごとに「なんとなく」行われているフローを組織共通にしたい"
+
+  - id: "DEC-009"
+    context: "ナレッジベースの蓄積内容"
+    question: "何を蓄積するか"
+    answer: "すべて（過去事例、修正履歴と理由、設計ルール）"
+    reasoning: "組織の知見を包括的に蓄積して活用"
+
+  - id: "DEC-010"
+    context: "ナレッジ履歴の保存先"
+    question: "履歴をどこに保存するか"
+    answer: "~/.claude/knowledge/ 配下"
+    reasoning: "グローバルなナレッジとして全プロジェクトで共有"
+
+  - id: "DEC-011"
+    context: "ナレッジの記録形式"
+    question: "どの形式で記録するか"
+    answer: "YAML/JSON"
+    reasoning: "将来的にDB化しやすい構造化された形式"
+
+preferences:
+  - category: "仕様書作成"
+    preference: "構造化する前に元ドキュメントをoriginal/に保存する"
+
+  - category: "仕様書作成"
+    preference: "AskUserQuestionを使って対象読者・形式・追加情報を確認する"
+
+  - category: "仕様書作成"
+    preference: "プロセスフローは参考資料（画像等）を確認して正確に把握する"
+
+  - category: "システム設計"
+    preference: "全体最適を重視（ユーザー個別ではなく組織全体で賢くなる）"
+
+  - category: "システム設計"
+    preference: "ロールバック可能な設計にする（安全に戻せること）"
+
+  - category: "要件定義"
+    preference: "仕様概要（メール・口頭等）からラフ仕様書を作成するプロセスを含める"
+
+  - category: "要件定義"
+    preference: "不足情報はヒアリングで補完する機能を持たせる"
+
+instructions:
+  - instruction: "仕様書を構造化する際は、まず対象読者・形式を確認してから着手する"
+    applies_to: "仕様書作成全般"
+
+  - instruction: "元のドキュメントは必ずoriginal/ディレクトリに保存してから編集する"
+    applies_to: "ドキュメント編集"
+
+  - instruction: "exampleとして具体的なサンプルを作成する（仕様概要の場合はメール・口頭情報形式）"
+    applies_to: "仕様書・テンプレート作成"
+
+  - instruction: "組織学習機能を設計する際は、A/Bテスト・評価・ロールバックをセットで考える"
+    applies_to: "システム設計"
+
+  - instruction: "会話から学んだ知見は~/.claude/knowledge/にYAML形式で蓄積する"
+    applies_to: "全セッション"

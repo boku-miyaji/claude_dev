@@ -1,60 +1,66 @@
-# DevContainer設定
+# DevContainer 設定
 
-このディレクトリには、開発環境用のdevcontainer設定が含まれています。
+このディレクトリには、開発環境用の devcontainer 設定が含まれています。
 
-## GPU設定の切り替え
+## GPU 設定の切り替え
 
-GPUあり/なしを切り替えて使用できます。
+GPU あり/なしを切り替えて使用できます。
 
-### 設定ファイルとDockerfile
+### 設定ファイルと Dockerfile
 
-2つの設定ファイルと2つのDockerfileが用意されています：
+2 つの設定ファイルと 2 つの Dockerfile が用意されています：
 
-#### CPU版
+#### CPU 版
+
 - 設定ファイル: `devcontainer-cpu.json`
-- Dockerfile: `Dockerfile-cpu` (node:20ベース)
-- GPU設定なしで動作します
-- CPU環境で使用する場合に推奨
+- Dockerfile: `Dockerfile-cpu` (node:20 ベース)
+- GPU 設定なしで動作します
+- CPU 環境で使用する場合に推奨
 
-#### GPU版
+#### GPU 版
+
 - 設定ファイル: `devcontainer-gpu.json`
-- Dockerfile: `Dockerfile-gpu` (NVIDIA CUDA/cuDNNベース)
-- GPUを使用する場合に使用します
-- NVIDIA GPUとNVIDIA Container Toolkitが必要
-- cuDNNライブラリが含まれています
+- Dockerfile: `Dockerfile-gpu` (NVIDIA CUDA/cuDNN ベース)
+- GPU を使用する場合に使用します
+- NVIDIA GPU と NVIDIA Container Toolkit が必要
+- cuDNN ライブラリが含まれています
 
 **切り替え方法:**
 
-1. **VSCode/Cursorで直接開く方法（推奨）:**
+1. **VSCode/Cursor で直接開く方法（推奨）:**
+
    - `.devcontainer/devcontainer-cpu.json` または `.devcontainer/devcontainer-gpu.json` を開く
    - コマンドパレット（Cmd/Ctrl+Shift+P）を開く
    - "Dev Containers: Reopen in Container" を選択
    - または、`.devcontainer/devcontainer-cpu.json` または `.devcontainer/devcontainer-gpu.json` を `devcontainer.json` にコピーして使用
 
 2. **ファイルをリネームする方法:**
+
    ```bash
    cd .devcontainer
    # CPU版を使用する場合
    cp devcontainer-cpu.json devcontainer.json
-   
+
    # GPU版を使用する場合
    cp devcontainer-gpu.json devcontainer.json
    ```
 
 ## 前提条件
 
-### GPU版を使用する場合
+### GPU 版を使用する場合
 
-1. **ホストマシンにNVIDIA GPUが必要**
-   - NVIDIA GPUドライバがインストールされていること
+1. **ホストマシンに NVIDIA GPU が必要**
+
+   - NVIDIA GPU ドライバがインストールされていること
    - `nvidia-smi` コマンドが動作すること
 
-2. **NVIDIA Container Toolkitが必要**
-   - DockerでGPUを使用するために必要
+2. **NVIDIA Container Toolkit が必要**
+
+   - Docker で GPU を使用するために必要
    - インストール方法: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
 
-3. **PaddlePaddle GPU版のインストール**
-   - コンテナ起動後、以下のコマンドでGPU版をインストール:
+3. **PaddlePaddle GPU 版のインストール**
+   - コンテナ起動後、以下のコマンドで GPU 版をインストール:
    ```bash
    cd /workspace/paddleocr
    source venv/bin/activate
@@ -62,15 +68,15 @@ GPUあり/なしを切り替えて使用できます。
    pip install paddlepaddle-gpu
    ```
 
-### CPU版を使用する場合
+### CPU 版を使用する場合
 
 - 特別な設定は不要です
 - `devcontainer-cpu.json` を使用してください
-- `Dockerfile-cpu` が自動的に使用されます（node:20ベース）
+- `Dockerfile-cpu` が自動的に使用されます（node:20 ベース）
 
 ## 確認方法
 
-### GPUが利用可能か確認
+### GPU が利用可能か確認
 
 ```bash
 # コンテナ内で実行
@@ -82,16 +88,15 @@ python3 -c "import paddle; print('GPU available:', paddle.device.is_compiled_wit
 
 ## トラブルシューティング
 
-### GPUが認識されない場合
+### GPU が認識されない場合
 
 1. ホストマシンで `nvidia-smi` が動作するか確認
-2. NVIDIA Container Toolkitがインストールされているか確認
-3. DockerでGPUが使用可能か確認: `docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi`
+2. NVIDIA Container Toolkit がインストールされているか確認
+3. Docker で GPU が使用可能か確認: `docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi`
 4. コンテナを再起動
 
-### PaddlePaddleがGPUを認識しない場合
+### PaddlePaddle が GPU を認識しない場合
 
-1. PaddlePaddle GPU版がインストールされているか確認
-2. CUDAバージョンがPaddlePaddleの要件を満たしているか確認
-3. 必要に応じて、特定のCUDAバージョン用のPaddlePaddleをインストール
-
+1. PaddlePaddle GPU 版がインストールされているか確認
+2. CUDA バージョンが PaddlePaddle の要件を満たしているか確認
+3. 必要に応じて、特定の CUDA バージョン用の PaddlePaddle をインストール
