@@ -8,6 +8,7 @@
 .claude/.credentials.json.*
 
 # claude - local settings
+.claude/settings.json
 .claude/settings.local.json
 .claude/security_warnings_state_*.json
 .claude/session-env/
@@ -42,7 +43,9 @@
 .cache
 tasks*
 
+# pj
+project-*
+presales-*
+
 # cursor server backup - keep local but don't track
 .cursor-server.bak/
-# project-rikyu (tracked in separate repo)
-project-review/project-rikyu-sales-proposals-poc/
