@@ -161,6 +161,68 @@ Issue ID を指定して、設計ドキュメント (Markdown) を作成しま�
 
 ---
 
+### 解説・可視化コマンド
+
+#### `/explain` - ファイル/ディレクトリ解説
+
+指定したファイルまたはディレクトリの中身を詳細にわかりやすく説明します。コードの構造・ロジック、ドキュメントの要点を整理して **HTML レポート** として出力します。Mermaid ダイアグラム・コードハイライト・ダークモード対応。
+
+**使用例:**
+```bash
+# 単一ファイルを解説
+/explain src/auth/login.ts
+
+# ディレクトリ全体を解説
+/explain src/components/
+
+# 観点を指定して解説
+/explain src/api/routes.ts セキュリティの観点で詳しく
+
+# ドキュメントの要点整理
+/explain docs/architecture.md
+```
+
+**引数:**
+- `file-path` (必須): 対象ファイルまたはディレクトリのパス
+- 追加指示 (オプション): 説明の観点や深堀りしたいポイント
+
+**出力:** `tasks/explain/explain_{対象名}_{timestamp}.html`
+
+---
+
+#### `/visualize` - Mermaid ダイアグラム生成
+
+指定したファイルまたはディレクトリを Mermaid ダイアグラムで可視化します。依存関係グラフ、クラス図、シーケンス図、フローチャートなどを自動生成し、**HTML レポート** として出力します。ダークモード・タブ切り替え対応。
+
+**使用例:**
+```bash
+# ディレクトリの依存関係を可視化（自動判定）
+/visualize src/services/
+
+# 処理フローを可視化
+/visualize src/auth/login.ts flow
+
+# クラス図を生成
+/visualize src/models/ class
+
+# API のシーケンス図を生成
+/visualize src/api/routes.ts sequence
+
+# ER 図を生成
+/visualize prisma/schema.prisma er
+
+# 全種別を包括的に生成
+/visualize src/core/ all
+```
+
+**引数:**
+- `file-path` (必須): 対象ファイルまたはディレクトリのパス
+- `diagram-type` (オプション): `deps` / `flow` / `class` / `sequence` / `er` / `state` / `all`
+
+**出力:** `tasks/visualize/visualize_{対象名}_{timestamp}.html`
+
+---
+
 ### 分析・レビューコマンド
 
 #### `/devil-advocate` - 反論AI分析
