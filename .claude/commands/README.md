@@ -161,6 +161,40 @@ Issue ID を指定して、設計ドキュメント (Markdown) を作成しま�
 
 ---
 
+### 分析・レビューコマンド
+
+#### `/devil-advocate` - 反論AI分析
+
+指定したドキュメントやコードに対して、多角的な視点から反論・質問・盲点を分析します。
+
+**使用例:**
+```bash
+# ドキュメントを分析
+/devil-advocate diary/docs/3-ARCHITECTURE.md
+
+# 追加の観点を指定して分析
+/devil-advocate diary/docs/3-ARCHITECTURE.md セキュリティ重視で分析してほしい
+
+# ソースコードを分析
+/devil-advocate diary/src/lib/api/entries.ts
+```
+
+**引数:**
+- `file-path` (必須): 分析対象のファイルパス
+- 追加指示 (オプション): 特に重視したい分析観点
+
+**分析視点（6つ）:**
+1. 技術的妥当性
+2. ビジネス・ユーザー視点
+3. セキュリティ・リスク
+4. 保守性・拡張性
+5. 前提・暗黙の仮定（盲点）
+6. ステークホルダーからの想定質問
+
+**出力:** `tasks/review/devil_advocate_{ファイル名}_{timestamp}.md`
+
+---
+
 ### その他のコマンド
 
 #### `/backward-commit` - コミット取り消し
