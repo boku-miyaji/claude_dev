@@ -118,6 +118,13 @@ RUN PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2) && \
     chown -R node:node /usr/local/lib/python${PYTHON_VERSION} || \
     chown -R node:node /usr/lib/python3 || true
 
+# Supabase CLI インストール
+RUN ARCH=$(dpkg --print-architecture) && \
+    VERSION=$(curl -fsSL https://api.github.com/repos/supabase/cli/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/') && \
+    curl -fsSL "https://github.com/supabase/cli/releases/download/v${VERSION}/supabase_${VERSION}_linux_${ARCH}.deb" -o /tmp/supabase.deb && \
+    dpkg -i /tmp/supabase.deb && \
+    rm /tmp/supabase.deb
+
 # もとの non-root ユーザーに戻す
 USER node
 
