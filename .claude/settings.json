@@ -14,7 +14,8 @@
       "Bash(git -C /workspace/circuit_diagram show HEAD:backend/src/prompts/__init__.py)",
       "Read(//tmp/**)",
       "Bash(wc:*)",
-      "Bash(pgrep:*)"
+      "Bash(pgrep:*)",
+      "Bash(dd:*)"
     ],
     "additionalDirectories": [
       "/workspace/circuit_diagram/frontend/src/app/projects/[projectId]",
