@@ -346,31 +346,30 @@ Issue ID を指定して、設計ドキュメント (Markdown) を作成しま�
 
 **使用例:**
 ```bash
-# バグ修正（Issue ID + 症状の説明）
-/fix 42 ログイン画面でメールアドレスのバリデーションが効いていない
+# バグの症状を説明
+/fix ログイン画面でメールアドレスのバリデーションが効いていない
 
-# 機能修正（Issue ID + 修正したい内容）
-/fix 55 日記一覧のソート順が作成日時ではなく更新日時になっている
+# 機能修正の内容を説明
+/fix 日記一覧のソート順が作成日時ではなく更新日時になっている
 
-# 詳細な指示付き
-/fix 68 APIレスポンスのページネーションで最終ページの件数が正しくない。totalCountは正しいがitemsが重複している
+# 詳細な指示
+/fix APIレスポンスのページネーションで最終ページの件数が正しくない。totalCountは正しいがitemsが重複している
 ```
 
 **引数:**
-- `issue-id` (必須): GitHub Issue ID
 - `修正指示` (必須): バグの症状や修正したい内容の説明
 
 **実行フロー:**
 1. 原因調査（Root Cause Analysis）
-2. 原因調査ドキュメント作成 → `tasks/fix/{ID}_analysis.md`
+2. 原因調査ドキュメント作成 → `tasks/fix/{timestamp}_{slug}_analysis.md`
 3. 要件定義・設計ドキュメントの更新
 4. 実装修正 + 回帰テスト作成
-5. 再発防止ドキュメント作成 → `tasks/fix/{ID}_lessons_learned.md`
-6. コミット + PR 準備
+5. 再発防止ドキュメント作成 → `tasks/fix/{timestamp}_{slug}_lessons_learned.md`
+6. コミット
 
 **出力ドキュメント:**
-- `tasks/fix/{Issue_ID}_analysis.md` - 原因調査レポート
-- `tasks/fix/{Issue_ID}_lessons_learned.md` - 再発防止レポート（チェックリスト付き）
+- `tasks/fix/{timestamp}_{slug}_analysis.md` - 原因調査レポート
+- `tasks/fix/{timestamp}_{slug}_lessons_learned.md` - 再発防止レポート（チェックリスト付き）
 - 更新された設計ドキュメント
 
 ---
@@ -422,7 +421,7 @@ graph TD
     F -.->|品質チェック| M[/audit docs/]
     H -.->|品質チェック| N[/audit src/]
 
-    L -->|バグ発見| O[/fix issue-id 症状説明]
+    L -->|バグ発見| O[/fix 症状説明]
     O --> P[原因調査 + ドキュメント更新]
     P --> Q[実装修正 + 回帰テスト]
     Q --> R[再発防止レポート作成]

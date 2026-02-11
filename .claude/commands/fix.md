@@ -17,7 +17,7 @@ allowed-tools: >
   MultiEdit(*)
 description: |
   バグ修正・機能修正コマンド。原因調査→ドキュメント更新→実装修正→再発防止の一連フローを実行。
-  引数にIssue IDと修正指示を受け取る。
+  引数に修正指示を受け取る。
 ---
 
 ## 引数
@@ -34,17 +34,17 @@ $ARGUMENTS
 
 ### 1. 引数検証と準備
 
-- 第 1 引数で **Issue ID** を受け取る（必須）
-- 第 2 引数以降で **修正指示・バグの症状** を受け取る（必須）
-  - 例: `/7-fix 42 ログイン画面でメールアドレスのバリデーションが効いていない`
-  - 例: `/7-fix 55 日記一覧のソート順が作成日時ではなく更新日時になっている`
-- 引数が不足している場合はエラーメッセージを表示して終了
-- 対象タスクの YAML ファイル `tasks/{Issue ID}_*.yaml` を確認
+- 引数で **修正指示・バグの症状** を受け取る（必須）
+  - 例: `/fix ログイン画面でメールアドレスのバリデーションが効いていない`
+  - 例: `/fix 日記一覧のソート順が作成日時ではなく更新日時になっている`
+- 引数が空の場合はエラーメッセージを表示して終了
+- タイムスタンプを生成: `YYYYMMDDHHMMSS`
+- 修正指示から短い識別スラッグを生成（例: `email-validation`, `sort-order`）
+  - 以降、ファイル名には `{timestamp}_{slug}` を使用する
 
-### 2. 機能ブランチの作成・切り替え
+### 2. 修正ブランチの作成・切り替え
 
-- 既存ブランチ `feature/implement-{Issue ID}` がある場合は切り替え
-- 無い場合は最新の main ブランチから `fix/{Issue ID}-hotfix` で新規作成
+- 最新の main ブランチから `fix/{slug}` で新規作成
 
 ### 3. 原因調査（Root Cause Analysis）
 
@@ -60,11 +60,10 @@ $ARGUMENTS
 
 `tasks/fix/` ディレクトリがなければ作成し、以下のドキュメントを生成:
 
-**ファイル名**: `tasks/fix/{Issue_ID}_analysis.md`
+**ファイル名**: `tasks/fix/{timestamp}_{slug}_analysis.md`
 
 ```markdown
 ---
-issue: {Issue ID}
 title: "{修正タイトル}"
 type: "bugfix" | "feature-fix"
 severity: "critical" | "high" | "medium" | "low"
@@ -100,7 +99,7 @@ createdAt: "{ISO 8601}"
 
 [ultrathink] 既存のドキュメントを確認し、**問題の原因となった記載漏れ・不整合**を修正する:
 
-1. **設計ドキュメント確認**: `tasks/design/{Issue ID}_*.md` が存在すれば読み込み
+1. **設計ドキュメント確認**: `tasks/design/` 配下の関連する設計書を確認
 2. **要件定義確認**: `docs/` 配下の関連する仕様書・要件定義を確認
 3. **ドキュメント更新**:
    - 設計書に **「修正履歴」セクション** を追加（または追記）
@@ -108,8 +107,8 @@ createdAt: "{ISO 8601}"
    - バリデーションルール、ビジネスロジックの明確化
 4. **更新内容をコンソールに表示**して、何を修正したか説明
 
-> 重要: ドキュメントが存在しない場合は、必要最小限の設計ノートを
-> `tasks/fix/{Issue_ID}_design_note.md` として新規作成する。
+> 重要: 関連する設計ドキュメントが存在しない場合は、必要最小限の設計ノートを
+> `tasks/fix/{timestamp}_{slug}_design_note.md` として新規作成する。
 
 ### 6. 実装の修正
 
@@ -128,16 +127,15 @@ createdAt: "{ISO 8601}"
 
 ### 7. 再発防止ドキュメント作成（Lessons Learned）
 
-**ファイル名**: `tasks/fix/{Issue_ID}_lessons_learned.md`
+**ファイル名**: `tasks/fix/{timestamp}_{slug}_lessons_learned.md`
 
 このドキュメントは**次回同じミスを防ぐ**ための最重要成果物:
 
 ```markdown
 ---
-issue: {Issue ID}
 title: "{修正タイトル}"
 createdAt: "{ISO 8601}"
-relatedAnalysis: "tasks/fix/{Issue_ID}_analysis.md"
+relatedAnalysis: "tasks/fix/{timestamp}_{slug}_analysis.md"
 ---
 
 # 再発防止レポート（Lessons Learned）
@@ -179,31 +177,12 @@ relatedAnalysis: "tasks/fix/{Issue_ID}_analysis.md"
   - バグ修正: `fix: {修正内容の要約}`
   - 機能修正: `fix: {修正内容の要約}` or `refactor: {修正内容の要約}`
 - ドキュメント更新のコミットは別にする:
-  1. `docs: add root cause analysis for #{Issue ID}`
+  1. `docs: add root cause analysis for {slug}`
   2. `fix: {修正内容}` (コード変更)
-  3. `docs: add lessons learned for #{Issue ID}`
+  3. `docs: add lessons learned for {slug}`
 - ローカルコミットのみ（プッシュしない）
 
-### 9. PR 関連ファイル作成/更新
-
-- `tasks/pr/commits` ディレクトリがなければ作成
-- 今回の修正の差分を `tasks/pr/{Issue_ID}_commits/{YYYYMMDDHHMMSS}.md` に記録:
-  - 原因調査の要約
-  - 修正内容
-  - 追加したテスト
-  - 更新したドキュメント
-
-### 10. タスクステータス更新
-
-- YAML ファイルを更新:
-  - `updatedAt` を現在時刻に更新
-  - `fix` セクションを追加:
-    - `analysis`: 原因調査ドキュメントパス
-    - `lessonsLearned`: 再発防止ドキュメントパス
-    - `branch`: ブランチ名
-    - `commits`: コミットハッシュ一覧
-
-### 11. 完了ログ出力
+### 9. 完了ログ出力
 
 - 修正概要を表示
 - 作成・更新したドキュメント一覧:
@@ -211,4 +190,4 @@ relatedAnalysis: "tasks/fix/{Issue_ID}_analysis.md"
   - 更新した設計ドキュメント
   - 再発防止レポート
 - ブランチ名とコミット状況
-- 次のステップ（`/5-update-pr` or `/6-push-pr`）への案内
+- 次のステップへの案内
