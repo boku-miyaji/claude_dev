@@ -49,3 +49,9 @@ presales-*
 
 # cursor server backup - keep local but don't track
 .cursor-server.bak/
+
+# project-rikyu (tracked in separate repo)
+project-review/project-rikyu-sales-proposals-poc/
+
+# circuit diagram output (managed by circuit_diagram/.gitignore)
+# circuit_diagram/output/
