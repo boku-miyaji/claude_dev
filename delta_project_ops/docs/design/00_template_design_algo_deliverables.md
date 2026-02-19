@@ -114,13 +114,6 @@ LLM の台頭により、AI/ML PoC の評価は「正解データに対する定
 ```markdown
 # プロジェクト推進履歴
 
-> **プロジェクト名**: {project_name}
-> **期間**: {start_date} 〜 {end_date}
-> **最終更新**: {last_updated}
-> **関連**: [全体設計](01_project_design.md) | [意思決定ログ](02_decision_log.md)
-
----
-
 ## ログ
 
 ### {YYYY-MM-DD}: {変更の概要タイトル}
@@ -248,13 +241,6 @@ LLM の台頭により、AI/ML PoC の評価は「正解データに対する定
 ```markdown
 # プロジェクト全体設計
 
-> **プロジェクト名**: {project_name}
-> **期間**: {start_date} 〜 {end_date}
-> **最終更新**: {last_updated}
-> **関連**: [推進履歴](00_progress_history.md) | [意思決定ログ](02_decision_log.md)
-
----
-
 ## 1. 前提
 
 ### 最終的なゴール
@@ -358,12 +344,6 @@ LLM の台頭により、AI/ML PoC の評価は「正解データに対する定
 
 ```markdown
 # 意思決定プロセス（アルゴ）
-
-> **プロジェクト名**: {project_name}
-> **最終更新**: {last_updated}
-> **関連**: [推進履歴](00_progress_history.md) | [全体設計](01_project_design.md)
-
----
 
 ## サマリ
 
