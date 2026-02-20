@@ -1,4 +1,4 @@
-FROM node:20
+FROM node:22
 
 ARG TZ
 ENV TZ="$TZ"
@@ -104,8 +104,8 @@ RUN echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-node-fullsudo \
 
  RUN echo 'node:node' | chpasswd
 
-# Python 3.11とpipをインストール
-# node:20はDebianベース（Debian 12 bookworm）で、Python 3.11がデフォルトで含まれている
+# Python 3とpipをインストール
+# node:22はDebianベース（Debian 12 bookworm）
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-dev \

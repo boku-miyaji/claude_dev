@@ -4,11 +4,11 @@ FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04 AS cuda-base
 # Main stage: Install Node.js and other tools on top of CUDA/cuDNN base
 FROM cuda-base
 
-# Install Node.js 20
+# Install Node.js 22
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
