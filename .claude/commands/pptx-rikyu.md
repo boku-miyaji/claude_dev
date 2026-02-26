@@ -10,7 +10,7 @@ allowed-tools: >
   Skill(pptx)
 description: |
   Markdownやドキュメントの内容をACES/rikyuブランドのPowerPointにまとめる。
-  定例会資料スタイル（提案仮説構築AI_定例会1_20260219_v1.pptx準拠）で生成する。
+  テンプレートベース生成（提案仮説構築AI_定例会1_20260219_v1.pptx準拠）。
 ---
 
 ## 引数
@@ -21,306 +21,353 @@ $ARGUMENTS
 - 第2引数（オプション）: 出力ファイルパス（デフォルト: `output/{テーマ名}.pptx`）
 - 追加コンテキスト: タイトル、宛先、日付などの指定があれば使用する
 
-## ACES/Rikyu ブランドカラー定義
+---
 
-以下のカラースキームを**厳守**すること。全てのスライドで一貫して使用する。
-参照元: `project-rikyu-sales-proposals-poc/untracked/original_document/report/提案仮説構築AI_定例会1_20260219_v1.pptx`
+## テンプレート情報
 
-### テーマ情報
-
-- **テーマ名**: ACES Slide Master
-- **カラースキーム**: ACES color scheme v2
-- **スライドサイズ**: 16:9（13.33" × 7.50" = 960pt × 540pt）
-
-### カラーパレット
+### テンプレートファイル
 
 ```
-/* === Theme Colors (from ACES color scheme v2) === */
---aces-dk1:           #121212;   /* メインテキスト（ほぼ黒） */
---aces-lt1:           #FFFFFF;   /* メイン背景（白） */
---aces-dk2:           #757575;   /* セカンダリグレー */
---aces-lt2:           #C7C7C7;   /* 装飾用ライトグレー（幾何図形等） */
---aces-accent1-blue:  #5298BA;   /* 青コメントボックス、KPIハイライト */
---aces-accent2-red:   #DB5F5F;   /* 赤テキスト（注意喚起） */
---aces-accent3-green: #629F64;   /* テーマグリーン（アクセント3） */
---aces-accent4-gold:  #C0B76A;   /* ゴールドマイルストーン▼ */
-
-/* === Slide-Level Colors (実際のスライドで使用) === */
---aces-charcoal:      #393939;   /* セクション仕切りスライド背景 */
---aces-table-text:    #454545;   /* テーブルセルのテキスト */
---aces-green-dark:    #006843;   /* テーブルヘッダー、強調ボックス背景 */
---aces-green-medium:  #197A56;   /* スケジュールバー、強調アクセント */
---aces-green-bright:  #009A62;   /* 明るい緑アクセント */
---aces-green-mint:    #C2E7D9;   /* 薄ミント（3軸ボックス、ハイライト行等） */
---aces-green-pale:    #DFE6E0;   /* 極薄緑背景 */
---aces-orange:        #FBAE40;   /* オレンジアクセント（レイアウト装飾） */
---aces-white:         #FFFFFF;   /* メイン背景 */
---aces-border-gray:   #C7C7C7;   /* テーブル罫線、区切り線 */
+project-rikyu-sales-proposals-poc/untracked/original_document/report/提案仮説構築AI_定例会1_20260219_v1.pptx
 ```
 
-### PptxGenJSでの使用（#プレフィックスなし）
+- **テーマ**: ACES Slide Master / ACES color scheme v2
+- **スライドサイズ**: 16:9（13.33" × 7.50"）
+- **スライド数**: 35枚
 
-```javascript
-const COLORS = {
-  dk1:         '121212',  // メインテキスト
-  charcoal:    '393939',  // セクション仕切り背景
-  tableText:   '454545',  // テーブルテキスト
-  dk2:         '757575',  // セカンダリグレー
-  lt2:         'C7C7C7',  // ライトグレー（装飾・罫線）
-  greenDark:   '006843',  // テーブルヘッダー、強調ボックス
-  greenMedium: '197A56',  // スケジュールバー、強めの緑
-  greenBright: '009A62',  // 明るい緑アクセント
-  greenMint:   'C2E7D9',  // 薄ミント背景
-  greenPale:   'DFE6E0',  // 極薄緑背景
-  blue:        '5298BA',  // 青コールアウト
-  red:         'DB5F5F',  // 赤アクセント
-  gold:        'C0B76A',  // ゴールド
-  orange:      'FBAE40',  // オレンジアクセント
-  white:       'FFFFFF',
-};
-```
+### テンプレートスライドインデックス（0始まり）
 
-### フォント定義
+| タイプ | インデックス | シェイプ数 | 用途 |
+|--------|:-----------:|:---------:|------|
+| **タイトル** | 0 | 2 | 表紙（宛先 + タイトル + 日付） |
+| **INDEX** | 1 | 1 | 目次（右側にバレットリスト） |
+| **コンテンツ（3プレースホルダー）** | 21 | 3 | 標準コンテンツ（タイトル + サブタイトル + 本文） |
+| **コンテンツ（2プレースホルダー）** | 2 | 2 | タイトル + 大きな本文（サブタイトルなし） |
+| **セクション仕切り** | 6 | 1 | チャコール背景にセクション名（8, 14, 22, 24も同等） |
 
-- **ラテン文字**: Century Gothic（HTMLレンダリング時はVerdanaフォールバック）
-- **日本語**: 游ゴシック / Yu Gothic（HTMLレンダリング時はNoto Sans CJK JPフォールバック）
-- **テーマフォント設定**:
-  - Major: Century Gothic + 游ゴシック
-  - Minor: Century Gothic + 游ゴシック Medium
+### コンテンツスライドのプレースホルダー構造（Slide 21基準）
 
-```css
-/* HTML用フォントスタック */
-font-family: 'Century Gothic', Verdana, 'Yu Gothic', 'Noto Sans CJK JP', sans-serif;
-```
-
-## スライドタイプ定義
-
-全スライドのHTMLテンプレートで以下を共通とする:
-
-### 共通CSS
-
-```css
-html { background: #ffffff; }
-body {
-  width: 960pt; height: 540pt; margin: 0; padding: 0;
-  font-family: 'Century Gothic', Verdana, 'Yu Gothic', 'Noto Sans CJK JP', sans-serif;
-  color: #121212;
-  display: flex; flex-direction: column;
-}
-```
-
-### フッター（全スライド共通）
-
-全コンテンツスライド（タイトルスライド以外）の下部にフッターを配置。
-参照PPTXではフッターは画像だが、html2pptxではHTMLで再現する:
-
-- 細い区切り線（1pt, #C7C7C7）
-- 左中央: 「ACES」テキスト（10pt, #757575, letter-spacing: 3pt, Century Gothic太字）
-- 右: 「CONFIDENTIAL」テキスト（8pt, #C7C7C7, letter-spacing: 3pt） + ページ番号
-
-```html
-<!-- フッター -->
-<div style="position: absolute; bottom: 0; left: 0; right: 0; height: 36pt;">
-  <div style="position: absolute; top: 0; left: 30pt; right: 30pt; border-top: 1px solid #C7C7C7;"></div>
-  <div style="position: absolute; bottom: 8pt; left: 0; right: 0; display: flex; justify-content: center;">
-    <p style="font-size: 10pt; color: #757575; letter-spacing: 3pt; font-weight: bold; margin: 0;">ACES</p>
-  </div>
-  <div style="position: absolute; bottom: 8pt; right: 30pt; display: flex; align-items: center; gap: 12pt;">
-    <p style="font-size: 8pt; color: #C7C7C7; letter-spacing: 3pt; margin: 0;">CONFIDENTIAL</p>
-    <p style="font-size: 9pt; color: #757575; margin: 0;">|</p>
-    <p style="font-size: 9pt; color: #757575; margin: 0;">{ページ番号}</p>
-  </div>
-</div>
-```
-
-### フッター（セクション仕切りスライド用・白文字版）
-
-```html
-<!-- フッター（暗背景用） -->
-<div style="position: absolute; bottom: 0; left: 0; right: 0; height: 36pt;">
-  <div style="position: absolute; top: 0; left: 30pt; right: 30pt; border-top: 1px solid rgba(255,255,255,0.3);"></div>
-  <div style="position: absolute; bottom: 8pt; left: 0; right: 0; display: flex; justify-content: center;">
-    <p style="font-size: 10pt; color: rgba(255,255,255,0.7); letter-spacing: 3pt; font-weight: bold; margin: 0;">ACES</p>
-  </div>
-  <div style="position: absolute; bottom: 8pt; right: 30pt; display: flex; align-items: center; gap: 12pt;">
-    <p style="font-size: 8pt; color: rgba(255,255,255,0.4); letter-spacing: 3pt; margin: 0;">CONFIDENTIAL</p>
-    <p style="font-size: 9pt; color: rgba(255,255,255,0.6); margin: 0;">|</p>
-    <p style="font-size: 9pt; color: rgba(255,255,255,0.6); margin: 0;">{ページ番号}</p>
-  </div>
-</div>
-```
+| シェイプ | 位置(in) | サイズ(in) | フォント | 用途 |
+|---------|----------|-----------|----------|------|
+| shape-0 | (0.42, 0.44) | 12.46 × 0.40 | Yu Gothic | タイトル |
+| shape-1 | (0.42, 0.91) | 12.46 × 0.73 | Yu Gothic Medium | サブタイトル（キーメッセージ） |
+| shape-2 | (0.42, 1.79) | 12.46 × 5.14 | Century Gothic | 本文（バレットポイント対応） |
 
 ---
 
-### Type 1: タイトルスライド
+## カラーパレット
 
-- 背景: 白
-- 左側2/3:
-  - 宛先テキスト（32ptレギュラー, #121212）例: 「株式会社りそな銀行 御中」
-  - タイトル（28ptレギュラー, #121212）例: 「提案仮説構築AI 定例会1」
-- 左下: 日付テキスト（14pt, #757575）
-- 右側1/3: 装飾的なグレー幾何図形（PNGで事前生成、#C7C7C7系のストライプ/三角形）
-- 最左下: 「ACES」ロゴテキスト（太字14pt, #121212, letter-spacing: 4pt）
-- フッターなし
+スライドマスター左上のカラーパレットに準拠。
 
-### Type 2: セクション仕切りスライド
+### テーマカラー
 
-- 背景: `#393939`（チャコール）
-- 左側にグレーの装飾幾何図形（半透明PNG, #C7C7C7系）
-- 中央やや左にセクションタイトル（白, 28-30pt, レギュラー〜Light）
-- 右下にフッター（白文字版を使用）
+```
+dk1:           #121212    メインテキスト（ほぼ黒）
+lt1:           #FFFFFF    メイン背景（白）
+dk2:           #757575    セカンダリグレー
+lt2:           #C7C7C7    装飾用ライトグレー（幾何図形・罫線）
+accent1:       #5298BA    青（コールアウト、KPIハイライト）
+accent2:       #DB5F5F    赤（注意喚起テキスト）
+accent3:       #629F64    テーマグリーン（アクセント3）
+accent4:       #C0B76A    ゴールド（マイルストーン▼）
+```
 
-### Type 3: INDEXスライド
+### スライドレベルカラー
 
-- 背景: 左約40%がグレー系グラデーション画像（PNG）、右60%が白
-- 左側（グレー領域内）: 「INDEX」テキスト（太字26pt白）
-- 右側: 番号付きセクションリスト
-  - 番号: #757575 テキスト
-  - セクション名: #121212 テキスト（16-18pt）
-  - 現在のセクション: `#006843`の左ボーダーまたは`#C2E7D9`ハイライト帯でマーク
-- フッターあり
+```
+charcoal:      #393939    セクション仕切り背景
+tableText:     #454545    テーブルセルのテキスト
+greenDark:     #006843    テーブルヘッダー、強調ボックス背景
+greenMedium:   #197A56    スケジュールバー、強めの緑
+greenBright:   #009A62    明るい緑アクセント
+greenMint:     #C2E7D9    薄ミント（ハイライト行、強調背景）
+greenPale:     #DFE6E0    極薄緑背景（交互行等）
+orange:        #FBAE40    オレンジアクセント
+borderGray:    #C7C7C7    テーブル罫線、区切り線
+```
 
-### Type 4: コンテンツスライド（標準）
+### カラー使用ガイドライン
 
-- 左上: スライドタイトル（太字22pt, #121212）
-- タイトル下: サブタイトル/説明文（13pt, #757575）
-- コンテンツ領域: テキスト・バレットポイント（11-14pt, #121212）
-- オプション: 青色コールアウトボックス（背景 `#5298BA`, 白テキスト, 角丸4pt）
-- オプション: 薄緑ハイライトボックス（背景 `#DFE6E0` or `#C2E7D9`）
-- フッターあり
+- **テーブルヘッダー**: 背景 `#006843`、テキスト白
+- **テーブルデータ行**: 背景白、テキスト `#454545`
+- **テーブル交互行**: 背景 `#DFE6E0`（オプション）
+- **テーブル罫線**: `#C7C7C7` 1pt
+- **強調セル**: テキスト `#006843` 太字、または背景 `#C2E7D9`
+- **コールアウトボックス**: 背景 `#5298BA`、テキスト白
+- **ハイライトボックス**: 背景 `#C2E7D9` or `#DFE6E0`
+- **セクション仕切り**: 背景 `#393939`、テキスト白
 
-### Type 5: テーブルスライド
+### フォント定義
 
-- タイトル + サブタイトル
-- テーブル:
-  - ヘッダー行: 背景 `#006843`、テキスト白、太字
-  - データ行: 背景白、テキスト `#454545`
-  - 交互行: 背景 `#DFE6E0`（オプション）
-  - 罫線: `#C7C7C7` 1pt
-  - フォントサイズ: ヘッダー11pt、データ10-11pt
-  - 強調セル: テキスト `#006843` 太字、または背景 `#C2E7D9`
-- フッターあり
+- **タイトル**: Yu Gothic
+- **サブタイトル**: Yu Gothic Medium
+- **本文（バレットポイント）**: Century Gothic
+- **ラテン文字**: Century Gothic
+- **日本語**: 游ゴシック / Yu Gothic
 
-### Type 6: フロー/ダイアグラムスライド
+### フォントサイズガイド
 
-- タイトル + サブタイトル
-- ボックス要素:
-  - 通常ボックス: 背景白、罫線 `#C7C7C7` 1pt、角丸2pt
-  - ハイライトボックス: 背景 `#C2E7D9`（薄ミント）、罫線 `#006843`
-  - 強調ボックス: 背景 `#006843`、テキスト白
-  - 青ボックス: 背景 `#5298BA`、テキスト白
-- 矢印: `#757575`、テキストでの表現時は「→」を使用
-- フッターあり
-
-### Type 7: スケジュール/ガントチャートスライド
-
-- タイトル + サブタイトル
-- 凡例: 右上に「ACES担当」（白背景枠線）、「お客さま担当」（`#197A56`背景白テキスト）
-- タイムライン表:
-  - 月ヘッダー: 太字、中央揃え
-  - タスクバー: ACES=`#197A56`、顧客=`#5298BA`、共同=`#757575`
-  - マイルストーン: `#C0B76A`のテキスト（▼マーク）
-- フットノート: `#757575` 小文字（9pt）で注記
-- フッターあり
-
-### Type 8: ３軸×要素図解スライド
-
-- 3つの縦に並ぶ軸ブロック:
-  - A軸: 背景 `#006843`（濃緑）、テキスト白
-  - B軸: 背景 `#006843`、テキスト白
-  - C軸: 背景 `#006843`、テキスト白
-- 各軸の右に要素ブロック: 背景 `#C2E7D9`（薄ミント）、テキスト `#121212`
-- 横断軸（ある場合）: 背景 `#5298BA`、テキスト白
-- フッターあり
-
-### Type 9: 体制図スライド
-
-- タイトル + サブタイトル
-- 組織ボックス: 罫線 `#C7C7C7`、テキスト `#121212`
-- 役割ラベル: 背景 `#006843`、テキスト白（小さめ）
-- 接続線: `#C7C7C7`
-- フッターあり
-
-### Type 10: 検証サイクル/プロセスフロースライド
-
-- タイトル + サブタイトル
-- ステップボックス:
-  - ステップ番号: 背景 `#006843`、テキスト白（丸または四角）
-  - ステップタイトル: 太字 `#121212`
-  - ステップ内容: `#454545` テキスト
-- 矢印/接続: `#197A56` or `#757575`
-- 担当者セクション: 背景 `#DFE6E0` 薄緑帯
-- フッターあり
+- 宛先/大タイトル: 28-32pt
+- スライドタイトル: shape-0のデフォルトに従う
+- サブタイトル: shape-1のデフォルトに従う
+- 本文バレット Level 0: 通常サイズ
+- 本文バレット Level 1: 通常サイズ（インデント）
+- 本文バレット Level 2: 通常サイズ（さらにインデント）
+- テーブルセル: 8-10pt
 
 ---
 
 ## 実行手順
 
-### 1. 入力コンテンツの読み取り
+### 1. 入力コンテンツの読み取りとスライド設計
 
-- 引数で指定されたファイル/ディレクトリを読み取る
-- Markdownの場合は構造（見出し、リスト、テーブル）を解析
-- 内容をスライド単位に分割する
+[ultrathink] 入力内容を読み取り、スライド構成を設計する:
 
-### 2. スライド構成の設計
+1. **タイトルスライド**（テンプレート Slide 0）— 必ず最初に1枚
+2. **INDEXスライド**（テンプレート Slide 1）— セクションが3つ以上ある場合
+3. コンテンツに応じたテンプレートスライド選択:
+   - バレットポイント中心 → Slide 21（3プレースホルダー）
+   - テーブル中心 → Slide 21（本文エリアにテーブルを配置）
+   - タイトル + 大きな本文のみ → Slide 2（2プレースホルダー）
+4. 各セクション前に**セクション仕切り**（テンプレート Slide 6）を必要に応じて配置
+5. テンプレートマッピングを作成
 
-[ultrathink] 入力内容からスライド構成を設計する:
+**テンプレートマッピング例:**
+```python
+# テンプレートスライドインデックス（0始まり）
+template_mapping = [
+    0,   # Slide 0: タイトル
+    1,   # Slide 1: INDEX
+    21,  # Slide 2: コンテンツ（実施概要）
+    21,  # Slide 3: コンテンツ（評価スケール）
+    6,   # Slide 4: セクション仕切り（アンケート設問）
+    21,  # Slide 5: コンテンツ（Section A）
+    21,  # Slide 6: コンテンツ（Section B・C）
+]
+```
 
-1. **タイトルスライド**（Type 1）— 必ず最初に1枚
-2. **INDEXスライド**（Type 3）— セクションが3つ以上ある場合
-3. 最初のセクション前に**セクション仕切り**（Type 2）
-4. コンテンツに応じたスライドタイプ選択:
-   - テーブルデータ → Type 5
-   - プロセスフロー → Type 6 or Type 10
-   - スケジュール → Type 7
-   - 3軸×要素関連 → Type 8
-   - 体制図 → Type 9
-   - その他 → Type 4
-5. 各セクション前に**セクション仕切り**（Type 2）
-6. **ご相談事項**スライド（Type 4）— 必要に応じて
-7. **Appendix仕切り**（Type 2）— 参考資料がある場合
+### 2. rearrange.py でテンプレートスライドを配置
 
-### 3. HTML スライドファイルの生成
+```bash
+SCRIPTS=/home/node/.claude/plugins/cache/anthropic-agent-skills/document-skills/69c0b1a06741/skills/pptx/scripts
+TEMPLATE="project-rikyu-sales-proposals-poc/untracked/original_document/report/提案仮説構築AI_定例会1_20260219_v1.pptx"
 
-- `/pptx` スキルを使ってPPTXを生成する
-- 各スライドをHTMLファイルとして作成
-- 出力ディレクトリ: `output/slides/` に個別HTMLファイルを配置
-- カラーパレットを厳守すること
-- html2pptx.md の制約事項を必ず確認する
+python3 "$SCRIPTS/rearrange.py" "$TEMPLATE" output/{name}/working.pptx 0,1,21,21,6,21,21
+```
 
-### 4. PPTX生成
+### 3. inventory.py でシェイプ情報を抽出
 
-- `html2pptx` ライブラリを使用してHTMLをPPTXに変換
-- build-pptx.js スクリプトを作成して一括変換
-- 出力先にPPTXファイルを書き出す
+```bash
+python3 "$SCRIPTS/inventory.py" output/{name}/working.pptx output/{name}/text-inventory.json
+```
 
-### 5. 生成確認
+text-inventory.json を読み込んで全シェイプの位置・サイズ・プレースホルダータイプを確認する。
 
-- ファイルサイズを確認
-- サムネイル画像を生成して目視確認
-- スライド数を報告
-- 出力パスを表示
+### 4. replacement-text.json を作成
+
+入力コンテンツをシェイプにマッピング。`/pptx` スキルの replace.py 仕様に従う。
+
+**フォーマットルール:**
+- `font_name: "Yu Gothic"` — タイトル (shape-0)
+- `font_name: "Yu Gothic Medium"` — サブタイトル (shape-1)
+- `font_name: "Century Gothic"` — 本文バレット (shape-2)
+- `bullet: true, level: 0` — メイン項目
+- `bullet: true, level: 1` — サブ項目
+- `bullet: true, level: 2` — 詳細項目
+- バレットテキストに `•`, `-`, `*` などの記号を含めない（自動付与される）
+
+**replacement-text.json の例:**
+```json
+{
+  "slide-0": {
+    "shape-0": {
+      "paragraphs": [
+        {"text": "株式会社りそな銀行 御中", "font_size": 32.0},
+        {"text": "アンケート実施内容 v1.0", "font_size": 28.0}
+      ]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "2026/2/26"}]
+    }
+  },
+  "slide-2": {
+    "shape-0": {
+      "paragraphs": [{"text": "実施概要", "font_name": "Yu Gothic"}]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "AI出力の品質評価とベースライン測定", "font_name": "Yu Gothic Medium"}]
+    },
+    "shape-2": {
+      "paragraphs": [
+        {"text": "目的", "bullet": true, "level": 0, "font_name": "Century Gothic"},
+        {"text": "AI出力の品質評価", "bullet": true, "level": 1, "font_name": "Century Gothic"}
+      ]
+    }
+  }
+}
+```
+
+### 5. replace.py でテキストを適用
+
+```bash
+python3 "$SCRIPTS/replace.py" output/{name}/working.pptx output/{name}/replacement-text.json output/{name}/replaced.pptx
+```
+
+### 6. テーブル追加（必要な場合）
+
+テーブルを含むスライドがある場合、python-pptx を使用してテーブルを追加する。
+
+**テーブル追加スクリプト例:**
+```python
+from pptx import Presentation
+from pptx.util import Inches, Pt, Emu
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN
+
+prs = Presentation('output/{name}/replaced.pptx')
+
+# テーブルを追加するスライド（0始まり）
+slide = prs.slides[2]
+
+# テーブルの位置とサイズ（本文エリア内に配置）
+left, top = Inches(0.42), Inches(1.90)
+width, height = Inches(12.46), Inches(2.5)
+
+rows, cols = 5, 3
+table_shape = slide.shapes.add_table(rows, cols, left, top, width, height)
+table = table_shape.table
+
+# ACES テーブルスタイリング
+COLORS = {
+    'header_bg': RGBColor(0x00, 0x68, 0x43),   # greenDark
+    'header_text': RGBColor(0xFF, 0xFF, 0xFF),  # white
+    'cell_text': RGBColor(0x45, 0x45, 0x45),    # tableText
+    'alt_row': RGBColor(0xDF, 0xE6, 0xE0),      # greenPale
+    'highlight': RGBColor(0xC2, 0xE7, 0xD9),    # greenMint
+    'border': RGBColor(0xC7, 0xC7, 0xC7),       # borderGray
+}
+
+# ヘッダー行スタイリング
+for cell in table.rows[0].cells:
+    cell.fill.solid()
+    cell.fill.fore_color.rgb = COLORS['header_bg']
+    for para in cell.text_frame.paragraphs:
+        para.font.size = Pt(9)
+        para.font.color.rgb = COLORS['header_text']
+        para.font.bold = True
+        para.font.name = 'Century Gothic'
+
+# データ行スタイリング
+for row_idx in range(1, rows):
+    for cell in table.rows[row_idx].cells:
+        for para in cell.text_frame.paragraphs:
+            para.font.size = Pt(8)
+            para.font.color.rgb = COLORS['cell_text']
+            para.font.name = 'Century Gothic'
+        # 交互行の背景色（オプション）
+        if row_idx % 2 == 0:
+            cell.fill.solid()
+            cell.fill.fore_color.rgb = COLORS['alt_row']
+
+prs.save('output/{name}/with-tables.pptx')
+```
+
+**テーブルを使うべき場面:**
+- 項目×内容の対応表（実施概要、評価基準など）
+- スコア一覧
+- スケジュール表
+- 比較表
+
+**テーブルレイアウトのガイドライン:**
+- テーブルは本文エリア内（top: 1.79"以降, width: 12.46"）に配置
+- サブタイトルとの間に適切なマージンを取る
+- 1スライドあたり最大12行程度
+- テーブルがあるスライドでは shape-2（本文）のバレットテキストを最小限にするか空にする
+
+### 7. OOXML クリーンアップ（必要な場合）
+
+テンプレートスライドに不要な非プレースホルダーシェイプがある場合、OOXML編集で除去する。
+
+```bash
+OOXML_SCRIPTS=/home/node/.claude/plugins/cache/anthropic-agent-skills/document-skills/69c0b1a06741/skills/pptx/ooxml/scripts
+
+# アンパック
+python3 "$OOXML_SCRIPTS/unpack.py" output/{name}/replaced.pptx /tmp/{name}-unpacked
+
+# Python で不要シェイプを除去（例: 特定位置の非プレースホルダーシェイプ）
+python3 -c "
+import re
+for i in range(3, 11):  # slide3.xml～slide10.xml
+    fpath = f'/tmp/{name}-unpacked/ppt/slides/slide{i}.xml'
+    with open(fpath, 'r') as f:
+        content = f.read()
+    # 非プレースホルダーの不要シェイプを特定・除去
+    # （位置座標やシェイプIDで識別）
+    with open(fpath, 'w') as f:
+        f.write(content)
+"
+
+# バリデーション
+python3 "$OOXML_SCRIPTS/validate.py" /tmp/{name}-unpacked --original output/{name}/replaced.pptx
+
+# リパック
+python3 "$OOXML_SCRIPTS/pack.py" /tmp/{name}-unpacked output/{name}.pptx
+```
+
+### 8. サムネイル検証
+
+```bash
+python3 "$SCRIPTS/thumbnail.py" output/{name}.pptx output/{name}/thumbnails --cols 5
+```
+
+サムネイル画像を確認:
+- テキストの切れ、重なりがないか
+- テーブルの表示が正しいか
+- フォント・色が正しいか
+- フッター（ACES / CONFIDENTIAL）が表示されているか
+- 問題があれば replacement-text.json を修正して再実行
+
+---
+
+## スライドタイプガイド
+
+### タイトルスライド（テンプレート Slide 0）
+
+- shape-0: 宛先テキスト（32pt）+ タイトル（28pt）
+- shape-1: 日付
+- スライドマスターの幾何図形、ACESロゴ、フッターは自動継承
+
+### INDEXスライド（テンプレート Slide 1）
+
+- shape-0: セクション名のバレットリスト
+- 左側のグレー領域と「INDEX」テキストはスライドマスターから自動継承
+
+### セクション仕切りスライド（テンプレート Slide 6）
+
+- shape-0: セクション名テキスト
+- チャコール（#393939）背景と幾何図形はスライドマスターから自動継承
+
+### コンテンツスライド（テンプレート Slide 21）
+
+- shape-0: スライドタイトル（Yu Gothic）
+- shape-1: サブタイトル/キーメッセージ（Yu Gothic Medium）
+- shape-2: 本文コンテンツ — バレットポイント or テーブル or 両方
+- **テーブルを使う場合**: shape-2のテキストは最小限にし、python-pptxでテーブルを追加
+
+---
 
 ## テキストルール
 
-- 日本語テキストはCentury Gothic + 游ゴシックが目標フォント
-- HTMLレンダリングでは `'Century Gothic', Verdana, 'Yu Gothic', 'Noto Sans CJK JP', sans-serif` を指定
-- フォントサイズガイド:
-  - 宛先/大タイトル: 28-32pt（レギュラー）
-  - スライドタイトル: 22pt（太字）
-  - サブタイトル: 13pt（#757575）
-  - 本文: 11-14pt
-  - テーブルセル: 10-11pt
-  - フッター: 8-10pt
-- 1スライドあたりの情報量を適切に制限する（テーブルは最大12行程度）
+- 1スライドあたりの情報量を適切に制限する
+- テーブルは最大12行程度
+- バレットは3レベルまで（level 0, 1, 2）
+- テンプレートのフォント設定を尊重する（明示的なfont_name指定で上書き可能）
+- ACES/rikyuのカラーパレットから逸脱しないこと
 
 ## 注意事項
 
-- CSSグラデーションは使用禁止。背景画像はSharpでPNG事前生成する
-- PptxGenJSの色指定で`#`プレフィックスは使用禁止（ファイル破損の原因）
-- `<div>`内のテキストは必ず`<p>`タグで囲む
-- 箇条書きは`<ul>`/`<ol>`を使用し、手動の`•`記号は禁止
-- ACES/rikyuのカラーパレットから逸脱しないこと
-- セクション仕切りスライドの背景は必ず `#393939` を使用する
-- テーブルヘッダーの緑は必ず `#006843` を使用する
-- テーブルテキストは `#454545`、通常テキストは `#121212` を使い分ける
+- **テンプレートアプローチを必ず使用すること**（HTMLベースの生成は使わない）
+- テンプレートのスライドマスター、フッター画像、幾何図形はそのまま継承される
+- テンプレートファイルが存在しない場合はエラーメッセージを表示
+- python3 コマンドを使用すること（python は使用不可）
+- pip install には `--break-system-packages` フラグが必要
