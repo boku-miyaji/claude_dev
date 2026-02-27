@@ -9,6 +9,7 @@ allowed-tools: >
   Task(*),
   Skill(pptx)
 description: |
+  ACES format・rikyu向け資料作成コマンド。
   Markdownやドキュメントの内容をACES/rikyuブランドのPowerPointにまとめる。
   テンプレートベース生成（提案仮説構築AI_定例会1_20260219_v1.pptx準拠）。
   通常版と詳細版の2バージョンを同時生成する。
