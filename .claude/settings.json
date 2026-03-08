@@ -23,7 +23,11 @@
       "Bash(npm info:*)",
       "Bash(npx -y google-calendar-mcp --help)",
       "Read(//home/node/.npm/_npx/**)",
-      "Read(//home/node/**)"
+      "Read(//home/node/**)",
+      "Bash(git -C /workspace/diary diff --stat)",
+      "Bash(git -C /workspace/diary log --oneline -3)",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(git rebase:*)"
     ],
     "additionalDirectories": [
       "/workspace/circuit_diagram/frontend/src/app/projects/[projectId]",
@@ -33,28 +37,6 @@
       "/workspace/output",
       "/workspace/.claude"
     ]
-  },
-  "enabledPlugins": {
-    "document-skills@anthropic-agent-skills": true,
-    "frontend-design@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "serena@claude-plugins-official": true,
-    "pr-review-toolkit@claude-plugins-official": true,
-    "github@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "supabase@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true,
-    "company@ai-company": true
-  },
-  "extraKnownMarketplaces": {
-    "ai-company": {
-      "source": {
-        "source": "github",
-        "repo": "boku-miyaji/claude_dev",
-        "path": "/workspace"
-      }
-    }
   },
   "hooks": {
     "UserPromptSubmit": [
@@ -92,6 +74,28 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "document-skills@anthropic-agent-skills": true,
+    "frontend-design@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "serena@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "supabase@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "company@ai-company": true
+  },
+  "extraKnownMarketplaces": {
+    "ai-company": {
+      "source": {
+        "source": "github",
+        "repo": "boku-miyaji/claude_dev",
+        "path": "/workspace"
+      }
+    }
   },
   "feedbackSurveyState": {
     "lastShownTime": 1755317418565
