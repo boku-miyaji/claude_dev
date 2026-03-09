@@ -10,7 +10,7 @@
 
 | 項目 | 内容 |
 |------|------|
-| **ディレクトリ** | `youtube_translater/` |
+| **GitHub** | [boku-miyaji/youtube_translater](https://github.com/boku-miyaji/youtube_translater) |
 | **概要** | YouTube動画のURLから音声を自動文字起こしし、AIで質問応答できるWebアプリ |
 | **技術スタック** | Node.js, Express, Vite, TailwindCSS, OpenAI GPT-4o-mini, Whisper |
 | **ステータス** | v2.0.0 リリース済み・運用中 |
@@ -20,7 +20,7 @@
 
 | 項目 | 内容 |
 |------|------|
-| **ディレクトリ** | `diary/` (`diary-codex/` は旧版) |
+| **GitHub** | [boku-miyaji/diary](https://github.com/boku-miyaji/diary) |
 | **概要** | AIを活用した自己理解促進型デジタル日記システム。1タップ/5秒で感情記録 |
 | **技術スタック** | Expo (React Native), TypeScript, Supabase, Zustand, NativeWind |
 | **ステータス** | 開発中 |
@@ -30,7 +30,7 @@
 
 | 項目 | 内容 |
 |------|------|
-| **ディレクトリ** | `sancha-app/` |
+| **GitHub** | 未作成 |
 | **概要** | 三軒茶屋のお店を記録・共有するローカルコミュニティプラットフォーム |
 | **技術スタック** | 未定（設計フェーズ） |
 | **ステータス** | 企画・設計中（要件定義書、戦略ドキュメント作成済み） |
@@ -45,7 +45,7 @@
 
 | 項目 | 内容 |
 |------|------|
-| **ディレクトリ** | `/` (リポジトリルート) |
+| **GitHub** | [boku-miyaji/claude_dev](https://github.com/boku-miyaji/claude_dev) |
 | **概要** | Claude Code の設定・カスタムコマンド・ワークフロー集 |
 | **主な機能** | タスク管理ワークフロー、ドキュメント雛形生成、PR支援 |
 
@@ -53,7 +53,7 @@
 
 | 項目 | 内容 |
 |------|------|
-| **ディレクトリ** | `base_framework/` |
+| **GitHub** | claude_dev 内 (`base_framework/`) ※独立リポジトリ化検討中 |
 | **概要** | LLMを活用したシステム構築の汎用フレームワーク設計書 |
 | **ステータス** | 設計書のみ（実装前） |
 | **対象** | 設計支援、文書生成、コード生成、データ分析 など |
@@ -62,7 +62,7 @@
 
 | 項目 | 内容 |
 |------|------|
-| **ディレクトリ** | `delta_project_ops/` |
+| **GitHub** | claude_dev 内 (`delta_project_ops/`) ※独立リポジトリ化検討中 |
 | **概要** | AI/ML PoC の成果物テンプレート標準化 |
 | **ステータス** | 設計中 |
 | **対象** | プロジェクト推進履歴、全体設計、意思決定プロセスのテンプレート |

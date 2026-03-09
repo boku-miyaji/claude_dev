@@ -36,8 +36,9 @@
 .claude/knowledge/
 .claude/plans/
 
-# application folder
+# application folder (individual app repos)
 *app*
+!apps/
 
 # others
 .cache
