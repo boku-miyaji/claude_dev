@@ -1,0 +1,160 @@
+{
+  "slide-0": {
+    "shape-0": {
+      "paragraphs": [
+        {"text": "株式会社りそな銀行 御中", "font_size": 32.0},
+        {"text": "汎用性・拡張性の設計方針", "font_size": 28.0}
+      ]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "2026/3/10 | rikyu ソリューションセールス伴奏AI PoC"}]
+    }
+  },
+  "slide-1": {
+    "shape-0": {
+      "paragraphs": [
+        {"text": "LLM first設計方針: 従来型との比較", "bullet": true, "level": 0},
+        {"text": "5つの拡張軸: コードを変えずに賢くなる", "bullet": true, "level": 0},
+        {"text": "ナレッジ拡張: 業界テンプレート・更新ルール", "bullet": true, "level": 0},
+        {"text": "ツール拡張: 名前ベースディスパッチ", "bullet": true, "level": 0},
+        {"text": "パイプライン拡張: スキル追加型アーキテクチャ", "bullet": true, "level": 0},
+        {"text": "変更影響の局所化", "bullet": true, "level": 0},
+        {"text": "確定的(ルール) × 判断的(LLM)の使い分け", "bullet": true, "level": 0}
+      ]
+    }
+  },
+  "slide-2": {
+    "shape-0": {
+      "paragraphs": [{"text": "LLM first設計方針", "font_name": "Yu Gothic"}]
+    }
+  },
+  "slide-3": {
+    "shape-0": {
+      "paragraphs": [{"text": "従来型 vs LLM first — 設計パラダイムの転換", "font_name": "Yu Gothic"}]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "人間がルールを書く量を最小化し、LLMが自然言語の指示から行動を生成する", "font_name": "Yu Gothic Medium"}]
+    },
+    "shape-2": {
+      "paragraphs": [
+        {"text": "", "font_name": "Century Gothic"}
+      ]
+    }
+  },
+  "slide-4": {
+    "shape-0": {
+      "paragraphs": [{"text": "「コードを変えずに賢くなる」5つの拡張軸", "font_name": "Yu Gothic"}]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "日常的な改善はナレッジ/プロンプト層で完結し、コード変更なしで品質が向上する", "font_name": "Yu Gothic Medium"}]
+    },
+    "shape-2": {
+      "paragraphs": [
+        {"text": "", "font_name": "Century Gothic"}
+      ]
+    }
+  },
+  "slide-5": {
+    "shape-0": {
+      "paragraphs": [{"text": "ナレッジ拡張", "font_name": "Yu Gothic"}]
+    }
+  },
+  "slide-6": {
+    "shape-0": {
+      "paragraphs": [{"text": "業界テンプレート(K1)の追加 — YAMLを書くだけ", "font_name": "Yu Gothic"}]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "新しい業界を追加する場合、YAMLファイルを1つ追加するだけでAIが業界知識を獲得する", "font_name": "Yu Gothic Medium"}]
+    },
+    "shape-2": {
+      "paragraphs": [
+        {"text": "", "font_name": "Century Gothic"}
+      ]
+    }
+  },
+  "slide-7": {
+    "shape-0": {
+      "paragraphs": [{"text": "更新ルール(K2)とナレッジのライフサイクル", "font_name": "Yu Gothic"}]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "エキスパートヒアリング → YAML構造化 → AI品質向上 → RMフィードバック → さらに改善", "font_name": "Yu Gothic Medium"}]
+    },
+    "shape-2": {
+      "paragraphs": [
+        {"text": "", "font_name": "Century Gothic"}
+      ]
+    }
+  },
+  "slide-8": {
+    "shape-0": {
+      "paragraphs": [{"text": "ツール拡張", "font_name": "Yu Gothic"}]
+    }
+  },
+  "slide-9": {
+    "shape-0": {
+      "paragraphs": [{"text": "名前ベースディスパッチ — ツール追加がループ構造に影響しない", "font_name": "Yu Gothic"}]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "agentic harnessパターンの核心: LLMが使いたいツールを判断し、ディスパッチマップで実行先を解決", "font_name": "Yu Gothic Medium"}]
+    },
+    "shape-2": {
+      "paragraphs": [
+        {"text": "", "font_name": "Century Gothic"}
+      ]
+    }
+  },
+  "slide-10": {
+    "shape-0": {
+      "paragraphs": [{"text": "パイプライン拡張", "font_name": "Yu Gothic"}]
+    }
+  },
+  "slide-11": {
+    "shape-0": {
+      "paragraphs": [{"text": "スキル追加型アーキテクチャ — M1-M10パイプライン構成", "font_name": "Yu Gothic"}]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "各パイプラインは独立したスキル。新しいスキルを追加しても既存パイプラインに影響しない", "font_name": "Yu Gothic Medium"}]
+    },
+    "shape-2": {
+      "paragraphs": [
+        {"text": "", "font_name": "Century Gothic"}
+      ]
+    }
+  },
+  "slide-12": {
+    "shape-0": {
+      "paragraphs": [{"text": "変更影響の局所化", "font_name": "Yu Gothic"}]
+    }
+  },
+  "slide-13": {
+    "shape-0": {
+      "paragraphs": [{"text": "変更の種類と影響範囲 — 疎結合が生む保守性", "font_name": "Yu Gothic"}]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "どのレイヤーを変更しても、他のレイヤーに影響が波及しない設計", "font_name": "Yu Gothic Medium"}]
+    },
+    "shape-2": {
+      "paragraphs": [
+        {"text": "", "font_name": "Century Gothic"}
+      ]
+    }
+  },
+  "slide-14": {
+    "shape-0": {
+      "paragraphs": [{"text": "確定的×判断的", "font_name": "Yu Gothic"}]
+    }
+  },
+  "slide-15": {
+    "shape-0": {
+      "paragraphs": [{"text": "確定的(ルール) × 判断的(LLM)の使い分け", "font_name": "Yu Gothic"}]
+    },
+    "shape-1": {
+      "paragraphs": [{"text": "「絶対に守らせたい」はルールエンジンに、「できるだけ従ってほしい」はプロンプトに", "font_name": "Yu Gothic Medium"}]
+    },
+    "shape-2": {
+      "paragraphs": [
+        {"text": "", "font_name": "Century Gothic"}
+      ]
+    }
+  }
+}
