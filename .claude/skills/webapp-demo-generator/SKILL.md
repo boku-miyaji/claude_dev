@@ -72,11 +72,76 @@ description: Webアプリの操作シナリオから、Playwrightベースのデ
 
 標準構成は以下。
 
-1. Playwrightでブラウザ操作
-2. Playwrightまたは外部手段で録画
-3. 操作ログから字幕原稿を生成
-4. 必要ならTTSでナレーション音声を生成
-5. ffmpegで字幕・音声・動画を合成
+1. Playwrightでブラウザ操作（video: on で録画）
+2. 操作ログから字幕タイミング JSON を自動生成
+3. ffmpeg の `drawtext` + `drawbox` フィルタで字幕・ラベルを焼き込み
+4. 必要ならTTSでナレーション音声を生成し合成
+
+**重要: ASS字幕ではなく drawtext フィルタを使う。**
+ASS は libass のフォント解決が環境依存で失敗しやすい。
+drawtext は fontfile を直接指定するため確実に動作する。
+
+## 字幕・ラベルのオーバーレイ設計
+
+デモ動画には2種類のオーバーレイを表示する。
+
+### 左上: 機能ラベル（シーン名）
+
+現在どの機能を説明しているかを示すバッジ。
+
+- **位置**: 左上 (x=15, y=10)
+- **サイズ**: 固定（460x65px）— テキスト長に関わらず同じ
+- **テキスト**: 中央揃え
+- **表示タイミング**: シーン単位で切り替わる
+- **推奨カラーバリエーション**:
+
+| スタイル | 背景色 | 文字色 | 用途 |
+|---------|--------|--------|------|
+| Navy（推奨） | `#1a365d` @0.95 | 白 | 汎用・プロフェッショナル |
+| Black | `black` @0.9 | 白 | シネマティック |
+| Brand Green | `#005a2e` @0.95 | 白 | りそな等の緑系ブランド |
+| White + Border | `white` + 黒枠3px | 黒 | 暗い背景のアプリ向け |
+
+### 下部: 字幕テキスト
+
+操作の説明を表示するフルワイドバー。
+
+- **位置**: 画面下部 (y=830)
+- **サイズ**: 横幅いっぱい（w=画面幅）、高さ70px
+- **テキスト**: 中央揃え
+- **背景**: 半透明黒 (`black@0.7`)
+- **文字**: 白、フォントサイズ28-30
+- **表示タイミング**: ステップ単位で切り替わる
+
+### ffmpeg drawtext 実装パターン
+
+```bash
+# 左上ラベル（固定サイズBOX + 中央揃えテキスト）
+drawbox=x=15:y=10:w=460:h=65:color=0x1a365d@0.95:t=fill:enable='between(t,S,E)',
+drawtext=fontfile=FONT:text='ラベル':fontsize=36:fontcolor=white:\
+  x=15+(460-text_w)/2:y=10+(65-text_h)/2:enable='between(t,S,E)'
+
+# 下部字幕（フルワイドバー + 中央揃えテキスト）
+drawbox=x=0:y=830:w=iw:h=70:color=black@0.7:t=fill:enable='between(t,S,E)',
+drawtext=fontfile=FONT:text='字幕':fontsize=28:fontcolor=white:\
+  x=(w-text_w)/2:y=830+(70-text_h)/2:enable='between(t,S,E)'
+```
+
+### ストーリーライン駆動の設計
+
+字幕のタイミング・テキストは **storyline.ts → timeline.json → mux.sh** のパイプラインで自動生成する。
+
+```
+storyline.ts (シーン定義)
+    ↓ Playwright 実行
+timeline.json (タイミング付き字幕データ)
+    ↓ mux.sh が jq でパース
+ffmpeg drawtext フィルタチェーン
+    ↓
+完成動画 (MP4)
+```
+
+storyline.ts を編集するだけで、字幕テキスト・タイミング・シーンラベルが全て自動反映される。
 
 ## 推奨出力フォーマット
 
@@ -123,7 +188,7 @@ description: Webアプリの操作シナリオから、Playwrightベースのデ
 - TypeScript利用可
 - Playwright採用
 - 動画は mp4
-- 字幕は srt
+- 字幕は drawtext フィルタ（timeline.json 経由）
 - ローカル環境で一旦動かす
 - 画面サイズは 1440x900 前後
 - 対象はログイン後の業務画面
