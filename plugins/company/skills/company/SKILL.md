@@ -563,6 +563,48 @@ Inbox処理完了:
 
 ---
 
+## Supabase 連携
+
+データの永続化・モバイルアクセスのために Supabase を使用する。
+
+### データの読み書き
+
+Supabase MCP プラグインが利用可能な場合、以下のテーブルにデータを読み書きする:
+
+- `companies` - PJ会社の一覧と設定
+- `tasks` - タスク・TODO
+- `comments` - コメント（モバイルからの入力含む）
+- `evaluations` - 部署評価
+- `activity_log` - アクティビティログ
+- `claude_settings` - Claude Code の設定・プラグイン・パーミッション
+- `categories` - 大分類（xx, yy, zz）
+- `departments` - 部署
+
+### 設定の同期
+
+`/company` 起動時、以下を Supabase に同期する:
+
+1. 現在の `.claude/settings.json` を読み取り
+2. `claude_settings` テーブルに upsert（scope = カレントディレクトリ名）
+3. enabledPlugins, permissions.allow を個別フィールドに展開
+
+### タスクの取得
+
+運営モードで秘書がTODOやタスクを表示する際:
+
+1. **Supabase が利用可能** → `tasks` テーブルから取得
+2. **Supabase が利用不可** → `.company-{name}/secretary/todos/` のローカルファイルから取得
+
+### コメントの取り込み
+
+ダッシュボード（Web/モバイル）からのコメントを処理する際:
+
+1. `comments` テーブルから未処理のコメントを取得
+2. 内容に応じて適切な部署に振り分け
+3. 処理済みとしてログに記録
+
+---
+
 ## 重要な注意事項
 
 - 秘書が常にエントリーポイント。ユーザーに部署を意識させない
