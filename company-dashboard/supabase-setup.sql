@@ -168,22 +168,14 @@ alter table activity_log enable row level security;
 alter table claude_settings enable row level security;
 
 -- Policy: authenticated users can do everything
-do $$
-declare
-  t text;
-begin
-  for t in select unnest(array[
-    'categories', 'companies', 'departments', 'tasks',
-    'comments', 'evaluations', 'activity_log', 'claude_settings'
-  ])
-  loop
-    execute format(
-      'create policy if not exists "auth_full_%1$s" on %1$s
-       for all to authenticated using (true) with check (true)',
-      t
-    );
-  end loop;
-end $$;
+create policy "auth_full_categories" on categories for all to authenticated using (true) with check (true);
+create policy "auth_full_companies" on companies for all to authenticated using (true) with check (true);
+create policy "auth_full_departments" on departments for all to authenticated using (true) with check (true);
+create policy "auth_full_tasks" on tasks for all to authenticated using (true) with check (true);
+create policy "auth_full_comments" on comments for all to authenticated using (true) with check (true);
+create policy "auth_full_evaluations" on evaluations for all to authenticated using (true) with check (true);
+create policy "auth_full_activity_log" on activity_log for all to authenticated using (true) with check (true);
+create policy "auth_full_claude_settings" on claude_settings for all to authenticated using (true) with check (true);
 
 -- ============================================================
 -- 5. Views
