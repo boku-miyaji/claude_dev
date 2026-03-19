@@ -22,33 +22,31 @@ Supabase Dashboard > Authentication > Providers > GitHub:
 1. GitHub で OAuth App を作成:
    - [github.com/settings/developers](https://github.com/settings/developers) > New OAuth App
    - **Application name**: HD Dashboard
-   - **Homepage URL**: `https://{your-github-username}.github.io/claude_dev/company-dashboard/`
+   - **Homepage URL**: デプロイ後のURL（Step 4 で確定）
    - **Callback URL**: `https://xxx.supabase.co/auth/v1/callback`
 2. Client ID と Client Secret を Supabase の GitHub Provider に入力
 3. Enable をオンにする
 
-### 4. デプロイ
+### 4. Vercel にデプロイ
 
-#### GitHub Pages（推奨）
+1. [vercel.com](https://vercel.com) にGitHubでログイン
+2. 「Add New Project」→ `boku-miyaji/claude_dev` リポジトリを選択
+3. 設定:
+   - **Root Directory**: `company-dashboard`
+   - **Framework Preset**: Other
+   - **Build Command**: (空欄のまま)
+   - **Output Directory**: `.`
+4. 「Deploy」
 
-```bash
-# リポジトリ設定でGitHub Pagesを有効にする
-# Source: Deploy from a branch > main > / (root) or /company-dashboard
-```
+デプロイ完了後、`https://xxx.vercel.app` のようなURLが発行される。
 
-アクセスURL: `https://{username}.github.io/claude_dev/company-dashboard/`
-
-#### ローカル確認
-
-```bash
-cd company-dashboard
-python3 -m http.server 8080
-# http://localhost:8080 でアクセス
-```
+**デプロイ後:**
+- GitHub OAuth App の Homepage URL をVercelのURLに更新する
+- Supabase > Authentication > URL Configuration > Site URL にもVercelのURLを設定する
 
 ### 5. 初回接続
 
-1. ダッシュボードを開く
+1. Vercel のURLにアクセス
 2. Supabase URL と Anon Key を入力
 3. 「Save & Connect」
 4. 「Sign in with GitHub」
@@ -95,6 +93,7 @@ Claude Code (ターミナル)
 ```
 company-dashboard/
 ├── index.html            ← SPA (HTML + CSS + JS in one file)
+├── vercel.json           ← Vercel deployment config
 ├── supabase-setup.sql    ← DB schema
 └── README.md             ← This file
 ```
