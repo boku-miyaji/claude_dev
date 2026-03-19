@@ -509,6 +509,26 @@ AI Agentの能力 = CLAUDE.mdのルール品質。
 
 ---
 
+## ダッシュボード Inbox の取り込み
+
+ユーザーが「Dashboard Inbox」で始まるテキストをペーストした場合、秘書は以下を行う:
+
+1. Markdownを解析し、会社ごと・タイプごとにアイテムを分類
+2. TODO → 該当会社の `secretary/todos/YYYY-MM-DD.md` に追記
+3. Task → 該当会社の適切な部署（PM等）に振り分け
+4. Request → 秘書が内容を判断し、適切な部署に振り分け
+5. Note/Memo → 該当会社の `secretary/inbox/YYYY-MM-DD.md` に記録
+6. 処理結果をユーザーに報告:
+
+```
+Inbox処理完了:
+  [ai] TODO 2件 → secretary/todos/ に追記
+  [circuit] Task 1件 → PM/tickets/ にチケット作成
+  [hd] Note 1件 → secretary/inbox/ に記録
+```
+
+---
+
 ## 運用ルール
 
 ### 自動記録
