@@ -1,150 +1,150 @@
-# cc-company-ai - AI開発組織プラグイン
+# cc-company-ai - HD + PJ会社プラグイン
 
-Claude Code 用の仮想組織プラグイン。`/company` コマンドで秘書AIが起動し、AI開発・システム開発を中心とした組織を管理する。
+Claude Code 用の仮想組織プラグイン。`/company` コマンドでHD（ホールディングス）秘書が起動し、複数のPJ会社を統括管理する。
 
-[cc-company](https://github.com/Shin-sibainu/cc-company) にインスパイアされ、AI開発チームの業務に最適化したカスタム版。
+[cc-company](https://github.com/Shin-sibainu/cc-company) にインスパイアされ、複数PJを掛け持ちするAIエンジニア向けにカスタマイズ。
 
-## 特徴
-
-- **秘書が窓口** - ユーザーは部署を意識せず、秘書に話しかけるだけ
-- **AI開発に特化した6チーム体制** - 要件定義 / 設計 / 実装 / アルゴ / 評価 / AIOps
-- **システム開発3チーム** - バックエンド / フロントエンド / QA
-- **人事部 = 組織最適化エンジン** - CLAUDE.mdを継続改善し、Agentの能力を向上
-- **部署のライフサイクル管理** - 追加・統合・廃止を社長承認で実行
-
-## 組織構成
+## コンセプト
 
 ```
-.company/
-├── secretary/        秘書室（窓口・常設）
-├── ai-dev/           AI開発（6チーム）
-│   ├── requirements/   要件定義
-│   ├── design/         設計
-│   ├── implementation/ 実装
-│   ├── algorithm/      アルゴ
-│   ├── evaluation/     評価
-│   └── aiops/          AIOps
-├── sys-dev/          システム開発（3チーム）
-│   ├── backend/        バックエンド
-│   ├── frontend/       フロントエンド
-│   └── qa/             QA
-├── pm/               PM
-├── materials/        資料制作
-├── research/         リサーチ（3チーム）
-│   ├── market/         マーケット調査
-│   ├── tech/           技術調査
-│   └── client-research/ 対象企業調査
-└── hr/               人事部（組織最適化）
+/company           → HD秘書（全社統括・新会社作成・評価）
+/company ai        → AI開発会社の秘書
+/company circuit   → 回路図PJの秘書
+/company rikyu     → りきゅうPJの秘書
 ```
+
+- **1コマンド・引数で切り替え** - PJごとにコンテキストを完全分離
+- **HD = 統括司令塔** - 全PJ会社の横断ダッシュボード・リソース配分
+- **PJ会社 = 独立組織** - 必要な部署だけ選んで作成
+- **動的作成** - HD秘書に「新しい会社を作って」で即座に新設
+
+## データ構造
+
+```
+.company/                ← HD（全社統括）
+├── secretary/           ← HD秘書室
+├── hr/                  ← 人事部（全社評価）
+└── registry.md          ← PJ会社一覧
+
+.company-ai/             ← AI開発会社
+├── secretary/
+├── ai-dev/              ← AI開発（6チーム）
+├── sys-dev/             ← システム開発（3チーム）
+├── pm/
+├── materials/
+├── research/
+└── ...
+
+.company-circuit/        ← 回路図PJ
+├── secretary/
+├── ai-dev/
+├── research/
+└── ...
+```
+
+## 選べる部署
+
+PJ会社作成時に必要な部署だけ選択できる:
+
+| ID | 部署 | 内容 |
+|----|------|------|
+| ai-dev | AI開発 | 要件定義/設計/実装/アルゴ/評価/AIOps の6チーム |
+| sys-dev | システム開発 | バックエンド/フロントエンド/QA の3チーム |
+| pm | PM | プロジェクト管理・チケット |
+| materials | 資料制作 | 顧客説明資料・提案書・デモ |
+| research | リサーチ | マーケット/技術/対象企業調査 の3チーム |
+
+秘書室は全PJ会社に常設。人事部はHDに常設。
 
 ## インストール
 
-### 方法1: GitHub マーケットプレイスから（推奨）
-
-Claude Code 内で以下を実行：
+### GitHub マーケットプレイスから
 
 ```
 /plugin marketplace add boku-miyaji/claude_dev
 /plugin install company@ai-company
 ```
 
-### 方法2: ローカルからインストール（開発用）
+### ローカルから（開発用）
 
-```bash
-# リポジトリをクローン
-git clone https://github.com/boku-miyaji/claude_dev.git
-
-# Claude Code 内でローカルマーケットプレイスを追加
-/plugin marketplace add ./claude_dev
+```
+/plugin marketplace add ./
 /plugin install company@ai-company
 ```
 
-### インストール確認
-
-```
-/company
-```
-
-秘書のオンボーディングが始まれば成功です。
-
 ## 使い方
 
-### 初回起動
+### 初回: HDセットアップ
 
 ```
 /company
 ```
 
-秘書が2つの質問をします：
-1. あなたの事業・活動
-2. 目標・困りごと
+HD秘書のオンボーディングが始まります。
 
-回答をもとに `.company/` が自動生成されます。
+### PJ会社を作る
+
+```
+/company
+→ 「AI開発の会社を作って。名前はai」
+```
+
+または直接:
+
+```
+/company ai
+→ 未作成なのでオンボーディングが始まる
+```
 
 ### 日常的な使い方
 
 ```
-/company
+/company           全社ダッシュボード、横断タスク、壁打ち
+/company ai        AI会社で作業
+/company circuit   回路図PJで作業
 ```
 
-で秘書に話しかけるだけ。例：
+### HD秘書に聞けること
 
-- 「今日のTODOを見せて」
-- 「LLMの精度改善について壁打ちしたい」
-- 「顧客向けのデモ資料を作りたい」
-- 「ダッシュボード」
-- 「組織を評価して」
+- 「ダッシュボード」 - 全PJ会社の状況一覧
+- 「どのPJに注力すべき？」 - リソース配分アドバイス
+- 「新しい会社を作って」 - PJ会社の新設
+- 「〇〇会社を閉じて」 - PJ会社のアーカイブ
+- 「評価して」 - 全社横断の組織評価
+- 壁打ち・相談 - 全体方針の議論
 
-秘書が適切な部署に振り分けて処理します。
+### PJ会社の秘書に聞けること
 
-### 部署の追加・削除
-
-```
-「営業部署を作って」  → 即座に作成
-「評価して」          → 人事部が全部署を評価し、統合・廃止を提案
-```
+- TODO管理、壁打ち、メモ
+- 部署への作業振り分け（自動）
+- PJ内ダッシュボード
+- 部署の追加・統合・廃止
 
 ## 人事部の仕組み
 
-人事部は「社長が最小の指示で最大の成果を得る」ための最適化エンジンです。
+HD所属の人事部が全PJ会社を横断評価。
 
 ### 評価軸（5軸）
 
-| 評価軸 | 意味 |
-|--------|------|
-| 自律完遂率 | 追加指示なしで完了したか |
-| 一発OK率 | やり直しの頻度 |
-| 連携効率 | 部署間の差し戻し率 |
-| 目標寄与度 | ゴールに直結するか |
-| 稼働率 | 使われているか |
-
-### 自動トリガー
-
-- 同じ修正指示が2回 → CLAUDE.mdルール改善提案
-- 稼働なし3回 → 統合・廃止提案
-- 差し戻し2回 → 連携プロトコル改善提案
-
-## カスタマイズ
-
-### 部署・チームの変更
-
-[departments.md](plugins/company/skills/company/references/departments.md) を編集して、部署構成やテンプレートを変更できます。
-
-### 秘書のキャラクター変更
-
-[departments.md](plugins/company/skills/company/references/departments.md) 内の `secretary/CLAUDE.md` セクションを編集してください。
+| 評価軸 | 意味 | 低スコア時 |
+|--------|------|-----------|
+| 自律完遂率 | 追加指示なしで完了 | CLAUDE.mdルール改善 |
+| 一発OK率 | やり直し頻度 | テンプレート改善 |
+| 連携効率 | 差し戻し率 | 連携プロトコル改善 |
+| 目標寄与度 | ゴール直結度 | 方向性再定義 |
+| 稼働率 | 利用頻度 | 統合・廃止提案 |
 
 ## ファイル構成
 
 ```
 plugins/company/
 ├── .claude-plugin/
-│   └── plugin.json               プラグイン定義
+│   └── plugin.json
 └── skills/company/
     ├── SKILL.md                   /company スキル本体
     └── references/
         ├── departments.md         全部署・チームのテンプレート集
-        └── claude-md-template.md  組織CLAUDE.md生成テンプレート
+        └── claude-md-template.md  HD + PJ会社のCLAUDE.md生成テンプレート
 ```
 
 ## ライセンス
