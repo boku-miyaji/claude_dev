@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HD Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface-hover: #1a1a25;
+    --border: #1e1e2e;
+    --border-accent: #2a2a3e;
+    --text: #e0e0e8;
+    --text-muted: #6b6b80;
+    --text-dim: #4a4a5e;
+    --accent: #6366f1;
+    --accent-soft: rgba(99, 102, 241, 0.12);
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.12);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245, 158, 11, 0.12);
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.12);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.12);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .header h1 span { color: var(--text-muted); font-weight: 400; }
+  .header-meta {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  /* Layout */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 32px;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 32px;
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+  .section-badge {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    background: var(--surface);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* Grid */
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 900px) {
+    .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .grid-3, .grid-4, .grid-2 { grid-template-columns: 1fr; }
+    .container { padding: 16px; }
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    transition: border-color 0.15s;
+  }
+  .card:hover { border-color: var(--border-accent); }
+
+  /* Company Card */
+  .company-card { cursor: default; }
+  .company-card .company-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .company-card .company-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .company-card .company-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .company-card .company-stats {
+    display: flex;
+    gap: 16px;
+  }
+  .company-card .stat {
+    display: flex;
+    flex-direction: column;
+  }
+  .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: var(--mono);
+    letter-spacing: -0.02em;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Status indicator */
+  .status { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .status-active .status-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-idle .status-dot { background: var(--amber); }
+  .status-archived .status-dot { background: var(--text-dim); }
+
+  /* Score */
+  .score {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+  .score-s { background: var(--accent-soft); color: var(--accent); }
+  .score-a { background: var(--green-soft); color: var(--green); }
+  .score-b { background: var(--blue-soft); color: var(--blue); }
+  .score-c { background: var(--amber-soft); color: var(--amber); }
+  .score-d { background: var(--red-soft); color: var(--red); }
+
+  /* TODO list */
+  .todo-list { list-style: none; }
+  .todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-check {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border-accent);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .todo-check.done {
+    background: var(--green-soft);
+    border-color: var(--green);
+    position: relative;
+  }
+  .todo-check.done::after {
+    content: '✓';
+    position: absolute;
+    top: -1px; left: 2px;
+    font-size: 11px;
+    color: var(--green);
+  }
+  .todo-content { flex: 1; }
+  .todo-content.done { text-decoration: line-through; color: var(--text-dim); }
+  .todo-meta {
+    display: flex; gap: 8px; margin-top: 2px;
+  }
+  .todo-tag {
+    font-size: 10px;
+    font-family: var(--mono);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .todo-tag.high { background: var(--red-soft); color: var(--red); }
+  .todo-tag.normal { background: var(--blue-soft); color: var(--blue); }
+  .todo-tag.low { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
+  .todo-tag.company {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* Table */
+  .eval-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .eval-table th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .eval-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .eval-table tr:last-child td { border-bottom: none; }
+  .eval-table .dept-name { font-weight: 500; }
+  .eval-table .eval-mark {
+    font-family: var(--mono);
+    text-align: center;
+  }
+  .mark-excellent { color: var(--accent); }
+  .mark-good { color: var(--green); }
+  .mark-fair { color: var(--amber); }
+  .mark-poor { color: var(--red); }
+
+  /* Timeline / Activity */
+  .activity-list { list-style: none; }
+  .activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 8px 0;
+    font-size: 13px;
+  }
+  .activity-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    min-width: 80px;
+  }
+  .activity-company {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 1px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .activity-text { color: var(--text-muted); }
+
+  /* Schedule */
+  .schedule-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .schedule-item:last-child { border-bottom: none; }
+  .schedule-date {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    min-width: 90px;
+  }
+  .schedule-date.overdue { color: var(--red); }
+  .schedule-date.today { color: var(--green); }
+  .schedule-date.upcoming { color: var(--amber); }
+  .schedule-bar {
+    height: 3px;
+    border-radius: 2px;
+    flex: 1;
+    background: var(--border);
+    position: relative;
+  }
+  .schedule-progress {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .schedule-label { min-width: 120px; }
+  .schedule-company {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+  }
+
+  /* KPI Gauge */
+  .kpi-card {
+    text-align: center;
+    padding: 20px 16px;
+  }
+  .kpi-value {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: var(--mono);
+    letter-spacing: -0.03em;
+  }
+  .kpi-value.good { color: var(--green); }
+  .kpi-value.warn { color: var(--amber); }
+  .kpi-value.bad { color: var(--red); }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .kpi-change {
+    font-size: 11px;
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+  .kpi-change.up { color: var(--green); }
+  .kpi-change.down { color: var(--red); }
+
+  /* Notes */
+  .note-card {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .note-card strong { color: var(--text); }
+
+  /* Custom Section Indicator */
+  .customizable {
+    position: relative;
+  }
+  .customizable::after {
+    content: '⚙ カスタマイズ可';
+    position: absolute;
+    top: -8px; right: 0;
+    font-size: 9px;
+    color: var(--text-dim);
+    background: var(--bg);
+    padding: 0 4px;
+    display: none;
+  }
+  .customizable:hover::after { display: block; }
+
+  /* Full width card */
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 24px 32px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HD DASHBOARD
+     このHTMLは /company の「ダッシュボード」コマンドで自動生成される。
+     秘書と相談してセクションの追加・変更・削除が可能。
+
+     生成時の指示:
+     - {{...}} プレースホルダーを実データで置換する
+     - 存在しないセクションは削除する
+     - 新しいセクションは .card クラスで追加する
+     - データは .company/ および .company-*/ から取得する
+     ============================================================ -->
+
+<div class="header">
+  <h1>HD Dashboard <span>/ {{OWNER_NAME}}</span></h1>
+  <div class="header-meta">Updated: {{GENERATED_DATE}} {{GENERATED_TIME}}</div>
+</div>
+
+<div class="container">
+
+  <!-- ========== KPI Overview ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">Overview</span>
+      <span class="section-badge">全社KPI</span>
+    </div>
+    <div class="grid-4">
+      <div class="card kpi-card">
+        <div class="kpi-value good">{{TOTAL_COMPANIES}}</div>
+        <div class="kpi-label">PJ会社数</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-value warn">{{TOTAL_OPEN_TODOS}}</div>
+        <div class="kpi-label">未完了TODO</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-value good">{{OVERALL_OK_RATE}}%</div>
+        <div class="kpi-label">全社 一発OK率</div>
+        <div class="kpi-change up">{{OK_RATE_CHANGE}}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-value good">{{OVERALL_SCORE}}</div>
+        <div class="kpi-label">総合スコア</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PJ Companies ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">PJ Companies</span>
+      <span class="section-badge">{{TOTAL_COMPANIES}} active</span>
+    </div>
+    <div class="grid-3">
+
+      <!-- {{COMPANY_CARDS_START}} -->
+      <div class="card company-card">
+        <div class="company-id">{{COMPANY_ID}}</div>
+        <div class="company-name">{{COMPANY_NAME}}</div>
+        <div class="company-desc">{{COMPANY_DESCRIPTION}}</div>
+        <div class="status status-active"><div class="status-dot"></div>Active</div>
+        <div class="company-stats" style="margin-top: 12px;">
+          <div class="stat">
+            <span class="stat-value">{{COMPANY_OPEN_TODOS}}</span>
+            <span class="stat-label">TODO</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{COMPANY_DEPARTMENTS}}</span>
+            <span class="stat-label">部署</span>
+          </div>
+          <div class="stat">
+            <span class="score score-{{COMPANY_SCORE_CLASS}}">{{COMPANY_SCORE}}</span>
+            <span class="stat-label">評価</span>
+          </div>
+        </div>
+      </div>
+      <!-- {{COMPANY_CARDS_END}} -->
+
+    </div>
+  </section>
+
+  <div class="grid-2">
+
+    <!-- ========== TODO (Cross-company) ========== -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-title">Today's TODO</span>
+        <span class="section-badge">{{TODAY_DATE}}</span>
+      </div>
+      <div class="card">
+        <ul class="todo-list">
+
+          <!-- {{TODO_ITEMS_START}} -->
+          <li class="todo-item">
+            <div class="todo-check {{TODO_DONE_CLASS}}"></div>
+            <div class="todo-content {{TODO_DONE_CLASS}}">
+              {{TODO_TEXT}}
+              <div class="todo-meta">
+                <span class="todo-tag company">{{TODO_COMPANY}}</span>
+                <span class="todo-tag {{TODO_PRIORITY}}">{{TODO_PRIORITY_LABEL}}</span>
+              </div>
+            </div>
+          </li>
+          <!-- {{TODO_ITEMS_END}} -->
+
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== Schedule ========== -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-title">Schedule</span>
+        <span class="section-badge">マイルストーン</span>
+      </div>
+      <div class="card">
+
+        <!-- {{SCHEDULE_ITEMS_START}} -->
+        <div class="schedule-item">
+          <div class="schedule-date {{SCHEDULE_DATE_CLASS}}">{{SCHEDULE_DATE}}</div>
+          <div>
+            <div class="schedule-label">{{SCHEDULE_TITLE}}</div>
+            <div class="schedule-company">{{SCHEDULE_COMPANY}}</div>
+          </div>
+          <div class="schedule-bar">
+            <div class="schedule-progress" style="width: {{SCHEDULE_PROGRESS}}%"></div>
+          </div>
+        </div>
+        <!-- {{SCHEDULE_ITEMS_END}} -->
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ========== Department Evaluation ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">Department Evaluation</span>
+      <span class="section-badge">人事部レポート</span>
+    </div>
+    <div class="card">
+      <table class="eval-table">
+        <thead>
+          <tr>
+            <th>PJ会社</th>
+            <th>部署/チーム</th>
+            <th>自律完遂</th>
+            <th>一発OK</th>
+            <th>連携効率</th>
+            <th>目標寄与</th>
+            <th>稼働率</th>
+            <th>総合</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- {{EVAL_ROWS_START}} -->
+          <tr>
+            <td><span class="todo-tag company">{{EVAL_COMPANY}}</span></td>
+            <td class="dept-name">{{EVAL_DEPT}}</td>
+            <td class="eval-mark {{EVAL_AUTONOMY_CLASS}}">{{EVAL_AUTONOMY}}</td>
+            <td class="eval-mark {{EVAL_QUALITY_CLASS}}">{{EVAL_QUALITY}}</td>
+            <td class="eval-mark {{EVAL_COLLAB_CLASS}}">{{EVAL_COLLAB}}</td>
+            <td class="eval-mark {{EVAL_GOAL_CLASS}}">{{EVAL_GOAL}}</td>
+            <td class="eval-mark {{EVAL_USAGE_CLASS}}">{{EVAL_USAGE}}</td>
+            <td><span class="score score-{{EVAL_TOTAL_CLASS}}">{{EVAL_TOTAL}}</span></td>
+          </tr>
+          <!-- {{EVAL_ROWS_END}} -->
+
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="grid-2">
+
+    <!-- ========== Recent Activity ========== -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-title">Recent Activity</span>
+      </div>
+      <div class="card">
+        <ul class="activity-list">
+
+          <!-- {{ACTIVITY_ITEMS_START}} -->
+          <li class="activity-item">
+            <span class="activity-date">{{ACTIVITY_DATE}}</span>
+            <span class="activity-company">{{ACTIVITY_COMPANY}}</span>
+            <span class="activity-text">{{ACTIVITY_TEXT}}</span>
+          </li>
+          <!-- {{ACTIVITY_ITEMS_END}} -->
+
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== Issues & Proposals ========== -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-title">Issues & Proposals</span>
+        <span class="section-badge">人事部</span>
+      </div>
+      <div class="card">
+
+        <!-- {{ISSUES_START}} -->
+        <div class="note-card" style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+            <span class="todo-tag {{ISSUE_SEVERITY}}">{{ISSUE_SEVERITY_LABEL}}</span>
+            <span class="todo-tag company">{{ISSUE_COMPANY}}</span>
+          </div>
+          <strong>{{ISSUE_TITLE}}</strong><br>
+          {{ISSUE_DESCRIPTION}}
+        </div>
+        <!-- {{ISSUES_END}} -->
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ========== Context / Notes ========== -->
+  <section class="section customizable">
+    <div class="section-header">
+      <span class="section-title">Context & Notes</span>
+      <span class="section-badge">秘書メモ</span>
+    </div>
+    <div class="card note-card" style="padding: 16px;">
+      {{CONTEXT_NOTES}}
+    </div>
+  </section>
+
+</div>
+
+<div class="footer">
+  <span>Generated by HD Secretary · /company dashboard</span>
+  <span>セクションの追加・変更は秘書に相談してください</span>
+</div>
+
+</body>
+</html>
