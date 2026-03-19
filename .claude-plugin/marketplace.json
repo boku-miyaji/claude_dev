@@ -1,0 +1,20 @@
+{
+  "name": "ai-company",
+  "owner": {
+    "name": "owner"
+  },
+  "metadata": {
+    "description": "AI開発・システム開発を中心とした仮想組織プラグイン。秘書が窓口、人事部が組織を継続最適化。"
+  },
+  "plugins": [
+    {
+      "name": "company",
+      "source": "./plugins/company",
+      "description": "AI開発・システム開発を中心とした仮想組織スキル。秘書が窓口、人事部が組織を継続最適化。",
+      "version": "1.0.0",
+      "license": "MIT",
+      "category": "productivity",
+      "tags": ["company", "organization", "ai-dev", "secretary", "productivity"]
+    }
+  ]
+}
