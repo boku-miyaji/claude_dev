@@ -3,166 +3,186 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>HD Dashboard</title>
+<title>宮路HD</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◆</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 :root {
-  --bg: #09090b; --surface: #18181b; --surface2: #1f1f23;
-  --border: #27272a; --border2: #3f3f46;
-  --text: #fafafa; --text2: #a1a1aa; --text3: #52525b;
-  --accent: #6366f1; --accent2: #818cf8; --accent-bg: rgba(99,102,241,.12);
-  --green: #22c55e; --green-bg: rgba(34,197,94,.12);
-  --amber: #f59e0b; --amber-bg: rgba(245,158,11,.12);
-  --red: #ef4444; --red-bg: rgba(239,68,68,.12);
-  --blue: #3b82f6; --blue-bg: rgba(59,130,246,.12);
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --mono: 'SF Mono', 'Fira Code', monospace;
-  --r: 8px; --r2: 12px;
+  --bg: #0a0a0b; --surface: #141416; --surface2: #1c1c20; --surface3: #232328;
+  --border: #2a2a2f; --border2: #3a3a42;
+  --text: #f0f0f2; --text2: #9898a4; --text3: #5c5c68;
+  --accent: #7c5cff; --accent2: #9b82ff; --accent-bg: rgba(124,92,255,.10); --accent-border: rgba(124,92,255,.25);
+  --green: #34d399; --green-bg: rgba(52,211,153,.10); --green-border: rgba(52,211,153,.25);
+  --amber: #fbbf24; --amber-bg: rgba(251,191,36,.10); --amber-border: rgba(251,191,36,.25);
+  --red: #f87171; --red-bg: rgba(248,113,113,.10); --red-border: rgba(248,113,113,.25);
+  --blue: #60a5fa; --blue-bg: rgba(96,165,250,.10); --blue-border: rgba(96,165,250,.25);
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --r: 8px; --r2: 12px; --r3: 16px;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,.4);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 a{color:var(--accent2);text-decoration:none}
+::selection{background:var(--accent);color:#fff}
 
 /* Layout */
 .app{display:flex;min-height:100vh}
-.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;display:flex;flex-direction:column}
-.main{flex:1;overflow-y:auto;height:100vh}
-.page{padding:24px 32px;max-width:1200px;margin:0 auto}
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;flex-shrink:0;display:flex;flex-direction:column;backdrop-filter:blur(20px)}
+.main{flex:1;overflow-y:auto;height:100vh;background:var(--bg)}
+.page{padding:32px 40px;max-width:1200px;margin:0 auto}
 
 /* Sidebar */
-.sidebar .logo{padding:0 16px 16px;font-size:14px;font-weight:700;border-bottom:1px solid var(--border);margin-bottom:8px}
-.sidebar .logo span{color:var(--text3);font-weight:400}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:var(--font)}
-.nav-item:hover{color:var(--text);background:var(--surface2)}
-.nav-item.active{color:var(--text);background:var(--accent-bg)}
-.nav-icon{width:16px;text-align:center;font-size:14px}
+.sidebar .logo{padding:0 20px 20px;font-size:15px;font-weight:700;border-bottom:1px solid var(--border);margin-bottom:12px;display:flex;align-items:center;gap:10px;letter-spacing:-.02em}
+.sidebar .logo .logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),#c084fc);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:700}
+.sidebar .logo-sub{color:var(--text3);font-weight:400;font-size:12px;margin-left:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:9px 20px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:var(--font);font-weight:500;border-radius:0;position:relative}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-item.active{color:var(--text);background:rgba(255,255,255,.06)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-icon{width:18px;text-align:center;font-size:15px;opacity:.7}
+.nav-item.active .nav-icon{opacity:1}
 .nav-spacer{flex:1}
-.nav-user{padding:12px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
+.nav-user{padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:var(--mono);letter-spacing:-.02em}
 
 /* Mobile nav */
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);z-index:100;padding:4px 0 env(safe-area-inset-bottom)}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(20,20,22,.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:100;padding:6px 0 env(safe-area-inset-bottom)}
 .mobile-nav-inner{display:flex;justify-content:space-around}
-.mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px;font-size:10px;color:var(--text3);border:none;background:none;cursor:pointer;font-family:var(--font)}
+.mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;font-size:10px;color:var(--text3);border:none;background:none;cursor:pointer;font-family:var(--font);font-weight:500;transition:color .2s}
 .mob-nav-item.active{color:var(--accent2)}
-.mob-nav-item .mob-icon{font-size:18px}
+.mob-nav-item .mob-icon{font-size:20px}
 
 @media(max-width:768px){
   .sidebar{display:none}
   .mobile-nav{display:block}
-  .page{padding:16px 16px 80px}
+  .page{padding:20px 16px 90px}
 }
 
 /* Cards */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;transition:border-color .15s}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;transition:all .2s}
 .card:hover{border-color:var(--border2)}
+.card-glow:hover{box-shadow:0 0 0 1px var(--accent-border), var(--shadow)}
 
 /* Section */
-.section{margin-bottom:28px}
-.section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px}
+.section{margin-bottom:32px}
+.section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:12px}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-.03em;margin-bottom:4px}
+.page-desc{font-size:13px;color:var(--text2);margin-bottom:24px}
 
 /* Grids */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
 @media(max-width:768px){.g2,.g3,.g4{grid-template-columns:1fr}}
 
 /* KPI */
-.kpi{text-align:center;padding:20px 16px}
-.kpi-val{font-size:28px;font-weight:700;font-family:var(--mono)}
+.kpi{text-align:center;padding:24px 16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:60%;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
+.kpi-val{font-size:32px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em}
 .kpi-val.good{color:var(--green)}.kpi-val.warn{color:var(--amber)}.kpi-val.bad{color:var(--red)}
-.kpi-lbl{font-size:10px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
+.kpi-lbl{font-size:10px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.08em;font-weight:500}
 
 /* Tags */
-.tag{font-size:10px;font-family:var(--mono);padding:2px 6px;border-radius:4px;display:inline-block}
-.tag-co{background:var(--accent-bg);color:var(--accent2)}
-.tag-high{background:var(--red-bg);color:var(--red)}
-.tag-normal{background:var(--blue-bg);color:var(--blue)}
+.tag{font-size:10px;font-family:var(--mono);font-weight:500;padding:3px 8px;border-radius:5px;display:inline-block;letter-spacing:.02em}
+.tag-co{background:var(--accent-bg);color:var(--accent2);border:1px solid var(--accent-border)}
+.tag-high{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.tag-normal{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
 .tag-low{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
-.tag-open{background:var(--amber-bg);color:var(--amber)}
-.tag-done{background:var(--green-bg);color:var(--green)}
-.tag-in_progress{background:var(--blue-bg);color:var(--blue)}
+.tag-open{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.tag-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.tag-in_progress{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
 
 /* Status dot */
-.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
-.dot-active{background:var(--green);box-shadow:0 0 6px var(--green)}
-.dot-paused{background:var(--amber)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot-active{background:var(--green);box-shadow:0 0 8px rgba(52,211,153,.5)}
+.dot-paused{background:var(--amber);box-shadow:0 0 8px rgba(251,191,36,.3)}
 .dot-archived{background:var(--text3)}
 
 /* Buttons */
-.btn{padding:8px 16px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px;font-family:var(--font)}
-.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2)}
-.btn-g{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-g:hover{border-color:var(--border2);color:var(--text)}
-.btn-d{background:transparent;color:var(--red);border:1px solid var(--red-bg)}.btn-d:hover{background:var(--red-bg)}
-.btn-sm{padding:4px 10px;font-size:11px}
+.btn{padding:9px 18px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px;font-family:var(--font);letter-spacing:-.01em}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2);box-shadow:0 0 20px rgba(124,92,255,.3)}
+.btn-g{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-g:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
+.btn-d{background:transparent;color:var(--red);border:1px solid var(--red-border)}.btn-d:hover{background:var(--red-bg)}
+.btn-sm{padding:6px 12px;font-size:11px}
 
 /* Forms */
-.input{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;color:var(--text);font-size:13px;outline:none;width:100%;font-family:var(--font);transition:border-color .15s}
-.input:focus{border-color:var(--accent)}
+.input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;color:var(--text);font-size:13px;outline:none;width:100%;font-family:var(--font);transition:all .2s}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
 .input::placeholder{color:var(--text3)}
-select.input{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2352525b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+select.input{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235c5c68' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
 textarea.input{resize:vertical;min-height:80px}
-.form-row{display:flex;gap:8px;margin-bottom:12px}
+.form-row{display:flex;gap:10px;margin-bottom:14px}
 .form-row .input{flex:1}
-label.form-label{font-size:11px;color:var(--text3);margin-bottom:4px;display:block}
+label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:block;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
 
 /* Task list */
-.task-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.task-item{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);font-size:13px;transition:background .15s}
 .task-item:last-child{border-bottom:none}
-.task-check{width:18px;height:18px;border:1.5px solid var(--border2);border-radius:4px;cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s;background:none}
-.task-check:hover{border-color:var(--green)}
+.task-check{width:20px;height:20px;border:2px solid var(--border2);border-radius:6px;cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;background:none}
+.task-check:hover{border-color:var(--green);background:var(--green-bg)}
 .task-check.done{background:var(--green-bg);border-color:var(--green);color:var(--green);font-size:11px}
 .task-body{flex:1;min-width:0}
-.task-title{margin-bottom:2px}
+.task-title{margin-bottom:3px;font-weight:500}
 .task-title.done{text-decoration:line-through;color:var(--text3)}
-.task-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-.task-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.task-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.task-actions{display:flex;gap:4px;opacity:0;transition:opacity .2s}
 .task-item:hover .task-actions{opacity:1}
-.task-act-btn{background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 4px;font-size:12px;border-radius:3px}
+.task-act-btn{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 6px;font-size:13px;border-radius:5px;transition:all .15s}
 .task-act-btn:hover{color:var(--text);background:var(--surface2)}
 
 /* Company card */
-.co-card{cursor:pointer}
-.co-card .co-id{font-family:var(--mono);font-size:11px;color:var(--accent2);background:var(--accent-bg);padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:6px}
-.co-card .co-name{font-size:14px;font-weight:600;margin-bottom:3px}
-.co-card .co-desc{font-size:12px;color:var(--text2);margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.co-stats{display:flex;gap:16px}
-.co-stat-val{font-size:18px;font-weight:700;font-family:var(--mono)}
-.co-stat-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.co-card{cursor:default;transition:all .25s}
+.co-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.co-card .co-id{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--accent2);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 8px;border-radius:5px;display:inline-block;margin-bottom:8px}
+.co-card .co-name{font-size:15px;font-weight:600;margin-bottom:4px;letter-spacing:-.02em}
+.co-card .co-desc{font-size:12px;color:var(--text2);margin-bottom:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.co-stats{display:flex;gap:20px}
+.co-stat-val{font-size:20px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em}
+.co-stat-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-weight:500}
 
 /* Comments */
-.comment-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.comment-item{padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
 .comment-item:last-child{border-bottom:none}
-.comment-meta{font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:4px;display:flex;gap:8px}
-.comment-body{color:var(--text2)}
+.comment-meta{font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:5px;display:flex;gap:8px}
+.comment-body{color:var(--text2);line-height:1.5}
 
 /* Toast */
-.toast{position:fixed;bottom:80px;right:24px;background:var(--green);color:#fff;padding:10px 20px;border-radius:var(--r);font-size:13px;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;z-index:200}
+.toast{position:fixed;bottom:80px;right:24px;background:var(--surface2);color:var(--text);border:1px solid var(--green-border);padding:12px 24px;border-radius:var(--r);font-size:13px;font-weight:500;opacity:0;transform:translateY(10px);transition:all .35s cubic-bezier(.16,1,.3,1);pointer-events:none;z-index:200;box-shadow:var(--shadow-lg)}
 .toast.show{opacity:1;transform:translateY(0)}
 @media(max-width:768px){.toast{bottom:100px;right:16px;left:16px;text-align:center}}
 
 /* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:150;display:flex;align-items:center;justify-content:center;padding:16px}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
-.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border)}
-.modal-header h3{font-size:14px;font-weight:600}
-.modal-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:4px}
-.modal-body{padding:16px}
-.modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:150;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid var(--border)}
+.modal-header h3{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.modal-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:4px 8px;border-radius:5px;transition:all .15s}
+.modal-close:hover{color:var(--text);background:var(--surface2)}
+.modal-body{padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
 /* Auth page */
-.auth-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
-.auth-box{text-align:center;max-width:360px}
-.auth-box h1{font-size:24px;margin-bottom:8px}
-.auth-box p{color:var(--text2);font-size:14px;margin-bottom:24px}
-.btn-github{background:#24292e;color:#fff;padding:12px 24px;font-size:14px;border-radius:var(--r);border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-family:var(--font)}
-.btn-github:hover{background:#333}
+.auth-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 50% 0%, rgba(124,92,255,.08) 0%, transparent 60%)}
+.auth-box{text-align:center;max-width:380px}
+.auth-logo{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),#c084fc);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:700;margin:0 auto 24px;box-shadow:0 8px 32px rgba(124,92,255,.3)}
+.auth-box h1{font-size:28px;font-weight:700;letter-spacing:-.04em;margin-bottom:6px}
+.auth-box p{color:var(--text2);font-size:14px;margin-bottom:32px}
+.btn-github{background:#fff;color:#000;padding:14px 32px;font-size:14px;font-weight:600;border-radius:var(--r);border:none;cursor:pointer;display:inline-flex;align-items:center;gap:10px;font-family:var(--font);transition:all .2s;letter-spacing:-.01em}
+.btn-github:hover{background:#f0f0f0;transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,.1)}
+.btn-github svg{opacity:.8}
 
 /* Empty */
-.empty{text-align:center;padding:32px;color:var(--text3);font-size:13px}
+.empty{text-align:center;padding:40px;color:var(--text3);font-size:13px}
 
 /* Filter bar */
-.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.filter-bar .input{max-width:200px;padding:7px 10px;font-size:12px}
+.filter-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.filter-bar .input{max-width:180px;padding:8px 12px;font-size:12px}
 @media(max-width:768px){.filter-bar .input{max-width:none;flex:1}}
 
 /* Scrollbar */
@@ -172,6 +192,9 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:4px;display:blo
 ::-webkit-scrollbar-thumb:hover{background:var(--border2)}
 
 .hidden{display:none!important}
+
+/* Subtle gradient line */
+.gradient-line{height:1px;background:linear-gradient(90deg,transparent,var(--accent-border),transparent);margin:24px 0}
 </style>
 </head>
 <body>
@@ -179,8 +202,9 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:4px;display:blo
 <!-- ========== Auth Screen ========== -->
 <div id="auth-screen" class="auth-page">
   <div class="auth-box">
-    <h1>HD Dashboard</h1>
-    <p>PJ Company Management System</p>
+    <div class="auth-logo">M</div>
+    <h1>宮路HD</h1>
+    <p>Holding Company Dashboard</p>
     <button class="btn-github" id="btn-login">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
       Sign in with GitHub
@@ -192,9 +216,12 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:4px;display:blo
 <div id="app-screen" class="app hidden">
   <!-- Sidebar -->
   <nav class="sidebar">
-    <div class="logo">HD <span>Dashboard</span></div>
+    <div class="logo">
+      <div class="logo-icon">M</div>
+      宮路HD
+    </div>
     <button class="nav-item active" data-page="dashboard"><span class="nav-icon">◉</span> Dashboard</button>
-    <button class="nav-item" data-page="inbox"><span class="nav-icon">+</span> Inbox</button>
+    <button class="nav-item" data-page="inbox"><span class="nav-icon">＋</span> Inbox</button>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
@@ -212,10 +239,10 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:4px;display:blo
   <div class="mobile-nav">
     <div class="mobile-nav-inner">
       <button class="mob-nav-item active" data-page="dashboard"><span class="mob-icon">◉</span>Home</button>
-      <button class="mob-nav-item" data-page="inbox"><span class="mob-icon">+</span>Inbox</button>
+      <button class="mob-nav-item" data-page="inbox"><span class="mob-icon">＋</span>Inbox</button>
       <button class="mob-nav-item" data-page="tasks"><span class="mob-icon">☐</span>Tasks</button>
       <button class="mob-nav-item" data-page="companies"><span class="mob-icon">◫</span>Co.</button>
-      <button class="mob-nav-item" data-page="settings"><span class="mob-icon">⚙</span>Settings</button>
+      <button class="mob-nav-item" data-page="settings"><span class="mob-icon">⚙</span>More</button>
     </div>
   </div>
 </div>
@@ -231,17 +258,15 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:4px;display:blo
 'use strict';
 
 // ============================================================
-// CONFIG - Set your Supabase credentials here
+// CONFIG
 // ============================================================
 var SUPABASE_URL = 'https://akycymnahqypmtsfqhtr.supabase.co';
 var SUPABASE_ANON_KEY = 'sb_publishable_VYgxoltXaSlEIjcH1dpa7w_TPc3mYBf';
 
-// Try URL params as override (for easy deployment)
 var params = new URLSearchParams(window.location.search);
 if (params.get('sb_url')) SUPABASE_URL = params.get('sb_url');
 if (params.get('sb_key')) SUPABASE_ANON_KEY = params.get('sb_key');
 
-// Try localStorage config
 try {
   var cfg = JSON.parse(localStorage.getItem('hd-config') || '{}');
   if (cfg.url) SUPABASE_URL = cfg.url;
@@ -250,7 +275,6 @@ try {
 
 var sb = null;
 var currentPage = 'dashboard';
-var dataCache = {};
 
 // ============================================================
 // Init
@@ -278,11 +302,12 @@ function showConfigPrompt() {
   var authScreen = document.getElementById('auth-screen');
   var box = authScreen.querySelector('.auth-box');
   while (box.firstChild) box.removeChild(box.firstChild);
-  box.appendChild(el('h1', {textContent: 'HD Dashboard Setup'}));
-  box.appendChild(el('p', {textContent: 'Enter your Supabase credentials'}));
-  var urlInput = el('input', {className: 'input', placeholder: 'Supabase URL (https://xxx.supabase.co)', style: 'margin-bottom:8px'});
-  var keyInput = el('input', {className: 'input', placeholder: 'Supabase Anon Key', style: 'margin-bottom:16px'});
-  var saveBtn = el('button', {className: 'btn btn-p', textContent: 'Save & Connect'});
+  box.appendChild(el('div', {className: 'auth-logo', textContent: 'M'}));
+  box.appendChild(el('h1', {textContent: '宮路HD Setup'}));
+  box.appendChild(el('p', {textContent: 'Supabase の接続情報を入力してください'}));
+  var urlInput = el('input', {className: 'input', placeholder: 'Supabase URL (https://xxx.supabase.co)', style: 'margin-bottom:10px'});
+  var keyInput = el('input', {className: 'input', placeholder: 'Publishable Key', style: 'margin-bottom:20px'});
+  var saveBtn = el('button', {className: 'btn btn-p', style: 'width:100%', textContent: 'Save & Connect'});
   saveBtn.addEventListener('click', function() {
     var u = urlInput.value.trim();
     var k = keyInput.value.trim();
@@ -311,7 +336,7 @@ function showAuth() {
 function showApp(user) {
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app-screen').classList.remove('hidden');
-  document.getElementById('nav-user').textContent = user.user_metadata.user_name || user.email || '';
+  document.getElementById('nav-user').textContent = '@' + (user.user_metadata.user_name || user.email || '');
   document.getElementById('btn-logout').addEventListener('click', function() { sb.auth.signOut(); });
   setupNav();
   navigate('dashboard');
@@ -358,7 +383,7 @@ function toast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 2000);
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
 
 function fmtDate(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('ja-JP'); }
@@ -404,7 +429,8 @@ function renderPage(page) {
 // Dashboard Page
 // ============================================================
 async function renderDashboard(root) {
-  root.appendChild(el('div', {className: 'section-title', textContent: 'Overview'}));
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Dashboard'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '全PJ会社の横断ビュー'}));
 
   var [companies, tasks] = await Promise.all([
     sb.from('companies').select('*').eq('status', 'active'),
@@ -416,7 +442,7 @@ async function renderDashboard(root) {
   var overdue = ts.filter(function(t) { return t.due_date && new Date(t.due_date) < new Date(); });
 
   // KPIs
-  var kpiGrid = el('div', {className: 'g4', style: 'margin-bottom:24px'}, [
+  var kpiGrid = el('div', {className: 'g4', style: 'margin-bottom:28px'}, [
     el('div', {className: 'card kpi'}, [
       el('div', {className: 'kpi-val good', textContent: String(cos.length)}),
       el('div', {className: 'kpi-lbl', textContent: 'PJ Companies'})
@@ -439,12 +465,12 @@ async function renderDashboard(root) {
   // Companies
   root.appendChild(el('div', {className: 'section-title', textContent: 'PJ Companies'}));
   if (cos.length === 0) {
-    root.appendChild(el('div', {className: 'card empty', textContent: 'No companies yet. Go to Companies to add one.'}));
+    root.appendChild(el('div', {className: 'card empty', textContent: 'まだPJ会社がありません。Companies から作成してください。'}));
   } else {
-    var grid = el('div', {className: 'g3', style: 'margin-bottom:24px'});
+    var grid = el('div', {className: 'g3', style: 'margin-bottom:28px'});
     cos.forEach(function(co) {
       var coTasks = ts.filter(function(t) { return t.company_id === co.id; });
-      var card = el('div', {className: 'card co-card', onClick: function() { navigate('tasks'); }}, [
+      var card = el('div', {className: 'card co-card card-glow', onClick: function() { navigate('tasks'); }}, [
         el('div', {className: 'co-id', textContent: co.id}),
         el('div', {className: 'co-name', textContent: co.name}),
         el('div', {className: 'co-desc', textContent: co.description || ''}),
@@ -453,9 +479,9 @@ async function renderDashboard(root) {
             el('div', {className: 'co-stat-val', textContent: String(coTasks.length)}),
             el('div', {className: 'co-stat-lbl', textContent: 'Tasks'})
           ]),
-          el('div', {}, [
+          el('div', {style: 'display:flex;align-items:center;gap:6px'}, [
             el('span', {className: 'dot dot-' + co.status}),
-            el('span', {textContent: ' ' + co.status, style: 'font-size:12px;color:var(--text2)'})
+            el('span', {textContent: co.status, style: 'font-size:11px;color:var(--text2);font-weight:500'})
           ])
         ])
       ]);
@@ -469,12 +495,12 @@ async function renderDashboard(root) {
   var actRes = await sb.from('activity_log').select('*, companies(name)').order('created_at', {ascending: false}).limit(10);
   var acts = actRes.data || [];
   if (acts.length === 0) {
-    root.appendChild(el('div', {className: 'card empty', textContent: 'No activity yet'}));
+    root.appendChild(el('div', {className: 'card empty', textContent: 'アクティビティはまだありません'}));
   } else {
     var actCard = el('div', {className: 'card'});
     acts.forEach(function(a) {
-      actCard.appendChild(el('div', {className: 'task-item', style: 'border-bottom:1px solid var(--border)'}, [
-        el('span', {style: 'font-family:var(--mono);font-size:11px;color:var(--text3);min-width:90px', textContent: fmtTime(a.created_at)}),
+      actCard.appendChild(el('div', {className: 'task-item'}, [
+        el('span', {style: 'font-family:var(--mono);font-size:11px;color:var(--text3);min-width:90px;flex-shrink:0', textContent: fmtTime(a.created_at)}),
         a.company_id ? el('span', {className: 'tag tag-co', textContent: a.company_id}) : null,
         el('span', {style: 'color:var(--text2);font-size:13px', textContent: a.description || a.action})
       ]));
@@ -487,30 +513,28 @@ async function renderDashboard(root) {
 // Inbox Page
 // ============================================================
 async function renderInbox(root) {
-  root.appendChild(el('div', {className: 'section-title', textContent: 'Quick Add'}));
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Inbox'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'タスクやコメントをすばやく追加'}));
 
   var cosRes = await sb.from('companies').select('id, name').eq('status', 'active');
   var cos = cosRes.data || [];
 
-  // Type select
   var typeSelect = el('select', {className: 'input'});
   ['todo', 'task', 'request'].forEach(function(t) {
     typeSelect.appendChild(el('option', {value: t, textContent: t.charAt(0).toUpperCase() + t.slice(1)}));
   });
 
-  // Company select
   var coSelect = el('select', {className: 'input'});
   cos.forEach(function(c) { coSelect.appendChild(el('option', {value: c.id, textContent: c.name})); });
-  if (cos.length === 0) coSelect.appendChild(el('option', {textContent: '(no companies)', value: ''}));
+  if (cos.length === 0) coSelect.appendChild(el('option', {textContent: '(会社なし)', value: ''}));
 
-  // Priority select
   var priSelect = el('select', {className: 'input'});
   ['normal', 'high', 'low'].forEach(function(p) { priSelect.appendChild(el('option', {value: p, textContent: p})); });
 
-  var titleInput = el('input', {className: 'input', placeholder: 'What needs to be done?'});
-  var descInput = el('textarea', {className: 'input', placeholder: 'Details (optional)', style: 'min-height:60px'});
+  var titleInput = el('input', {className: 'input', placeholder: '何をする？'});
+  var descInput = el('textarea', {className: 'input', placeholder: '詳細（任意）', style: 'min-height:60px'});
 
-  var addBtn = el('button', {className: 'btn btn-p', textContent: 'Add', onClick: async function() {
+  var addBtn = el('button', {className: 'btn btn-p', style: 'width:100%', textContent: 'タスクを追加', onClick: async function() {
     var title = titleInput.value.trim();
     var coId = coSelect.value;
     if (!title || !coId) return;
@@ -521,26 +545,27 @@ async function renderInbox(root) {
     await sb.rpc('log_activity', {p_company_id: coId, p_action: 'task_created', p_description: title});
     titleInput.value = '';
     descInput.value = '';
-    toast('Added');
+    toast('追加しました');
     renderInbox(clearEl('page-container').appendChild(el('div', {className: 'page'})));
   }});
 
   titleInput.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addBtn.click(); } });
 
-  var form = el('div', {className: 'card', style: 'margin-bottom:24px'}, [
+  var form = el('div', {className: 'card', style: 'margin-bottom:28px'}, [
     el('div', {className: 'form-row'}, [typeSelect, coSelect, priSelect]),
-    el('div', {style: 'margin-bottom:8px'}, [titleInput]),
-    el('div', {style: 'margin-bottom:12px'}, [descInput]),
-    el('div', {style: 'text-align:right'}, [addBtn])
+    el('div', {style: 'margin-bottom:10px'}, [titleInput]),
+    el('div', {style: 'margin-bottom:14px'}, [descInput]),
+    addBtn
   ]);
   root.appendChild(form);
 
   // Quick comment
+  root.appendChild(el('div', {className: 'gradient-line'}));
   root.appendChild(el('div', {className: 'section-title', textContent: 'Quick Comment'}));
   var commentCoSelect = el('select', {className: 'input'});
   cos.forEach(function(c) { commentCoSelect.appendChild(el('option', {value: c.id, textContent: c.name})); });
-  var commentInput = el('textarea', {className: 'input', placeholder: 'Leave a note or comment...', style: 'min-height:60px'});
-  var commentBtn = el('button', {className: 'btn btn-p', textContent: 'Add Comment', onClick: async function() {
+  var commentInput = el('textarea', {className: 'input', placeholder: 'メモやコメントを残す...', style: 'min-height:60px'});
+  var commentBtn = el('button', {className: 'btn btn-g', style: 'width:100%', textContent: 'コメント追加', onClick: async function() {
     var body = commentInput.value.trim();
     var coId = commentCoSelect.value;
     if (!body || !coId) return;
@@ -548,12 +573,12 @@ async function renderInbox(root) {
     await sb.from('comments').insert({company_id: coId, body: body, source: isMobile ? 'mobile' : 'web'});
     await sb.rpc('log_activity', {p_company_id: coId, p_action: 'comment_added', p_description: body.substring(0, 100)});
     commentInput.value = '';
-    toast('Comment added');
+    toast('コメント追加しました');
   }});
   root.appendChild(el('div', {className: 'card'}, [
     el('div', {className: 'form-row'}, [commentCoSelect]),
-    el('div', {style: 'margin-bottom:12px'}, [commentInput]),
-    el('div', {style: 'text-align:right'}, [commentBtn])
+    el('div', {style: 'margin-bottom:14px'}, [commentInput]),
+    commentBtn
   ]));
 }
 
@@ -568,7 +593,6 @@ async function renderTasks(root) {
   var cos = cosRes.data || [];
   var allTasks = tasksRes.data || [];
 
-  // Filter state
   var filters = {status: 'open', company: '', priority: ''};
 
   function applyFilters() {
@@ -586,7 +610,7 @@ async function renderTasks(root) {
     while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
     var filtered = applyFilters();
     if (filtered.length === 0) {
-      listEl.appendChild(el('div', {className: 'empty', textContent: 'No tasks match filters'}));
+      listEl.appendChild(el('div', {className: 'empty', textContent: 'フィルターに一致するタスクはありません'}));
       return;
     }
     filtered.forEach(function(t) {
@@ -596,13 +620,13 @@ async function renderTasks(root) {
         await sb.from('tasks').update({status: newStatus, completed_at: newStatus === 'done' ? new Date().toISOString() : null}).eq('id', t.id);
         t.status = newStatus;
         renderTaskList();
-        toast(newStatus === 'done' ? 'Done!' : 'Reopened');
+        toast(newStatus === 'done' ? '完了!' : '再オープン');
       }});
       var item = el('div', {className: 'task-item'}, [
         check,
         el('div', {className: 'task-body'}, [
           el('div', {className: 'task-title' + (isDone ? ' done' : ''), textContent: t.title}),
-          t.description ? el('div', {style: 'font-size:12px;color:var(--text3);margin-top:2px', textContent: t.description.substring(0, 100)}) : null,
+          t.description ? el('div', {style: 'font-size:12px;color:var(--text3);margin-top:3px', textContent: t.description.substring(0, 120)}) : null,
           el('div', {className: 'task-meta'}, [
             el('span', {className: 'tag tag-co', textContent: t.company_id}),
             el('span', {className: 'tag tag-' + t.priority, textContent: t.priority}),
@@ -613,11 +637,11 @@ async function renderTasks(root) {
         el('div', {className: 'task-actions'}, [
           el('button', {className: 'task-act-btn', textContent: '\u270e', title: 'Edit', onClick: function() { showEditTask(t); }}),
           el('button', {className: 'task-act-btn', textContent: '\u00d7', title: 'Delete', onClick: async function() {
-            if (!confirm('Delete "' + t.title + '"?')) return;
+            if (!confirm('"' + t.title + '" を削除しますか？')) return;
             await sb.from('tasks').delete().eq('id', t.id);
             allTasks = allTasks.filter(function(x) { return x.id !== t.id; });
             renderTaskList();
-            toast('Deleted');
+            toast('削除しました');
           }})
         ])
       ]);
@@ -625,22 +649,23 @@ async function renderTasks(root) {
     });
   }
 
-  // Header
-  root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [
-    el('div', {className: 'section-title', style: 'margin:0', textContent: 'Tasks'}),
-    el('button', {className: 'btn btn-p btn-sm', textContent: '+ Add', onClick: function() { navigate('inbox'); }})
+  root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px'}, [
+    el('div', {}, [
+      el('div', {className: 'page-title', textContent: 'Tasks'}),
+      el('div', {className: 'page-desc', style: 'margin-bottom:0', textContent: '全PJ会社のタスク一覧'})
+    ]),
+    el('button', {className: 'btn btn-p btn-sm', textContent: '+ 追加', onClick: function() { navigate('inbox'); }})
   ]));
 
-  // Filters
   var statusSel = el('select', {className: 'input', onChange: function() { filters.status = statusSel.value; renderTaskList(); }});
-  [{v:'',l:'All Status'},{v:'open',l:'Open'},{v:'in_progress',l:'In Progress'},{v:'done',l:'Done'},{v:'cancelled',l:'Cancelled'}].forEach(function(o) {
+  [{v:'',l:'すべて'},{v:'open',l:'Open'},{v:'in_progress',l:'In Progress'},{v:'done',l:'Done'},{v:'cancelled',l:'Cancelled'}].forEach(function(o) {
     var opt = el('option', {value: o.v, textContent: o.l}); if (o.v === 'open') opt.selected = true; statusSel.appendChild(opt);
   });
   var coSel = el('select', {className: 'input', onChange: function() { filters.company = coSel.value; renderTaskList(); }});
-  coSel.appendChild(el('option', {value: '', textContent: 'All Companies'}));
+  coSel.appendChild(el('option', {value: '', textContent: 'すべての会社'}));
   cos.forEach(function(c) { coSel.appendChild(el('option', {value: c.id, textContent: c.name})); });
   var priSel = el('select', {className: 'input', onChange: function() { filters.priority = priSel.value; renderTaskList(); }});
-  [{v:'',l:'All Priority'},{v:'high',l:'High'},{v:'normal',l:'Normal'},{v:'low',l:'Low'}].forEach(function(o) { priSel.appendChild(el('option', {value: o.v, textContent: o.l})); });
+  [{v:'',l:'すべての優先度'},{v:'high',l:'High'},{v:'normal',l:'Normal'},{v:'low',l:'Low'}].forEach(function(o) { priSel.appendChild(el('option', {value: o.v, textContent: o.l})); });
 
   root.appendChild(el('div', {className: 'filter-bar'}, [statusSel, coSel, priSel]));
   root.appendChild(el('div', {className: 'card', id: 'task-list-container'}));
@@ -656,19 +681,19 @@ function showEditTask(t) {
   ['open','in_progress','done','cancelled'].forEach(function(s) { var o = el('option', {value: s, textContent: s}); if (s === t.status) o.selected = true; statusSel.appendChild(o); });
   var dueDateInput = el('input', {className: 'input', type: 'date', value: t.due_date || ''});
 
-  var close = showModal('Edit Task', [
+  var close = showModal('タスクを編集', [
     el('label', {className: 'form-label', textContent: 'Title'}), titleInput,
-    el('div', {style: 'height:8px'}),
+    el('div', {style: 'height:10px'}),
     el('label', {className: 'form-label', textContent: 'Description'}), descInput,
-    el('div', {style: 'height:8px'}),
+    el('div', {style: 'height:10px'}),
     el('div', {className: 'form-row'}, [
       el('div', {style: 'flex:1'}, [el('label', {className: 'form-label', textContent: 'Priority'}), priSel]),
       el('div', {style: 'flex:1'}, [el('label', {className: 'form-label', textContent: 'Status'}), statusSel]),
       el('div', {style: 'flex:1'}, [el('label', {className: 'form-label', textContent: 'Due Date'}), dueDateInput])
     ])
   ], [
-    el('button', {className: 'btn btn-g', textContent: 'Cancel', onClick: function() { close(); }}),
-    el('button', {className: 'btn btn-p', textContent: 'Save', onClick: async function() {
+    el('button', {className: 'btn btn-g', textContent: 'キャンセル', onClick: function() { close(); }}),
+    el('button', {className: 'btn btn-p', textContent: '保存', onClick: async function() {
       var newStatus = statusSel.value;
       await sb.from('tasks').update({
         title: titleInput.value.trim(),
@@ -679,7 +704,7 @@ function showEditTask(t) {
         completed_at: newStatus === 'done' ? new Date().toISOString() : null
       }).eq('id', t.id);
       close();
-      toast('Updated');
+      toast('更新しました');
       navigate('tasks');
     }})
   ]);
@@ -696,20 +721,22 @@ async function renderCompanies(root) {
   var cats = catRes.data || [];
   var cos = cosRes.data || [];
 
-  root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [
-    el('div', {className: 'section-title', style: 'margin:0', textContent: 'Companies'}),
+  root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px'}, [
+    el('div', {}, [
+      el('div', {className: 'page-title', textContent: 'Companies'}),
+      el('div', {className: 'page-desc', style: 'margin-bottom:0', textContent: 'PJ会社の管理'})
+    ]),
     el('div', {style: 'display:flex;gap:8px'}, [
-      el('button', {className: 'btn btn-g btn-sm', textContent: '+ Category', onClick: function() { showAddCategory(cats); }}),
-      el('button', {className: 'btn btn-p btn-sm', textContent: '+ Company', onClick: function() { showAddCompany(cats); }})
+      el('button', {className: 'btn btn-g btn-sm', textContent: '+ カテゴリ', onClick: function() { showAddCategory(cats); }}),
+      el('button', {className: 'btn btn-p btn-sm', textContent: '+ 会社', onClick: function() { showAddCompany(cats); }})
     ])
   ]));
 
   if (cos.length === 0) {
-    root.appendChild(el('div', {className: 'card empty', textContent: 'No companies yet. Add your first PJ company.'}));
+    root.appendChild(el('div', {className: 'card empty', textContent: 'まだPJ会社がありません。最初の会社を作成しましょう。'}));
     return;
   }
 
-  // Group by category
   var grouped = {};
   var uncategorized = [];
   cos.forEach(function(c) {
@@ -724,14 +751,14 @@ async function renderCompanies(root) {
   cats.forEach(function(cat) {
     var catCos = grouped[cat.id] || [];
     if (catCos.length === 0) return;
-    root.appendChild(el('div', {className: 'section-title', style: 'margin-top:16px', textContent: cat.name + (cat.description ? ' - ' + cat.description : '')}));
+    root.appendChild(el('div', {className: 'section-title', style: 'margin-top:20px', textContent: cat.name + (cat.description ? ' \u2014 ' + cat.description : '')}));
     var grid = el('div', {className: 'g3', style: 'margin-bottom:16px'});
     catCos.forEach(function(co) { grid.appendChild(makeCompanyCard(co)); });
     root.appendChild(grid);
   });
 
   if (uncategorized.length > 0) {
-    root.appendChild(el('div', {className: 'section-title', style: 'margin-top:16px', textContent: 'Uncategorized'}));
+    root.appendChild(el('div', {className: 'section-title', style: 'margin-top:20px', textContent: 'その他'}));
     var grid2 = el('div', {className: 'g3'});
     uncategorized.forEach(function(co) { grid2.appendChild(makeCompanyCard(co)); });
     root.appendChild(grid2);
@@ -739,7 +766,7 @@ async function renderCompanies(root) {
 }
 
 function makeCompanyCard(co) {
-  return el('div', {className: 'card co-card'}, [
+  return el('div', {className: 'card co-card card-glow'}, [
     el('div', {style: 'display:flex;justify-content:space-between;align-items:flex-start'}, [
       el('div', {}, [
         el('div', {className: 'co-id', textContent: co.id}),
@@ -748,13 +775,13 @@ function makeCompanyCard(co) {
       el('span', {className: 'dot dot-' + co.status})
     ]),
     el('div', {className: 'co-desc', textContent: co.description || ''}),
-    co.server_path ? el('div', {style: 'font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:4px', textContent: co.server_path}) : null,
-    el('div', {style: 'margin-top:10px;display:flex;gap:6px'}, [
-      el('button', {className: 'btn btn-g btn-sm', textContent: 'Edit', onClick: function() { showEditCompany(co); }}),
-      el('button', {className: 'btn btn-sm', style: 'font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer', textContent: co.status === 'active' ? 'Archive' : 'Activate', onClick: async function() {
+    co.server_path ? el('div', {style: 'font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:6px', textContent: co.server_path}) : null,
+    el('div', {style: 'margin-top:14px;display:flex;gap:8px'}, [
+      el('button', {className: 'btn btn-g btn-sm', textContent: '編集', onClick: function() { showEditCompany(co); }}),
+      el('button', {className: 'btn btn-sm', style: 'font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:6px 12px', textContent: co.status === 'active' ? 'アーカイブ' : '有効化', onClick: async function() {
         var newStatus = co.status === 'active' ? 'archived' : 'active';
         await sb.from('companies').update({status: newStatus}).eq('id', co.id);
-        toast(newStatus === 'archived' ? 'Archived' : 'Activated');
+        toast(newStatus === 'archived' ? 'アーカイブしました' : '有効化しました');
         navigate('companies');
       }})
     ])
@@ -762,30 +789,30 @@ function makeCompanyCard(co) {
 }
 
 function showAddCompany(cats) {
-  var idInput = el('input', {className: 'input', placeholder: 'ID (kebab-case, e.g., circuit-dx)'});
-  var nameInput = el('input', {className: 'input', placeholder: 'Name (e.g., \u96fb\u5b50\u57fa\u76e4\u8a2d\u8a08DX)'});
-  var descInput = el('input', {className: 'input', placeholder: 'Description'});
+  var idInput = el('input', {className: 'input', placeholder: 'ID (kebab-case, 例: circuit-dx)'});
+  var nameInput = el('input', {className: 'input', placeholder: '会社名 (例: 電子基盤設計DX)'});
+  var descInput = el('input', {className: 'input', placeholder: '説明'});
   var catSel = el('select', {className: 'input'});
-  catSel.appendChild(el('option', {value: '', textContent: '(no category)'}));
+  catSel.appendChild(el('option', {value: '', textContent: '(カテゴリなし)'}));
   cats.forEach(function(c) { catSel.appendChild(el('option', {value: c.id, textContent: c.name})); });
-  var pathInput = el('input', {className: 'input', placeholder: 'Server path (e.g., xx/project-alpha)'});
-  var repoInput = el('input', {className: 'input', placeholder: 'GitHub repo URL (optional)'});
+  var pathInput = el('input', {className: 'input', placeholder: 'サーバーパス (例: xx/project-alpha)'});
+  var repoInput = el('input', {className: 'input', placeholder: 'GitHub リポジトリURL (任意)'});
 
-  var close = showModal('Add Company', [
+  var close = showModal('会社を追加', [
     el('label', {className: 'form-label', textContent: 'Company ID'}), idInput,
-    el('div', {style: 'height:8px'}),
-    el('label', {className: 'form-label', textContent: 'Name'}), nameInput,
-    el('div', {style: 'height:8px'}),
-    el('label', {className: 'form-label', textContent: 'Description'}), descInput,
-    el('div', {style: 'height:8px'}),
-    el('label', {className: 'form-label', textContent: 'Category'}), catSel,
-    el('div', {style: 'height:8px'}),
-    el('label', {className: 'form-label', textContent: 'Server Path'}), pathInput,
-    el('div', {style: 'height:8px'}),
+    el('div', {style: 'height:10px'}),
+    el('label', {className: 'form-label', textContent: '会社名'}), nameInput,
+    el('div', {style: 'height:10px'}),
+    el('label', {className: 'form-label', textContent: '説明'}), descInput,
+    el('div', {style: 'height:10px'}),
+    el('label', {className: 'form-label', textContent: 'カテゴリ'}), catSel,
+    el('div', {style: 'height:10px'}),
+    el('label', {className: 'form-label', textContent: 'サーバーパス'}), pathInput,
+    el('div', {style: 'height:10px'}),
     el('label', {className: 'form-label', textContent: 'GitHub Repo'}), repoInput
   ], [
-    el('button', {className: 'btn btn-g', textContent: 'Cancel', onClick: function() { close(); }}),
-    el('button', {className: 'btn btn-p', textContent: 'Create', onClick: async function() {
+    el('button', {className: 'btn btn-g', textContent: 'キャンセル', onClick: function() { close(); }}),
+    el('button', {className: 'btn btn-p', textContent: '作成', onClick: async function() {
       var id = idInput.value.trim();
       var name = nameInput.value.trim();
       if (!id || !name) return;
@@ -795,9 +822,9 @@ function showAddCompany(cats) {
         git_repo_url: repoInput.value.trim() || null
       });
       if (res.error) { toast('Error: ' + res.error.message); return; }
-      await sb.rpc('log_activity', {p_company_id: id, p_action: 'company_created', p_description: name + ' created'});
+      await sb.rpc('log_activity', {p_company_id: id, p_action: 'company_created', p_description: name + ' を作成'});
       close();
-      toast('Company created');
+      toast('会社を作成しました');
       navigate('companies');
     }})
   ]);
@@ -809,48 +836,48 @@ function showEditCompany(co) {
   var pathInput = el('input', {className: 'input', value: co.server_path || ''});
   var repoInput = el('input', {className: 'input', value: co.git_repo_url || ''});
 
-  var close = showModal('Edit ' + co.name, [
-    el('label', {className: 'form-label', textContent: 'Name'}), nameInput,
-    el('div', {style: 'height:8px'}),
-    el('label', {className: 'form-label', textContent: 'Description'}), descInput,
-    el('div', {style: 'height:8px'}),
-    el('label', {className: 'form-label', textContent: 'Server Path'}), pathInput,
-    el('div', {style: 'height:8px'}),
+  var close = showModal(co.name + ' を編集', [
+    el('label', {className: 'form-label', textContent: '会社名'}), nameInput,
+    el('div', {style: 'height:10px'}),
+    el('label', {className: 'form-label', textContent: '説明'}), descInput,
+    el('div', {style: 'height:10px'}),
+    el('label', {className: 'form-label', textContent: 'サーバーパス'}), pathInput,
+    el('div', {style: 'height:10px'}),
     el('label', {className: 'form-label', textContent: 'GitHub Repo'}), repoInput
   ], [
-    el('button', {className: 'btn btn-g', textContent: 'Cancel', onClick: function() { close(); }}),
-    el('button', {className: 'btn btn-p', textContent: 'Save', onClick: async function() {
+    el('button', {className: 'btn btn-g', textContent: 'キャンセル', onClick: function() { close(); }}),
+    el('button', {className: 'btn btn-p', textContent: '保存', onClick: async function() {
       await sb.from('companies').update({
         name: nameInput.value.trim(), description: descInput.value.trim() || null,
         server_path: pathInput.value.trim() || null, git_repo_url: repoInput.value.trim() || null
       }).eq('id', co.id);
       close();
-      toast('Updated');
+      toast('更新しました');
       navigate('companies');
     }})
   ]);
 }
 
 function showAddCategory(cats) {
-  var idInput = el('input', {className: 'input', placeholder: 'ID (e.g., xx)'});
-  var nameInput = el('input', {className: 'input', placeholder: 'Name'});
-  var descInput = el('input', {className: 'input', placeholder: 'Description (optional)'});
+  var idInput = el('input', {className: 'input', placeholder: 'ID (例: xx)'});
+  var nameInput = el('input', {className: 'input', placeholder: '名前'});
+  var descInput = el('input', {className: 'input', placeholder: '説明 (任意)'});
 
-  var close = showModal('Add Category', [
+  var close = showModal('カテゴリを追加', [
     el('label', {className: 'form-label', textContent: 'ID'}), idInput,
-    el('div', {style: 'height:8px'}),
-    el('label', {className: 'form-label', textContent: 'Name'}), nameInput,
-    el('div', {style: 'height:8px'}),
-    el('label', {className: 'form-label', textContent: 'Description'}), descInput
+    el('div', {style: 'height:10px'}),
+    el('label', {className: 'form-label', textContent: '名前'}), nameInput,
+    el('div', {style: 'height:10px'}),
+    el('label', {className: 'form-label', textContent: '説明'}), descInput
   ], [
-    el('button', {className: 'btn btn-g', textContent: 'Cancel', onClick: function() { close(); }}),
-    el('button', {className: 'btn btn-p', textContent: 'Create', onClick: async function() {
+    el('button', {className: 'btn btn-g', textContent: 'キャンセル', onClick: function() { close(); }}),
+    el('button', {className: 'btn btn-p', textContent: '作成', onClick: async function() {
       var id = idInput.value.trim();
       var name = nameInput.value.trim();
       if (!id || !name) return;
       await sb.from('categories').insert({id: id, name: name, description: descInput.value.trim() || null, sort_order: cats.length});
       close();
-      toast('Category created');
+      toast('カテゴリを作成しました');
       navigate('companies');
     }})
   ]);
@@ -860,31 +887,33 @@ function showAddCategory(cats) {
 // Settings Page
 // ============================================================
 async function renderSettings(root) {
-  root.appendChild(el('div', {className: 'section-title', textContent: 'Claude Code Settings'}));
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Settings'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'Claude Code 設定とダッシュボード設定'}));
 
   var res = await sb.from('claude_settings').select('*');
   var settings = res.data || [];
 
+  root.appendChild(el('div', {className: 'section-title', textContent: 'Claude Code Settings'}));
   if (settings.length === 0) {
     root.appendChild(el('div', {className: 'card'}, [
       el('div', {className: 'empty'}, [
-        el('div', {textContent: 'No settings synced yet.'}),
-        el('div', {style: 'margin-top:8px;font-size:12px;color:var(--text3)', textContent: 'Use /company to sync your Claude Code settings from the terminal.'})
+        el('div', {textContent: 'まだ設定が同期されていません'}),
+        el('div', {style: 'margin-top:8px;font-size:12px;color:var(--text3)', textContent: 'ターミナルで /company を使って同期してください'})
       ])
     ]));
   } else {
     settings.forEach(function(s) {
-      var card = el('div', {className: 'card', style: 'margin-bottom:12px'}, [
-        el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'}, [
-          el('div', {style: 'font-weight:600;font-size:14px', textContent: s.scope}),
+      var card = el('div', {className: 'card', style: 'margin-bottom:14px'}, [
+        el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px'}, [
+          el('div', {style: 'font-weight:600;font-size:15px;letter-spacing:-.02em', textContent: s.scope}),
           el('span', {style: 'font-size:10px;font-family:var(--mono);color:var(--text3)', textContent: s.server_path || ''})
         ])
       ]);
 
       if (s.plugins && Object.keys(s.plugins).length > 0) {
-        card.appendChild(el('div', {style: 'font-size:11px;color:var(--text3);margin:8px 0 4px', textContent: 'PLUGINS'}));
+        card.appendChild(el('div', {style: 'font-size:11px;color:var(--text3);margin:10px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.08em', textContent: 'Plugins'}));
         Object.keys(s.plugins).forEach(function(p) {
-          card.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);padding:2px 0;display:flex;gap:6px;align-items:center'}, [
+          card.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);padding:3px 0;display:flex;gap:8px;align-items:center'}, [
             el('span', {className: 'dot ' + (s.plugins[p] ? 'dot-active' : 'dot-archived')}),
             el('span', {textContent: p})
           ]));
@@ -892,12 +921,12 @@ async function renderSettings(root) {
       }
 
       if (s.permissions && s.permissions.allow && s.permissions.allow.length > 0) {
-        card.appendChild(el('div', {style: 'font-size:11px;color:var(--text3);margin:12px 0 4px', textContent: 'PERMISSIONS (' + s.permissions.allow.length + ')'}));
+        card.appendChild(el('div', {style: 'font-size:11px;color:var(--text3);margin:14px 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:.08em', textContent: 'Permissions (' + s.permissions.allow.length + ')'}));
         s.permissions.allow.slice(0, 5).forEach(function(p) {
-          card.appendChild(el('div', {style: 'font-size:11px;font-family:var(--mono);color:var(--text3);padding:1px 0', textContent: p}));
+          card.appendChild(el('div', {style: 'font-size:11px;font-family:var(--mono);color:var(--text3);padding:2px 0', textContent: p}));
         });
         if (s.permissions.allow.length > 5) {
-          card.appendChild(el('div', {style: 'font-size:11px;color:var(--text3)', textContent: '... and ' + (s.permissions.allow.length - 5) + ' more'}));
+          card.appendChild(el('div', {style: 'font-size:11px;color:var(--text3);margin-top:4px', textContent: '... and ' + (s.permissions.allow.length - 5) + ' more'}));
         }
       }
 
@@ -905,18 +934,28 @@ async function renderSettings(root) {
     });
   }
 
-  // Supabase config
-  root.appendChild(el('div', {className: 'section-title', style: 'margin-top:24px', textContent: 'Dashboard Config'}));
-  var urlInput = el('input', {className: 'input', value: SUPABASE_URL, placeholder: 'Supabase URL', style: 'margin-bottom:8px'});
-  var keyInput = el('input', {className: 'input', value: SUPABASE_ANON_KEY, placeholder: 'Supabase Anon Key', style: 'margin-bottom:8px'});
+  // Dashboard config
+  root.appendChild(el('div', {className: 'gradient-line'}));
+  root.appendChild(el('div', {className: 'section-title', textContent: 'Dashboard Config'}));
+  var urlInput = el('input', {className: 'input', value: SUPABASE_URL, placeholder: 'Supabase URL', style: 'margin-bottom:10px'});
+  var keyInput = el('input', {className: 'input', value: SUPABASE_ANON_KEY, placeholder: 'Publishable Key', style: 'margin-bottom:10px', type: 'password'});
+  var showKeyBtn = el('button', {className: 'btn btn-g btn-sm', style: 'margin-bottom:14px', textContent: 'キーを表示', onClick: function() {
+    if (keyInput.type === 'password') {
+      keyInput.type = 'text';
+      showKeyBtn.textContent = 'キーを隠す';
+    } else {
+      keyInput.type = 'password';
+      showKeyBtn.textContent = 'キーを表示';
+    }
+  }});
   root.appendChild(el('div', {className: 'card'}, [
     el('label', {className: 'form-label', textContent: 'Supabase URL'}), urlInput,
-    el('div', {style: 'height:8px'}),
-    el('label', {className: 'form-label', textContent: 'Supabase Anon Key'}), keyInput,
-    el('div', {style: 'height:12px'}),
-    el('button', {className: 'btn btn-p btn-sm', textContent: 'Save Config', onClick: function() {
+    el('label', {className: 'form-label', textContent: 'Publishable Key'}), keyInput,
+    showKeyBtn,
+    el('div', {}),
+    el('button', {className: 'btn btn-p btn-sm', textContent: '設定を保存', onClick: function() {
       localStorage.setItem('hd-config', JSON.stringify({url: urlInput.value.trim(), key: keyInput.value.trim()}));
-      toast('Config saved. Reload to apply.');
+      toast('設定を保存しました。リロードで反映されます。');
     }})
   ]));
 }
