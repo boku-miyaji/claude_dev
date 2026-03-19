@@ -101,26 +101,17 @@ Claude Code (/company コマンド)
 
 ### Step 7: Supabase 接続情報を設定
 
-`company-dashboard/index.html` の冒頭部分を編集:
+1. デプロイした Vercel URL にアクセス
+2. 初回は **Setup 画面** が表示される
+3. Step 1 でメモした **Project URL** と **Publishable Key** を入力
+4. **Save & Connect** をクリック
 
-```js
-var SUPABASE_URL = 'https://xxxxx.supabase.co';    // ← Step 1 の URL
-var SUPABASE_ANON_KEY = 'sb_publishable_xxxxx';     // ← Step 1 の Publishable Key
-```
-
-commit & push で自動デプロイ:
-
-```bash
-git add company-dashboard/index.html
-git commit -m "fix: set Supabase credentials"
-git push origin main
-```
-
-> または、ダッシュボードの **Settings** 画面からも設定可能（localStorage に保存）。
+> 接続情報はブラウザの localStorage に保存されます。ソースコードにはハードコードされないので、リポジトリを public にしても安全です。
+> 設定変更は Dashboard の **Settings** 画面からいつでも可能です。
 
 ### Step 8: 動作確認
 
-1. Vercel URL にアクセス
+1. Setup 完了後、ログイン画面が表示される
 2. **「Sign in with GitHub」** をクリック
 3. GitHub で **Authorize**
 4. ダッシュボードが表示されれば完了
