@@ -1,6 +1,6 @@
 # 宮路HD Dashboard
 
-PJ会社を一元管理する Web ダッシュボード。
+PJ会社（プロジェクト単位の仮想組織）を一元管理する Web ダッシュボード。
 Supabase (PostgreSQL + Auth) + Vercel (静的ホスティング) で構成。
 PC・スマホ同一URLで利用可能。
 
@@ -9,9 +9,11 @@ PC・スマホ同一URLで利用可能。
 ```
 スマホ / PC (ブラウザ)
     ↕ Supabase JS Client (REST + Realtime)
-Supabase (PostgreSQL + GitHub OAuth + RLS per user)
+Supabase (PostgreSQL + GitHub OAuth + RLS)
     ↕ Supabase MCP Plugin
 Claude Code (/company コマンド)
+    ↕ 自動 commit & push
+全サーバーに反映
 ```
 
 ## セキュリティ
@@ -27,14 +29,14 @@ Claude Code (/company コマンド)
 - [Supabase](https://supabase.com) アカウント（無料）
 - [Vercel](https://vercel.com) アカウント（無料）
 
-## セットアップ手順
+---
+
+## クイックスタート（ゼロ → 動作確認まで 約15分）
 
 ### Step 1: リポジトリをフォーク
 
-1. このリポジトリを **Fork**（または `git clone`）
-2. ローカルに clone:
-
 ```bash
+# Fork してから clone
 git clone https://github.com/<your-username>/claude_dev.git
 cd claude_dev
 ```
@@ -46,7 +48,7 @@ cd claude_dev
 
    | 項目 | 値 |
    |------|-----|
-   | **Name** | `miyaji-hd`（任意） |
+   | **Name** | 任意（例: `my-hd`） |
    | **Database Password** | 安全なパスワード |
    | **Region** | `Northeast Asia (Tokyo)` |
 
@@ -69,14 +71,14 @@ cd claude_dev
 
 ### Step 4: Supabase 接続情報を設定
 
-`company-dashboard/index.html` を編集（CONFIG セクション）:
+`company-dashboard/index.html` の冒頭 CONFIG セクションを編集:
 
 ```js
 var SUPABASE_URL = 'https://xxxxx.supabase.co';    // ← Step 2 の URL
-var SUPABASE_ANON_KEY = 'sb_publishable_xxxxx';     // ← Step 2 の Publishable Key
+var SUPABASE_ANON_KEY = 'sb_publishable_xxxxx';     // ← Step 2 の Key
 ```
 
-> **Publishable Key は公開用キーです。** フロントエンドにハードコードするのが正しい使い方です。セキュリティは RLS（user_id によるデータ分離） + GitHub OAuth が担保します。
+> Publishable Key は公開用です。セキュリティは RLS + GitHub OAuth が担保します。
 
 ### Step 5: GitHub OAuth App を作成
 
@@ -85,8 +87,8 @@ var SUPABASE_ANON_KEY = 'sb_publishable_xxxxx';     // ← Step 2 の Publishabl
 
    | 項目 | 値 |
    |------|-----|
-   | **Application name** | `宮路HD`（任意） |
-   | **Homepage URL** | `https://example.vercel.app`（Step 7 で発行後に更新してもOK） |
+   | **Application name** | 任意（例: `My HD`） |
+   | **Homepage URL** | `https://example.vercel.app`（Step 7 で更新可） |
    | **Authorization callback URL** | `https://xxxxx.supabase.co/auth/v1/callback` |
 
    > `xxxxx` は Step 2 の Project URL のホスト部分。
@@ -149,24 +151,84 @@ Vercel が自動で再デプロイします。
 3. GitHub で **Authorize**
 4. ダッシュボードが表示されれば完了
 
+---
+
 ## 画面構成
 
-| 画面 | 内容 | スマホ対応 |
-|------|------|-----------|
+| 画面 | 内容 | スマホ |
+|------|------|:------:|
 | **Dashboard** | KPI概要・PJ会社一覧・直近アクティビティ | ○ |
 | **Inbox** | タスク追加・コメント追加（メイン入力画面） | ○ |
 | **Tasks** | 全社横断タスクボード（フィルター・編集・完了） | ○ |
 | **Companies** | PJ会社の作成・編集・アーカイブ・カテゴリ管理 | ○ |
-| **Settings** | Claude Code設定閲覧・ダッシュボード設定 | ○ |
+| **Org Chart** | HD → 会社 → 部署 → チームのツリー組織図 | ○ |
+| **Knowledge** | ナレッジベース（LLMデフォルトとの差分ルール蓄積） | ○ |
+| **Prompts** | 社長のプロンプト履歴（会社別・日付別） | ○ |
+| **Insights** | 社長分析（行動パターン・好み・傾向） | ○ |
+| **Settings** | Claude Code 設定・Plugins・Skills・MCP・Permissions・CLAUDE.md | ○ |
+
+### Settings の詳細
+
+| セクション | 内容 |
+|-----------|------|
+| **Scopes** | 設定スコープ一覧（global / プロジェクト別） |
+| **Plugins** | インストール済みプラグインと有効/無効状態 |
+| **Skills** | 利用可能なスキル一覧 |
+| **MCP Servers** | 接続中の MCP サーバー・ツール数・コマンド |
+| **Permissions** | 許可ルール一覧（タイプ別グルーピング） |
+| **CLAUDE.md** | 各スコープの CLAUDE.md 内容を展開表示 |
+| **Skills Matrix** | 全スコープ横断のプラグイン比較テーブル |
+
+---
 
 ## Claude Code 連携
 
 ターミナルで `/company` を実行すると、秘書が Supabase のデータと連動:
 
 ```
-/company          → HD秘書（全社ダッシュボード表示・タスク管理）
+/company          → HD秘書（全社ダッシュボード・タスク管理・新会社作成）
 /company ai       → AI会社秘書（PJ固有のコンテキストで作業）
+/company circuit  → 回路図PJ秘書
 ```
+
+### 自動同期の仕組み
+
+```
+/company 起動
+  ↓ (1) settings.json + CLAUDE.md を Supabase に同期
+  ↓ (2) ナレッジベースを読み込み（暗黙適用）
+  ↓ (3) 未処理コメントを確認
+  ↓
+社長がメッセージを送信
+  ↓ (4) プロンプトを prompt_log に記録
+  ↓ (5) 修正指示を検出 → knowledge_base に蓄積
+  ↓
+作業完了
+  ↓ (6) git commit & push（全サーバーに反映）
+  ↓ (7) タスク・評価を Supabase に書き込み
+  ↓
+ダッシュボード（PC / スマホ）にリアルタイム反映
+```
+
+---
+
+## DB テーブル一覧
+
+| テーブル | 用途 |
+|---------|------|
+| `categories` | 大分類（ディレクトリ単位のグルーピング） |
+| `companies` | PJ会社 |
+| `departments` | 部署（チーム情報を teams jsonb で保持） |
+| `tasks` | タスク・TODO・マイルストーン |
+| `comments` | コメント（Web / モバイル / Claude Code から投稿） |
+| `evaluations` | 部署評価（5軸: 自律完遂・一発OK・連携効率・目標寄与・稼働率） |
+| `activity_log` | アクティビティログ |
+| `claude_settings` | Claude Code 設定（plugins / permissions / skills / MCP / CLAUDE.md） |
+| `prompt_log` | 社長プロンプト履歴（入力のみ、出力は記録しない） |
+| `ceo_insights` | 社長分析（pattern / preference / strength / tendency / feedback） |
+| `knowledge_base` | ナレッジ（LLMデフォルトとの差分ルール蓄積、CLAUDE.md 昇格あり） |
+
+---
 
 ## トラブルシューティング
 
@@ -174,30 +236,26 @@ Vercel が自動で再デプロイします。
 |------|-----------|
 | **404 NOT_FOUND** | リポジトリルートに `vercel.json` があるか確認。Vercel で Redeploy を試す |
 | **ログインボタンが反応しない** | Supabase の Site URL / Redirect URLs が Vercel URL と一致しているか確認 |
-| **ログイン後にデータが空** | 正常。まだデータ未投入。Inbox からタスクを追加してみてください |
-| **RLS エラー** | SQL Editor で `select * from pg_policies` を実行し `auth_full` ポリシーが8件あるか確認 |
-| **他人にデータが見えないか心配** | 各ユーザーが自分の Supabase プロジェクトを持つ設計。GitHub OAuth + RLS(認証必須)で保護 |
+| **ログイン後にデータが空** | 正常。Inbox からタスクを追加、または `/company` で秘書を起動してデータを同期 |
+| **RLS エラー** | SQL Editor で `select * from pg_policies` を実行。`auth_full` ポリシーが 11 件あるか確認 |
+| **Settings が空** | `/company` をターミナルで実行して設定を同期する必要あり |
+| **Org Chart が空** | Companies ページで会社を作成するか、`/company` で秘書に作成してもらう |
 
-## Settings 可視化
-
-Settings ページでは以下を一覧表示できます（`/company` 実行時に自動同期）:
-
-| セクション | 内容 |
-|-----------|------|
-| **Scopes** | Claude Code の設定スコープ一覧（global / プロジェクト別） |
-| **Plugins** | インストール済みプラグインと有効/無効状態 |
-| **Skills** | 利用可能なスキル一覧 |
-| **MCP Servers** | 接続中の MCP サーバー・ツール数・コマンド |
-| **Permissions** | 許可ルール一覧（Bash / Read / WebFetch 等タイプ別） |
+---
 
 ## ファイル構成
 
 ```
 company-dashboard/
-├── index.html                                  SPA (HTML + CSS + JS)
-├── supabase-setup.sql                          新規インストール用スキーマ
-├── supabase-migration-002-revert-user-id.sql   user_id削除用マイグレーション
+├── index.html                                  SPA (HTML + CSS + JS, 単一ファイル)
+├── supabase-setup.sql                          新規インストール用スキーマ（全テーブル一括）
+├── supabase-migration-002-revert-user-id.sql   user_id削除（既存DB用）
+├── supabase-migration-003-prompt-log-ceo-insights.sql  プロンプト履歴 + 社長分析
+├── supabase-migration-004-knowledge-base.sql   ナレッジベース + CLAUDE.md可視化
 └── README.md                                   This file
 
 vercel.json                                     Root config (→ company-dashboard/)
 ```
+
+> **新規セットアップ**: `supabase-setup.sql` のみ実行すればOK（全テーブル含む）。
+> **既存DB更新**: migration ファイルを番号順に実行。
