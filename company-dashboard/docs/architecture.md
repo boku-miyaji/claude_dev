@@ -59,9 +59,34 @@
 
 ## データフロー
 
+## マルチサーバー対応
+
+複数のサーバーや同一サーバーの別ディレクトリで開発する場合、それぞれが独立したレコードとして管理される。
+
+```
+識別子 = hostname:project_dir
+
+例:
+  server-a:/workspace         → "server-a:/workspace"
+  server-a:/home/user/proj-b  → "server-a:/home/user/proj-b"
+  server-b:/workspace         → "server-b:/workspace"
+```
+
+| ファイル | 共有/ローカル | git管理 | 内容 |
+|---------|:---:|:---:|------|
+| `settings.json` | 共有 | ✅ | hooks, plugins, env, marketplaces |
+| `settings.local.json` | ローカル | ❌ | マシン固有のパス, 権限 |
+| `.mcp.json` | 共有 | ✅ | MCP サーバー設定 |
+
+`config-sync.sh` は両方を読み取り、マージして Supabase に同期する（`permissions.allow` は結合、他はローカルが優先）。
+
+---
+
+## データフロー
+
 | 何が | どこから | どこへ | いつ | どうやって |
 |------|---------|-------|------|-----------|
-| 設定（plugins/permissions/hooks） | `settings.json` | Supabase `claude_settings` | セッション起動時 | `config-sync.sh` |
+| 設定（plugins/permissions/hooks） | `settings.json` + `settings.local.json` | Supabase `claude_settings` | セッション起動時 | `config-sync.sh` |
 | MCP サーバー一覧 | `.mcp.json` | Supabase `claude_settings` | セッション起動時 | `config-sync.sh` |
 | CLAUDE.md 内容 | `.claude/CLAUDE.md` | Supabase `claude_settings` | セッション起動時 | `config-sync.sh` |
 | スキル一覧 | 全 SKILL.md | Supabase `slash_commands` | セッション起動時 | `sync-slash-commands.sh` |

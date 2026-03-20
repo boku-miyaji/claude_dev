@@ -3,7 +3,8 @@
 ```
 /workspace/
 ├── .claude/                           Claude Code 設定ディレクトリ
-│   ├── settings.json                  ★ 全設定の中心（hooks/権限/プラグイン/env）
+│   ├── settings.json                  ★ 共有設定（hooks/プラグイン/env） ← git管理
+│   ├── settings.local.json            マシン固有設定（パス/権限） ← gitignore
 │   ├── .mcp.json                      MCP サーバー接続設定（google-calendar 等）
 │   ├── CLAUDE.md                      プロジェクト指示書（LLMへの恒久ルール）
 │   ├── hooks/                         自動実行スクリプト群
@@ -85,3 +86,4 @@
 | `migration-006` | Hook 用 anon RLS ポリシー |
 | `migration-007` | slash_commands テーブル |
 | `migration-008` | 財務テーブル（projects, invoices, expenses, time_entries, tax_payments） |
+| `migration-009` | マルチサーバー対応（claude_settings に server_host カラム追加） |

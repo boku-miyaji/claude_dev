@@ -18,20 +18,35 @@ if [ -z "$PROJECT_DIR" ]; then
   exit 0
 fi
 
-SCOPE=$(basename "$PROJECT_DIR")
+# Server identifier: hostname:project_dir (unique per machine + directory)
+SERVER_HOST=$(hostname -s 2>/dev/null || echo "local")
+SCOPE="${SERVER_HOST}:${PROJECT_DIR}"
 SETTINGS_FILE="$PROJECT_DIR/.claude/settings.json"
 MCP_FILE="$PROJECT_DIR/.claude/.mcp.json"
 CLAUDE_MD_FILE="$PROJECT_DIR/.claude/CLAUDE.md"
 
-# Read settings.json
+# Read settings.json (shared, committed to git)
 SETTINGS_JSON="{}"
 if [ -f "$SETTINGS_FILE" ]; then
   SETTINGS_JSON=$(cat "$SETTINGS_FILE")
 fi
 
-# Extract plugins and permissions
-PLUGINS=$(echo "$SETTINGS_JSON" | jq '.enabledPlugins // {}')
-PERMISSIONS=$(echo "$SETTINGS_JSON" | jq '.permissions // {}')
+# Read settings.local.json (machine-specific, gitignored)
+LOCAL_SETTINGS_FILE="$PROJECT_DIR/.claude/settings.local.json"
+LOCAL_SETTINGS_JSON="{}"
+if [ -f "$LOCAL_SETTINGS_FILE" ]; then
+  LOCAL_SETTINGS_JSON=$(cat "$LOCAL_SETTINGS_FILE")
+fi
+
+# Merge: local overrides shared, permissions.allow arrays are concatenated
+MERGED_SETTINGS=$(jq -n \
+  --argjson shared "$SETTINGS_JSON" \
+  --argjson local "$LOCAL_SETTINGS_JSON" \
+  '$shared * $local | .permissions.allow = (($shared.permissions.allow // []) + ($local.permissions.allow // []) | unique) | .permissions.additionalDirectories = (($shared.permissions.additionalDirectories // []) + ($local.permissions.additionalDirectories // []) | unique)')
+
+# Extract plugins and permissions from merged
+PLUGINS=$(echo "$MERGED_SETTINGS" | jq '.enabledPlugins // {}')
+PERMISSIONS=$(echo "$MERGED_SETTINGS" | jq '.permissions // {}')
 
 # Read MCP servers config
 MCP_SERVERS="{}"
@@ -53,7 +68,7 @@ PAYLOAD=$(jq -n \
   --arg id "$SCOPE" \
   --arg scope "$SCOPE" \
   --arg server_path "$PROJECT_DIR" \
-  --argjson settings_json "$SETTINGS_JSON" \
+  --argjson settings_json "$MERGED_SETTINGS" \
   --argjson plugins "$PLUGINS" \
   --argjson permissions "$PERMISSIONS" \
   --argjson skills "$SKILLS" \
@@ -71,16 +86,33 @@ PAYLOAD=$(jq -n \
     claude_md_content: $claude_md_content
   }')
 
+# If migration-009 is applied (server_host column exists), add it
+PAYLOAD_WITH_HOST=$(echo "$PAYLOAD" | jq --arg sh "$SERVER_HOST" '. + {server_host: $sh}')
+
 # Upsert to Supabase claude_settings
-curl -s -o /dev/null -w "" \
+# Try with server_host first (migration-009), fallback without
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
   "${SUPABASE_URL}/rest/v1/claude_settings?on_conflict=id" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=minimal,resolution=merge-duplicates" \
-  -d "$PAYLOAD" \
+  -d "$PAYLOAD_WITH_HOST" \
   --max-time 10 \
-  2>/dev/null || true
+  2>/dev/null) || true
+
+if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
+  # Fallback: without server_host (pre migration-009)
+  curl -s -o /dev/null -w "" \
+    "${SUPABASE_URL}/rest/v1/claude_settings?on_conflict=id" \
+    -H "apikey: ${SUPABASE_ANON_KEY}" \
+    -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+    -H "Content-Type: application/json" \
+    -H "Prefer: return=minimal,resolution=merge-duplicates" \
+    -d "$PAYLOAD" \
+    --max-time 10 \
+    2>/dev/null || true
+fi
 
 # Sync slash commands (diff-based)
 "$SCRIPT_DIR/sync-slash-commands.sh" "$PROJECT_DIR" 2>/dev/null || true

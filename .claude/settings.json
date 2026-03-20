@@ -8,34 +8,19 @@
   "permissions": {
     "allow": [
       "Bash(python3:*)",
-      "Bash(/workspace/circuit_diagram/backend/.venv/bin/python:*)",
       "Bash(docker compose:*)",
-      "Bash(git -C /workspace/circuit_diagram show HEAD:backend/src/routers/block_diagram.py)",
-      "Bash(git -C /workspace/circuit_diagram show HEAD:backend/src/prompts/__init__.py)",
       "Read(//tmp/**)",
       "Bash(wc:*)",
       "Bash(pgrep:*)",
       "Bash(dd:*)",
-      "Read(//home/node/.claude/plugins/cache/ai-company/company/1.0.0/skills/company/references/**)",
       "WebFetch(domain:github.com)",
-      "Read(//home/node/.npm/_npx/7145db6b471ecd40/node_modules/google-calendar-mcp/dist/**)",
       "Bash(npx google-calendar-mcp:*)",
       "Bash(npm info:*)",
       "Bash(npx -y google-calendar-mcp --help)",
-      "Read(//home/node/.npm/_npx/**)",
-      "Read(//home/node/**)",
-      "Bash(git -C /workspace/diary diff --stat)",
-      "Bash(git -C /workspace/diary log --oneline -3)",
       "mcp__plugin_context7_context7__query-docs",
-      "Bash(git rebase:*)"
-    ],
-    "additionalDirectories": [
-      "/workspace/circuit_diagram/frontend/src/app/projects/[projectId]",
-      "/workspace/circuit_diagram/frontend/src/app/projects/[projectId]/workspace",
-      "/workspace/circuit_diagram/frontend/src/app/projects/*/block-diagram",
-      "/workspace/circuit_diagram/backend/src/routers/__pycache__",
-      "/workspace/output",
-      "/workspace/.claude"
+      "Bash(git rebase:*)",
+      "Read(//home/node/**)",
+      "Bash(CLAUDE_PROJECT_DIR=\"/workspace\" bash /workspace/.claude/hooks/config-sync.sh)"
     ]
   },
   "hooks": {
@@ -45,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/workspace/.claude/hooks/prompt-log.sh",
+            "command": ".claude/hooks/prompt-log.sh",
             "async": true
           }
         ]
@@ -57,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/workspace/.claude/hooks/permission-guard.sh"
+            "command": ".claude/hooks/permission-guard.sh"
           }
         ]
       }
@@ -68,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/workspace/.claude/hooks/config-sync.sh",
+            "command": ".claude/hooks/config-sync.sh",
             "async": true
           }
         ]
@@ -96,8 +81,5 @@
         "path": "/workspace"
       }
     }
-  },
-  "feedbackSurveyState": {
-    "lastShownTime": 1755317418565
   }
 }

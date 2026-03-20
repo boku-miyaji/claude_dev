@@ -1988,7 +1988,14 @@ async function renderSettings(root) {
   var scopes = [];
 
   settings.forEach(function(s) {
-    scopes.push({scope: s.scope, path: s.server_path, updated: s.updated_at});
+    // Parse scope: "hostname:path" or legacy "workspace"
+    var hostName = '', dirPath = s.server_path || '';
+    if (s.scope && s.scope.indexOf(':') > 0) {
+      var parts = s.scope.split(':');
+      hostName = parts[0];
+      dirPath = parts.slice(1).join(':');
+    }
+    scopes.push({scope: s.scope, host: s.server_host || hostName, path: dirPath, updated: s.updated_at});
 
     if (s.plugins) Object.keys(s.plugins).forEach(function(p) {
       allPlugins[p] = {enabled: s.plugins[p], scope: s.scope};
@@ -2015,9 +2022,12 @@ async function renderSettings(root) {
   var scopeGrid = el('div', {className: 'g3'});
   scopes.forEach(function(sc) {
     scopeGrid.appendChild(el('div', {className: 'card'}, [
-      el('div', {style: 'font-weight:600;font-size:14px;letter-spacing:-.02em;margin-bottom:4px', textContent: sc.scope}),
-      el('div', {style: 'font-size:11px;font-family:var(--mono);color:var(--text3)', textContent: sc.path || ''}),
-      el('div', {style: 'font-size:10px;color:var(--text3);margin-top:8px', textContent: sc.updated ? 'Updated: ' + new Date(sc.updated).toLocaleDateString('ja-JP') : ''})
+      el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:4px'}, [
+        sc.host ? el('span', {textContent: sc.host, style: 'font-weight:600;font-size:14px;letter-spacing:-.02em'}) : null,
+        sc.host ? el('span', {textContent: '●', style: 'font-size:8px;color:#22c55e'}) : null
+      ]),
+      el('div', {style: 'font-size:11px;font-family:var(--mono);color:var(--text3)', textContent: sc.path || sc.scope}),
+      el('div', {style: 'font-size:10px;color:var(--text3);margin-top:8px', textContent: sc.updated ? 'Synced: ' + new Date(sc.updated).toLocaleString('ja-JP') : ''})
     ]));
   });
   root.appendChild(scopeGrid);
