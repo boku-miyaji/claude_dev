@@ -157,13 +157,32 @@ if [ -d "$SOURCE_BASE/skills" ]; then
     echo '{}' > "$KM_FILE"
   fi
   HAS_AI_COMPANY=$(jq 'has("ai-company")' "$KM_FILE" 2>/dev/null || echo "false")
+  MP_LOCATION="$HOME/.claude/plugins/marketplaces/ai-company"
   if [ "$HAS_AI_COMPANY" != "true" ]; then
-    MP_LOCATION="$HOME/.claude/plugins/marketplaces/ai-company"
     mkdir -p "$MP_LOCATION"
     jq --arg loc "$MP_LOCATION" \
       '. + {"ai-company": {"source": {"source": "github", "repo": "boku-miyaji/claude_dev"}, "installLocation": $loc, "lastUpdated": (now | todate)}}' \
       "$KM_FILE" > "$KM_FILE.tmp" && mv "$KM_FILE.tmp" "$KM_FILE"
   fi
+
+  # Sync root marketplace.json to marketplace directory (required for skill discovery)
+  if [ -f "$PROJECT_DIR/.claude-plugin/marketplace.json" ]; then
+    mkdir -p "$MP_LOCATION/.claude-plugin"
+    cp -f "$PROJECT_DIR/.claude-plugin/marketplace.json" "$MP_LOCATION/.claude-plugin/marketplace.json"
+  fi
+  # Sync skills to marketplace directory so Claude Code can resolve skill paths
+  for skill_dir in "$SOURCE_BASE"/skills/*/; do
+    [ -d "$skill_dir" ] || continue
+    skill_name=$(basename "$skill_dir")
+    mp_skill_dir="$MP_LOCATION/plugins/company/skills/$skill_name"
+    mkdir -p "$mp_skill_dir"
+    if [ -f "$skill_dir/SKILL.md" ]; then
+      cp -f "$skill_dir/SKILL.md" "$mp_skill_dir/SKILL.md"
+    fi
+    if [ -d "$skill_dir/references" ]; then
+      cp -rf "$skill_dir/references" "$mp_skill_dir/"
+    fi
+  done
 
   # Register in installed_plugins.json if missing
   IP_FILE="$HOME/.claude/plugins/installed_plugins.json"
