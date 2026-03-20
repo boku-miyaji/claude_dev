@@ -273,10 +273,23 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <div class="mobile-nav-inner">
       <button class="mob-nav-item active" data-page="dashboard"><span class="mob-icon">◉</span>Home</button>
       <button class="mob-nav-item" data-page="inbox"><span class="mob-icon">＋</span>Inbox</button>
+      <button class="mob-nav-item" data-page="finance"><span class="mob-icon">¥</span>Finance</button>
       <button class="mob-nav-item" data-page="tasks"><span class="mob-icon">☐</span>Tasks</button>
       <button class="mob-nav-item" data-page="companies"><span class="mob-icon">◫</span>Co.</button>
-      <button class="mob-nav-item" data-page="prompts"><span class="mob-icon">▷</span>Log</button>
-      <button class="mob-nav-item" data-page="settings"><span class="mob-icon">⚙</span>More</button>
+      <button class="mob-nav-item" id="mob-more-btn"><span class="mob-icon">⋯</span>More</button>
+    </div>
+  </div>
+  <!-- Mobile more menu -->
+  <div id="mob-more-menu" style="display:none;position:fixed;bottom:70px;right:8px;left:8px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:8px;z-index:101;box-shadow:0 -4px 24px rgba(0,0,0,.12)">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+      <button class="mob-nav-item" data-page="portfolio" style="padding:12px 8px"><span class="mob-icon">◆</span>Portfolio</button>
+      <button class="mob-nav-item" data-page="career" style="padding:12px 8px"><span class="mob-icon">☆</span>Career</button>
+      <button class="mob-nav-item" data-page="orgchart" style="padding:12px 8px"><span class="mob-icon">⊞</span>Org</button>
+      <button class="mob-nav-item" data-page="prompts" style="padding:12px 8px"><span class="mob-icon">▷</span>Prompts</button>
+      <button class="mob-nav-item" data-page="insights" style="padding:12px 8px"><span class="mob-icon">◇</span>Insights</button>
+      <button class="mob-nav-item" data-page="knowledge" style="padding:12px 8px"><span class="mob-icon">◈</span>Knowledge</button>
+      <button class="mob-nav-item" data-page="commands" style="padding:12px 8px"><span class="mob-icon">⌘</span>Commands</button>
+      <button class="mob-nav-item" data-page="settings" style="padding:12px 8px"><span class="mob-icon">⚙</span>Settings</button>
     </div>
   </div>
 </div>
@@ -381,8 +394,23 @@ function showApp(user) {
 // ============================================================
 function setupNav() {
   document.querySelectorAll('[data-page]').forEach(function(btn) {
-    btn.addEventListener('click', function() { navigate(btn.getAttribute('data-page')); });
+    btn.addEventListener('click', function() {
+      var moreMenu = document.getElementById('mob-more-menu');
+      if (moreMenu) moreMenu.style.display = 'none';
+      navigate(btn.getAttribute('data-page'));
+    });
   });
+  // Mobile "More" menu toggle
+  var moreBtn = document.getElementById('mob-more-btn');
+  var moreMenu = document.getElementById('mob-more-menu');
+  if (moreBtn && moreMenu) {
+    moreBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      moreMenu.style.display = moreMenu.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', function() { moreMenu.style.display = 'none'; });
+    moreMenu.addEventListener('click', function(e) { e.stopPropagation(); });
+  }
 }
 
 function navigate(page) {
