@@ -1,5 +1,5 @@
 {
   "name": "company",
   "description": "HD + PJ会社の仮想組織スキル。引数なしでHD秘書、引数ありでPJ会社秘書が起動。人事部が全社を横断評価・最適化。",
-  "version": "2.0.0"
+  "version": "2.1.0"
 }

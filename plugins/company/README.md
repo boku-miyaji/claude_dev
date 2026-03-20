@@ -170,6 +170,23 @@ CLAUDE.md の継続改善により、Agent の能力を向上させる。
 
 ---
 
+## `/permission` — パーミッション管理
+
+Claude Code の権限レベルをワンコマンドで切り替え。
+
+```
+/permission full     全許可（確認なし）
+/permission safe     破壊的操作のみブロック
+/permission strict   ホワイトリストのみ許可
+/permission show     現在の設定を表示
+/permission add <pattern>    allow に追加
+/permission remove <pattern> allow から削除
+/permission deny <pattern>   deny に追加
+/permission undeny <pattern> deny から削除
+```
+
+---
+
 ## ファイル構成
 
 ```
@@ -177,11 +194,13 @@ plugins/company/
 ├── .claude-plugin/
 │   └── plugin.json                 プラグイン定義
 ├── README.md                       This file
-└── skills/company/
-    ├── SKILL.md                    /company スキル本体
-    └── references/
-        ├── departments.md          全部署・チームのテンプレート集
-        └── claude-md-template.md   HD + PJ会社の CLAUDE.md 生成テンプレート
+├── skills/company/
+│   ├── SKILL.md                    /company スキル本体
+│   └── references/
+│       ├── departments.md          全部署・チームのテンプレート集
+│       └── claude-md-template.md   HD + PJ会社の CLAUDE.md 生成テンプレート
+└── skills/permission/
+    └── SKILL.md                    /permission スキル本体
 
 company-dashboard/                  Web ダッシュボード
 ├── index.html                      SPA (単一ファイル)
