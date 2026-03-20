@@ -82,6 +82,9 @@ curl -s -o /dev/null -w "" \
   --max-time 10 \
   2>/dev/null || true
 
+# Sync slash commands (diff-based)
+"$SCRIPT_DIR/sync-slash-commands.sh" "$PROJECT_DIR" 2>/dev/null || true
+
 # Log sync activity
 ACTIVITY=$(jq -n \
   --arg action "hook_sync" \

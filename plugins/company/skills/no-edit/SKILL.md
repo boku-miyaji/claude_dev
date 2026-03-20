@@ -4,6 +4,7 @@ description: >
   ファイル編集を一切せず、調査・回答のみを行う読み取り専用モード。
   /no-edit に続けて質問や指示を書くと、調べて答えるだけで何も変更しない。
 trigger: /no-edit
+category: utility
 ---
 
 # No-Edit Mode（読み取り専用）

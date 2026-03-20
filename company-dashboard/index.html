@@ -251,10 +251,12 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
     <button class="nav-item" data-page="orgchart"><span class="nav-icon">⊞</span> Org Chart</button>
     <button class="nav-item" data-page="portfolio"><span class="nav-icon">◆</span> Portfolio</button>
+    <button class="nav-item" data-page="finance"><span class="nav-icon">¥</span> Finance</button>
     <button class="nav-item" data-page="career"><span class="nav-icon">☆</span> Career</button>
     <button class="nav-item" data-page="knowledge"><span class="nav-icon">◈</span> Knowledge</button>
     <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
+    <button class="nav-item" data-page="commands"><span class="nav-icon">⌘</span> Commands</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <div class="nav-spacer"></div>
     <div class="nav-user" id="nav-user"></div>
@@ -458,6 +460,8 @@ function renderPage(page) {
     knowledge: renderKnowledge,
     prompts: renderPrompts,
     insights: renderInsights,
+    finance: renderFinance,
+    commands: renderSlashCommands,
     settings: renderSettings
   };
   if (renderers[page]) renderers[page](p);
@@ -1513,6 +1517,446 @@ async function renderInsights(root) {
     });
 
     root.appendChild(card);
+  });
+}
+
+// ============================================================
+// Finance Page
+// ============================================================
+function fmtYen(n) { return '¥' + (n || 0).toLocaleString(); }
+
+async function renderFinance(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Finance'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '売上・経費・稼働時間・税金の管理'}));
+
+  // Tabs
+  var tabs = ['overview', 'projects', 'invoices', 'expenses', 'time', 'tax'];
+  var tabLabels = {overview:'概要',projects:'案件',invoices:'請求書',expenses:'経費',time:'稼働時間',tax:'税金'};
+  var tabBar = el('div', {style: 'display:flex;gap:2px;margin:24px 0 20px;border-bottom:1px solid var(--border)'});
+  var tabContent = el('div');
+  root.appendChild(tabBar);
+  root.appendChild(tabContent);
+
+  function switchTab(tab) {
+    tabBar.querySelectorAll('button').forEach(function(b) { b.style.borderBottom = b.dataset.tab === tab ? '2px solid var(--accent)' : '2px solid transparent'; b.style.color = b.dataset.tab === tab ? 'var(--text)' : 'var(--text3)'; });
+    while (tabContent.firstChild) tabContent.removeChild(tabContent.firstChild);
+    var renderers = {overview: finOverview, projects: finProjects, invoices: finInvoices, expenses: finExpenses, time: finTime, tax: finTax};
+    if (renderers[tab]) renderers[tab](tabContent);
+  }
+
+  tabs.forEach(function(t) {
+    tabBar.appendChild(el('button', {
+      'data-tab': t,
+      textContent: tabLabels[t],
+      style: 'background:none;border:none;padding:8px 16px;cursor:pointer;font-size:13px;font-family:var(--font);font-weight:500;border-bottom:2px solid transparent;color:var(--text3);transition:all .2s',
+      onClick: function() { switchTab(t); }
+    }));
+  });
+  switchTab('overview');
+}
+
+// --- Finance: Overview ---
+async function finOverview(root) {
+  var now = new Date();
+  var ym = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  var startOfMonth = ym + '-01';
+  var endOfMonth = ym + '-31';
+
+  var [invRes, expRes, timeRes, projRes, taxRes] = await Promise.all([
+    sb.from('invoices').select('*').gte('invoice_date', startOfMonth).lte('invoice_date', endOfMonth),
+    sb.from('expenses').select('*').gte('expense_date', startOfMonth).lte('expense_date', endOfMonth),
+    sb.from('time_entries').select('*').gte('work_date', startOfMonth).lte('work_date', endOfMonth),
+    sb.from('projects').select('*').eq('status', 'active'),
+    sb.from('tax_payments').select('*').eq('status', 'upcoming').order('due_date').limit(5)
+  ]);
+
+  var invoices = invRes.data || [];
+  var expenses = expRes.data || [];
+  var entries = timeRes.data || [];
+  var projects = projRes.data || [];
+  var taxes = taxRes.data || [];
+
+  var totalRev = invoices.reduce(function(s,i){return s+i.amount;}, 0);
+  var totalExp = expenses.reduce(function(s,e){return s+e.amount;}, 0);
+  var totalHrs = entries.reduce(function(s,t){return s+parseFloat(t.hours);}, 0);
+  var grossProfit = totalRev - totalExp;
+  var hourlyRate = totalHrs > 0 ? Math.round(totalRev / totalHrs) : 0;
+
+  // Summary cards
+  var cards = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px'});
+  [{l:'売上',v:fmtYen(totalRev),c:'var(--accent)'},{l:'経費',v:fmtYen(totalExp),c:'var(--text3)'},{l:'粗利',v:fmtYen(grossProfit),c:grossProfit>=0?'#22c55e':'#ef4444'},{l:'稼働',v:totalHrs.toFixed(1)+'h',c:'var(--text)'},{l:'実質時給',v:fmtYen(hourlyRate),c:'var(--accent2)'}].forEach(function(d) {
+    cards.appendChild(el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:20px'}, [
+      el('div', {textContent: d.l, style: 'font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px'}),
+      el('div', {textContent: d.v, style: 'font-size:24px;font-weight:600;color:'+d.c})
+    ]));
+  });
+  root.appendChild(el('h3', {textContent: now.getFullYear()+'年'+(now.getMonth()+1)+'月', style: 'margin:0 0 16px;font-size:16px;font-weight:600'}));
+  root.appendChild(cards);
+
+  // Project breakdown
+  if (entries.length > 0 || invoices.length > 0) {
+    root.appendChild(el('h3', {textContent: '案件別', style: 'margin:24px 0 12px;font-size:14px;font-weight:600'}));
+    var tbl = el('table', {style: 'width:100%;border-collapse:collapse;font-size:13px'});
+    tbl.appendChild(el('thead', {}, [el('tr', {}, ['案件','売上','稼働','時給'].map(function(h){return el('th',{textContent:h,style:'text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:500'})}))]));
+    var tbody = el('tbody');
+    var projMap = {};
+    projects.forEach(function(p) { projMap[p.id] = p; });
+    // Group by project
+    var projStats = {};
+    invoices.forEach(function(inv) {
+      var pid = inv.project_id || 'unassigned';
+      if (!projStats[pid]) projStats[pid] = {rev:0,hrs:0};
+      projStats[pid].rev += inv.amount;
+    });
+    entries.forEach(function(te) {
+      var pid = te.project_id || 'unassigned';
+      if (!projStats[pid]) projStats[pid] = {rev:0,hrs:0};
+      projStats[pid].hrs += parseFloat(te.hours);
+    });
+    Object.keys(projStats).forEach(function(pid) {
+      var s = projStats[pid];
+      var pname = pid === 'unassigned' ? '未割当' : (projMap[pid] ? projMap[pid].name : 'PJ#'+pid);
+      var rate = s.hrs > 0 ? Math.round(s.rev / s.hrs) : '-';
+      tbody.appendChild(el('tr', {}, [
+        el('td', {textContent: pname, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
+        el('td', {textContent: fmtYen(s.rev), style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
+        el('td', {textContent: s.hrs.toFixed(1)+'h', style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
+        el('td', {textContent: typeof rate === 'number' ? fmtYen(rate) : rate, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'})
+      ]));
+    });
+    tbl.appendChild(tbody);
+    root.appendChild(tbl);
+  }
+
+  // Upcoming tax
+  if (taxes.length > 0) {
+    root.appendChild(el('h3', {textContent: '次の税金支払い', style: 'margin:24px 0 12px;font-size:14px;font-weight:600'}));
+    taxes.forEach(function(t) {
+      var typeLabels = {income_tax:'所得税',consumption_tax:'消費税',resident_tax:'住民税',business_tax:'事業税',estimated_tax:'予定納税'};
+      root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px'}, [
+        el('span', {textContent: (typeLabels[t.tax_type]||t.tax_type) + (t.period ? ' '+t.period : '')}),
+        el('span', {style: 'display:flex;gap:16px'}, [
+          el('span', {textContent: fmtDate(t.due_date), style: 'color:var(--text3)'}),
+          el('span', {textContent: fmtYen(t.amount), style: 'font-weight:600'})
+        ])
+      ]));
+    });
+  }
+
+  // Unpaid invoices
+  var unpaid = invoices.filter(function(i){return i.status !== 'paid';});
+  if (unpaid.length > 0) {
+    root.appendChild(el('h3', {textContent: '未入金 ('+unpaid.length+'件)', style: 'margin:24px 0 12px;font-size:14px;font-weight:600;color:#ef4444'}));
+    unpaid.forEach(function(inv) {
+      root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px'}, [
+        el('span', {textContent: inv.client_name + (inv.invoice_number ? ' #'+inv.invoice_number : '')}),
+        el('span', {style: 'display:flex;gap:16px'}, [
+          el('span', {textContent: '期限: '+fmtDate(inv.due_date), style: 'color:var(--text3)'}),
+          el('span', {textContent: fmtYen(inv.amount), style: 'font-weight:600'})
+        ])
+      ]));
+    });
+  }
+}
+
+// --- Finance: Projects ---
+async function finProjects(root) {
+  var res = await sb.from('projects').select('*').order('status,created_at');
+  var projects = res.data || [];
+  var statusLabels = {active:'稼働中',completed:'完了',paused:'中断',cancelled:'中止'};
+  var typeLabels = {project:'プロジェクト',monthly:'月額',hourly:'時間制',consulting:'コンサル'};
+
+  if (projects.length === 0) {
+    root.appendChild(el('div', {textContent: '案件が未登録です。/invoice project add で追加してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
+    return;
+  }
+
+  projects.forEach(function(p) {
+    var statusColor = p.status === 'active' ? '#22c55e' : p.status === 'completed' ? 'var(--text3)' : '#f59e0b';
+    root.appendChild(el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px'}, [
+      el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'}, [
+        el('div', {style: 'font-weight:600;font-size:14px'}, [
+          el('span', {textContent: p.name}),
+          el('span', {textContent: ' · '+p.client_name, style: 'color:var(--text3);font-weight:400'})
+        ]),
+        el('span', {textContent: statusLabels[p.status]||p.status, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+statusColor+'20;color:'+statusColor})
+      ]),
+      el('div', {style: 'display:flex;gap:24px;font-size:12px;color:var(--text3)'}, [
+        el('span', {textContent: typeLabels[p.contract_type]||p.contract_type}),
+        p.default_rate ? el('span', {textContent: '目標: '+fmtYen(p.default_rate)+'/h'}) : null,
+        p.budget ? el('span', {textContent: '予算: '+fmtYen(p.budget)}) : null,
+        p.start_date ? el('span', {textContent: fmtDate(p.start_date)+'〜'+(p.end_date?fmtDate(p.end_date):'')}) : null
+      ])
+    ]));
+  });
+}
+
+// --- Finance: Invoices ---
+async function finInvoices(root) {
+  var res = await sb.from('invoices').select('*').order('invoice_date', {ascending:false});
+  var invoices = res.data || [];
+  var statusColors = {draft:'var(--text3)',sent:'#3b82f6',paid:'#22c55e',overdue:'#ef4444',cancelled:'var(--text3)'};
+  var statusLabels = {draft:'下書',sent:'送付済',paid:'入金済',overdue:'期限超過',cancelled:'取消'};
+
+  if (invoices.length === 0) {
+    root.appendChild(el('div', {textContent: '請求書が未登録です。/invoice add <ファイル> で追加してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
+    return;
+  }
+
+  var tbl = el('table', {style: 'width:100%;border-collapse:collapse;font-size:13px'});
+  tbl.appendChild(el('thead', {}, [el('tr', {}, ['日付','請求先','番号','金額','状態','入金日'].map(function(h){return el('th',{textContent:h,style:'text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:500'})}))]));
+  var tbody = el('tbody');
+  invoices.forEach(function(inv) {
+    var sc = statusColors[inv.status]||'var(--text3)';
+    tbody.appendChild(el('tr', {}, [
+      el('td', {textContent: fmtDate(inv.invoice_date), style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
+      el('td', {textContent: inv.client_name, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
+      el('td', {textContent: inv.invoice_number||'-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'}),
+      el('td', {textContent: fmtYen(inv.amount), style: 'padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600'}),
+      el('td', {style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}, [
+        el('span', {textContent: statusLabels[inv.status]||inv.status, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+sc+'20;color:'+sc})
+      ]),
+      el('td', {textContent: inv.paid_date ? fmtDate(inv.paid_date) : '-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'})
+    ]));
+  });
+  tbl.appendChild(tbody);
+  root.appendChild(tbl);
+}
+
+// --- Finance: Expenses ---
+async function finExpenses(root) {
+  var res = await sb.from('expenses').select('*').order('expense_date', {ascending:false});
+  var expenses = res.data || [];
+  var catLabels = {equipment:'機材',transportation:'交通費',communication:'通信費',office:'事務所',outsourcing:'外注',supplies:'消耗品',insurance:'保険',tax_payment:'税金',subscription:'サブスク',education:'研修',entertainment:'交際費',other:'他'};
+
+  if (expenses.length === 0) {
+    root.appendChild(el('div', {textContent: '経費が未登録です。/invoice expense で追加してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
+    return;
+  }
+
+  // Monthly total
+  var monthTotal = expenses.reduce(function(s,e){return s+e.amount;},0);
+  root.appendChild(el('div', {style: 'margin-bottom:20px;font-size:14px'}, [
+    el('span', {textContent: '合計: ', style: 'color:var(--text3)'}),
+    el('span', {textContent: fmtYen(monthTotal), style: 'font-weight:600;font-size:18px'})
+  ]));
+
+  // Category breakdown
+  var byCat = {};
+  expenses.forEach(function(e) {
+    byCat[e.category] = (byCat[e.category]||0) + e.amount;
+  });
+  var catBar = el('div', {style: 'display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px'});
+  Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a];}).forEach(function(cat) {
+    var pct = monthTotal > 0 ? Math.round(byCat[cat]/monthTotal*100) : 0;
+    catBar.appendChild(el('div', {style: 'font-size:12px;color:var(--text3)'}, [
+      el('span', {textContent: (catLabels[cat]||cat)+' '}),
+      el('span', {textContent: fmtYen(byCat[cat])+' ('+pct+'%)', style: 'font-weight:500;color:var(--text)'})
+    ]));
+  });
+  root.appendChild(catBar);
+
+  // List
+  expenses.forEach(function(e) {
+    root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px'}, [
+      el('div', {}, [
+        el('span', {textContent: e.description}),
+        el('span', {textContent: ' · '+(catLabels[e.category]||e.category), style: 'color:var(--text3)'})
+      ]),
+      el('div', {style: 'display:flex;gap:16px;align-items:center'}, [
+        el('span', {textContent: fmtDate(e.expense_date), style: 'color:var(--text3);font-size:12px'}),
+        el('span', {textContent: fmtYen(e.amount), style: 'font-weight:600'})
+      ])
+    ]));
+  });
+}
+
+// --- Finance: Time Entries ---
+async function finTime(root) {
+  var res = await sb.from('time_entries').select('*').order('work_date', {ascending:false}).limit(100);
+  var projRes = await sb.from('projects').select('id,name,client_name');
+  var entries = res.data || [];
+  var projMap = {};
+  (projRes.data||[]).forEach(function(p) { projMap[p.id] = p; });
+
+  if (entries.length === 0) {
+    root.appendChild(el('div', {textContent: '稼働記録がありません。/invoice sync でカレンダーから同期してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
+    return;
+  }
+
+  var totalHrs = entries.reduce(function(s,e){return s+parseFloat(e.hours);},0);
+  root.appendChild(el('div', {style: 'margin-bottom:20px;font-size:14px'}, [
+    el('span', {textContent: '合計: ', style: 'color:var(--text3)'}),
+    el('span', {textContent: totalHrs.toFixed(1)+'h', style: 'font-weight:600;font-size:18px'}),
+    el('span', {textContent: ' ('+entries.length+'件)', style: 'color:var(--text3);margin-left:8px'})
+  ]));
+
+  // Group by date
+  var byDate = {};
+  entries.forEach(function(e) {
+    if (!byDate[e.work_date]) byDate[e.work_date] = [];
+    byDate[e.work_date].push(e);
+  });
+
+  Object.keys(byDate).sort().reverse().forEach(function(date) {
+    var dayEntries = byDate[date];
+    var dayTotal = dayEntries.reduce(function(s,e){return s+parseFloat(e.hours);},0);
+    root.appendChild(el('div', {style: 'margin-top:16px;margin-bottom:8px;display:flex;justify-content:space-between;font-size:13px;font-weight:600'}, [
+      el('span', {textContent: fmtDate(date)}),
+      el('span', {textContent: dayTotal.toFixed(1)+'h', style: 'color:var(--accent)'})
+    ]));
+    dayEntries.forEach(function(e) {
+      var proj = projMap[e.project_id];
+      root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:6px 0 6px 16px;border-left:2px solid var(--border);font-size:13px;color:var(--text2)'}, [
+        el('div', {}, [
+          proj ? el('span', {textContent: proj.name+' ', style: 'color:var(--text)'}) : null,
+          el('span', {textContent: e.description||'', style: 'color:var(--text3)'})
+        ]),
+        el('div', {style: 'display:flex;gap:12px;align-items:center'}, [
+          el('span', {textContent: parseFloat(e.hours).toFixed(1)+'h'}),
+          el('span', {textContent: e.source === 'calendar' ? '📅' : '✏️', style: 'font-size:11px'})
+        ])
+      ]));
+    });
+  });
+}
+
+// --- Finance: Tax ---
+async function finTax(root) {
+  var res = await sb.from('tax_payments').select('*').order('due_date');
+  var payments = res.data || [];
+  var typeLabels = {income_tax:'所得税',consumption_tax:'消費税',resident_tax:'住民税',business_tax:'個人事業税',estimated_tax:'予定納税'};
+  var statusLabels = {upcoming:'予定',paid:'支払済',overdue:'期限超過'};
+  var statusColors = {upcoming:'#3b82f6',paid:'#22c55e',overdue:'#ef4444'};
+
+  if (payments.length === 0) {
+    root.appendChild(el('div', {textContent: '税金情報がありません。/invoice tax でシミュレーションを実行してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
+    return;
+  }
+
+  // Group by year
+  var byYear = {};
+  payments.forEach(function(p) { if (!byYear[p.tax_year]) byYear[p.tax_year]=[]; byYear[p.tax_year].push(p); });
+
+  Object.keys(byYear).sort().reverse().forEach(function(year) {
+    var yearPayments = byYear[year];
+    var yearTotal = yearPayments.reduce(function(s,p){return s+p.amount;},0);
+    var yearPaid = yearPayments.filter(function(p){return p.status==='paid';}).reduce(function(s,p){return s+p.amount;},0);
+
+    root.appendChild(el('div', {style: 'margin-top:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline'}, [
+      el('h3', {textContent: year+'年度', style: 'font-size:15px;font-weight:600;margin:0'}),
+      el('div', {style: 'font-size:13px;color:var(--text3)'}, [
+        el('span', {textContent: '支払済: '+fmtYen(yearPaid)+' / '+fmtYen(yearTotal)})
+      ])
+    ]));
+
+    yearPayments.forEach(function(p) {
+      var sc = statusColors[p.status]||'var(--text3)';
+      root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px'}, [
+        el('div', {}, [
+          el('span', {textContent: typeLabels[p.tax_type]||p.tax_type, style: 'font-weight:500'}),
+          p.period ? el('span', {textContent: ' '+p.period, style: 'color:var(--text3)'}) : null
+        ]),
+        el('div', {style: 'display:flex;gap:16px;align-items:center'}, [
+          el('span', {textContent: fmtDate(p.due_date), style: 'color:var(--text3)'}),
+          el('span', {textContent: fmtYen(p.amount), style: 'font-weight:600'}),
+          el('span', {textContent: statusLabels[p.status]||p.status, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+sc+'20;color:'+sc})
+        ])
+      ]));
+    });
+  });
+}
+
+// ============================================================
+// Slash Commands Page
+// ============================================================
+async function renderSlashCommands(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Slash Commands'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'カスタムスキル・スラッシュコマンドの一覧（カテゴリ別）'}));
+
+  var res = await sb.from('slash_commands').select('*').eq('status', 'active').order('category');
+  var cmds = res.data || [];
+
+  if (cmds.length === 0) {
+    root.appendChild(el('div', {className: 'card'}, [
+      el('div', {className: 'empty', textContent: 'コマンドが登録されていません。次のセッション起動時に自動同期されます。'})
+    ]));
+    return;
+  }
+
+  // KPIs
+  var categories = {};
+  cmds.forEach(function(c) {
+    if (!categories[c.category]) categories[c.category] = [];
+    categories[c.category].push(c);
+  });
+  var catKeys = Object.keys(categories);
+
+  var kpiGrid = el('div', {className: 'g4', style: 'margin-bottom:28px'}, [
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val good', textContent: String(cmds.length)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Total Commands'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: String(catKeys.length)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Categories'})
+    ])
+  ]);
+  root.appendChild(kpiGrid);
+
+  // Category labels & colors
+  var catMeta = {
+    organization: {label: '組織・タスク管理', icon: '◫', color: 'var(--blue)'},
+    permission:   {label: '権限・設定管理', icon: '⚙', color: 'var(--orange)'},
+    utility:      {label: 'ユーティリティ', icon: '◇', color: 'var(--green)'},
+    workflow:     {label: 'ワークフロー', icon: '▷', color: 'var(--purple, #8b5cf6)'},
+    document:     {label: 'ドキュメント・資料', icon: '◆', color: 'var(--yellow, #eab308)'},
+    analysis:     {label: '分析・可視化', icon: '◈', color: 'var(--cyan, #06b6d4)'},
+    development:  {label: '開発支援', icon: '☐', color: 'var(--red)'},
+    other:        {label: 'その他', icon: '○', color: 'var(--text3)'}
+  };
+
+  // Render by category
+  catKeys.sort().forEach(function(cat) {
+    var meta = catMeta[cat] || catMeta.other;
+    var items = categories[cat];
+
+    var section = el('div', {style: 'margin-bottom:24px'});
+    section.appendChild(el('div', {className: 'section-title', style: 'color:' + meta.color}, [
+      document.createTextNode(meta.icon + ' ' + meta.label + ' (' + items.length + ')')
+    ]));
+
+    var card = el('div', {className: 'card'});
+    items.forEach(function(cmd) {
+      var row = el('div', {style: 'padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:16px'});
+
+      // Trigger badge
+      var badge = el('code', {
+        textContent: cmd.trigger,
+        style: 'background:var(--accent-bg);color:var(--accent);padding:3px 10px;border-radius:4px;font-size:13px;font-weight:600;white-space:nowrap'
+      });
+      row.appendChild(badge);
+
+      // Description + source
+      var info = el('div', {style: 'flex:1;min-width:0'});
+      if (cmd.description) {
+        info.appendChild(el('div', {textContent: cmd.description, style: 'font-size:13px;color:var(--text);line-height:1.5'}));
+      }
+      var metaLine = el('div', {style: 'font-size:11px;color:var(--text3);margin-top:4px'});
+      if (cmd.source) metaLine.appendChild(document.createTextNode(cmd.source));
+      if (cmd.source_path) {
+        metaLine.appendChild(document.createTextNode(' · '));
+        metaLine.appendChild(el('span', {textContent: cmd.source_path, style: 'opacity:0.7'}));
+      }
+      info.appendChild(metaLine);
+      row.appendChild(info);
+
+      card.appendChild(row);
+    });
+    // Remove last border
+    if (card.lastChild) card.lastChild.style.borderBottom = 'none';
+    section.appendChild(card);
+    root.appendChild(section);
   });
 }
 

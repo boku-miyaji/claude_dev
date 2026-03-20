@@ -5,6 +5,7 @@ description: >
   full / safe / strict の3段階 + show / add / remove で個別管理。
   PermissionRequest Hook により、セッション内で即座に反映される。
 trigger: /permission
+category: permission
 ---
 
 # Permission Manager

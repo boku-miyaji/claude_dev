@@ -4,6 +4,7 @@ description: >
   HD（ホールディングス）+ PJ別会社の仮想組織管理。
   引数なしでHD秘書、引数ありで各PJ会社の秘書が起動する。
 trigger: /company
+category: organization
 ---
 
 # 仮想カンパニー（HD + PJ会社）
