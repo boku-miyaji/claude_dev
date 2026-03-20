@@ -173,10 +173,21 @@ PJSON
     echo '{"version": 2, "plugins": {}}' > "$IP_FILE"
   fi
   HAS_PLUGIN=$(jq '.plugins | has("company@ai-company")' "$IP_FILE" 2>/dev/null || echo "false")
+  # Fix existing entry if scope is wrong (user → project with projectPath)
+  if [ "$HAS_PLUGIN" = "true" ]; then
+    CURRENT_SCOPE=$(jq -r '.plugins["company@ai-company"][0].scope // ""' "$IP_FILE" 2>/dev/null)
+    CURRENT_PROJPATH=$(jq -r '.plugins["company@ai-company"][0].projectPath // ""' "$IP_FILE" 2>/dev/null)
+    if [ "$CURRENT_SCOPE" != "project" ] || [ "$CURRENT_PROJPATH" != "$PROJECT_DIR" ]; then
+      NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+      jq --arg path "$CACHE_BASE" --arg now "$NOW" --arg projpath "$PROJECT_DIR" \
+        '.plugins["company@ai-company"] = [{"scope": "project", "installPath": $path, "version": "1.0.0", "installedAt": $now, "lastUpdated": $now, "projectPath": $projpath}]' \
+        "$IP_FILE" > "$IP_FILE.tmp" && mv "$IP_FILE.tmp" "$IP_FILE"
+    fi
+  fi
   if [ "$HAS_PLUGIN" != "true" ]; then
     NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-    jq --arg path "$CACHE_BASE" --arg now "$NOW" \
-      '.plugins["company@ai-company"] = [{"scope": "user", "installPath": $path, "version": "1.0.0", "installedAt": $now, "lastUpdated": $now}]' \
+    jq --arg path "$CACHE_BASE" --arg now "$NOW" --arg projpath "$PROJECT_DIR" \
+      '.plugins["company@ai-company"] = [{"scope": "project", "installPath": $path, "version": "1.0.0", "installedAt": $now, "lastUpdated": $now, "projectPath": $projpath}]' \
       "$IP_FILE" > "$IP_FILE.tmp" && mv "$IP_FILE.tmp" "$IP_FILE"
   fi
 fi
