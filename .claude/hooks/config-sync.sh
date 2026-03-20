@@ -152,6 +152,33 @@ PJSON
       cp -rf "$skill_dir/references" "$cache_skill_dir/"
     fi
   done
+
+  # Register in known_marketplaces.json if missing
+  KM_FILE="$HOME/.claude/plugins/known_marketplaces.json"
+  if [ ! -f "$KM_FILE" ]; then
+    echo '{}' > "$KM_FILE"
+  fi
+  HAS_AI_COMPANY=$(jq 'has("ai-company")' "$KM_FILE" 2>/dev/null || echo "false")
+  if [ "$HAS_AI_COMPANY" != "true" ]; then
+    MP_LOCATION="$HOME/.claude/plugins/marketplaces/ai-company"
+    mkdir -p "$MP_LOCATION"
+    jq --arg loc "$MP_LOCATION" \
+      '. + {"ai-company": {"source": {"source": "github", "repo": "boku-miyaji/claude_dev"}, "installLocation": $loc, "lastUpdated": (now | todate)}}' \
+      "$KM_FILE" > "$KM_FILE.tmp" && mv "$KM_FILE.tmp" "$KM_FILE"
+  fi
+
+  # Register in installed_plugins.json if missing
+  IP_FILE="$HOME/.claude/plugins/installed_plugins.json"
+  if [ ! -f "$IP_FILE" ]; then
+    echo '{"version": 2, "plugins": {}}' > "$IP_FILE"
+  fi
+  HAS_PLUGIN=$(jq '.plugins | has("company@ai-company")' "$IP_FILE" 2>/dev/null || echo "false")
+  if [ "$HAS_PLUGIN" != "true" ]; then
+    NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+    jq --arg path "$CACHE_BASE" --arg now "$NOW" \
+      '.plugins["company@ai-company"] = [{"scope": "user", "installPath": $path, "version": "1.0.0", "installedAt": $now, "lastUpdated": $now}]' \
+      "$IP_FILE" > "$IP_FILE.tmp" && mv "$IP_FILE.tmp" "$IP_FILE"
+  fi
 fi
 
 # Sync slash commands (diff-based)
