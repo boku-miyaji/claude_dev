@@ -195,6 +195,31 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 
 /* Subtle gradient line */
 .gradient-line{height:1px;background:linear-gradient(90deg,transparent,var(--accent-border),transparent);margin:24px 0}
+
+/* Org Tree */
+.tree{display:flex;flex-direction:column;align-items:center;padding:32px 16px;overflow-x:auto}
+.tree-node{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 20px;text-align:center;position:relative;min-width:120px;transition:all .2s}
+.tree-node:hover{border-color:var(--accent-border);box-shadow:var(--shadow)}
+.tree-node-hd{background:linear-gradient(135deg,var(--accent-bg),rgba(124,108,255,.08));border-color:var(--accent-border);min-width:160px}
+.tree-node-co{min-width:140px}
+.tree-node-dept{min-width:110px;padding:10px 14px}
+.tree-node-team{min-width:90px;padding:8px 12px;font-size:11px;background:var(--surface2)}
+.tree-node .tn-title{font-weight:600;font-size:13px;letter-spacing:-.02em}
+.tree-node .tn-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.tree-node .tn-id{font-size:9px;font-family:var(--mono);color:var(--accent2);margin-top:4px}
+.tree-node-hd .tn-title{font-size:15px;color:var(--accent)}
+
+.tree-children{display:flex;gap:0;justify-content:center;position:relative;padding-top:24px}
+.tree-children::before{content:'';position:absolute;top:0;left:50%;width:1px;height:24px;background:var(--border2)}
+.tree-children>*{position:relative;padding:0 12px}
+.tree-children>*::before{content:'';position:absolute;top:-24px;left:50%;width:1px;height:24px;background:var(--border2)}
+.tree-children[data-count]::after{content:'';position:absolute;top:0;height:1px;background:var(--border2)}
+.tree-branch{display:flex;flex-direction:column;align-items:center}
+
+/* Horizontal connector */
+.tree-hline{position:relative}
+.tree-hline::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--border2)}
+@media(max-width:768px){.tree{padding:16px 8px}.tree-children{flex-direction:column;align-items:center;gap:8px;padding-top:16px}.tree-children::before{height:16px}.tree-children>*::before{height:16px;top:-16px}.tree-children>*{padding:0}}
 </style>
 </head>
 <body>
@@ -224,6 +249,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="inbox"><span class="nav-icon">＋</span> Inbox</button>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
+    <button class="nav-item" data-page="orgchart"><span class="nav-icon">⊞</span> Org Chart</button>
     <button class="nav-item" data-page="knowledge"><span class="nav-icon">◈</span> Knowledge</button>
     <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
@@ -424,6 +450,7 @@ function renderPage(page) {
     inbox: renderInbox,
     tasks: renderTasks,
     companies: renderCompanies,
+    orgchart: renderOrgChart,
     knowledge: renderKnowledge,
     prompts: renderPrompts,
     insights: renderInsights,
@@ -888,6 +915,135 @@ function showAddCategory(cats) {
       navigate('companies');
     }})
   ]);
+}
+
+// ============================================================
+// Org Chart Page
+// ============================================================
+
+async function renderOrgChart(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Organization Chart'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'HD → 子会社 → 部署 → チームのツリー構造'}));
+
+  var companies = (await sb.from('companies').select('*').order('created_at')).data || [];
+  var departments = (await sb.from('departments').select('*').order('company_id,name')).data || [];
+  var categories = (await sb.from('categories').select('*').order('sort_order')).data || [];
+
+  // Group departments by company
+  var deptsByCompany = {};
+  departments.forEach(function(d) {
+    if (!deptsByCompany[d.company_id]) deptsByCompany[d.company_id] = [];
+    deptsByCompany[d.company_id].push(d);
+  });
+
+  // Group companies by category
+  var companiesByCat = {_none: []};
+  categories.forEach(function(c) { companiesByCat[c.id] = []; });
+  companies.forEach(function(c) {
+    var key = c.category_id || '_none';
+    if (!companiesByCat[key]) companiesByCat[key] = [];
+    companiesByCat[key].push(c);
+  });
+
+  if (companies.length === 0) {
+    root.appendChild(el('div', {className: 'card'}, [
+      el('div', {className: 'empty', textContent: 'まだ会社がありません。/company で作成してください'})
+    ]));
+    return;
+  }
+
+  // Build tree
+  var tree = el('div', {className: 'tree'});
+
+  // HD node
+  var hdNode = el('div', {className: 'tree-node tree-node-hd'}, [
+    el('div', {className: 'tn-title', textContent: '宮路HD'}),
+    el('div', {className: 'tn-sub', textContent: companies.length + ' companies'}),
+  ]);
+  tree.appendChild(hdNode);
+
+  // Company level
+  var activeCompanies = companies.filter(function(c) { return c.status === 'active'; });
+  var archivedCompanies = companies.filter(function(c) { return c.status !== 'active'; });
+
+  if (activeCompanies.length > 0) {
+    var coChildren = el('div', {className: 'tree-children'});
+
+    activeCompanies.forEach(function(co) {
+      var branch = el('div', {className: 'tree-branch'});
+
+      // Company node
+      var statusDot = co.status === 'active' ? 'dot-active' : co.status === 'paused' ? 'dot-paused' : 'dot-archived';
+      var coNode = el('div', {className: 'tree-node tree-node-co'}, [
+        el('div', {style: 'display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:4px'}, [
+          el('span', {className: 'dot ' + statusDot}),
+          el('div', {className: 'tn-title', textContent: co.name})
+        ]),
+        co.description ? el('div', {className: 'tn-sub', textContent: co.description.substring(0, 30)}) : null,
+        el('div', {className: 'tn-id', textContent: co.id})
+      ].filter(Boolean));
+      branch.appendChild(coNode);
+
+      // Department level
+      var depts = deptsByCompany[co.id] || [];
+      if (depts.length > 0) {
+        var deptChildren = el('div', {className: 'tree-children'});
+
+        depts.forEach(function(dept) {
+          var deptBranch = el('div', {className: 'tree-branch'});
+          var teams = dept.teams || [];
+
+          var deptNode = el('div', {className: 'tree-node tree-node-dept'}, [
+            el('div', {className: 'tn-title', textContent: dept.name}),
+            teams.length > 0 ? el('div', {className: 'tn-sub', textContent: teams.length + ' teams'}) : null
+          ].filter(Boolean));
+          deptBranch.appendChild(deptNode);
+
+          // Team level
+          if (teams.length > 0) {
+            var teamChildren = el('div', {className: 'tree-children'});
+            teams.forEach(function(team) {
+              var teamName = typeof team === 'string' ? team : (team.name || team);
+              teamChildren.appendChild(el('div', {className: 'tree-branch'}, [
+                el('div', {className: 'tree-node tree-node-team'}, [
+                  el('div', {className: 'tn-title', textContent: teamName})
+                ])
+              ]));
+            });
+            deptBranch.appendChild(teamChildren);
+          }
+
+          deptChildren.appendChild(deptBranch);
+        });
+
+        branch.appendChild(deptChildren);
+      }
+
+      coChildren.appendChild(branch);
+    });
+
+    tree.appendChild(coChildren);
+  }
+
+  // Archived (collapsed)
+  if (archivedCompanies.length > 0) {
+    var archSection = el('div', {style: 'margin-top:24px;text-align:center'});
+    archSection.appendChild(el('div', {className: 'section-title', textContent: 'Archived (' + archivedCompanies.length + ')'}));
+    var archList = el('div', {style: 'display:flex;gap:8px;justify-content:center;flex-wrap:wrap'});
+    archivedCompanies.forEach(function(co) {
+      archList.appendChild(el('div', {className: 'tree-node tree-node-co', style: 'opacity:.5'}, [
+        el('div', {style: 'display:flex;align-items:center;gap:6px;justify-content:center'}, [
+          el('span', {className: 'dot dot-archived'}),
+          el('div', {className: 'tn-title', textContent: co.name})
+        ]),
+        el('div', {className: 'tn-id', textContent: co.id})
+      ]));
+    });
+    archSection.appendChild(archList);
+    tree.appendChild(archSection);
+  }
+
+  root.appendChild(el('div', {className: 'card', style: 'overflow-x:auto'}, [tree]));
 }
 
 // ============================================================
