@@ -1457,12 +1457,81 @@ async function renderInsights(root) {
   }
 
   // Category config
+  // --- Work Rhythm Chart (from prompt_log timestamps) ---
+  var logRes = await sb.from('prompt_log').select('created_at');
+  var logs = logRes.data || [];
+  if (logs.length >= 5) {
+    root.appendChild(el('div', {className: 'section-title', textContent: '⏰ 稼働リズム'}));
+    var rhythmCard = el('div', {className: 'card', style: 'margin-bottom:24px'});
+
+    // Hour distribution (JST = UTC+9)
+    var hourCounts = new Array(24).fill(0);
+    var dowCounts = new Array(7).fill(0);
+    var dowLabels = ['日','月','火','水','木','金','土'];
+    logs.forEach(function(l) {
+      var d = new Date(l.created_at);
+      var jstHour = (d.getUTCHours() + 9) % 24;
+      hourCounts[jstHour]++;
+      var jstDay = new Date(d.getTime() + 9*60*60*1000).getDay();
+      dowCounts[jstDay]++;
+    });
+
+    var maxHour = Math.max.apply(null, hourCounts) || 1;
+    var maxDow = Math.max.apply(null, dowCounts) || 1;
+
+    // Hour chart
+    rhythmCard.appendChild(el('div', {textContent: '時間帯別アクティビティ', style: 'font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text2)'}));
+    var hourBar = el('div', {style: 'display:flex;align-items:flex-end;gap:2px;height:60px;margin-bottom:16px'});
+    for (var h = 0; h < 24; h++) {
+      var pct = Math.round(hourCounts[h] / maxHour * 100);
+      var isLate = h >= 22 || h < 6;
+      hourBar.appendChild(el('div', {
+        title: h + ':00 — ' + hourCounts[h] + '件',
+        style: 'flex:1;min-width:0;background:' + (isLate ? 'var(--red)' : 'var(--accent)') + ';opacity:' + (pct > 0 ? Math.max(0.3, pct/100) : 0.05) + ';height:' + Math.max(2, pct) + '%;border-radius:2px 2px 0 0;cursor:default'
+      }));
+    }
+    rhythmCard.appendChild(hourBar);
+    var hourLabels = el('div', {style: 'display:flex;gap:2px;font-size:9px;color:var(--text3);font-family:var(--mono)'});
+    for (var h2 = 0; h2 < 24; h2++) {
+      hourLabels.appendChild(el('div', {style: 'flex:1;min-width:0;text-align:center', textContent: h2 % 3 === 0 ? h2+'' : ''}));
+    }
+    rhythmCard.appendChild(hourLabels);
+
+    // Day of week chart
+    rhythmCard.appendChild(el('div', {textContent: '曜日別アクティビティ', style: 'font-size:12px;font-weight:600;margin:20px 0 8px;color:var(--text2)'}));
+    var dowBar = el('div', {style: 'display:flex;gap:4px;height:40px;align-items:flex-end'});
+    for (var dw = 0; dw < 7; dw++) {
+      var dpct = Math.round(dowCounts[dw] / maxDow * 100);
+      var isWeekend = dw === 0 || dw === 6;
+      dowBar.appendChild(el('div', {style: 'flex:1;display:flex;flex-direction:column;align-items:center;gap:4px'}, [
+        el('div', {style: 'width:100%;background:' + (isWeekend ? 'var(--amber)' : 'var(--accent)') + ';height:' + Math.max(2, dpct) + '%;border-radius:3px;opacity:' + (dpct > 0 ? Math.max(0.3, dpct/100) : 0.1)}),
+        el('div', {textContent: dowLabels[dw], style: 'font-size:10px;color:var(--text3)'})
+      ]));
+    }
+    rhythmCard.appendChild(dowBar);
+
+    // Stats summary
+    var peakHour = hourCounts.indexOf(maxHour);
+    var peakDow = dowCounts.indexOf(maxDow);
+    var lateNight = hourCounts.slice(22).reduce(function(a,b){return a+b;},0) + hourCounts.slice(0,6).reduce(function(a,b){return a+b;},0);
+    var lateRate = logs.length > 0 ? Math.round(lateNight / logs.length * 100) : 0;
+
+    rhythmCard.appendChild(el('div', {style: 'display:flex;gap:24px;margin-top:16px;font-size:12px;color:var(--text2)'}, [
+      el('span', {}, [el('span', {textContent: 'ピーク時間: ', style: 'color:var(--text3)'}), el('span', {textContent: peakHour+':00', style: 'font-weight:600'})]),
+      el('span', {}, [el('span', {textContent: '最活発曜日: ', style: 'color:var(--text3)'}), el('span', {textContent: dowLabels[peakDow], style: 'font-weight:600'})]),
+      el('span', {}, [el('span', {textContent: '深夜率: ', style: 'color:var(--text3)'}), el('span', {textContent: lateRate+'%', style: 'font-weight:600;color:' + (lateRate > 20 ? 'var(--red)' : 'var(--text)')})])
+    ]));
+
+    root.appendChild(rhythmCard);
+  }
+
   var catConfig = {
     pattern: {label: 'パターン', icon: '◎', color: 'var(--accent2)'},
     preference: {label: '好み', icon: '♡', color: 'var(--green)'},
     strength: {label: '得意分野', icon: '★', color: 'var(--amber)'},
     tendency: {label: '傾向', icon: '→', color: 'var(--blue)'},
-    feedback: {label: 'フィードバック', icon: '↩', color: 'var(--red)'}
+    feedback: {label: 'フィードバック', icon: '↩', color: 'var(--red)'},
+    work_rhythm: {label: '稼働リズム', icon: '⏰', color: 'var(--accent)'}
   };
 
   var confColors = {high: 'var(--green)', medium: 'var(--amber)', low: 'var(--text3)'};

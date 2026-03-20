@@ -686,11 +686,51 @@ Inbox処理完了:
 - `strength` - 得意分野（深い知識を持つ領域）
 - `tendency` - 傾向（見落としがち、後回しにしがち）
 - `feedback` - 修正フィードバックの蓄積
+- `work_rhythm` - 稼働リズム（時間帯・曜日の傾向）
+
+**時間帯・曜日分析（work_rhythm）:**
+
+`prompt_log.created_at` のタイムスタンプを使い、以下を分析する:
+
+1. **曜日別アクティビティ**: 各曜日の入力件数を集計。休日 vs 平日の比率
+2. **時間帯別アクティビティ**: 1時間単位で集計。ピーク時間帯を特定
+3. **集中パターン**: 連続入力（5分以内の間隔）のセッション長を計測
+4. **深夜作業の検出**: 22:00〜6:00 の入力割合
+
+分析クエリ例:
+```sql
+-- 曜日別集計（JST）
+SELECT extract(dow from created_at at time zone 'Asia/Tokyo') as dow,
+       count(*) as cnt
+FROM prompt_log
+GROUP BY dow ORDER BY dow;
+
+-- 時間帯別集計（JST）
+SELECT extract(hour from created_at at time zone 'Asia/Tokyo') as hour,
+       count(*) as cnt
+FROM prompt_log
+GROUP BY hour ORDER BY hour;
+```
+
+分析結果の例:
+```
+📊 稼働リズム分析
+
+⏰ ピーク時間帯: 10:00-12:00, 14:00-17:00（1日の入力の65%）
+📅 最もアクティブな曜日: 火曜・木曜
+🌙 深夜作業率: 12%（22:00-6:00）
+⏱  平均セッション長: 45分（連続入力の塊）
+📈 週間トレンド: 月曜に立ち上がり、水曜にピーク、金曜に減少
+
+💡 提案:
+  - 集中作業は10-12時に固めると効率的です
+  - 深夜作業が増加傾向 → 日中のブロック時間確保を検討
+```
 
 **インサイトの書き込み:**
 ```sql
 INSERT INTO ceo_insights (category, insight, evidence, company_id, confidence)
-VALUES ('preference', '具体的なインサイト', '根拠となるプロンプト例', 'company-id', 'medium');
+VALUES ('work_rhythm', '平日10-12時が最も集中力が高い時間帯。この時間にコーディング系タスクが集中', '直近30日のprompt_log時間帯分析', null, 'high');
 ```
 
 ### ナレッジ蓄積プロトコル（必須）
