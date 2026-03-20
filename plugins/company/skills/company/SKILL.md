@@ -36,21 +36,25 @@ category: organization
 
 ## Step 1: モード判定
 
-引数を解析してモードを決定する。
+引数を解析してモードを決定する。**Supabase を Single Source of Truth とし、ローカルファイルはキャッシュとして扱う。**
 
 ### 引数なし → HDモード
 
-1. `.company/` が存在するか確認
-   - **存在する** → `.company/CLAUDE.md` を読み込み → **HD運営モード**へ
-   - **存在しない** → **HDオンボーディング**へ
+1. Supabase `claude_settings` から `company_claude_md` を取得（`id` = 任意の既存レコード）
+   - **取得成功（中身あり）** → HD設定として使用 → **HD運営モード**へ
+   - **取得成功（空）** → **HDオンボーディング**へ
+   - **取得失敗** → ローカル `.company/CLAUDE.md` にフォールバック
+     - 存在する → **HD運営モード**へ
+     - 存在しない → **HDオンボーディング**へ
 
 ### 引数あり → PJ会社モード
 
 引数を `{name}` として:
 
-1. `.company-{name}/` が存在するか確認
-   - **存在する** → `.company-{name}/CLAUDE.md` を読み込み → **PJ会社運営モード**へ
-   - **存在しない** → **PJ会社オンボーディング**へ
+1. Supabase `companies` テーブルから `id = '{name}'` を取得
+   - **取得成功（存在する）** → **PJ会社運営モード**へ
+   - **取得成功（存在しない）** → **PJ会社オンボーディング**へ
+   - **取得失敗** → ローカル `.company-{name}/` にフォールバック
 
 ---
 
@@ -74,40 +78,50 @@ category: organization
 
 ### HD生成
 
-ヒアリング結果をもとに `.company/` を自動生成:
+ヒアリング結果をもとに HD設定を Supabase に保存し、ローカルキャッシュも生成する:
+
+**Step A: CLAUDE.md を生成**
+
+1. `references/claude-md-template.md` の HD用テンプレートから `CLAUDE.md` テキストを生成
+2. 変数置換:
+   - `{{BUSINESS_TYPE}}` ← Q1
+   - `{{GOALS_AND_CHALLENGES}}` ← Q2
+   - `{{CREATED_DATE}}` ← 今日の日付
+   - `{{PERSONALIZATION_NOTES}}` ← Q1+Q2 から生成
+
+**Step B: Supabase に保存（Source of Truth）**
+
+1. `claude_settings` テーブルに `company_claude_md` と `hd_config` を UPSERT:
+   ```
+   PATCH claude_settings?id=eq.{SCOPE}
+   { "company_claude_md": "生成した CLAUDE.md 全文",
+     "hd_config": { "business_type": "Q1回答", "goals": "Q2回答", "created_date": "今日" } }
+   ```
+2. `activity_log` に `action: 'hd_onboarding'` を記録
+
+**Step C: ローカルキャッシュ生成**
+
+`.company/` ディレクトリを作成（キャッシュ用。ソースはSupabase）:
 
 ```
 .company/
-├── CLAUDE.md                   ← references/claude-md-template.md の HD用テンプレートから生成
-├── secretary/
+├── CLAUDE.md                   ← Supabase から生成したコピー
+├── secretary/                  ← ローカルキャッシュ用（データは Supabase）
 │   ├── inbox/
 │   ├── todos/
-│   │   └── YYYY-MM-DD.md
 │   └── notes/
 ├── hr/
 │   ├── evaluations/
 │   ├── proposals/
 │   └── retrospectives/
-└── registry.md                 ← 全PJ会社の一覧（自動更新）
+└── registry.md                 ← companies テーブルから生成
 ```
-
-**変数置換:**
-
-- `{{BUSINESS_TYPE}}` ← Q1
-- `{{GOALS_AND_CHALLENGES}}` ← Q2
-- `{{CREATED_DATE}}` ← 今日の日付
-- `{{PERSONALIZATION_NOTES}}` ← Q1+Q2 から生成
 
 **完了メッセージ:**
 
 > HDのセットアップが完了しました！
 >
-> ```
-> .company/
-> ├── secretary/    ← HD秘書室
-> ├── hr/           ← 人事部（全社評価）
-> └── registry.md   ← PJ会社一覧
-> ```
+> データは Supabase で管理されるので、どのサーバーからでもアクセスできます。
 >
 > **新しいPJ会社を作るには:**
 > - `/company` で「新しい会社を作って」と言ってください
@@ -153,11 +167,13 @@ category: organization
 
 選択された部署のみで `.company-{name}/` を生成:
 
-1. `.company-{name}/` ディレクトリを作成
-2. `references/claude-md-template.md` のPJ会社用テンプレートから `CLAUDE.md` を生成
-3. 選択された部署のみフォルダ + `CLAUDE.md` を作成（`references/departments.md` から）
-4. 秘書室は常に作成（必須）
-5. **HD のレジストリに登録**: `.company/registry.md` に追記
+1. Supabase `companies` テーブルに INSERT（id={name}, name, description, status='active'）
+2. 選択された部署を `departments` テーブルに INSERT
+3. `.company-{name}/` ディレクトリをローカルキャッシュとして作成
+4. `references/claude-md-template.md` のPJ会社用テンプレートから `CLAUDE.md` を生成
+5. 選択された部署のみフォルダ + `CLAUDE.md` を作成（`references/departments.md` から）
+6. 秘書室は常に作成（必須）
+7. `activity_log` に `action: 'company_created'` を記録
 
 **完了メッセージ:**
 
@@ -176,18 +192,21 @@ category: organization
 
 ## HD運営モード
 
-`.company/` が存在する場合。まず `.company/CLAUDE.md` を読み込む。
+Supabase から HD 設定を取得済み（またはローカルフォールバック）。
 
 ### 起動時の自動処理
 
-HD秘書が起動したら、まず以下を自動で行い報告する:
+HD秘書が起動したら、**Supabase から一括でデータを取得**し報告する:
 
-1. **今日の予定を取得**: google-calendar MCP で今日と明日のイベントを取得
+1. **HD設定読み込み**: `claude_settings.company_claude_md` からHDプロフィール・ルールを取得
+2. **今日の予定を取得**: google-calendar MCP で今日と明日のイベントを取得
    - `[仕事]` タグ付きイベント → 案件関連として強調表示
    - その他のイベント → 参考として表示
-2. **未処理タスクを確認**: `tasks` テーブルから `status = 'open'` を取得
-3. **未処理コメント確認**: `comments` テーブルから最新を取得
-4. **ナレッジ読み込み**: `knowledge_base` から active ルールを取得
+3. **未処理タスクを確認**: `tasks` テーブルから `status = 'open'` を取得
+4. **未処理コメント確認**: `comments` テーブルから最新を取得
+5. **ナレッジ読み込み**: `knowledge_base` から active ルールを取得
+6. **今日のメモ確認**: `secretary_notes` から `note_date = today` を取得
+7. **未処理HR提案**: `hr_proposals` から `status in ('draft', 'proposed')` を取得
 
 報告フォーマット:
 ```
@@ -222,7 +241,7 @@ HD秘書が起動したら、まず以下を自動で行い報告する:
 | 「新しい会社を作って」 | PJ会社オンボーディングへ |
 | 「〇〇会社を閉じて」 | PJ会社の廃止（アーカイブ） |
 | 「全体のTODO」 | 全社のTODOを横断表示 |
-| 壁打ち・相談（全体方針） | HD秘書が対話、`.company/secretary/notes/` に保存 |
+| 壁打ち・相談（全体方針） | HD秘書が対話、`secretary_notes` テーブルに保存（type='note'） |
 | 「評価して」 | 全社横断の評価レポート |
 | 「どのPJに注力すべき？」 | 全社の状況を分析してアドバイス |
 
@@ -246,14 +265,14 @@ HD秘書が「これは特定のPJ会社の仕事だ」と判断した場合:
 **生成手順:**
 
 1. `references/dashboard-template.html` を読み込む
-2. 以下のデータソースからデータを収集:
-   - `.company/registry.md` → PJ会社一覧
-   - `.company-*/secretary/todos/` → 各社のTODO
-   - `.company-*/CLAUDE.md` → 各社の部署構成
-   - `.company/hr/evaluations/` → 直近の評価レポート
-   - `.company-*/secretary/notes/` → 直近のアクティビティ
-   - `.company-*/pm/projects/` → スケジュール・マイルストーン
-   - `.company/hr/proposals/` → 課題・提案
+2. 以下のデータソースから **Supabase 経由で** データを収集:
+   - `companies` テーブル → PJ会社一覧
+   - `tasks` テーブル → 各社のTODO
+   - `departments` テーブル → 各社の部署構成
+   - `evaluations` テーブル → 直近の評価レポート
+   - `secretary_notes` テーブル → 直近のアクティビティ・メモ
+   - `hr_proposals` テーブル → 課題・提案
+   - `hr_retrospectives` テーブル → 直近のレトロスペクティブ
 3. テンプレートの `{{...}}` プレースホルダーを実データで置換
 4. 繰り返しブロック（`{{XXX_START}}` 〜 `{{XXX_END}}`）をデータ件数分展開
 5. `.company/dashboard.html` に出力
@@ -290,10 +309,10 @@ PJ会社一覧:
 
 ### PJ会社の廃止
 
-1. `.company-{name}/` 内の重要ファイルを `.company/secretary/notes/archive-{name}/` に退避
-2. `.company-{name}/` を削除
-3. `.company/registry.md` から削除
-4. 社長の承認が必要
+1. 社長の承認が必要
+2. Supabase `companies` テーブルで `status = 'archived'` に更新
+3. `activity_log` に `action: 'company_archived'` を記録
+4. ローカル `.company-{name}/` が存在すれば削除（キャッシュのため）
 
 ---
 
@@ -323,9 +342,9 @@ PJ会社の秘書が起動したら:
 
 | パターン | 対応 |
 |---------|------|
-| TODO・タスク関連 | `secretary/todos/` の今日のファイルに追記・表示 |
-| 壁打ち・相談・ブレスト | 対話で深掘りし、まとまったら `secretary/notes/` に保存 |
-| メモ・クイックキャプチャ | `secretary/inbox/` にタイムスタンプ付きで記録 |
+| TODO・タスク関連 | `tasks` テーブルに読み書き |
+| 壁打ち・相談・ブレスト | 対話で深掘りし、まとまったら `secretary_notes` に保存（type='note'） |
+| メモ・クイックキャプチャ | `secretary_notes` に INSERT（type='inbox'） |
 | 「今日やること」 | 今日のTODOファイルを表示 |
 | 「ダッシュボード」 | このPJ会社内の全部署概要を表示 |
 | 雑談・挨拶 | 親しみやすく応答 |
@@ -495,7 +514,8 @@ AI Agentの能力 = CLAUDE.mdのルール品質。
 
 ### 評価レポート
 
-「評価して」「レトロ」リクエスト時、または人事部が自主的に:
+「評価して」「レトロ」リクエスト時、または人事部が自主的に。
+結果は `evaluations` テーブルに INSERT し、レトロは `hr_retrospectives` テーブルに INSERT する。
 
 ```markdown
 # HD 組織評価レポート - YYYY-MM-DD
@@ -529,19 +549,16 @@ AI Agentの能力 = CLAUDE.mdのルール品質。
 
 ---
 
-## HD レジストリ（.company/registry.md）
+## HD レジストリ（Supabase `companies` テーブル）
 
-全PJ会社を管理するファイル。PJ会社の新設・廃止時に自動更新。
+全PJ会社は Supabase `companies` テーブルで管理する。PJ会社の新設・廃止時に自動更新。
 
-```markdown
-# PJ会社レジストリ
-
-| ID | 会社名 | 説明 | 作成日 | ステータス |
-|----|--------|------|--------|-----------|
-| ai | AI開発会社 | LLM/AIシステム開発 | YYYY-MM-DD | active |
-| circuit | 回路図PJ | 回路図AI自動生成 | YYYY-MM-DD | active |
-| rikyu | りきゅうPJ | りそな向けコンサル提案 | YYYY-MM-DD | archived |
+```sql
+-- PJ会社一覧の取得
+SELECT id, name, description, created_at, status FROM companies ORDER BY created_at;
 ```
+
+ローカル `.company/registry.md` は表示用キャッシュとしてオプションで生成可能。
 
 ---
 
@@ -550,44 +567,39 @@ AI Agentの能力 = CLAUDE.mdのルール品質。
 ユーザーが「Dashboard Inbox」で始まるテキストをペーストした場合、秘書は以下を行う:
 
 1. Markdownを解析し、会社ごと・タイプごとにアイテムを分類
-2. TODO → 該当会社の `secretary/todos/YYYY-MM-DD.md` に追記
-3. Task → 該当会社の適切な部署（PM等）に振り分け
-4. Request → 秘書が内容を判断し、適切な部署に振り分け
-5. Note/Memo → 該当会社の `secretary/inbox/YYYY-MM-DD.md` に記録
+2. TODO → `tasks` テーブルに INSERT（該当 company_id）
+3. Task → `tasks` テーブルに INSERT（type='task', 該当 department_id）
+4. Request → 秘書が内容を判断し、`tasks` テーブルに INSERT
+5. Note/Memo → `secretary_notes` テーブルに INSERT（type='inbox', 該当 company_id）
 6. 処理結果をユーザーに報告:
 
 ```
 Inbox処理完了:
-  [ai] TODO 2件 → secretary/todos/ に追記
-  [circuit] Task 1件 → PM/tickets/ にチケット作成
-  [hd] Note 1件 → secretary/inbox/ に記録
+  [ai] TODO 2件 → tasks テーブルに追加
+  [circuit] Task 1件 → tasks テーブルに追加
+  [hd] Note 1件 → secretary_notes テーブルに記録
 ```
 
 ---
 
 ## 運用ルール
 
-### 自動記録
+### 自動記録（Supabase 優先）
 
-意思決定、学び、アイデアは言われなくても記録する。
+意思決定、学び、アイデアは言われなくても記録する。**Supabase が Source of Truth。**
 
-- 意思決定 → `secretary/notes/YYYY-MM-DD-decisions.md`
-- 学び・気づき → `secretary/notes/YYYY-MM-DD-learnings.md`
-- アイデア → `secretary/inbox/YYYY-MM-DD.md`
+- 意思決定 → `secretary_notes` に INSERT（`type='decision'`, `note_date=today`）
+- 学び・気づき → `secretary_notes` に INSERT（`type='learning'`, `note_date=today`）
+- アイデア → `secretary_notes` に INSERT（`type='inbox'`, `note_date=today`）
 
-### 同日1ファイル
+**Supabase 接続不可時のフォールバック:**
+- ローカルファイルに書き込む（従来の形式: `secretary/notes/YYYY-MM-DD-decisions.md` 等）
+- 次回 Supabase 接続成功時にアップロード
 
-同じ日付のファイルがすでに存在する場合は**追記**する。新規作成しない。
+### 同日メモの扱い
 
-### 日付チェック
-
-ファイル操作の前に必ず今日の日付を確認する。古い日付のファイルに書き込まない。
-
-### ファイル命名
-
-- 日次ファイル: `YYYY-MM-DD.md`
-- トピックファイル: `kebab-case.md`
-- 意思決定ログ: `YYYY-MM-DD-decisions.md`
+同じ日付・同じ type のメモは、Supabase では個別の行として INSERT する（append-only）。
+ローカルキャッシュファイルに書く場合は同日1ファイルに追記。
 
 ---
 
@@ -612,12 +624,15 @@ Inbox処理完了:
 | `comments` | コメント（モバイルからの入力含む） |
 | `evaluations` | 部署評価 |
 | `activity_log` | アクティビティログ |
-| `claude_settings` | Claude Code の設定・プラグイン・パーミッション・MCP |
+| `claude_settings` | Claude Code の設定・プラグイン・パーミッション・MCP・**HD設定（company_claude_md）** |
 | `categories` | 大分類（xx, yy, zz） |
 | `departments` | 部署 |
 | `prompt_log` | 社長のプロンプト履歴（入力のみ） |
 | `ceo_insights` | 社長分析（行動パターン・好み・傾向） |
 | `knowledge_base` | ナレッジ（LLMデフォルトとの差分ルール蓄積） |
+| `secretary_notes` | 秘書メモ・inbox・意思決定ログ・学習ログ（type列で区別） |
+| `hr_proposals` | 組織改編提案（restructure, merge, improve_claude_md 等） |
+| `hr_retrospectives` | KPTレトロスペクティブ |
 
 ### Hook による自動同期（常時）
 
@@ -834,21 +849,27 @@ INSERT INTO knowledge_base (
 - 人事部の評価メトリクスは常に更新する（修正指示・差し戻し等のイベント発生時）
 - 組織再編（統合・廃止）は必ず社長の承認を得てから実行する
 - HDの人事部は全PJ会社を横断的に評価する
-- PJ会社の新設・廃止時は必ず `.company/registry.md` を更新する
+- PJ会社の新設・廃止時は必ず Supabase `companies` テーブルを更新する
+- **Supabase が Single Source of Truth。ローカル `.company/` はキャッシュ**
 - **settings 同期と prompt_log 記録は Hook が自動処理する（`/company` 不要）**
-- **`/company` 起動時はナレッジ読み込み・コメント確認を追加実行する**
+- **`/company` 起動時はナレッジ読み込み・コメント確認・secretary_notes・hr_proposals を追加取得する**
 - **作業完了後は必ず git commit & push する**
 - **社長分析部はプロンプト蓄積に応じて自動的にインサイトを生成する**
+- **Supabase 接続不可時はローカルファイルにフォールバックし、次回接続時に同期する**
 
 ### Hook と `/company` の役割分担
 
-| 機能 | 実行タイミング | 実行者 |
-|------|---------------|--------|
-| プロンプト記録 | 毎回の入力 | Hook (UserPromptSubmit) |
-| settings/MCP/CLAUDE.md 同期 | セッション開始 | Hook (SessionStart) |
-| 今日の予定取得（Calendar） | `/company` 起動時 | company スキル (google-calendar MCP) |
-| ナレッジ読み込み・適用 | `/company` 起動時 | company スキル |
-| 未処理コメント確認 | `/company` 起動時 | company スキル |
-| タスク管理・組織運営 | `/company` 起動時 | company スキル |
-| CEO分析 | 蓄積トリガー or 手動 | company スキル |
-| ナレッジ検出・蓄積 | `/company` 内の会話 | company スキル |
+| 機能 | 実行タイミング | 実行者 | データ保存先 |
+|------|---------------|--------|-------------|
+| プロンプト記録 | 毎回の入力 | Hook (UserPromptSubmit) | `prompt_log` |
+| settings/MCP/CLAUDE.md 同期 | セッション開始 | Hook (SessionStart) | `claude_settings` |
+| HD設定（.company/CLAUDE.md）同期 | セッション開始 | Hook (SessionStart) | `claude_settings.company_claude_md` |
+| 今日の予定取得（Calendar） | `/company` 起動時 | company スキル | — |
+| ナレッジ読み込み・適用 | `/company` 起動時 | company スキル | `knowledge_base` |
+| 未処理コメント確認 | `/company` 起動時 | company スキル | `comments` |
+| 今日のメモ・提案確認 | `/company` 起動時 | company スキル | `secretary_notes`, `hr_proposals` |
+| タスク管理・組織運営 | `/company` 起動時 | company スキル | `tasks`, `companies`, `departments` |
+| メモ・意思決定・学び記録 | `/company` 内の会話 | company スキル | `secretary_notes` |
+| HR提案・レトロ | `/company` 内の会話 | company スキル | `hr_proposals`, `hr_retrospectives` |
+| CEO分析 | 蓄積トリガー or 手動 | company スキル | `ceo_insights` |
+| ナレッジ検出・蓄積 | `/company` 内の会話 | company スキル | `knowledge_base` |

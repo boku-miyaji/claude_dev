@@ -63,6 +63,13 @@ fi
 # Build skills list from settings (enabled plugins = available skills)
 SKILLS="$PLUGINS"
 
+# Read .company/CLAUDE.md for HD config sync (migration-010)
+COMPANY_CLAUDE_MD=""
+COMPANY_CLAUDE_MD_FILE="$PROJECT_DIR/.company/CLAUDE.md"
+if [ -f "$COMPANY_CLAUDE_MD_FILE" ]; then
+  COMPANY_CLAUDE_MD=$(cat "$COMPANY_CLAUDE_MD_FILE")
+fi
+
 # Build upsert payload
 PAYLOAD=$(jq -n \
   --arg id "$SCOPE" \
@@ -74,6 +81,7 @@ PAYLOAD=$(jq -n \
   --argjson skills "$SKILLS" \
   --argjson mcp_servers "$MCP_SERVERS" \
   --arg claude_md_content "$CLAUDE_MD_CONTENT" \
+  --arg company_claude_md "$COMPANY_CLAUDE_MD" \
   '{
     id: $id,
     scope: $scope,
@@ -83,7 +91,8 @@ PAYLOAD=$(jq -n \
     permissions: $permissions,
     skills: $skills,
     mcp_servers: $mcp_servers,
-    claude_md_content: $claude_md_content
+    claude_md_content: $claude_md_content,
+    company_claude_md: $company_claude_md
   }')
 
 # If migration-009 is applied (server_host column exists), add it
