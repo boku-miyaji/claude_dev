@@ -25,6 +25,7 @@ config-sync.sh 実行
   │   └── env 設定
   ├── .mcp.json を読み取り → MCP サーバー一覧
   ├── .claude/CLAUDE.md を読み取り → 内容全文
+  ├── .company/CLAUDE.md を読み取り → HD設定（company_claude_md）
   ├── ↑ 全てを JSON にまとめて claude_settings テーブルに UPSERT
   │
   └── sync-slash-commands.sh を呼び出し

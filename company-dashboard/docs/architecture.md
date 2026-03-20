@@ -89,9 +89,32 @@
 | 設定（plugins/permissions/hooks） | `settings.json` + `settings.local.json` | Supabase `claude_settings` | セッション起動時 | `config-sync.sh` |
 | MCP サーバー一覧 | `.mcp.json` | Supabase `claude_settings` | セッション起動時 | `config-sync.sh` |
 | CLAUDE.md 内容 | `.claude/CLAUDE.md` | Supabase `claude_settings` | セッション起動時 | `config-sync.sh` |
+| HD設定 | `.company/CLAUDE.md` | Supabase `claude_settings.company_claude_md` | セッション起動時 | `config-sync.sh` |
 | スキル一覧 | 全 SKILL.md | Supabase `slash_commands` | セッション起動時 | `sync-slash-commands.sh` |
 | ユーザー入力 | Claude Code | Supabase `prompt_log` | 入力ごと | `prompt-log.sh` |
-| タスク・コメント | `/company` | Supabase `tasks`/`comments` | 手動操作時 | Supabase MCP |
+| タスク・会社・部署 | `/company` | Supabase `tasks`/`companies`/`departments` | 手動操作時 | REST API |
+| メモ・意思決定・学び | `/company` | Supabase `secretary_notes` | 手動操作時 | REST API |
+| HR提案・レトロ | `/company` | Supabase `hr_proposals`/`hr_retrospectives` | 手動操作時 | REST API |
 | 請求書・経費 | `/invoice` | Supabase `invoices`/`expenses` | 手動操作時 | REST API |
 | 稼働時間 | Google Calendar | Supabase `time_entries` | `/invoice sync` | Calendar MCP → REST |
 | ダッシュボード表示 | Supabase | ブラウザ | ページ表示時 | Supabase JS Client |
+
+## マルチサーバー同期タイミング
+
+Supabase が Single Source of Truth。`.company/` ディレクトリはローカルキャッシュ。
+
+| データ | 書き込みタイミング | 読み込みタイミング |
+|--------|------------------|------------------|
+| 会社・タスク・メモ等 | `/company` で操作した瞬間 → Supabase に即書き込み | `/company` 起動時に Supabase から fetch |
+| HD設定（.company/CLAUDE.md） | `/company` で変更時 + セッション開始時（Hook） | `/company` 起動時に Supabase から fetch |
+| ダッシュボード | — | ページ表示時に Supabase から直接読み取り（常に最新） |
+
+```
+サーバーA: /company で作業 → Supabase に即書き込み
+                                    ↓
+ダッシュボード: 即反映（Supabase から直接読む）
+                                    ↓
+サーバーB: /company 起動時に Supabase から最新を取得
+```
+
+Supabase 接続不可時はローカル `.company/` にフォールバックし、次回接続時に同期する。

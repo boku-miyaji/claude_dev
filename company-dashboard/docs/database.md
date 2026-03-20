@@ -12,6 +12,14 @@
 | `evaluations` | 部署評価 | `/company` |
 | `activity_log` | アクティビティ | 各種操作 |
 
+## 秘書・HR（migration-010 追加）
+
+| テーブル | 用途 | 書き込み元 |
+|---------|------|-----------|
+| `secretary_notes` | メモ・inbox・意思決定・学びログ（type列で区別） | `/company` |
+| `hr_proposals` | 組織改編提案 | `/company` |
+| `hr_retrospectives` | KPTレトロスペクティブ | `/company` |
+
 ## AI・ナレッジ
 
 | テーブル | 用途 | 書き込み元 |
@@ -19,7 +27,7 @@
 | `prompt_log` | 全入力履歴 | `prompt-log.sh` (Hook) |
 | `ceo_insights` | 行動分析 | `/company` |
 | `knowledge_base` | ルール蓄積 | `/company` |
-| `claude_settings` | 設定スナップショット | `config-sync.sh` (Hook) |
+| `claude_settings` | 設定スナップショット + **HD設定（company_claude_md）** | `config-sync.sh` (Hook) + `/company` |
 | `slash_commands` | スキル一覧 | `sync-slash-commands.sh` (Hook) |
 
 ## ポートフォリオ・キャリア
