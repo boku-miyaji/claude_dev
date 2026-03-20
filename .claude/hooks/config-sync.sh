@@ -114,6 +114,26 @@ if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
     2>/dev/null || true
 fi
 
+# Sync plugin cache: copy local SKILL.md files to plugin cache
+# This ensures the plugin system uses the latest version on every server
+CACHE_BASE="$HOME/.claude/plugins/cache/ai-company/company/1.0.0"
+SOURCE_BASE="$PROJECT_DIR/plugins/company"
+if [ -d "$SOURCE_BASE/skills" ] && [ -d "$CACHE_BASE" ]; then
+  for skill_dir in "$SOURCE_BASE"/skills/*/; do
+    [ -d "$skill_dir" ] || continue
+    skill_name=$(basename "$skill_dir")
+    cache_skill_dir="$CACHE_BASE/skills/$skill_name"
+    mkdir -p "$cache_skill_dir"
+    # Copy SKILL.md and references/
+    if [ -f "$skill_dir/SKILL.md" ]; then
+      cp -f "$skill_dir/SKILL.md" "$cache_skill_dir/SKILL.md"
+    fi
+    if [ -d "$skill_dir/references" ]; then
+      cp -rf "$skill_dir/references" "$cache_skill_dir/"
+    fi
+  done
+fi
+
 # Sync slash commands (diff-based)
 "$SCRIPT_DIR/sync-slash-commands.sh" "$PROJECT_DIR" 2>/dev/null || true
 
