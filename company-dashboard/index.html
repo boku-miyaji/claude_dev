@@ -250,6 +250,8 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
     <button class="nav-item" data-page="orgchart"><span class="nav-icon">⊞</span> Org Chart</button>
+    <button class="nav-item" data-page="portfolio"><span class="nav-icon">◆</span> Portfolio</button>
+    <button class="nav-item" data-page="career"><span class="nav-icon">☆</span> Career</button>
     <button class="nav-item" data-page="knowledge"><span class="nav-icon">◈</span> Knowledge</button>
     <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
@@ -451,6 +453,8 @@ function renderPage(page) {
     tasks: renderTasks,
     companies: renderCompanies,
     orgchart: renderOrgChart,
+    portfolio: renderPortfolio,
+    career: renderCareer,
     knowledge: renderKnowledge,
     prompts: renderPrompts,
     insights: renderInsights,
@@ -1044,6 +1048,201 @@ async function renderOrgChart(root) {
   }
 
   root.appendChild(el('div', {className: 'card', style: 'overflow-x:auto'}, [tree]));
+}
+
+// ============================================================
+// Portfolio Page
+// ============================================================
+
+async function renderPortfolio(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Portfolio'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '事業内容・実績・技術スタック'}));
+
+  var services = (await sb.from('services').select('*,companies(name)').order('category')).data || [];
+  var projects = (await sb.from('portfolio_projects').select('*,companies(name)').order('period_start', {ascending: false})).data || [];
+  var techStack = (await sb.from('tech_stack').select('*').order('category,proficiency')).data || [];
+
+  // Stats
+  root.appendChild(el('div', {className: 'g4', style: 'margin-bottom:24px'}, [
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: services.filter(function(s){return s.status==='active'}).length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Services'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: projects.length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Projects'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val good', textContent: techStack.filter(function(t){return t.proficiency==='expert'}).length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Expert Skills'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: techStack.length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Tech Stack'})
+    ])
+  ]));
+
+  // --- Services ---
+  root.appendChild(el('div', {className: 'section-title', textContent: 'Services (' + services.length + ')'}));
+  if (services.length === 0) {
+    root.appendChild(el('div', {className: 'card'}, [el('div', {className: 'empty', textContent: '/company で秘書に「サービスメニューを登録して」と依頼'})]));
+  } else {
+    var svcCard = el('div', {className: 'card', style: 'margin-bottom:20px'});
+    services.forEach(function(s) {
+      var coName = s.companies ? s.companies.name : '';
+      var statusCls = s.status === 'active' ? 'tag-done' : s.status === 'planned' ? 'tag-open' : 'tag-low';
+      svcCard.appendChild(el('div', {style: 'padding:12px 0;border-bottom:1px solid var(--border)'}, [
+        el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:4px'}, [
+          el('span', {style: 'font-weight:600;font-size:14px;flex:1', textContent: s.name}),
+          el('span', {className: 'tag ' + statusCls, textContent: s.status}),
+          coName ? el('span', {className: 'tag tag-co', textContent: coName}) : null
+        ].filter(Boolean)),
+        s.description ? el('div', {style: 'font-size:12px;color:var(--text2);margin-bottom:4px', textContent: s.description}) : null,
+        s.deliverables ? el('div', {style: 'font-size:11px;color:var(--text3)', textContent: '成果物: ' + s.deliverables}) : null
+      ].filter(Boolean)));
+    });
+    root.appendChild(svcCard);
+  }
+
+  // --- Projects ---
+  root.appendChild(el('div', {className: 'gradient-line'}));
+  root.appendChild(el('div', {className: 'section-title', textContent: 'Projects (' + projects.length + ')'}));
+  if (projects.length === 0) {
+    root.appendChild(el('div', {className: 'card'}, [el('div', {className: 'empty', textContent: '実績なし。PJ完了時にマーケティング部署が自動追加します'})]));
+  } else {
+    var g = el('div', {className: 'g2'});
+    projects.forEach(function(p) {
+      var period = '';
+      if (p.period_start) period = p.period_start.substring(0, 7);
+      if (p.period_end) period += ' → ' + p.period_end.substring(0, 7);
+      var tags = (p.tech_stack || []).map(function(t) { return el('span', {className: 'tag tag-co', style: 'margin:2px', textContent: t}); });
+      g.appendChild(el('div', {className: 'card card-glow'}, [
+        el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:6px'}, [
+          el('span', {className: 'dot ' + (p.status === 'ongoing' ? 'dot-active' : p.status === 'completed' ? 'dot-paused' : 'dot-archived')}),
+          el('span', {style: 'font-weight:600;font-size:14px', textContent: p.title})
+        ]),
+        p.client ? el('div', {style: 'font-size:11px;color:var(--text3);margin-bottom:4px', textContent: p.client}) : null,
+        p.description ? el('div', {style: 'font-size:12px;color:var(--text2);margin-bottom:8px', textContent: p.description}) : null,
+        p.outcome ? el('div', {style: 'font-size:12px;color:var(--green);margin-bottom:8px', textContent: '成果: ' + p.outcome}) : null,
+        tags.length > 0 ? el('div', {style: 'display:flex;flex-wrap:wrap;gap:0'}, tags) : null,
+        period ? el('div', {style: 'font-size:10px;color:var(--text3);margin-top:8px;font-family:var(--mono)', textContent: period}) : null
+      ].filter(Boolean)));
+    });
+    root.appendChild(g);
+  }
+
+  // --- Tech Stack ---
+  root.appendChild(el('div', {className: 'gradient-line'}));
+  root.appendChild(el('div', {className: 'section-title', textContent: 'Tech Stack (' + techStack.length + ')'}));
+  if (techStack.length === 0) {
+    root.appendChild(el('div', {className: 'card'}, [el('div', {className: 'empty', textContent: '技術スタック未登録'})]));
+  } else {
+    var catLabels = {language:'Languages', framework:'Frameworks', infrastructure:'Infrastructure', ai_ml:'AI / ML', database:'Databases', tool:'Tools', platform:'Platforms', other:'Other'};
+    var profColors = {expert:'var(--green)', advanced:'var(--blue)', intermediate:'var(--amber)', beginner:'var(--text3)'};
+    var grouped = {};
+    techStack.forEach(function(t) { if (!grouped[t.category]) grouped[t.category] = []; grouped[t.category].push(t); });
+    var techGrid = el('div', {className: 'g2'});
+    Object.keys(catLabels).forEach(function(cat) {
+      var items = grouped[cat]; if (!items) return;
+      var card = el('div', {className: 'card'}, [
+        el('div', {style: 'font-weight:600;font-size:13px;margin-bottom:10px;color:var(--accent)', textContent: catLabels[cat]})
+      ]);
+      items.forEach(function(t) {
+        card.appendChild(el('div', {style: 'display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px'}, [
+          el('span', {style: 'width:8px;height:8px;border-radius:50%;background:' + (profColors[t.proficiency] || 'var(--text3)'), className: 'dot'}),
+          el('span', {style: 'flex:1;font-weight:500', textContent: t.name}),
+          t.years_experience ? el('span', {style: 'font-size:10px;font-family:var(--mono);color:var(--text3)', textContent: t.years_experience + 'y'}) : null,
+          el('span', {style: 'font-size:10px;color:' + (profColors[t.proficiency] || 'var(--text3)'), textContent: t.proficiency})
+        ].filter(Boolean)));
+      });
+      techGrid.appendChild(card);
+    });
+    root.appendChild(techGrid);
+  }
+}
+
+// ============================================================
+// Career Page
+// ============================================================
+
+async function renderCareer(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Career'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'キャリアロードマップ・市場価値・目標管理'}));
+
+  var items = (await sb.from('career').select('*').order('priority,created_at', {ascending: false})).data || [];
+  var active = items.filter(function(i){return i.status === 'active'});
+
+  // Stats
+  var goals = items.filter(function(i){return i.type === 'goal'});
+  var completed = items.filter(function(i){return i.status === 'completed'});
+  root.appendChild(el('div', {className: 'g4', style: 'margin-bottom:24px'}, [
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: goals.length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Goals'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: active.length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Active Items'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val good', textContent: completed.length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Completed'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: items.filter(function(i){return i.type==='market_insight'}).length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Market Insights'})
+    ])
+  ]));
+
+  if (items.length === 0) {
+    root.appendChild(el('div', {className: 'card'}, [
+      el('div', {className: 'empty'}, [
+        el('div', {textContent: 'キャリア情報なし'}),
+        el('div', {style: 'margin-top:8px;font-size:12px;color:var(--text3)', textContent: '/company で「キャリアについて相談したい」と秘書に話しかけてください'})
+      ])
+    ]));
+    return;
+  }
+
+  var typeConfig = {
+    goal: {label: '目標', icon: '◎', color: 'var(--accent2)'},
+    milestone: {label: 'マイルストーン', icon: '◇', color: 'var(--blue)'},
+    strength: {label: '強み', icon: '★', color: 'var(--green)'},
+    weakness: {label: '課題', icon: '△', color: 'var(--amber)'},
+    market_insight: {label: '市場洞察', icon: '◉', color: 'var(--accent)'},
+    reflection: {label: '振り返り', icon: '↻', color: 'var(--text2)'},
+    action_item: {label: 'アクション', icon: '→', color: 'var(--blue)'}
+  };
+
+  var statusCls = {active: 'tag-open', completed: 'tag-done', on_hold: 'tag-low', dropped: 'tag-low'};
+
+  // Group by type
+  var grouped = {};
+  items.forEach(function(i) { if (!grouped[i.type]) grouped[i.type] = []; grouped[i.type].push(i); });
+
+  // Render goals first, then others
+  var typeOrder = ['goal', 'action_item', 'milestone', 'strength', 'weakness', 'market_insight', 'reflection'];
+  typeOrder.forEach(function(type) {
+    var typeItems = grouped[type]; if (!typeItems) return;
+    var cfg = typeConfig[type] || {label: type, icon: '·', color: 'var(--text2)'};
+
+    root.appendChild(el('div', {className: 'section-title', textContent: cfg.icon + ' ' + cfg.label + ' (' + typeItems.length + ')'}));
+    var card = el('div', {className: 'card', style: 'margin-bottom:20px'});
+
+    typeItems.forEach(function(item) {
+      card.appendChild(el('div', {style: 'padding:12px 0;border-bottom:1px solid var(--border)'}, [
+        el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:4px'}, [
+          el('span', {style: 'color:' + cfg.color + ';font-size:14px', textContent: cfg.icon}),
+          el('span', {style: 'font-weight:500;font-size:13px;flex:1', textContent: item.title}),
+          item.priority === 'high' ? el('span', {className: 'tag tag-high', textContent: 'high'}) : null,
+          el('span', {className: 'tag ' + (statusCls[item.status] || 'tag-low'), textContent: item.status})
+        ].filter(Boolean)),
+        item.description ? el('div', {style: 'font-size:12px;color:var(--text2);margin-left:26px;margin-bottom:4px', textContent: item.description}) : null,
+        item.target_date ? el('div', {style: 'font-size:10px;color:var(--text3);margin-left:26px;font-family:var(--mono)', textContent: '期限: ' + item.target_date}) : null
+      ].filter(Boolean)));
+    });
+    root.appendChild(card);
+  });
 }
 
 // ============================================================
