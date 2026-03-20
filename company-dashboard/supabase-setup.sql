@@ -120,6 +120,30 @@ create table if not exists claude_settings (
   updated_at timestamptz not null default now()
 );
 
+-- 社長プロンプト履歴（入力のみ記録）
+create table if not exists prompt_log (
+  id serial primary key,
+  company_id text references companies(id) on delete set null,
+  prompt text not null,
+  context text,
+  tags text[] not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+-- 社長分析（行動パターン・好み・傾向）
+create table if not exists ceo_insights (
+  id serial primary key,
+  category text not null
+    check (category in ('pattern', 'preference', 'strength', 'tendency', 'feedback')),
+  insight text not null,
+  evidence text,
+  company_id text references companies(id) on delete set null,
+  confidence text not null default 'medium'
+    check (confidence in ('high', 'medium', 'low')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- ============================================================
 -- 2. Indexes
 -- ============================================================
@@ -136,6 +160,11 @@ create index if not exists idx_comments_company on comments(company_id);
 create index if not exists idx_evaluations_company on evaluations(company_id);
 create index if not exists idx_activity_log_company on activity_log(company_id);
 create index if not exists idx_activity_log_created on activity_log(created_at desc);
+create index if not exists idx_prompt_log_company on prompt_log(company_id);
+create index if not exists idx_prompt_log_created on prompt_log(created_at desc);
+create index if not exists idx_prompt_log_tags on prompt_log using gin(tags);
+create index if not exists idx_ceo_insights_category on ceo_insights(category);
+create index if not exists idx_ceo_insights_company on ceo_insights(company_id);
 
 -- ============================================================
 -- 3. Updated_at trigger
@@ -157,6 +186,10 @@ create or replace trigger tasks_updated_at
   before update on tasks
   for each row execute function update_updated_at();
 
+create or replace trigger ceo_insights_updated_at
+  before update on ceo_insights
+  for each row execute function update_updated_at();
+
 -- ============================================================
 -- 4. RLS (Row Level Security)
 -- ============================================================
@@ -171,6 +204,8 @@ alter table comments enable row level security;
 alter table evaluations enable row level security;
 alter table activity_log enable row level security;
 alter table claude_settings enable row level security;
+alter table prompt_log enable row level security;
+alter table ceo_insights enable row level security;
 
 create policy "auth_full" on categories for all to authenticated using (true) with check (true);
 create policy "auth_full" on companies for all to authenticated using (true) with check (true);
@@ -179,6 +214,8 @@ create policy "auth_full" on tasks for all to authenticated using (true) with ch
 create policy "auth_full" on comments for all to authenticated using (true) with check (true);
 create policy "auth_full" on evaluations for all to authenticated using (true) with check (true);
 create policy "auth_full" on activity_log for all to authenticated using (true) with check (true);
+create policy "auth_full" on prompt_log for all to authenticated using (true) with check (true);
+create policy "auth_full" on ceo_insights for all to authenticated using (true) with check (true);
 create policy "auth_full" on claude_settings for all to authenticated using (true) with check (true);
 
 -- ============================================================

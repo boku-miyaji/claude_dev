@@ -224,6 +224,8 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="inbox"><span class="nav-icon">＋</span> Inbox</button>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
+    <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
+    <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <div class="nav-spacer"></div>
     <div class="nav-user" id="nav-user"></div>
@@ -242,6 +244,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
       <button class="mob-nav-item" data-page="inbox"><span class="mob-icon">＋</span>Inbox</button>
       <button class="mob-nav-item" data-page="tasks"><span class="mob-icon">☐</span>Tasks</button>
       <button class="mob-nav-item" data-page="companies"><span class="mob-icon">◫</span>Co.</button>
+      <button class="mob-nav-item" data-page="prompts"><span class="mob-icon">▷</span>Log</button>
       <button class="mob-nav-item" data-page="settings"><span class="mob-icon">⚙</span>More</button>
     </div>
   </div>
@@ -420,6 +423,8 @@ function renderPage(page) {
     inbox: renderInbox,
     tasks: renderTasks,
     companies: renderCompanies,
+    prompts: renderPrompts,
+    insights: renderInsights,
     settings: renderSettings
   };
   if (renderers[page]) renderers[page](p);
@@ -881,6 +886,175 @@ function showAddCategory(cats) {
       navigate('companies');
     }})
   ]);
+}
+
+// ============================================================
+// Prompts Page
+// ============================================================
+
+async function renderPrompts(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Prompt History'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '社長の入力プロンプト履歴（会社別）'}));
+
+  // Filters
+  var companies = (await sb.from('companies').select('id,name').eq('status', 'active')).data || [];
+  var filterCompany = el('select', {className: 'input'}, [
+    el('option', {value: '', textContent: 'All Companies'}),
+  ].concat(companies.map(function(c) { return el('option', {value: c.id, textContent: c.name}); })));
+  var filterBar = el('div', {className: 'filter-bar'}, [filterCompany]);
+  root.appendChild(filterBar);
+
+  var listContainer = el('div', {});
+  root.appendChild(listContainer);
+
+  async function loadPrompts() {
+    var query = sb.from('prompt_log').select('*,companies(name)').order('created_at', {ascending: false}).limit(100);
+    var compVal = filterCompany.value;
+    if (compVal) query = query.eq('company_id', compVal);
+    var res = await query;
+    var prompts = res.data || [];
+
+    while (listContainer.firstChild) listContainer.removeChild(listContainer.firstChild);
+
+    if (prompts.length === 0) {
+      listContainer.appendChild(el('div', {className: 'card'}, [
+        el('div', {className: 'empty', textContent: 'プロンプト履歴なし。/company でやりとりすると自動記録されます'})
+      ]));
+      return;
+    }
+
+    // Group by date
+    var grouped = {};
+    prompts.forEach(function(p) {
+      var d = new Date(p.created_at).toLocaleDateString('ja-JP');
+      if (!grouped[d]) grouped[d] = [];
+      grouped[d].push(p);
+    });
+
+    Object.keys(grouped).forEach(function(date) {
+      listContainer.appendChild(el('div', {className: 'section-title', style: 'margin-top:20px', textContent: date + ' (' + grouped[date].length + ')'}));
+      var card = el('div', {className: 'card'});
+      grouped[date].forEach(function(p) {
+        var time = new Date(p.created_at).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+        var coName = p.companies ? p.companies.name : (p.context || 'HD');
+        var tags = (p.tags || []).map(function(t) { return el('span', {className: 'tag tag-co', style: 'margin-right:4px', textContent: t}); });
+        card.appendChild(el('div', {style: 'padding:10px 0;border-bottom:1px solid var(--border)'}, [
+          el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:6px'}, [
+            el('span', {style: 'font-size:11px;font-family:var(--mono);color:var(--text3)', textContent: time}),
+            el('span', {className: 'tag tag-normal', textContent: coName})
+          ].concat(tags)),
+          el('div', {style: 'font-size:13px;color:var(--text);white-space:pre-wrap;word-break:break-word;max-height:120px;overflow:hidden', textContent: p.prompt})
+        ]));
+      });
+      listContainer.appendChild(card);
+    });
+
+    // Stats
+    var totalCount = prompts.length;
+    var uniqueDays = Object.keys(grouped).length;
+    listContainer.insertBefore(el('div', {className: 'g3', style: 'margin-bottom:20px'}, [
+      el('div', {className: 'card kpi'}, [
+        el('div', {className: 'kpi-val', textContent: totalCount}),
+        el('div', {className: 'kpi-lbl', textContent: 'Total Prompts'})
+      ]),
+      el('div', {className: 'card kpi'}, [
+        el('div', {className: 'kpi-val', textContent: uniqueDays}),
+        el('div', {className: 'kpi-lbl', textContent: 'Active Days'})
+      ]),
+      el('div', {className: 'card kpi'}, [
+        el('div', {className: 'kpi-val', textContent: companies.length}),
+        el('div', {className: 'kpi-lbl', textContent: 'Companies'})
+      ])
+    ]), listContainer.firstChild);
+  }
+
+  filterCompany.addEventListener('change', loadPrompts);
+  await loadPrompts();
+}
+
+// ============================================================
+// Insights Page
+// ============================================================
+
+async function renderInsights(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'CEO Insights'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '社長分析 — 行動パターン・好み・傾向'}));
+
+  var res = await sb.from('ceo_insights').select('*,companies(name)').order('created_at', {ascending: false});
+  var insights = res.data || [];
+
+  if (insights.length === 0) {
+    root.appendChild(el('div', {className: 'card'}, [
+      el('div', {className: 'empty'}, [
+        el('div', {textContent: 'インサイトなし'}),
+        el('div', {style: 'margin-top:8px;font-size:12px;color:var(--text3)', textContent: 'プロンプトが10件以上蓄積されると、社長分析部が自動で分析を開始します'})
+      ])
+    ]));
+    return;
+  }
+
+  // Category config
+  var catConfig = {
+    pattern: {label: 'パターン', icon: '◎', color: 'var(--accent2)'},
+    preference: {label: '好み', icon: '♡', color: 'var(--green)'},
+    strength: {label: '得意分野', icon: '★', color: 'var(--amber)'},
+    tendency: {label: '傾向', icon: '→', color: 'var(--blue)'},
+    feedback: {label: 'フィードバック', icon: '↩', color: 'var(--red)'}
+  };
+
+  var confColors = {high: 'var(--green)', medium: 'var(--amber)', low: 'var(--text3)'};
+
+  // Group by category
+  var grouped = {};
+  insights.forEach(function(i) {
+    if (!grouped[i.category]) grouped[i.category] = [];
+    grouped[i.category].push(i);
+  });
+
+  // Stats
+  root.appendChild(el('div', {className: 'g4', style: 'margin-bottom:24px'}, [
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: insights.length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Total Insights'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val good', textContent: insights.filter(function(i){return i.confidence==='high'}).length}),
+      el('div', {className: 'kpi-lbl', textContent: 'High Confidence'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: Object.keys(grouped).length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Categories'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: insights.filter(function(i){return i.company_id}).length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Company-Specific'})
+    ])
+  ]));
+
+  // Render by category
+  Object.keys(catConfig).forEach(function(cat) {
+    var items = grouped[cat] || [];
+    if (items.length === 0) return;
+    var cfg = catConfig[cat];
+
+    root.appendChild(el('div', {className: 'section-title', textContent: cfg.icon + ' ' + cfg.label + ' (' + items.length + ')'}));
+    var card = el('div', {className: 'card', style: 'margin-bottom:20px'});
+
+    items.forEach(function(item) {
+      var coName = item.companies ? item.companies.name : '全社';
+      card.appendChild(el('div', {style: 'padding:12px 0;border-bottom:1px solid var(--border)'}, [
+        el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:6px'}, [
+          el('span', {style: 'width:8px;height:8px;border-radius:50%;background:' + (confColors[item.confidence] || 'var(--text3)'), className: 'dot'}),
+          el('span', {style: 'font-weight:500;font-size:13px;flex:1', textContent: item.insight}),
+          el('span', {className: 'tag tag-co', textContent: coName})
+        ]),
+        item.evidence ? el('div', {style: 'font-size:11px;color:var(--text3);margin-left:20px;font-style:italic', textContent: '根拠: ' + item.evidence}) : null,
+        el('div', {style: 'font-size:10px;color:var(--text3);margin-left:20px;margin-top:4px;font-family:var(--mono)', textContent: item.confidence + ' · ' + new Date(item.created_at).toLocaleDateString('ja-JP')})
+      ].filter(Boolean)));
+    });
+
+    root.appendChild(card);
+  });
 }
 
 // ============================================================
