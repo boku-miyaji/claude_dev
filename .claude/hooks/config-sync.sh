@@ -107,7 +107,8 @@ HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=minimal,resolution=merge-duplicates" \
   -d "$PAYLOAD_WITH_HOST" \
-  --max-time 10 \
+  --connect-timeout 10 \
+  --max-time 20 \
   2>/dev/null) || true
 
 if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
@@ -119,7 +120,8 @@ if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
     -H "Content-Type: application/json" \
     -H "Prefer: return=minimal,resolution=merge-duplicates" \
     -d "$PAYLOAD" \
-    --max-time 10 \
+    --connect-timeout 10 \
+  --max-time 20 \
     2>/dev/null || true
 fi
 
@@ -235,7 +237,8 @@ curl -s -o /dev/null -w "" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=minimal" \
   -d "$ACTIVITY" \
-  --max-time 5 \
+  --connect-timeout 10 \
+  --max-time 15 \
   2>/dev/null || true
 
 exit 0

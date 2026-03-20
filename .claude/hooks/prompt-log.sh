@@ -65,7 +65,8 @@ curl -s -o /dev/null -w "" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=minimal" \
   -d "$PAYLOAD" \
-  --max-time 5 \
+  --connect-timeout 10 \
+  --max-time 15 \
   2>/dev/null || true
 
 exit 0
