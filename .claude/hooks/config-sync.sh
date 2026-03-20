@@ -123,15 +123,13 @@ if [ -d "$SOURCE_BASE/skills" ]; then
   mkdir -p "$CACHE_BASE/.claude-plugin"
   mkdir -p "$CACHE_BASE/skills"
 
-  # Ensure plugin.json exists
-  if [ ! -f "$CACHE_BASE/.claude-plugin/plugin.json" ]; then
-    cat > "$CACHE_BASE/.claude-plugin/plugin.json" << 'PJSON'
-{
-  "name": "company",
-  "description": "AI開発・システム開発を中心とした仮想組織スキル。秘書が窓口、人事部が組織を継続最適化。",
-  "version": "1.0.0"
-}
-PJSON
+  # Sync marketplace.json (required for skills-based plugin format)
+  if [ -f "$SOURCE_BASE/.claude-plugin/marketplace.json" ]; then
+    cp -f "$SOURCE_BASE/.claude-plugin/marketplace.json" "$CACHE_BASE/.claude-plugin/marketplace.json"
+  fi
+  # Remove legacy plugin.json if marketplace.json exists
+  if [ -f "$CACHE_BASE/.claude-plugin/marketplace.json" ] && [ -f "$CACHE_BASE/.claude-plugin/plugin.json" ]; then
+    rm -f "$CACHE_BASE/.claude-plugin/plugin.json"
   fi
 
   # Ensure README exists
