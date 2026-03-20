@@ -178,6 +178,32 @@ category: organization
 
 `.company/` が存在する場合。まず `.company/CLAUDE.md` を読み込む。
 
+### 起動時の自動処理
+
+HD秘書が起動したら、まず以下を自動で行い報告する:
+
+1. **今日の予定を取得**: google-calendar MCP で今日と明日のイベントを取得
+   - `[仕事]` タグ付きイベント → 案件関連として強調表示
+   - その他のイベント → 参考として表示
+2. **未処理タスクを確認**: `tasks` テーブルから `status = 'open'` を取得
+3. **未処理コメント確認**: `comments` テーブルから最新を取得
+4. **ナレッジ読み込み**: `knowledge_base` から active ルールを取得
+
+報告フォーマット:
+```
+おはようございます！本日のブリーフィングです。
+
+📅 今日の予定:
+  14:00 [仕事] A社 定例MTG
+  16:00 [仕事] B社 レビュー
+  18:00 歯医者
+
+📋 未完了タスク: X件（高優先: Y件）
+💬 未読コメント: Z件
+
+何から始めますか？
+```
+
 ### HD秘書の役割
 
 **全社を横断的に見る統括秘書。**
@@ -274,6 +300,15 @@ PJ会社一覧:
 ## PJ会社 運営モード
 
 `.company-{name}/` が存在する場合。まず `.company-{name}/CLAUDE.md` を読み込む。
+
+### 起動時の自動処理
+
+PJ会社の秘書が起動したら:
+
+1. **今日の予定を取得**: google-calendar MCP で今日のイベントを取得し、この PJ に関連するものをフィルター
+   - `[仕事] {client_name}` が一致するイベントを強調
+2. **このPJのタスク確認**: `tasks` テーブルから該当 `company_id` のものを取得
+3. **ナレッジ読み込み**: `knowledge_base` から active ルール取得
 
 ### 基本フロー
 
@@ -771,6 +806,7 @@ INSERT INTO knowledge_base (
 |------|---------------|--------|
 | プロンプト記録 | 毎回の入力 | Hook (UserPromptSubmit) |
 | settings/MCP/CLAUDE.md 同期 | セッション開始 | Hook (SessionStart) |
+| 今日の予定取得（Calendar） | `/company` 起動時 | company スキル (google-calendar MCP) |
 | ナレッジ読み込み・適用 | `/company` 起動時 | company スキル |
 | 未処理コメント確認 | `/company` 起動時 | company スキル |
 | タスク管理・組織運営 | `/company` 起動時 | company スキル |
