@@ -88,7 +88,35 @@ create policy "auth_full" on secretary_notes for all to authenticated using (tru
 create policy "auth_full" on hr_proposals for all to authenticated using (true) with check (true);
 create policy "auth_full" on hr_retrospectives for all to authenticated using (true) with check (true);
 
--- Anon policies (hooks and skills use anon key)
+-- Anon policies: new tables (hooks and skills use anon key)
 create policy "anon_all_secretary_notes" on secretary_notes for all to anon using (true) with check (true);
 create policy "anon_all_hr_proposals" on hr_proposals for all to anon using (true) with check (true);
 create policy "anon_all_hr_retrospectives" on hr_retrospectives for all to anon using (true) with check (true);
+
+-- 6. Anon write policies for existing tables
+-- /company スキルは anon key で Supabase REST API を呼ぶため、
+-- 会社作成・タスク追加等に書き込み権限が必要。
+-- migration-006 では SELECT のみだったテーブルに全権限を付与する。
+drop policy if exists "anon_select_companies" on companies;
+create policy "anon_all_companies" on companies for all to anon using (true) with check (true);
+
+drop policy if exists "anon_select_departments" on departments;
+create policy "anon_all_departments" on departments for all to anon using (true) with check (true);
+
+drop policy if exists "anon_select_tasks" on tasks;
+create policy "anon_all_tasks" on tasks for all to anon using (true) with check (true);
+
+drop policy if exists "anon_select_comments" on comments;
+create policy "anon_all_comments" on comments for all to anon using (true) with check (true);
+
+drop policy if exists "anon_select_evaluations" on evaluations;
+create policy "anon_all_evaluations" on evaluations for all to anon using (true) with check (true);
+
+drop policy if exists "anon_select_ceo_insights" on ceo_insights;
+create policy "anon_all_ceo_insights" on ceo_insights for all to anon using (true) with check (true);
+
+drop policy if exists "anon_select_knowledge_base" on knowledge_base;
+create policy "anon_all_knowledge_base" on knowledge_base for all to anon using (true) with check (true);
+
+drop policy if exists "anon_select_categories" on categories;
+create policy "anon_all_categories" on categories for all to anon using (true) with check (true);
