@@ -15,14 +15,23 @@
       "Read(//tmp/**)",
       "Bash(wc:*)",
       "Bash(pgrep:*)",
-      "Bash(dd:*)"
+      "Bash(dd:*)",
+      "Read(//home/node/.claude/plugins/cache/ai-company/company/1.0.0/skills/company/references/**)",
+      "WebFetch(domain:github.com)",
+      "Read(//home/node/.npm/_npx/7145db6b471ecd40/node_modules/google-calendar-mcp/dist/**)",
+      "Bash(npx google-calendar-mcp:*)",
+      "Bash(npm info:*)",
+      "Bash(npx -y google-calendar-mcp --help)",
+      "Read(//home/node/.npm/_npx/**)",
+      "Read(//home/node/**)"
     ],
     "additionalDirectories": [
       "/workspace/circuit_diagram/frontend/src/app/projects/[projectId]",
       "/workspace/circuit_diagram/frontend/src/app/projects/[projectId]/workspace",
       "/workspace/circuit_diagram/frontend/src/app/projects/*/block-diagram",
       "/workspace/circuit_diagram/backend/src/routers/__pycache__",
-      "/workspace/output"
+      "/workspace/output",
+      "/workspace/.claude"
     ]
   },
   "enabledPlugins": {
@@ -35,7 +44,43 @@
     "code-review@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "supabase@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true
+    "commit-commands@claude-plugins-official": true,
+    "company@ai-company": true
+  },
+  "extraKnownMarketplaces": {
+    "ai-company": {
+      "source": {
+        "source": "github",
+        "repo": "boku-miyaji/claude_dev",
+        "path": "/workspace"
+      }
+    }
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/prompt-log.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/config-sync.sh",
+            "async": true
+          }
+        ]
+      }
+    ]
   },
   "feedbackSurveyState": {
     "lastShownTime": 1755317418565

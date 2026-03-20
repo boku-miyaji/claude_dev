@@ -583,48 +583,57 @@ Inbox処理完了:
 | `ceo_insights` | 社長分析（行動パターン・好み・傾向） |
 | `knowledge_base` | ナレッジ（LLMデフォルトとの差分ルール蓄積） |
 
-### 起動時の自動同期（必須）
+### Hook による自動同期（常時）
 
-**`/company` が実行されるたびに、以下を自動実行する。スキップしない。**
+**以下の機能は Claude Code の Hook で自動実行される。`/company` の起動は不要。**
 
-1. **settings.json + CLAUDE.md 同期**:
-   - `.claude/settings.json` を読み取り
-   - `claude_settings` テーブルに upsert（id = ワークスペース名）
-   - `plugins` = enabledPlugins
-   - `permissions` = permissions オブジェクト全体
-   - `skills` = 利用可能なスキル一覧（`/company` のシステムリマインダーから取得）
-   - `mcp_servers` = MCP サーバー設定（利用可能な場合）
-   - `claude_md_content` = `.claude/CLAUDE.md` の内容（存在すれば）
-   - `scope` = ディレクトリ名（例: "claude_dev"）
-   - `server_path` = カレントディレクトリの絶対パス
-   - **複数スコープ**: プロジェクト固有の CLAUDE.md がある場合は別レコードで upsert
+#### Hook 1: `UserPromptSubmit` → prompt_log（毎回の入力）
 
-2. **ナレッジベース読み込み**:
+`.claude/hooks/prompt-log.sh` がすべてのユーザー入力を `prompt_log` テーブルに自動記録する。
+
+- **記録内容**: プロンプト全文、コンテキスト（ワークスペース名）、自動タグ
+- **記録しないもの**: 単なる確認応答（「はい」「OK」等）
+- **非同期実行**: 会話をブロックしない
+
+#### Hook 2: `SessionStart` → claude_settings（セッション開始時）
+
+`.claude/hooks/config-sync.sh` がセッション開始のたびに設定を同期する。
+
+- `settings.json` → `plugins`, `permissions`
+- `.mcp.json` → `mcp_servers`
+- `CLAUDE.md` → `claude_md_content`
+- `scope` = ワークスペース名、`server_path` = 絶対パス
+
+**これにより、プラグインの追加/削除、MCP サーバーの変更、CLAUDE.md の更新が自動的にダッシュボードに反映される。**
+
+### `/company` 起動時の追加同期
+
+**`/company` が実行されたときは、Hook では実行できない以下を追加で実行する:**
+
+1. **ナレッジベース読み込み**:
    - `knowledge_base` テーブルから `status = 'active'` のルールを取得
    - `scope = 'global'` のルールは全社で適用
    - `scope = 'company'` のルールは該当会社でのみ適用
    - 取得したルールを秘書の行動指針として内部的に保持する
 
-3. **未処理コメント確認**:
+2. **未処理コメント確認**:
    - `comments` テーブルから最新のコメントを取得
    - 未処理のものがあれば秘書に通知
 
-4. **同期完了ログ**:
+3. **同期完了ログ**:
    - `activity_log` に `action: 'sync'` で記録
 
-### プロンプト履歴の記録（必須）
+### `/company` 内でのプロンプト記録（補足）
 
-**社長（ユーザー）が何かを言うたびに、以下を実行する:**
+`/company` 内では Hook の自動記録に加え、`company_id` を付与して記録する:
 
-1. ユーザーのメッセージ（プロンプト）を `prompt_log` テーブルに INSERT:
+1. ユーザーのメッセージを `prompt_log` テーブルに INSERT:
    - `company_id` = 現在の会社ID（HDモードなら null）
    - `prompt` = ユーザーのメッセージ全文
    - `context` = 現在のモード（"hd" / 会社名）
    - `tags` = プロンプトの内容から自動タグ付け（例: `['task', 'ai-dev']`）
 
-2. **記録しないもの:**
-   - `/company` コマンド自体
-   - 単なる「はい」「OK」などの確認応答
+2. **Hook と重複しないよう注意**: Hook が既に記録しているため、`/company` 内では `company_id` の付与のみを行えばよい
 
 ### 社長分析部（HD常設）
 
@@ -750,7 +759,19 @@ INSERT INTO knowledge_base (
 - 組織再編（統合・廃止）は必ず社長の承認を得てから実行する
 - HDの人事部は全PJ会社を横断的に評価する
 - PJ会社の新設・廃止時は必ず `.company/registry.md` を更新する
-- **起動時に必ず Supabase に settings を同期する（スキップ禁止）**
-- **社長のプロンプトを prompt_log に記録する（出力は記録しない）**
+- **settings 同期と prompt_log 記録は Hook が自動処理する（`/company` 不要）**
+- **`/company` 起動時はナレッジ読み込み・コメント確認を追加実行する**
 - **作業完了後は必ず git commit & push する**
 - **社長分析部はプロンプト蓄積に応じて自動的にインサイトを生成する**
+
+### Hook と `/company` の役割分担
+
+| 機能 | 実行タイミング | 実行者 |
+|------|---------------|--------|
+| プロンプト記録 | 毎回の入力 | Hook (UserPromptSubmit) |
+| settings/MCP/CLAUDE.md 同期 | セッション開始 | Hook (SessionStart) |
+| ナレッジ読み込み・適用 | `/company` 起動時 | company スキル |
+| 未処理コメント確認 | `/company` 起動時 | company スキル |
+| タスク管理・組織運営 | `/company` 起動時 | company スキル |
+| CEO分析 | 蓄積トリガー or 手動 | company スキル |
+| ナレッジ検出・蓄積 | `/company` 内の会話 | company スキル |

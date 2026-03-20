@@ -183,31 +183,63 @@ Vercel が自動で再デプロイします。
 
 ## Claude Code 連携
 
-ターミナルで `/company` を実行すると、秘書が Supabase のデータと連動:
+### 2層構造: Hook（常時自動） + `/company`（手動）
 
 ```
-/company          → HD秘書（全社ダッシュボード・タスク管理・新会社作成）
-/company ai       → AI会社秘書（PJ固有のコンテキストで作業）
-/company circuit  → 回路図PJ秘書
+┌─────────────────────────────────────────────────────┐
+│ Layer 1: Hook（常時・自動）                           │
+│                                                     │
+│  UserPromptSubmit → prompt_log に全入力を自動記録     │
+│  SessionStart     → settings/MCP/CLAUDE.md を自動同期 │
+│                                                     │
+│  ※ /company を打たなくても動作する                     │
+└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│ Layer 2: /company（手動）                             │
+│                                                     │
+│  /company          → HD秘書（タスク管理・新会社作成）   │
+│  /company ai       → AI会社秘書（PJ固有で作業）       │
+│  /company circuit  → 回路図PJ秘書                    │
+│                                                     │
+│  起動時: ナレッジ読み込み・コメント確認                  │
+│  会話中: 修正指示を検出 → knowledge_base に蓄積        │
+│  完了時: git commit & push                           │
+└─────────────────────────────────────────────────────┘
 ```
 
-### 自動同期の仕組み
+### `/company` を使うタイミング
+
+| タイミング | 目的 |
+|-----------|------|
+| **作業開始時** | ナレッジ読み込み、未処理コメント確認 |
+| **タスク管理** | TODO作成・進捗更新・優先度変更 |
+| **組織運営** | 部署作成・人事評価・壁打ち相談 |
+| **分析依頼** | 「分析して」でCEOインサイト生成 |
+| **ナレッジ整理** | ルール確認・CLAUDE.md昇格判断 |
+
+### データフロー
 
 ```
-/company 起動
-  ↓ (1) settings.json + CLAUDE.md を Supabase に同期
-  ↓ (2) ナレッジベースを読み込み（暗黙適用）
-  ↓ (3) 未処理コメントを確認
-  ↓
-社長がメッセージを送信
-  ↓ (4) プロンプトを prompt_log に記録
-  ↓ (5) 修正指示を検出 → knowledge_base に蓄積
-  ↓
-作業完了
-  ↓ (6) git commit & push（全サーバーに反映）
-  ↓ (7) タスク・評価を Supabase に書き込み
+通常の作業（Hook が自動処理）
+  SessionStart → settings/MCP/CLAUDE.md を Supabase に同期
+  各入力       → prompt_log に自動記録（タグ付き）
+
+/company 起動時（追加処理）
+  ↓ (1) knowledge_base のアクティブルールを読み込み
+  ↓ (2) 未処理コメントを確認・通知
+  ↓ (3) 修正指示を検出 → knowledge_base に蓄積
+  ↓ (4) 作業完了 → git commit & push
   ↓
 ダッシュボード（PC / スマホ）にリアルタイム反映
+```
+
+### Hook ファイル
+
+```
+.claude/hooks/
+├── supabase.env       接続情報（URL + Anon Key）
+├── prompt-log.sh      UserPromptSubmit → prompt_log
+└── config-sync.sh     SessionStart → claude_settings
 ```
 
 ---
@@ -238,7 +270,7 @@ Vercel が自動で再デプロイします。
 | **ログインボタンが反応しない** | Supabase の Site URL / Redirect URLs が Vercel URL と一致しているか確認 |
 | **ログイン後にデータが空** | 正常。Inbox からタスクを追加、または `/company` で秘書を起動してデータを同期 |
 | **RLS エラー** | SQL Editor で `select * from pg_policies` を実行。`auth_full` ポリシーが 11 件あるか確認 |
-| **Settings が空** | `/company` をターミナルで実行して設定を同期する必要あり |
+| **Settings が空** | 次のセッション開始時に Hook が自動同期する。急ぐ場合は `/company` を実行 |
 | **Org Chart が空** | Companies ページで会社を作成するか、`/company` で秘書に作成してもらう |
 
 ---
@@ -252,6 +284,8 @@ company-dashboard/
 ├── supabase-migration-002-revert-user-id.sql   user_id削除（既存DB用）
 ├── supabase-migration-003-prompt-log-ceo-insights.sql  プロンプト履歴 + 社長分析
 ├── supabase-migration-004-knowledge-base.sql   ナレッジベース + CLAUDE.md可視化
+├── supabase-migration-005-portfolio-career.sql  ポートフォリオ + キャリア管理
+├── supabase-migration-006-hook-anon-policies.sql  Hook用 anon RLSポリシー
 └── README.md                                   This file
 
 vercel.json                                     Root config (→ company-dashboard/)
