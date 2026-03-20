@@ -224,6 +224,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="inbox"><span class="nav-icon">＋</span> Inbox</button>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
+    <button class="nav-item" data-page="knowledge"><span class="nav-icon">◈</span> Knowledge</button>
     <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
@@ -423,6 +424,7 @@ function renderPage(page) {
     inbox: renderInbox,
     tasks: renderTasks,
     companies: renderCompanies,
+    knowledge: renderKnowledge,
     prompts: renderPrompts,
     insights: renderInsights,
     settings: renderSettings
@@ -889,6 +891,108 @@ function showAddCategory(cats) {
 }
 
 // ============================================================
+// Knowledge Page
+// ============================================================
+
+async function renderKnowledge(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Knowledge Base'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'LLMデフォルトとの差分ルール — 毎回指示しなくても適用される知識'}));
+
+  var res = await sb.from('knowledge_base').select('*,companies(name)').order('confidence', {ascending: false});
+  var items = res.data || [];
+  var active = items.filter(function(i){return i.status === 'active'});
+  var promoted = items.filter(function(i){return i.status === 'promoted'});
+
+  // Stats
+  root.appendChild(el('div', {className: 'g4', style: 'margin-bottom:24px'}, [
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: active.length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Active Rules'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val good', textContent: active.filter(function(i){return i.confidence>=3}).length}),
+      el('div', {className: 'kpi-lbl', textContent: 'High Confidence'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: active.filter(function(i){return i.scope==='global'}).length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Global'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: promoted.length}),
+      el('div', {className: 'kpi-lbl', textContent: 'Promoted to CLAUDE.md'})
+    ])
+  ]));
+
+  if (items.length === 0) {
+    root.appendChild(el('div', {className: 'card'}, [
+      el('div', {className: 'empty'}, [
+        el('div', {textContent: 'ナレッジなし'}),
+        el('div', {style: 'margin-top:8px;font-size:12px;color:var(--text3)', textContent: '社長が修正指示や好みを伝えると、自動的にナレッジとして蓄積されます'})
+      ])
+    ]));
+    return;
+  }
+
+  // Category config
+  var catLabels = {
+    coding: 'Coding', documentation: 'Documentation', communication: 'Communication',
+    design: 'Design', process: 'Process', quality: 'Quality',
+    tools: 'Tools', domain: 'Domain', other: 'Other'
+  };
+
+  // Group by category
+  var grouped = {};
+  active.forEach(function(i) {
+    if (!grouped[i.category]) grouped[i.category] = [];
+    grouped[i.category].push(i);
+  });
+
+  Object.keys(catLabels).forEach(function(cat) {
+    var catItems = grouped[cat];
+    if (!catItems || catItems.length === 0) return;
+
+    root.appendChild(el('div', {className: 'section-title', textContent: catLabels[cat] + ' (' + catItems.length + ')'}));
+    var card = el('div', {className: 'card', style: 'margin-bottom:20px'});
+
+    catItems.forEach(function(item) {
+      var scopeLabel = item.scope === 'global' ? '全社' : (item.companies ? item.companies.name : item.company_id || '');
+      var confDots = '';
+      for (var i = 0; i < Math.min(item.confidence, 5); i++) confDots += '●';
+      for (var j = item.confidence; j < 5; j++) confDots += '○';
+
+      card.appendChild(el('div', {style: 'padding:12px 0;border-bottom:1px solid var(--border)'}, [
+        el('div', {style: 'display:flex;align-items:flex-start;gap:10px'}, [
+          el('div', {style: 'flex:1'}, [
+            el('div', {style: 'font-size:13px;font-weight:500;margin-bottom:4px', textContent: item.rule}),
+            item.reason ? el('div', {style: 'font-size:11px;color:var(--text3)', textContent: item.reason}) : null
+          ].filter(Boolean)),
+          el('div', {style: 'flex-shrink:0;text-align:right'}, [
+            el('div', {style: 'font-size:11px;color:var(--accent2);letter-spacing:2px', textContent: confDots}),
+            el('span', {className: 'tag tag-co', style: 'margin-top:4px', textContent: scopeLabel})
+          ])
+        ])
+      ]));
+    });
+    root.appendChild(card);
+  });
+
+  // Promoted section
+  if (promoted.length > 0) {
+    root.appendChild(el('div', {className: 'gradient-line'}));
+    root.appendChild(el('div', {className: 'section-title', textContent: 'Promoted to CLAUDE.md (' + promoted.length + ')'}));
+    var proCard = el('div', {className: 'card'});
+    promoted.forEach(function(item) {
+      proCard.appendChild(el('div', {style: 'padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:8px;align-items:center'}, [
+        el('span', {style: 'color:var(--green)', textContent: '✓'}),
+        el('span', {style: 'flex:1;color:var(--text2)', textContent: item.rule}),
+        el('span', {style: 'font-size:10px;color:var(--text3);font-family:var(--mono)', textContent: item.promoted_to || 'CLAUDE.md'})
+      ]));
+    });
+    root.appendChild(proCard);
+  }
+}
+
+// ============================================================
 // Prompts Page
 // ============================================================
 
@@ -1208,6 +1312,76 @@ async function renderSettings(root) {
       });
     });
     root.appendChild(permCard);
+  }
+
+  // --- CLAUDE.md Viewer ---
+  var claudeMdSettings = settings.filter(function(s) { return s.claude_md_content; });
+  if (claudeMdSettings.length > 0) {
+    root.appendChild(el('div', {className: 'gradient-line'}));
+    root.appendChild(el('div', {className: 'section-title', textContent: 'CLAUDE.md (' + claudeMdSettings.length + ' scopes)'}));
+    claudeMdSettings.forEach(function(s) {
+      var isExpanded = false;
+      var contentDiv = el('div', {style: 'display:none;margin-top:12px;padding:16px;background:var(--surface2);border-radius:var(--r);font-size:12px;font-family:var(--mono);white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;color:var(--text2);line-height:1.7'});
+      contentDiv.textContent = s.claude_md_content;
+      var toggleBtn = el('button', {className: 'btn btn-g btn-sm', textContent: '展開'});
+      toggleBtn.addEventListener('click', function() {
+        isExpanded = !isExpanded;
+        contentDiv.style.display = isExpanded ? 'block' : 'none';
+        toggleBtn.textContent = isExpanded ? '閉じる' : '展開';
+      });
+      var lineCount = (s.claude_md_content.match(/\n/g) || []).length + 1;
+      root.appendChild(el('div', {className: 'card', style: 'margin-bottom:14px'}, [
+        el('div', {style: 'display:flex;align-items:center;gap:10px'}, [
+          el('div', {style: 'font-weight:600;font-size:14px;flex:1', textContent: s.scope}),
+          el('span', {style: 'font-size:11px;color:var(--text3);font-family:var(--mono)', textContent: lineCount + ' lines'}),
+          toggleBtn
+        ]),
+        contentDiv
+      ]));
+    });
+  }
+
+  // --- Skills/MCP Cross-Company Matrix ---
+  if (settings.length > 1) {
+    root.appendChild(el('div', {className: 'gradient-line'}));
+    root.appendChild(el('div', {className: 'section-title', textContent: 'Skills / Plugins Matrix (cross-scope)'}));
+
+    // Build matrix data
+    var allScopeNames = settings.map(function(s) { return s.scope; });
+    var pluginMatrix = {};
+    settings.forEach(function(s) {
+      if (!s.plugins) return;
+      Object.keys(s.plugins).forEach(function(p) {
+        if (!pluginMatrix[p]) pluginMatrix[p] = {};
+        pluginMatrix[p][s.scope] = s.plugins[p];
+      });
+    });
+
+    if (Object.keys(pluginMatrix).length > 0) {
+      var tbl = el('div', {className: 'card', style: 'overflow-x:auto'});
+      var table = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px'});
+      // Header
+      var thead = el('tr', {style: 'border-bottom:2px solid var(--border)'}, [
+        el('th', {style: 'text-align:left;padding:8px;font-weight:600;color:var(--text3)', textContent: 'Plugin'})
+      ].concat(allScopeNames.map(function(sc) {
+        return el('th', {style: 'text-align:center;padding:8px;font-weight:600;color:var(--text3);font-size:10px', textContent: sc});
+      })));
+      table.appendChild(thead);
+      // Rows
+      Object.keys(pluginMatrix).sort().forEach(function(p) {
+        var row = el('tr', {style: 'border-bottom:1px solid var(--border)'}, [
+          el('td', {style: 'padding:6px 8px;font-family:var(--mono);font-size:11px', textContent: p})
+        ].concat(allScopeNames.map(function(sc) {
+          var val = pluginMatrix[p][sc];
+          var icon = val === true ? '●' : val === false ? '○' : '—';
+          var color = val === true ? 'var(--green)' : val === false ? 'var(--red)' : 'var(--text3)';
+          return el('td', {style: 'text-align:center;padding:6px 8px;color:' + color, textContent: icon});
+        })));
+        table.appendChild(row);
+      });
+      tbl.appendChild(table);
+      root.appendChild(tbl);
+    }
   }
 }
 

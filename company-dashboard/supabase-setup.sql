@@ -117,6 +117,7 @@ create table if not exists claude_settings (
   permissions jsonb not null default '{}',
   skills jsonb not null default '{}',
   mcp_servers jsonb not null default '{}',
+  claude_md_content text,
   updated_at timestamptz not null default now()
 );
 
@@ -144,6 +145,27 @@ create table if not exists ceo_insights (
   updated_at timestamptz not null default now()
 );
 
+-- ナレッジベース（LLMデフォルトとの差分を蓄積）
+create table if not exists knowledge_base (
+  id serial primary key,
+  category text not null
+    check (category in ('coding', 'documentation', 'communication', 'design',
+                         'process', 'quality', 'tools', 'domain', 'other')),
+  rule text not null,
+  reason text,
+  source_prompt text,
+  scope text not null default 'global'
+    check (scope in ('global', 'company')),
+  company_id text references companies(id) on delete set null,
+  confidence int not null default 1,
+  auto_apply boolean not null default true,
+  status text not null default 'active'
+    check (status in ('active', 'deprecated', 'promoted')),
+  promoted_to text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- ============================================================
 -- 2. Indexes
 -- ============================================================
@@ -165,6 +187,10 @@ create index if not exists idx_prompt_log_created on prompt_log(created_at desc)
 create index if not exists idx_prompt_log_tags on prompt_log using gin(tags);
 create index if not exists idx_ceo_insights_category on ceo_insights(category);
 create index if not exists idx_ceo_insights_company on ceo_insights(company_id);
+create index if not exists idx_knowledge_base_category on knowledge_base(category);
+create index if not exists idx_knowledge_base_scope on knowledge_base(scope);
+create index if not exists idx_knowledge_base_status on knowledge_base(status);
+create index if not exists idx_knowledge_base_company on knowledge_base(company_id);
 
 -- ============================================================
 -- 3. Updated_at trigger
@@ -190,6 +216,10 @@ create or replace trigger ceo_insights_updated_at
   before update on ceo_insights
   for each row execute function update_updated_at();
 
+create or replace trigger knowledge_base_updated_at
+  before update on knowledge_base
+  for each row execute function update_updated_at();
+
 -- ============================================================
 -- 4. RLS (Row Level Security)
 -- ============================================================
@@ -206,6 +236,7 @@ alter table activity_log enable row level security;
 alter table claude_settings enable row level security;
 alter table prompt_log enable row level security;
 alter table ceo_insights enable row level security;
+alter table knowledge_base enable row level security;
 
 create policy "auth_full" on categories for all to authenticated using (true) with check (true);
 create policy "auth_full" on companies for all to authenticated using (true) with check (true);
@@ -216,6 +247,7 @@ create policy "auth_full" on evaluations for all to authenticated using (true) w
 create policy "auth_full" on activity_log for all to authenticated using (true) with check (true);
 create policy "auth_full" on prompt_log for all to authenticated using (true) with check (true);
 create policy "auth_full" on ceo_insights for all to authenticated using (true) with check (true);
+create policy "auth_full" on knowledge_base for all to authenticated using (true) with check (true);
 create policy "auth_full" on claude_settings for all to authenticated using (true) with check (true);
 
 -- ============================================================

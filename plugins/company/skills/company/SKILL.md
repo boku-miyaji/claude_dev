@@ -581,26 +581,35 @@ Inbox処理完了:
 | `departments` | 部署 |
 | `prompt_log` | 社長のプロンプト履歴（入力のみ） |
 | `ceo_insights` | 社長分析（行動パターン・好み・傾向） |
+| `knowledge_base` | ナレッジ（LLMデフォルトとの差分ルール蓄積） |
 
 ### 起動時の自動同期（必須）
 
 **`/company` が実行されるたびに、以下を自動実行する。スキップしない。**
 
-1. **settings.json 同期**:
+1. **settings.json + CLAUDE.md 同期**:
    - `.claude/settings.json` を読み取り
    - `claude_settings` テーブルに upsert（id = ワークスペース名）
    - `plugins` = enabledPlugins
    - `permissions` = permissions オブジェクト全体
    - `skills` = 利用可能なスキル一覧（`/company` のシステムリマインダーから取得）
    - `mcp_servers` = MCP サーバー設定（利用可能な場合）
+   - `claude_md_content` = `.claude/CLAUDE.md` の内容（存在すれば）
    - `scope` = ディレクトリ名（例: "claude_dev"）
    - `server_path` = カレントディレクトリの絶対パス
+   - **複数スコープ**: プロジェクト固有の CLAUDE.md がある場合は別レコードで upsert
 
-2. **未処理コメント確認**:
+2. **ナレッジベース読み込み**:
+   - `knowledge_base` テーブルから `status = 'active'` のルールを取得
+   - `scope = 'global'` のルールは全社で適用
+   - `scope = 'company'` のルールは該当会社でのみ適用
+   - 取得したルールを秘書の行動指針として内部的に保持する
+
+3. **未処理コメント確認**:
    - `comments` テーブルから最新のコメントを取得
    - 未処理のものがあれば秘書に通知
 
-3. **同期完了ログ**:
+4. **同期完了ログ**:
    - `activity_log` に `action: 'sync'` で記録
 
 ### プロンプト履歴の記録（必須）
@@ -638,6 +647,69 @@ Inbox処理完了:
 INSERT INTO ceo_insights (category, insight, evidence, company_id, confidence)
 VALUES ('preference', '具体的なインサイト', '根拠となるプロンプト例', 'company-id', 'medium');
 ```
+
+### ナレッジ蓄積プロトコル（必須）
+
+**社長の指示が「LLMのデフォルト挙動と異なる」場合、ナレッジとして蓄積する。**
+
+これにより、同じ指示を2回する必要がなくなる。
+
+#### 検出トリガー
+
+以下のパターンを検出したら `knowledge_base` に INSERT する:
+
+1. **修正指示**: 「〜しないで」「〜じゃなくて」「それは違う」
+2. **明示的ルール**: 「常に〜して」「必ず〜」「〜すべき」
+3. **好みの表明**: 「〜の方がいい」「〜が好き」「〜を使って」
+4. **デフォルトからの逸脱**: LLMが一般的にやることと異なる指示
+
+#### 蓄積の流れ
+
+```
+社長: 「テストは必ずpytestで書いて。unittestは使わないで」
+  ↓ 検出: LLMデフォルト(unittest OK) と異なる指示
+  ↓
+INSERT INTO knowledge_base (
+  category: 'coding',
+  rule: 'テストは必ず pytest で書く。unittest は使わない',
+  reason: '社長の指示。pytestを標準とする',
+  source_prompt: '元のプロンプト',
+  scope: 'global',  -- 全社適用
+  confidence: 1,
+  auto_apply: true
+)
+  ↓
+次回以降: テスト作成時に自動で pytest を使用
+```
+
+#### confidence の昇格
+
+- 同じルールが再度確認された → confidence + 1
+- confidence ≥ 3 → CLAUDE.md への昇格を提案
+- 社長が承認 → `status = 'promoted'`, `promoted_to = 'CLAUDE.md'`
+
+#### カテゴリ
+
+| category | 内容 | 例 |
+|----------|------|-----|
+| `coding` | コーディングルール | pytest 必須、TypeScript 必須 |
+| `documentation` | ドキュメント規則 | 絵文字禁止、箇条書き推奨 |
+| `communication` | コミュニケーション | 報告形式、口調 |
+| `design` | 設計方針 | マイクロサービスより モノリス |
+| `process` | プロセス | PRレビュー必須、Issue先行 |
+| `quality` | 品質基準 | テストカバレッジ、エラーハンドリング |
+| `tools` | ツール選択 | VSCode、GitHub、Supabase |
+| `domain` | ドメイン知識 | 業界固有の知識 |
+| `other` | その他 | |
+
+#### ナレッジの適用
+
+秘書は作業開始時に `knowledge_base` の active ルールを読み込み、**暗黙的に適用する**。
+ユーザーに「ナレッジに基づいて〜しました」とは言わない。自然に適用する。
+
+ただし、ナレッジと社長の新しい指示が矛盾する場合:
+1. 新しい指示を優先する
+2. 既存ナレッジを更新するか確認する
 
 ### タスクの読み書き
 
