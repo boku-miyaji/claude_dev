@@ -16,9 +16,9 @@ Claude Code (/company コマンド)
 
 ## セキュリティ
 
+- **各ユーザーが自分の Supabase プロジェクトを持つ**（シングルテナント）
 - **GitHub OAuth** でログイン認証
-- **RLS (Row Level Security)** で全テーブルに `user_id` フィルター
-- 他人がログインしても自分のデータは見えない
+- **RLS** で未認証アクセスをブロック
 - Publishable Key はフロントエンド公開用（Stripe 公開キーと同じ設計）
 
 ## 前提条件
@@ -175,17 +175,29 @@ Vercel が自動で再デプロイします。
 | **404 NOT_FOUND** | リポジトリルートに `vercel.json` があるか確認。Vercel で Redeploy を試す |
 | **ログインボタンが反応しない** | Supabase の Site URL / Redirect URLs が Vercel URL と一致しているか確認 |
 | **ログイン後にデータが空** | 正常。まだデータ未投入。Inbox からタスクを追加してみてください |
-| **RLS エラー** | SQL Editor で `select * from pg_policies` を実行し `own_data` ポリシーが8件あるか確認 |
-| **他人にデータが見えないか心配** | 全テーブルに `user_id` + RLS `auth.uid() = user_id` で保護済み。別アカウントでログインして確認可 |
+| **RLS エラー** | SQL Editor で `select * from pg_policies` を実行し `auth_full` ポリシーが8件あるか確認 |
+| **他人にデータが見えないか心配** | 各ユーザーが自分の Supabase プロジェクトを持つ設計。GitHub OAuth + RLS(認証必須)で保護 |
+
+## Settings 可視化
+
+Settings ページでは以下を一覧表示できます（`/company` 実行時に自動同期）:
+
+| セクション | 内容 |
+|-----------|------|
+| **Scopes** | Claude Code の設定スコープ一覧（global / プロジェクト別） |
+| **Plugins** | インストール済みプラグインと有効/無効状態 |
+| **Skills** | 利用可能なスキル一覧 |
+| **MCP Servers** | 接続中の MCP サーバー・ツール数・コマンド |
+| **Permissions** | 許可ルール一覧（Bash / Read / WebFetch 等タイプ別） |
 
 ## ファイル構成
 
 ```
 company-dashboard/
-├── index.html                              SPA (HTML + CSS + JS)
-├── supabase-setup.sql                      新規インストール用スキーマ
-├── supabase-migration-001-add-user-id.sql  既存DB用マイグレーション
-└── README.md                               This file
+├── index.html                                  SPA (HTML + CSS + JS)
+├── supabase-setup.sql                          新規インストール用スキーマ
+├── supabase-migration-002-revert-user-id.sql   user_id削除用マイグレーション
+└── README.md                                   This file
 
-vercel.json                                 Root config (→ company-dashboard/)
+vercel.json                                     Root config (→ company-dashboard/)
 ```
