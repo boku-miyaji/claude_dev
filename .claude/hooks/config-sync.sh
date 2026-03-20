@@ -114,17 +114,37 @@ if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
     2>/dev/null || true
 fi
 
-# Sync plugin cache: copy local SKILL.md files to plugin cache
-# This ensures the plugin system uses the latest version on every server
+# Sync plugin cache: ensure ai-company plugin is fully installed and up to date
+# This creates the cache from scratch if missing, or updates if stale
 CACHE_BASE="$HOME/.claude/plugins/cache/ai-company/company/1.0.0"
 SOURCE_BASE="$PROJECT_DIR/plugins/company"
-if [ -d "$SOURCE_BASE/skills" ] && [ -d "$CACHE_BASE" ]; then
+if [ -d "$SOURCE_BASE/skills" ]; then
+  # Create cache base structure if missing
+  mkdir -p "$CACHE_BASE/.claude-plugin"
+  mkdir -p "$CACHE_BASE/skills"
+
+  # Ensure plugin.json exists
+  if [ ! -f "$CACHE_BASE/.claude-plugin/plugin.json" ]; then
+    cat > "$CACHE_BASE/.claude-plugin/plugin.json" << 'PJSON'
+{
+  "name": "company",
+  "description": "AI開発・システム開発を中心とした仮想組織スキル。秘書が窓口、人事部が組織を継続最適化。",
+  "version": "1.0.0"
+}
+PJSON
+  fi
+
+  # Ensure README exists
+  if [ ! -f "$CACHE_BASE/README.md" ]; then
+    echo "# ai-company plugin" > "$CACHE_BASE/README.md"
+  fi
+
+  # Sync all skills (SKILL.md + references/)
   for skill_dir in "$SOURCE_BASE"/skills/*/; do
     [ -d "$skill_dir" ] || continue
     skill_name=$(basename "$skill_dir")
     cache_skill_dir="$CACHE_BASE/skills/$skill_name"
     mkdir -p "$cache_skill_dir"
-    # Copy SKILL.md and references/
     if [ -f "$skill_dir/SKILL.md" ]; then
       cp -f "$skill_dir/SKILL.md" "$cache_skill_dir/SKILL.md"
     fi
