@@ -1982,6 +1982,39 @@ async function finTax(root) {
 
   simSection.appendChild(el('h3', {textContent: '税金シミュレーション', style: 'font-size:15px;font-weight:600;margin:0 0 16px'}));
 
+  // Assumptions panel
+  var assumeToggle = el('button', {textContent: '計算の前提条件', style: 'background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font);margin-bottom:16px;display:inline-flex;align-items:center;gap:4px'});
+  var assumeArrow = el('span', {textContent: ' ▸', style: 'font-size:10px'});
+  assumeToggle.appendChild(assumeArrow);
+  var assumeBox = el('div', {style: 'display:none;margin-bottom:20px;padding:16px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);font-size:12px;line-height:1.8;color:var(--text2)'});
+  assumeToggle.addEventListener('click', function() {
+    var show = assumeBox.style.display === 'none';
+    assumeBox.style.display = show ? 'block' : 'none';
+    assumeArrow.textContent = show ? ' ▾' : ' ▸';
+  });
+  var assumptions = [
+    ['申告区分', '個人事業主・青色申告（e-Tax）'],
+    ['青色申告特別控除', '65万円'],
+    ['基礎控除', '48万円'],
+    ['社会保険料控除', '未反映（国保・年金を含めると更に節税）'],
+    ['その他の所得控除', '未反映（配偶者控除・生命保険料控除等）'],
+    ['消費税', '免税事業者として計算（基準期間の課税売上1,000万円以下）'],
+    ['所得税率', '累進課税 5%〜45%（2026年度税制）'],
+    ['復興特別所得税', '所得税額 × 2.1%'],
+    ['住民税', '課税所得 × 10% + 均等割 5,000円'],
+    ['個人事業税', '（事業所得 - 290万円）× 5%'],
+    ['年間売上の予測', '実績月数から12ヶ月に按分（' + monthsElapsed + 'ヶ月実績 → 年間換算）'],
+    ['注意', 'あくまで概算です。正確な税額は税理士にご確認ください']
+  ];
+  assumptions.forEach(function(a) {
+    assumeBox.appendChild(el('div', {style: 'display:flex;gap:8px;padding:2px 0;border-bottom:1px solid var(--border)'}, [
+      el('span', {textContent: a[0], style: 'min-width:130px;color:var(--text3);flex-shrink:0;font-weight:500'}),
+      el('span', {textContent: a[1]})
+    ]));
+  });
+  simSection.appendChild(assumeToggle);
+  simSection.appendChild(assumeBox);
+
   // Revenue input
   var revRow = el('div', {style: 'display:flex;align-items:center;gap:12px;margin-bottom:12px'});
   revRow.appendChild(el('label', {textContent: '年間売上（税抜）', style: 'font-size:13px;color:var(--text2);min-width:120px'}));
