@@ -2019,10 +2019,108 @@ async function finTax(root) {
   var resultArea = el('div');
   simSection.appendChild(resultArea);
 
+  function drawDonut(canvas, segments, centerText, centerSub) {
+    var size = canvas.width / (window.devicePixelRatio || 1);
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    var cx = size / 2, cy = size / 2, r = size / 2 - 8, lineW = size * 0.18;
+    var total = segments.reduce(function(s, seg) { return s + seg.value; }, 0);
+    if (total === 0) return;
+    var startAngle = -Math.PI / 2;
+    segments.forEach(function(seg) {
+      var sliceAngle = (seg.value / total) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, startAngle, startAngle + sliceAngle);
+      ctx.arc(cx, cy, r - lineW, startAngle + sliceAngle, startAngle, true);
+      ctx.closePath();
+      ctx.fillStyle = seg.color;
+      ctx.fill();
+      startAngle += sliceAngle;
+    });
+    // Center text
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#e5e5e5';
+    ctx.font = 'bold ' + Math.round(size * 0.13) + 'px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(centerText, cx, cy - 6);
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text3').trim() || '#888';
+    ctx.font = Math.round(size * 0.075) + 'px system-ui';
+    ctx.fillText(centerSub, cx, cy + 12);
+  }
+
   function renderResult(t) {
     while (resultArea.firstChild) resultArea.removeChild(resultArea.firstChild);
 
-    // KPI cards
+    // ===== Visual Charts Row =====
+    var chartsRow = el('div', {style: 'display:grid;grid-template-columns:' + (window.innerWidth <= 600 ? '1fr' : '1fr 1fr') + ';gap:20px;margin-bottom:24px'});
+
+    // --- Donut Chart: Revenue Allocation ---
+    var donutCard = el('div', {style: 'padding:20px;border-radius:12px;background:var(--bg2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center'});
+    donutCard.appendChild(el('div', {textContent: '売上の内訳', style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;align-self:flex-start'}));
+    var donutCanvas = el('canvas', {width: 180, height: 180});
+    donutCanvas.style.width = '180px';
+    donutCanvas.style.height = '180px';
+    donutCard.appendChild(donutCanvas);
+    var effRate = t.revenue > 0 ? (t.totalTax / t.revenue * 100).toFixed(1) : '0';
+    var donutSegments = [
+      {label: '手取り', value: Math.max(0, t.takeHome), color: '#22c55e'},
+      {label: '所得税+復興税', value: t.incomeTax + t.reconstructionTax, color: '#ef4444'},
+      {label: '住民税', value: t.residentTax, color: '#f59e0b'},
+      {label: '事業税', value: t.businessTax, color: '#8b5cf6'},
+      {label: '経費', value: t.expense, color: '#64748b'}
+    ].filter(function(s) { return s.value > 0; });
+    drawDonut(donutCanvas, donutSegments, effRate + '%', '実効税率');
+
+    // Legend
+    var legend = el('div', {style: 'display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:14px;justify-content:center'});
+    donutSegments.forEach(function(seg) {
+      var pct = t.revenue > 0 ? (seg.value / t.revenue * 100).toFixed(0) : '0';
+      legend.appendChild(el('div', {style: 'display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)'}, [
+        el('div', {style: 'width:8px;height:8px;border-radius:50%;background:'+seg.color+';flex-shrink:0'}),
+        el('span', {textContent: seg.label+' '+pct+'%'})
+      ]));
+    });
+    donutCard.appendChild(legend);
+    chartsRow.appendChild(donutCard);
+
+    // --- Stacked Bar: Revenue Waterfall ---
+    var barCard = el('div', {style: 'padding:20px;border-radius:12px;background:var(--bg2);border:1px solid var(--border)'});
+    barCard.appendChild(el('div', {textContent: '収支ウォーターフォール', style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:16px'}));
+
+    var waterfallItems = [
+      {label: '売上', value: t.revenue, color: '#3b82f6', type: 'full'},
+      {label: '経費', value: -t.expense, color: '#64748b', type: 'minus'},
+      {label: '所得税', value: -(t.incomeTax + t.reconstructionTax), color: '#ef4444', type: 'minus'},
+      {label: '住民税', value: -t.residentTax, color: '#f59e0b', type: 'minus'},
+      {label: '事業税', value: -t.businessTax, color: '#8b5cf6', type: 'minus'},
+      {label: '手取り', value: Math.max(0, t.takeHome), color: '#22c55e', type: 'full'}
+    ].filter(function(item) { return item.value !== 0; });
+
+    var maxVal = t.revenue || 1;
+    waterfallItems.forEach(function(item) {
+      var absVal = Math.abs(item.value);
+      var pct = Math.min(100, absVal / maxVal * 100);
+      var row = el('div', {style: 'margin-bottom:10px'});
+      // Label + value
+      row.appendChild(el('div', {style: 'display:flex;justify-content:space-between;margin-bottom:3px;font-size:11px'}, [
+        el('span', {textContent: item.label, style: 'color:var(--text2)'}),
+        el('span', {textContent: (item.value < 0 ? '- ' : '') + fmtYen(absVal), style: 'font-weight:500;color:' + item.color})
+      ]));
+      // Bar
+      var barBg = el('div', {style: 'height:20px;background:var(--border);border-radius:4px;overflow:hidden;position:relative'});
+      barBg.appendChild(el('div', {style: 'height:100%;width:'+pct+'%;background:'+item.color+';border-radius:4px;transition:width .3s ease'}));
+      row.appendChild(barBg);
+      barCard.appendChild(row);
+    });
+    chartsRow.appendChild(barCard);
+    resultArea.appendChild(chartsRow);
+
+    // ===== KPI cards =====
     var cards = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px'});
     var kpis = [
       {label:'課税所得', val: fmtYen(t.taxableIncome), color:'var(--text)'},
@@ -2040,8 +2138,42 @@ async function finTax(root) {
     });
     resultArea.appendChild(cards);
 
-    // Breakdown table
-    var table = el('div', {style: 'font-size:13px'});
+    // ===== Expense Comparison Mini-chart =====
+    var compCard = el('div', {style: 'padding:16px 20px;border-radius:12px;background:var(--bg2);border:1px solid var(--border);margin-bottom:20px'});
+    compCard.appendChild(el('div', {textContent: '経費別 手取り比較', style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px'}));
+    var compLevels = [0, 500000, 1000000, 2000000, 3000000, 5000000];
+    var compResults = compLevels.map(function(exp) { return calcTax(t.revenue, exp); });
+    var maxTakeHome = Math.max.apply(null, compResults.map(function(r) { return r.takeHome; })) || 1;
+    compLevels.forEach(function(exp, i) {
+      var cr = compResults[i];
+      var isActive = exp === t.expense;
+      var pct = Math.max(0, cr.takeHome / maxTakeHome * 100);
+      var row = el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:6px'});
+      row.appendChild(el('div', {textContent: exp === 0 ? '¥0' : '¥'+Math.round(exp/10000)+'万', style: 'min-width:40px;font-size:11px;color:'+(isActive?'var(--accent)':'var(--text3)')+';text-align:right;font-weight:'+(isActive?'600':'400')}));
+      var bar = el('div', {style: 'flex:1;height:16px;background:var(--border);border-radius:3px;overflow:hidden;position:relative'});
+      bar.appendChild(el('div', {style: 'height:100%;width:'+pct+'%;background:'+(isActive?'var(--accent)':'#22c55e40')+';border-radius:3px;transition:width .3s ease'}));
+      row.appendChild(bar);
+      row.appendChild(el('div', {textContent: fmtYen(cr.takeHome), style: 'min-width:90px;font-size:11px;text-align:right;font-weight:'+(isActive?'600':'400')+';color:'+(isActive?'var(--accent)':'var(--text2)')}));
+      var saved = cr.takeHome - compResults[0].takeHome;
+      if (saved > 0) {
+        row.appendChild(el('div', {textContent: '+'+fmtYen(saved), style: 'min-width:70px;font-size:10px;color:#22c55e;text-align:right'}));
+      } else {
+        row.appendChild(el('div', {style: 'min-width:70px'}));
+      }
+      compCard.appendChild(row);
+    });
+    resultArea.appendChild(compCard);
+
+    // ===== Breakdown table (collapsible) =====
+    var detailToggle = el('button', {textContent: '計算詳細を表示', style: 'background:none;border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-size:12px;color:var(--text3);cursor:pointer;font-family:var(--font);margin-bottom:12px'});
+    var detailBox = el('div', {style: 'display:none;font-size:13px'});
+    detailToggle.addEventListener('click', function() {
+      var show = detailBox.style.display === 'none';
+      detailBox.style.display = show ? 'block' : 'none';
+      detailToggle.textContent = show ? '計算詳細を隠す' : '計算詳細を表示';
+    });
+    resultArea.appendChild(detailToggle);
+
     var rows = [
       ['売上（税抜）', fmtYen(t.revenue), ''],
       ['経費', '- '+fmtYen(t.expense), ''],
@@ -2056,23 +2188,16 @@ async function finTax(root) {
       ['個人事業税', fmtYen(t.businessTax), t.businessTax === 0 ? 'color:var(--text3)' : ''],
       ['─', '─', 'color:var(--border)'],
       ['税金合計', fmtYen(t.totalTax), 'font-weight:600;color:#ef4444'],
-      ['実効税率', (t.revenue > 0 ? (t.totalTax / t.revenue * 100).toFixed(1) : '0') + '%', 'color:var(--text3)'],
+      ['実効税率', effRate + '%', 'color:var(--text3)'],
       ['手取り', fmtYen(t.takeHome), 'font-weight:600;color:#22c55e']
     ];
     rows.forEach(function(r) {
-      table.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);'+r[2]}, [
+      detailBox.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);'+r[2]}, [
         el('span', {textContent: r[0]}),
         el('span', {textContent: r[1]})
       ]));
     });
-    resultArea.appendChild(table);
-
-    // Tax saving note
-    if (t.expense === 0) {
-      resultArea.appendChild(el('div', {style: 'margin-top:16px;padding:12px 16px;border-radius:8px;background:var(--accent)10;border:1px solid var(--accent)30;font-size:12px;color:var(--text2)'}, [
-        el('span', {textContent: '💡 経費を計上すると節税できます。スライダーで経費額を変更してシミュレーションしてみてください。'})
-      ]));
-    }
+    resultArea.appendChild(detailBox);
   }
 
   function updateSim() {
