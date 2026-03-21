@@ -1919,17 +1919,182 @@ async function finTime(root) {
 }
 
 // --- Finance: Tax ---
+function calcTax(revenue, expense) {
+  var income = revenue - expense;
+  var blueDeduction = 650000;
+  var basicDeduction = 480000;
+  var taxableBase = Math.max(0, income - blueDeduction);
+  var taxableIncome = Math.max(0, taxableBase - basicDeduction);
+
+  // Income tax (progressive)
+  var brackets = [
+    [1950000, 0.05, 0],
+    [3300000, 0.10, 97500],
+    [6950000, 0.20, 427500],
+    [9000000, 0.23, 636000],
+    [18000000, 0.33, 1536000],
+    [40000000, 0.40, 2796000],
+    [Infinity, 0.45, 4796000]
+  ];
+  var incomeTax = 0;
+  for (var i = 0; i < brackets.length; i++) {
+    if (taxableIncome <= brackets[i][0]) {
+      incomeTax = Math.floor(taxableIncome * brackets[i][1] - brackets[i][2]);
+      break;
+    }
+  }
+  var reconstructionTax = Math.floor(incomeTax * 0.021);
+  var residentTax = Math.floor(taxableIncome * 0.10) + 5000;
+  var businessTax = income > 2900000 ? Math.floor((income - 2900000) * 0.05) : 0;
+  var totalTax = incomeTax + reconstructionTax + residentTax + businessTax;
+  var takeHome = revenue - expense - totalTax;
+
+  return {
+    revenue: revenue, expense: expense, income: income,
+    taxableBase: taxableBase, taxableIncome: taxableIncome,
+    incomeTax: incomeTax, reconstructionTax: reconstructionTax,
+    residentTax: residentTax, businessTax: businessTax,
+    totalTax: totalTax, takeHome: takeHome
+  };
+}
+
 async function finTax(root) {
+  // Fetch annual revenue from invoices
+  var year = new Date().getFullYear();
+  var invRes = await sb.from('invoices').select('amount').gte('invoice_date', year+'-01-01').lte('invoice_date', year+'-12-31');
+  var invoices = invRes.data || [];
+  var actualRevQ = invoices.reduce(function(s,i){return s+i.amount;},0);
+
+  // Projected annual revenue (simple: Q1 actual × 4)
+  var now = new Date();
+  var monthsElapsed = now.getMonth() + 1;
+  var projectedRevenue = monthsElapsed > 0 ? Math.round(actualRevQ / monthsElapsed * 12) : 0;
+
   var res = await sb.from('tax_payments').select('*').order('due_date');
   var payments = res.data || [];
   var typeLabels = {income_tax:'所得税',consumption_tax:'消費税',resident_tax:'住民税',business_tax:'個人事業税',estimated_tax:'予定納税'};
   var statusLabels = {upcoming:'予定',paid:'支払済',overdue:'期限超過'};
   var statusColors = {upcoming:'#3b82f6',paid:'#22c55e',overdue:'#ef4444'};
 
-  if (payments.length === 0) {
-    root.appendChild(el('div', {textContent: '税金情報がありません。/invoice tax でシミュレーションを実行してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
-    return;
+  // ===== Simulation Section =====
+  var simSection = el('div', {style: 'margin-bottom:32px'});
+  root.appendChild(simSection);
+
+  simSection.appendChild(el('h3', {textContent: '税金シミュレーション', style: 'font-size:15px;font-weight:600;margin:0 0 16px'}));
+
+  // Revenue input
+  var revRow = el('div', {style: 'display:flex;align-items:center;gap:12px;margin-bottom:12px'});
+  revRow.appendChild(el('label', {textContent: '年間売上（税抜）', style: 'font-size:13px;color:var(--text2);min-width:120px'}));
+  var revInput = el('input', {type:'number', value: projectedRevenue, style: 'width:160px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--font);background:var(--bg2);color:var(--text)'});
+  revRow.appendChild(revInput);
+  revRow.appendChild(el('span', {textContent: '(' + fmtYen(projectedRevenue) + ' 予測)', style: 'font-size:12px;color:var(--text3)', className: 'rev-hint'}));
+  simSection.appendChild(revRow);
+
+  // Expense slider
+  var expRow = el('div', {style: 'display:flex;align-items:center;gap:12px;margin-bottom:8px'});
+  expRow.appendChild(el('label', {textContent: '年間経費', style: 'font-size:13px;color:var(--text2);min-width:120px'}));
+  var expInput = el('input', {type:'number', value: 0, style: 'width:160px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--font);background:var(--bg2);color:var(--text)'});
+  expRow.appendChild(expInput);
+  var expLabel = el('span', {textContent: fmtYen(0), style: 'font-size:12px;color:var(--text3)'});
+  expRow.appendChild(expLabel);
+  simSection.appendChild(expRow);
+
+  var sliderRow = el('div', {style: 'display:flex;align-items:center;gap:12px;margin-bottom:4px;padding-left:132px'});
+  var expSlider = el('input', {type:'range', min:0, max: Math.max(projectedRevenue, 5000000), step: 10000, value: 0, style: 'flex:1;accent-color:var(--accent)'});
+  sliderRow.appendChild(expSlider);
+  simSection.appendChild(sliderRow);
+
+  // Preset buttons
+  var presetRow = el('div', {style: 'display:flex;gap:6px;margin-bottom:20px;padding-left:132px;flex-wrap:wrap'});
+  [0, 500000, 1000000, 2000000, 3000000, 5000000].forEach(function(v) {
+    presetRow.appendChild(el('button', {
+      textContent: v === 0 ? '¥0' : '¥'+Math.round(v/10000)+'万',
+      style: 'padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);color:var(--text2);font-size:11px;cursor:pointer;font-family:var(--font)',
+      onClick: function() { expInput.value = v; expSlider.value = v; updateSim(); }
+    }));
+  });
+  simSection.appendChild(presetRow);
+
+  // Result area
+  var resultArea = el('div');
+  simSection.appendChild(resultArea);
+
+  function renderResult(t) {
+    while (resultArea.firstChild) resultArea.removeChild(resultArea.firstChild);
+
+    // KPI cards
+    var cards = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px'});
+    var kpis = [
+      {label:'課税所得', val: fmtYen(t.taxableIncome), color:'var(--text)'},
+      {label:'所得税+復興税', val: fmtYen(t.incomeTax + t.reconstructionTax), color:'#ef4444'},
+      {label:'住民税', val: fmtYen(t.residentTax), color:'#f59e0b'},
+      {label:'事業税', val: fmtYen(t.businessTax), color:'#8b5cf6'},
+      {label:'税金合計', val: fmtYen(t.totalTax), color:'#ef4444'},
+      {label:'手取り', val: fmtYen(t.takeHome), color:'#22c55e'}
+    ];
+    kpis.forEach(function(k) {
+      cards.appendChild(el('div', {style: 'padding:14px;border-radius:8px;background:var(--bg2);border:1px solid var(--border)'}, [
+        el('div', {textContent: k.label, style: 'font-size:11px;color:var(--text3);margin-bottom:4px'}),
+        el('div', {textContent: k.val, style: 'font-size:16px;font-weight:600;color:'+k.color})
+      ]));
+    });
+    resultArea.appendChild(cards);
+
+    // Breakdown table
+    var table = el('div', {style: 'font-size:13px'});
+    var rows = [
+      ['売上（税抜）', fmtYen(t.revenue), ''],
+      ['経費', '- '+fmtYen(t.expense), ''],
+      ['事業所得', fmtYen(t.income), ''],
+      ['青色申告特別控除', '- ¥650,000', ''],
+      ['基礎控除', '- ¥480,000', ''],
+      ['課税所得', fmtYen(t.taxableIncome), 'font-weight:600'],
+      ['─', '─', 'color:var(--border)'],
+      ['所得税', fmtYen(t.incomeTax), ''],
+      ['復興特別所得税', fmtYen(t.reconstructionTax), ''],
+      ['住民税', fmtYen(t.residentTax), ''],
+      ['個人事業税', fmtYen(t.businessTax), t.businessTax === 0 ? 'color:var(--text3)' : ''],
+      ['─', '─', 'color:var(--border)'],
+      ['税金合計', fmtYen(t.totalTax), 'font-weight:600;color:#ef4444'],
+      ['実効税率', (t.revenue > 0 ? (t.totalTax / t.revenue * 100).toFixed(1) : '0') + '%', 'color:var(--text3)'],
+      ['手取り', fmtYen(t.takeHome), 'font-weight:600;color:#22c55e']
+    ];
+    rows.forEach(function(r) {
+      table.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);'+r[2]}, [
+        el('span', {textContent: r[0]}),
+        el('span', {textContent: r[1]})
+      ]));
+    });
+    resultArea.appendChild(table);
+
+    // Tax saving note
+    if (t.expense === 0) {
+      resultArea.appendChild(el('div', {style: 'margin-top:16px;padding:12px 16px;border-radius:8px;background:var(--accent)10;border:1px solid var(--accent)30;font-size:12px;color:var(--text2)'}, [
+        el('span', {textContent: '💡 経費を計上すると節税できます。スライダーで経費額を変更してシミュレーションしてみてください。'})
+      ]));
+    }
   }
+
+  function updateSim() {
+    var rev = parseInt(revInput.value) || 0;
+    var exp = parseInt(expInput.value) || 0;
+    expLabel.textContent = fmtYen(exp);
+    var t = calcTax(rev, exp);
+    renderResult(t);
+  }
+
+  expSlider.addEventListener('input', function() { expInput.value = expSlider.value; updateSim(); });
+  expInput.addEventListener('input', function() { expSlider.value = expInput.value; updateSim(); });
+  revInput.addEventListener('input', function() { expSlider.max = Math.max(parseInt(revInput.value)||0, 5000000); updateSim(); });
+
+  // Initial render
+  updateSim();
+
+  // ===== Payment Schedule Section =====
+  if (payments.length === 0) return;
+
+  root.appendChild(el('div', {style: 'border-top:1px solid var(--border);margin-top:24px;padding-top:24px'}));
+  root.appendChild(el('h3', {textContent: '納付スケジュール', style: 'font-size:15px;font-weight:600;margin:0 0 16px'}));
 
   // Group by year
   var byYear = {};
