@@ -1654,104 +1654,347 @@ async function renderFinance(root) {
 // --- Finance: Overview ---
 async function finOverview(root) {
   var now = new Date();
-  var ym = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  var year = now.getFullYear();
+  var ym = year + '-' + String(now.getMonth()+1).padStart(2,'0');
   var startOfMonth = ym + '-01';
   var endOfMonth = ym + '-31';
+  var startOfYear = year + '-01-01';
+  var endOfYear = year + '-12-31';
 
-  var [invRes, expRes, timeRes, projRes, taxRes] = await Promise.all([
+  var [invMonthRes, expMonthRes, timeMonthRes, projRes, taxRes, invYearRes, expYearRes, timeYearRes] = await Promise.all([
     sb.from('invoices').select('*').gte('invoice_date', startOfMonth).lte('invoice_date', endOfMonth),
     sb.from('expenses').select('*').gte('expense_date', startOfMonth).lte('expense_date', endOfMonth),
     sb.from('time_entries').select('*').gte('work_date', startOfMonth).lte('work_date', endOfMonth),
     sb.from('projects').select('*').eq('status', 'active'),
-    sb.from('tax_payments').select('*').eq('status', 'upcoming').order('due_date').limit(5)
+    sb.from('tax_payments').select('*').eq('status', 'upcoming').order('due_date').limit(5),
+    sb.from('invoices').select('*').gte('invoice_date', startOfYear).lte('invoice_date', endOfYear),
+    sb.from('expenses').select('*').gte('expense_date', startOfYear).lte('expense_date', endOfYear),
+    sb.from('time_entries').select('*').gte('work_date', startOfYear).lte('work_date', endOfYear)
   ]);
 
-  var invoices = invRes.data || [];
-  var expenses = expRes.data || [];
-  var entries = timeRes.data || [];
+  var invoices = invMonthRes.data || [];
+  var expenses = expMonthRes.data || [];
+  var entries = timeMonthRes.data || [];
   var projects = projRes.data || [];
   var taxes = taxRes.data || [];
+  var allInv = invYearRes.data || [];
+  var allExp = expYearRes.data || [];
+  var allTime = timeYearRes.data || [];
 
   var totalRev = invoices.reduce(function(s,i){return s+i.amount;}, 0);
   var totalExp = expenses.reduce(function(s,e){return s+e.amount;}, 0);
   var totalHrs = entries.reduce(function(s,t){return s+parseFloat(t.hours);}, 0);
   var grossProfit = totalRev - totalExp;
   var hourlyRate = totalHrs > 0 ? Math.round(totalRev / totalHrs) : 0;
+  var yearRev = allInv.reduce(function(s,i){return s+i.amount;}, 0);
+  var yearExp = allExp.reduce(function(s,e){return s+e.amount;}, 0);
+  var yearHrs = allTime.reduce(function(s,t){return s+parseFloat(t.hours);}, 0);
 
-  // Summary cards
-  var cards = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px'});
-  [{l:'売上',v:fmtYen(totalRev),c:'var(--accent)'},{l:'経費',v:fmtYen(totalExp),c:'var(--text3)'},{l:'粗利',v:fmtYen(grossProfit),c:grossProfit>=0?'#22c55e':'#ef4444'},{l:'稼働',v:totalHrs.toFixed(1)+'h',c:'var(--text)'},{l:'実質時給',v:fmtYen(hourlyRate),c:'var(--accent2)'}].forEach(function(d) {
-    cards.appendChild(el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:20px'}, [
-      el('div', {textContent: d.l, style: 'font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px'}),
-      el('div', {textContent: d.v, style: 'font-size:24px;font-weight:600;color:'+d.c})
+  // ===== Title =====
+  root.appendChild(el('h3', {textContent: year+'年'+(now.getMonth()+1)+'月', style: 'margin:0 0 16px;font-size:16px;font-weight:600'}));
+
+  // ===== KPI Cards =====
+  var cards = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px'});
+  [{l:'売上',v:fmtYen(totalRev),c:'var(--accent)',sub:'年計 '+fmtYen(yearRev)},
+   {l:'経費',v:fmtYen(totalExp),c:'var(--text3)',sub:'年計 '+fmtYen(yearExp)},
+   {l:'粗利',v:fmtYen(grossProfit),c:grossProfit>=0?'#22c55e':'#ef4444',sub:(totalRev>0?Math.round(grossProfit/totalRev*100):0)+'%'},
+   {l:'稼働',v:totalHrs.toFixed(1)+'h',c:'var(--text)',sub:'年計 '+yearHrs.toFixed(1)+'h'},
+   {l:'実質時給',v:fmtYen(hourlyRate),c:'var(--accent2)',sub:yearHrs>0?'年平均 '+fmtYen(Math.round(yearRev/yearHrs)):'-'}
+  ].forEach(function(d) {
+    cards.appendChild(el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px'}, [
+      el('div', {textContent: d.l, style: 'font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px'}),
+      el('div', {textContent: d.v, style: 'font-size:22px;font-weight:600;color:'+d.c}),
+      el('div', {textContent: d.sub, style: 'font-size:10px;color:var(--text3);margin-top:4px'})
     ]));
   });
-  root.appendChild(el('h3', {textContent: now.getFullYear()+'年'+(now.getMonth()+1)+'月', style: 'margin:0 0 16px;font-size:16px;font-weight:600'}));
   root.appendChild(cards);
 
-  // Project breakdown
-  if (entries.length > 0 || invoices.length > 0) {
-    root.appendChild(el('h3', {textContent: '案件別', style: 'margin:24px 0 12px;font-size:14px;font-weight:600'}));
-    var tbl = el('table', {style: 'width:100%;border-collapse:collapse;font-size:13px'});
-    tbl.appendChild(el('thead', {}, [el('tr', {}, ['案件','売上','稼働','時給'].map(function(h){return el('th',{textContent:h,style:'text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:500'})}))]));
-    var tbody = el('tbody');
-    var projMap = {};
-    projects.forEach(function(p) { projMap[p.id] = p; });
-    // Group by project
-    var projStats = {};
-    invoices.forEach(function(inv) {
-      var pid = inv.project_id || 'unassigned';
-      if (!projStats[pid]) projStats[pid] = {rev:0,hrs:0};
-      projStats[pid].rev += inv.amount;
+  // ===== Monthly Revenue Bar Chart =====
+  var monthlyData = {};
+  for (var m = 1; m <= 12; m++) {
+    monthlyData[m] = {rev: 0, exp: 0, hrs: 0};
+  }
+  allInv.forEach(function(inv) {
+    var mon = parseInt(inv.invoice_date.substring(5, 7));
+    monthlyData[mon].rev += inv.amount;
+  });
+  allExp.forEach(function(exp) {
+    var mon = parseInt(exp.expense_date.substring(5, 7));
+    monthlyData[mon].exp += exp.amount;
+  });
+  allTime.forEach(function(te) {
+    var mon = parseInt(te.work_date.substring(5, 7));
+    monthlyData[mon].hrs += parseFloat(te.hours);
+  });
+
+  var chartCard = el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:24px'});
+  chartCard.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [
+    el('div', {textContent: year+'年 月別売上推移', style: 'font-size:13px;font-weight:600;color:var(--text2)'}),
+    el('div', {style: 'display:flex;gap:12px;font-size:10px;color:var(--text3)'}, [
+      el('span', {}, [el('span', {style: 'display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--accent);margin-right:4px;vertical-align:middle'}), document.createTextNode('売上')]),
+      el('span', {}, [el('span', {style: 'display:inline-block;width:8px;height:8px;border-radius:2px;background:#ef4444;margin-right:4px;vertical-align:middle'}), document.createTextNode('経費')])
+    ])
+  ]));
+
+  var maxMonthly = 0;
+  for (var mk = 1; mk <= 12; mk++) { maxMonthly = Math.max(maxMonthly, monthlyData[mk].rev, monthlyData[mk].exp); }
+  if (maxMonthly === 0) maxMonthly = 1;
+
+  // Y-axis labels + bars
+  var chartBody = el('div', {style: 'display:flex;gap:4px'});
+  // Y axis
+  var yAxis = el('div', {style: 'display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;padding-right:6px;height:140px;font-size:9px;color:var(--text3);font-family:var(--mono)'});
+  yAxis.appendChild(el('span', {textContent: (maxMonthly >= 1000000 ? Math.round(maxMonthly/10000)+'万' : fmtYen(maxMonthly))}));
+  yAxis.appendChild(el('span', {textContent: (maxMonthly >= 1000000 ? Math.round(maxMonthly/20000)+'万' : fmtYen(Math.round(maxMonthly/2)))}));
+  yAxis.appendChild(el('span', {textContent: '0'}));
+  chartBody.appendChild(yAxis);
+
+  // Bars area
+  var barsArea = el('div', {style: 'flex:1;display:flex;align-items:flex-end;gap:3px;height:140px;border-bottom:1px solid var(--border);border-left:1px solid var(--border);padding:0 2px'});
+  var curMonth = now.getMonth() + 1;
+  for (var mi = 1; mi <= 12; mi++) {
+    var md = monthlyData[mi];
+    var revH = Math.max(0, md.rev / maxMonthly * 130);
+    var expH = Math.max(0, md.exp / maxMonthly * 130);
+    var isCurrent = mi === curMonth;
+    var isFuture = mi > curMonth;
+
+    var barGroup = el('div', {style: 'flex:1;display:flex;flex-direction:column;align-items:center;gap:2px', title: mi+'月: 売上'+fmtYen(md.rev)+' 経費'+fmtYen(md.exp)});
+
+    var barsRow = el('div', {style: 'display:flex;gap:1px;align-items:flex-end;width:100%;justify-content:center;height:130px'});
+    barsRow.appendChild(el('div', {style: 'width:45%;max-width:20px;height:'+revH+'px;background:' + (isCurrent ? 'var(--accent)' : isFuture ? 'var(--border)' : 'var(--accent)') + ';opacity:'+(isFuture?'.2':'1')+';border-radius:2px 2px 0 0;transition:height .3s ease;min-height:'+(md.rev>0?'2':'0')+'px'}));
+    barsRow.appendChild(el('div', {style: 'width:45%;max-width:20px;height:'+expH+'px;background:#ef4444;opacity:'+(isFuture?'.2':'.7')+';border-radius:2px 2px 0 0;transition:height .3s ease;min-height:'+(md.exp>0?'2':'0')+'px'}));
+    barGroup.appendChild(barsRow);
+    barsArea.appendChild(barGroup);
+  }
+  chartBody.appendChild(barsArea);
+  chartCard.appendChild(chartBody);
+
+  // Month labels
+  var monthLabels = el('div', {style: 'display:flex;margin-left:40px;margin-top:4px'});
+  for (var ml = 1; ml <= 12; ml++) {
+    monthLabels.appendChild(el('div', {
+      textContent: ml+'月',
+      style: 'flex:1;text-align:center;font-size:9px;color:'+(ml===curMonth?'var(--accent)':'var(--text3)')+';font-weight:'+(ml===curMonth?'600':'400')
+    }));
+  }
+  chartCard.appendChild(monthLabels);
+
+  // Monthly summary under chart
+  var monthlySummary = el('div', {style: 'display:flex;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);flex-wrap:wrap;justify-content:center'});
+  var avgRev = yearRev / curMonth;
+  monthlySummary.appendChild(el('span', {}, [document.createTextNode('月平均売上: '), el('span', {textContent: fmtYen(Math.round(avgRev)), style: 'font-weight:600;color:var(--text2)'})]));
+  monthlySummary.appendChild(el('span', {}, [document.createTextNode('年間予測: '), el('span', {textContent: fmtYen(Math.round(avgRev * 12)), style: 'font-weight:600;color:var(--text2)'})]));
+  monthlySummary.appendChild(el('span', {}, [document.createTextNode('月平均稼働: '), el('span', {textContent: (yearHrs / curMonth).toFixed(1) + 'h', style: 'font-weight:600;color:var(--text2)'})]));
+  chartCard.appendChild(monthlySummary);
+  root.appendChild(chartCard);
+
+  // ===== Two-column: Project Donut + Project Breakdown =====
+  var projMap = {};
+  projects.forEach(function(p) { projMap[p.id] = p; });
+
+  // Gather year-to-date project stats
+  var projStats = {};
+  allInv.forEach(function(inv) {
+    var pid = inv.project_id || 'unassigned';
+    if (!projStats[pid]) projStats[pid] = {rev:0,hrs:0,name:''};
+    projStats[pid].rev += inv.amount;
+  });
+  allTime.forEach(function(te) {
+    var pid = te.project_id || 'unassigned';
+    if (!projStats[pid]) projStats[pid] = {rev:0,hrs:0,name:''};
+    projStats[pid].hrs += parseFloat(te.hours);
+  });
+  Object.keys(projStats).forEach(function(pid) {
+    projStats[pid].name = pid === 'unassigned' ? '未割当' : (projMap[pid] ? projMap[pid].name : 'PJ#'+pid);
+  });
+
+  var projKeys = Object.keys(projStats).sort(function(a,b) { return projStats[b].rev - projStats[a].rev; });
+  var projColors = ['var(--accent)', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+
+  if (projKeys.length > 0) {
+    var twoCol = el('div', {style: 'display:grid;grid-template-columns:'+(window.innerWidth<=600?'1fr':'1fr 1fr')+';gap:16px;margin-bottom:24px'});
+
+    // Project donut
+    var donutCard = el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;display:flex;flex-direction:column;align-items:center'});
+    donutCard.appendChild(el('div', {textContent: '案件別売上構成（年間）', style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;align-self:flex-start'}));
+    var projDonut = el('canvas', {width: 160, height: 160});
+    projDonut.style.width = '160px';
+    projDonut.style.height = '160px';
+    donutCard.appendChild(projDonut);
+
+    var donutSegs = projKeys.map(function(pid, i) {
+      return {label: projStats[pid].name, value: projStats[pid].rev, color: projColors[i % projColors.length]};
     });
-    entries.forEach(function(te) {
-      var pid = te.project_id || 'unassigned';
-      if (!projStats[pid]) projStats[pid] = {rev:0,hrs:0};
-      projStats[pid].hrs += parseFloat(te.hours);
-    });
-    Object.keys(projStats).forEach(function(pid) {
-      var s = projStats[pid];
-      var pname = pid === 'unassigned' ? '未割当' : (projMap[pid] ? projMap[pid].name : 'PJ#'+pid);
-      var rate = s.hrs > 0 ? Math.round(s.rev / s.hrs) : '-';
-      tbody.appendChild(el('tr', {}, [
-        el('td', {textContent: pname, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
-        el('td', {textContent: fmtYen(s.rev), style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
-        el('td', {textContent: s.hrs.toFixed(1)+'h', style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
-        el('td', {textContent: typeof rate === 'number' ? fmtYen(rate) : rate, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'})
+    // Use the drawDonut function from tax tab if available, or inline it
+    if (typeof drawDonut === 'function') {
+      drawDonut(projDonut, donutSegs, projKeys.length+'', '案件');
+    } else {
+      // Inline mini donut
+      var dpr = window.devicePixelRatio || 1;
+      var sz = 160;
+      projDonut.width = sz * dpr; projDonut.height = sz * dpr;
+      projDonut.style.width = sz+'px'; projDonut.style.height = sz+'px';
+      var dctx = projDonut.getContext('2d');
+      dctx.scale(dpr, dpr);
+      var dtotal = donutSegs.reduce(function(s,seg){return s+seg.value;},0) || 1;
+      var dstart = -Math.PI / 2;
+      donutSegs.forEach(function(seg) {
+        var sa = (seg.value / dtotal) * Math.PI * 2;
+        dctx.beginPath();
+        dctx.arc(80,80,68,dstart,dstart+sa);
+        dctx.arc(80,80,40,dstart+sa,dstart,true);
+        dctx.closePath();
+        dctx.fillStyle = seg.color;
+        dctx.fill();
+        dstart += sa;
+      });
+      dctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#e5e5e5';
+      dctx.font = 'bold 18px system-ui';
+      dctx.textAlign = 'center';
+      dctx.textBaseline = 'middle';
+      dctx.fillText(projKeys.length+'', 80, 74);
+      dctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text3').trim()||'#888';
+      dctx.font = '11px system-ui';
+      dctx.fillText('案件', 80, 92);
+    }
+
+    // Legend
+    var dLegend = el('div', {style: 'display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:14px;justify-content:center'});
+    donutSegs.forEach(function(seg) {
+      var pct = yearRev > 0 ? (seg.value / yearRev * 100).toFixed(0) : '0';
+      dLegend.appendChild(el('div', {style: 'display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)'}, [
+        el('div', {style: 'width:8px;height:8px;border-radius:50%;background:'+seg.color}),
+        el('span', {textContent: seg.label+' '+pct+'%'})
       ]));
     });
-    tbl.appendChild(tbody);
-    root.appendChild(tbl);
+    donutCard.appendChild(dLegend);
+    twoCol.appendChild(donutCard);
+
+    // Project breakdown bars
+    var breakCard = el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px'});
+    breakCard.appendChild(el('div', {textContent: '案件別 売上・稼働（年間）', style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:14px'}));
+
+    var maxProjRev = Math.max.apply(null, projKeys.map(function(pid){return projStats[pid].rev;})) || 1;
+    projKeys.forEach(function(pid, i) {
+      var s = projStats[pid];
+      var pct = s.rev / maxProjRev * 100;
+      var rate = s.hrs > 0 ? fmtYen(Math.round(s.rev / s.hrs))+'/h' : '-';
+      var row = el('div', {style: 'margin-bottom:14px'});
+      row.appendChild(el('div', {style: 'display:flex;justify-content:space-between;margin-bottom:3px;font-size:12px'}, [
+        el('span', {textContent: s.name, style: 'font-weight:500;color:var(--text)'}),
+        el('span', {textContent: fmtYen(s.rev), style: 'font-weight:600;color:'+projColors[i%projColors.length]})
+      ]));
+      var bar = el('div', {style: 'height:14px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:3px'});
+      bar.appendChild(el('div', {style: 'height:100%;width:'+pct+'%;background:'+projColors[i%projColors.length]+';border-radius:3px;transition:width .3s'}));
+      row.appendChild(bar);
+      row.appendChild(el('div', {style: 'display:flex;gap:12px;font-size:10px;color:var(--text3)'}, [
+        el('span', {textContent: s.hrs.toFixed(1)+'h'}),
+        el('span', {textContent: rate})
+      ]));
+      breakCard.appendChild(row);
+    });
+    twoCol.appendChild(breakCard);
+    root.appendChild(twoCol);
   }
 
-  // Upcoming tax
+  // ===== Revenue vs Expense stacked bar (this month) =====
+  if (totalRev > 0 || totalExp > 0) {
+    var revExpCard = el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:24px'});
+    revExpCard.appendChild(el('div', {textContent: '今月の収支バランス', style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px'}));
+    var totalBoth = Math.max(totalRev, 1);
+    // Revenue bar
+    revExpCard.appendChild(el('div', {style: 'margin-bottom:8px'}, [
+      el('div', {style: 'display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px'}, [
+        el('span', {textContent: '売上', style: 'color:var(--text3)'}),
+        el('span', {textContent: fmtYen(totalRev), style: 'font-weight:600;color:var(--accent)'})
+      ]),
+      el('div', {style: 'height:24px;background:var(--border);border-radius:4px;overflow:hidden'}, [
+        el('div', {style: 'height:100%;width:100%;background:var(--accent);border-radius:4px'})
+      ])
+    ]));
+    // Expense bar
+    revExpCard.appendChild(el('div', {style: 'margin-bottom:8px'}, [
+      el('div', {style: 'display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px'}, [
+        el('span', {textContent: '経費', style: 'color:var(--text3)'}),
+        el('span', {textContent: fmtYen(totalExp), style: 'font-weight:500;color:#ef4444'})
+      ]),
+      el('div', {style: 'height:24px;background:var(--border);border-radius:4px;overflow:hidden'}, [
+        el('div', {style: 'height:100%;width:'+(totalExp/totalBoth*100)+'%;background:#ef4444;border-radius:4px;opacity:.7'})
+      ])
+    ]));
+    // Profit bar
+    revExpCard.appendChild(el('div', {}, [
+      el('div', {style: 'display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px'}, [
+        el('span', {textContent: '粗利', style: 'color:var(--text3)'}),
+        el('span', {textContent: fmtYen(grossProfit), style: 'font-weight:600;color:#22c55e'})
+      ]),
+      el('div', {style: 'height:24px;background:var(--border);border-radius:4px;overflow:hidden'}, [
+        el('div', {style: 'height:100%;width:'+(Math.max(0,grossProfit)/totalBoth*100)+'%;background:#22c55e;border-radius:4px'})
+      ])
+    ]));
+    root.appendChild(revExpCard);
+  }
+
+  // ===== Upcoming tax =====
   if (taxes.length > 0) {
-    root.appendChild(el('h3', {textContent: '次の税金支払い', style: 'margin:24px 0 12px;font-size:14px;font-weight:600'}));
+    var taxCard = el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:24px'});
+    taxCard.appendChild(el('div', {textContent: '次の税金支払い', style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px'}));
+    var typeLabels = {income_tax:'所得税',consumption_tax:'消費税',resident_tax:'住民税',business_tax:'事業税',estimated_tax:'予定納税'};
+    var taxTotal = taxes.reduce(function(s,t){return s+t.amount;},0);
+    var maxTax = Math.max.apply(null, taxes.map(function(t){return t.amount;})) || 1;
     taxes.forEach(function(t) {
-      var typeLabels = {income_tax:'所得税',consumption_tax:'消費税',resident_tax:'住民税',business_tax:'事業税',estimated_tax:'予定納税'};
-      root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px'}, [
-        el('span', {textContent: (typeLabels[t.tax_type]||t.tax_type) + (t.period ? ' '+t.period : '')}),
-        el('span', {style: 'display:flex;gap:16px'}, [
-          el('span', {textContent: fmtDate(t.due_date), style: 'color:var(--text3)'}),
+      var pct = t.amount / maxTax * 100;
+      var daysLeft = Math.ceil((new Date(t.due_date) - now) / 86400000);
+      var urgColor = daysLeft < 30 ? '#ef4444' : daysLeft < 90 ? '#f59e0b' : '#3b82f6';
+      var row = el('div', {style: 'margin-bottom:10px'});
+      row.appendChild(el('div', {style: 'display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px'}, [
+        el('span', {}, [
+          el('span', {textContent: (typeLabels[t.tax_type]||t.tax_type) + (t.period ? ' '+t.period : ''), style: 'font-weight:500'}),
+          el('span', {textContent: ' · '+fmtDate(t.due_date), style: 'color:var(--text3)'})
+        ]),
+        el('span', {style: 'display:flex;gap:8px;align-items:center'}, [
+          el('span', {textContent: daysLeft+'日後', style: 'font-size:10px;padding:1px 6px;border-radius:3px;background:'+urgColor+'18;color:'+urgColor}),
           el('span', {textContent: fmtYen(t.amount), style: 'font-weight:600'})
         ])
       ]));
+      row.appendChild(el('div', {style: 'height:6px;background:var(--border);border-radius:3px;overflow:hidden'}, [
+        el('div', {style: 'height:100%;width:'+pct+'%;background:'+urgColor+';border-radius:3px;opacity:.6'})
+      ]));
+      taxCard.appendChild(row);
     });
+    taxCard.appendChild(el('div', {style: 'margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px'}, [
+      el('span', {textContent: '直近の支払い合計', style: 'color:var(--text3)'}),
+      el('span', {textContent: fmtYen(taxTotal), style: 'font-weight:600;color:#ef4444'})
+    ]));
+    root.appendChild(taxCard);
   }
 
-  // Unpaid invoices
-  var unpaid = invoices.filter(function(i){return i.status !== 'paid';});
-  if (unpaid.length > 0) {
-    root.appendChild(el('h3', {textContent: '未入金 ('+unpaid.length+'件)', style: 'margin:24px 0 12px;font-size:14px;font-weight:600;color:#ef4444'}));
-    unpaid.forEach(function(inv) {
-      root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px'}, [
-        el('span', {textContent: inv.client_name + (inv.invoice_number ? ' #'+inv.invoice_number : '')}),
-        el('span', {style: 'display:flex;gap:16px'}, [
-          el('span', {textContent: '期限: '+fmtDate(inv.due_date), style: 'color:var(--text3)'}),
+  // ===== Unpaid invoices =====
+  var allUnpaid = allInv.filter(function(i){return i.status !== 'paid';});
+  if (allUnpaid.length > 0) {
+    var unpaidCard = el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 20px'});
+    var unpaidTotal = allUnpaid.reduce(function(s,i){return s+i.amount;},0);
+    unpaidCard.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'}, [
+      el('div', {textContent: '未入金 ('+allUnpaid.length+'件)', style: 'font-size:12px;font-weight:600;color:#ef4444'}),
+      el('div', {textContent: fmtYen(unpaidTotal), style: 'font-size:16px;font-weight:600;color:#ef4444'})
+    ]));
+    allUnpaid.forEach(function(inv) {
+      var dueDate = new Date(inv.due_date);
+      var isOverdue = dueDate < now;
+      root.appendChild; // no-op
+      unpaidCard.appendChild(el('div', {style: 'display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px'}, [
+        el('span', {}, [
+          el('span', {textContent: inv.client_name, style: 'font-weight:500'}),
+          inv.invoice_number ? el('span', {textContent: ' #'+inv.invoice_number, style: 'color:var(--text3)'}) : null
+        ]),
+        el('span', {style: 'display:flex;gap:10px;align-items:center'}, [
+          el('span', {textContent: fmtDate(inv.due_date), style: 'color:'+(isOverdue?'#ef4444':'var(--text3)')}),
           el('span', {textContent: fmtYen(inv.amount), style: 'font-weight:600'})
         ])
       ]));
     });
+    root.appendChild(unpaidCard);
   }
 }
 
