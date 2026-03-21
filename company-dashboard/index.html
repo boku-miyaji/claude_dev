@@ -213,13 +213,12 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .tree-children::before{content:'';position:absolute;top:0;left:50%;width:1px;height:24px;background:var(--border2)}
 .tree-children>*{position:relative;padding:0 12px}
 .tree-children>*::before{content:'';position:absolute;top:-24px;left:50%;width:1px;height:24px;background:var(--border2)}
-.tree-children[data-count]::after{content:'';position:absolute;top:0;height:1px;background:var(--border2)}
+.tree-children>*::after{content:'';position:absolute;top:-24px;left:0;right:0;height:1px;background:var(--border2)}
+.tree-children>*:first-child::after{left:50%;right:0}
+.tree-children>*:last-child::after{left:0;right:50%}
+.tree-children>*:only-child::after{display:none}
 .tree-branch{display:flex;flex-direction:column;align-items:center}
-
-/* Horizontal connector */
-.tree-hline{position:relative}
-.tree-hline::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--border2)}
-@media(max-width:768px){.tree{padding:16px 8px}.tree-children{flex-direction:column;align-items:center;gap:8px;padding-top:16px}.tree-children::before{height:16px}.tree-children>*::before{height:16px;top:-16px}.tree-children>*{padding:0}}
+@media(max-width:768px){.tree{padding:16px 8px}.tree-children{flex-direction:column;align-items:center;gap:8px;padding-top:16px}.tree-children::before{height:16px}.tree-children>*::before{height:16px;top:-16px}.tree-children>*{padding:0}.tree-children>*::after{display:none}}
 </style>
 </head>
 <body>
