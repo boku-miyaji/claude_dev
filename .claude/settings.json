@@ -8,19 +8,51 @@
   "permissions": {
     "allow": [
       "Bash(python3:*)",
+      "Bash(/workspace/circuit_diagram/backend/.venv/bin/python:*)",
       "Bash(docker compose:*)",
+      "Bash(git -C /workspace/circuit_diagram show HEAD:backend/src/routers/block_diagram.py)",
+      "Bash(git -C /workspace/circuit_diagram show HEAD:backend/src/prompts/__init__.py)",
       "Read(//tmp/**)",
       "Bash(wc:*)",
       "Bash(pgrep:*)",
       "Bash(dd:*)",
+      "Read(//home/node/.claude/plugins/cache/ai-company/company/1.0.0/skills/company/references/**)",
       "WebFetch(domain:github.com)",
+      "Read(//home/node/.npm/_npx/7145db6b471ecd40/node_modules/google-calendar-mcp/dist/**)",
       "Bash(npx google-calendar-mcp:*)",
       "Bash(npm info:*)",
       "Bash(npx -y google-calendar-mcp --help)",
+      "Read(//home/node/.npm/_npx/**)",
+      "Read(//home/node/**)",
+      "Bash(git -C /workspace/diary diff --stat)",
+      "Bash(git -C /workspace/diary log --oneline -3)",
       "mcp__plugin_context7_context7__query-docs",
       "Bash(git rebase:*)",
-      "Read(//home/node/**)",
-      "Bash(CLAUDE_PROJECT_DIR=\"/workspace\" bash /workspace/.claude/hooks/config-sync.sh)"
+      "Bash(git -C /workspace stash pop)",
+      "Bash(git submodule:*)",
+      "Bash(git -C /workspace remote -v)",
+      "Bash(cp /workspace/plugins/company/.claude-plugin/marketplace.json /home/node/.claude/plugins/cache/ai-company/company/1.0.0/.claude-plugin/marketplace.json)",
+      "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/1.0.0/.claude-plugin/plugin.json)",
+      "Bash(git -C /workspace check-ignore .company/)",
+      "Bash(git -C /workspace ls-files .company/)",
+      "Bash(find /workspace/company-dashboard -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx -o -name *.html \\\\\\))",
+      "Bash(npx next:*)",
+      "Bash(jq -r \".[] | \"\"\\\\\\(.created_at\\)\\\\t\\\\\\(.context\\)\\\\t\\\\\\(.tags | join\\(\"\",\"\"\\)\\)\\\\t\\\\\\(.prompt | gsub\\(\"\"\\\\n\"\"; \"\" \"\"\\) | .[0:120]\\)\"\"\")",
+      "Read(//dev/**)",
+      "Bash(find /workspace/project-rikyu-sales-proposals-poc /workspace/.company-rikyu /workspace/docs /workspace/project-scotch-care -type f \\\\\\(-name *.md -o -name *.txt -o -name *.json \\\\\\))",
+      "Bash(find /workspace/docs -type f \\\\\\(-name *.md -o -name *.txt \\\\\\))",
+      "Read(//workspace/**)"
+    ],
+    "additionalDirectories": [
+      "/workspace/circuit_diagram/frontend/src/app/projects/[projectId]",
+      "/workspace/circuit_diagram/frontend/src/app/projects/[projectId]/workspace",
+      "/workspace/circuit_diagram/frontend/src/app/projects/*/block-diagram",
+      "/workspace/circuit_diagram/backend/src/routers/__pycache__",
+      "/workspace/output",
+      "/workspace/.claude",
+      "/home/node/.claude/plugins/marketplaces/ai-company/.claude-plugin",
+      "/home/node/.claude/plugins/cache/ai-company/company/4f177a81c0e9/skills/company",
+      "/workspace/.company-circuit"
     ]
   },
   "hooks": {
@@ -30,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/prompt-log.sh",
+            "command": "/workspace/.claude/hooks/prompt-log.sh",
             "async": true
           }
         ]
@@ -42,7 +74,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/permission-guard.sh"
+            "command": "/workspace/.claude/hooks/permission-guard.sh"
           }
         ]
       }
@@ -53,8 +85,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/config-sync.sh",
+            "command": "/workspace/.claude/hooks/config-sync.sh",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/company-sync-check.sh"
           }
         ]
       }
@@ -81,5 +117,8 @@
         "path": "/workspace"
       }
     }
+  },
+  "feedbackSurveyState": {
+    "lastShownTime": 1755317418565
   }
 }

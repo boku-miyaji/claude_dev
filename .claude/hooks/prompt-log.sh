@@ -30,6 +30,19 @@ esac
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 CONTEXT=$(basename "$CWD" 2>/dev/null || echo "unknown")
 
+# Server identification
+SERVER_HOST=$(hostname -s 2>/dev/null || echo "unknown")
+
+# Infer company_id from CWD (e.g. /workspace/.company-rikyu/ → rikyu)
+COMPANY_ID=""
+if echo "$CWD" | grep -qP '\.company-[a-z]'; then
+  COMPANY_ID=$(echo "$CWD" | grep -oP '\.company-\K[a-z0-9-]+' | head -1)
+fi
+# Also infer from prompt content mentioning /company {name}
+if [ -z "$COMPANY_ID" ]; then
+  COMPANY_ID=$(echo "$PROMPT" | grep -oP '/company\s+\K[a-z0-9-]+' | head -1 || true)
+fi
+
 # Auto-tag based on content
 TAGS="[]"
 TAG_LIST=()
@@ -50,12 +63,16 @@ if [ ${#TAG_LIST[@]} -gt 0 ]; then
   TAGS=$(printf '%s\n' "${TAG_LIST[@]}" | jq -R . | jq -s .)
 fi
 
-# Build JSON payload
+# Build JSON payload (with server_host, cwd, company_id)
 PAYLOAD=$(jq -n \
   --arg prompt "$PROMPT" \
   --arg context "$CONTEXT" \
   --argjson tags "$TAGS" \
-  '{prompt: $prompt, context: $context, tags: $tags}')
+  --arg server_host "$SERVER_HOST" \
+  --arg cwd "$CWD" \
+  --arg company_id "$COMPANY_ID" \
+  '{prompt: $prompt, context: $context, tags: $tags, server_host: $server_host, cwd: $cwd}
+   | if $company_id != "" then . + {company_id: $company_id} else . end')
 
 # POST to Supabase
 curl -s -o /dev/null -w "" \
