@@ -380,7 +380,29 @@ function showAuth() {
   });
 }
 
-function showApp(user) {
+async function showApp(user) {
+  // Ensure user_settings exists (auto-register on first login)
+  var usRes = await sb.from('user_settings').select('id').eq('user_id', user.id).single();
+  if (!usRes.data) {
+    // First login: register this GitHub user as owner
+    var ins = await sb.from('user_settings').insert({
+      user_id: user.id,
+      github_username: user.user_metadata.user_name || user.email || ''
+    });
+    if (ins.error) {
+      // If insert fails (e.g., not the first user after migration-017), show access denied
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('app-screen').classList.add('hidden');
+      var box = document.getElementById('auth-screen').querySelector('.auth-box');
+      while (box.firstChild) box.removeChild(box.firstChild);
+      box.appendChild(el('div', {className: 'auth-logo', style: 'background:var(--red)', textContent: '!'}));
+      box.appendChild(el('h1', {textContent: 'Access Denied'}));
+      box.appendChild(el('p', {textContent: 'このダッシュボードへのアクセス権がありません。オーナーに連絡してください。'}));
+      box.appendChild(el('button', {className: 'btn btn-g', style: 'width:100%;margin-top:16px', textContent: 'ログアウト', onClick: function() { sb.auth.signOut(); }}));
+      return;
+    }
+  }
+
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app-screen').classList.remove('hidden');
   document.getElementById('nav-user').textContent = '@' + (user.user_metadata.user_name || user.email || '');
