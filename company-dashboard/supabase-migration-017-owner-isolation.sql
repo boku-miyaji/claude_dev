@@ -141,12 +141,30 @@ create policy "owner_full" on claude_settings for all to authenticated
   using (public.is_owner()) with check (public.is_owner());
 
 -- ============================================================
--- Step 3: user_settings は自分の行のみ（migration-016 で設定済み）
+-- Step 3: user_settings の INSERT を制限
 -- ============================================================
--- user_settings_select_own: user_id = auth.uid()
--- user_settings_insert_own: user_id = auth.uid()
--- user_settings_update_own: user_id = auth.uid()
--- → 変更不要
+-- 問題: 誰でも自分の行を INSERT できると、他人も owner になれる
+-- 解決: INSERT は「テーブルが空の場合のみ」許可（= 最初の1人だけ）
+--       2人目以降は既存オーナーが手動で追加する
+-- ============================================================
+
+-- 既存ポリシーを差し替え
+drop policy if exists "user_settings_insert_own" on user_settings;
+
+-- INSERT: テーブルが空の場合のみ（最初のユーザー = オーナー）
+create policy "user_settings_insert_first_only"
+  on user_settings for insert to authenticated
+  with check (
+    user_id = auth.uid()
+    and not exists (select 1 from user_settings)
+  );
+
+-- オーナーが他ユーザーを追加するためのポリシー
+create policy "user_settings_insert_by_owner"
+  on user_settings for insert to authenticated
+  with check (
+    public.is_owner()
+  );
 
 -- ============================================================
 -- 確認用クエリ
