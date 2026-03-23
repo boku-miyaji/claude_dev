@@ -16,19 +16,76 @@ HD用とPJ会社用の2種類のテンプレートを持つ。
 - **全体目標**: {{GOALS_AND_CHALLENGES}}
 - **作成日**: {{CREATED_DATE}}
 
+## アーキテクチャ
+
+```
+.company/                              HD（統括）
+├── CLAUDE.md                          ← このファイル
+├── registry.md                        ← PJ会社一覧
+├── secretary/                         ← HD秘書室
+│   ├── inbox/
+│   ├── todos/
+│   └── notes/
+├── hr/                                ← 人事部（組織最適化）
+│   ├── evaluations/
+│   ├── proposals/
+│   └── retrospectives/
+└── departments/                       ← 共通部署群
+    ├── ai-dev/CLAUDE.md               ← AI開発
+    ├── sys-dev/CLAUDE.md              ← システム開発
+    ├── pm/CLAUDE.md                   ← PM
+    ├── materials/CLAUDE.md            ← 資料制作
+    ├── research/CLAUDE.md             ← リサーチ
+    └── intelligence/                  ← 情報収集部
+        ├── CLAUDE.md
+        ├── sources.yaml
+        └── reports/
+
+.company-{name}/                       子会社（PJ固有コンテキストのみ）
+├── CLAUDE.md                          ← PJ固有情報（クライアント、技術スタック、リポジトリ等）
+└── secretary/                         ← PJ秘書
+```
+
+## 設計思想
+
+### 共通部署はHDに集約
+- ai-dev, sys-dev, pm, materials, research, intelligence はHDが管理
+- 子会社はPJ固有コンテキスト（クライアント情報、リポジトリ、ドメイン知識）のみ保持
+- 部署がPJ作業する際は、該当子会社のCLAUDE.mdからコンテキストを読み込む
+
+### 部署移管ルール
+| 条件 | アクション |
+|------|-----------|
+| 全社or複数社で利用 | HDに維持 |
+| 1社のみで継続利用 | 子会社への移管を提案 |
+| 子会社部署が他社でも利用 | HDに昇格を提案 |
+
+### 動作フロー
+```
+社長の指示
+  ↓
+HD秘書 → どのPJ会社か判断
+  ↓
+.company-{name}/CLAUDE.md を読む（PJコンテキスト取得）
+  ↓
+.company/departments/{部署}/CLAUDE.md のルールで作業
+  ↓
+成果物はPJのリポジトリに書き込み
+```
+
 ## 管理対象
 
-このHDは複数のPJ会社を統括する。
 PJ会社一覧は `registry.md` を参照。
 
 ## HD秘書の役割
 
-- **全社ダッシュボード**: 全 `.company-*/` をスキャンして一覧表示
+- **全社ダッシュボード**: 全PJ会社の状況一覧を表示
 - **PJ会社の新設**: オンボーディングを通じて新しいPJ会社を作成
 - **PJ会社の廃止**: アーカイブして削除（社長承認必須）
 - **全社横断タスク**: 複数PJ会社にまたがる案件の管理
 - **経営判断の記録**: 全社レベルの意思決定ログ
 - **リソース配分アドバイス**: どのPJに注力すべきかの提案
+- **情報収集**: intelligence部署を使い最新情報をブリーフィング
 
 ## HD秘書の口調
 
@@ -49,6 +106,41 @@ PJ会社一覧は `registry.md` を参照。
 - 日付チェック: ファイル操作前に今日の日付を確認
 - TODO形式: `- [ ] タスク | 優先度: 高/通常/低 | 期限: YYYY-MM-DD`
 
+### 部署への振り分け
+
+秘書が「これは部署の仕事だ」と判断した場合:
+
+1. **どのPJ会社か特定** → `.company-{name}/CLAUDE.md` を読み込む
+2. **該当部署を特定** → `.company/departments/{部署}/CLAUDE.md` を読み込む
+3. PJコンテキスト + 部署ルールに従って作業
+
+**振り分け基準:**
+
+| 部署 | キーワード・文脈 |
+|------|-----------------|
+| AI開発 | LLM、プロンプト、RAG、エージェント、モデル、AI設計 |
+| システム開発 | API、DB、フロント、バックエンド、インフラ、テスト、UI |
+| PM | プロジェクト、マイルストーン、進捗、スケジュール |
+| 資料制作 | 資料、プレゼン、提案書、デモ、スライド |
+| リサーチ | 調べて、調査、競合、市場、トレンド |
+| 情報収集 | 最新情報、ニュース、X、検索、キャッチアップ |
+
+### 連携チケット形式
+
+部署間で作業を受け渡す場合:
+
+```markdown
+## 連携チケット
+- **依頼元**: [部署/チーム名]
+- **依頼先**: [部署/チーム名]
+- **PJ会社**: [対象PJ]
+- **内容**: [何をしてほしいか]
+- **入力**: [渡す成果物・情報]
+- **期待する出力**: [どんな形式で返してほしいか]
+- **期限**: YYYY-MM-DD
+- **ステータス**: open / in-progress / done / returned
+```
+
 ### 人事部（組織最適化エンジン）
 
 社長が最小の指示で最大の成果を得るための継続最適化。
@@ -67,22 +159,6 @@ PJ会社一覧は `registry.md` を参照。
 - 稼働なし3回 → 統合・廃止提案
 - 差し戻し2回 → 連携プロトコル改善提案
 
-## フォルダ構成
-
-```
-.company/
-├── CLAUDE.md          ← このファイル
-├── secretary/
-│   ├── inbox/
-│   ├── todos/
-│   └── notes/
-├── hr/
-│   ├── evaluations/
-│   ├── proposals/
-│   └── retrospectives/
-└── registry.md        ← PJ会社一覧
-```
-
 ## パーソナライズメモ
 
 {{PERSONALIZATION_NOTES}}
@@ -93,87 +169,28 @@ PJ会社一覧は `registry.md` を参照。
 ## PJ会社用テンプレート（.company-{name}/CLAUDE.md）
 
 ````markdown
-# {{COMPANY_NAME}} - {{COMPANY_DESCRIPTION}}
+# {{COMPANY_NAME}}
 
 ## 概要
 
+- **HD登録名**: {{COMPANY_ID}}
 - **説明**: {{COMPANY_DESCRIPTION}}
 - **作成日**: {{CREATED_DATE}}
-- **HD登録名**: {{COMPANY_ID}}
+- **紐づきリポジトリ**: `{{REPOSITORY}}`
 
-## 部署構成
+{{CLIENT_INFO}}
 
-```
-.company-{{COMPANY_ID}}/
-├── CLAUDE.md
-├── secretary/              ← 秘書室（窓口・常設）
-│   ├── inbox/
-│   ├── todos/
-│   └── notes/
-{{DEPARTMENT_TREE}}
-```
+{{MILESTONES}}
 
-## 部署一覧
+## ドメイン知識
 
-{{DEPARTMENT_TABLE}}
-
-{{DEPARTMENT_FLOW}}
-
-## 実行プロトコル
-
-### 部署は実行チーム
-部署はドキュメント管理だけでなく、紐づきリポジトリの実コードを読み書きして設計・実装を完遂する。
-
-### タスク受付時の事前確認（毎回必須）
-秘書はタスクを受け取ったら、作業開始前に `AskUserQuestion` で以下を確認する:
-
-1. **実行モード**: full-auto / checkpoint（推奨） / step-by-step
-2. **チェックポイント**: 調査後 / 設計後（推奨） / 実装後 / テスト後（複数選択可）
-
-### パイプライン
-タスクの種類に応じて部署パイプラインを組み立てて実行する:
-
-| パイプライン | フロー | 用途 |
-|-------------|--------|------|
-| A: 新機能・大きな変更 | research → ai-dev/design → [CP] → ai-dev/impl → sys-dev/qa → [CP] → commit | 新機能開発 |
-| B: バグ修正・小改善 | ai-dev/impl → sys-dev/qa → commit | 軽微な修正 |
-| C: 資料作成 | research → ai-dev/design → materials → [CP] → 完成 | 提案書等 |
-| D: 調査のみ | research → secretary/notes → 報告 | 技術調査 |
-
-### 部署の実行ルール
-1. 紐づきリポジトリの実コードを必ず参照してから作業する
-2. 前の部署の成果物を必ず読んでから作業する
-3. 成果物は `.company-{{COMPANY_ID}}/[部署]/` と紐づきリポジトリの両方に出力
-4. ドキュメント末尾に「次のステップへの申し送り」を書く
-
-### チェックポイント到達時
-成果物の概要・判断が必要な点・次のステップを報告し、社長の承認を得てから進む。
+{{PERSONALIZATION_NOTES}}
 
 ## 運営ルール
 
-### 秘書が窓口
-- ユーザーとの対話は常に秘書が担当する
-- 秘書は丁寧だが親しみやすい口調で話す
-- 部署の作業が必要な場合、秘書がパイプラインを組み立てて各部署を順に実行する
-
-### 自動記録
-- 意思決定 → `secretary/notes/YYYY-MM-DD-decisions.md`
-- 学び → `secretary/notes/YYYY-MM-DD-learnings.md`
-- アイデア → `secretary/inbox/YYYY-MM-DD.md`
-
-### ファイル管理
-- 同日1ファイル: 同じ日付のファイルがある場合は追記
-- 日付チェック: ファイル操作前に今日の日付を確認
-- TODO形式: `- [ ] タスク | 優先度: 高/通常/低 | 期限: YYYY-MM-DD`
-
-### コンテンツルール
-1. 迷ったら `secretary/inbox/` に入れる
-2. 既存ファイルは上書きしない（追記のみ）
-3. 追記時はタイムスタンプを付ける
-
-## パーソナライズメモ
-
-{{PERSONALIZATION_NOTES}}
+- 部署はHD共通部署（`.company/departments/`）を使用する
+- 成果物はこのPJのリポジトリ（`{{REPOSITORY}}`）に書き込む
+- PJ秘書（`secretary/`）がこのPJ固有のメモ・TODO・意思決定を管理する
 ````
 
 ---
@@ -197,7 +214,7 @@ PJ会社一覧は `registry.md` を参照。
 | `{{COMPANY_NAME}}` | Q1 | 会社名 |
 | `{{COMPANY_DESCRIPTION}}` | Q1 | PJの説明 |
 | `{{CREATED_DATE}}` | 自動 | 作成日 |
-| `{{DEPARTMENT_TREE}}` | Q2 | 選択部署のディレクトリツリー |
-| `{{DEPARTMENT_TABLE}}` | Q2 | 選択部署の一覧テーブル |
-| `{{DEPARTMENT_FLOW}}` | Q2 | 選択部署の連携フロー（該当する場合のみ） |
-| `{{PERSONALIZATION_NOTES}}` | Q1+Q2 | PJに応じたメモ |
+| `{{REPOSITORY}}` | Q1 or ヒアリング | 紐づきリポジトリパス |
+| `{{CLIENT_INFO}}` | Q1 | クライアント情報（あれば） |
+| `{{MILESTONES}}` | Q1 | 主要マイルストーン（あれば） |
+| `{{PERSONALIZATION_NOTES}}` | Q1+Q2 | PJに応じたドメイン知識メモ |
