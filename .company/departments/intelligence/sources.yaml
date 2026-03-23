@@ -1,0 +1,62 @@
+# 情報収集部 - 監視対象設定
+# 更新日: 2026-03-23
+
+x_accounts:
+  # AI / Tech 系
+  - handle: "@AnthropicAI"
+    category: "AI"
+    note: "Claude / Anthropic 公式"
+    priority: high
+  - handle: "@OpenAI"
+    category: "AI"
+    note: "OpenAI 公式"
+    priority: high
+  - handle: "@GoogleAI"
+    category: "AI"
+    note: "Google AI 公式"
+    priority: high
+
+  # 個人アカウント
+  - handle: "@trq212"
+    category: "個人"
+    priority: high
+  - handle: "@systematicls"
+    category: "個人"
+    priority: high
+  - handle: "@tricalt"
+    category: "個人"
+    priority: high
+  - handle: "@CodevolutionWeb"
+    category: "開発"
+    note: "Web開発チュートリアル"
+    priority: normal
+  - handle: "@AkshayxSaini"
+    category: "開発"
+    note: "開発コンテンツ"
+    priority: normal
+
+keywords:
+  - term: "Claude Code"
+    category: "AI tools"
+    frequency: daily
+  - term: "Cursor AI"
+    category: "AI tools"
+    frequency: daily
+  - term: "GitHub Copilot"
+    category: "AI tools"
+    frequency: weekly
+  - term: "AI Agent framework"
+    category: "AI tools"
+    frequency: weekly
+  - term: "MCP server"
+    category: "AI tools"
+    frequency: daily
+  - term: "AI coding assistant"
+    category: "AI tools"
+    frequency: weekly
+
+web_sources: []
+  # 将来追加用
+  # - url: "https://www.anthropic.com/news"
+  #   category: "AI"
+  #   frequency: daily

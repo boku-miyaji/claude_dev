@@ -2,65 +2,46 @@
 
 ## 概要
 
-- **説明**: 電子回路設計DXシステム開発（仕様決め→回路ブロック図→部品選定のAI自動化）
-- **作成日**: 2026-03-20
 - **HD登録名**: circuit
+- **説明**: 電子回路設計DXシステム開発（仕様決め→回路ブロック図→部品選定のAI自動化）
+- **作成日**: 2026-03-21
 - **紐づきリポジトリ**: `circuit_diagram/`
 
 ## 技術スタック
 
-- Next.js
-- FastAPI
-- SQLAlchemy
-- OpenAI
-- Gemini
+| レイヤー | 技術 |
+|----------|------|
+| フロントエンド | Next.js 14 (App Router) + React + TypeScript + Tailwind CSS |
+| バックエンド | Python 3.11 + FastAPI + SQLAlchemy |
+| データベース | SQLite (開発) / PostgreSQL (本番) |
+| LLM連携 | OpenAI API, Google AI (Gemini) |
 
-## 部署構成
+## 機能ロードマップ
+
+| ステータス | 機能 |
+|-----------|------|
+| 実装済み | 仕様決め（仕様概要→ラフ仕様書自動生成） |
+| 準備中 | 回路ブロック図生成 |
+| 準備中 | 詳細回路ブロック図生成 |
+| 準備中 | 主要部品選定 |
+| 未実装 | 部品構成決め |
+| 未実装 | 検証 |
+
+## 標準パイプライン
 
 ```
-.company-circuit/
-├── CLAUDE.md
-├── secretary/              ← 秘書室（窓口・常設）
-│   ├── inbox/
-│   ├── todos/
-│   └── notes/
-├── pm/                     ← PM（プロジェクト管理）
-│   ├── projects/
-│   └── tickets/
-├── sys-dev/                ← システム開発
-│   ├── backend/
-│   ├── frontend/
-│   └── qa/
-├── ai-dev/                 ← AI開発
-│   ├── requirements/
-│   ├── design/
-│   ├── implementation/
-│   ├── algorithm/
-│   ├── evaluation/
-│   └── aiops/
-├── materials/              ← 資料制作
-│   └── deliverables/
-└── research/               ← リサーチ
-    ├── market/
-    ├── tech/
-    └── client-research/
+リサーチ(技術調査) → AI開発(要件→設計→実装→評価) → sys-dev(統合) → QA → デプロイ
+                                                        ↑
+                                                   資料制作(デモ)
+PM が全体を横断的に管理
 ```
 
-## 秘書の役割
+## ドメイン知識
 
-- ユーザーの指示を受けて適切な部署に振り分け
-- TODO・タスク管理
-- 壁打ち・相談対応
-- 紐づきリポジトリ（circuit_diagram/）の実コードとの連携
+電子回路設計のDX化。仕様決め→回路ブロック図→詳細回路図→部品選定→部品構成→検証という一連のプロセスをLLMで自動化・支援する。現在は仕様決め機能が実装済みで、次のフェーズとして回路ブロック図生成と部品選定に進む段階。
 
 ## 運営ルール
 
-### 自動記録
-- 意思決定 → `secretary/notes/YYYY-MM-DD-decisions.md`
-- 学び → `secretary/notes/YYYY-MM-DD-learnings.md`
-- アイデア → `secretary/inbox/YYYY-MM-DD.md`
-
-### ファイル管理
-- 同日1ファイル: 同じ日付のファイルがある場合は追記
-- 日付チェック: ファイル操作前に今日の日付を確認
-- TODO形式: `- [ ] タスク | 優先度: 高/通常/低 | 期限: YYYY-MM-DD`
+- 部署はHD共通部署（`.company/departments/`）を使用する
+- 成果物はこのPJのリポジトリ（`circuit_diagram/`）に書き込む
+- PJ秘書（`secretary/`）がこのPJ固有のメモ・TODO・意思決定を管理する
