@@ -120,9 +120,10 @@ if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
     -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
     -H "Content-Type: application/json" \
     -H "Prefer: return=minimal,resolution=merge-duplicates" \
+    -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
     -d "$PAYLOAD" \
     --connect-timeout 10 \
-  --max-time 20 \
+    --max-time 20 \
     2>/dev/null || true
 fi
 

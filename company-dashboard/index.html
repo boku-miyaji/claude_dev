@@ -310,15 +310,8 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 var SUPABASE_URL = 'https://akycymnahqypmtsfqhtr.supabase.co';
 var SUPABASE_ANON_KEY = 'sb_publishable_VYgxoltXaSlEIjcH1dpa7w_TPc3mYBf';
 
-var params = new URLSearchParams(window.location.search);
-if (params.get('sb_url')) SUPABASE_URL = params.get('sb_url');
-if (params.get('sb_key')) SUPABASE_ANON_KEY = params.get('sb_key');
-
-try {
-  var cfg = JSON.parse(localStorage.getItem('hd-config') || '{}');
-  if (cfg.url) SUPABASE_URL = cfg.url;
-  if (cfg.key) SUPABASE_ANON_KEY = cfg.key;
-} catch(e) {}
+// URL/key are hardcoded (anon key is public by design, security is via RLS)
+// No URL parameter override (phishing risk) or localStorage override needed
 
 var sb = null;
 var currentPage = 'dashboard';
@@ -327,10 +320,6 @@ var currentPage = 'dashboard';
 // Init
 // ============================================================
 function init() {
-  if (SUPABASE_URL.indexOf('{{') === 0) {
-    showConfigPrompt();
-    return;
-  }
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   sb.auth.getSession().then(function(res) {
     if (res.data.session) {
