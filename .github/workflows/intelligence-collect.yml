@@ -4,8 +4,8 @@ on:
   schedule:
     # 09:00 JST = 00:00 UTC (数分ずらしてピーク回避)
     - cron: '3 0 * * *'
-    # 02:00 JST = 17:00 UTC (US西海岸の午前中)
-    - cron: '7 17 * * *'
+    # 21:00 JST = 12:00 UTC (夜のキャッチアップ)
+    - cron: '7 12 * * *'
   workflow_dispatch: # 手動実行も可能
 
 permissions:

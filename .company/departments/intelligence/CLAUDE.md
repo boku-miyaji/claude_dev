@@ -8,7 +8,7 @@
 | 時刻 (JST) | 目的 | 実行方法 |
 |------------|------|---------|
 | 09:00 | 朝ブリーフィング | GitHub Actions 自動実行 |
-| 02:00 | US活動時間帯キャッチアップ | GitHub Actions 自動実行 |
+| 21:00 | 夜のキャッチアップ | GitHub Actions 自動実行 |
 | /company 起動時 | 最新レポート要約 | 直近レポート(.json)を読み込み Claude が要約 |
 | 「情報収集して」 | オンデマンド | `python scripts/intelligence/collect.py` を実行 |
 
