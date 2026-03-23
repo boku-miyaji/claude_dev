@@ -255,6 +255,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="knowledge"><span class="nav-icon">◈</span> Knowledge</button>
     <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
+    <button class="nav-item" data-page="intelligence"><span class="nav-icon">◎</span> Intelligence</button>
     <button class="nav-item" data-page="commands"><span class="nav-icon">⌘</span> Commands</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <div class="nav-spacer"></div>
@@ -488,6 +489,7 @@ function renderPage(page) {
     prompts: renderPrompts,
     insights: renderInsights,
     finance: renderFinance,
+    intelligence: renderIntelligence,
     commands: renderSlashCommands,
     settings: renderSettings
   };
@@ -2704,6 +2706,84 @@ async function renderSlashCommands(root) {
 }
 
 // ============================================================
+// Intelligence Page
+// ============================================================
+async function renderIntelligence(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Intelligence'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '情報収集レポート（09:00 / 21:00 JST 自動収集）'}));
+
+  // Fetch reports from secretary_notes where type = 'intelligence_report'
+  var res = await sb.from('secretary_notes')
+    .select('*')
+    .eq('type', 'intelligence_report')
+    .order('created_at', {ascending: false})
+    .limit(20);
+  var reports = res.data || [];
+
+  if (reports.length === 0) {
+    root.appendChild(el('div', {className: 'card empty', style: 'padding:40px;text-align:center'}, [
+      el('div', {style: 'font-size:32px;margin-bottom:12px', textContent: '◎'}),
+      el('div', {style: 'font-size:14px;color:var(--text2)', textContent: 'まだレポートがありません。GitHub Actions が初回実行されると表示されます。'}),
+      el('div', {style: 'font-size:12px;color:var(--text3);margin-top:8px', textContent: 'スケジュール: 09:00 JST / 21:00 JST'})
+    ]));
+    return;
+  }
+
+  // Report list
+  var section = el('div', {className: 'section'});
+  reports.forEach(function(report) {
+    var data;
+    try { data = typeof report.content === 'string' ? JSON.parse(report.content) : report.content; } catch(e) { data = null; }
+    var totalResults = data ? (data.total_results || 0) : 0;
+    var totalSources = data ? (data.total_sources || 0) : 0;
+    var ts = report.created_at ? new Date(report.created_at) : new Date();
+    var timeStr = ts.toLocaleString('ja-JP', {timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+
+    var card = el('div', {className: 'card', style: 'margin-bottom:12px;cursor:pointer'});
+    card.addEventListener('click', function() { toggleReportDetail(card, data); });
+
+    var header = el('div', {style: 'display:flex;justify-content:space-between;align-items:center'}, [
+      el('div', {}, [
+        el('div', {style: 'font-size:14px;font-weight:600', textContent: timeStr}),
+        el('div', {style: 'font-size:12px;color:var(--text3);margin-top:2px', textContent: totalSources + ' sources / ' + totalResults + ' results'})
+      ]),
+      el('div', {className: 'badge badge-blue', textContent: data ? 'collected' : 'error'})
+    ]);
+    card.appendChild(header);
+    section.appendChild(card);
+  });
+  root.appendChild(section);
+}
+
+function toggleReportDetail(card, data) {
+  var existing = card.querySelector('.report-detail');
+  if (existing) { existing.remove(); return; }
+  if (!data || !data.collections) return;
+
+  var detail = el('div', {className: 'report-detail', style: 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px'});
+
+  data.collections.forEach(function(coll) {
+    var label = coll.type === 'keyword' ? '"' + coll.term + '"' : coll.handle;
+    var tag = coll.is_exploration ? ' [探索]' : '';
+    detail.appendChild(el('div', {style: 'font-size:13px;font-weight:600;margin-bottom:6px;margin-top:12px', textContent: label + tag}));
+
+    if (coll.error) {
+      detail.appendChild(el('div', {style: 'font-size:12px;color:var(--red)', textContent: 'Error: ' + coll.error}));
+      return;
+    }
+
+    (coll.results || []).forEach(function(r) {
+      var item = el('div', {style: 'margin-bottom:8px;padding-left:12px;border-left:2px solid var(--border)'}, [
+        el('a', {href: r.url, target: '_blank', style: 'font-size:12px;font-weight:500;display:block', textContent: r.title || 'No title'}),
+        el('div', {style: 'font-size:11px;color:var(--text3);margin-top:2px', textContent: (r.snippet || '').substring(0, 150)})
+      ]);
+      detail.appendChild(item);
+    });
+  });
+
+  card.appendChild(detail);
+}
+
 // Settings Page
 // ============================================================
 async function renderSettings(root) {

@@ -265,6 +265,37 @@ def main():
         f.write(generate_markdown(data))
     print(f"  Markdown 保存: {md_path}")
 
+    # Supabase に保存（ダッシュボード表示用）
+    supabase_url = os.environ.get("SUPABASE_URL")
+    supabase_key = os.environ.get("SUPABASE_ANON_KEY")
+    if supabase_url and supabase_key:
+        try:
+            import requests as req
+
+            resp = req.post(
+                f"{supabase_url}/rest/v1/secretary_notes",
+                headers={
+                    "apikey": supabase_key,
+                    "Authorization": f"Bearer {supabase_key}",
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal",
+                },
+                json={
+                    "type": "intelligence_report",
+                    "content": json.dumps(data, ensure_ascii=False),
+                    "note_date": now.strftime("%Y-%m-%d"),
+                },
+                timeout=10,
+            )
+            if resp.status_code in (200, 201):
+                print("  Supabase 保存: OK")
+            else:
+                print(f"  Supabase 保存: エラー ({resp.status_code})")
+        except Exception as e:
+            print(f"  Supabase 保存: スキップ ({e})")
+    else:
+        print("  Supabase: 環境変数未設定、スキップ")
+
     # 古いレポートの件数を表示
     report_files = sorted(REPORTS_DIR.glob("*.json"))
     if len(report_files) > 30:
