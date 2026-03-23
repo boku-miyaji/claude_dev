@@ -307,8 +307,8 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 // ============================================================
 // CONFIG
 // ============================================================
-var SUPABASE_URL = '{{SUPABASE_URL}}';
-var SUPABASE_ANON_KEY = '{{SUPABASE_ANON_KEY}}';
+var SUPABASE_URL = 'https://akycymnahqypmtsfqhtr.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_VYgxoltXaSlEIjcH1dpa7w_TPc3mYBf';
 
 var params = new URLSearchParams(window.location.search);
 if (params.get('sb_url')) SUPABASE_URL = params.get('sb_url');
@@ -2788,7 +2788,104 @@ function toggleReportDetail(card, data) {
 // ============================================================
 async function renderSettings(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'Settings'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: 'Claude Code の設定・Skills・MCP・Permissions を可視化'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'ユーザー設定・Claude Code 設定・Skills・MCP・Permissions'}));
+
+  // ============================================================
+  // User Settings (Ingest Key, Hook Config)
+  // ============================================================
+  var session = (await sb.auth.getSession()).data.session;
+  var userId = session ? session.user.id : null;
+  var githubUsername = session ? (session.user.user_metadata.user_name || '') : '';
+
+  // Fetch or create user_settings
+  var userSettings = null;
+  if (userId) {
+    var usRes = await sb.from('user_settings').select('*').eq('user_id', userId).single();
+    userSettings = usRes.data;
+  }
+
+  root.appendChild(el('div', {className: 'section-title', textContent: 'API Keys & Hook Config'}));
+  var userCard = el('div', {className: 'card', style: 'margin-bottom:24px'});
+
+  // Ingest Key
+  var currentKey = (userSettings && userSettings.ingest_api_key) || '';
+  var keyInput = el('input', {
+    className: 'input',
+    type: 'text',
+    placeholder: 'Ingest API Key (UUID)',
+    value: currentKey,
+    style: 'font-family:var(--mono);font-size:12px;margin-bottom:8px'
+  });
+
+  var genBtn = el('button', {className: 'btn btn-g btn-sm', textContent: 'UUID 生成', style: 'margin-right:8px'});
+  genBtn.addEventListener('click', function() {
+    keyInput.value = crypto.randomUUID();
+  });
+
+  var saveKeyBtn = el('button', {className: 'btn btn-p btn-sm', textContent: '保存'});
+  saveKeyBtn.addEventListener('click', async function() {
+    var key = keyInput.value.trim();
+    if (!key) return;
+    if (userSettings) {
+      await sb.from('user_settings').update({ingest_api_key: key, github_username: githubUsername}).eq('user_id', userId);
+    } else {
+      await sb.from('user_settings').insert({user_id: userId, ingest_api_key: key, github_username: githubUsername});
+    }
+    toast('Ingest Key を保存しました');
+    userSettings = {ingest_api_key: key};
+  });
+
+  userCard.appendChild(el('div', {style: 'margin-bottom:16px'}, [
+    el('div', {style: 'font-weight:600;font-size:14px;margin-bottom:4px', textContent: 'Ingest API Key'}),
+    el('div', {style: 'font-size:12px;color:var(--text3);margin-bottom:10px', textContent: 'Hook / intelligence collect が Supabase に書き込むための認証キー。保存後、Supabase SQL Editor で同じ値を設定してください。'}),
+    keyInput,
+    el('div', {style: 'display:flex;gap:8px;align-items:center'}, [genBtn, saveKeyBtn])
+  ]));
+
+  // SQL instruction
+  userCard.appendChild(el('div', {style: 'margin-bottom:16px'}, [
+    el('div', {style: 'font-weight:600;font-size:13px;margin-bottom:6px', textContent: 'Supabase SQL Editor で実行'}),
+    el('div', {style: 'background:var(--surface2);padding:12px;border-radius:var(--r);font-family:var(--mono);font-size:11px;line-height:1.6;color:var(--text2);cursor:pointer;position:relative', onClick: function() {
+      var sqlText = "ALTER DATABASE postgres SET app.ingest_api_key = '" + (keyInput.value.trim() || '<your-key>') + "';\nSELECT pg_reload_conf();";
+      navigator.clipboard.writeText(sqlText).then(function() { toast('SQL をコピーしました'); });
+    }, textContent: "-- クリックでコピー\nALTER DATABASE postgres SET app.ingest_api_key = '" + (currentKey || '<your-key>') + "';\nSELECT pg_reload_conf();"})
+  ]));
+
+  // Hook Config Copy
+  userCard.appendChild(el('div', {style: 'margin-bottom:8px'}, [
+    el('div', {style: 'font-weight:600;font-size:13px;margin-bottom:6px', textContent: 'Hook 設定ファイル（supabase.env）'}),
+    el('div', {style: 'font-size:12px;color:var(--text3);margin-bottom:10px', textContent: '.claude/hooks/supabase.env にペーストしてください。'})
+  ]));
+
+  var copyEnvBtn = el('button', {className: 'btn btn-g btn-sm', textContent: 'supabase.env をコピー', style: 'margin-bottom:8px'});
+  copyEnvBtn.addEventListener('click', function() {
+    var envContent = '# Supabase connection for company-dashboard hooks\n'
+      + 'SUPABASE_URL="' + SUPABASE_URL + '"\n'
+      + 'SUPABASE_ANON_KEY="' + SUPABASE_ANON_KEY + '"\n\n'
+      + '# Ingest API Key (migration-015)\n'
+      + 'SUPABASE_INGEST_KEY="' + (keyInput.value.trim() || '') + '"\n';
+    navigator.clipboard.writeText(envContent).then(function() { toast('supabase.env をコピーしました'); });
+  });
+  userCard.appendChild(copyEnvBtn);
+
+  // GitHub Secrets
+  userCard.appendChild(el('div', {style: 'margin-top:16px;padding-top:16px;border-top:1px solid var(--border)'}, [
+    el('div', {style: 'font-weight:600;font-size:13px;margin-bottom:6px', textContent: 'GitHub Actions Secrets'}),
+    el('div', {style: 'font-size:12px;color:var(--text3);margin-bottom:8px', textContent: 'Repository → Settings → Secrets → New:'}),
+    el('div', {style: 'background:var(--surface2);padding:12px;border-radius:var(--r);font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--text2)'}, [
+      el('div', {}, [el('span', {style: 'color:var(--accent2)', textContent: 'SUPABASE_URL'}), document.createTextNode(' = ' + SUPABASE_URL)]),
+      el('div', {}, [el('span', {style: 'color:var(--accent2)', textContent: 'SUPABASE_ANON_KEY'}), document.createTextNode(' = ' + SUPABASE_ANON_KEY)]),
+      el('div', {}, [el('span', {style: 'color:var(--accent2)', textContent: 'SUPABASE_INGEST_KEY'}), document.createTextNode(' = ' + (keyInput.value.trim() || '<設定してから>'))])
+    ])
+  ]));
+
+  root.appendChild(userCard);
+
+  // ============================================================
+  // Claude Code Settings (existing)
+  // ============================================================
+  root.appendChild(el('div', {className: 'gradient-line'}));
+  root.appendChild(el('div', {className: 'section-title', textContent: 'Claude Code Settings'}));
 
   var res = await sb.from('claude_settings').select('*').order('scope');
   var settings = res.data || [];
