@@ -59,3 +59,8 @@ project-review/project-rikyu-sales-proposals-poc/
 
 # company plugin - generated org data (per-project)
 .company/
+
+# secrets & tokens (NEVER commit)
+.config/google/credentials.json
+token.json
+.claude/hooks/supabase.env

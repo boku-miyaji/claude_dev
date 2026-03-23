@@ -81,6 +81,7 @@ curl -s -o /dev/null -w "" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=minimal" \
+  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
   -d "$PAYLOAD" \
   --connect-timeout 10 \
   --max-time 15 \

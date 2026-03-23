@@ -30,6 +30,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_INGEST_KEY: ${{ secrets.SUPABASE_INGEST_KEY }}
         run: python scripts/intelligence/collect.py
 
       - name: Commit and push reports

@@ -268,6 +268,7 @@ def main():
     # Supabase に保存（ダッシュボード表示用）
     supabase_url = os.environ.get("SUPABASE_URL")
     supabase_key = os.environ.get("SUPABASE_ANON_KEY")
+    ingest_key = os.environ.get("SUPABASE_INGEST_KEY", "")
     if supabase_url and supabase_key:
         try:
             import requests as req
@@ -279,6 +280,7 @@ def main():
                     "Authorization": f"Bearer {supabase_key}",
                     "Content-Type": "application/json",
                     "Prefer": "return=minimal",
+                    "x-ingest-key": ingest_key,
                 },
                 json={
                     "type": "intelligence_report",

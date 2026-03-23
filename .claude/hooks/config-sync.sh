@@ -106,6 +106,7 @@ HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=minimal,resolution=merge-duplicates" \
+  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
   -d "$PAYLOAD_WITH_HOST" \
   --connect-timeout 10 \
   --max-time 20 \
@@ -236,6 +237,7 @@ curl -s -o /dev/null -w "" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=minimal" \
+  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
   -d "$ACTIVITY" \
   --connect-timeout 10 \
   --max-time 15 \
