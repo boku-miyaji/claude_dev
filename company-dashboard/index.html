@@ -2749,22 +2749,27 @@ async function renderIntelligence(root) {
   // Report list
   var section = el('div', {className: 'section'});
   reports.forEach(function(report) {
-    var data;
-    try { data = typeof report.content === 'string' ? JSON.parse(report.content) : report.content; } catch(e) { data = null; }
+    var body = report.body || '';
+    var data = null;
+    var isJson = false;
+    try { data = JSON.parse(body); isJson = true; } catch(e) { data = null; }
+
     var totalResults = data ? (data.total_results || 0) : 0;
     var totalSources = data ? (data.total_sources || 0) : 0;
     var ts = report.created_at ? new Date(report.created_at) : new Date();
     var timeStr = ts.toLocaleString('ja-JP', {timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+    var title = report.title || timeStr;
+    var source = (report.tags || []).indexOf('auto') > -1 ? 'auto' : 'manual';
 
     var card = el('div', {className: 'card', style: 'margin-bottom:12px;cursor:pointer'});
-    card.addEventListener('click', function() { toggleReportDetail(card, data); });
+    card.addEventListener('click', function() { toggleReportDetail(card, isJson ? data : body); });
 
     var header = el('div', {style: 'display:flex;justify-content:space-between;align-items:center'}, [
       el('div', {}, [
-        el('div', {style: 'font-size:14px;font-weight:600', textContent: timeStr}),
-        el('div', {style: 'font-size:12px;color:var(--text3);margin-top:2px', textContent: totalSources + ' sources / ' + totalResults + ' results'})
+        el('div', {style: 'font-size:14px;font-weight:600', textContent: title}),
+        el('div', {style: 'font-size:12px;color:var(--text3);margin-top:2px', textContent: isJson ? totalSources + ' sources / ' + totalResults + ' results' : 'Markdown report'})
       ]),
-      el('div', {className: 'badge badge-blue', textContent: data ? 'collected' : 'error'})
+      el('div', {className: 'badge ' + (source === 'auto' ? 'badge-blue' : 'badge-green'), textContent: source})
     ]);
     card.appendChild(header);
     section.appendChild(card);
@@ -2775,7 +2780,18 @@ async function renderIntelligence(root) {
 function toggleReportDetail(card, data) {
   var existing = card.querySelector('.report-detail');
   if (existing) { existing.remove(); return; }
-  if (!data || !data.collections) return;
+  if (!data) return;
+
+  // Markdown string (manual collection via /company)
+  if (typeof data === 'string') {
+    var detail = el('div', {className: 'report-detail', style: 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px;font-size:13px;line-height:1.8;white-space:pre-wrap;font-family:var(--font);color:var(--text2);max-height:600px;overflow-y:auto'});
+    detail.textContent = data;
+    card.appendChild(detail);
+    return;
+  }
+
+  // JSON data (auto collection via GitHub Actions)
+  if (!data.collections) return;
 
   var detail = el('div', {className: 'report-detail', style: 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px'});
 

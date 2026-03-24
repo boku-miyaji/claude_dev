@@ -284,8 +284,10 @@ def main():
                 },
                 json={
                     "type": "intelligence_report",
-                    "content": json.dumps(data, ensure_ascii=False),
+                    "title": f"情報収集レポート {now.strftime('%Y-%m-%d %H:%M')}",
+                    "body": json.dumps(data, ensure_ascii=False),
                     "note_date": now.strftime("%Y-%m-%d"),
+                    "tags": ["intelligence", "auto"],
                 },
                 timeout=10,
             )
