@@ -1,6 +1,9 @@
 # 情報収集部 - 監視対象設定
-# 更新日: 2026-03-23
+# 更新日: 2026-03-24
 
+# ============================================================
+# X アカウント（WebSearch site:x.com 経由で取得）
+# ============================================================
 x_accounts:
   # AI / Tech 系
   - handle: "@AnthropicAI"
@@ -35,6 +38,9 @@ x_accounts:
     note: "開発コンテンツ"
     priority: normal
 
+# ============================================================
+# キーワード検索
+# ============================================================
 keywords:
   - term: "Claude Code"
     category: "AI tools"
@@ -55,8 +61,114 @@ keywords:
     category: "AI tools"
     frequency: weekly
 
-web_sources: []
-  # 将来追加用
-  # - url: "https://www.anthropic.com/news"
-  #   category: "AI"
-  #   frequency: daily
+# ============================================================
+# 公式ブログ・リリースノート（WebFetch で取得可能）
+# ============================================================
+web_sources:
+  # --- AI 企業公式 ---
+  - url: "https://www.anthropic.com/news"
+    category: "AI"
+    name: "Anthropic Blog"
+    frequency: daily
+  - url: "https://openai.com/news/"
+    category: "AI"
+    name: "OpenAI Blog"
+    frequency: daily
+  - url: "https://blog.google/technology/ai/"
+    category: "AI"
+    name: "Google AI Blog"
+    frequency: daily
+
+  # --- ツール公式 ---
+  - url: "https://code.claude.com/docs/en/changelog"
+    category: "AI tools"
+    name: "Claude Code Changelog"
+    frequency: daily
+  - url: "https://cursor.com/changelog"
+    category: "AI tools"
+    name: "Cursor Changelog"
+    frequency: daily
+  - url: "https://modelcontextprotocol.io/development/roadmap"
+    category: "AI tools"
+    name: "MCP Roadmap"
+    frequency: weekly
+
+  # --- テックニュース ---
+  - url: "https://techcrunch.com/category/artificial-intelligence/"
+    category: "tech news"
+    name: "TechCrunch AI"
+    frequency: daily
+  - url: "https://www.theverge.com/ai-artificial-intelligence"
+    category: "tech news"
+    name: "The Verge AI"
+    frequency: daily
+
+# ============================================================
+# 技術記事プラットフォーム（キーワード × サイト限定検索）
+# ============================================================
+tech_articles:
+  # --- 海外 ---
+  - site: "dev.to"
+    name: "Dev.to"
+    note: "海外版 Zenn/Qiita。開発者コミュニティ記事"
+    keywords: ["Claude Code", "MCP server", "AI agent", "Cursor"]
+    frequency: daily
+  - site: "medium.com"
+    name: "Medium"
+    note: "テック記事プラットフォーム"
+    keywords: ["Claude Code", "AI coding assistant", "MCP"]
+    frequency: daily
+  - site: "hashnode.dev"
+    name: "Hashnode"
+    note: "開発者ブログプラットフォーム"
+    keywords: ["Claude", "AI agent", "MCP server"]
+    frequency: weekly
+  - site: "huggingface.co/blog"
+    name: "Hugging Face Blog"
+    note: "MLコミュニティ公式ブログ"
+    keywords: ["agent", "MCP", "coding"]
+    frequency: weekly
+  - site: "arxiv.org"
+    name: "arXiv"
+    note: "AI/ML 論文プレプリント"
+    keywords: ["LLM agent", "code generation", "agentic"]
+    frequency: weekly
+
+  # --- 日本 ---
+  - site: "zenn.dev"
+    name: "Zenn"
+    note: "日本の技術記事プラットフォーム"
+    keywords: ["Claude Code", "MCP", "Cursor", "AIエージェント"]
+    frequency: daily
+  - site: "note.com"
+    name: "note"
+    note: "日本のクリエイター記事プラットフォーム"
+    keywords: ["Claude Code", "AI開発", "MCP"]
+    frequency: daily
+  - site: "qiita.com"
+    name: "Qiita"
+    note: "日本のエンジニア向け技術情報共有"
+    keywords: ["Claude Code", "MCP", "AIエージェント", "Cursor"]
+    frequency: daily
+
+# ============================================================
+# GitHub リリース監視
+# ============================================================
+github_releases:
+  - repo: "anthropics/claude-code"
+    category: "AI tools"
+    name: "Claude Code"
+  - repo: "modelcontextprotocol/specification"
+    category: "AI tools"
+    name: "MCP Spec"
+  - repo: "anthropics/anthropic-sdk-python"
+    category: "AI tools"
+    name: "Anthropic Python SDK"
+
+# ============================================================
+# Hacker News（キーワードフィルター）
+# ============================================================
+hacker_news:
+  enabled: true
+  keywords: ["Claude", "Anthropic", "Cursor", "MCP", "AI agent", "coding assistant"]
+  min_score: 50  # 50ポイント以上の記事のみ
