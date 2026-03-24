@@ -93,7 +93,40 @@ intelligence/
 4. 全体の要約と社長への提言を生成
 5. フィードバックを促す
 
-## 手動実行
+## Supabase 連携（必須）
+
+**秘書が /company 内で情報収集した場合、必ず Supabase に INSERT する。**
+
+```
+テーブル: secretary_notes
+カラム:
+  type: 'intelligence_report'
+  title: '情報収集レポート YYYY-MM-DD HH:MM'
+  body: レポート全文（Markdown）
+  note_date: 'YYYY-MM-DD'
+  tags: ['intelligence', 'manual']
+```
+
+INSERT は以下のように実行する:
+```bash
+source .claude/hooks/supabase.env
+curl -X POST "${SUPABASE_URL}/rest/v1/secretary_notes" \
+  -H "apikey: ${SUPABASE_ANON_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=minimal" \
+  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
+  -d '{"type":"intelligence_report","title":"...","body":"...","note_date":"YYYY-MM-DD","tags":["intelligence","manual"]}'
+```
+
+**ローカルファイル（reports/）への保存も同時に行う。**
+
+## レポートのルール
+
+- 各情報には必ず**情報源のURL**を明記する（リンクなし情報は不可）
+- Markdown 形式で記述する（ダッシュボードでレンダリングされる）
+
+## 手動実行（GitHub Actions）
 
 ```bash
 cd /workspace && python scripts/intelligence/collect.py

@@ -6,6 +6,7 @@
 <title>宮路HD</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◆</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -90,6 +91,26 @@ a{color:var(--accent2);text-decoration:none}
 .tag-co{background:var(--accent-bg);color:var(--accent2);border:1px solid var(--accent-border)}
 .tag-high{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 .tag-normal{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:5px;display:inline-block}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+
+/* Markdown body in Intelligence reports */
+.md-body{font-size:13px;line-height:1.8;color:var(--text)}
+.md-body h1{font-size:18px;font-weight:700;margin:20px 0 10px;letter-spacing:-.02em}
+.md-body h2{font-size:15px;font-weight:700;margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);letter-spacing:-.01em}
+.md-body h3{font-size:14px;font-weight:600;margin:14px 0 6px}
+.md-body p{margin:0 0 10px}
+.md-body ul,.md-body ol{margin:0 0 10px;padding-left:20px}
+.md-body li{margin:3px 0}
+.md-body a{color:var(--accent2);text-decoration:underline;text-underline-offset:2px}
+.md-body a:hover{color:var(--accent)}
+.md-body strong{font-weight:600}
+.md-body code{font-family:var(--mono);font-size:12px;background:var(--surface2);padding:2px 5px;border-radius:4px}
+.md-body pre{background:var(--surface2);padding:12px;border-radius:var(--r);overflow-x:auto;margin:0 0 12px}
+.md-body pre code{background:none;padding:0}
+.md-body hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+.md-body blockquote{border-left:3px solid var(--accent-border);padding-left:12px;color:var(--text2);margin:0 0 10px}
 .tag-low{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
 .tag-open{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .tag-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
@@ -2784,8 +2805,13 @@ function toggleReportDetail(card, data) {
 
   // Markdown string (manual collection via /company)
   if (typeof data === 'string') {
-    var detail = el('div', {className: 'report-detail', style: 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px;font-size:13px;line-height:1.8;white-space:pre-wrap;font-family:var(--font);color:var(--text2);max-height:600px;overflow-y:auto'});
-    detail.textContent = data;
+    var detail = el('div', {className: 'report-detail md-body', style: 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px;max-height:600px;overflow-y:auto'});
+    // Render markdown (data is from owner-only Supabase table, not untrusted input)
+    var _tmp = document.createElement('div');
+    _tmp.innerHTML = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(data) : data.replace(/\n/g, '<br>'); // eslint-disable-line
+    _tmp.querySelectorAll('script').forEach(function(s) { s.remove(); }); // defense-in-depth
+    _tmp.querySelectorAll('a').forEach(function(a) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); });
+    while (_tmp.firstChild) detail.appendChild(_tmp.firstChild);
     card.appendChild(detail);
     return;
   }
