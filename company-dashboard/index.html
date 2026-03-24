@@ -2750,6 +2750,197 @@ async function renderIntelligence(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'Intelligence'}));
   root.appendChild(el('div', {className: 'page-desc', textContent: '情報収集レポート（09:00 / 21:00 JST 自動収集）'}));
 
+  // Tab navigation
+  var activeTab = 'reports';
+  var tabBar = el('div', {style: 'display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0'});
+  var contentArea = el('div');
+  var tabs = [
+    {id: 'reports', label: 'Reports'},
+    {id: 'sources', label: 'Sources'}
+  ];
+
+  function renderTab(tabId) {
+    activeTab = tabId;
+    tabBar.querySelectorAll('button').forEach(function(b) {
+      b.style.borderBottom = b.getAttribute('data-tab') === tabId ? '2px solid var(--accent)' : '2px solid transparent';
+      b.style.color = b.getAttribute('data-tab') === tabId ? 'var(--accent)' : 'var(--text3)';
+    });
+    while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
+    if (tabId === 'reports') renderReportsTab(contentArea);
+    else if (tabId === 'sources') renderSourcesTab(contentArea);
+  }
+
+  tabs.forEach(function(t) {
+    var btn = el('button', {
+      'data-tab': t.id,
+      style: 'background:none;border:none;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px',
+      textContent: t.label,
+      onClick: function() { renderTab(t.id); }
+    });
+    tabBar.appendChild(btn);
+  });
+
+  root.appendChild(tabBar);
+  root.appendChild(contentArea);
+  renderTab('reports');
+}
+
+// --- Sources Tab ---
+async function renderSourcesTab(root) {
+  var res = await sb.from('intelligence_sources').select('*').order('source_type').order('priority', {ascending: true});
+  var sources = res.data || [];
+
+  if (sources.length === 0) {
+    root.appendChild(el('div', {className: 'card empty', style: 'padding:40px;text-align:center'}, [
+      el('div', {style: 'font-size:14px;color:var(--text2)', textContent: 'ソースが登録されていません。migration-019 を実行してください。'})
+    ]));
+    return;
+  }
+
+  // Group by source_type
+  var groups = {};
+  var typeLabels = {
+    x_account: 'X アカウント', keyword: 'キーワード検索', web_source: '公式ブログ / ニュース',
+    tech_article: '技術記事プラットフォーム', github_release: 'GitHub Releases', hacker_news: 'Hacker News'
+  };
+  sources.forEach(function(s) {
+    if (!groups[s.source_type]) groups[s.source_type] = [];
+    groups[s.source_type].push(s);
+  });
+
+  // Add Source button
+  var addBtn = el('button', {className: 'btn btn-p btn-sm', textContent: '+ ソース追加', style: 'margin-bottom:20px'});
+  addBtn.addEventListener('click', function() { showAddSourceModal(root); });
+  root.appendChild(addBtn);
+
+  // Stats
+  var enabledCount = sources.filter(function(s) { return s.enabled; }).length;
+  root.appendChild(el('div', {style: 'font-size:12px;color:var(--text3);margin-bottom:16px', textContent: '合計 ' + sources.length + ' ソース（有効: ' + enabledCount + '）'}));
+
+  // Render each group
+  Object.keys(typeLabels).forEach(function(type) {
+    var items = groups[type];
+    if (!items || items.length === 0) return;
+
+    root.appendChild(el('div', {className: 'section-title', style: 'margin-top:20px', textContent: typeLabels[type] + ' (' + items.length + ')'}));
+
+    var card = el('div', {className: 'card'});
+    items.forEach(function(src, idx) {
+      var cfg = src.config || {};
+      var detail = '';
+      if (src.source_type === 'x_account') detail = 'site:x.com 検索';
+      else if (src.source_type === 'keyword') detail = '検索語: "' + (cfg.term || '') + '"';
+      else if (src.source_type === 'web_source') detail = cfg.url || '';
+      else if (src.source_type === 'tech_article') detail = 'site:' + (cfg.site || '') + ' | キーワード: ' + (cfg.keywords || []).join(', ');
+      else if (src.source_type === 'github_release') detail = cfg.repo || '';
+      else if (src.source_type === 'hacker_news') detail = 'キーワード: ' + (cfg.keywords || []).join(', ') + ' (min: ' + (cfg.min_score || 0) + 'pt)';
+
+      var priorityColor = src.priority === 'high' ? 'var(--red)' : src.priority === 'low' ? 'var(--text3)' : 'var(--blue)';
+
+      var toggleBtn = el('button', {
+        className: 'btn btn-g btn-sm',
+        textContent: src.enabled ? 'ON' : 'OFF',
+        style: 'font-size:10px;padding:2px 8px;min-width:36px;' + (src.enabled ? 'color:var(--green)' : 'color:var(--red)'),
+        onClick: async function() {
+          await sb.from('intelligence_sources').update({enabled: !src.enabled}).eq('id', src.id);
+          src.enabled = !src.enabled;
+          toggleBtn.textContent = src.enabled ? 'ON' : 'OFF';
+          toggleBtn.style.color = src.enabled ? 'var(--green)' : 'var(--red)';
+          toast((src.enabled ? '有効' : '無効') + 'にしました: ' + src.name);
+        }
+      });
+
+      var deleteBtn = el('button', {
+        className: 'btn btn-g btn-sm',
+        textContent: '削除',
+        style: 'font-size:10px;padding:2px 8px;color:var(--red)',
+        onClick: async function() {
+          if (!confirm(src.name + ' を削除しますか？')) return;
+          await sb.from('intelligence_sources').delete().eq('id', src.id);
+          row.remove();
+          toast('削除しました: ' + src.name);
+        }
+      });
+
+      var row = el('div', {style: 'display:flex;align-items:center;gap:10px;padding:10px 0;' + (idx < items.length - 1 ? 'border-bottom:1px solid var(--border)' : '')}, [
+        el('div', {style: 'width:8px;height:8px;border-radius:50%;background:' + priorityColor + ';flex-shrink:0'}),
+        el('div', {style: 'flex:1;min-width:0'}, [
+          el('div', {style: 'font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px'}, [
+            document.createTextNode(src.name),
+            el('span', {className: 'tag tag-co', textContent: src.category})
+          ]),
+          el('div', {style: 'font-size:11px;color:var(--text3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', textContent: detail}),
+          src.note ? el('div', {style: 'font-size:10px;color:var(--text3);margin-top:1px;font-style:italic', textContent: src.note}) : null
+        ].filter(Boolean)),
+        el('span', {style: 'font-size:10px;color:var(--text3);flex-shrink:0', textContent: src.frequency}),
+        toggleBtn,
+        deleteBtn
+      ]);
+      card.appendChild(row);
+    });
+    root.appendChild(card);
+  });
+}
+
+function showAddSourceModal(parentRoot) {
+  var typeSelect = el('select', {className: 'input', style: 'margin-bottom:10px'});
+  [
+    {v: 'x_account', l: 'X アカウント'},
+    {v: 'keyword', l: 'キーワード検索'},
+    {v: 'web_source', l: 'Web サイト / ブログ'},
+    {v: 'tech_article', l: '技術記事プラットフォーム'},
+    {v: 'github_release', l: 'GitHub リリース'},
+  ].forEach(function(o) {
+    var opt = document.createElement('option');
+    opt.value = o.v; opt.textContent = o.l;
+    typeSelect.appendChild(opt);
+  });
+
+  var nameInput = el('input', {className: 'input', placeholder: '表示名（例: @AnthropicAI, Zenn, Claude Code）', style: 'margin-bottom:10px'});
+  var valueInput = el('input', {className: 'input', placeholder: '値（handle / 検索語 / URL / site名 / owner/repo）', style: 'margin-bottom:10px'});
+  var keywordsInput = el('input', {className: 'input', placeholder: 'キーワード（tech_article のみ、カンマ区切り）', style: 'margin-bottom:10px'});
+  var categoryInput = el('input', {className: 'input', placeholder: 'カテゴリ（例: AI tools, 海外技術記事）', value: 'AI tools', style: 'margin-bottom:10px'});
+
+  var prioritySelect = el('select', {className: 'input', style: 'margin-bottom:10px'});
+  ['high', 'normal', 'low'].forEach(function(p) {
+    var opt = document.createElement('option'); opt.value = p; opt.textContent = p;
+    if (p === 'normal') opt.selected = true;
+    prioritySelect.appendChild(opt);
+  });
+
+  var saveBtn = el('button', {className: 'btn btn-p', textContent: '追加', onClick: async function() {
+    var type = typeSelect.value;
+    var name = nameInput.value.trim();
+    var value = valueInput.value.trim();
+    if (!name || !value) { toast('名前と値は必須です'); return; }
+
+    var config = {};
+    if (type === 'x_account') config = {handle: value.replace('@', '')};
+    else if (type === 'keyword') config = {term: value};
+    else if (type === 'web_source') config = {url: value};
+    else if (type === 'tech_article') {
+      var kws = keywordsInput.value.split(',').map(function(k) { return k.trim(); }).filter(Boolean);
+      config = {site: value, keywords: kws.length > 0 ? kws : [name]};
+    }
+    else if (type === 'github_release') config = {repo: value};
+
+    await sb.from('intelligence_sources').insert({
+      source_type: type, name: name, config: config,
+      category: categoryInput.value.trim() || 'general',
+      priority: prioritySelect.value
+    });
+    toast('追加しました: ' + name);
+    // Re-render
+    while (parentRoot.firstChild) parentRoot.removeChild(parentRoot.firstChild);
+    renderSourcesTab(parentRoot);
+  }});
+
+  showModal('ソース追加', [typeSelect, nameInput, valueInput, keywordsInput, categoryInput, prioritySelect], [saveBtn]);
+}
+
+// --- Reports Tab ---
+async function renderReportsTab(root) {
+
   // Fetch reports from secretary_notes where type = 'intelligence_report'
   var res = await sb.from('secretary_notes')
     .select('*')
