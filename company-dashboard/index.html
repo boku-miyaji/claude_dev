@@ -2863,6 +2863,21 @@ async function renderSourcesTab(root) {
         }
       });
 
+      // Score bar
+      var scoreVal = (src.score || 1.0);
+      var scorePercent = Math.round((scoreVal / 2.0) * 100);
+      var scoreColor = scoreVal >= 1.3 ? 'var(--green)' : scoreVal <= 0.7 ? 'var(--red)' : 'var(--blue)';
+      var scoreBar = el('div', {style: 'width:48px;flex-shrink:0;text-align:center'}, [
+        el('div', {style: 'height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-bottom:2px'}, [
+          el('div', {style: 'height:100%;width:' + scorePercent + '%;background:' + scoreColor + ';border-radius:2px'})
+        ]),
+        el('div', {style: 'font-size:9px;font-family:var(--mono);color:' + scoreColor, textContent: scoreVal.toFixed(1)})
+      ]);
+
+      var fbInfo = (src.useful_count || 0) + (src.noise_count || 0) > 0
+        ? el('div', {style: 'font-size:9px;color:var(--text3);margin-top:1px', textContent: '+' + (src.useful_count||0) + ' / -' + (src.noise_count||0)})
+        : null;
+
       var row = el('div', {style: 'display:flex;align-items:center;gap:10px;padding:10px 0;' + (idx < items.length - 1 ? 'border-bottom:1px solid var(--border)' : '')}, [
         el('div', {style: 'width:8px;height:8px;border-radius:50%;background:' + priorityColor + ';flex-shrink:0'}),
         el('div', {style: 'flex:1;min-width:0'}, [
@@ -2871,8 +2886,10 @@ async function renderSourcesTab(root) {
             el('span', {className: 'tag tag-co', textContent: src.category})
           ]),
           el('div', {style: 'font-size:11px;color:var(--text3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', textContent: detail}),
-          src.note ? el('div', {style: 'font-size:10px;color:var(--text3);margin-top:1px;font-style:italic', textContent: src.note}) : null
+          src.note ? el('div', {style: 'font-size:10px;color:var(--text3);margin-top:1px;font-style:italic', textContent: src.note}) : null,
+          fbInfo
         ].filter(Boolean)),
+        scoreBar,
         el('span', {style: 'font-size:10px;color:var(--text3);flex-shrink:0', textContent: src.frequency}),
         toggleBtn,
         deleteBtn
@@ -2990,6 +3007,43 @@ async function renderReportsTab(root) {
   root.appendChild(section);
 }
 
+function renderFeedbackSection() {
+  var section = el('div', {style: 'margin-top:20px;padding-top:16px;border-top:1px solid var(--border)'});
+  section.appendChild(el('div', {style: 'font-size:12px;font-weight:600;margin-bottom:10px;color:var(--text2)', textContent: 'ソース評価（スコアに反映されます）'}));
+
+  // Load sources and render feedback buttons
+  (async function() {
+    var res = await sb.from('intelligence_sources').select('id,name,source_type,score,category').eq('enabled', true).order('source_type');
+    var sources = res.data || [];
+    if (sources.length === 0) { section.appendChild(el('div', {style: 'font-size:11px;color:var(--text3)', textContent: 'ソースが未登録です'})); return; }
+
+    var grid = el('div', {style: 'display:flex;flex-wrap:wrap;gap:6px'});
+    sources.forEach(function(src) {
+      var chip = el('div', {style: 'display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:11px;background:var(--surface)'}, [
+        el('span', {textContent: src.name, style: 'color:var(--text2)'}),
+        el('span', {style: 'font-family:var(--mono);font-size:9px;color:var(--text3)', textContent: (src.score||1).toFixed(1)}),
+        el('button', {textContent: '+', style: 'background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:4px;width:20px;height:20px;font-size:12px;cursor:pointer;font-weight:700;padding:0', onClick: async function() {
+          await sb.rpc('apply_source_feedback', {p_source_id: src.id, p_feedback: 'useful'});
+          src.score = Math.min((src.score||1) + 0.3, 2.0);
+          chip.querySelector('span:nth-child(2)').textContent = src.score.toFixed(1);
+          toast(src.name + ' +0.3');
+        }}),
+        el('button', {textContent: '-', style: 'background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:4px;width:20px;height:20px;font-size:12px;cursor:pointer;font-weight:700;padding:0', onClick: async function() {
+          await sb.rpc('apply_source_feedback', {p_source_id: src.id, p_feedback: 'noise'});
+          src.score = Math.max((src.score||1) - 0.3, 0.1);
+          chip.querySelector('span:nth-child(2)').textContent = src.score.toFixed(1);
+          toast(src.name + ' -0.3');
+        }})
+      ]);
+      grid.appendChild(chip);
+    });
+    section.appendChild(grid);
+    section.appendChild(el('div', {style: 'font-size:10px;color:var(--text3);margin-top:8px', textContent: '7日間FBなし → スコアが自動的にデフォルト(1.0)に戻ります'}));
+  })();
+
+  return section;
+}
+
 function toggleReportDetail(card, data) {
   var existing = card.querySelector('.report-detail');
   if (existing) { existing.remove(); return; }
@@ -3004,6 +3058,8 @@ function toggleReportDetail(card, data) {
     _tmp.querySelectorAll('script').forEach(function(s) { s.remove(); }); // defense-in-depth
     _tmp.querySelectorAll('a').forEach(function(a) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); });
     while (_tmp.firstChild) detail.appendChild(_tmp.firstChild);
+    // Feedback section for markdown reports
+    detail.appendChild(renderFeedbackSection());
     card.appendChild(detail);
     return;
   }
@@ -3032,6 +3088,7 @@ function toggleReportDetail(card, data) {
     });
   });
 
+  detail.appendChild(renderFeedbackSection());
   card.appendChild(detail);
 }
 
