@@ -319,6 +319,7 @@ var currentPage = 'dashboard';
 // ============================================================
 // Init
 // ============================================================
+var appReady = false;
 function init() {
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   sb.auth.getSession().then(function(res) {
@@ -329,8 +330,8 @@ function init() {
     }
   });
   sb.auth.onAuthStateChange(function(event, session) {
-    if (event === 'SIGNED_IN' && session) showApp(session.user);
-    else if (event === 'SIGNED_OUT') showAuth();
+    if (event === 'SIGNED_IN' && session && !appReady) showApp(session.user);
+    else if (event === 'SIGNED_OUT') { appReady = false; showAuth(); }
   });
 }
 
@@ -391,6 +392,9 @@ async function showApp(user) {
       return;
     }
   }
+
+  if (appReady) return; // prevent double init
+  appReady = true;
 
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('app-screen').classList.remove('hidden');
