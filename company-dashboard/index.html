@@ -397,7 +397,8 @@ async function showApp(user) {
   document.getElementById('nav-user').textContent = '@' + (user.user_metadata.user_name || user.email || '');
   document.getElementById('btn-logout').addEventListener('click', function() { sb.auth.signOut(); });
   setupNav();
-  navigate('dashboard');
+  var startPage = (window.location.hash || '').replace('#', '') || 'dashboard';
+  navigate(startPage);
 }
 
 // ============================================================
@@ -426,6 +427,7 @@ function setupNav() {
 
 function navigate(page) {
   currentPage = page;
+  window.location.hash = page;
   document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.toggle('active', n.getAttribute('data-page') === page); });
   document.querySelectorAll('.mob-nav-item').forEach(function(n) { n.classList.toggle('active', n.getAttribute('data-page') === page); });
   renderPage(page);
