@@ -2800,8 +2800,9 @@ async function renderSourcesTab(root) {
   // Group by source_type
   var groups = {};
   var typeLabels = {
-    x_account: 'X アカウント', keyword: 'キーワード検索', web_source: '公式ブログ / ニュース',
-    tech_article: '技術記事プラットフォーム', github_release: 'GitHub Releases', hacker_news: 'Hacker News'
+    keyword: 'キーワード検索', web_source: '公式ブログ / ニュース',
+    tech_article: '技術記事プラットフォーム', github_release: 'GitHub Releases', hacker_news: 'Hacker News',
+    x_account: 'X アカウント（参考・制限あり）'
   };
   sources.forEach(function(s) {
     if (!groups[s.source_type]) groups[s.source_type] = [];
