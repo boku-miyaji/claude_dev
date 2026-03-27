@@ -47,6 +47,8 @@ tasks*
 # pj
 project-*
 presales-*
+denso-*
+circuit_diagram/
 
 # cursor server backup - keep local but don't track
 .cursor-server.bak/
