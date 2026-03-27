@@ -3,10 +3,11 @@
 # Logs every user prompt to the company dashboard.
 # Runs async so it never blocks the conversation.
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "$SCRIPT_DIR/supabase.env"
+source "$SCRIPT_DIR/supabase-check.sh"
+[ "$SUPABASE_AVAILABLE" = "true" ] || exit 0
 
 # Read hook input from stdin
 INPUT=$(cat)
@@ -75,7 +76,7 @@ PAYLOAD=$(jq -n \
    | if $company_id != "" then . + {company_id: $company_id} else . end')
 
 # POST to Supabase
-curl -s -o /dev/null -w "" \
+curl -4 -s -o /dev/null -w "" \
   "${SUPABASE_URL}/rest/v1/prompt_log" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \

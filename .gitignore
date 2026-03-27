@@ -7,8 +7,9 @@
 .claude/.credentials.json
 .claude/.credentials.json.*
 
-# claude - local settings
-.claude/settings.json
+# claude - shared settings (tracked in git for cross-server consistency)
+# .claude/settings.json → tracked (hooks, plugins, base permissions)
+# claude - local settings (server-specific overrides, NOT tracked)
 .claude/settings.local.json
 .claude/security_warnings_state_*.json
 .claude/session-env/
@@ -59,8 +60,9 @@ project-review/project-rikyu-sales-proposals-poc/
 # circuit diagram output (managed by circuit_diagram/.gitignore)
 # circuit_diagram/output/
 
-# company plugin - generated org data (per-project)
-.company/
+# company - org structure (tracked in git for cross-server sharing)
+# .company/ → tracked (HD structure, departments, registry)
+# .company-*/ → tracked (PJ company context, secretary)
 
 # secrets & tokens (NEVER commit)
 .config/google/credentials.json

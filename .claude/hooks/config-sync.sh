@@ -3,10 +3,11 @@
 # Syncs settings.json, .mcp.json, CLAUDE.md, skills, plugins on every session start.
 # This replaces the manual sync that previously only ran on /company.
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "$SCRIPT_DIR/supabase.env"
+source "$SCRIPT_DIR/supabase-check.sh"
+[ "$SUPABASE_AVAILABLE" = "true" ] || exit 0
 
 # Read hook input from stdin
 INPUT=$(cat)
@@ -100,7 +101,7 @@ PAYLOAD_WITH_HOST=$(echo "$PAYLOAD" | jq --arg sh "$SERVER_HOST" '. + {server_ho
 
 # Upsert to Supabase claude_settings
 # Try with server_host first (migration-009), fallback without
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+HTTP_CODE=$(curl -4 -s -o /dev/null -w "%{http_code}" \
   "${SUPABASE_URL}/rest/v1/claude_settings?on_conflict=id" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
@@ -114,7 +115,7 @@ HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
 
 if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
   # Fallback: without server_host (pre migration-009)
-  curl -s -o /dev/null -w "" \
+  curl -4 -s -o /dev/null -w "" \
     "${SUPABASE_URL}/rest/v1/claude_settings?on_conflict=id" \
     -H "apikey: ${SUPABASE_ANON_KEY}" \
     -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
@@ -232,7 +233,7 @@ ACTIVITY=$(jq -n \
   --argjson metadata "$(jq -n --arg scope "$SCOPE" --arg source "hook" '{scope: $scope, source: $source}')" \
   '{action: $action, description: $description, metadata: $metadata}')
 
-curl -s -o /dev/null -w "" \
+curl -4 -s -o /dev/null -w "" \
   "${SUPABASE_URL}/rest/v1/activity_log" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \

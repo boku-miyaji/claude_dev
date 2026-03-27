@@ -47,12 +47,32 @@
       "Bash(for dir:*)",
       "Read(//workspace/**)",
       "Bash(mv /workspace/.company-rikyu/ai-dev/design/*.md /workspace/.company-rikyu/secretary/archive/)",
-      "Bash(mv /workspace/.company-rikyu/materials/deliverables/*.md /workspace/.company-rikyu/secretary/archive/)"
+      "Bash(mv /workspace/.company-rikyu/materials/deliverables/*.md /workspace/.company-rikyu/secretary/archive/)",
+      "Bash(git -C /workspace stash pop)",
+      "Bash(git submodule:*)",
+      "Bash(git -C /workspace remote -v)",
+      "Bash(cp /workspace/plugins/company/.claude-plugin/marketplace.json /home/node/.claude/plugins/cache/ai-company/company/1.0.0/.claude-plugin/marketplace.json)",
+      "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/1.0.0/.claude-plugin/plugin.json)",
+      "Bash(git -C /workspace check-ignore .company/)",
+      "Bash(git -C /workspace ls-files .company/)",
+      "Bash(npx next:*)",
+      "Read(//dev/**)",
+      "Bash(shasum -a 256)",
+      "WebFetch(domain:www.notion.so)",
+      "Bash(rm -f .next/dev/lock)",
+      "Bash(pnpm dev:*)",
+      "Bash(node -e \":*)",
+      "Bash(git hash-object:*)",
+      "Bash(git update-index:*)",
+      "Read(//workspace/$dir/secretary/**)",
+      "Bash(git -C /workspace log --oneline -5)"
     ],
     "additionalDirectories": [
       "/home/yutamiyaji/development/polaris/claude_dev/circuit_diagram/gnn_verification/step1_cktgen/CktGNN/OCB/CktBench101",
       "/workspace/circuit_diagram/gnn_verification",
-      "/home/node/.claude/plugins/cache/ai-company/company/1.0.0/skills/company/references"
+      "/home/node/.claude/plugins/cache/ai-company/company/1.0.0/skills/company/references",
+      "/workspace/project-rikyu-sales-proposals-poc/server/.next/dev",
+      "/workspace/project-scotch-care/reference_docs/RFI/回答"
     ]
   },
   "hooks": {
@@ -83,6 +103,10 @@
       {
         "matcher": "",
         "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/supabase-status.sh"
+          },
           {
             "type": "command",
             "command": ".claude/hooks/config-sync.sh",

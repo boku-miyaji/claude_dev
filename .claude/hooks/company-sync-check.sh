@@ -3,10 +3,11 @@
 # Compares Supabase companies table with local .company-*/ directories.
 # Outputs warnings to stderr (shown to user) if mismatches are found.
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "$SCRIPT_DIR/supabase.env"
+source "$SCRIPT_DIR/supabase-check.sh"
+[ "$SUPABASE_AVAILABLE" = "true" ] || exit 0
 
 # Read hook input from stdin
 INPUT=$(cat)
@@ -14,7 +15,7 @@ CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 PROJECT_DIR="${CWD:-/workspace}"
 
 # Fetch active companies from Supabase
-SUPABASE_COMPANIES=$(curl -s \
+SUPABASE_COMPANIES=$(curl -4 -s \
   "${SUPABASE_URL}/rest/v1/companies?select=id,name&status=eq.active&order=id.asc" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \

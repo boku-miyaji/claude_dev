@@ -3,10 +3,11 @@
 # diff against local cache, upsert changes to Supabase.
 # Called from config-sync.sh on SessionStart.
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "$SCRIPT_DIR/supabase.env"
+source "$SCRIPT_DIR/supabase-check.sh"
+[ "$SUPABASE_AVAILABLE" = "true" ] || exit 0
 
 PROJECT_DIR="${1:-/workspace}"
 CACHE_FILE="$SCRIPT_DIR/skills-cache.json"
@@ -132,7 +133,7 @@ if [ "$CURRENT_HASH" = "$CACHED_HASH" ]; then
 fi
 
 # --- Batch upsert ---
-curl -s -o /dev/null -w "" \
+curl -4 -s -o /dev/null -w "" \
   "${SUPABASE_URL}/rest/v1/slash_commands?on_conflict=id" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
@@ -148,7 +149,7 @@ REMOVED=$(echo "$CACHED_SKILLS" | jq -c --argjson current "$CURRENT_SKILLS" \
 
 if [ "$REMOVED" != "[]" ] && [ "$REMOVED" != "null" ] && [ -n "$REMOVED" ]; then
   echo "$REMOVED" | jq -r '.[]' | while read -r rid; do
-    curl -s -o /dev/null \
+    curl -4 -s -o /dev/null \
       "${SUPABASE_URL}/rest/v1/slash_commands?id=eq.${rid}" \
       -X PATCH \
       -H "apikey: ${SUPABASE_ANON_KEY}" \
