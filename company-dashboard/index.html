@@ -282,7 +282,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="commands"><span class="nav-icon">⌘</span> Commands</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <div class="nav-spacer"></div>
-    <a href="/how-it-works" target="_blank" class="nav-item" style="text-decoration:none;color:var(--text3);font-size:12px"><span class="nav-icon">?</span> How it Works</a>
+    <button class="nav-item" data-page="how-it-works"><span class="nav-icon">?</span> How it Works</button>
     <div class="nav-user" id="nav-user"></div>
     <button class="nav-item" id="btn-logout"><span class="nav-icon">→</span> Sign out</button>
   </nav>
@@ -535,6 +535,7 @@ function renderPage(page) {
     intelligence: renderIntelligence,
     diary: renderDiary,
     artifacts: renderArtifacts,
+    'how-it-works': renderHowItWorks,
     commands: renderSlashCommands,
     settings: renderSettings
   };
@@ -3017,6 +3018,17 @@ async function renderArtifacts(root) {
   }
 
   loadList();
+}
+
+// ============================================================
+// How it Works Page (embedded)
+// ============================================================
+async function renderHowItWorks(root) {
+  var iframe = el('iframe', {
+    src: '/how-it-works.html',
+    style: 'width:100%;height:calc(100vh - 60px);border:none;border-radius:8px'
+  });
+  root.appendChild(iframe);
 }
 
 // ============================================================
