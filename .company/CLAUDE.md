@@ -87,6 +87,20 @@ PJ会社一覧は `registry.md` を参照。
 
 ## 運営ルール
 
+### ブリーフィング時のカレンダー取得（必須）
+
+起動時ブリーフィングでは **accessRole: owner の全カレンダー** からイベントを統合取得する。primary だけでは仕事の予定が漏れる。
+
+**対象カレンダー:**
+- `yumzzz.my6223@gmail.com`（primary・個人）
+- `yuta.miyaji.xyz@gmail.com`（個人2）
+- `yuta.miyaji@acesinc.co.jp`（ACES社・仕事）
+
+**表示ルール:**
+- **必ず `TZ=Asia/Tokyo date` で現在時刻を取得してから**状態判定する（推測しない）
+- 現在時刻を基準に「✅完了」「▶️進行中」「⏳これから」を明示
+- `[仕事]`/`[In]`/`[Ex]` タグ付きは仕事関連として強調
+
 ### 自動記録
 - 意思決定 → `secretary/notes/YYYY-MM-DD-decisions.md`
 - 学び → `secretary/notes/YYYY-MM-DD-learnings.md`
