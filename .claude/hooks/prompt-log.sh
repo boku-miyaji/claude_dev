@@ -43,12 +43,27 @@ fi
 if [ -z "$COMPANY_ID" ]; then
   COMPANY_ID=$(echo "$PROMPT" | grep -oP '/company\s+\K[a-z0-9-]+' | head -1 || true)
 fi
+# Infer from prompt keywords if still empty
+if [ -z "$COMPANY_ID" ]; then
+  echo "$PROMPT" | grep -qi "rikyu\|りきゅう\|りそな\|proposal\|アンケート" && COMPANY_ID="rikyu"
+fi
+if [ -z "$COMPANY_ID" ]; then
+  echo "$PROMPT" | grep -qi "回路\|circuit\|polaris\|図面\|暗黙知" && COMPANY_ID="circuit"
+fi
+if [ -z "$COMPANY_ID" ]; then
+  echo "$PROMPT" | grep -qi "sompo\|foundry\|scotch\|SOMPOケア" && COMPANY_ID="foundry"
+fi
 
 # Auto-tag based on content
 TAGS="[]"
 TAG_LIST=()
 
-# Detect common patterns for auto-tagging
+# --- PJ auto-tagging (session-tagger) ---
+echo "$PROMPT" | grep -qi "rikyu\|りきゅう\|りそな\|proposal\|アンケート\|営業支援\|設問\|集計" && TAG_LIST+=("pj:rikyu")
+echo "$PROMPT" | grep -qi "回路\|circuit\|図面\|polaris\|暗黙知\|tacit" && TAG_LIST+=("pj:circuit")
+echo "$PROMPT" | grep -qi "sompo\|foundry\|scotch\|SOMPOケア\|技術スタック\|RFI\|RFP\|Lakehouse" && TAG_LIST+=("pj:foundry")
+
+# --- Activity type auto-tagging ---
 echo "$PROMPT" | grep -qi "実装\|implement\|コード\|code\|関数\|function" && TAG_LIST+=("coding")
 echo "$PROMPT" | grep -qi "テスト\|test" && TAG_LIST+=("test")
 echo "$PROMPT" | grep -qi "バグ\|bug\|fix\|修正\|エラー\|error" && TAG_LIST+=("bugfix")
@@ -58,7 +73,9 @@ echo "$PROMPT" | grep -qi "レビュー\|review\|PR" && TAG_LIST+=("review")
 echo "$PROMPT" | grep -qi "デプロイ\|deploy\|リリース\|release" && TAG_LIST+=("deploy")
 echo "$PROMPT" | grep -qi "質問\|教えて\|how\|what\|why\|？\|?" && TAG_LIST+=("question")
 echo "$PROMPT" | grep -qi "リファクタ\|refactor\|整理\|cleanup" && TAG_LIST+=("refactor")
-echo "$PROMPT" | grep -qi "company\|秘書\|組織\|タスク\|TODO" && TAG_LIST+=("company")
+echo "$PROMPT" | grep -qi "company\|秘書\|組織\|タスク\|TODO\|ダッシュボード\|ブリーフィング" && TAG_LIST+=("company")
+echo "$PROMPT" | grep -qi "pptx\|スライド\|資料作成\|プレゼン" && TAG_LIST+=("materials")
+echo "$PROMPT" | grep -qi "調べ\|調査\|リサーチ\|研究\|競合" && TAG_LIST+=("research")
 
 if [ ${#TAG_LIST[@]} -gt 0 ]; then
   TAGS=$(printf '%s\n' "${TAG_LIST[@]}" | jq -R . | jq -s .)
