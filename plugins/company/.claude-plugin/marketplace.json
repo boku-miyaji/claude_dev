@@ -14,7 +14,10 @@
         "./skills/company",
         "./skills/invoice",
         "./skills/permission",
-        "./skills/no-edit"
+        "./skills/no-edit",
+        "./skills/register",
+        "./skills/auto-prep",
+        "./skills/weekly-digest"
       ]
     }
   ]
