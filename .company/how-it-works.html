@@ -247,9 +247,11 @@
     <li><a href="#data-layers">3層データ管理 — ファイル × Git × Supabase</a></li>
     <li><a href="#memory-flow">記憶の流れ — どこに何が記録されるか</a></li>
     <li><a href="#hooks">自動化 — Hook による無意識の同期</a></li>
+    <li><a href="#intelligence">情報収集 → リサーチ — 知の循環</a></li>
     <li><a href="#insurance">保険 — うまくいかないときの備え</a></li>
     <li><a href="#improvement">改善サイクル — 組織が賢くなる仕組み</a></li>
     <li><a href="#prep-intelligence">準備タイミングインテリジェンス</a></li>
+    <li><a href="#philosophy">設計思想 — エンハンス、代替ではない</a></li>
   </ol>
 </div>
 
@@ -563,9 +565,122 @@ sequenceDiagram
   </table>
 </section>
 
-<!-- 5. Insurance -->
+<!-- 5. Intelligence → Research -->
+<section id="intelligence">
+  <h2>5. 情報収集 → リサーチ — 知の循環</h2>
+  <p>intelligence部署（情報収集）が自動でデータを集め、research部署（リサーチ）がそれを分析・構造化する。2つの部署は独立ではなく、パイプラインとして連携します。</p>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+flowchart TB
+    subgraph INT["intelligence — 情報収集部"]
+        S1["sources.yaml<br/>監視対象の定義"]
+        C1["collect.py<br/>GitHub Actions 09:00/21:00"]
+        R1["reports/<br/>JSON + Markdown"]
+        P1["preferences.yaml<br/>スコアリング"]
+    end
+
+    subgraph RES["research — リサーチ部署"]
+        M1["market/<br/>市場・競合分析"]
+        T1["tech/<br/>技術調査"]
+        CR["client-research/<br/>企業・人物調査"]
+    end
+
+    subgraph OUT["出力（3段構成）"]
+        O1["① 公知情報ベース分析<br/>ソースURL付き"]
+        O2["② 限界の明示<br/>非公開情報が必要な領域"]
+        O3["③ 壁打ちモード<br/>社長の手元情報と統合"]
+    end
+
+    S1 --> C1
+    C1 --> R1
+    R1 --> |"スコア上位を優先"| P1
+    P1 --> |"フィードバック"| S1
+
+    R1 --> |"収集データを素材として"| M1 & T1 & CR
+    M1 & T1 & CR --> O1 --> O2 --> O3
+
+    CEO2["👤 社長"] --> |"有用/ノイズ"| P1
+    CEO2 --> |"手元の非公開情報"| O3
+
+    style INT fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style RES fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style OUT fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    </pre>
+  </div>
+
+  <h3>intelligence: 自動収集エンジン</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">収集チャネル</div>
+      <ul>
+        <li><strong>キーワード検索</strong> — DuckDuckGo で指定キーワードの上位5件</li>
+        <li><strong>X アカウント監視</strong> — site:x.com 検索で最新ポスト</li>
+        <li><strong>Webサイト監視</strong> — IR、プレスリリース等（拡張予定）</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">スコアリングシステム</div>
+      <ul>
+        <li><strong>有用</strong> → スコア +0.2（最大2.0）</li>
+        <li><strong>ノイズ</strong> → スコア -0.2（最小0.1）</li>
+        <li><strong>探索枠 20%</strong> — 低スコアでも20%の確率で収集（過学習防止）</li>
+        <li><strong>30日減衰</strong> — FBなしスコアはデフォルト(1.0)へ回帰</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>research: 分析 → 3段構成出力</h3>
+  <p>intelligence の収集データを素材として、リサーチ部署が分析・構造化する。<strong>すべての出力は3段構成に従う。</strong></p>
+
+  <table>
+    <thead>
+      <tr><th>段</th><th>内容</th><th>目的</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>① 公知情報</strong></td>
+        <td>IR、決算、プレスリリース等から得られる情報を整理。全情報にソースURL付与</td>
+        <td>人が直接確認・検証できる</td>
+      </tr>
+      <tr>
+        <td><strong>② 限界の明示</strong></td>
+        <td>「ここから先は非公開情報が必要」を正直に示す。推測は明確にラベル付け</td>
+        <td>何がわかっていて何がわからないかを透明に</td>
+      </tr>
+      <tr>
+        <td><strong>③ 壁打ちモード</strong></td>
+        <td>社長が手元の非公開情報（中計・議事録等）を見ながら深掘りできる導線</td>
+        <td>AI出力を自分の理解として昇華する</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>自動発動タイミング</h3>
+  <table>
+    <thead>
+      <tr><th>タイミング</th><th>何が起きるか</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>09:00 / 21:00（自動）</td><td>GitHub Actions で sources.yaml の全ソースを収集 → レポート生成</td></tr>
+      <tr><td>/company 起動時</td><td>最新レポートの要約をブリーフィングに含める</td></tr>
+      <tr><td>MTG準備時（prep-log連動）</td><td>クライアントMTG前に相手企業の最新情報を自動チェック</td></tr>
+      <tr><td>新PJ会社作成時</td><td>クライアント企業の基本情報を自動収集して CLAUDE.md に注入</td></tr>
+    </tbody>
+  </table>
+
+  <h3>ダッシュボード連携</h3>
+  <p>ダッシュボードの <strong>Intelligence タブ</strong> に表示される内容:</p>
+  <ul>
+    <li><strong>Sources</strong> — sources.yaml の全監視対象（スコア・有効/無効の管理）</li>
+    <li><strong>Reports</strong> — secretary_notes テーブルの type='intelligence_report' レコード</li>
+    <li><strong>Score Analytics</strong> — ソースごとのスコア推移・フィードバック履歴</li>
+  </ul>
+</section>
+
+<!-- 6. Insurance -->
 <section id="insurance">
-  <h2>5. 保険 — うまくいかないときの備え</h2>
+  <h2>6. 保険 — うまくいかないときの備え</h2>
   <p>3つの障害シナリオに対するフォールバック設計。</p>
 
   <div class="card insurance-card">
@@ -637,9 +752,9 @@ graph TB
   <p>PJリポジトリは完全に独立。あるPJでミスをしても、他PJや組織設定には影響しない。CLAUDE.mdのコミットルールがこの境界を強制します。</p>
 </section>
 
-<!-- 6. Improvement -->
+<!-- 7. Improvement -->
 <section id="improvement">
-  <h2>6. 改善サイクル</h2>
+  <h2>7. 改善サイクル</h2>
   <p>組織は3つのフィードバックループで自動的に賢くなっていきます。</p>
 
   <div class="mermaid-wrapper">
@@ -724,9 +839,9 @@ flowchart LR
   </div>
 </section>
 
-<!-- 7. Prep Intelligence -->
+<!-- 8. Prep Intelligence -->
 <section id="prep-intelligence">
-  <h2>7. 準備タイミングインテリジェンス</h2>
+  <h2>8. 準備タイミングインテリジェンス</h2>
   <p>ミーティングごとに「いつ準備を始めるべきか」を実績データから精度高く予測するシステム。</p>
 
   <h3>多次元ミーティング分類</h3>
@@ -832,6 +947,82 @@ flowchart TB
   </div>
 
   <p>データ保存先: <code>.company/secretary/prep-log/{date}_{slug}.yaml</code></p>
+</section>
+
+<!-- 9. Philosophy -->
+<section id="philosophy">
+  <h2>9. 設計思想 — エンハンス、代替ではない</h2>
+
+  <div class="card" style="border-left: 3px solid var(--accent);">
+    <div class="card-title" style="font-size: 1.15rem;">このシステムは人の仕事を完全代替するのではなく、エンハンスするもの</div>
+    <p style="margin-top: 12px;">AI出力をそのまま商談に持ち込むのは難しい。自分で説明できない内容は使えない。</p>
+  </div>
+
+  <h3>なぜ「完成品」を作らないのか</h3>
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+flowchart LR
+    AI["AI出力<br/>（素材）"] --> WALL["壁打ち<br/>社長 × 秘書"]
+    WALL --> OWN["自分の解釈<br/>として昇華"]
+    OWN --> MTG["商談・報告<br/>自分の言葉で説明"]
+
+    BAD["AI出力を<br/>そのまま使う"] -.->|"✕"| FAIL["質問に答えられない<br/>思考力が低下"]
+
+    style AI fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style WALL fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    style OWN fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style MTG fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style BAD fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    style FAIL fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    </pre>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title" style="color: var(--green);">正しい使い方</div>
+      <ul>
+        <li>AI出力を<strong>壁打ちの素材</strong>として使う</li>
+        <li>腹落ちするまで対話で深掘りする</li>
+        <li>質問が来そうなところは自分で掘る</li>
+        <li>公知情報の限界を理解した上で非公開情報と統合する</li>
+        <li>最終的に<strong>自分の言葉で説明できる状態</strong>にする</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color: var(--red);">避けるべき使い方</div>
+      <ul>
+        <li>AI出力をそのままコピペして報告する</li>
+        <li>内容を理解せずに資料として提出する</li>
+        <li>「AIが作ったから正しいだろう」と検証しない</li>
+        <li>思考プロセスをスキップする</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>システム全体に適用される原則</h3>
+  <table>
+    <thead>
+      <tr><th>部署</th><th>適用</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>リサーチ</strong></td>
+        <td>3段構成出力（公知情報+リンク → 限界明示 → 壁打ちモード）</td>
+      </tr>
+      <tr>
+        <td><strong>資料制作</strong></td>
+        <td>資料は「完成品」ではなく「壁打ちの素材」。社長レビュー必須</td>
+      </tr>
+      <tr>
+        <td><strong>AI開発</strong></td>
+        <td>設計書はチェックポイントで社長確認。実装は理解した上で承認</td>
+      </tr>
+      <tr>
+        <td><strong>秘書</strong></td>
+        <td>重要な判断は必ず社長に確認。自動実行は権限レベルで制御</td>
+      </tr>
+    </tbody>
+  </table>
 </section>
 
 <!-- Footer -->

@@ -226,6 +226,9 @@ fi
 # Sync slash commands (diff-based)
 "$SCRIPT_DIR/sync-slash-commands.sh" "$PROJECT_DIR" 2>/dev/null || true
 
+# Sync company state (.company/ → Supabase companies + departments)
+"$SCRIPT_DIR/company-sync.sh" "$PROJECT_DIR" 2>/dev/null || true
+
 # Log sync activity
 ACTIVITY=$(jq -n \
   --arg action "hook_sync" \
