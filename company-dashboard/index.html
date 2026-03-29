@@ -2942,11 +2942,11 @@ async function renderArtifacts(root) {
     ]));
 
     // Content
-    var contentCard = el('div', {className: 'card', style: 'margin-bottom:20px;max-height:600px;overflow:auto'});
+    var contentCard = el('div', {className: 'card', style: 'margin-bottom:20px;overflow:auto'});
     if (!artifact.content) {
       contentCard.appendChild(el('div', {className: 'empty', textContent: '未同期。次のセッション起動時に自動同期されます。'}));
     } else if (artifact.file_type === 'html') {
-      var iframe = el('iframe', {style: 'width:100%;height:500px;border:none;background:#fff;border-radius:8px'});
+      var iframe = el('iframe', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;background:#fff;border-radius:8px'});
       contentCard.appendChild(iframe);
       setTimeout(function() {
         iframe.contentDocument.open();
@@ -2956,7 +2956,7 @@ async function renderArtifacts(root) {
     } else if (artifact.file_type === 'md') {
       contentCard.appendChild(el('div', {style: 'white-space:pre-wrap;font-size:13px;line-height:1.7;font-family:var(--mono)', textContent: artifact.content}));
     } else {
-      contentCard.appendChild(el('pre', {style: 'font-size:12px;overflow:auto;max-height:500px', textContent: artifact.content}));
+      contentCard.appendChild(el('pre', {style: 'font-size:12px;overflow:auto;max-height:calc(100vh - 280px)', textContent: artifact.content}));
     }
     detailContainer.appendChild(contentCard);
 
