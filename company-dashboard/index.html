@@ -277,6 +277,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
     <button class="nav-item" data-page="intelligence"><span class="nav-icon">◎</span> Intelligence</button>
+    <button class="nav-item" data-page="artifacts"><span class="nav-icon">📄</span> Artifacts</button>
     <button class="nav-item" data-page="commands"><span class="nav-icon">⌘</span> Commands</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <div class="nav-spacer"></div>
@@ -309,6 +310,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
       <button class="mob-nav-item" data-page="prompts" style="padding:12px 8px"><span class="mob-icon">▷</span>Prompts</button>
       <button class="mob-nav-item" data-page="insights" style="padding:12px 8px"><span class="mob-icon">◇</span>Insights</button>
       <button class="mob-nav-item" data-page="knowledge" style="padding:12px 8px"><span class="mob-icon">◈</span>Knowledge</button>
+      <button class="mob-nav-item" data-page="artifacts" style="padding:12px 8px"><span class="mob-icon">📄</span>Artifacts</button>
       <button class="mob-nav-item" data-page="commands" style="padding:12px 8px"><span class="mob-icon">⌘</span>Commands</button>
       <button class="mob-nav-item" data-page="settings" style="padding:12px 8px"><span class="mob-icon">⚙</span>Settings</button>
     </div>
@@ -528,6 +530,7 @@ function renderPage(page) {
     insights: renderInsights,
     finance: renderFinance,
     intelligence: renderIntelligence,
+    artifacts: renderArtifacts,
     commands: renderSlashCommands,
     settings: renderSettings
   };
@@ -2675,6 +2678,193 @@ async function finTax(root) {
       ]));
     });
   });
+}
+
+// ============================================================
+// Artifacts Page
+// ============================================================
+async function renderArtifacts(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Artifacts'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '成果物の確認・コメント。ファイルパスを登録すると自動同期されます。'}));
+
+  // Register form
+  var regCard = el('div', {className: 'card', style: 'margin-bottom:20px'});
+  var regTitle = el('input', {className: 'input', placeholder: 'タイトル（例: 技術スタック方針）', style: 'margin-bottom:8px'});
+  var regPath = el('input', {className: 'input', placeholder: 'ファイルパス（例: project-scotch-care/docs/final_output/02_tech_stack.md）', style: 'margin-bottom:8px'});
+  var companies = (await sb.from('companies').select('id,name').eq('status','active')).data || [];
+  var regCompany = el('select', {className: 'input', style: 'margin-bottom:8px'}, [
+    el('option', {value: '', textContent: '-- PJ会社 --'})
+  ].concat(companies.map(function(c) { return el('option', {value: c.id, textContent: c.name}); })));
+  var regBtn = el('button', {className: 'btn btn-primary', textContent: '+ 登録'});
+  regCard.appendChild(el('div', {className: 'section-title', textContent: 'ファイル登録'}));
+  regCard.appendChild(regTitle);
+  regCard.appendChild(regPath);
+  regCard.appendChild(el('div', {style: 'display:flex;gap:8px'}, [regCompany, regBtn]));
+  root.appendChild(regCard);
+
+  var listContainer = el('div', {});
+  root.appendChild(listContainer);
+
+  // Detail view container
+  var detailContainer = el('div', {style: 'display:none'});
+  root.appendChild(detailContainer);
+
+  regBtn.onclick = async function() {
+    var title = regTitle.value.trim();
+    var fpath = regPath.value.trim();
+    if (!title || !fpath) return;
+    var ext = fpath.split('.').pop().toLowerCase();
+    var ftype = ['md','html','yaml','json','txt'].includes(ext) ? ext : 'txt';
+    var payload = {title: title, file_path: fpath, file_type: ftype, status: 'active', tags: []};
+    if (regCompany.value) payload.company_id = regCompany.value;
+    await sb.from('artifacts').insert(payload);
+    regTitle.value = ''; regPath.value = '';
+    loadList();
+  };
+
+  async function loadList() {
+    listContainer.style.display = '';
+    detailContainer.style.display = 'none';
+    while (listContainer.firstChild) listContainer.removeChild(listContainer.firstChild);
+
+    var res = await sb.from('artifacts').select('*,companies(name)').eq('status','active').order('updated_at',{ascending:false});
+    var arts = res.data || [];
+
+    // Count open comments per artifact
+    var commentRes = await sb.from('artifact_comments').select('artifact_id,id').eq('status','open');
+    var commentCounts = {};
+    (commentRes.data || []).forEach(function(c) {
+      commentCounts[c.artifact_id] = (commentCounts[c.artifact_id] || 0) + 1;
+    });
+
+    if (arts.length === 0) {
+      listContainer.appendChild(el('div', {className: 'card'}, [
+        el('div', {className: 'empty', textContent: 'まだ成果物が登録されていません。上のフォームからファイルパスを登録してください。'})
+      ]));
+      return;
+    }
+
+    arts.forEach(function(a) {
+      var coName = a.companies ? a.companies.name : 'HD';
+      var synced = a.last_synced_at ? new Date(a.last_synced_at).toLocaleString('ja-JP') : '未同期';
+      var openComments = commentCounts[a.id] || 0;
+      var commentBadge = openComments > 0
+        ? el('span', {style: 'background:var(--orange);color:#000;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600', textContent: openComments + ' コメント'})
+        : el('span', {style: 'color:var(--text3);font-size:11px', textContent: 'コメントなし'});
+
+      var card = el('div', {className: 'card', style: 'cursor:pointer;margin-bottom:12px'}, [
+        el('div', {style: 'display:flex;justify-content:space-between;align-items:center'}, [
+          el('div', {}, [
+            el('div', {style: 'font-weight:600;margin-bottom:4px', textContent: a.title}),
+            el('div', {style: 'font-size:12px;color:var(--text3);font-family:var(--mono)', textContent: a.file_path})
+          ]),
+          el('div', {style: 'text-align:right'}, [
+            el('div', {}, [el('span', {className: 'tag tag-normal', textContent: coName}), commentBadge]),
+            el('div', {style: 'font-size:11px;color:var(--text3);margin-top:4px', textContent: '同期: ' + synced})
+          ])
+        ])
+      ]);
+      card.onclick = function() { showDetail(a); };
+      listContainer.appendChild(card);
+    });
+  }
+
+  async function showDetail(artifact) {
+    listContainer.style.display = 'none';
+    detailContainer.style.display = '';
+    while (detailContainer.firstChild) detailContainer.removeChild(detailContainer.firstChild);
+
+    // Back button
+    var backBtn = el('button', {className: 'btn', style: 'margin-bottom:16px;font-size:12px', textContent: '← 一覧に戻る'});
+    backBtn.onclick = loadList;
+    detailContainer.appendChild(backBtn);
+
+    // Title + meta
+    var coName = artifact.companies ? artifact.companies.name : 'HD';
+    detailContainer.appendChild(el('div', {className: 'page-title', style: 'font-size:1.2rem', textContent: artifact.title}));
+    detailContainer.appendChild(el('div', {style: 'display:flex;gap:8px;align-items:center;margin-bottom:16px'}, [
+      el('span', {className: 'tag tag-normal', textContent: coName}),
+      el('span', {style: 'font-size:12px;font-family:var(--mono);color:var(--text3)', textContent: artifact.file_path}),
+      el('span', {style: 'font-size:11px;color:var(--text3)', textContent: artifact.file_type.toUpperCase()})
+    ]));
+
+    // Content
+    var contentCard = el('div', {className: 'card', style: 'margin-bottom:20px;max-height:600px;overflow:auto'});
+    if (!artifact.content) {
+      contentCard.appendChild(el('div', {className: 'empty', textContent: '未同期。次のセッション起動時に自動同期されます。'}));
+    } else if (artifact.file_type === 'html') {
+      var iframe = el('iframe', {style: 'width:100%;height:500px;border:none;background:#fff;border-radius:8px'});
+      contentCard.appendChild(iframe);
+      setTimeout(function() {
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(artifact.content);
+        iframe.contentDocument.close();
+      }, 0);
+    } else if (artifact.file_type === 'md') {
+      contentCard.appendChild(el('div', {style: 'white-space:pre-wrap;font-size:13px;line-height:1.7;font-family:var(--mono)', textContent: artifact.content}));
+    } else {
+      contentCard.appendChild(el('pre', {style: 'font-size:12px;overflow:auto;max-height:500px', textContent: artifact.content}));
+    }
+    detailContainer.appendChild(contentCard);
+
+    // Comments section
+    detailContainer.appendChild(el('div', {className: 'section-title', textContent: 'コメント'}));
+    var commentList = el('div', {});
+    detailContainer.appendChild(commentList);
+
+    // Add comment form
+    var commentInput = el('textarea', {className: 'input', placeholder: 'コメントを追加...', style: 'min-height:60px;margin-top:12px;resize:vertical'});
+    var commentBtn = el('button', {className: 'btn btn-primary', style: 'margin-top:8px', textContent: 'コメント投稿'});
+    detailContainer.appendChild(commentInput);
+    detailContainer.appendChild(commentBtn);
+
+    async function loadComments() {
+      while (commentList.firstChild) commentList.removeChild(commentList.firstChild);
+      var res = await sb.from('artifact_comments').select('*').eq('artifact_id', artifact.id).order('created_at', {ascending: true});
+      var comments = res.data || [];
+      if (comments.length === 0) {
+        commentList.appendChild(el('div', {style: 'color:var(--text3);font-size:13px;padding:8px 0', textContent: 'コメントなし'}));
+        return;
+      }
+      comments.forEach(function(c) {
+        var time = new Date(c.created_at).toLocaleString('ja-JP');
+        var statusColor = c.status === 'open' ? 'var(--orange)' : 'var(--green)';
+        var statusText = c.status === 'open' ? 'OPEN' : c.status.toUpperCase();
+        var card = el('div', {className: 'card', style: 'margin-bottom:8px;padding:12px'}, [
+          el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px'}, [
+            el('div', {style: 'display:flex;gap:8px;align-items:center'}, [
+              el('span', {style: 'font-size:10px;padding:2px 6px;border-radius:4px;background:' + statusColor + '22;color:' + statusColor + ';font-weight:600', textContent: statusText}),
+              el('span', {style: 'font-size:11px;color:var(--text3)', textContent: c.source}),
+              el('span', {style: 'font-size:11px;color:var(--text3)', textContent: time})
+            ]),
+            c.status === 'open' ? (function() {
+              var resolveBtn = el('button', {className: 'btn', style: 'font-size:11px;padding:3px 10px', textContent: '✓ 解決'});
+              resolveBtn.onclick = async function(e) {
+                e.stopPropagation();
+                await sb.from('artifact_comments').update({status: 'resolved', resolved_by: 'manual', resolved_at: new Date().toISOString()}).eq('id', c.id);
+                loadComments();
+              };
+              return resolveBtn;
+            })() : el('span')
+          ]),
+          el('div', {style: 'font-size:13px;white-space:pre-wrap', textContent: c.body})
+        ]);
+        commentList.appendChild(card);
+      });
+    }
+
+    commentBtn.onclick = async function() {
+      var body = commentInput.value.trim();
+      if (!body) return;
+      await sb.from('artifact_comments').insert({artifact_id: artifact.id, body: body, source: 'dashboard'});
+      commentInput.value = '';
+      loadComments();
+    };
+
+    loadComments();
+  }
+
+  loadList();
 }
 
 // ============================================================
