@@ -3,6 +3,8 @@
 PJ会社（プロジェクト単位の仮想組織）を一元管理する Web ダッシュボード。
 Supabase (PostgreSQL + Auth) + Vercel (静的ホスティング) で構成。
 
+**本番URL**: https://claude-dev-virid.vercel.app/
+
 ## ドキュメント
 
 | ドキュメント | 内容 |
@@ -48,6 +50,7 @@ Supabase (PostgreSQL + Auth) + Vercel (静的ホスティング) で構成。
 | Insights | 行動分析 |
 | Commands | スキル一覧（カテゴリ別） |
 | Settings | 設定・Plugins・MCP・権限・CLAUDE.md |
+| [How it Works](how-it-works) | 仮想カンパニーシステムの運営ガイド（アーキテクチャ・データ管理・改善サイクル） |
 
 ---
 
