@@ -2695,12 +2695,8 @@ async function renderDiary(root) {
   var today = new Date().toISOString().slice(0,10);
   var dateInput = el('input', {type: 'date', className: 'input', value: today, style: 'width:160px;margin-bottom:8px'});
   var bodyInput = el('textarea', {className: 'input', placeholder: '今日感じたこと、考えたこと...', style: 'min-height:120px;resize:vertical;margin-bottom:8px;font-size:14px;line-height:1.7'});
-  var typeSelect = el('select', {className: 'input', style: 'width:120px'}, [
-    el('option', {value: 'full', textContent: 'まとめ'}),
-    el('option', {value: 'fragment', textContent: '断片メモ'})
-  ]);
   var saveBtn = el('button', {className: 'btn btn-primary', textContent: '記録する'});
-  inputCard.appendChild(el('div', {style: 'display:flex;gap:8px;align-items:center;margin-bottom:8px'}, [dateInput, typeSelect]));
+  inputCard.appendChild(el('div', {style: 'display:flex;gap:8px;align-items:center;margin-bottom:8px'}, [dateInput]));
   inputCard.appendChild(bodyInput);
   inputCard.appendChild(saveBtn);
   root.appendChild(inputCard);
@@ -2728,7 +2724,7 @@ async function renderDiary(root) {
     await sb.from('diary_entries').insert({
       entry_date: dateInput.value,
       body: body,
-      entry_type: typeSelect.value
+      entry_type: 'fragment'
     });
     bodyInput.value = '';
     saveBtn.disabled = false;
