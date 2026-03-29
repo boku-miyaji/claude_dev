@@ -25,8 +25,9 @@ COMPANY_DIR="$PROJECT_DIR/.company"
 # Parse registry.md table rows (skip header rows)
 REGISTRY="$COMPANY_DIR/registry.md"
 if [ -f "$REGISTRY" ]; then
-  # Extract table rows: | id | name | description | repo | date | status |
-  grep '^\|' "$REGISTRY" | grep -v '^\| ID\|^\|--\|^\| 部署\|^\| パス' | while IFS='|' read -r _ id name desc repo created status _rest; do
+  # Extract PJ company rows: 6 data columns (id|name|desc|repo|date|status)
+  # Filter: skip headers, separators, and rows with fewer columns (department table)
+  grep '|' "$REGISTRY" | awk -F'|' 'NF >= 8 && $2 !~ /ID|--/ && $6 !~ /--/' | while IFS='|' read -r _ id name desc repo created status _rest; do
     id=$(echo "$id" | xargs)
     name=$(echo "$name" | xargs)
     desc=$(echo "$desc" | xargs)

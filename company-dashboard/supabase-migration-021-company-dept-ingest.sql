@@ -29,6 +29,16 @@ create policy "anon_update_departments_with_key"
   using (public.check_ingest_key())
   with check (public.check_ingest_key());
 
+-- === companies: SELECT with ingest key (upsert requires SELECT to check on_conflict) ===
+create policy "anon_select_companies_with_key"
+  on companies for select to anon
+  using (public.check_ingest_key());
+
+-- === departments: SELECT with ingest key ===
+create policy "anon_select_departments_with_key"
+  on departments for select to anon
+  using (public.check_ingest_key());
+
 -- ============================================================
 -- 確認用
 -- ============================================================
