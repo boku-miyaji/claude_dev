@@ -179,16 +179,36 @@ if [ -d "$SOURCE_BASE/skills" ]; then
       "$KM_FILE" > "$KM_FILE.tmp" && mv "$KM_FILE.tmp" "$KM_FILE"
   fi
 
-  # Sync root marketplace.json to marketplace directory (required for skill discovery)
-  if [ -f "$PROJECT_DIR/.claude-plugin/marketplace.json" ]; then
-    mkdir -p "$MP_LOCATION/.claude-plugin"
-    cp -f "$PROJECT_DIR/.claude-plugin/marketplace.json" "$MP_LOCATION/.claude-plugin/marketplace.json"
-  fi
-  # Sync skills to marketplace directory so Claude Code can resolve skill paths
+  # Build marketplace.json for the marketplace directory
+  # Skills at ./skills/X (matching anthropic-agent-skills pattern)
+  mkdir -p "$MP_LOCATION/.claude-plugin"
+  SKILL_PATHS="[]"
   for skill_dir in "$SOURCE_BASE"/skills/*/; do
     [ -d "$skill_dir" ] || continue
     skill_name=$(basename "$skill_dir")
-    mp_skill_dir="$MP_LOCATION/plugins/company/skills/$skill_name"
+    SKILL_PATHS=$(echo "$SKILL_PATHS" | jq --arg s "./skills/$skill_name" '. + [$s]')
+  done
+  jq -n \
+    --argjson skills "$SKILL_PATHS" \
+    '{
+      name: "ai-company",
+      owner: { name: "owner" },
+      metadata: { description: "AI開発・システム開発を中心とした仮想組織プラグイン。秘書が窓口、人事部が組織を継続最適化。" },
+      plugins: [{
+        name: "company",
+        source: "./",
+        description: "HD + PJ別会社の仮想組織管理。引数なしでHD秘書、引数ありで各PJ会社の秘書が起動する。",
+        strict: false,
+        skills: $skills
+      }]
+    }' > "$MP_LOCATION/.claude-plugin/marketplace.json"
+
+  # Sync skills to marketplace directory at root level (./skills/X pattern)
+  mkdir -p "$MP_LOCATION/skills"
+  for skill_dir in "$SOURCE_BASE"/skills/*/; do
+    [ -d "$skill_dir" ] || continue
+    skill_name=$(basename "$skill_dir")
+    mp_skill_dir="$MP_LOCATION/skills/$skill_name"
     mkdir -p "$mp_skill_dir"
     if [ -f "$skill_dir/SKILL.md" ]; then
       cp -f "$skill_dir/SKILL.md" "$mp_skill_dir/SKILL.md"
