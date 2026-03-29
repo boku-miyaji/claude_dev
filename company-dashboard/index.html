@@ -277,6 +277,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
     <button class="nav-item" data-page="intelligence"><span class="nav-icon">◎</span> Intelligence</button>
+    <button class="nav-item" data-page="diary"><span class="nav-icon">✎</span> Diary</button>
     <button class="nav-item" data-page="artifacts"><span class="nav-icon">📄</span> Artifacts</button>
     <button class="nav-item" data-page="commands"><span class="nav-icon">⌘</span> Commands</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
@@ -310,6 +311,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
       <button class="mob-nav-item" data-page="prompts" style="padding:12px 8px"><span class="mob-icon">▷</span>Prompts</button>
       <button class="mob-nav-item" data-page="insights" style="padding:12px 8px"><span class="mob-icon">◇</span>Insights</button>
       <button class="mob-nav-item" data-page="knowledge" style="padding:12px 8px"><span class="mob-icon">◈</span>Knowledge</button>
+      <button class="mob-nav-item" data-page="diary" style="padding:12px 8px"><span class="mob-icon">✎</span>Diary</button>
       <button class="mob-nav-item" data-page="artifacts" style="padding:12px 8px"><span class="mob-icon">📄</span>Artifacts</button>
       <button class="mob-nav-item" data-page="commands" style="padding:12px 8px"><span class="mob-icon">⌘</span>Commands</button>
       <button class="mob-nav-item" data-page="settings" style="padding:12px 8px"><span class="mob-icon">⚙</span>Settings</button>
@@ -530,6 +532,7 @@ function renderPage(page) {
     insights: renderInsights,
     finance: renderFinance,
     intelligence: renderIntelligence,
+    diary: renderDiary,
     artifacts: renderArtifacts,
     commands: renderSlashCommands,
     settings: renderSettings
@@ -2678,6 +2681,169 @@ async function finTax(root) {
       ]));
     });
   });
+}
+
+// ============================================================
+// Diary Page
+// ============================================================
+async function renderDiary(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Diary'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '感じたことを書く。AIが感情・ウェルビーイング・パーソナリティを分析。'}));
+
+  // --- Input Section ---
+  var inputCard = el('div', {className: 'card', style: 'margin-bottom:20px'});
+  var today = new Date().toISOString().slice(0,10);
+  var dateInput = el('input', {type: 'date', className: 'input', value: today, style: 'width:160px;margin-bottom:8px'});
+  var bodyInput = el('textarea', {className: 'input', placeholder: '今日感じたこと、考えたこと...', style: 'min-height:120px;resize:vertical;margin-bottom:8px;font-size:14px;line-height:1.7'});
+  var typeSelect = el('select', {className: 'input', style: 'width:120px'}, [
+    el('option', {value: 'full', textContent: 'まとめ'}),
+    el('option', {value: 'fragment', textContent: '断片メモ'})
+  ]);
+  var saveBtn = el('button', {className: 'btn btn-primary', textContent: '記録する'});
+  inputCard.appendChild(el('div', {style: 'display:flex;gap:8px;align-items:center;margin-bottom:8px'}, [dateInput, typeSelect]));
+  inputCard.appendChild(bodyInput);
+  inputCard.appendChild(saveBtn);
+  root.appendChild(inputCard);
+
+  // --- Stats ---
+  var statsContainer = el('div', {className: 'g3', style: 'margin-bottom:20px'});
+  root.appendChild(statsContainer);
+
+  // --- WBI Chart ---
+  var chartCard = el('div', {className: 'card', style: 'margin-bottom:20px'});
+  chartCard.appendChild(el('div', {className: 'section-title', textContent: 'ウェルビーイング推移'}));
+  var chartArea = el('div', {style: 'height:200px;display:flex;align-items:end;gap:4px;padding:8px 0'});
+  chartCard.appendChild(chartArea);
+  root.appendChild(chartCard);
+
+  // --- Entries List ---
+  var listContainer = el('div', {});
+  root.appendChild(listContainer);
+
+  saveBtn.onclick = async function() {
+    var body = bodyInput.value.trim();
+    if (!body) return;
+    saveBtn.disabled = true;
+    saveBtn.textContent = '保存中...';
+    await sb.from('diary_entries').insert({
+      entry_date: dateInput.value,
+      body: body,
+      entry_type: typeSelect.value
+    });
+    bodyInput.value = '';
+    saveBtn.disabled = false;
+    saveBtn.textContent = '記録する';
+    loadEntries();
+  };
+
+  async function loadEntries() {
+    // Stats
+    var countRes = await sb.from('diary_entries').select('id', {count: 'exact', head: true});
+    var totalCount = countRes.count || 0;
+    var analyzedRes = await sb.from('diary_entries').select('id', {count: 'exact', head: true}).not('wbi', 'is', null);
+    var analyzedCount = analyzedRes.count || 0;
+
+    // Streak calculation
+    var datesRes = await sb.from('diary_entries').select('entry_date').order('entry_date', {ascending: false}).limit(60);
+    var dates = [...new Set((datesRes.data || []).map(function(d) { return d.entry_date; }))].sort().reverse();
+    var streak = 0;
+    var checkDate = new Date(); checkDate.setHours(0,0,0,0);
+    for (var i = 0; i < dates.length; i++) {
+      var d = new Date(dates[i] + 'T00:00:00');
+      if (d.getTime() === checkDate.getTime()) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else if (i === 0 && (checkDate.getTime() - d.getTime()) <= 86400000) {
+        // Today not yet written, check yesterday
+        checkDate.setDate(checkDate.getDate() - 1);
+        if (d.getTime() === checkDate.getTime()) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else break;
+      } else break;
+    }
+
+    while (statsContainer.firstChild) statsContainer.removeChild(statsContainer.firstChild);
+    statsContainer.appendChild(el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: totalCount}),
+      el('div', {className: 'kpi-lbl', textContent: 'Total Entries'})
+    ]));
+    statsContainer.appendChild(el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: streak + '日'}),
+      el('div', {className: 'kpi-lbl', textContent: 'Streak'})
+    ]));
+    statsContainer.appendChild(el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', textContent: analyzedCount}),
+      el('div', {className: 'kpi-lbl', textContent: 'AI Analyzed'})
+    ]));
+
+    // WBI Chart (last 30 entries with WBI)
+    var wbiRes = await sb.from('diary_entries').select('entry_date,wbi').not('wbi', 'is', null).order('entry_date', {ascending: true}).limit(30);
+    while (chartArea.firstChild) chartArea.removeChild(chartArea.firstChild);
+    var wbiData = wbiRes.data || [];
+    if (wbiData.length === 0) {
+      chartArea.appendChild(el('div', {style: 'color:var(--text3);font-size:12px;width:100%;text-align:center;padding:40px 0', textContent: 'AI分析後にグラフが表示されます。/company で「日記を分析して」と言ってください。'}));
+    } else {
+      wbiData.forEach(function(w) {
+        var pct = (w.wbi / 10) * 100;
+        var color = w.wbi >= 7 ? 'var(--green)' : w.wbi >= 4 ? 'var(--blue)' : 'var(--red)';
+        var bar = el('div', {style: 'flex:1;display:flex;flex-direction:column;align-items:center;gap:2px'}, [
+          el('div', {style: 'font-size:9px;color:var(--text3)', textContent: w.wbi.toFixed(1)}),
+          el('div', {style: 'width:100%;background:' + color + '44;border-radius:4px 4px 0 0;height:' + pct + '%;min-height:4px;transition:height .3s', title: w.entry_date + ': WBI ' + w.wbi}),
+          el('div', {style: 'font-size:8px;color:var(--text3);transform:rotate(-45deg);white-space:nowrap', textContent: w.entry_date.slice(5)})
+        ]);
+        chartArea.appendChild(bar);
+      });
+    }
+
+    // Entries list (last 20)
+    while (listContainer.firstChild) listContainer.removeChild(listContainer.firstChild);
+    var res = await sb.from('diary_entries').select('*').order('entry_date', {ascending: false}).order('created_at', {ascending: false}).limit(20);
+    var entries = res.data || [];
+
+    entries.forEach(function(e) {
+      var dateStr = e.entry_date;
+      var dow = new Date(e.entry_date + 'T00:00:00').toLocaleDateString('ja-JP', {weekday: 'short'});
+      var time = new Date(e.created_at).toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'});
+
+      // Emotion badges
+      var emotionBadges = [];
+      if (e.emotions) {
+        var sorted = Object.entries(e.emotions).sort(function(a,b) { return b[1] - a[1]; }).slice(0, 3);
+        var emotionColors = {joy:'#fbbf24', trust:'#34d399', fear:'#a78bfa', surprise:'#f472b6', sadness:'#60a5fa', disgust:'#6b7280', anger:'#f87171', anticipation:'#fb923c'};
+        sorted.forEach(function(pair) {
+          if (pair[1] > 20) {
+            emotionBadges.push(el('span', {style: 'font-size:10px;padding:1px 6px;border-radius:99px;background:' + (emotionColors[pair[0]] || 'var(--text3)') + '22;color:' + (emotionColors[pair[0]] || 'var(--text3)'), textContent: pair[0] + ' ' + pair[1]}));
+          }
+        });
+      }
+
+      // WBI badge
+      var wbiBadge = e.wbi ? el('span', {style: 'font-size:10px;padding:1px 6px;border-radius:99px;background:var(--accent)22;color:var(--accent)', textContent: 'WBI ' + e.wbi}) : null;
+
+      var typeBadge = e.entry_type === 'fragment'
+        ? el('span', {style: 'font-size:10px;color:var(--text3);border:1px solid var(--border);padding:1px 6px;border-radius:99px', textContent: '断片'})
+        : null;
+
+      var header = el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap'}, [
+        el('span', {style: 'font-weight:600;font-size:13px', textContent: dateStr + ' (' + dow + ')'}),
+        el('span', {style: 'font-size:11px;color:var(--text3)', textContent: time}),
+        typeBadge, wbiBadge
+      ].concat(emotionBadges).filter(Boolean));
+
+      var card = el('div', {className: 'card', style: 'margin-bottom:10px'}, [
+        header,
+        el('div', {style: 'font-size:13px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow:hidden', textContent: e.body}),
+        e.ai_summary ? el('div', {style: 'margin-top:8px;padding:8px;background:var(--accent)08;border-radius:6px;font-size:12px;color:var(--accent2)'}, [
+          el('span', {style: 'font-weight:600', textContent: 'AI: '}),
+          el('span', {textContent: e.ai_summary})
+        ]) : null
+      ].filter(Boolean));
+      listContainer.appendChild(card);
+    });
+  }
+
+  loadEntries();
 }
 
 // ============================================================
