@@ -1434,15 +1434,44 @@ async function renderPrompts(root) {
   var filterBar = el('div', {className: 'filter-bar'}, [filterCompany]);
   root.appendChild(filterBar);
 
+  var PAGE_SIZE = 50;
+  var currentPage = 0;
+  var totalPromptCount = 0;
+
   var listContainer = el('div', {});
   root.appendChild(listContainer);
 
+  // Pagination controls
+  var pagBar = el('div', {style: 'display:flex;align-items:center;gap:12px;margin-top:16px;justify-content:center'});
+  var pagInfo = el('span', {style: 'font-size:12px;color:var(--text3)'});
+  var btnPrev = el('button', {className: 'btn', textContent: '← 前', style: 'font-size:12px;padding:6px 14px'});
+  var btnNext = el('button', {className: 'btn', textContent: '次 →', style: 'font-size:12px;padding:6px 14px'});
+  btnPrev.onclick = function() { if (currentPage > 0) { currentPage--; loadPrompts(); } };
+  btnNext.onclick = function() { currentPage++; loadPrompts(); };
+  pagBar.appendChild(btnPrev);
+  pagBar.appendChild(pagInfo);
+  pagBar.appendChild(btnNext);
+  root.appendChild(pagBar);
+
   async function loadPrompts() {
-    var query = sb.from('prompt_log').select('*,companies(name)').order('created_at', {ascending: false}).limit(100);
+    // Get total count
+    var countRes = await sb.from('prompt_log').select('id', {count: 'exact', head: true});
+    totalPromptCount = countRes.count || 0;
+
+    var offset = currentPage * PAGE_SIZE;
+    var query = sb.from('prompt_log').select('*,companies(name)').order('created_at', {ascending: false}).range(offset, offset + PAGE_SIZE - 1);
     var compVal = filterCompany.value;
     if (compVal) query = query.eq('company_id', compVal);
     var res = await query;
     var prompts = res.data || [];
+
+    // Update pagination
+    var totalPages = Math.ceil(totalPromptCount / PAGE_SIZE);
+    pagInfo.textContent = (currentPage + 1) + ' / ' + totalPages + ' (' + totalPromptCount + '件)';
+    btnPrev.disabled = currentPage <= 0;
+    btnNext.disabled = offset + PAGE_SIZE >= totalPromptCount;
+    btnPrev.style.opacity = btnPrev.disabled ? '0.3' : '1';
+    btnNext.style.opacity = btnNext.disabled ? '0.3' : '1';
 
     while (listContainer.firstChild) listContainer.removeChild(listContainer.firstChild);
 
@@ -1480,16 +1509,14 @@ async function renderPrompts(root) {
     });
 
     // Stats
-    var totalCount = prompts.length;
-    var uniqueDays = Object.keys(grouped).length;
     listContainer.insertBefore(el('div', {className: 'g3', style: 'margin-bottom:20px'}, [
       el('div', {className: 'card kpi'}, [
-        el('div', {className: 'kpi-val', textContent: totalCount}),
+        el('div', {className: 'kpi-val', textContent: totalPromptCount}),
         el('div', {className: 'kpi-lbl', textContent: 'Total Prompts'})
       ]),
       el('div', {className: 'card kpi'}, [
-        el('div', {className: 'kpi-val', textContent: uniqueDays}),
-        el('div', {className: 'kpi-lbl', textContent: 'Active Days'})
+        el('div', {className: 'kpi-val', textContent: Object.keys(grouped).length}),
+        el('div', {className: 'kpi-lbl', textContent: 'Days (this page)'})
       ]),
       el('div', {className: 'card kpi'}, [
         el('div', {className: 'kpi-val', textContent: companies.length}),
