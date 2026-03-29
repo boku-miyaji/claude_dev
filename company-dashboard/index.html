@@ -3024,11 +3024,19 @@ async function renderArtifacts(root) {
 // How it Works Page (embedded)
 // ============================================================
 async function renderHowItWorks(root) {
-  var iframe = el('iframe', {
-    src: '/how-it-works.html',
-    style: 'width:100%;height:calc(100vh - 60px);border:none;border-radius:8px'
-  });
-  root.appendChild(iframe);
+  // Use srcdoc iframe to avoid X-Frame-Options issues with same-origin fetch
+  var container = el('div', {style: 'width:100%;height:calc(100vh - 60px)'});
+  root.appendChild(container);
+  try {
+    var res = await fetch('/how-it-works.html');
+    var html = await res.text();
+    var iframe = document.createElement('iframe');
+    iframe.style.cssText = 'width:100%;height:100%;border:none;border-radius:8px';
+    iframe.srcdoc = html;
+    container.appendChild(iframe);
+  } catch(e) {
+    container.appendChild(el('div', {className: 'empty', textContent: 'ページの読み込みに失敗しました'}));
+  }
 }
 
 // ============================================================
