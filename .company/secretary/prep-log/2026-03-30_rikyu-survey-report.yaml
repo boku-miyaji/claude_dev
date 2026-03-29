@@ -1,0 +1,54 @@
+meeting:
+  date: "2026-03-30"
+  time: "10:30"
+  duration_min: 45
+  title: "アンケート集計結果・報告ストーリー相談"
+  calendar: "acesinc"
+  company_id: "rikyu"
+  recurring: false
+  recurrence_freq: "one-off"
+
+  audience:
+    primary: "client-working"
+    size: 2
+    key_stakeholders:
+      - "ryo.kodama@acesinc.co.jp"
+
+  purpose:
+    primary: "reporting"
+    secondary: "discussion"
+
+  your_role: "presenter"
+  format: "online"
+  stakes: "high"
+
+  prep_dependency:
+    depends_on: []
+    blocks: []
+
+prep:
+  planned_start: "2026-03-29T20:15"
+  actual_start: null            # 作業開始時に記録
+  actual_end: null              # 作業完了時に記録
+  actual_duration_min: null
+  lead_time_hours: 14.25
+
+  tasks:
+    - type: "data-analysis"
+      description: "アンケート集計"
+      duration_min: null        # 実績を記録
+      complexity: "medium"
+
+  interruptions: null
+  context_switches: null
+
+result:
+  prep_sufficient: null
+  quality_score: null
+  what_was_missing: null
+  what_was_unnecessary: null
+  ideal_lead_time_hours: null
+  ideal_duration_min: null
+  meeting_outcome: null
+  notes: null
+  next_action: null

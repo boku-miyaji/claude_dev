@@ -7,6 +7,7 @@
 | foundry | Foundry移行会社 | SOMPOケア Foundry移行PJT支援 | project-scotch-care/ | 2026-03-20 | active |
 | rikyu | りきゅう | りそな向け営業支援DX | project-rikyu-sales-proposals-poc/ | 2026-03-20 | active |
 | circuit | 回路設計支援システム会社 | 電子回路設計DX | circuit_diagram/ | 2026-03-21 | active |
+| polaris | Polaris AI | 図面暗黙知抽出（Polaris AI社協業） | なし | 2026-03-29 | active |
 
 ## HD共通部署一覧
 
