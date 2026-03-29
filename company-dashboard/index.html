@@ -2685,22 +2685,16 @@ async function finTax(root) {
 // ============================================================
 async function renderArtifacts(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'Artifacts'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: '成果物の確認・コメント。ファイルパスを登録すると自動同期されます。'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '成果物の確認・コメント。Claude Code で /register path/to/file.md で登録。'}));
 
-  // Register form
-  var regCard = el('div', {className: 'card', style: 'margin-bottom:20px'});
-  var regTitle = el('input', {className: 'input', placeholder: 'タイトル（例: 技術スタック方針）', style: 'margin-bottom:8px'});
-  var regPath = el('input', {className: 'input', placeholder: 'ファイルパス（例: project-scotch-care/docs/final_output/02_tech_stack.md）', style: 'margin-bottom:8px'});
   var companies = (await sb.from('companies').select('id,name').eq('status','active')).data || [];
-  var regCompany = el('select', {className: 'input', style: 'margin-bottom:8px'}, [
-    el('option', {value: '', textContent: '-- PJ会社 --'})
+
+  // Filter bar
+  var filterCompany = el('select', {className: 'input'}, [
+    el('option', {value: '', textContent: 'All'})
   ].concat(companies.map(function(c) { return el('option', {value: c.id, textContent: c.name}); })));
-  var regBtn = el('button', {className: 'btn btn-primary', textContent: '+ 登録'});
-  regCard.appendChild(el('div', {className: 'section-title', textContent: 'ファイル登録'}));
-  regCard.appendChild(regTitle);
-  regCard.appendChild(regPath);
-  regCard.appendChild(el('div', {style: 'display:flex;gap:8px'}, [regCompany, regBtn]));
-  root.appendChild(regCard);
+  filterCompany.onchange = function() { loadList(); };
+  root.appendChild(el('div', {className: 'filter-bar'}, [filterCompany]));
 
   var listContainer = el('div', {});
   root.appendChild(listContainer);
@@ -2709,25 +2703,14 @@ async function renderArtifacts(root) {
   var detailContainer = el('div', {style: 'display:none'});
   root.appendChild(detailContainer);
 
-  regBtn.onclick = async function() {
-    var title = regTitle.value.trim();
-    var fpath = regPath.value.trim();
-    if (!title || !fpath) return;
-    var ext = fpath.split('.').pop().toLowerCase();
-    var ftype = ['md','html','yaml','json','txt'].includes(ext) ? ext : 'txt';
-    var payload = {title: title, file_path: fpath, file_type: ftype, status: 'active', tags: []};
-    if (regCompany.value) payload.company_id = regCompany.value;
-    await sb.from('artifacts').insert(payload);
-    regTitle.value = ''; regPath.value = '';
-    loadList();
-  };
-
   async function loadList() {
     listContainer.style.display = '';
     detailContainer.style.display = 'none';
     while (listContainer.firstChild) listContainer.removeChild(listContainer.firstChild);
 
-    var res = await sb.from('artifacts').select('*,companies(name)').eq('status','active').order('updated_at',{ascending:false});
+    var query = sb.from('artifacts').select('*,companies(name)').eq('status','active').order('updated_at',{ascending:false});
+    if (filterCompany.value) query = query.eq('company_id', filterCompany.value);
+    var res = await query;
     var arts = res.data || [];
 
     // Count open comments per artifact
@@ -2774,10 +2757,16 @@ async function renderArtifacts(root) {
     detailContainer.style.display = '';
     while (detailContainer.firstChild) detailContainer.removeChild(detailContainer.firstChild);
 
-    // Back button
-    var backBtn = el('button', {className: 'btn', style: 'margin-bottom:16px;font-size:12px', textContent: '← 一覧に戻る'});
+    // Top bar: back + archive
+    var backBtn = el('button', {className: 'btn', style: 'font-size:12px', textContent: '← 一覧に戻る'});
     backBtn.onclick = loadList;
-    detailContainer.appendChild(backBtn);
+    var archiveBtn = el('button', {className: 'btn', style: 'font-size:12px;color:var(--red)', textContent: 'アーカイブ（追跡停止）'});
+    archiveBtn.onclick = async function() {
+      if (!confirm('この成果物の追跡を停止しますか？')) return;
+      await sb.from('artifacts').update({status: 'archived'}).eq('id', artifact.id);
+      loadList();
+    };
+    detailContainer.appendChild(el('div', {style: 'display:flex;justify-content:space-between;margin-bottom:16px'}, [backBtn, archiveBtn]));
 
     // Title + meta
     var coName = artifact.companies ? artifact.companies.name : 'HD';
