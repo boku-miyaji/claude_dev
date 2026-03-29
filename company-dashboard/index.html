@@ -3021,22 +3021,151 @@ async function renderArtifacts(root) {
 }
 
 // ============================================================
-// How it Works Page (embedded)
+// How it Works Page (native)
 // ============================================================
 async function renderHowItWorks(root) {
-  // Use srcdoc iframe to avoid X-Frame-Options issues with same-origin fetch
-  var container = el('div', {style: 'width:100%;height:calc(100vh - 60px)'});
-  root.appendChild(container);
-  try {
-    var res = await fetch('/how-it-works.html');
-    var html = await res.text();
-    var iframe = document.createElement('iframe');
-    iframe.style.cssText = 'width:100%;height:100%;border:none;border-radius:8px';
-    iframe.srcdoc = html;
-    container.appendChild(iframe);
-  } catch(e) {
-    container.appendChild(el('div', {className: 'empty', textContent: 'ページの読み込みに失敗しました'}));
+  root.appendChild(el('div', {className: 'page-title', textContent: 'How it Works'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '宮路HDの仮想カンパニーシステムがどう動いているか'}));
+
+  function section(title, children) {
+    var s = el('div', {style: 'margin-bottom:32px'});
+    s.appendChild(el('div', {className: 'section-title', style: 'font-size:15px;margin-bottom:12px', textContent: title}));
+    children.forEach(function(c) { s.appendChild(c); });
+    return s;
   }
+  function p(text) { return el('div', {style: 'font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:8px', textContent: text}); }
+  function row(items) { return el('div', {className: 'g' + items.length, style: 'margin-bottom:12px'}, items); }
+  function miniCard(title, body) {
+    return el('div', {className: 'card', style: 'padding:14px'}, [
+      el('div', {style: 'font-weight:600;font-size:13px;margin-bottom:4px', textContent: title}),
+      el('div', {style: 'font-size:12px;color:var(--text3);line-height:1.6', textContent: body})
+    ]);
+  }
+  function tbl(headers, rows) {
+    var t = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px'});
+    var thead = el('tr', {});
+    headers.forEach(function(h) { thead.appendChild(el('th', {style: 'text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--accent);font-weight:600', textContent: h})); });
+    t.appendChild(thead);
+    rows.forEach(function(r) {
+      var tr = el('tr', {});
+      r.forEach(function(c) { tr.appendChild(el('td', {style: 'padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text2)', textContent: c})); });
+      t.appendChild(tr);
+    });
+    return t;
+  }
+  function flow(steps) {
+    return el('div', {style: 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0'}, steps.map(function(s, i) {
+      var items = [el('span', {style: 'background:var(--accent);color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600', textContent: s})];
+      if (i < steps.length - 1) items.push(el('span', {style: 'color:var(--text3)', textContent: '→'}));
+      return el('span', {style: 'display:flex;align-items:center;gap:8px'}, items);
+    }));
+  }
+
+  // --- 1. Architecture ---
+  root.appendChild(section('全体アーキテクチャ', [
+    p('1人の社長が複数PJを横断管理する仮想持株会社構造。AIエージェント（Claude）が秘書として各社を運営。'),
+    flow(['/company', 'HD秘書がPJ判断', 'PJ会社のCLAUDE.md読込', 'HD共通部署で作業', '成果物をPJリポジトリに']),
+    row([
+      miniCard('HD（.company/）', '秘書室 / 人事部 / 共通6部署（AI開発・システム開発・PM・資料制作・リサーチ・情報収集）'),
+      miniCard('PJ会社（.company-*/）', 'PJ固有コンテキスト（クライアント情報・ドメイン知識）+ 秘書のみ。部署はHD共通を利用')
+    ]),
+    tbl(['PJ会社', '説明', 'ステータス'], [
+      ['foundry', 'SOMPOケア Foundry移行PJT支援', 'active'],
+      ['rikyu', 'りそな向け営業支援DX', 'active'],
+      ['circuit', '電子回路設計DX', 'active'],
+      ['polaris', '図面暗黙知抽出（Polaris AI社協業）', 'active']
+    ])
+  ]));
+
+  // --- 2. Data Layers ---
+  root.appendChild(section('3層データ管理', [
+    p('データはファイル（速度）× Git（履歴）× Supabase（分析・同期）の3層で管理。'),
+    row([
+      miniCard('Layer 1: ファイル', 'CLAUDE.md / メモ / TODO / prep-log。エージェントが即座に読み書き'),
+      miniCard('Layer 2: Git', 'マルチリポジトリ。claude_dev(HD) + 各PJリポジトリ。バージョン管理・履歴保持'),
+      miniCard('Layer 3: Supabase', 'プロンプト履歴 / ナレッジ / タスク / 日記 / CEO分析。クラウド永続・モバイルアクセス')
+    ]),
+    p('ローカルファイルが常にマスター。Supabaseは分析・同期・モバイルアクセス用。落ちても作業は止まらない。')
+  ]));
+
+  // --- 3. Memory Flow ---
+  root.appendChild(section('記憶の流れ — 昇格パス', [
+    p('一時的なメモ → 繰り返し出現 → ナレッジ化 → CLAUDE.mdルール化。同じ指示を2回する必要がなくなる。'),
+    tbl(['記憶タイプ', '保存先', '昇格条件'], [
+      ['プロンプト履歴', 'prompt_log (Supabase)', '10件超 → CEO分析トリガー'],
+      ['ナレッジ', 'knowledge_base (Supabase)', 'confidence ≥ 3 → CLAUDE.md 昇格提案'],
+      ['意思決定ログ', 'secretary/notes/ (ファイル)', 'パターン検出 → ルール化提案'],
+      ['CLAUDE.md', '.company*/CLAUDE.md', '最も永続的。エージェントの恒久的行動指針']
+    ])
+  ]));
+
+  // --- 4. Hooks ---
+  root.appendChild(section('自動化 — Hook', [
+    p('社長が何もしなくてもバックグラウンドで同期・記録が行われる。'),
+    tbl(['Hook', 'トリガー', '処理'], [
+      ['supabase-status.sh', 'SessionStart', 'Supabase接続確認'],
+      ['config-sync.sh', 'SessionStart', '設定・MCP・プラグイン・CLAUDE.md → Supabase同期'],
+      ['company-sync.sh', 'SessionStart', '.company/ の会社・部署 → Supabase同期'],
+      ['artifact-sync.sh', 'SessionStart', '登録済みファイルの変更検知 → 内容を同期'],
+      ['prompt-log.sh', '毎回の入力', 'プロンプト記録 + PJ自動タグ付け（非同期）'],
+      ['company-pull.sh', '/company 実行時', 'git pull で最新の組織データ取得'],
+      ['permission-guard.sh', '権限リクエスト時', 'full/safe/strict に基づく自動判定']
+    ])
+  ]));
+
+  // --- 5. Intelligence → Research ---
+  root.appendChild(section('情報収集 → リサーチ', [
+    p('intelligence部署が自動でデータを集め、research部署が分析・構造化する。'),
+    flow(['sources.yaml', 'collect.py (09:00/21:00)', 'reports/', 'スコアリング', 'リサーチが3段構成で分析']),
+    row([
+      miniCard('収集', 'キーワード検索 (DuckDuckGo) / X アカウント監視 / Webサイト監視'),
+      miniCard('スコアリング', '有用 +0.2 / ノイズ -0.2 / 探索枠20% / 30日減衰'),
+      miniCard('3段構成出力', '① 公知情報+URL → ② 限界の明示 → ③ 壁打ちモード')
+    ])
+  ]));
+
+  // --- 6. Insurance ---
+  root.appendChild(section('保険 — フォールバック', [
+    tbl(['障害', 'フォールバック'], [
+      ['Supabase障害', 'ローカルファイルで代替。Supabaseはミラー、マスターは常にファイル'],
+      ['Git push不可', 'ローカルにコミットは残る。次回pullでconflict検出→秘書が報告'],
+      ['エージェント誤判断', 'permission-guard.shが破壊的操作をブロック + チェックポイント制 + git revert可能']
+    ]),
+    p('PJリポジトリは完全独立。あるPJでミスをしても他PJや組織設定には影響しない。')
+  ]));
+
+  // --- 7. Improvement ---
+  root.appendChild(section('改善サイクル — 3つのループ', [
+    row([
+      miniCard('Loop 1: ナレッジ蓄積（即時）', '修正指示を検出 → knowledge_base記録 → 次回から暗黙適用 → confidence上昇 → CLAUDE.md昇格'),
+      miniCard('Loop 2: 組織最適化（定期）', '5軸評価（自律完遂率/一発OK率/連携効率/目標寄与/稼働率）→ 低スコアでルール改善提案'),
+      miniCard('Loop 3: CEO分析（蓄積）', 'prompt_log蓄積 → 行動パターン/時間帯/好み/傾向分析 → 秘書の先回り提案')
+    ])
+  ]));
+
+  // --- 8. Prep Intelligence ---
+  root.appendChild(section('準備タイミングインテリジェンス', [
+    p('ミーティングごとに「いつ準備を始めるべきか」を実績データから予測。'),
+    tbl(['分類軸', '値'], [
+      ['audience', 'client-exec / client-working / internal-team / external-partner / personal'],
+      ['purpose', 'reporting / status-update / brainstorming / decision / demo / review / knowledge-sharing'],
+      ['your_role', 'presenter / co-presenter / facilitator / participant / observer'],
+      ['stakes', 'critical / high / medium / low']
+    ]),
+    flow(['Phase 1: 経験則 (0-4件)', 'Phase 2: 統計 (5-9件)', 'Phase 3: 個別最適 (10-19件)', 'Phase 4: 予測 (20件〜)'])
+  ]));
+
+  // --- 9. Philosophy ---
+  root.appendChild(section('設計思想 — エンハンス、代替ではない', [
+    el('div', {className: 'card', style: 'border-left:3px solid var(--accent);margin-bottom:12px'}, [
+      el('div', {style: 'font-weight:600;font-size:14px;margin-bottom:4px', textContent: 'このシステムは人の仕事を完全代替するのではなく、エンハンスするもの'}),
+      p('AI出力をそのまま商談に持ち込むのは難しい。自分で説明できない内容は使えない。')
+    ]),
+    row([
+      miniCard('正しい使い方', 'AI出力を壁打ちの素材として使う → 腹落ちするまで対話 → 自分の言葉で説明できる状態にする'),
+      miniCard('避けるべき使い方', 'AI出力をそのままコピペ → 内容を理解せず提出 → 思考プロセスをスキップ')
+    ])
+  ]));
 }
 
 // ============================================================
