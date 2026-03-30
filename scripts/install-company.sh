@@ -66,7 +66,7 @@ info "リポジトリを取得しました"
 echo ""
 echo "📦 プラグインをインストール中..."
 
-SKILLS_SRC="$TMP_DIR/skills"
+SKILLS_SRC="$TMP_DIR/plugins/company/skills"
 
 if [ -d "$MARKETPLACE_DIR/skills" ] && [ "$FORCE" = false ]; then
   warn "marketplace スキルは既に存在します"
@@ -134,7 +134,7 @@ echo "📚 参照ファイルをコピー中..."
 for skill_dir in "$MARKETPLACE_DIR/skills/"*/; do
   [ -d "$skill_dir" ] || continue
   skill_name=$(basename "$skill_dir")
-  ref_src="$TMP_DIR/skills/$skill_name/references"
+  ref_src="$TMP_DIR/plugins/company/skills/$skill_name/references"
   ref_dst="$skill_dir/references"
   if [ -d "$ref_src" ] && [ ! -d "$ref_dst" ]; then
     cp -r "$ref_src" "$ref_dst"
