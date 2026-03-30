@@ -234,7 +234,7 @@
 <div class="hero">
   <h1>仮想カンパニーシステム</h1>
   <p>HD + PJ会社の組織構造でAIエージェントが自律的に動く仕組み</p>
-  <p class="dim" style="margin-top: 8px; font-size: 0.85rem;">Last updated: 2026-03-29</p>
+  <p class="dim" style="margin-top: 8px; font-size: 0.85rem;">Last updated: 2026-03-30</p>
 </div>
 
 <div class="container">
@@ -246,6 +246,7 @@
     <li><a href="#architecture">全体アーキテクチャ</a></li>
     <li><a href="#data-layers">3層データ管理 — ファイル × Git × Supabase</a></li>
     <li><a href="#memory-flow">記憶の流れ — どこに何が記録されるか</a></li>
+    <li><a href="#data-freshness">データ鮮度マップ — 何がいつ更新されるか</a></li>
     <li><a href="#hooks">自動化 — Hook による無意識の同期</a></li>
     <li><a href="#intelligence">情報収集 → リサーチ — 知の循環</a></li>
     <li><a href="#insurance">保険 — うまくいかないときの備え</a></li>
@@ -283,8 +284,7 @@ graph TB
     subgraph PJ["PJ会社群"]
         R[".company-rikyu/<br/>りそな営業支援DX"]
         F[".company-foundry/<br/>SOMPOケアFoundry"]
-        C[".company-circuit/<br/>回路設計支援"]
-        P[".company-polaris/<br/>図面暗黙知抽出"]
+        C[".company-circuit/<br/>回路設計支援 + Polaris AI"]
     end
 
     subgraph INFRA["インフラ"]
@@ -298,7 +298,7 @@ graph TB
     SEC --> DEPT
     SEC --> HR
     DEPT --> PJ
-    R & F & C & P --> GIT
+    R & F & C --> GIT
     SEC --> SB
     SEC --> GCal
 
@@ -487,6 +487,221 @@ flowchart TB
   </div>
 </section>
 
+<!-- 3.5 Data Freshness -->
+<section id="data-freshness">
+  <h2>3.5 データ鮮度マップ — 何がいつ更新されるか</h2>
+  <p>システムが管理するデータは、更新トリガーによって鮮度が大きく異なります。<strong>特に分析系データは能動的にトリガーしないと古くなります。</strong></p>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+flowchart TB
+    subgraph RT["リアルタイム自動（常に最新）"]
+        direction LR
+        PL["prompt_log<br/>毎プロンプト"]
+        AL["activity_log<br/>Session開始/終了"]
+    end
+
+    subgraph SCHED["定期自動（スケジュール）"]
+        direction LR
+        IR["intelligence reports<br/>09:00 / 21:00 JST"]
+        CS["claude_settings<br/>SessionStart毎"]
+        AR["artifacts hash<br/>SessionStart毎"]
+        SC["slash_commands<br/>SessionStart毎"]
+        CO["companies/depts<br/>SessionStart毎"]
+    end
+
+    subgraph DEMAND["/company 起動時のみ"]
+        direction LR
+        CI["ceo_insights<br/>prompt 10件超で初回"]
+        KB["knowledge_base<br/>修正指示を検出時"]
+        CM["comments<br/>モバイル入力の取り込み"]
+    end
+
+    subgraph MANUAL["手動トリガー（最も古くなりやすい）"]
+        direction LR
+        EV["hr/evaluations<br/>「評価して」で実行"]
+        DA["diary_analysis<br/>日記分析実行時"]
+        PF["preferences.yaml<br/>フィードバック入力時"]
+        PL2["prep-log<br/>MTG後のFB入力時"]
+    end
+
+    RT ~~~ SCHED ~~~ DEMAND ~~~ MANUAL
+
+    style RT fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style SCHED fill:#1a2e2e,stroke:#60a5fa,color:#e0e0e8
+    style DEMAND fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    style MANUAL fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    </pre>
+  </div>
+
+  <h3>分析系データの更新トリガー詳細</h3>
+  <p>分析系は最も「古くなりやすい」カテゴリです。以下が各データの更新条件と陳腐化リスクです。</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>データ</th>
+        <th>保存先</th>
+        <th>何がトリガーか</th>
+        <th>更新頻度の実態</th>
+        <th>陳腐化リスク</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>CEO行動分析</strong><br/><code>ceo_insights</code></td>
+        <td><span class="badge badge-supabase">Supabase</span></td>
+        <td><code>/company</code> 内で <code>prompt_log</code> が10件超 → 初回分析、以降20件ごと、または「分析して」で即時</td>
+        <td><span style="color: var(--yellow);">低頻度</span> — /company を使わないセッションでは更新されない</td>
+        <td><strong style="color: var(--red);">高</strong> — 直接コーディングが続くと prompt_log だけ溜まり分析が追いつかない</td>
+      </tr>
+      <tr>
+        <td><strong>ナレッジベース</strong><br/><code>knowledge_base</code></td>
+        <td><span class="badge badge-supabase">Supabase</span></td>
+        <td><code>/company</code> 内で修正指示（「〜しないで」「〜じゃなくて」）を検出した時</td>
+        <td><span style="color: var(--yellow);">低頻度</span> — /company 外の修正指示はキャプチャされない</td>
+        <td><strong style="color: var(--red);">高</strong> — Claude Memory には記録されるが、Supabase側は /company 経由のみ</td>
+      </tr>
+      <tr>
+        <td><strong>日記分析</strong><br/><code>diary_analysis</code></td>
+        <td><span class="badge badge-supabase">Supabase</span></td>
+        <td><code>/company diary</code> で日記を書き、分析を要求した時</td>
+        <td><span style="color: var(--red);">手動のみ</span> — 社長が能動的に日記を書かない限り更新されない</td>
+        <td><strong style="color: var(--red);">高</strong> — 完全に社長の習慣に依存</td>
+      </tr>
+      <tr>
+        <td><strong>組織評価</strong><br/><code>hr/evaluations/</code></td>
+        <td><span class="badge badge-file">ファイル</span></td>
+        <td>「評価して」「レトロ」で人事部が実行。または自動トリガー（修正2回/稼働なし3回）</td>
+        <td><span style="color: var(--yellow);">低頻度</span> — 自動トリガーは /company 内でのみ動作</td>
+        <td><strong style="color: var(--yellow);">中</strong> — 初期評価(3/21)以降、更新されていない可能性</td>
+      </tr>
+      <tr>
+        <td><strong>情報収集スコア</strong><br/><code>preferences.yaml</code></td>
+        <td><span class="badge badge-file">ファイル</span></td>
+        <td>社長が <code>[id] 有用</code> / <code>[id] ノイズ</code> とフィードバックした時</td>
+        <td><span style="color: var(--yellow);">低頻度</span> — FBなし30日で自動減衰するため放置してもデフォルトに回帰</td>
+        <td><strong style="color: var(--green);">低</strong> — 30日減衰メカニズムが陳腐化を自動緩和</td>
+      </tr>
+      <tr>
+        <td><strong>準備実績</strong><br/><code>prep-log/</code></td>
+        <td><span class="badge badge-file">ファイル</span></td>
+        <td>MTG準備 → 実施 → 事後フィードバック（quality 1-5）の入力時</td>
+        <td><span style="color: var(--yellow);">低頻度</span> — MTG後のFB入力が抜けると精度向上が止まる</td>
+        <td><strong style="color: var(--yellow);">中</strong> — データ不足のままPhase 1（経験則）に留まる</td>
+      </tr>
+      <tr>
+        <td><strong>情報収集レポート</strong><br/><code>intelligence/reports/</code></td>
+        <td><span class="badge badge-file">ファイル</span> + <span class="badge badge-supabase">Supabase</span></td>
+        <td>GitHub Actions (09:00/21:00 JST) + <code>collect.py</code> 手動実行</td>
+        <td><span style="color: var(--green);">高頻度</span> — 1日2回の自動実行</td>
+        <td><strong style="color: var(--green);">低</strong> — 完全自動化済み</td>
+      </tr>
+      <tr>
+        <td><strong>プロンプト履歴</strong><br/><code>prompt_log</code></td>
+        <td><span class="badge badge-supabase">Supabase</span></td>
+        <td>UserPromptSubmit Hook（毎回のプロンプト入力）</td>
+        <td><span style="color: var(--green);">リアルタイム</span></td>
+        <td><strong style="color: var(--green);">なし</strong> — 完全自動</td>
+      </tr>
+      <tr>
+        <td><strong>設定・プラグイン</strong><br/><code>claude_settings</code></td>
+        <td><span class="badge badge-supabase">Supabase</span></td>
+        <td>SessionStart Hook（セッション開始のたび）</td>
+        <td><span style="color: var(--green);">高頻度</span></td>
+        <td><strong style="color: var(--green);">なし</strong> — セッション開始で自動同期</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>分析データの依存関係</h3>
+  <p>分析系データは<strong>上流データの鮮度に依存</strong>します。上流が更新されないと、下流の分析も古いままです。</p>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+flowchart LR
+    subgraph UP["上流：自動収集（常に新しい）"]
+        PL["prompt_log<br/>毎プロンプト自動"]
+        IR["intelligence<br/>reports<br/>1日2回自動"]
+    end
+
+    subgraph MID["中流：/company トリガー"]
+        KB["knowledge_base<br/>修正指示検出時"]
+        CI["ceo_insights<br/>10件超で分析"]
+    end
+
+    subgraph DOWN["下流：手動トリガー"]
+        EV["evaluations<br/>「評価して」"]
+        DA["diary_analysis<br/>日記分析実行"]
+        PL2["prep-log FB<br/>MTG後入力"]
+    end
+
+    PL --> |"蓄積 → 分析"| CI
+    PL --> |"修正パターン検出"| KB
+    KB --> |"confidence ≥ 3"| CMD["CLAUDE.md 昇格"]
+    CI --> |"行動パターン"| EV
+
+    IR --> |"素材として"| RES["research<br/>リサーチ"]
+    PL2 --> |"実績蓄積"| PRED["準備時間予測<br/>精度向上"]
+
+    style UP fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style MID fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    style DOWN fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    </pre>
+  </div>
+
+  <h3>陳腐化しやすいデータへの対策</h3>
+
+  <div class="grid-2">
+    <div class="card" style="border-left: 3px solid var(--red);">
+      <div class="card-title" style="color: var(--red);">問題: /company を経由しないと分析が更新されない</div>
+      <p><code>ceo_insights</code> と <code>knowledge_base</code> は <code>/company</code> スキル内でのみ検出・更新される。日常のコーディング作業では <code>prompt_log</code> だけが溜まり、分析は古いまま。</p>
+      <p><strong>対策:</strong></p>
+      <ul>
+        <li><code>/company</code> 起動時に「前回分析からの未分析プロンプト数」を表示し、分析を促す</li>
+        <li>Claude Memory（<code>~/.claude/memory/</code>）はセッション横断で修正指示を記録するため、<code>knowledge_base</code> の補完として機能する</li>
+        <li>定期的に <code>/company</code> → 「分析して」を実行する運用を推奨</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left: 3px solid var(--yellow);">
+      <div class="card-title" style="color: var(--yellow);">問題: 手動フィードバックが入らないと精度が上がらない</div>
+      <p><code>prep-log</code> の事後FB、<code>preferences.yaml</code> のスコア調整、<code>diary_analysis</code> は社長の入力に完全依存。</p>
+      <p><strong>対策:</strong></p>
+      <ul>
+        <li><code>/company</code> 起動時に「FB未入力のMTG」「未レビューのintelligenceレポート」を検出し、リマインドする</li>
+        <li><code>preferences.yaml</code> は30日減衰メカニズムで自動緩和されるため、放置しても大きな問題にはならない</li>
+        <li><code>evaluations</code> は四半期ごとの定期実行を推奨</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>データ鮮度サマリ</h3>
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+quadrantChart
+    title データ鮮度 × 重要度マトリクス
+    x-axis 更新頻度 低 --> 高
+    y-axis 意思決定への影響 低 --> 高
+    quadrant-1 常に最新で重要（理想）
+    quadrant-2 重要だが古くなりやすい（要注意）
+    quadrant-3 影響小さく更新も少ない（許容）
+    quadrant-4 自動更新で影響小（放置可）
+    prompt_log: [0.95, 0.6]
+    claude_settings: [0.85, 0.3]
+    intelligence_reports: [0.75, 0.5]
+    ceo_insights: [0.2, 0.8]
+    knowledge_base: [0.25, 0.85]
+    evaluations: [0.1, 0.7]
+    diary_analysis: [0.1, 0.4]
+    prep-log: [0.3, 0.6]
+    preferences.yaml: [0.35, 0.3]
+    activity_log: [0.9, 0.2]
+    </pre>
+  </div>
+  <p class="dim">左上（第2象限）のデータが最も注意が必要。<code>knowledge_base</code>・<code>ceo_insights</code>・<code>evaluations</code> は重要度が高いのに更新頻度が低い。</p>
+
+</section>
+
 <!-- 4. Hooks -->
 <section id="hooks">
   <h2>4. 自動化 — Hook による無意識の同期</h2>
@@ -518,6 +733,16 @@ sequenceDiagram
     CC->>Git: 最新の組織データ取得
     CC->>SB: knowledge_base 読込み
     CC->>SB: comments 確認
+
+    Note over CEO,Git: ツール実行時
+    CC->>Hook: PreToolUse (Bash)
+    Hook-->>CC: bash-guard.sh (危険コマンドブロック)
+    CC->>Hook: PostToolUse (Edit/Write)
+    Hook->>Hook: post-edit-check.sh (lint/型チェック)
+
+    Note over CEO,Git: セッション終了時
+    CC->>Hook: Stop
+    Hook->>SB: session-summary.sh (変更ファイル記録)
 
     Note over CEO,Git: 作業完了時
     CC->>Git: git commit & push
@@ -560,6 +785,30 @@ sequenceDiagram
         <td><span class="badge badge-hook">PermissionRequest</span></td>
         <td>権限レベル(full/safe/strict)に基づく自動判定</td>
         <td>No</td>
+      </tr>
+      <tr>
+        <td><code>session-start-marker.sh</code></td>
+        <td><span class="badge badge-auto">SessionStart</span></td>
+        <td>セッション開始タイムスタンプを記録（session-summary.sh の基準点）</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td><code>session-summary.sh</code></td>
+        <td><span class="badge badge-auto">Stop</span></td>
+        <td>セッション中に変更された.company/ファイルを自動記録</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><code>bash-guard.sh</code></td>
+        <td><span class="badge badge-hook">PreToolUse</span> <code>Bash</code></td>
+        <td><code>rm -rf /</code>, <code>git push --force main</code>, <code>DROP TABLE</code> をブロック</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td><code>post-edit-check.sh</code></td>
+        <td><span class="badge badge-hook">PostToolUse</span> <code>Edit|Write</code></td>
+        <td>編集後にlint/型チェック自動実行（.ts→tsc, .py→ruff）</td>
+        <td>Yes</td>
       </tr>
     </tbody>
   </table>
