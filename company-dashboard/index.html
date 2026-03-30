@@ -240,6 +240,33 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .tree-children>*:only-child::after{display:none}
 .tree-branch{display:flex;flex-direction:column;align-items:center}
 @media(max-width:768px){.tree{padding:16px 8px}.tree-children{flex-direction:column;align-items:center;gap:8px;padding-top:16px}.tree-children::before{height:16px}.tree-children>*::before{height:16px;top:-16px}.tree-children>*{padding:0}.tree-children>*::after{display:none}}
+
+/* Fullscreen Artifact Viewer */
+.fs-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .2s}
+.fs-overlay.active{opacity:1;pointer-events:all}
+.fs-topbar{display:flex;align-items:center;gap:12px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;min-height:48px}
+.fs-topbar .fs-title{font-size:13px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fs-topbar .fs-meta{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.fs-body{flex:1;display:flex;overflow:hidden}
+.fs-content{flex:1;overflow:hidden;position:relative}
+.fs-content iframe{width:100%;height:100%;border:none;background:#fff}
+.fs-content pre{margin:0;padding:24px;font-size:13px;overflow:auto;height:100%}
+.fs-comment-panel{width:0;overflow:hidden;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width .25s ease}
+.fs-comment-panel.open{width:360px}
+.fs-comment-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.fs-comment-header span{font-size:13px;font-weight:600}
+.fs-comment-list{flex:1;overflow-y:auto;padding:12px 16px}
+.fs-comment-form{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0}
+.fs-comment-form textarea{width:100%;min-height:60px;resize:vertical;font-size:13px;border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;font-family:var(--font);background:var(--surface2);outline:none;transition:border-color .15s}
+.fs-comment-form textarea:focus{border-color:var(--accent)}
+.fs-comment-form button{margin-top:8px;width:100%}
+.fs-comment-item{padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;background:var(--surface2)}
+.fs-comment-item .fc-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.fs-comment-item .fc-body{font-size:13px;white-space:pre-wrap;line-height:1.6}
+.fs-fab{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(80,70,229,.4);z-index:1001;display:none;align-items:center;justify-content:center;transition:transform .15s}
+.fs-fab:hover{transform:scale(1.08)}
+.fs-overlay.active~.fs-fab{display:flex}
+@media(max-width:600px){.fs-comment-panel.open{width:100%;position:absolute;top:48px;bottom:0;right:0;z-index:2}}
 </style>
 </head>
 <body>
@@ -2899,15 +2926,18 @@ async function renderArtifacts(root) {
         ? el('span', {style: 'background:var(--orange);color:#000;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600', textContent: openComments + ' コメント'})
         : el('span', {style: 'color:var(--text3);font-size:11px', textContent: 'コメントなし'});
 
+      var fsBtn = el('button', {className: 'btn', style: 'font-size:11px;padding:3px 10px;flex-shrink:0', textContent: '\u26F6 全画面'});
+      (function(art) { fsBtn.onclick = function(e) { e.stopPropagation(); openFullscreen(art); }; })(a);
+
       var card = el('div', {className: 'card', style: 'cursor:pointer;margin-bottom:12px'}, [
-        el('div', {style: 'display:flex;justify-content:space-between;align-items:center'}, [
-          el('div', {}, [
+        el('div', {style: 'display:flex;justify-content:space-between;align-items:center;gap:12px'}, [
+          el('div', {style: 'flex:1;min-width:0'}, [
             el('div', {style: 'font-weight:600;margin-bottom:4px', textContent: a.title}),
-            el('div', {style: 'font-size:12px;color:var(--text3);font-family:var(--mono)', textContent: a.file_path})
+            el('div', {style: 'font-size:12px;color:var(--text3);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis', textContent: a.file_path})
           ]),
-          el('div', {style: 'text-align:right'}, [
-            el('div', {}, [el('span', {className: 'tag tag-normal', textContent: coName}), commentBadge]),
-            el('div', {style: 'font-size:11px;color:var(--text3);margin-top:4px', textContent: '同期: ' + synced})
+          el('div', {style: 'text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px'}, [
+            el('div', {style: 'display:flex;gap:6px;align-items:center'}, [el('span', {className: 'tag tag-normal', textContent: coName}), commentBadge, fsBtn]),
+            el('div', {style: 'font-size:11px;color:var(--text3)', textContent: '同期: ' + synced})
           ])
         ])
       ]);
@@ -2924,13 +2954,15 @@ async function renderArtifacts(root) {
     // Top bar: back + archive
     var backBtn = el('button', {className: 'btn', style: 'font-size:12px', textContent: '← 一覧に戻る'});
     backBtn.onclick = loadList;
+    var fullscreenBtn = el('button', {className: 'btn btn-primary', style: 'font-size:12px', textContent: '\u26F6 全画面で見る'});
+    fullscreenBtn.onclick = function() { openFullscreen(artifact); };
     var archiveBtn = el('button', {className: 'btn', style: 'font-size:12px;color:var(--red)', textContent: 'アーカイブ（追跡停止）'});
     archiveBtn.onclick = async function() {
       if (!confirm('この成果物の追跡を停止しますか？')) return;
       await sb.from('artifacts').update({status: 'archived'}).eq('id', artifact.id);
       loadList();
     };
-    detailContainer.appendChild(el('div', {style: 'display:flex;justify-content:space-between;margin-bottom:16px'}, [backBtn, archiveBtn]));
+    detailContainer.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [backBtn, el('div', {style: 'display:flex;gap:8px'}, [fullscreenBtn, archiveBtn])]));
 
     // Title + meta
     var coName = artifact.companies ? artifact.companies.name : 'HD';
@@ -3944,6 +3976,150 @@ async function renderSettings(root) {
 // Boot
 // ============================================================
 init();
+
+// ============================================================
+// Fullscreen Artifact Viewer
+// ============================================================
+var fsOverlay = null;
+var fsCurrentArtifact = null;
+
+function initFullscreenViewer() {
+  if (fsOverlay) return;
+  fsOverlay = el('div', {className: 'fs-overlay'});
+
+  var closeBtn = el('button', {className: 'btn', style: 'font-size:12px;padding:4px 12px', textContent: '✕ 閉じる'});
+  closeBtn.onclick = closeFullscreen;
+
+  var titleEl = el('span', {className: 'fs-title', id: 'fs-title'});
+  var metaEl = el('span', {className: 'fs-meta', id: 'fs-meta'});
+
+  var toggleBtn = el('button', {className: 'btn', id: 'fs-toggle-comments', style: 'font-size:12px;padding:4px 12px', textContent: '\uD83D\uDCAC コメント'});
+  var topbar = el('div', {className: 'fs-topbar'}, [closeBtn, titleEl, metaEl, toggleBtn]);
+
+  var contentArea = el('div', {className: 'fs-content', id: 'fs-content'});
+
+  var panelCloseBtn = el('button', {className: 'btn', style: 'font-size:11px;padding:2px 8px', textContent: '✕'});
+  var panelHeader = el('div', {className: 'fs-comment-header'}, [el('span', {textContent: 'コメント'}), panelCloseBtn]);
+  var commentList = el('div', {className: 'fs-comment-list', id: 'fs-comments'});
+  var commentInput = el('textarea', {id: 'fs-comment-input', placeholder: 'コメントを追加...', style: 'width:100%;min-height:60px;resize:vertical;font-size:13px;border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;font-family:var(--font);background:var(--surface2);outline:none'});
+  var sendBtn = el('button', {className: 'btn btn-primary', style: 'margin-top:8px;width:100%', textContent: '投稿'});
+  var commentForm = el('div', {className: 'fs-comment-form'}, [commentInput, sendBtn]);
+  var panel = el('div', {className: 'fs-comment-panel', id: 'fs-panel'}, [panelHeader, commentList, commentForm]);
+
+  var body = el('div', {className: 'fs-body'}, [contentArea, panel]);
+  fsOverlay.appendChild(topbar);
+  fsOverlay.appendChild(body);
+  document.body.appendChild(fsOverlay);
+
+  toggleBtn.onclick = function() { panel.classList.toggle('open'); };
+  panelCloseBtn.onclick = function() { panel.classList.remove('open'); };
+
+  sendBtn.onclick = async function() {
+    var text = commentInput.value.trim();
+    if (!text || !fsCurrentArtifact) return;
+    sendBtn.disabled = true;
+    sendBtn.textContent = '送信中...';
+    await sb.from('artifact_comments').insert({artifact_id: fsCurrentArtifact.id, body: text, source: 'dashboard'});
+    commentInput.value = '';
+    sendBtn.disabled = false;
+    sendBtn.textContent = '投稿';
+    loadFsComments();
+  };
+
+  // Ctrl+Enter to submit
+  commentInput.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && fsOverlay.classList.contains('active')) closeFullscreen();
+  });
+}
+
+function openFullscreen(artifact) {
+  initFullscreenViewer();
+  fsCurrentArtifact = artifact;
+  document.getElementById('fs-title').textContent = artifact.title;
+  document.getElementById('fs-meta').textContent = artifact.file_type.toUpperCase() + ' \xB7 ' + (artifact.file_path || '');
+
+  var contentEl = document.getElementById('fs-content');
+  while (contentEl.firstChild) contentEl.removeChild(contentEl.firstChild);
+
+  if (!artifact.content) {
+    contentEl.appendChild(el('div', {style: 'padding:40px;text-align:center;color:var(--text3)', textContent: '未同期。次のセッション起動時に自動同期されます。'}));
+  } else if (artifact.file_type === 'html') {
+    var iframe = el('iframe', {style: 'width:100%;height:100%;border:none;background:#fff'});
+    contentEl.appendChild(iframe);
+    setTimeout(function() {
+      iframe.contentDocument.open();
+      iframe.contentDocument.write(artifact.content);
+      iframe.contentDocument.close();
+    }, 0);
+  } else if (artifact.file_type === 'md') {
+    var mdIframe = el('iframe', {style: 'width:100%;height:100%;border:none;background:#fff'});
+    contentEl.appendChild(mdIframe);
+    setTimeout(function() {
+      var mdHtml = typeof marked !== 'undefined' ? marked.parse(artifact.content) : '<pre>' + artifact.content.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</pre>';
+      mdIframe.contentDocument.open();
+      mdIframe.contentDocument.write('<!DOCTYPE html><html><head><style>body{font-family:-apple-system,sans-serif;padding:24px 32px;font-size:14px;line-height:1.8;color:#1a1d21}pre{background:#f1f3f5;padding:12px;border-radius:8px;overflow:auto}code{font-size:13px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e2e5e9;padding:8px 12px;text-align:left}th{background:#f1f3f5}</style></head><body>' + mdHtml + '</body></html>');
+      mdIframe.contentDocument.close();
+    }, 0);
+  } else {
+    var pre = el('pre', {textContent: artifact.content, style: 'margin:0;padding:24px;font-size:13px;overflow:auto;height:100%'});
+    contentEl.appendChild(pre);
+  }
+
+  fsOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  loadFsComments();
+}
+
+function closeFullscreen() {
+  if (fsOverlay) fsOverlay.classList.remove('active');
+  document.getElementById('fs-panel').classList.remove('open');
+  document.body.style.overflow = '';
+  fsCurrentArtifact = null;
+}
+
+async function loadFsComments() {
+  var list = document.getElementById('fs-comments');
+  while (list.firstChild) list.removeChild(list.firstChild);
+  if (!fsCurrentArtifact) return;
+  var res = await sb.from('artifact_comments').select('*').eq('artifact_id', fsCurrentArtifact.id).order('created_at', {ascending: true});
+  var comments = res.data || [];
+  if (comments.length === 0) {
+    list.appendChild(el('div', {style: 'color:var(--text3);font-size:13px;padding:12px 0;text-align:center', textContent: 'コメントなし'}));
+    return;
+  }
+  var openCount = comments.filter(function(c){return c.status==='open'}).length;
+  document.getElementById('fs-toggle-comments').textContent = '\uD83D\uDCAC コメント' + (openCount > 0 ? ' (' + openCount + ')' : '');
+  comments.forEach(function(c) {
+    var time = new Date(c.created_at).toLocaleString('ja-JP');
+    var statusColor = c.status === 'open' ? 'var(--amber)' : 'var(--green)';
+    var statusBadge = el('span', {style: 'font-size:10px;padding:1px 6px;border-radius:4px;background:' + statusColor + '22;color:' + statusColor + ';font-weight:600', textContent: c.status === 'open' ? 'OPEN' : 'RESOLVED'});
+    var timeSpan = el('span', {style: 'font-size:10px;color:var(--text3)', textContent: time});
+    var metaLeft = el('div', {style: 'display:flex;gap:6px;align-items:center'}, [statusBadge, timeSpan]);
+    var metaRow = el('div', {className: 'fc-meta'}, [metaLeft]);
+
+    if (c.status === 'open') {
+      var resolveBtn = el('button', {className: 'btn', style: 'font-size:10px;padding:2px 8px', textContent: '\u2713 解決'});
+      (function(cid) {
+        resolveBtn.onclick = async function() {
+          await sb.from('artifact_comments').update({status: 'resolved', resolved_by: 'manual', resolved_at: new Date().toISOString()}).eq('id', cid);
+          loadFsComments();
+        };
+      })(c.id);
+      metaRow.appendChild(resolveBtn);
+    }
+
+    var bodyEl = el('div', {className: 'fc-body', textContent: c.body});
+    var item = el('div', {className: 'fs-comment-item'}, [metaRow, bodyEl]);
+    list.appendChild(item);
+  });
+}
 
 })();
 </script>
