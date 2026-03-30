@@ -1,0 +1,165 @@
+# データ鮮度ポリシー
+# /company 起動時に秘書が自動チェックし、閾値超過データを更新する
+#
+# priority: 更新実行の優先順位（1が最優先。同時に複数staleなら優先度順）
+# max_age_days: この日数を超えたら stale と判定
+# auto_update: true = 秘書が自動で更新実行 / false = リマインドのみ
+# check_method: 鮮度チェックの方法
+# update_action: 更新時に秘書が実行するアクション
+# blocking: true = ブリーフィング前に実行（結果を待つ）/ false = ブリーフィング後にバックグラウンド
+
+data_sources:
+
+  # ── 優先度1: 分析系（意思決定に直結、最も古くなりやすい） ──
+
+  ceo_insights:
+    priority: 1
+    max_age_days: 7
+    auto_update: true
+    blocking: false
+    check_method: supabase_query
+    check_query: >
+      SELECT created_at FROM ceo_insights
+      ORDER BY created_at DESC LIMIT 1
+    count_query: >
+      SELECT count(*) as cnt FROM prompt_log
+      WHERE created_at > (
+        SELECT COALESCE(max(created_at), '2000-01-01')
+        FROM ceo_insights
+      )
+    stale_condition: "最終分析から7日超過 OR 未分析プロンプト20件超"
+    update_action: |
+      prompt_log の未分析分を集計し、以下のカテゴリで ceo_insights に INSERT:
+      - pattern（行動パターン）
+      - preference（好み）
+      - work_rhythm（稼働リズム: 時間帯・曜日）
+      - tendency（傾向）
+
+  knowledge_base:
+    priority: 2
+    max_age_days: 14
+    auto_update: true
+    blocking: false
+    check_method: supabase_query
+    check_query: >
+      SELECT created_at FROM knowledge_base
+      WHERE status = 'active'
+      ORDER BY created_at DESC LIMIT 1
+    promotion_check: >
+      SELECT rule, confidence FROM knowledge_base
+      WHERE status = 'active' AND confidence >= 3
+    stale_condition: "14日間新規ナレッジなし"
+    update_action: |
+      1. 直近のセッションで修正指示パターンがなかったか prompt_log を確認
+      2. Claude Memory (~/.claude/memory/) に記録された feedback 型メモリを確認
+      3. Supabase側に未反映のナレッジがあれば knowledge_base に INSERT
+      4. confidence >= 3 のルールがあれば CLAUDE.md 昇格を提案
+
+  evaluations:
+    priority: 3
+    max_age_days: 30
+    auto_update: true
+    blocking: false
+    check_method: file_check
+    check_path: ".company/hr/evaluations/"
+    stale_condition: "最終評価から30日超過"
+    update_action: |
+      人事部の5軸評価（自律完遂率/一発OK率/連携効率/目標寄与度/稼働率）を実行:
+      1. 各PJ会社の直近アクティビティを確認
+      2. prompt_log から修正指示・差し戻しパターンを検出
+      3. 評価レポートを .company/hr/evaluations/YYYY-MM-DD.md に出力
+      4. 改善提案があれば .company/hr/proposals/ に記録
+
+  # ── 優先度2: フィードバック系（精度向上に必要） ──
+
+  prep_log_feedback:
+    priority: 4
+    max_age_days: 3
+    auto_update: false
+    blocking: false
+    check_method: file_and_calendar
+    stale_condition: "完了済みMTGで事後フィードバック未入力のものがある"
+    update_action: |
+      1. Google Calendar から過去7日の完了済みMTGを取得
+      2. prep-log/ に対応する FB（quality スコア）があるか確認
+      3. 未入力のMTGをリストアップしてリマインド
+      リマインド形式:
+        「以下のMTGの事後フィードバックが未入力です:
+         - 3/28 A社定例 → 準備は十分でしたか？(1-5)
+         - 3/29 B社レビュー → 準備は十分でしたか？(1-5)」
+
+  intelligence_feedback:
+    priority: 5
+    max_age_days: 7
+    auto_update: false
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/intelligence/reports/"
+    stale_condition: "直近7日のレポートにフィードバック未入力のアイテムがある"
+    update_action: |
+      直近の intelligence レポートを読み、FB未入力の高スコアアイテムを提示:
+        「情報収集レポートへのフィードバックがあれば教えてください:
+         [kw-Claude-1] Claude Code新機能 → 有用/ノイズ？
+         [x-Anthr-2] Anthropic発表 → 有用/ノイズ？」
+
+  preferences_decay:
+    priority: 6
+    max_age_days: 30
+    auto_update: true
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/intelligence/preferences.yaml"
+    stale_condition: "preferences.yaml の最終更新から30日超過"
+    update_action: |
+      preferences.yaml のスコアに30日減衰を適用:
+      score = score + (1.0 - score) * 0.1
+      （デフォルト1.0に向かって10%回帰）
+
+  # ── 優先度3: 基盤データ（自動更新済みだが確認は必要） ──
+
+  intelligence_reports:
+    priority: 7
+    max_age_days: 1
+    auto_update: true
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/intelligence/reports/"
+    stale_condition: "最新レポートが24時間以上前（GitHub Actions障害の可能性）"
+    update_action: |
+      GitHub Actions が正常に動作していない可能性。手動で collect.py を実行:
+      python scripts/intelligence/collect.py
+
+  diary_analysis:
+    priority: 8
+    max_age_days: 30
+    auto_update: false
+    blocking: false
+    check_method: supabase_query
+    check_query: >
+      SELECT created_at FROM diary_analysis
+      ORDER BY created_at DESC LIMIT 1
+    stale_condition: "最終日記分析から30日超過"
+    update_action: |
+      リマインドのみ:
+        「日記分析が30日以上更新されていません。
+         /company diary で近況を記録しませんか？」
+
+# ── 実行ルール ──
+
+execution_rules:
+  # ブリーフィング表示順: priority 昇順
+  # auto_update=true のものは確認なしで実行
+  # auto_update=false のものはリマインドのみ（社長に判断を委ねる）
+  # blocking=true のものはブリーフィング前に完了を待つ
+  # 1回の起動で更新するのは最大3件（コンテキスト消費を抑制）
+  max_auto_updates_per_session: 3
+
+  # stale データの報告形式
+  report_format: |
+    📊 データ鮮度チェック:
+      ✅ prompt_log — リアルタイム（最終: 数分前）
+      ✅ intelligence — 最新（最終: 今朝 09:00）
+      ⚠️ ceo_insights — 12日経過（未分析プロンプト: 34件）→ 自動更新中...
+      ⚠️ evaluations — 38日経過 → 自動更新中...
+      💬 prep-log FB — 2件未入力 → 後ほどお聞きします
+      ✅ knowledge_base — 5日前（active: 8件）

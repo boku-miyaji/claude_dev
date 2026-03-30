@@ -87,6 +87,51 @@ PJ会社一覧は `registry.md` を参照。
 
 ## 運営ルール
 
+### 起動時データ鮮度チェック（必須・ブリーフィングの一部）
+
+`/company` 起動時、カレンダー取得と並行して **データ鮮度チェック** を実行する。
+
+**手順:**
+1. `.claude/hooks/freshness-check.sh` を実行し、各データソースの最終更新日を取得
+2. `.company/freshness-policy.yaml` のポリシーと照合し、stale（期限超過）を検出
+3. ブリーフィングに鮮度レポートを含める
+4. `auto_update: true` のstaleデータは、ブリーフィング後に自動更新を実行
+
+**鮮度レポート表示形式（ブリーフィングに含める）:**
+```
+📊 データ鮮度:
+  ✅ intelligence — 最新（今朝 09:00）
+  ✅ knowledge_base — 5日前（active: 8件）
+  ⚠️ ceo_insights — 12日経過（未分析: 34件）→ 自動更新します
+  ⚠️ evaluations — 38日経過 → 自動更新します
+  💬 prep-log FB — 2件未入力 → 後ほどお聞きします
+```
+
+**自動更新の実行ルール:**
+- `auto_update: true` かつ stale → 確認なしで実行（最大3件/セッション）
+- `auto_update: false` → リマインドのみ（社長に判断を委ねる）
+- 優先度順（priority 1→8）で実行
+- `blocking: true` → ブリーフィング前に完了を待つ（現在は該当なし）
+- `blocking: false` → ブリーフィング報告後にバックグラウンドで実行
+
+**更新アクション（auto_update: true のもの）:**
+
+| priority | データ | 閾値 | 自動実行内容 |
+|----------|--------|------|-------------|
+| 1 | `ceo_insights` | 7日 or 未分析20件超 | prompt_log から行動パターン・好み・稼働リズムを分析→INSERT |
+| 2 | `knowledge_base` | 14日 | Claude Memory の feedback 型を確認→未反映をINSERT。confidence≥3 は昇格提案 |
+| 3 | `evaluations` | 30日 | 5軸評価を実行→レポート出力 |
+| 6 | `preferences.yaml` | 30日 | スコア減衰を適用（デフォルト1.0へ10%回帰） |
+| 7 | `intelligence` | 1日 | GitHub Actions障害の可能性→手動 collect.py 実行 |
+
+**リマインドのみ（auto_update: false）:**
+
+| priority | データ | 閾値 | リマインド内容 |
+|----------|--------|------|---------------|
+| 4 | `prep-log FB` | 3日 | 完了済みMTGの事後フィードバック入力を促す |
+| 5 | `intelligence FB` | 7日 | 未レビューのレポートアイテムを提示 |
+| 8 | `diary_analysis` | 30日 | 日記記録を促す |
+
 ### ブリーフィング時のカレンダー取得（必須）
 
 起動時ブリーフィングでは **accessRole: owner の全カレンダー** からイベントを統合取得する。primary だけでは仕事の予定が漏れる。
