@@ -141,7 +141,13 @@
       "Read(//workspace/=== marketplaces/**)",
       "WebFetch(domain:www.anthropic.com)",
       "WebFetch(domain:openai.com)",
-      "WebFetch(domain:cursor.com)"
+      "WebFetch(domain:cursor.com)",
+      "WebFetch(domain:opencode.ai)",
+      "WebFetch(domain:qiita.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:sesamedisk.com)",
+      "WebFetch(domain:danielmiessler.com)",
+      "WebFetch(domain:dev.to)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
