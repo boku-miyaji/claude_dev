@@ -483,11 +483,13 @@ function setupNav() {
 }
 
 function navigate(page) {
-  currentPage = page;
+  // Support deep links like "artifacts/uuid" — route to the base page
+  var basePage = page.split('/')[0];
+  currentPage = basePage;
   window.location.hash = page;
-  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.toggle('active', n.getAttribute('data-page') === page); });
-  document.querySelectorAll('.mob-nav-item').forEach(function(n) { n.classList.toggle('active', n.getAttribute('data-page') === page); });
-  renderPage(page);
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.toggle('active', n.getAttribute('data-page') === basePage); });
+  document.querySelectorAll('.mob-nav-item').forEach(function(n) { n.classList.toggle('active', n.getAttribute('data-page') === basePage); });
+  renderPage(basePage);
 }
 
 // ============================================================
@@ -2941,7 +2943,7 @@ async function renderArtifacts(root) {
           ])
         ])
       ]);
-      card.onclick = function() { showDetail(a); };
+      card.onclick = function() { window.location.hash = 'artifacts/' + a.id; showDetail(a); };
       listContainer.appendChild(card);
     });
   }
@@ -2951,18 +2953,29 @@ async function renderArtifacts(root) {
     detailContainer.style.display = '';
     while (detailContainer.firstChild) detailContainer.removeChild(detailContainer.firstChild);
 
-    // Top bar: back + archive
-    var backBtn = el('button', {className: 'btn', style: 'font-size:12px', textContent: '← 一覧に戻る'});
-    backBtn.onclick = loadList;
-    var fullscreenBtn = el('button', {className: 'btn btn-primary', style: 'font-size:12px', textContent: '\u26F6 全画面で見る'});
+    // Top bar: back + reload + fullscreen + archive
+    var backBtn = el('button', {className: 'btn', style: 'font-size:12px', textContent: '\u2190 \u4E00\u89A7\u306B\u623B\u308B'});
+    backBtn.onclick = function() { window.location.hash = 'artifacts'; loadList(); };
+    var reloadDetailBtn = el('button', {className: 'btn', style: 'font-size:12px', textContent: '\u21BB \u66F4\u65B0'});
+    reloadDetailBtn.onclick = async function() {
+      reloadDetailBtn.disabled = true;
+      reloadDetailBtn.textContent = '\u66F4\u65B0\u4E2D...';
+      var res = await sb.from('artifacts').select('*,companies(name)').eq('id', artifact.id).single();
+      if (res.data) { artifact = res.data; showDetail(artifact); }
+      reloadDetailBtn.disabled = false;
+      reloadDetailBtn.textContent = '\u21BB \u66F4\u65B0';
+      toast('Artifact \u3092\u66F4\u65B0\u3057\u307E\u3057\u305F');
+    };
+    var fullscreenBtn = el('button', {className: 'btn btn-primary', style: 'font-size:12px', textContent: '\u26F6 \u5168\u753B\u9762\u3067\u898B\u308B'});
     fullscreenBtn.onclick = function() { openFullscreen(artifact); };
-    var archiveBtn = el('button', {className: 'btn', style: 'font-size:12px;color:var(--red)', textContent: 'アーカイブ（追跡停止）'});
+    var archiveBtn = el('button', {className: 'btn', style: 'font-size:12px;color:var(--red)', textContent: '\u30A2\u30FC\u30AB\u30A4\u30D6\uFF08\u8FFD\u8DE1\u505C\u6B62\uFF09'});
     archiveBtn.onclick = async function() {
-      if (!confirm('この成果物の追跡を停止しますか？')) return;
+      if (!confirm('\u3053\u306E\u6210\u679C\u7269\u306E\u8FFD\u8DE1\u3092\u505C\u6B62\u3057\u307E\u3059\u304B\uFF1F')) return;
       await sb.from('artifacts').update({status: 'archived'}).eq('id', artifact.id);
+      window.location.hash = 'artifacts';
       loadList();
     };
-    detailContainer.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [backBtn, el('div', {style: 'display:flex;gap:8px'}, [fullscreenBtn, archiveBtn])]));
+    detailContainer.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [backBtn, el('div', {style: 'display:flex;gap:8px'}, [reloadDetailBtn, fullscreenBtn, archiveBtn])]));
 
     // Title + meta
     var coName = artifact.companies ? artifact.companies.name : 'HD';
@@ -3100,6 +3113,16 @@ async function renderArtifacts(root) {
     loadComments();
   }
 
+  // Check if hash points to a specific artifact (e.g. #artifacts/uuid)
+  var hashParts = (window.location.hash || '').replace('#', '').split('/');
+  if (hashParts[0] === 'artifacts' && hashParts[1]) {
+    var artId = hashParts[1];
+    var res = await sb.from('artifacts').select('*,companies(name)').eq('id', artId).single();
+    if (res.data) {
+      showDetail(res.data);
+      return;
+    }
+  }
   loadList();
 }
 
