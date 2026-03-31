@@ -2993,7 +2993,19 @@ async function renderArtifacts(root) {
     detailContainer.appendChild(contentCard);
 
     // Comments section
-    detailContainer.appendChild(el('div', {className: 'section-title', textContent: 'コメント'}));
+    var showResolved = false;
+    var commentHeader = el('div', {style: 'display:flex;justify-content:space-between;align-items:center'}, [
+      el('div', {className: 'section-title', style: 'margin-bottom:0', textContent: 'コメント'}),
+      (function() {
+        var toggleLabel = el('label', {style: 'display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);cursor:pointer'});
+        var toggleCb = el('input', {type: 'checkbox', style: 'cursor:pointer'});
+        toggleCb.onchange = function() { showResolved = toggleCb.checked; loadComments(); };
+        toggleLabel.appendChild(toggleCb);
+        toggleLabel.appendChild(document.createTextNode('解決済みを表示'));
+        return toggleLabel;
+      })()
+    ]);
+    detailContainer.appendChild(commentHeader);
     var commentList = el('div', {});
     detailContainer.appendChild(commentList);
 
@@ -3007,32 +3019,71 @@ async function renderArtifacts(root) {
       while (commentList.firstChild) commentList.removeChild(commentList.firstChild);
       var res = await sb.from('artifact_comments').select('*').eq('artifact_id', artifact.id).order('created_at', {ascending: true});
       var comments = res.data || [];
+      var filtered = showResolved ? comments : comments.filter(function(c) { return c.status === 'open'; });
       if (comments.length === 0) {
         commentList.appendChild(el('div', {style: 'color:var(--text3);font-size:13px;padding:8px 0', textContent: 'コメントなし'}));
         return;
       }
-      comments.forEach(function(c) {
+      var resolvedCount = comments.filter(function(c) { return c.status !== 'open'; }).length;
+      if (!showResolved && resolvedCount > 0 && filtered.length === 0) {
+        commentList.appendChild(el('div', {style: 'color:var(--text3);font-size:13px;padding:8px 0', textContent: resolvedCount + '件の解決済みコメント（トグルで表示）'}));
+        return;
+      }
+      filtered.forEach(function(c) {
         var time = new Date(c.created_at).toLocaleString('ja-JP');
         var statusColor = c.status === 'open' ? 'var(--orange)' : 'var(--green)';
         var statusText = c.status === 'open' ? 'OPEN' : c.status.toUpperCase();
-        var card = el('div', {className: 'card', style: 'margin-bottom:8px;padding:12px'}, [
+        var bodyEl = el('div', {style: 'font-size:13px;white-space:pre-wrap', textContent: c.body});
+        var actionBtns = el('div', {style: 'display:flex;gap:6px;align-items:center'});
+
+        // Edit button
+        (function(comment, bodyDiv, actionDiv) {
+          var editBtn = el('button', {className: 'btn', style: 'font-size:11px;padding:3px 10px', textContent: '✎ 編集'});
+          editBtn.onclick = function(e) {
+            e.stopPropagation();
+            var editArea = el('textarea', {className: 'input', style: 'min-height:50px;resize:vertical;font-size:13px', value: comment.body});
+            var saveBtn = el('button', {className: 'btn btn-primary', style: 'font-size:11px;padding:3px 10px;margin-top:6px', textContent: '保存'});
+            var cancelBtn = el('button', {className: 'btn', style: 'font-size:11px;padding:3px 10px;margin-top:6px', textContent: 'キャンセル'});
+            var editActions = el('div', {style: 'display:flex;gap:6px;margin-top:4px'}, [saveBtn, cancelBtn]);
+            bodyDiv.textContent = '';
+            bodyDiv.appendChild(editArea);
+            bodyDiv.appendChild(editActions);
+            editArea.focus();
+            saveBtn.onclick = async function() {
+              var newBody = editArea.value.trim();
+              if (!newBody) return;
+              saveBtn.disabled = true; saveBtn.textContent = '保存中...';
+              await sb.from('artifact_comments').update({body: newBody}).eq('id', comment.id);
+              loadComments();
+            };
+            cancelBtn.onclick = function() { loadComments(); };
+          };
+          actionDiv.appendChild(editBtn);
+        })(c, bodyEl, actionBtns);
+
+        // Resolve button (open only)
+        if (c.status === 'open') {
+          (function(cid) {
+            var resolveBtn = el('button', {className: 'btn', style: 'font-size:11px;padding:3px 10px', textContent: '✓ 解決'});
+            resolveBtn.onclick = async function(e) {
+              e.stopPropagation();
+              await sb.from('artifact_comments').update({status: 'resolved', resolved_by: 'manual', resolved_at: new Date().toISOString()}).eq('id', cid);
+              loadComments();
+            };
+            actionBtns.appendChild(resolveBtn);
+          })(c.id);
+        }
+
+        var card = el('div', {className: 'card', style: 'margin-bottom:8px;padding:12px' + (c.status !== 'open' ? ';opacity:0.6' : '')}, [
           el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px'}, [
             el('div', {style: 'display:flex;gap:8px;align-items:center'}, [
               el('span', {style: 'font-size:10px;padding:2px 6px;border-radius:4px;background:' + statusColor + '22;color:' + statusColor + ';font-weight:600', textContent: statusText}),
               el('span', {style: 'font-size:11px;color:var(--text3)', textContent: c.source}),
               el('span', {style: 'font-size:11px;color:var(--text3)', textContent: time})
             ]),
-            c.status === 'open' ? (function() {
-              var resolveBtn = el('button', {className: 'btn', style: 'font-size:11px;padding:3px 10px', textContent: '✓ 解決'});
-              resolveBtn.onclick = async function(e) {
-                e.stopPropagation();
-                await sb.from('artifact_comments').update({status: 'resolved', resolved_by: 'manual', resolved_at: new Date().toISOString()}).eq('id', c.id);
-                loadComments();
-              };
-              return resolveBtn;
-            })() : el('span')
+            actionBtns
           ]),
-          el('div', {style: 'font-size:13px;white-space:pre-wrap', textContent: c.body})
+          bodyEl
         ]);
         commentList.appendChild(card);
       });
@@ -3999,7 +4050,13 @@ function initFullscreenViewer() {
   var contentArea = el('div', {className: 'fs-content', id: 'fs-content'});
 
   var panelCloseBtn = el('button', {className: 'btn', style: 'font-size:11px;padding:2px 8px', textContent: '✕'});
-  var panelHeader = el('div', {className: 'fs-comment-header'}, [el('span', {textContent: 'コメント'}), panelCloseBtn]);
+  var fsShowResolved = false;
+  var fsToggleResolved = el('label', {style: 'display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);cursor:pointer;margin-left:auto;margin-right:8px'});
+  var fsToggleCb = el('input', {type: 'checkbox', style: 'cursor:pointer'});
+  fsToggleCb.onchange = function() { fsShowResolved = fsToggleCb.checked; loadFsComments(); };
+  fsToggleResolved.appendChild(fsToggleCb);
+  fsToggleResolved.appendChild(document.createTextNode('解決済み'));
+  var panelHeader = el('div', {className: 'fs-comment-header'}, [el('span', {textContent: 'コメント'}), fsToggleResolved, panelCloseBtn]);
   var commentList = el('div', {className: 'fs-comment-list', id: 'fs-comments'});
   var commentInput = el('textarea', {id: 'fs-comment-input', placeholder: 'コメントを追加...', style: 'width:100%;min-height:60px;resize:vertical;font-size:13px;border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;font-family:var(--font);background:var(--surface2);outline:none'});
   var sendBtn = el('button', {className: 'btn btn-primary', style: 'margin-top:8px;width:100%', textContent: '投稿'});
@@ -4095,28 +4152,61 @@ async function loadFsComments() {
     return;
   }
   var openCount = comments.filter(function(c){return c.status==='open'}).length;
+  var resolvedCount = comments.length - openCount;
   document.getElementById('fs-toggle-comments').textContent = '\uD83D\uDCAC コメント' + (openCount > 0 ? ' (' + openCount + ')' : '');
-  comments.forEach(function(c) {
+  var filtered = fsShowResolved ? comments : comments.filter(function(c) { return c.status === 'open'; });
+  if (!fsShowResolved && resolvedCount > 0 && filtered.length === 0) {
+    list.appendChild(el('div', {style: 'color:var(--text3);font-size:12px;padding:12px 0;text-align:center', textContent: resolvedCount + '件の解決済みコメント'}));
+    return;
+  }
+  filtered.forEach(function(c) {
     var time = new Date(c.created_at).toLocaleString('ja-JP');
     var statusColor = c.status === 'open' ? 'var(--amber)' : 'var(--green)';
     var statusBadge = el('span', {style: 'font-size:10px;padding:1px 6px;border-radius:4px;background:' + statusColor + '22;color:' + statusColor + ';font-weight:600', textContent: c.status === 'open' ? 'OPEN' : 'RESOLVED'});
     var timeSpan = el('span', {style: 'font-size:10px;color:var(--text3)', textContent: time});
     var metaLeft = el('div', {style: 'display:flex;gap:6px;align-items:center'}, [statusBadge, timeSpan]);
     var metaRow = el('div', {className: 'fc-meta'}, [metaLeft]);
+    var actionBtns = el('div', {style: 'display:flex;gap:4px;align-items:center'});
 
+    // Edit button
+    var bodyEl = el('div', {className: 'fc-body', textContent: c.body});
+    (function(comment, bodyDiv) {
+      var editBtn = el('button', {className: 'btn', style: 'font-size:10px;padding:2px 8px', textContent: '\u270E 編集'});
+      editBtn.onclick = function() {
+        var editArea = el('textarea', {style: 'width:100%;min-height:50px;resize:vertical;font-size:12px;border:1px solid var(--border);border-radius:var(--r);padding:6px 8px;font-family:var(--font);background:var(--surface2);outline:none', value: comment.body});
+        var saveBtn = el('button', {className: 'btn btn-primary', style: 'font-size:10px;padding:2px 8px;margin-top:4px', textContent: '保存'});
+        var cancelBtn = el('button', {className: 'btn', style: 'font-size:10px;padding:2px 8px;margin-top:4px', textContent: 'キャンセル'});
+        var editActions = el('div', {style: 'display:flex;gap:4px;margin-top:4px'}, [saveBtn, cancelBtn]);
+        bodyDiv.textContent = '';
+        bodyDiv.appendChild(editArea);
+        bodyDiv.appendChild(editActions);
+        editArea.focus();
+        saveBtn.onclick = async function() {
+          var newBody = editArea.value.trim();
+          if (!newBody) return;
+          saveBtn.disabled = true; saveBtn.textContent = '保存中...';
+          await sb.from('artifact_comments').update({body: newBody}).eq('id', comment.id);
+          loadFsComments();
+        };
+        cancelBtn.onclick = function() { loadFsComments(); };
+      };
+      actionBtns.appendChild(editBtn);
+    })(c, bodyEl);
+
+    // Resolve button (open only)
     if (c.status === 'open') {
-      var resolveBtn = el('button', {className: 'btn', style: 'font-size:10px;padding:2px 8px', textContent: '\u2713 解決'});
       (function(cid) {
+        var resolveBtn = el('button', {className: 'btn', style: 'font-size:10px;padding:2px 8px', textContent: '\u2713 解決'});
         resolveBtn.onclick = async function() {
           await sb.from('artifact_comments').update({status: 'resolved', resolved_by: 'manual', resolved_at: new Date().toISOString()}).eq('id', cid);
           loadFsComments();
         };
+        actionBtns.appendChild(resolveBtn);
       })(c.id);
-      metaRow.appendChild(resolveBtn);
     }
 
-    var bodyEl = el('div', {className: 'fc-body', textContent: c.body});
-    var item = el('div', {className: 'fs-comment-item'}, [metaRow, bodyEl]);
+    metaRow.appendChild(actionBtns);
+    var item = el('div', {className: 'fs-comment-item', style: c.status !== 'open' ? 'opacity:0.6' : ''}, [metaRow, bodyEl]);
     list.appendChild(item);
   });
 }
