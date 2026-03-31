@@ -3881,8 +3881,7 @@ function renderChatMain(container, edgeFnUrl) {
     el('option', {value: 'auto', textContent: 'Auto (Recommended)'}),
     el('option', {value: 'gpt-4o-mini', textContent: 'GPT-4o-mini ($0.15/M)'}),
     el('option', {value: 'gpt-4o', textContent: 'GPT-4o ($2.50/M)'}),
-    el('option', {value: 'claude-haiku-4-5', textContent: 'Claude Haiku ($0.80/M)'}),
-    el('option', {value: 'claude-sonnet-4-6', textContent: 'Claude Sonnet ($3.00/M)'})
+    el('option', {value: 'gpt-4.1', textContent: 'GPT-4.1 ($2.00/M)'})
   ]);
   modelSelect.value = chatState.model;
   modelSelect.onchange = function() { chatState.model = modelSelect.value; };
@@ -4161,7 +4160,7 @@ function renderChatSpec(root) {
     '|-----------|-------|----------------------|',
     '| Simple (translation, factual) | GPT-4o-mini | $0.15 |',
     '| Moderate (analysis, code) | GPT-4o | $2.50 |',
-    '| Complex (design, strategy) | Claude Sonnet 4.6 | $3.00 |',
+    '| Complex (design, strategy) | GPT-4o | $2.50 |',
     '',
     'Classification itself uses GPT-4o-mini (~$0.001/call).',
     '',
@@ -4175,7 +4174,7 @@ function renderChatSpec(root) {
     '| Normal | 30 | ~$0.02 | ~$18 |',
     '| Heavy | 50 | ~$0.03 | ~$45 |',
     '',
-    'Auto-routing saves ~75% vs using Claude Sonnet for everything.',
+    'Auto-routing saves ~60% vs using GPT-4o for everything.',
     '',
     '---',
     '',
@@ -4207,7 +4206,6 @@ function renderChatSpec(root) {
     '2. Set secrets:',
     '   ```',
     '   supabase secrets set OPENAI_API_KEY=sk-...',
-    '   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...',
     '   ```',
     '3. Run migration: `supabase-migration-025-ai-chat.sql`',
     '4. The Chat tab will appear in the dashboard automatically',
@@ -4262,10 +4260,7 @@ async function renderSettings(root) {
         el('span', {textContent: 'Set API keys: '}),
         el('code', {style: 'font-size:11px;background:var(--surface);padding:2px 6px;border-radius:4px', textContent: 'supabase secrets set OPENAI_API_KEY=sk-...'})
       ]),
-      el('li', {}, [
-        el('span', {textContent: 'Optional: '}),
-        el('code', {style: 'font-size:11px;background:var(--surface);padding:2px 6px;border-radius:4px', textContent: 'supabase secrets set ANTHROPIC_API_KEY=sk-ant-...'})
-      ])
+      el('li', {textContent: 'Open the Chat tab and send a message!'})
     ])
   ]));
   var testChatBtn = el('button', {className: 'btn btn-p btn-sm', textContent: 'Test Connection'});

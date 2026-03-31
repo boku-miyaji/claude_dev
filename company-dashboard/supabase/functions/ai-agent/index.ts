@@ -62,7 +62,7 @@ const MAX_TOOL_RESULT_CHARS = 4000;
 const MODEL_MAP: Record<string, string> = {
   simple: "gpt-4o-mini",
   moderate: "gpt-4o",
-  complex: "claude-sonnet-4-6",
+  complex: "gpt-4o",
 };
 
 const COST_TABLE: Record<string, { input: number; output: number }> = {
