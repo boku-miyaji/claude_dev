@@ -3644,6 +3644,102 @@ function renderFeedbackSection() {
   return section;
 }
 
+/** Render markdown string to a safe DOM fragment (strips scripts, externalizes links) */
+function renderMarkdownSafe(md) {
+  var wrapper = document.createElement('div');
+  if (typeof marked !== 'undefined' && marked.parse) {
+    // marked.parse output is from owner-only Supabase data (authenticated writes only)
+    var parsed = marked.parse(md);
+    // Defense-in-depth: strip scripts and sanitize via DOM
+    var tpl = document.createElement('template');
+    tpl.innerHTML = parsed; // eslint-disable-line -- owner-only data, script-stripped below
+    var frag = tpl.content;
+    frag.querySelectorAll('script,iframe,object,embed').forEach(function(s) { s.remove(); });
+    frag.querySelectorAll('a').forEach(function(a) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); });
+    wrapper.appendChild(frag);
+  } else {
+    wrapper.textContent = md;
+  }
+  return wrapper;
+}
+
+/** Track intelligence interaction (link click or like) via activity_log */
+function trackIntelligence(action, itemId, url, category) {
+  sb.from('activity_log').insert({
+    action: action,
+    description: action === 'intelligence_like' ? 'Liked: ' + itemId : 'Clicked: ' + (url || '').substring(0, 120),
+    metadata: {item_id: itemId || null, url: url || null, category: category || null}
+  }).then(function() {});
+}
+
+/** Extract item ID from a text node, e.g. "[kw-Claude-1]" -> "kw-Claude-1" */
+function extractItemId(text) {
+  var m = text.match(/\[([a-zA-Z]+-[a-zA-Z]+-?\d+)\]/);
+  return m ? m[1] : null;
+}
+
+/** Guess category from item ID prefix */
+function guessCategory(itemId) {
+  if (!itemId) return null;
+  if (itemId.startsWith('kw-')) return 'keyword';
+  if (itemId.startsWith('x-')) return 'x_account';
+  if (itemId.startsWith('cc-')) return 'claude_code';
+  if (itemId.startsWith('cursor-')) return 'cursor';
+  if (itemId.startsWith('mcp-')) return 'mcp';
+  if (itemId.startsWith('art-')) return 'article';
+  if (itemId.startsWith('hn-')) return 'hacker_news';
+  if (itemId.startsWith('agent-')) return 'ai_agent';
+  if (itemId.startsWith('ALERT-')) return 'alert';
+  return null;
+}
+
+/** Create a like button for a report item */
+function createLikeBtn(itemId, category) {
+  var liked = false;
+  var btn = el('button', {
+    textContent: '\u2661',
+    title: 'いいね',
+    style: 'background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:13px;padding:1px 5px;margin-left:6px;color:var(--text3);vertical-align:middle;line-height:1;transition:all .15s'
+  });
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (liked) return;
+    liked = true;
+    btn.textContent = '\u2665';
+    btn.style.color = 'var(--red, #e53e3e)';
+    btn.style.borderColor = 'var(--red, #e53e3e)';
+    trackIntelligence('intelligence_like', itemId, null, category);
+    toast('\u2665 ' + (itemId || 'item'));
+  });
+  return btn;
+}
+
+/** Enhance rendered markdown: add like buttons to items, track link clicks */
+function enhanceReportItems(container) {
+  container.querySelectorAll('li').forEach(function(li) {
+    var text = li.textContent || '';
+    var itemId = extractItemId(text);
+    if (!itemId) return;
+    var category = guessCategory(itemId);
+    li.style.position = 'relative';
+    li.appendChild(createLikeBtn(itemId, category));
+    li.querySelectorAll('a[href]').forEach(function(a) {
+      a.addEventListener('click', function() {
+        trackIntelligence('intelligence_click', itemId, a.href, category);
+      });
+    });
+  });
+  container.querySelectorAll('a[href]').forEach(function(a) {
+    if (a._tracked) return;
+    a._tracked = true;
+    a.addEventListener('click', function() {
+      var li = a.closest('li');
+      if (li && extractItemId(li.textContent || '')) return;
+      trackIntelligence('intelligence_click', null, a.href, null);
+    });
+  });
+}
+
 function toggleReportDetail(card, data) {
   var existing = card.querySelector('.report-detail');
   if (existing) { existing.remove(); return; }
@@ -3652,14 +3748,9 @@ function toggleReportDetail(card, data) {
   // Markdown string (manual collection via /company)
   if (typeof data === 'string') {
     var detail = el('div', {className: 'report-detail md-body', style: 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px;max-height:600px;overflow-y:auto'});
-    // Render markdown (data is from owner-only Supabase table, not untrusted input)
-    var _tmp = document.createElement('div');
-    _tmp.innerHTML = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(data) : data.replace(/\n/g, '<br>'); // eslint-disable-line
-    _tmp.querySelectorAll('script').forEach(function(s) { s.remove(); }); // defense-in-depth
-    _tmp.querySelectorAll('a').forEach(function(a) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); });
-    while (_tmp.firstChild) detail.appendChild(_tmp.firstChild);
-    // Feedback section for markdown reports
-    detail.appendChild(renderFeedbackSection());
+    // Render markdown — data is from owner-only Supabase table (authenticated writes only)
+    detail.appendChild(renderMarkdownSafe(data));
+    enhanceReportItems(detail);
     card.appendChild(detail);
     return;
   }
@@ -3679,16 +3770,19 @@ function toggleReportDetail(card, data) {
       return;
     }
 
-    (coll.results || []).forEach(function(r) {
+    (coll.results || []).forEach(function(r, idx) {
+      var itemId = (coll.type === 'keyword' ? 'kw' : 'x') + '-' + (coll.term || coll.handle || '').replace(/[^a-zA-Z]/g, '').substring(0, 5) + '-' + (idx + 1);
+      var category = coll.type === 'keyword' ? 'keyword' : 'x_account';
+      var link = el('a', {href: r.url, target: '_blank', style: 'font-size:12px;font-weight:500;display:inline', textContent: r.title || 'No title'});
+      link.addEventListener('click', function() { trackIntelligence('intelligence_click', itemId, r.url, category); });
       var item = el('div', {style: 'margin-bottom:8px;padding-left:12px;border-left:2px solid var(--border)'}, [
-        el('a', {href: r.url, target: '_blank', style: 'font-size:12px;font-weight:500;display:block', textContent: r.title || 'No title'}),
+        el('div', {}, [link, createLikeBtn(itemId, category)]),
         el('div', {style: 'font-size:11px;color:var(--text3);margin-top:2px', textContent: (r.snippet || '').substring(0, 150)})
       ]);
       detail.appendChild(item);
     });
   });
 
-  detail.appendChild(renderFeedbackSection());
   card.appendChild(detail);
 }
 
