@@ -147,7 +147,9 @@
       "WebFetch(domain:medium.com)",
       "WebFetch(domain:sesamedisk.com)",
       "WebFetch(domain:danielmiessler.com)",
-      "WebFetch(domain:dev.to)"
+      "WebFetch(domain:dev.to)",
+      "Bash(supabase --version)",
+      "Bash(supabase projects:*)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
