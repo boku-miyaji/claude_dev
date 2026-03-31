@@ -14,7 +14,55 @@
 
 ## 収集対象
 
-### 1. キーワード検索（DuckDuckGo）
+### 0. プロンプト起点キーワード（動的・最優先）
+
+**社長の直近プロンプトから興味・関心を推定し、検索キーワードを動的生成する。**
+
+#### 収集手順（「情報収集して」実行時に毎回実施）
+
+1. **prompt_log を取得**: Supabase `prompt_log` から直近7日分を取得
+   ```sql
+   SELECT prompt, tags, context, created_at
+   FROM prompt_log
+   ORDER BY created_at DESC
+   LIMIT 50
+   ```
+
+2. **興味トピックを抽出**: プロンプト群から以下を推定
+   - **技術キーワード**: 言及されたツール・ライブラリ・概念（例: "Playwright", "gRPC", "暗黙知"）
+   - **PJ文脈**: どのPJ会社の作業が多いか → そのドメインの最新情報を優先
+   - **課題・疑問**: 質問形式のプロンプト → その分野の解決策・ベストプラクティスを検索
+   - **繰り返し出現する単語**: 3回以上出現する固有名詞は強い興味シグナル
+
+3. **検索キーワードを生成**: 抽出したトピックから3〜5個の検索クエリを生成
+   - sources.yaml の固定キーワードと重複するものは除外
+   - レポートでは `[prompt-xxx-N]` のIDプレフィックスで区別
+
+4. **レポートに専用セクションを設ける**:
+   ```markdown
+   ## 🎯 あなたの関心から（prompt_log 分析）
+   直近7日のプロンプトから推定した関心トピック:
+   - Playwright / E2Eテスト（circuit PJ で頻出）
+   - 暗黙知抽出 / ナレッジマネジメント（circuit PJ）
+   - ...
+
+   - [prompt-play-1] (2026-03-30) タイトル... [URL]
+   - [prompt-tacit-1] (2026-03-29) タイトル... [URL]
+   ```
+
+#### activity_log も参照（補助シグナル）
+
+`intelligence_like` と `intelligence_click` の直近30日分も参照し、いいね/クリックが多いカテゴリの検索を厚くする。
+
+```sql
+SELECT metadata->>'category' as cat, count(*) as cnt
+FROM activity_log
+WHERE action IN ('intelligence_like', 'intelligence_click')
+  AND created_at > now() - interval '30 days'
+GROUP BY cat ORDER BY cnt DESC LIMIT 10
+```
+
+### 1. キーワード検索（固定・sources.yaml）
 - 指定キーワードの検索結果上位5件を収集
 - 新しいトレンドや重要な変化を検出
 
