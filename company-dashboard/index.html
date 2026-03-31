@@ -4137,8 +4137,22 @@ function initFullscreenViewer() {
   var titleEl = el('span', {className: 'fs-title', id: 'fs-title'});
   var metaEl = el('span', {className: 'fs-meta', id: 'fs-meta'});
 
+  var reloadBtn = el('button', {className: 'btn', id: 'fs-reload', style: 'font-size:12px;padding:4px 12px', textContent: '\u21BB 更新'});
+  reloadBtn.onclick = async function() {
+    if (!fsCurrentArtifact) return;
+    reloadBtn.disabled = true;
+    reloadBtn.textContent = '更新中...';
+    var res = await sb.from('artifacts').select('*').eq('id', fsCurrentArtifact.id).single();
+    if (res.data) {
+      fsCurrentArtifact = res.data;
+      openFullscreen(fsCurrentArtifact);
+    }
+    reloadBtn.disabled = false;
+    reloadBtn.textContent = '\u21BB 更新';
+    toast('Artifact を更新しました');
+  };
   var toggleBtn = el('button', {className: 'btn', id: 'fs-toggle-comments', style: 'font-size:12px;padding:4px 12px', textContent: '\uD83D\uDCAC コメント'});
-  var topbar = el('div', {className: 'fs-topbar'}, [closeBtn, titleEl, metaEl, toggleBtn]);
+  var topbar = el('div', {className: 'fs-topbar'}, [closeBtn, reloadBtn, titleEl, metaEl, toggleBtn]);
 
   var contentArea = el('div', {className: 'fs-content', id: 'fs-content'});
 
