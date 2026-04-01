@@ -1961,49 +1961,55 @@ models:
       </div>
     </div>
 
-    <h3 id="s7-rfi">RFI 5社の4原則適合度</h3>
+    <h3 id="s7-rfi">RFI 6社評価まとめ（最終成果物 PDF p.5-7 準拠）</h3>
+
+    <div class="callout">
+      <strong>PDF p.7 の結論: Deloitteが技術面で相対的に有力。一方で全社に確認事項あり → 最終判断はRFPで</strong>
+    </div>
 
     <table>
-      <tr><th>原則</th><th>富士通<br>(Databricks)</th><th>デロイト<br>(Databricks)</th><th>日立<br>(Snowflake)</th><th>PwC<br>(AWS Native)</th><th>Salesforce</th></tr>
+      <tr><th>会社</th><th>基盤</th><th>PDF評価</th><th>強み</th><th>主な懸念/確認事項</th></tr>
       <tr>
-        <td><strong>1. AI接続</strong></td>
-        <td style="color:var(--green);">◎◎</td>
-        <td style="color:var(--green);">◎◎</td>
-        <td style="color:var(--green);">◎</td>
-        <td style="color:var(--amber);">○</td>
-        <td style="color:var(--red);">△</td>
+        <td><strong>Deloitte</strong></td>
+        <td>Databricks</td>
+        <td style="color:var(--green);font-weight:600;">有力候補</td>
+        <td>Sケアデータの詳細試算。OSSベース。AI/ML・非構造進化・開発環境すべてに死角なし。24/365運用体制</td>
+        <td>マネージド体制の日本側員数・対応範囲。Dify等特定ツール依存（Databricks構成推奨なので大きな問題ではない）</td>
       </tr>
       <tr>
-        <td><strong>2. 学習蓄積</strong></td>
-        <td style="color:var(--green);">◎</td>
-        <td style="color:var(--green);">○</td>
-        <td style="color:var(--amber);">△</td>
-        <td style="color:var(--amber);">△</td>
-        <td style="color:var(--red);">×</td>
+        <td><strong>Fujitsu</strong></td>
+        <td>Databricks</td>
+        <td style="color:var(--amber);font-weight:600;">比較継続</td>
+        <td>egaku/Foundry運用経験者が在籍する唯一の会社。「移せるか」の不確実性が最も低い。インフラ構成も具体的</td>
+        <td>Kozuchi/DIPの独自ロックイン。AI拡張性の弱さ。Foundryパイプラインの移行マッピングは未提示</td>
       </tr>
       <tr>
-        <td><strong>3. ガバナンス</strong></td>
-        <td style="color:var(--green);">◎</td>
-        <td style="color:var(--green);">◎</td>
-        <td style="color:var(--green);">◎</td>
-        <td style="color:var(--amber);">○</td>
-        <td style="color:var(--amber);">△</td>
+        <td><strong>Sky</strong></td>
+        <td>Databricks</td>
+        <td style="color:var(--amber);font-weight:600;">比較継続</td>
+        <td>AI/ML構成提案が最も具体的（Mosaic AI+MLflow+Agent Bricks）。マルチLLM実績。コスト透明性高い</td>
+        <td>Tableau非対応（QuickSight固定）。推進体制に具体性がない</td>
       </tr>
       <tr>
-        <td><strong>4. ナレッジ蓄積</strong></td>
-        <td style="color:var(--amber);">○</td>
-        <td style="color:var(--amber);">○</td>
-        <td style="color:var(--green);">◎</td>
-        <td style="color:var(--amber);">△</td>
-        <td style="color:var(--amber);">○</td>
+        <td><strong>Hitachi</strong></td>
+        <td>Snowflake</td>
+        <td style="color:var(--amber);font-weight:600;">比較継続</td>
+        <td>介護業界のSnowflake実績。データ分析民主化の推進計画が具体的。業界理解</td>
+        <td>PySpark移行の工数・実現性。オープン標準への言及ゼロ。統合カタログの言及なし</td>
       </tr>
-      <tr style="font-weight:600;">
-        <td>総合</td>
-        <td style="color:var(--green);">A</td>
-        <td style="color:var(--green);">A-</td>
-        <td style="color:var(--amber);">B+</td>
-        <td style="color:var(--amber);">B</td>
-        <td style="color:var(--red);">C</td>
+      <tr>
+        <td><strong>PwC</strong></td>
+        <td>AWS Native</td>
+        <td style="color:var(--amber);font-weight:600;">比較継続</td>
+        <td>SOMPOグループとの関係性。ガバナンス設計の具体性、コンサル力。「仕組みづくり」の伴走者として最適</td>
+        <td>運用負荷が高い（AWS群の個別管理）。<strong>OSSを明示的に拒否</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Salesforce</strong></td>
+        <td>SF Data Cloud</td>
+        <td style="color:var(--red);font-weight:600;">優先度低</td>
+        <td>CRM連携が主目的なら検討余地。Data 360</td>
+        <td>全社データ基盤としてはオーバースペック（年62M-248M円）。AI機能は松プラン限定。SF閉域のロックイン</td>
       </tr>
     </table>
 
@@ -2013,7 +2019,7 @@ models:
         <li>Foundryオントロジーの移行方針（全社未言及）</li>
         <li>非構造データパイプライン（テキスト/画像/音声）の設計</li>
         <li>MDM（マスタデータ管理）→ PwCのみが提案</li>
-        <li>セマンティックレイヤーの初期構築 + 継続メンテの運用設計</li>
+        <li>セマンティックレイヤーの要否判断（PDF A-9: 初期構築では不要だが、<strong>AIチャットをスコープに入れる場合は初期から設計が必要</strong>）</li>
       </ul>
       → RFPでこれらを明確に問うべき
     </div>
@@ -2096,7 +2102,7 @@ models:
       <div class="card" style="border-left: 3px solid var(--green);">
         <h4>2. リスクが最小</h4>
         <ul>
-          <li>RFI でデロイト・富士通の2社が Databricks 構成を提案済み → ベンダー候補がいる</li>
+          <li>RFI で <strong>Deloitte（有力候補）</strong>・富士通・Sky の3社が Databricks 構成を提案済み → ベンダー候補が複数いる</li>
           <li>SMBC の 20+ 基幹系移行事例 → 日本大企業での実績あり</li>
           <li>Databricks-Palantir 提携 → 段階的移行パスも視野に入る</li>
           <li>Serverless 全面 GA → インフラ管理の負荷が下がっている</li>
