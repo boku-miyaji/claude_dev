@@ -48,7 +48,6 @@
     "feedback-command": 30
   },
   "promptQueueUseCount": 3,
-  "showExpandedTodos": true,
   "cachedStatsigGates": {
     "tengu_prompt_suggestion": true,
     "tengu_year_end_2025_campaign_promo": false,
