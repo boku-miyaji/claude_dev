@@ -151,7 +151,12 @@
       "Bash(supabase --version)",
       "Bash(supabase projects:*)",
       "WebFetch(domain:developers.openai.com)",
-      "WebFetch(domain:pecollective.com)"
+      "WebFetch(domain:pecollective.com)",
+      "Bash(/tmp/check_departments.sh:*)",
+      "Bash(/tmp/check_companies.sh:*)",
+      "Bash(/tmp/final_check.sh:*)",
+      "Bash(/tmp/qa_check.sh:*)",
+      "Bash(/tmp/complete_check.sh:*)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
