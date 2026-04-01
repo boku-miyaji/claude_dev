@@ -7,6 +7,12 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◆</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs" type="module" id="pdfjs-script"></script>
+<script type="module">
+  import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.worker.min.mjs';
+  window.pdfjsLib = pdfjsLib;
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -336,6 +342,40 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
   .chat-layout{height:calc(100vh - 70px)}
   .quick-ask-panel{width:95vw;max-height:60vh}
 }
+
+/* Growth Timeline */
+.growth-timeline{position:relative;padding-left:32px}
+.growth-timeline::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:2px;background:var(--border)}
+.growth-phase{margin-bottom:32px}
+.growth-phase-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:16px;padding:4px 12px;background:var(--surface2);border-radius:var(--r);display:inline-block;position:relative;left:-32px;margin-left:32px}
+.growth-event{position:relative;margin-bottom:16px;cursor:pointer}
+.growth-dot{position:absolute;left:-32px;top:6px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;z-index:1;border:2px solid var(--surface)}
+.growth-dot.failure{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.growth-dot.countermeasure{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)}
+.growth-dot.milestone{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.growth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 20px;transition:all .2s}
+.growth-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.growth-card.expanded{border-color:var(--accent-border);box-shadow:0 0 0 1px var(--accent-border)}
+.growth-card-header{display:flex;align-items:flex-start;gap:10px;justify-content:space-between}
+.growth-card-title{font-size:14px;font-weight:600;letter-spacing:-.01em;flex:1}
+.growth-card-date{font-size:11px;font-family:var(--mono);color:var(--text3);white-space:nowrap}
+.growth-card-meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.growth-detail{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.7;display:none}
+.growth-card.expanded .growth-detail{display:block}
+.growth-detail-section{margin-bottom:12px}
+.growth-detail-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px}
+.growth-detail-text{font-size:13px;line-height:1.6}
+.growth-metric{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border-radius:var(--r);margin-top:8px;font-family:var(--mono);font-size:12px}
+.growth-metric .arrow{color:var(--green);font-weight:700;font-size:16px}
+.growth-chain{border-left:2px dashed var(--accent-border);margin-left:-22px;padding-left:20px;margin-top:-8px;margin-bottom:-8px}
+.growth-filters{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.growth-filter-btn{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .2s;font-family:var(--font)}
+.growth-filter-btn:hover{border-color:var(--border2)}
+.growth-filter-btn.active{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
+.growth-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+@media(max-width:768px){.growth-summary{grid-template-columns:repeat(2,1fr)}}
+.growth-cat-bar{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:6px}
+.growth-cat-fill{height:100%;border-radius:3px;background:var(--green);transition:width .5s}
 </style>
 </head>
 <body>
@@ -380,6 +420,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="commands"><span class="nav-icon">⌘</span> Commands</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <div class="nav-spacer"></div>
+    <button class="nav-item" data-page="growth"><span class="nav-icon">↗</span> Growth</button>
     <button class="nav-item" data-page="how-it-works"><span class="nav-icon">?</span> How it Works</button>
     <div class="nav-user" id="nav-user"></div>
     <button class="nav-item" id="btn-logout"><span class="nav-icon">→</span> Sign out</button>
@@ -439,6 +480,7 @@ var ALL_MOB_TABS = [
   {page: 'diary', icon: '✎', label: 'Diary', pinned: true},
   {page: 'artifacts', icon: '📄', label: 'Artifacts', pinned: true},
   {page: 'chat', icon: '💬', label: 'AI Chat', pinned: true},
+  {page: 'growth', icon: '↗', label: 'Growth'},
   {page: 'api-costs', icon: '$', label: 'Costs'},
   {page: 'commands', icon: '⌘', label: 'Commands'},
   {page: 'settings', icon: '⚙', label: 'Settings'}
@@ -892,6 +934,7 @@ function renderPage(page) {
     chat: renderChat,
     'chat-spec': renderChatSpec,
     'api-costs': renderApiCosts,
+    growth: renderGrowth,
     'how-it-works': renderHowItWorks,
     commands: renderSlashCommands,
     settings: renderSettings
@@ -2788,35 +2831,307 @@ async function finProjects(root) {
 }
 
 // --- Finance: Invoices ---
-async function finInvoices(root) {
-  var res = await sb.from('invoices').select('*').order('invoice_date', {ascending:false});
-  var invoices = res.data || [];
-  var statusColors = {draft:'var(--text3)',sent:'#3b82f6',paid:'#22c55e',overdue:'#ef4444',cancelled:'var(--text3)'};
-  var statusLabels = {draft:'下書',sent:'送付済',paid:'入金済',overdue:'期限超過',cancelled:'取消'};
+var invoiceStatusColors = {draft:'var(--text3)',sent:'#3b82f6',paid:'#22c55e',overdue:'#ef4444',cancelled:'var(--text3)'};
+var invoiceStatusLabels = {draft:'下書',sent:'送付済',paid:'入金済',overdue:'期限超過',cancelled:'取消'};
 
-  if (invoices.length === 0) {
-    root.appendChild(el('div', {textContent: '請求書が未登録です。/invoice add <ファイル> で追加してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
-    return;
+// PDF text extraction using PDF.js
+async function extractPdfText(file) {
+  if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
+  var arrayBuffer = await file.arrayBuffer();
+  var pdf = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise;
+  var fullText = '';
+  for (var i = 1; i <= pdf.numPages; i++) {
+    var page = await pdf.getPage(i);
+    var content = await page.getTextContent();
+    var pageText = content.items.map(function(item) { return item.str; }).join(' ');
+    fullText += pageText + '\n';
+  }
+  return fullText;
+}
+
+// Parse invoice metadata from PDF text + filename
+function parseInvoice(pdfText, filename) {
+  var result = {client_name:'', amount:0, tax_amount:0, invoice_date:'', invoice_number:'', company_id:''};
+
+  // --- Filename parsing: {company}_{name}_請求書_{yyyy-mm月分}.pdf ---
+  var fnMatch = filename.match(/^(.+?)_.*?請求書_(\d{4})-?(\d{1,2})月?分/);
+  if (fnMatch) {
+    result.client_name = fnMatch[1];
+    var y = fnMatch[2], m = fnMatch[3].padStart(2,'0');
+    // Invoice date = last day of the billed month
+    var lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
+    result.invoice_date = y + '-' + m + '-' + String(lastDay).padStart(2,'0');
   }
 
-  var tbl = el('table', {style: 'width:100%;border-collapse:collapse;font-size:13px'});
-  tbl.appendChild(el('thead', {}, [el('tr', {}, ['日付','請求先','番号','金額','状態','入金日'].map(function(h){return el('th',{textContent:h,style:'text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:500'})}))]));
-  var tbody = el('tbody');
-  invoices.forEach(function(inv) {
-    var sc = statusColors[inv.status]||'var(--text3)';
-    tbody.appendChild(el('tr', {}, [
-      el('td', {textContent: fmtDate(inv.invoice_date), style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
-      el('td', {textContent: inv.client_name, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
-      el('td', {textContent: inv.invoice_number||'-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'}),
-      el('td', {textContent: fmtYen(inv.amount), style: 'padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600'}),
-      el('td', {style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}, [
-        el('span', {textContent: statusLabels[inv.status]||inv.status, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+sc+'20;color:'+sc})
-      ]),
-      el('td', {textContent: inv.paid_date ? fmtDate(inv.paid_date) : '-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'})
-    ]));
+  // --- PDF text parsing (overrides filename where found) ---
+  // Amount (tax-inclusive total)
+  var amtMatch = pdfText.match(/(?:合計|請求金額|ご請求額|総額|請求額)[\s\S]{0,30}?([0-9,]+)\s*円/) ||
+                 pdfText.match(/¥\s*([0-9,]+)[\s\S]{0,10}(?:合計|税込)/);
+  if (amtMatch) result.amount = parseInt(amtMatch[1].replace(/,/g, ''), 10);
+
+  // Tax amount
+  var taxMatch = pdfText.match(/(?:消費税|税額|うち税)[\s\S]{0,30}?([0-9,]+)\s*円/) ||
+                 pdfText.match(/(?:消費税|税額)[\s\S]{0,20}?¥?\s*([0-9,]+)/);
+  if (taxMatch) result.tax_amount = parseInt(taxMatch[1].replace(/,/g, ''), 10);
+
+  // Invoice date
+  var dateMatch = pdfText.match(/(?:請求日|発行日|日付)[\s:：\s]*(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/) ||
+                  pdfText.match(/(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})日?/);
+  if (dateMatch) {
+    result.invoice_date = dateMatch[1] + '-' + dateMatch[2].padStart(2,'0') + '-' + dateMatch[3].padStart(2,'0');
+  }
+
+  // Invoice number
+  var numMatch = pdfText.match(/(?:請求書番号|請求番号|No\.?|番号)[\s:：\s]*([A-Za-z0-9\-_]+)/);
+  if (numMatch) result.invoice_number = numMatch[1];
+
+  // Company ID mapping
+  var clientLower = result.client_name.toLowerCase();
+  if (clientLower.match(/aces/i)) result.company_id = '';
+  if (clientLower.match(/polaris/i)) result.company_id = 'polaris';
+  if (clientLower.match(/sompo|scotch|foundry/i)) result.company_id = 'foundry';
+  if (clientLower.match(/りそな|rikyu|risona/i)) result.company_id = 'rikyu';
+  if (clientLower.match(/denso|circuit|回路/i)) result.company_id = 'circuit';
+
+  return result;
+}
+
+// Upload PDF to Supabase Storage
+async function uploadInvoicePdf(file) {
+  var timestamp = Date.now();
+  var safeName = file.name.replace(/[^a-zA-Z0-9._\-\u3000-\u9fff]/g, '_');
+  var path = timestamp + '_' + safeName;
+  var res = await sb.storage.from('invoices').upload(path, file, {contentType: 'application/pdf'});
+  if (res.error) throw new Error(res.error.message);
+  return path;
+}
+
+// Invoice modal (shared for create + edit)
+function openInvoiceModal(existingInv, onSaved) {
+  var isEdit = !!existingInv;
+  var inv = existingInv || {client_name:'',amount:0,tax_amount:0,invoice_date:'',invoice_number:'',status:'draft',company_id:'',file_url:'',notes:''};
+
+  // Overlay
+  var overlay = el('div', {style: 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center'});
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+
+  var modal = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:480px;max-width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)'});
+
+  // Title
+  modal.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px'}, [
+    el('div', {textContent: isEdit ? '請求書を編集' : '請求書アップロード', style: 'font-size:16px;font-weight:600'}),
+    el('button', {textContent: '×', style: 'background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:0 4px', onClick: function() { overlay.remove(); }})
+  ]));
+
+  // PDF upload area (only for new)
+  var pdfStatus = el('div', {style: 'font-size:12px;color:var(--text3);margin-top:8px'});
+  if (!isEdit) {
+    var fileInput = el('input', {type: 'file', accept: '.pdf', style: 'display:none'});
+    var uploadArea = el('div', {style: 'border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;margin-bottom:16px;transition:border-color .2s'});
+    uploadArea.addEventListener('dragover', function(e) { e.preventDefault(); uploadArea.style.borderColor = 'var(--accent)'; });
+    uploadArea.addEventListener('dragleave', function() { uploadArea.style.borderColor = 'var(--border)'; });
+    uploadArea.addEventListener('drop', function(e) { e.preventDefault(); uploadArea.style.borderColor = 'var(--border)'; if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+    uploadArea.addEventListener('click', function() { fileInput.click(); });
+    fileInput.addEventListener('change', function() { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+    uploadArea.appendChild(el('div', {textContent: '📄 PDFファイルをドロップ、またはクリックして選択', style: 'color:var(--text2);font-size:13px'}));
+    uploadArea.appendChild(pdfStatus);
+    modal.appendChild(uploadArea);
+    modal.appendChild(fileInput);
+  } else if (inv.file_url) {
+    var dlBtn = el('button', {textContent: '📄 PDF を表示', style: 'background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;margin-bottom:16px;color:var(--text2)', onClick: async function() {
+      var res = await sb.storage.from('invoices').createSignedUrl(inv.file_url, 300);
+      if (res.data) window.open(res.data.signedUrl, '_blank');
+    }});
+    modal.appendChild(dlBtn);
+  }
+
+  // Form fields
+  var fields = [
+    {key:'client_name', label:'請求先', type:'text', required:true},
+    {key:'amount', label:'請求額（税込・円）', type:'number', required:true},
+    {key:'tax_amount', label:'うち消費税（円）', type:'number'},
+    {key:'invoice_date', label:'請求日', type:'date', required:true},
+    {key:'invoice_number', label:'請求書番号', type:'text'},
+    {key:'status', label:'ステータス', type:'select', options:['draft','sent','paid','overdue','cancelled'], optionLabels:invoiceStatusLabels},
+    {key:'due_date', label:'支払期日', type:'date'},
+    {key:'paid_date', label:'入金日', type:'date'},
+    {key:'company_id', label:'PJ会社', type:'select', options:['','foundry','rikyu','circuit','polaris'], optionLabels:{'':'(なし)',foundry:'Foundry',rikyu:'りきゅう',circuit:'回路設計',polaris:'Polaris'}},
+    {key:'notes', label:'メモ', type:'textarea'}
+  ];
+  var inputs = {};
+  var form = el('div', {style: 'display:flex;flex-direction:column;gap:12px'});
+  fields.forEach(function(f) {
+    var label = el('label', {textContent: f.label, style: 'font-size:11px;color:var(--text3);margin-bottom:2px;display:block'});
+    var inputStyle = 'width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:13px;font-family:var(--font);box-sizing:border-box';
+    var input;
+    if (f.type === 'select') {
+      input = el('select', {style: inputStyle});
+      f.options.forEach(function(o) {
+        var opt = el('option', {value: o, textContent: f.optionLabels[o] || o});
+        if (String(inv[f.key] || '') === o) opt.selected = true;
+        input.appendChild(opt);
+      });
+    } else if (f.type === 'textarea') {
+      input = el('textarea', {style: inputStyle + ';min-height:48px;resize:vertical', value: inv[f.key] || ''});
+    } else {
+      input = el('input', {type: f.type, style: inputStyle, value: inv[f.key] || ''});
+    }
+    inputs[f.key] = input;
+    var wrapper = el('div', {}, [label, input]);
+    form.appendChild(wrapper);
   });
-  tbl.appendChild(tbody);
-  root.appendChild(tbl);
+  modal.appendChild(form);
+
+  // Saving indicator
+  var saveStatus = el('div', {style: 'font-size:12px;color:var(--text3);margin-top:8px;min-height:18px'});
+
+  // Buttons
+  var btnRow = el('div', {style: 'display:flex;justify-content:' + (isEdit ? 'space-between' : 'flex-end') + ';gap:8px;margin-top:20px'});
+
+  if (isEdit) {
+    var delBtn = el('button', {textContent: '削除', style: 'background:none;border:1px solid #ef4444;color:#ef4444;border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:var(--font)', onClick: async function() {
+      if (!confirm('この請求書を削除しますか？')) return;
+      delBtn.disabled = true;
+      saveStatus.textContent = '削除中...';
+      if (inv.file_url) await sb.storage.from('invoices').remove([inv.file_url]);
+      await sb.from('invoices').delete().eq('id', inv.id);
+      overlay.remove();
+      if (onSaved) onSaved();
+    }});
+    btnRow.appendChild(delBtn);
+  }
+
+  var rightBtns = el('div', {style: 'display:flex;gap:8px'});
+  rightBtns.appendChild(el('button', {textContent: 'キャンセル', style: 'background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:var(--font)', onClick: function() { overlay.remove(); }}));
+
+  var selectedFile = null;
+  var uploadedPath = null;
+
+  var saveBtn = el('button', {textContent: '保存', style: 'background:var(--accent);border:none;color:#fff;border-radius:6px;padding:8px 20px;font-size:13px;cursor:pointer;font-weight:500;font-family:var(--font)', onClick: async function() {
+    var clientName = inputs.client_name.value.trim();
+    var amount = parseInt(inputs.amount.value, 10);
+    var invoiceDate = inputs.invoice_date.value;
+    if (!clientName || !amount || !invoiceDate) { saveStatus.textContent = '請求先・金額・請求日は必須です'; saveStatus.style.color = '#ef4444'; return; }
+
+    saveBtn.disabled = true;
+    saveStatus.textContent = '保存中...';
+    saveStatus.style.color = 'var(--text3)';
+
+    // Upload PDF if new file selected
+    if (selectedFile && !uploadedPath) {
+      try {
+        saveStatus.textContent = 'PDF アップロード中...';
+        uploadedPath = await uploadInvoicePdf(selectedFile);
+      } catch (e) {
+        saveStatus.textContent = 'アップロード失敗: ' + e.message;
+        saveStatus.style.color = '#ef4444';
+        saveBtn.disabled = false;
+        return;
+      }
+    }
+
+    var row = {
+      client_name: clientName,
+      amount: amount,
+      tax_amount: parseInt(inputs.tax_amount.value, 10) || 0,
+      invoice_date: invoiceDate,
+      invoice_number: inputs.invoice_number.value.trim() || null,
+      status: inputs.status.value,
+      due_date: inputs.due_date.value || null,
+      paid_date: inputs.paid_date.value || null,
+      company_id: inputs.company_id.value || null,
+      notes: inputs.notes.value.trim() || null
+    };
+    if (uploadedPath) row.file_url = uploadedPath;
+
+    var res;
+    if (isEdit) {
+      res = await sb.from('invoices').update(row).eq('id', inv.id);
+    } else {
+      res = await sb.from('invoices').insert(row);
+    }
+    if (res.error) {
+      saveStatus.textContent = 'エラー: ' + res.error.message;
+      saveStatus.style.color = '#ef4444';
+      saveBtn.disabled = false;
+      return;
+    }
+    overlay.remove();
+    if (onSaved) onSaved();
+  }});
+  rightBtns.appendChild(saveBtn);
+  btnRow.appendChild(rightBtns);
+  modal.appendChild(saveStatus);
+  modal.appendChild(btnRow);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Handle file selection (PDF parse)
+  async function handleFile(file) {
+    if (file.type !== 'application/pdf') { pdfStatus.textContent = 'PDFファイルのみ対応しています'; pdfStatus.style.color = '#ef4444'; return; }
+    selectedFile = file;
+    pdfStatus.textContent = '📄 ' + file.name + ' — 解析中...';
+    pdfStatus.style.color = 'var(--accent)';
+    try {
+      var text = await extractPdfText(file);
+      var parsed = parseInvoice(text, file.name);
+      // Fill form with parsed values (only if field is empty or zero)
+      if (parsed.client_name && !inputs.client_name.value) inputs.client_name.value = parsed.client_name;
+      if (parsed.amount && !parseInt(inputs.amount.value)) inputs.amount.value = parsed.amount;
+      if (parsed.tax_amount && !parseInt(inputs.tax_amount.value)) inputs.tax_amount.value = parsed.tax_amount;
+      if (parsed.invoice_date && !inputs.invoice_date.value) inputs.invoice_date.value = parsed.invoice_date;
+      if (parsed.invoice_number && !inputs.invoice_number.value) inputs.invoice_number.value = parsed.invoice_number;
+      if (parsed.company_id) inputs.company_id.value = parsed.company_id;
+      pdfStatus.textContent = '📄 ' + file.name + ' — 解析完了 ✓';
+      pdfStatus.style.color = '#22c55e';
+    } catch (e) {
+      pdfStatus.textContent = '📄 ' + file.name + ' — 解析失敗（手動入力してください）';
+      pdfStatus.style.color = '#f59e0b';
+    }
+  }
+}
+
+async function finInvoices(root) {
+  async function render() {
+    while (root.firstChild) root.removeChild(root.firstChild);
+
+    // Header with upload button
+    root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [
+      el('div'),
+      el('button', {textContent: '+ 請求書アップロード', style: 'background:var(--accent);border:none;color:#fff;border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;font-family:var(--font)', onClick: function() { openInvoiceModal(null, render); }})
+    ]));
+
+    var res = await sb.from('invoices').select('*').order('invoice_date', {ascending:false});
+    var invoices = res.data || [];
+
+    if (invoices.length === 0) {
+      root.appendChild(el('div', {textContent: '請求書が未登録です。上のボタンからPDFをアップロードしてください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
+      return;
+    }
+
+    var tbl = el('table', {style: 'width:100%;border-collapse:collapse;font-size:13px'});
+    tbl.appendChild(el('thead', {}, [el('tr', {}, ['日付','請求先','番号','金額','状態','入金日'].map(function(h){return el('th',{textContent:h,style:'text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:500'})}))]));
+    var tbody = el('tbody');
+    invoices.forEach(function(inv) {
+      var sc = invoiceStatusColors[inv.status]||'var(--text3)';
+      var tr = el('tr', {style: 'cursor:pointer;transition:background .15s', onClick: function() { openInvoiceModal(inv, render); }});
+      tr.addEventListener('mouseenter', function() { tr.style.background = 'var(--surface2)'; });
+      tr.addEventListener('mouseleave', function() { tr.style.background = 'none'; });
+      tr.appendChild(el('td', {textContent: fmtDate(inv.invoice_date), style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}));
+      tr.appendChild(el('td', {textContent: inv.client_name, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}));
+      tr.appendChild(el('td', {textContent: inv.invoice_number||'-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'}));
+      tr.appendChild(el('td', {textContent: fmtYen(inv.amount), style: 'padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600'}));
+      tr.appendChild(el('td', {style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}, [
+        el('span', {textContent: invoiceStatusLabels[inv.status]||inv.status, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+sc+'20;color:'+sc})
+      ]));
+      tr.appendChild(el('td', {textContent: inv.paid_date ? fmtDate(inv.paid_date) : '-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'}));
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    root.appendChild(tbl);
+  }
+  await render();
 }
 
 // --- Finance: Expenses ---
@@ -3745,6 +4060,255 @@ async function renderArtifacts(root) {
 }
 
 // ============================================================
+// Growth Chronicle Page
+// ============================================================
+async function renderGrowth(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Growth Chronicle'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '失敗と進化の記録 — どう壊れ、どう直し、どう成長したか'}));
+
+  var res = await sb.from('growth_events').select('*').order('event_date', {ascending: true}).order('created_at', {ascending: true});
+  var events = res.data || [];
+
+  if (events.length === 0) {
+    root.appendChild(el('div', {className: 'card empty', textContent: 'まだ成長記録がありません。seed データを投入してください。'}));
+    return;
+  }
+
+  // --- KPI Summary ---
+  var totalCount = events.length;
+  var failures = events.filter(function(e) { return e.event_type === 'failure'; });
+  var countermeasures = events.filter(function(e) { return e.event_type === 'countermeasure'; });
+  var milestones = events.filter(function(e) { return e.event_type === 'milestone'; });
+  var resolved = events.filter(function(e) { return e.status === 'resolved'; });
+
+  var summaryGrid = el('div', {className: 'growth-summary'}, [
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', style: 'color:var(--text)', textContent: String(totalCount)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Total Events'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val bad', textContent: String(failures.length)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Failures'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', style: 'color:var(--amber)', textContent: String(countermeasures.length)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Countermeasures'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val good', textContent: String(milestones.length)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Milestones'})
+    ])
+  ]);
+  root.appendChild(summaryGrid);
+
+  // --- Category Progress ---
+  var categories = ['security', 'architecture', 'devops', 'automation', 'tooling', 'organization', 'process'];
+  var catSection = el('div', {className: 'section', style: 'margin-bottom:28px'});
+  catSection.appendChild(el('div', {className: 'section-title', textContent: 'Category Progress'}));
+  var catGrid = el('div', {className: 'g2'});
+  categories.forEach(function(cat) {
+    var catEvents = events.filter(function(e) { return e.category === cat; });
+    if (catEvents.length === 0) return;
+    var catResolved = catEvents.filter(function(e) { return e.status === 'resolved'; });
+    var pct = Math.round(catResolved.length / catEvents.length * 100);
+    var catIcons = {security: '🛡', architecture: '🏗', devops: '⚙', automation: '🤖', tooling: '🔧', organization: '🏢', process: '📋'};
+    catGrid.appendChild(el('div', {className: 'card', style: 'padding:14px 18px'}, [
+      el('div', {style: 'display:flex;align-items:center;justify-content:space-between'}, [
+        el('span', {style: 'font-size:13px;font-weight:600'}, [
+          document.createTextNode((catIcons[cat] || '') + ' ' + cat)
+        ]),
+        el('span', {style: 'font-size:12px;font-family:var(--mono);color:var(--text2)', textContent: catResolved.length + '/' + catEvents.length})
+      ]),
+      el('div', {className: 'growth-cat-bar'}, [
+        el('div', {className: 'growth-cat-fill', style: 'width:' + pct + '%;background:' + (pct === 100 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)')})
+      ])
+    ]));
+  });
+  catSection.appendChild(catGrid);
+  root.appendChild(catSection);
+
+  // --- Filters ---
+  var currentFilter = 'all';
+  var filterBar = el('div', {className: 'growth-filters'});
+  var filterOptions = [
+    {key: 'all', label: 'All'},
+    {key: 'failure', label: 'Failures'},
+    {key: 'countermeasure', label: 'Countermeasures'},
+    {key: 'milestone', label: 'Milestones'},
+    {key: 'security', label: 'Security'},
+    {key: 'architecture', label: 'Architecture'},
+    {key: 'devops', label: 'DevOps'},
+    {key: 'automation', label: 'Automation'},
+    {key: 'tooling', label: 'Tooling'},
+    {key: 'organization', label: 'Organization'}
+  ];
+  var timelineContainer;
+
+  function renderTimeline() {
+    if (timelineContainer) timelineContainer.parentNode.removeChild(timelineContainer);
+    timelineContainer = el('div');
+
+    var filtered = events;
+    if (currentFilter !== 'all') {
+      filtered = events.filter(function(e) {
+        return e.event_type === currentFilter || e.category === currentFilter;
+      });
+    }
+
+    // Group by phase
+    var phases = [];
+    var phaseMap = {};
+    filtered.forEach(function(e) {
+      var phaseName = e.phase || 'Other';
+      if (!phaseMap[phaseName]) {
+        phaseMap[phaseName] = [];
+        phases.push(phaseName);
+      }
+      phaseMap[phaseName].push(e);
+    });
+
+    phases.forEach(function(phaseName) {
+      var phaseEl = el('div', {className: 'growth-phase'});
+      phaseEl.appendChild(el('div', {className: 'growth-phase-label', textContent: phaseName}));
+
+      var timeline = el('div', {className: 'growth-timeline'});
+
+      phaseMap[phaseName].forEach(function(evt) {
+        var dotIcons = {failure: '✕', countermeasure: '◆', milestone: '★'};
+        var typeLabels = {failure: 'FAILURE', countermeasure: 'COUNTERMEASURE', milestone: 'MILESTONE'};
+        var typeColors = {failure: 'var(--red)', countermeasure: 'var(--amber)', milestone: 'var(--green)'};
+        var sevColors = {critical: 'var(--red)', high: 'var(--amber)', medium: 'var(--blue)', low: 'var(--text3)'};
+
+        var card = el('div', {className: 'growth-card'});
+        var dot = el('div', {className: 'growth-dot ' + evt.event_type, textContent: dotIcons[evt.event_type] || '·'});
+
+        // Header
+        card.appendChild(el('div', {className: 'growth-card-header'}, [
+          el('div', {className: 'growth-card-title', textContent: evt.title}),
+          el('div', {className: 'growth-card-date', textContent: evt.event_date})
+        ]));
+
+        // Meta tags
+        var metaRow = el('div', {className: 'growth-card-meta'});
+        metaRow.appendChild(el('span', {
+          className: 'tag',
+          style: 'background:' + (typeColors[evt.event_type] || 'var(--text3)') + '11;color:' + (typeColors[evt.event_type] || 'var(--text3)') + ';border:1px solid ' + (typeColors[evt.event_type] || 'var(--text3)') + '33',
+          textContent: typeLabels[evt.event_type] || evt.event_type
+        }));
+        metaRow.appendChild(el('span', {className: 'tag tag-co', textContent: evt.category}));
+        if (evt.severity === 'critical' || evt.severity === 'high') {
+          metaRow.appendChild(el('span', {
+            className: 'tag',
+            style: 'background:' + (sevColors[evt.severity]) + '11;color:' + sevColors[evt.severity] + ';border:1px solid ' + sevColors[evt.severity] + '33',
+            textContent: evt.severity
+          }));
+        }
+        if (evt.status === 'resolved') {
+          metaRow.appendChild(el('span', {className: 'tag', style: 'background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)', textContent: 'resolved'}));
+        }
+        card.appendChild(metaRow);
+
+        // What happened (always visible summary)
+        card.appendChild(el('div', {style: 'margin-top:10px;font-size:13px;color:var(--text2);line-height:1.6', textContent: evt.what_happened}));
+
+        // Detail (expandable)
+        var detail = el('div', {className: 'growth-detail'});
+
+        if (evt.root_cause) {
+          detail.appendChild(el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Root Cause'}),
+            el('div', {className: 'growth-detail-text', textContent: evt.root_cause})
+          ]));
+        }
+        if (evt.countermeasure) {
+          detail.appendChild(el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Countermeasure'}),
+            el('div', {className: 'growth-detail-text', textContent: evt.countermeasure})
+          ]));
+        }
+        if (evt.result) {
+          detail.appendChild(el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Result / Learning'}),
+            el('div', {className: 'growth-detail-text', textContent: evt.result})
+          ]));
+        }
+
+        // Related commits
+        if (evt.related_commits && evt.related_commits.length > 0) {
+          var commitRow = el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Related Commits'})
+          ]);
+          var commitTags = el('div', {style: 'display:flex;gap:4px;flex-wrap:wrap'});
+          evt.related_commits.forEach(function(c) {
+            commitTags.appendChild(el('span', {className: 'tag', style: 'font-family:var(--mono);font-size:10px;background:var(--surface2);color:var(--text2);border:1px solid var(--border)', textContent: c}));
+          });
+          commitRow.appendChild(commitTags);
+          detail.appendChild(commitRow);
+        }
+
+        // Related migrations
+        if (evt.related_migrations && evt.related_migrations.length > 0) {
+          var migRow = el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Related Migrations'})
+          ]);
+          var migTags = el('div', {style: 'display:flex;gap:4px;flex-wrap:wrap'});
+          evt.related_migrations.forEach(function(m) {
+            migTags.appendChild(el('span', {className: 'tag', style: 'font-family:var(--mono);font-size:10px;background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-border)', textContent: m}));
+          });
+          migRow.appendChild(migTags);
+          detail.appendChild(migRow);
+        }
+
+        // Tags
+        if (evt.tags && evt.tags.length > 0) {
+          var tagRow = el('div', {className: 'growth-detail-section', style: 'margin-bottom:0'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Tags'})
+          ]);
+          var tagContainer = el('div', {style: 'display:flex;gap:4px;flex-wrap:wrap'});
+          evt.tags.forEach(function(t) {
+            tagContainer.appendChild(el('span', {className: 'tag', style: 'font-size:10px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)', textContent: t}));
+          });
+          tagRow.appendChild(tagContainer);
+          detail.appendChild(tagRow);
+        }
+
+        card.appendChild(detail);
+
+        // Click to expand
+        card.addEventListener('click', function() {
+          card.classList.toggle('expanded');
+        });
+
+        var eventEl = el('div', {className: 'growth-event'}, [dot, card]);
+        timeline.appendChild(eventEl);
+      });
+
+      phaseEl.appendChild(timeline);
+      timelineContainer.appendChild(phaseEl);
+    });
+
+    root.appendChild(timelineContainer);
+  }
+
+  filterOptions.forEach(function(opt) {
+    var btn = el('button', {
+      className: 'growth-filter-btn' + (opt.key === 'all' ? ' active' : ''),
+      textContent: opt.label,
+      onClick: function() {
+        currentFilter = opt.key;
+        filterBar.querySelectorAll('.growth-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        renderTimeline();
+      }
+    });
+    filterBar.appendChild(btn);
+  });
+  root.appendChild(filterBar);
+
+  renderTimeline();
+}
+
+// ============================================================
 // How it Works Page (native)
 // ============================================================
 async function renderHowItWorks(root) {
@@ -4285,18 +4849,26 @@ function renderFeedbackSection() {
   return section;
 }
 
-/** Render markdown string to a safe DOM fragment (strips scripts, externalizes links) */
+/** Render markdown string to a safe DOM fragment (strips scripts, event handlers, dangerous protocols) */
 function renderMarkdownSafe(md) {
   var wrapper = document.createElement('div');
   if (typeof marked !== 'undefined' && marked.parse) {
-    // marked.parse output is from owner-only Supabase data (authenticated writes only)
     var parsed = marked.parse(md);
-    // Defense-in-depth: strip scripts and sanitize via DOM
     var tpl = document.createElement('template');
-    tpl.innerHTML = parsed; // eslint-disable-line -- owner-only data, script-stripped below
+    tpl.innerHTML = parsed; // eslint-disable-line -- owner-only data, sanitized below
     var frag = tpl.content;
-    frag.querySelectorAll('script,iframe,object,embed').forEach(function(s) { s.remove(); });
-    frag.querySelectorAll('a').forEach(function(a) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); });
+    frag.querySelectorAll('script,iframe,object,embed,math,svg[onload],form').forEach(function(s) { s.remove(); });
+    // Strip all on* event handler attributes
+    frag.querySelectorAll('*').forEach(function(node) {
+      Array.from(node.attributes).forEach(function(attr) {
+        if (attr.name.startsWith('on')) node.removeAttribute(attr.name);
+      });
+    });
+    frag.querySelectorAll('a').forEach(function(a) {
+      var href = (a.getAttribute('href') || '').trim().toLowerCase();
+      if (href.startsWith('javascript:') || href.startsWith('data:') || href.startsWith('vbscript:')) { a.removeAttribute('href'); a.textContent = '[link removed]'; }
+      a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer');
+    });
     wrapper.appendChild(frag);
   } else {
     wrapper.textContent = md;
@@ -5174,6 +5746,20 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 if (evt.model) metrics.model = evt.model;
                 if (evt.complexity) metrics.complexity = evt.complexity;
                 break;
+              case 'context_injection': {
+                var parts = [];
+                if (evt.knowledge_rules) parts.push(evt.knowledge_rules + ' knowledge rules');
+                if (evt.diary_entries) parts.push(evt.diary_entries + ' diary entries');
+                if (evt.ceo_insights) parts.push(evt.ceo_insights + ' insights');
+                if (evt.personalization_fields && evt.personalization_fields.length) parts.push('profile: ' + evt.personalization_fields.join(', '));
+                if (parts.length) {
+                  var ctxNote = el('div', {className:'chat-tool-block', style:'opacity:0.6;font-size:11px'});
+                  ctxNote.appendChild(el('span',{textContent:'\uD83D\uDD12 '}));
+                  ctxNote.appendChild(el('span',{textContent:'Context sent to LLM: ' + parts.join(' \u00B7 ')}));
+                  msgContainer.insertBefore(el('div',{className:'chat-msg-row assistant'},[ctxNote]), assistantRow);
+                }
+                break;
+              }
               case 'step_start':
                 metaDiv.textContent = 'Step '+evt.step+'/'+evt.maxSteps+' \u00B7 '+evt.model+(evt.reasoning?' \u00B7 '+evt.reasoning:'');
                 metrics.stepCount = evt.step;
@@ -5221,10 +5807,21 @@ function renderMarkdownSafe(text, target) {
   while (target.firstChild) target.removeChild(target.firstChild);
   if (typeof marked!=='undefined'&&marked.parse) {
     var tpl = document.createElement('template');
-    tpl.innerHTML = marked.parse(text);
+    // Note: innerHTML on template is used for markdown rendering; sanitized below
+    tpl.innerHTML = marked.parse(text); // eslint-disable-line -- sanitized via DOM below
     var frag = tpl.content;
-    frag.querySelectorAll('script,iframe,object,embed').forEach(function(s){s.remove();});
-    frag.querySelectorAll('a').forEach(function(a){a.setAttribute('target','_blank');a.setAttribute('rel','noopener');});
+    frag.querySelectorAll('script,iframe,object,embed,math,svg[onload],form').forEach(function(s){s.remove();});
+    // Strip all on* event handler attributes and dangerous href protocols
+    frag.querySelectorAll('*').forEach(function(node) {
+      Array.from(node.attributes).forEach(function(attr) {
+        if (attr.name.startsWith('on')) node.removeAttribute(attr.name);
+      });
+    });
+    frag.querySelectorAll('a').forEach(function(a) {
+      var href = (a.getAttribute('href') || '').trim().toLowerCase();
+      if (href.startsWith('javascript:') || href.startsWith('data:') || href.startsWith('vbscript:')) { a.removeAttribute('href'); a.textContent = '[link removed]'; }
+      a.setAttribute('target','_blank'); a.setAttribute('rel','noopener noreferrer');
+    });
     target.appendChild(frag);
   } else { target.textContent = text; }
 }
