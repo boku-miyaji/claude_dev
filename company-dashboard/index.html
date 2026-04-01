@@ -6178,11 +6178,26 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     fileInput.value = '';
   });
 
+  // Camera input (hidden) — capture="environment" opens rear camera on mobile
+  var cameraInput = el('input', {type:'file',accept:'image/*',capture:'environment',style:'display:none'});
+  cameraInput.addEventListener('change', function() {
+    if (cameraInput.files && cameraInput.files[0]) {
+      var f = cameraInput.files[0];
+      var r = new FileReader();
+      r.onload = function(e) { pendingAttachments.push({name:'photo_'+Date.now()+'.jpg',type:f.type,dataUrl:e.target.result,base64:e.target.result.split(',')[1],size:f.size}); renderPreviews(); };
+      r.readAsDataURL(f);
+    }
+    cameraInput.value = '';
+  });
+
   // ChatGPT-style pill input box
   var inputBox = el('div', {className: 'chat-input-box'});
   var attachBtn = el('button', {className: 'chat-input-btn attach', title: 'Attach file'});
   attachBtn.appendChild(document.createTextNode('+'));
   attachBtn.addEventListener('click', function() { fileInput.click(); });
+  var cameraBtn = el('button', {className: 'chat-input-btn attach', title: 'Take photo', style: 'font-size:16px'});
+  cameraBtn.appendChild(document.createTextNode('\uD83D\uDCF7'));
+  cameraBtn.addEventListener('click', function() { cameraInput.click(); });
 
   var textarea = el('textarea', {rows: 1, placeholder: 'Message... (Shift+Enter for newline)'});
   // Auto-resize textarea
@@ -6198,10 +6213,12 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   var currentAbort = null;
 
   inputBox.appendChild(attachBtn);
+  inputBox.appendChild(cameraBtn);
   inputBox.appendChild(textarea);
   inputBox.appendChild(sendBtn);
   inputBox.appendChild(stopBtn);
   inputWrap.appendChild(inputBox);
+  inputWrap.appendChild(cameraInput);
   inputArea.appendChild(inputWrap);
   container.appendChild(inputArea);
 
