@@ -62,15 +62,72 @@
 
 ```
 security/
-├── CLAUDE.md          ← このファイル
-├── audits/            ← 監査レポート
-│   └── YYYY-MM-DD.md
-└── policies/          ← ポリシー文書
+├── CLAUDE.md            ← このファイル
+├── audits/              ← 監査レポート
+│   ├── YYYY-MM-DD.md    ← 手動監査（月次）
+│   ├── scan-YYYY-MM-DD.md ← 自動スキャン（週次）
+│   └── scan-latest.md   ← 最新スキャン（鮮度チェック用）
+└── policies/            ← ポリシー文書
+```
+
+## 自動化レイヤー（3層構成）
+
+セキュリティが「忘れ去られない」ための仕組み:
+
+### Layer 1: /company 起動時の鮮度チェック（毎回）
+
+`freshness-policy.yaml` に登録済み。`/company` 起動のたびに:
+- `security_scan` (priority 5): 週次スキャンが7日以上前 → 自動アラート
+- `security_audit` (priority 4): 手動監査が30日以上前 → リマインド
+
+### Layer 2: 週次自動スキャン（GitHub Actions）
+
+`.github/workflows/security-scan.yml` が毎週月曜 10:00 JST に実行:
+- `scripts/security/scan.py` で全リポジトリをスキャン
+- SHA ピン留め漏れ、permissions 未宣言、危険な CI コマンドを検出
+- 結果を `audits/scan-latest.md` + `audits/scan-YYYY-MM-DD.md` に出力
+- 自動コミット & プッシュ
+
+### Layer 3: 日次情報収集（intelligence 連携）
+
+`intelligence/sources.yaml` にセキュリティフィードを追加済み:
+- GitHub Security Blog、Socket.dev Blog を日次監視
+- "supply chain attack npm pypi"、"GitHub Actions vulnerability" を日次検索
+- @SocketDev（サプライチェーン速報）を監視
+- 重大な脆弱性が検出された場合、ブリーフィングで優先報告
+
+## 運用フロー
+
+### 通常時（自動）
+
+```
+毎日: intelligence → セキュリティ動向を収集・報告
+毎週月曜: security-scan.yml → 全リポジトリをスキャン → scan-latest.md
+/company 起動: 鮮度チェック → スキャン結果が古ければアラート
+```
+
+### 問題検出時
+
+```
+スキャンで High 検出 → /company ブリーフィングで警告
+intelligence で攻撃情報検出 → 影響有無を即時確認
+  → 影響あり: インシデント対応フロー（SLA準拠）
+  → 影響なし: 監査レポートに記録
+```
+
+### 月次（手動監査）
+
+```
+セキュリティ部が全PJの対応状況を棚卸し
+  → audits/YYYY-MM-DD.md に詳細レポート
+  → 未対応項目を各PJ会社へ是正指示
 ```
 
 ## 作業プロトコル
 
-1. **監査実施時**: 全PJリポジトリの workflows / lockfile / .npmrc / dependabot 設定をスキャン
-2. **是正指示**: 監査結果に基づき、各PJ会社へ対応チケットを発行
-3. **ナレッジ蓄積**: セキュリティインシデント・対応事例を記録
-4. **ルール更新**: ガイドライン原本の変更を検知し、全社ルールに反映
+1. **自動スキャン確認**: 毎週の scan-latest.md を確認し、新規 findings に対応
+2. **動向ウォッチ**: intelligence レポートのセキュリティカテゴリを確認
+3. **月次監査**: 全PJリポジトリの workflows / lockfile / .npmrc / dependabot を手動でも確認
+4. **是正指示**: 監査結果に基づき、各PJ会社へ対応チケットを発行
+5. **ナレッジ蓄積**: セキュリティインシデント・対応事例を記録
+6. **ルール更新**: ガイドライン原本の変更を検知し、全社ルールに反映

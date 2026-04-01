@@ -73,7 +73,7 @@ data_sources:
   # ── 優先度2: フィードバック系（精度向上に必要） ──
 
   prep_log_feedback:
-    priority: 4
+    priority: 6
     max_age_days: 3
     auto_update: false
     blocking: false
@@ -89,7 +89,7 @@ data_sources:
          - 3/29 B社レビュー → 準備は十分でしたか？(1-5)」
 
   intelligence_feedback:
-    priority: 5
+    priority: 7
     max_age_days: 7
     auto_update: false
     blocking: false
@@ -103,7 +103,7 @@ data_sources:
          [x-Anthr-2] Anthropic発表 → 有用/ノイズ？」
 
   preferences_decay:
-    priority: 6
+    priority: 8
     max_age_days: 30
     auto_update: true
     blocking: false
@@ -146,7 +146,7 @@ data_sources:
   # ── 優先度3: 基盤データ（自動更新済みだが確認は必要） ──
 
   intelligence_reports:
-    priority: 7
+    priority: 9
     max_age_days: 1
     auto_update: true
     blocking: false
@@ -158,7 +158,7 @@ data_sources:
       python scripts/intelligence/collect.py
 
   diary_analysis:
-    priority: 8
+    priority: 10
     max_age_days: 30
     auto_update: false
     blocking: false

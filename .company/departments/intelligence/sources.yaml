@@ -152,6 +152,45 @@ tech_articles:
     frequency: daily
 
 # ============================================================
+# セキュリティ（サプライチェーン攻撃・脆弱性動向）
+# ============================================================
+security:
+  keywords:
+    - term: "supply chain attack npm pypi"
+      category: "security"
+      frequency: daily
+    - term: "GitHub Actions vulnerability"
+      category: "security"
+      frequency: daily
+    - term: "npm malicious package"
+      category: "security"
+      frequency: daily
+    - term: "PyPI malware"
+      category: "security"
+      frequency: weekly
+
+  web_sources:
+    - url: "https://github.blog/security/"
+      category: "security"
+      name: "GitHub Security Blog"
+      frequency: daily
+    - url: "https://socket.dev/blog"
+      category: "security"
+      name: "Socket.dev Blog"
+      note: "npm/PyPI サプライチェーン攻撃検知"
+      frequency: daily
+
+  x_accounts:
+    - handle: "@SocketDev"
+      category: "security"
+      note: "サプライチェーンセキュリティ速報"
+      priority: high
+    - handle: "@snaborofficial"
+      category: "security"
+      note: "Snyk 公式"
+      priority: normal
+
+# ============================================================
 # GitHub リリース監視
 # ============================================================
 github_releases:
