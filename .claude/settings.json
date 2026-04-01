@@ -165,7 +165,8 @@
       "/home/node/.claude/plugins/marketplaces/ai-company/.claude-plugin",
       "/home/node/.claude/knowledge",
       "/workspace/.company/departments/security",
-      "/workspace/.claude/hooks"
+      "/workspace/.claude/hooks",
+      "/workspace/.company-polaris/secretary"
     ]
   },
   "hooks": {
@@ -250,16 +251,6 @@
             "command": ".claude/hooks/bash-guard.sh"
           }
         ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/tool-metrics.sh",
-            "async": true
-          }
-        ]
       }
     ],
     "PostToolUse": [
@@ -274,16 +265,6 @@
           {
             "type": "command",
             "command": ".claude/hooks/artifact-auto-sync.sh",
-            "async": true
-          }
-        ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/tool-metrics.sh",
             "async": true
           }
         ]
