@@ -1454,9 +1454,10 @@ async function renderInbox(root) {
       description: descInput.value.trim() || null, priority: priSelect.value
     });
     if (coId) await sb.rpc('log_activity', {p_company_id: coId, p_action: 'task_created', p_description: title});
+    var savedTitle = title;
     titleInput.value = '';
     descInput.value = '';
-    toast('追加しました');
+    toast('"' + savedTitle + '" を追加しました');
     renderInbox(clearEl('page-container').appendChild(el('div', {className: 'page'})));
   }});
 
@@ -3473,9 +3474,9 @@ function openInvoiceModal(existingInv, onSaved) {
 
   if (isEdit) {
     var delBtn = el('button', {textContent: '削除', style: 'background:none;border:1px solid #ef4444;color:#ef4444;border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:var(--font)', onClick: function() {
-      showConfirm('請求書を削除', 'この請求書を削除し���すか？', async function() {
+      showConfirm('請求書を削除', 'この請求書を削除しますか？', async function() {
         delBtn.disabled = true;
-        saveStatus.textContent = '削��中...';
+        saveStatus.textContent = '削除中...';
         if (inv.file_url) await sb.storage.from('invoices').remove([inv.file_url]);
         await sb.from('invoices').delete().eq('id', inv.id);
         overlay.remove();
@@ -5525,6 +5526,9 @@ async function renderApiCosts(root) {
 
   async function loadCosts(days) {
     while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
+    contentArea.appendChild(skeletonGrid(3, 3, 'skeleton-kpi'));
+    contentArea.appendChild(el('div', {style:'height:14px'}));
+    contentArea.appendChild(skeletonRows(4));
     var since = new Date(Date.now() - days * 86400000).toISOString();
 
     // Fetch all messages with cost data
@@ -5535,13 +5539,13 @@ async function renderApiCosts(root) {
       .not('cost_usd', 'is', null)
       .order('created_at', {ascending: false});
 
+    while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
+
+    if (res.error) { contentArea.appendChild(inlineError('APIコストの取得に失敗しました: ' + res.error.message, function() { loadCosts(days); })); return; }
     var msgs = res.data || [];
 
     if (msgs.length === 0) {
-      contentArea.appendChild(el('div', {className: 'card', style: 'padding:40px;text-align:center;color:var(--text3)'}, [
-        el('div', {style: 'font-size:24px;margin-bottom:8px', textContent: '$'}),
-        el('div', {textContent: 'この期間のAPI利用データはありません'})
-      ]));
+      contentArea.appendChild(emptyState('$', 'この期間のAPI利用データはありません'));
       return;
     }
 
