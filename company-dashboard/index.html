@@ -2977,13 +2977,47 @@ async function extractPdfText(file) {
   if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
   var arrayBuffer = await file.arrayBuffer();
   var pdf = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise;
-  var fullText = '';
+  var lines = [];
   for (var i = 1; i <= pdf.numPages; i++) {
     var page = await pdf.getPage(i);
     var content = await page.getTextContent();
-    var pageText = content.items.map(function(item) { return item.str; }).join(' ');
-    fullText += pageText + '\n';
+    var items = content.items.filter(function(it) { return it.str && it.str.trim(); });
+    if (items.length === 0) continue;
+
+    // Group items by Y coordinate (same line detection)
+    // transform[5] = Y position; items on same line share similar Y
+    var lineMap = {};
+    items.forEach(function(item) {
+      var y = Math.round(item.transform[5] * 10) / 10; // round to 0.1
+      // Find existing line within threshold (±2 units)
+      var lineKey = null;
+      var keys = Object.keys(lineMap);
+      for (var k = 0; k < keys.length; k++) {
+        if (Math.abs(parseFloat(keys[k]) - y) < 2) { lineKey = keys[k]; break; }
+      }
+      if (!lineKey) lineKey = String(y);
+      if (!lineMap[lineKey]) lineMap[lineKey] = [];
+      lineMap[lineKey].push({str: item.str, x: item.transform[4], w: item.width || 0});
+    });
+
+    // Sort lines by Y descending (PDF Y=0 is bottom), then items by X ascending
+    var sortedYs = Object.keys(lineMap).sort(function(a, b) { return parseFloat(b) - parseFloat(a); });
+    sortedYs.forEach(function(yKey) {
+      var lineItems = lineMap[yKey].sort(function(a, b) { return a.x - b.x; });
+      // Join items: no space if items are adjacent, space if gap > threshold
+      var lineStr = '';
+      for (var j = 0; j < lineItems.length; j++) {
+        if (j > 0) {
+          var gap = lineItems[j].x - (lineItems[j-1].x + lineItems[j-1].w);
+          if (gap > 5) lineStr += ' ';
+        }
+        lineStr += lineItems[j].str;
+      }
+      lines.push(lineStr.trim());
+    });
   }
+  var fullText = lines.join('\n');
+  console.log('[Invoice Parser] Extracted text:\n' + fullText);
   return fullText;
 }
 
@@ -2996,34 +3030,45 @@ function parseInvoice(pdfText, filename) {
   if (fnMatch) {
     result.client_name = fnMatch[1];
     var y = fnMatch[2], m = fnMatch[3].padStart(2,'0');
-    // Invoice date = last day of the billed month
     var lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
     result.invoice_date = y + '-' + m + '-' + String(lastDay).padStart(2,'0');
   }
 
+  // Prepare two versions of text for regex matching
+  var text = pdfText;
+  // Normalized: remove all whitespace (handles fragmented PDF text)
+  var norm = pdfText.replace(/[\s\u3000]+/g, '');
+  console.log('[Invoice Parser] Normalized text:\n' + norm);
+
   // --- PDF text parsing (overrides filename where found) ---
-  // Amount (tax-inclusive total)
-  var amtMatch = pdfText.match(/(?:合計|請求金額|ご請求額|総額|請求額)[\s\S]{0,30}?([0-9,]+)\s*円/) ||
-                 pdfText.match(/¥\s*([0-9,]+)[\s\S]{0,10}(?:合計|税込)/);
+
+  // Amount (tax-inclusive total) — try structured text first, then normalized
+  var amtMatch = text.match(/(?:合計|請求金額|ご請求額|総額|請求額|御請求額)\s*[¥￥]?\s*([0-9,]+)/) ||
+                 text.match(/(?:合計|請求金額|ご請求額|総額|請求額|御請求額)\s*[¥￥]?\s*([0-9,]+)\s*円/) ||
+                 norm.match(/(?:合計|請求金額|ご請求額|総額|請求額|御請求額)[¥￥]?([0-9,]+)/) ||
+                 norm.match(/[¥￥]([0-9,]{4,})/) ||
+                 text.match(/[¥￥]\s*([0-9,]{4,})/);
   if (amtMatch) result.amount = parseInt(amtMatch[1].replace(/,/g, ''), 10);
 
   // Tax amount
-  var taxMatch = pdfText.match(/(?:消費税|税額|うち税)[\s\S]{0,30}?([0-9,]+)\s*円/) ||
-                 pdfText.match(/(?:消費税|税額)[\s\S]{0,20}?¥?\s*([0-9,]+)/);
+  var taxMatch = text.match(/(?:消費税|税額|うち税|内消費税)\s*[¥￥]?\s*([0-9,]+)/) ||
+                 norm.match(/(?:消費税|税額|うち税|内消費税)[¥￥]?([0-9,]+)/);
   if (taxMatch) result.tax_amount = parseInt(taxMatch[1].replace(/,/g, ''), 10);
 
-  // Invoice date
-  var dateMatch = pdfText.match(/(?:請求日|発行日|日付)[\s:：\s]*(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/) ||
-                  pdfText.match(/(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})日?/);
+  // Invoice date — multiple formats
+  var dateMatch = text.match(/(?:請求日|発行日|日付)\s*[:：]?\s*(\d{4})\s*[年\/\-]\s*(\d{1,2})\s*[月\/\-]\s*(\d{1,2})/) ||
+                  norm.match(/(?:請求日|発行日|日付)[:：]?(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/) ||
+                  norm.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
   if (dateMatch) {
     result.invoice_date = dateMatch[1] + '-' + dateMatch[2].padStart(2,'0') + '-' + dateMatch[3].padStart(2,'0');
   }
 
   // Invoice number
-  var numMatch = pdfText.match(/(?:請求書番号|請求番号|No\.?|番号)[\s:：\s]*([A-Za-z0-9\-_]+)/);
+  var numMatch = text.match(/(?:請求書番号|請求番号|No\.?|番号)\s*[:：]?\s*([A-Za-z0-9\-_]+)/) ||
+                 norm.match(/(?:請求書番号|請求番号|No\.?|番号)[:：]?([A-Za-z0-9\-_]+)/);
   if (numMatch) result.invoice_number = numMatch[1];
 
-  // Company ID mapping
+  // Company ID mapping from client name
   var clientLower = result.client_name.toLowerCase();
   if (clientLower.match(/aces/i)) result.company_id = '';
   if (clientLower.match(/polaris/i)) result.company_id = 'polaris';
@@ -3031,6 +3076,7 @@ function parseInvoice(pdfText, filename) {
   if (clientLower.match(/りそな|rikyu|risona/i)) result.company_id = 'rikyu';
   if (clientLower.match(/denso|circuit|回路/i)) result.company_id = 'circuit';
 
+  console.log('[Invoice Parser] Parsed result:', JSON.stringify(result));
   return result;
 }
 
