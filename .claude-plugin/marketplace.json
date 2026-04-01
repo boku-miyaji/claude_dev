@@ -4,20 +4,15 @@
     "name": "owner"
   },
   "metadata": {
-    "description": "AI開発・システム開発を中心とした仮想組織プラグイン。秘書が窓口、人事部が組織を継続最適化。"
+    "description": "AI company plugin"
   },
   "plugins": [
     {
       "name": "company",
       "source": "./plugins/company",
-      "description": "AI開発・システム開発を中心とした仮想組織スキル。秘書が窓口、人事部が組織を継続最適化。",
+      "description": "HD + PJ company virtual organization management",
       "strict": false,
-      "skills": [
-        "./plugins/company/skills/company",
-        "./plugins/company/skills/invoice",
-        "./plugins/company/skills/permission",
-        "./plugins/company/skills/no-edit"
-      ]
+      "skills": ["./plugins/company/skills/auto-prep","./plugins/company/skills/company","./plugins/company/skills/diary","./plugins/company/skills/invoice","./plugins/company/skills/no-edit","./plugins/company/skills/permission","./plugins/company/skills/register","./plugins/company/skills/weekly-digest"]
     }
   ]
 }
