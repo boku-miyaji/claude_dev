@@ -53,7 +53,9 @@
       "mcp__plugin_serena_serena__replace_symbol_body",
       "Bash(npx vite:*)",
       "Bash(docker-compose build:*)",
-      "Bash(docker compose build:*)"
+      "Bash(docker compose build:*)",
+      "Bash(cp /workspace/company-dashboard/index.html /workspace/.claude/plugins/marketplaces/ai-company/company-dashboard/index.html)",
+      "Bash(cp /workspace/company-dashboard/index.html /workspace/.claude/plugins/cache/ai-company/company/89baddfa0ee7/company-dashboard/index.html)"
     ]
   }
 }

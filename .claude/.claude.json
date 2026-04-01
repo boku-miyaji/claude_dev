@@ -43,7 +43,8 @@
     "mobile-app": 21,
     "guest-passes": 21,
     "frontend-design-plugin": 30,
-    "color-when-multi-clauding": 30
+    "color-when-multi-clauding": 30,
+    "agent-flag": 30
   },
   "promptQueueUseCount": 3,
   "showExpandedTodos": true,
