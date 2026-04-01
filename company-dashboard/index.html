@@ -376,6 +376,36 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 @media(max-width:768px){.growth-summary{grid-template-columns:repeat(2,1fr)}}
 .growth-cat-bar{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:6px}
 .growth-cat-fill{height:100%;border-radius:3px;background:var(--green);transition:width .5s}
+
+/* Calendar */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:900px){.cal-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.cal-grid{grid-template-columns:1fr}}
+.cal-day{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:12px;min-height:130px;transition:all .2s}
+.cal-day:hover{border-color:var(--border2)}
+.cal-day.cal-today{border-color:var(--accent);border-width:2px;box-shadow:0 0 0 1px var(--accent-border)}
+.cal-day-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cal-day-dow{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.cal-day-num{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text)}
+.cal-today .cal-day-num{color:var(--accent)}
+.cal-evt{padding:5px 8px;margin-bottom:4px;border-radius:5px;font-size:11px;line-height:1.4;border-left:3px solid var(--accent);background:var(--accent-bg);cursor:default;transition:background .15s}
+.cal-evt:last-child{margin-bottom:0}
+.cal-evt:hover{filter:brightness(1.05)}
+.cal-evt.cal-work{border-left-color:var(--green);background:var(--green-bg)}
+.cal-evt.cal-secondary{border-left-color:var(--amber);background:var(--amber-bg)}
+.cal-evt.cal-primary{border-left-color:var(--accent);background:var(--accent-bg)}
+.cal-evt.cal-past{opacity:.45}
+.cal-evt.cal-now{box-shadow:inset 0 0 0 1px var(--accent)}
+.cal-evt-time{font-family:var(--mono);font-size:10px;color:var(--text3);display:block;margin-bottom:1px}
+.cal-evt-title{font-weight:500;color:var(--text);font-size:11px}
+.cal-legend{display:flex;gap:16px;margin-top:4px}
+.cal-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3)}
+.cal-legend-dot{width:10px;height:3px;border-radius:2px}
+.cal-legend-dot.w{background:var(--green)}.cal-legend-dot.p{background:var(--accent)}.cal-legend-dot.s{background:var(--amber)}
+.cal-empty{font-size:11px;color:var(--text3);padding:8px 0}
+.cal-sync-info{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);margin-bottom:16px}
+.cal-sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.cal-sync-dot.stale{background:var(--amber)}
 </style>
 </head>
 <body>
@@ -402,6 +432,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
       宮路HD
     </div>
     <button class="nav-item active" data-page="dashboard"><span class="nav-icon">◉</span> Dashboard</button>
+    <button class="nav-item" data-page="calendar"><span class="nav-icon">📅</span> Calendar</button>
     <button class="nav-item" data-page="inbox"><span class="nav-icon">＋</span> Inbox</button>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
@@ -467,6 +498,7 @@ var sb = null;
 // ============================================================
 var ALL_MOB_TABS = [
   {page: 'dashboard', icon: '◉', label: 'Home'},
+  {page: 'calendar', icon: '📅', label: 'Calendar'},
   {page: 'inbox', icon: '＋', label: 'Inbox'},
   {page: 'finance', icon: '¥', label: 'Finance'},
   {page: 'tasks', icon: '☐', label: 'Tasks'},
@@ -918,6 +950,7 @@ function renderPage(page) {
   c.appendChild(p);
   var renderers = {
     dashboard: renderDashboard,
+    calendar: renderCalendar,
     inbox: renderInbox,
     tasks: renderTasks,
     companies: renderCompanies,
