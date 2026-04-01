@@ -41,10 +41,11 @@
     "btw-side-question": 20,
     "web-app": 21,
     "mobile-app": 21,
-    "guest-passes": 21,
+    "guest-passes": 30,
     "frontend-design-plugin": 30,
     "color-when-multi-clauding": 30,
-    "agent-flag": 30
+    "agent-flag": 30,
+    "feedback-command": 30
   },
   "promptQueueUseCount": 3,
   "showExpandedTodos": true,
