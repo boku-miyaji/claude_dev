@@ -3029,37 +3029,55 @@ async function extractPdfText(file) {
 function parseInvoice(pdfText, filename) {
   var result = {client_name:'', amount:0, tax_amount:0, invoice_date:'', invoice_number:'', company_id:''};
 
-  // --- Filename parsing: {company}_{name}_請求書_{yyyy-mm月分}.pdf ---
-  var fnMatch = filename.match(/^(.+?)_.*?請求書_(\d{4})-?(\d{1,2})月?分/);
+  // --- Filename parsing (date fallback only) ---
+  var fnMatch = filename.match(/請求書_(\d{4})-?(\d{1,2})月?分/);
   if (fnMatch) {
-    result.client_name = fnMatch[1];
-    var y = fnMatch[2], m = fnMatch[3].padStart(2,'0');
+    var y = fnMatch[1], m = fnMatch[2].padStart(2,'0');
     var lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
     result.invoice_date = y + '-' + m + '-' + String(lastDay).padStart(2,'0');
   }
 
   // Prepare two versions of text for regex matching
   var text = pdfText;
-  // Normalized: remove all whitespace (handles fragmented PDF text)
   var norm = pdfText.replace(/[\s\u3000]+/g, '');
   console.log('[Invoice Parser] Normalized text:\n' + norm);
 
-  // --- PDF text parsing (overrides filename where found) ---
+  // --- Client name: extract from PDF (御中/様/宛 patterns, or "請求先") ---
+  var clientMatch = text.match(/(.+?)\s*(?:御中|様|殿)\s*$/m) ||
+                    norm.match(/(.+?)(?:御中|様|殿)/) ||
+                    text.match(/(?:請求先|宛先)\s*[:：]?\s*(.+)/);
+  if (clientMatch) {
+    // Clean up: remove leading markers like "〒", address fragments, whitespace
+    var raw = clientMatch[1].trim();
+    // Take last meaningful segment if multiple lines captured
+    var segments = raw.split(/[\n\r]+/);
+    var candidate = segments[segments.length - 1].trim();
+    // Remove common prefixes (〒, 住所っぽいもの)
+    candidate = candidate.replace(/^[〒\d\-]+/, '').replace(/^[都道府県].+?[市区町村].*/,'').trim();
+    if (candidate.length >= 2 && candidate.length <= 50) {
+      result.client_name = candidate;
+    }
+  }
 
-  // Amount (tax-inclusive total) — try structured text first, then normalized
+  // Fallback: filename prefix if PDF extraction failed
+  if (!result.client_name) {
+    var fnClientMatch = filename.match(/^(.+?)_.*?請求書/);
+    if (fnClientMatch) result.client_name = fnClientMatch[1];
+  }
+
+  // --- Amount (tax-inclusive total) ---
   var amtMatch = text.match(/(?:合計|請求金額|ご請求額|総額|請求額|御請求額)\s*[¥￥]?\s*([0-9,]+)/) ||
-                 text.match(/(?:合計|請求金額|ご請求額|総額|請求額|御請求額)\s*[¥￥]?\s*([0-9,]+)\s*円/) ||
                  norm.match(/(?:合計|請求金額|ご請求額|総額|請求額|御請求額)[¥￥]?([0-9,]+)/) ||
                  norm.match(/[¥￥]([0-9,]{4,})/) ||
                  text.match(/[¥￥]\s*([0-9,]{4,})/);
   if (amtMatch) result.amount = parseInt(amtMatch[1].replace(/,/g, ''), 10);
 
-  // Tax amount
+  // --- Tax amount ---
   var taxMatch = text.match(/(?:消費税|税額|うち税|内消費税)\s*[¥￥]?\s*([0-9,]+)/) ||
                  norm.match(/(?:消費税|税額|うち税|内消費税)[¥￥]?([0-9,]+)/);
   if (taxMatch) result.tax_amount = parseInt(taxMatch[1].replace(/,/g, ''), 10);
 
-  // Invoice date — multiple formats
+  // --- Invoice date ---
   var dateMatch = text.match(/(?:請求日|発行日|日付)\s*[:：]?\s*(\d{4})\s*[年\/\-]\s*(\d{1,2})\s*[月\/\-]\s*(\d{1,2})/) ||
                   norm.match(/(?:請求日|発行日|日付)[:：]?(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/) ||
                   norm.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
@@ -3067,13 +3085,13 @@ function parseInvoice(pdfText, filename) {
     result.invoice_date = dateMatch[1] + '-' + dateMatch[2].padStart(2,'0') + '-' + dateMatch[3].padStart(2,'0');
   }
 
-  // Invoice number
+  // --- Invoice number ---
   var numMatch = text.match(/(?:請求書番号|請求番号|No\.?|番号)\s*[:：]?\s*([A-Za-z0-9\-_]+)/) ||
                  norm.match(/(?:請求書番号|請求番号|No\.?|番号)[:：]?([A-Za-z0-9\-_]+)/);
   if (numMatch) result.invoice_number = numMatch[1];
 
-  // Company ID mapping from client name
-  var clientLower = result.client_name.toLowerCase();
+  // --- Company ID mapping ---
+  var clientLower = (result.client_name || '').toLowerCase();
   if (clientLower.match(/aces/i)) result.company_id = '';
   if (clientLower.match(/polaris/i)) result.company_id = 'polaris';
   if (clientLower.match(/sompo|scotch|foundry/i)) result.company_id = 'foundry';
