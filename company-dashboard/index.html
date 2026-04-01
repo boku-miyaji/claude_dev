@@ -5560,7 +5560,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   attachBtn.appendChild(document.createTextNode('+'));
   attachBtn.addEventListener('click', function() { fileInput.click(); });
 
-  var textarea = el('textarea', {rows: 1, placeholder: 'Message...'});
+  var textarea = el('textarea', {rows: 1, placeholder: 'Message... (Shift+Enter for newline)'});
   // Auto-resize textarea
   textarea.addEventListener('input', function() {
     textarea.style.height = 'auto';
@@ -5569,10 +5569,14 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
 
   var sendBtn = el('button', {className: 'chat-input-btn send', title: 'Send'});
   sendBtn.appendChild(document.createTextNode('\u2191'));
+  var stopBtn = el('button', {className: 'chat-input-btn send', title: 'Stop', style: 'background:var(--red);display:none'});
+  stopBtn.appendChild(document.createTextNode('\u25A0'));
+  var currentAbort = null;
 
   inputBox.appendChild(attachBtn);
   inputBox.appendChild(textarea);
   inputBox.appendChild(sendBtn);
+  inputBox.appendChild(stopBtn);
   inputWrap.appendChild(inputBox);
   inputArea.appendChild(inputWrap);
   container.appendChild(inputArea);
@@ -5598,7 +5602,9 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     if ((!text && !attachments.length) || chatState.streaming) return;
     textarea.value = ''; textarea.style.height = 'auto';
     pendingAttachments = []; renderPreviews();
-    chatState.streaming = true; sendBtn.disabled = true;
+    chatState.streaming = true;
+    sendBtn.style.display = 'none'; stopBtn.style.display = 'flex';
+    currentAbort = new AbortController();
 
     // Clear welcome
     if (!chatState.conversationId) { while (messagesInner.firstChild) messagesInner.removeChild(messagesInner.firstChild); }
@@ -5620,9 +5626,9 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     var metrics = {startTime: Date.now(), ttft: null, toolsUsed: [], model: null, stepCount: 0, complexity: null, tokIn: 0, tokOut: 0, costUsd: 0};
 
     if (chatState.directMode && getChatApiKey()) {
-      await sendDirectMode(text, metaDiv, contentDiv, messagesInner, row, attachments, metrics);
+      await sendDirectMode(text, metaDiv, contentDiv, messagesInner, row, attachments, metrics, currentAbort.signal);
     } else {
-      await sendEdgeFnMode(text, edgeFnUrl, metaDiv, contentDiv, messagesInner, row, attachments, metrics);
+      await sendEdgeFnMode(text, edgeFnUrl, metaDiv, contentDiv, messagesInner, row, attachments, metrics, currentAbort.signal);
     }
 
     // Save execution metrics
@@ -5641,11 +5647,13 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     // Show timing in meta
     metaDiv.textContent = (metaDiv.textContent || '') + ' \u00B7 TTFT:' + (metrics.ttft || '?') + 'ms \u00B7 Total:' + (totalTime/1000).toFixed(1) + 's';
 
-    chatState.streaming = false; sendBtn.disabled = false;
+    chatState.streaming = false;
+    sendBtn.style.display = 'flex'; stopBtn.style.display = 'none';
+    currentAbort = null;
     if (onConvUpdate) onConvUpdate();
   }
 
-  async function sendDirectMode(text, metaDiv, contentDiv, msgContainer, assistantRow, attachments, metrics) {
+  async function sendDirectMode(text, metaDiv, contentDiv, msgContainer, assistantRow, attachments, metrics, signal) {
     var apiKey = getChatApiKey();
     var model = chatState.model === 'auto' ? 'gpt-5-nano' : chatState.model;
     metrics.model = model;
@@ -5695,7 +5703,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
       var re = chatState.reasoningEffort==='auto'?(model==='gpt-5-nano'?'none':model==='gpt-5-mini'?'low':'medium'):chatState.reasoningEffort;
       var body = {model:model,messages:oaiMessages,stream:true,stream_options:{include_usage:true}};
       if (re && re !== 'none') body.reasoning_effort = re;
-      var res = await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify(body)});
+      var res = await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify(body),signal:signal});
       if (!res.ok) { contentDiv.textContent = 'Error ' + res.status; contentDiv.style.color='var(--red)'; return; }
 
       var reader = res.body.getReader(), decoder = new TextDecoder(), buf = '', tokIn = 0, tokOut = 0;
@@ -5718,18 +5726,26 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
         await sb.from('messages').insert({conversation_id:chatState.conversationId,role:'assistant',content:fullText,model:model,tokens_input:tokIn,tokens_output:tokOut,step:1});
         await sb.from('conversations').update({updated_at:new Date().toISOString()}).eq('id',chatState.conversationId);
       }
-    } catch(err) { contentDiv.textContent = 'Error: '+err.message; contentDiv.style.color='var(--red)'; }
+    } catch(err) { if (err.name !== 'AbortError') { contentDiv.textContent = 'Error: '+err.message; contentDiv.style.color='var(--red)'; } }
   }
 
-  async function sendEdgeFnMode(text, edgeFnUrl, metaDiv, contentDiv, msgContainer, assistantRow, attachments, metrics) {
+  async function sendEdgeFnMode(text, edgeFnUrl, metaDiv, contentDiv, msgContainer, assistantRow, attachments, metrics, signal) {
     var fullText = '';
     var images = (attachments||[]).filter(function(a){return a.type.startsWith('image/');}).map(function(a){return {data_url:a.dataUrl,name:a.name,type:a.type};});
     try {
       var session = await sb.auth.getSession();
       var token = session.data.session ? session.data.session.access_token : '';
       var res = await fetch(edgeFnUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
-        body:JSON.stringify({conversation_id:chatState.conversationId,message:text,model:chatState.model,context_mode:chatState.contextMode,company_id:chatState.companyId,reasoning_effort:chatState.reasoningEffort,images:images.length?images:undefined,precision_mode:chatState.precisionMode||undefined})});
-      if (!res.ok) { contentDiv.textContent = 'Edge Function error: HTTP ' + res.status; contentDiv.style.color='var(--red)'; return; }
+        body:JSON.stringify({conversation_id:chatState.conversationId,message:text,model:chatState.model,context_mode:chatState.contextMode,company_id:chatState.companyId,reasoning_effort:chatState.reasoningEffort,images:images.length?images:undefined,precision_mode:chatState.precisionMode||undefined}),signal:signal});
+      if (!res.ok) {
+        if (res.status === 401) {
+          contentDiv.textContent = 'Edge Function 認証エラー (401): Edge Function の OPENAI_API_KEY が未設定の可能性があります。Settings の Direct Mode に OpenAI API Key を設定してください。';
+          chatState.directMode = true;
+        } else {
+          contentDiv.textContent = 'Edge Function error: HTTP ' + res.status;
+        }
+        contentDiv.style.color='var(--red)'; return;
+      }
 
       var reader = res.body.getReader(), decoder = new TextDecoder(), buf = '';
       while (true) {
@@ -5793,9 +5809,12 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
           } catch(e) {}
         }
       }
-    } catch(err) { contentDiv.textContent = 'Error: '+err.message; contentDiv.style.color='var(--red)'; }
+    } catch(err) { if (err.name !== 'AbortError') { contentDiv.textContent = 'Error: '+err.message; contentDiv.style.color='var(--red)'; } }
   }
 
+  stopBtn.onclick = function() {
+    if (currentAbort) currentAbort.abort();
+  };
   sendBtn.onclick = sendMessage;
   textarea.addEventListener('keydown', function(e) {
     if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMessage(); }
