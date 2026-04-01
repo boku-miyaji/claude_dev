@@ -534,6 +534,7 @@ async function showApp(user) {
   // Load tab click counts first, then build mobile nav
   await loadTabClicksAndBuild();
   setupNav();
+  setupGlobalQuickAsk();
   var startPage = (window.location.hash || '').replace('#', '') || 'dashboard';
   navigate(startPage);
 }
@@ -552,6 +553,141 @@ function setupNav() {
   });
   // Build mobile nav from click data
   buildMobileNav();
+}
+
+/** Global Quick Ask: select text anywhere in the dashboard → one-shot AI answer */
+function setupGlobalQuickAsk() {
+  var qaBtn = el('div', {className: 'quick-ask-btn', textContent: 'Ask about this'});
+  document.body.appendChild(qaBtn);
+
+  // Detect text selection anywhere in .main content area
+  document.addEventListener('mouseup', function() {
+    var sel = window.getSelection();
+    var text = (sel && sel.toString() || '').trim();
+    if (text.length < 5) { qaBtn.style.display = 'none'; return; }
+    // Don't trigger on input/textarea/select
+    var anchor = sel.anchorNode && sel.anchorNode.parentElement;
+    if (anchor && (anchor.tagName === 'INPUT' || anchor.tagName === 'TEXTAREA' || anchor.tagName === 'SELECT' || anchor.isContentEditable)) return;
+    var range = sel.getRangeAt(0);
+    var rect = range.getBoundingClientRect();
+    qaBtn.style.display = 'block';
+    qaBtn.style.top = (rect.top + window.scrollY - 36) + 'px';
+    qaBtn.style.left = Math.min(rect.left + rect.width / 2 - 60, window.innerWidth - 160) + 'px';
+    qaBtn.dataset.selectedText = text;
+  });
+
+  document.addEventListener('mousedown', function(e) {
+    if (e.target !== qaBtn && !qaBtn.contains(e.target)) qaBtn.style.display = 'none';
+  });
+
+  qaBtn.addEventListener('click', function() {
+    var selectedText = qaBtn.dataset.selectedText || '';
+    qaBtn.style.display = 'none';
+    if (!selectedText) return;
+    openQuickAsk(selectedText);
+  });
+}
+
+function openQuickAsk(contextText) {
+  var panel = el('div', {className: 'quick-ask-panel'});
+  panel.style.position = 'fixed';
+  panel.style.top = '15vh';
+  panel.style.left = '50%';
+  panel.style.transform = 'translateX(-50%)';
+
+  var header = el('div', {className: 'qa-header'});
+  header.appendChild(el('span', {className: 'qa-title', textContent: 'Quick Ask'}));
+  var closeBtn = el('button', {className: 'qa-close', textContent: '\u00D7'});
+  header.appendChild(closeBtn);
+  panel.appendChild(header);
+
+  var ctx = el('div', {className: 'qa-context', textContent: contextText.substring(0, 500)});
+  panel.appendChild(ctx);
+
+  // Current page context
+  var pageCtx = currentPage || '';
+  var pageLabel = el('div', {style: 'padding:4px 16px;font-size:10px;color:var(--text3);background:var(--surface)', textContent: 'Page: ' + pageCtx});
+  panel.appendChild(pageLabel);
+
+  var body = el('div', {className: 'qa-body'});
+  body.appendChild(el('div', {style: 'color:var(--text3);font-size:12px', textContent: 'Ask a question about the selected text...'}));
+  panel.appendChild(body);
+
+  var inputRow = el('div', {className: 'qa-input-row'});
+  var qaInput = el('textarea', {rows: 1, placeholder: '"Explain this" / "Why?" / "Translate to English"'});
+  var qaSend = el('button', {className: 'qa-send'});
+  qaSend.appendChild(document.createTextNode('\u2191'));
+  inputRow.appendChild(qaInput);
+  inputRow.appendChild(qaSend);
+  panel.appendChild(inputRow);
+
+  var overlay = el('div', {style: 'position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.15)'});
+  function closeAll() {
+    if (panel.parentNode) panel.parentNode.removeChild(panel);
+    if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+  overlay.addEventListener('click', closeAll);
+  closeBtn.addEventListener('click', closeAll);
+  document.body.appendChild(overlay);
+  document.body.appendChild(panel);
+  qaInput.focus();
+
+  async function doQuickAsk() {
+    var question = qaInput.value.trim();
+    if (!question) question = 'Explain this in more detail.';
+    qaInput.value = '';
+    while (body.firstChild) body.removeChild(body.firstChild);
+
+    var statusLine = el('div', {style: 'font-size:11px;color:var(--text3);margin-bottom:8px'});
+    var contentArea = el('div', {className: 'md-body'});
+    body.appendChild(statusLine);
+    body.appendChild(contentArea);
+    statusLine.textContent = 'Thinking...';
+
+    var sysMsg = 'You are a helpful assistant embedded in a management dashboard. The user selected text on the "' + pageCtx + '" page and wants a quick answer. Be concise but thorough. Respond in the user\'s language.';
+    var userMsg = 'Selected text:\n"""\n' + contextText.substring(0, 2000) + '\n"""\n\nQuestion: ' + question;
+    var apiKey = getChatApiKey();
+    var model = (chatState && chatState.model !== 'auto') ? chatState.model : 'gpt-5-nano';
+
+    try {
+      var fetchOpts = {};
+      if (apiKey) {
+        fetchOpts = {url: 'https://api.openai.com/v1/chat/completions', headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+          body: {model:model,messages:[{role:'system',content:sysMsg},{role:'user',content:userMsg}],stream:true,stream_options:{include_usage:true}}};
+      } else if (sb) {
+        var session = await sb.auth.getSession();
+        fetchOpts = {url: SUPABASE_URL+'/functions/v1/ai-agent',
+          headers: {'Content-Type':'application/json','Authorization':'Bearer '+(session.data.session?session.data.session.access_token:''),'apikey':SUPABASE_ANON_KEY},
+          body: {message:userMsg,model:model,context_mode:'none',reasoning_effort:'none'}};
+      } else { contentArea.textContent = 'No API key or Edge Function available.'; return; }
+
+      var res = await fetch(fetchOpts.url, {method:'POST',headers:fetchOpts.headers,body:JSON.stringify(fetchOpts.body)});
+      if (!res.ok) { contentArea.textContent = 'Error: ' + res.status; return; }
+
+      var reader = res.body.getReader(), decoder = new TextDecoder(), buf = '', fullText = '';
+      statusLine.textContent = model;
+
+      while (true) {
+        var chunk = await reader.read();
+        if (chunk.done) break;
+        buf += decoder.decode(chunk.value,{stream:true});
+        var lines = buf.split('\n'); buf = lines.pop()||'';
+        for (var i=0;i<lines.length;i++) {
+          var line = lines[i];
+          if (!line.startsWith('data: ')||line==='data: [DONE]') continue;
+          try {
+            var d = JSON.parse(line.slice(6));
+            var delta = d.choices&&d.choices[0]&&d.choices[0].delta;
+            if (delta&&delta.content) { fullText += delta.content; renderMarkdownSafe(fullText, contentArea); }
+            if (d.type==='delta'&&d.content) { fullText += d.content; renderMarkdownSafe(fullText, contentArea); }
+          } catch(e) {}
+        }
+      }
+    } catch(err) { contentArea.textContent = 'Error: ' + err.message; }
+  }
+
+  qaSend.addEventListener('click', doQuickAsk);
+  qaInput.addEventListener('keydown', function(e) { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); doQuickAsk(); } });
 }
 
 /** Fetch tab click counts from Supabase and rebuild mobile nav */
@@ -5063,139 +5199,6 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
   textarea.focus();
-
-  // === Quick Ask: select text → one-shot deep dive ===
-  var qaBtn = el('div', {className: 'quick-ask-btn', textContent: 'Ask about this'});
-  document.body.appendChild(qaBtn);
-
-  messagesArea.addEventListener('mouseup', function() {
-    var sel = window.getSelection();
-    var text = (sel && sel.toString() || '').trim();
-    if (text.length < 5) { qaBtn.style.display = 'none'; return; }
-    // Position near selection
-    var range = sel.getRangeAt(0);
-    var rect = range.getBoundingClientRect();
-    qaBtn.style.display = 'block';
-    qaBtn.style.top = (rect.top + window.scrollY - 36) + 'px';
-    qaBtn.style.left = Math.min(rect.left + rect.width / 2 - 50, window.innerWidth - 160) + 'px';
-    qaBtn.dataset.selectedText = text;
-  });
-
-  document.addEventListener('mousedown', function(e) {
-    if (e.target !== qaBtn && !qaBtn.contains(e.target)) qaBtn.style.display = 'none';
-  });
-
-  qaBtn.addEventListener('click', function() {
-    var selectedText = qaBtn.dataset.selectedText || '';
-    qaBtn.style.display = 'none';
-    if (!selectedText) return;
-    openQuickAsk(selectedText);
-  });
-
-  function openQuickAsk(contextText) {
-    var panel = el('div', {className: 'quick-ask-panel'});
-    // Position: center-ish
-    panel.style.position = 'fixed';
-    panel.style.top = '15vh';
-    panel.style.left = '50%';
-    panel.style.transform = 'translateX(-50%)';
-
-    var header = el('div', {className: 'qa-header'});
-    header.appendChild(el('span', {className: 'qa-title', textContent: 'Quick Ask'}));
-    var closeBtn = el('button', {className: 'qa-close', textContent: '\u00D7'});
-    closeBtn.addEventListener('click', function() { document.body.removeChild(panel); });
-    header.appendChild(closeBtn);
-    panel.appendChild(header);
-
-    // Selected text context
-    var ctx = el('div', {className: 'qa-context', textContent: contextText.substring(0, 500)});
-    panel.appendChild(ctx);
-
-    // Response area
-    var body = el('div', {className: 'qa-body'});
-    body.appendChild(el('div', {style: 'color:var(--text3);font-size:12px', textContent: 'Ask a question about the selected text...'}));
-    panel.appendChild(body);
-
-    // Input row
-    var inputRow = el('div', {className: 'qa-input-row'});
-    var qaInput = el('textarea', {rows: 1, placeholder: 'e.g. "Explain this in detail" or "Why?"'});
-    var qaSend = el('button', {className: 'qa-send'});
-    qaSend.appendChild(document.createTextNode('\u2191'));
-    inputRow.appendChild(qaInput);
-    inputRow.appendChild(qaSend);
-    panel.appendChild(inputRow);
-
-    // Overlay
-    var overlay = el('div', {style: 'position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.15)'});
-    overlay.addEventListener('click', function() { document.body.removeChild(overlay); document.body.removeChild(panel); });
-    document.body.appendChild(overlay);
-    document.body.appendChild(panel);
-    qaInput.focus();
-
-    async function doQuickAsk() {
-      var question = qaInput.value.trim();
-      if (!question) question = 'Explain this in more detail.';
-      qaInput.value = '';
-      while (body.firstChild) body.removeChild(body.firstChild);
-
-      var statusLine = el('div', {style: 'font-size:11px;color:var(--text3);margin-bottom:8px'});
-      var contentArea = el('div', {className: 'md-body'});
-      body.appendChild(statusLine);
-      body.appendChild(contentArea);
-      statusLine.textContent = 'Thinking...';
-
-      var sysMsg = 'You are a helpful assistant. The user selected some text and wants a quick, focused answer about it. Be concise but thorough. Respond in the user\'s language.';
-      var userMsg = 'Selected text:\n"""\n' + contextText.substring(0, 2000) + '\n"""\n\nQuestion: ' + question;
-      var apiKey = getChatApiKey();
-      var model = chatState.model === 'auto' ? 'gpt-5-nano' : chatState.model;
-
-      try {
-        var oaiMessages = [{role:'system',content:sysMsg},{role:'user',content:userMsg}];
-        var fetchBody = {model:model,messages:oaiMessages,stream:true,stream_options:{include_usage:true}};
-        var headers = {};
-        var url = '';
-
-        if (apiKey) {
-          url = 'https://api.openai.com/v1/chat/completions';
-          headers = {'Content-Type':'application/json','Authorization':'Bearer '+apiKey};
-        } else {
-          // Try Edge Function
-          var session = await sb.auth.getSession();
-          url = SUPABASE_URL + '/functions/v1/ai-agent';
-          headers = {'Content-Type':'application/json','Authorization':'Bearer '+(session.data.session?session.data.session.access_token:''),'apikey':SUPABASE_ANON_KEY};
-          fetchBody = {message:userMsg,model:model,context_mode:'none',reasoning_effort:'none'};
-        }
-
-        var res = await fetch(url, {method:'POST',headers:headers,body:JSON.stringify(fetchBody)});
-        if (!res.ok) { contentArea.textContent = 'Error: ' + res.status; return; }
-
-        var reader = res.body.getReader(), decoder = new TextDecoder(), buf = '', fullText = '';
-        statusLine.textContent = model;
-
-        while (true) {
-          var chunk = await reader.read();
-          if (chunk.done) break;
-          buf += decoder.decode(chunk.value,{stream:true});
-          var lines = buf.split('\n'); buf = lines.pop()||'';
-          for (var i=0;i<lines.length;i++) {
-            var line = lines[i];
-            if (!line.startsWith('data: ')||line==='data: [DONE]') continue;
-            try {
-              var d = JSON.parse(line.slice(6));
-              // Direct mode (OpenAI)
-              var delta = d.choices&&d.choices[0]&&d.choices[0].delta;
-              if (delta&&delta.content) { fullText += delta.content; renderMarkdownSafe(fullText, contentArea); }
-              // Edge Function mode
-              if (d.type==='delta'&&d.content) { fullText += d.content; renderMarkdownSafe(fullText, contentArea); }
-            } catch(e) {}
-          }
-        }
-      } catch(err) { contentArea.textContent = 'Error: ' + err.message; }
-    }
-
-    qaSend.addEventListener('click', doQuickAsk);
-    qaInput.addEventListener('keydown', function(e) { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); doQuickAsk(); } });
-  }
 }
 
 function renderMarkdownSafe(text, target) {
