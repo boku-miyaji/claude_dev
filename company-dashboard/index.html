@@ -1172,7 +1172,8 @@ function showModal(title, bodyContent, footerContent) {
   var root = document.getElementById('modal-root');
   while (root.firstChild) root.removeChild(root.firstChild);
   var close = function() { while (root.firstChild) root.removeChild(root.firstChild); };
-  var overlay = el('div', {className: 'modal-overlay', onClick: function(e) { if (e.target === overlay) close(); }}, [
+  var isMobile = window.innerWidth <= 768;
+  var overlay = el('div', {className: 'modal-overlay' + (isMobile ? ' mobile-sheet' : ''), onClick: function(e) { if (e.target === overlay) close(); }}, [
     el('div', {className: 'modal'}, [
       el('div', {className: 'modal-header'}, [
         el('h3', {textContent: title}),
@@ -2606,16 +2607,15 @@ async function renderInsights(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'CEO Insights'}));
   root.appendChild(el('div', {className: 'page-desc', textContent: '社長分析 — 行動パターン・好み・傾向'}));
 
+  var skelI = skeletonGrid(2, 4, 'skeleton-card');
+  root.appendChild(skelI);
   var res = await sb.from('ceo_insights').select('*,companies(name)').order('created_at', {ascending: false});
+  skelI.parentNode.removeChild(skelI);
+  if (res.error) { root.appendChild(inlineError('インサイトの取得に失敗しました: ' + res.error.message, function() { renderPage('insights'); })); return; }
   var insights = res.data || [];
 
   if (insights.length === 0) {
-    root.appendChild(el('div', {className: 'card'}, [
-      el('div', {className: 'empty'}, [
-        el('div', {textContent: 'インサイトなし'}),
-        el('div', {style: 'margin-top:8px;font-size:12px;color:var(--text3)', textContent: 'プロンプトが10件以上蓄積されると、社長分析部が自動で分析を開始します'})
-      ])
-    ]));
+    root.appendChild(emptyState('◇', 'インサイトはまだありません。プロンプトが10件以上蓄積されると、社長分析部が自動で分析を開始します。'));
     return;
   }
 
