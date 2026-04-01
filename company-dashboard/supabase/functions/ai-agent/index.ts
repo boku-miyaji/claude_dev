@@ -578,7 +578,15 @@ async function classifyComplexity(message: string): Promise<string> {
 // System prompt
 // ============================================================
 
-async function buildSystemPrompt(companyId?: string, personalization?: Record<string, unknown>): Promise<string> {
+interface ContextInjectionReport {
+  knowledge_rules: number;
+  diary_entries: number;
+  ceo_insights: number;
+  personalization_fields: string[];
+}
+
+async function buildSystemPrompt(companyId?: string, personalization?: Record<string, unknown>): Promise<{ prompt: string; report: ContextInjectionReport }> {
+  const report: ContextInjectionReport = { knowledge_rules: 0, diary_entries: 0, ceo_insights: 0, personalization_fields: [] };
   const sb = getSupabase();
   const p = personalization || {};
 
@@ -592,9 +600,9 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
   let personSection = "";
   if (p.chat_nickname || p.chat_occupation || p.chat_about) {
     personSection = "\n## About the User\n";
-    if (p.chat_nickname) personSection += `- Name: ${p.chat_nickname}\n`;
-    if (p.chat_occupation) personSection += `- Occupation: ${p.chat_occupation}\n`;
-    if (p.chat_about) personSection += `- About: ${p.chat_about}\n`;
+    if (p.chat_nickname) { personSection += `- Name: ${p.chat_nickname}\n`; report.personalization_fields.push("nickname"); }
+    if (p.chat_occupation) { personSection += `- Occupation: ${p.chat_occupation}\n`; report.personalization_fields.push("occupation"); }
+    if (p.chat_about) { personSection += `- About: ${p.chat_about}\n`; report.personalization_fields.push("about"); }
   }
 
   // Style instructions
@@ -613,6 +621,7 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
     const { data: rules } = await sb.from("knowledge_base").select("rule,category").eq("status", "active").gte("confidence", 2).order("confidence", { ascending: false }).limit(15);
     if (rules && rules.length > 0) {
       knowledgeSection = "\n## Accumulated Knowledge (apply silently)\n" + rules.map(r => `- [${r.category}] ${r.rule}`).join("\n") + "\n";
+      report.knowledge_rules = rules.length;
     }
   }
 
@@ -623,6 +632,7 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
     const { data: diary } = await sb.from("secretary_notes").select("title,body,note_date").eq("type", "diary").gte("created_at", since).order("note_date", { ascending: false }).limit(5);
     if (diary && diary.length > 0) {
       diarySection = "\n## Recent Diary Entries (for context, do not mention unless asked)\n" + diary.map(d => `### ${d.note_date}\n${(d.body || "").substring(0, 300)}`).join("\n") + "\n";
+      report.diary_entries = diary.length;
     }
   }
 
@@ -632,10 +642,13 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
     const { data: insights } = await sb.from("ceo_insights").select("category,insight").order("created_at", { ascending: false }).limit(8);
     if (insights && insights.length > 0) {
       insightsSection = "\n## User Insights (apply silently to personalize)\n" + insights.map(i => `- [${i.category}] ${i.insight}`).join("\n") + "\n";
+      report.ceo_insights = insights.length;
     }
   }
 
-  return `You are the user's personal AI assistant. You know them deeply through their diary, knowledge base, behavior insights, and work history. You are the AI that understands them best.
+  if (styleSection) report.personalization_fields.push("style_prefs");
+
+  const prompt = `You are the user's personal AI assistant. You know them deeply through their diary, knowledge base, behavior insights, and work history. You are the AI that understands them best.
 ${personSection}
 ## Behavior
 - Use tools to gather real data before answering. Do NOT guess.
@@ -663,6 +676,8 @@ PJ Company: ${companyId || "HD (all projects)"}
 - Cite source tools when showing data
 ${styleSection ? "## Style Preferences\n" + styleSection : ""}
 ${knowledgeSection}${diarySection}${insightsSection}`;
+
+  return { prompt, report };
 }
 
 // ============================================================
@@ -701,7 +716,7 @@ async function agentLoop(
   conversationId: string, userMessage: string, model: string | null,
   contextMode: string, companyId: string | null, send: (e: SSEEvent) => void,
   userReasoningEffort?: string, images?: { data_url: string; name: string; type: string }[],
-  precisionMode?: boolean, userJwt?: string
+  precisionMode?: boolean, userJwt?: string, userId?: string | null
 ) {
   // Service client for server-side writes (messages, cost tracking)
   const sb = getServiceSupabase();
@@ -752,7 +767,7 @@ async function agentLoop(
     { role: "user", content: userContent },
   ];
 
-  await sb.from("messages").insert({ conversation_id: conversationId, role: "user", content: userMessage, step: 0 });
+  await sb.from("messages").insert({ conversation_id: conversationId, role: "user", content: userMessage, step: 0, user_id: userId });
 
   // Model selection + reasoning effort
   let selectedModel = model;
@@ -818,7 +833,7 @@ async function agentLoop(
     if (precisionMode && runningCost > MAX_COST_PRECISION) {
       send({ type: "error", message: `Cost cap reached ($${runningCost.toFixed(4)} > $${MAX_COST_PRECISION}). Stopping to prevent runaway costs.` });
       // Still save what we have
-      await sb.from("messages").insert({ conversation_id: conversationId, role: "assistant", content: result.text || "(cost cap reached)", model: selectedModel, tokens_input: totalIn, tokens_output: totalOut, cost_usd: runningCost, step });
+      await sb.from("messages").insert({ conversation_id: conversationId, role: "assistant", content: result.text || "(cost cap reached)", model: selectedModel, tokens_input: totalIn, tokens_output: totalOut, cost_usd: runningCost, step, user_id: userId });
       send({ type: "done", step, model: selectedModel, tokensInput: totalIn, tokensOutput: totalOut, costUsd: runningCost, routingReason: routingReason + " (cost-capped)" });
       return;
     }
@@ -829,7 +844,7 @@ async function agentLoop(
       await sb.from("messages").insert({
         conversation_id: conversationId, role: "assistant", content: result.text,
         model: selectedModel, tokens_input: totalIn, tokens_output: totalOut,
-        cost_usd: cost, routing_reason: routingReason, step,
+        cost_usd: cost, routing_reason: routingReason, step, user_id: userId,
       });
       await sb.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId);
 
@@ -864,7 +879,7 @@ async function agentLoop(
 
       await sb.from("messages").insert({
         conversation_id: conversationId, role: "tool", content: truncated,
-        tool_name: tc.name, tool_input: tc.input, tool_call_id: tc.id, step,
+        tool_name: tc.name, tool_input: tc.input, tool_call_id: tc.id, step, user_id: userId,
       });
 
       messages.push({ role: "tool", content: safeResult, tool_call_id: tc.id, name: isAnthropicModel(selectedModel) ? undefined : tc.name });
@@ -934,7 +949,7 @@ Deno.serve(async (req) => {
   if (!conversationId) {
     const title = await generateTitle(body.message);
     const { data, error } = await sb.from("conversations")
-      .insert({ title, model: body.model !== "auto" ? body.model : null, context_mode: body.context_mode || "full", company_id: body.company_id || null })
+      .insert({ title, model: body.model !== "auto" ? body.model : null, context_mode: body.context_mode || "full", company_id: body.company_id || null, user_id: userId })
       .select("id").single();
     if (error) return new Response(`Failed: ${error.message}`, { status: 500 });
     conversationId = data.id;
@@ -948,7 +963,7 @@ Deno.serve(async (req) => {
       }
       send({ type: "conversation", id: conversationId });
       try {
-        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images, body.precision_mode, userJwt);
+        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images, body.precision_mode, userJwt, userId);
       } catch (err) { send({ type: "error", message: (err as Error).message }); }
       controller.close();
     },
