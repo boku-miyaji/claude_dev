@@ -2760,6 +2760,8 @@ function fmtYen(n) { return '¥' + (n || 0).toLocaleString(); }
 async function renderFinance(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'Finance'}));
   root.appendChild(el('div', {className: 'page-desc', textContent: '売上・経費・稼働時間・税金の管理'}));
+  var skelF = el('div', {}, [skeletonGrid(4, 4, 'skeleton-kpi'), el('div', {style:'height:14px'}), skeletonRows(4)]);
+  root.appendChild(skelF);
 
   // Tabs
   var tabs = ['overview', 'projects', 'invoices', 'expenses', 'time', 'tax'];
@@ -2807,6 +2809,8 @@ async function finOverview(root) {
     sb.from('expenses').select('*').gte('expense_date', startOfYear).lte('expense_date', endOfYear),
     sb.from('time_entries').select('*').gte('work_date', startOfYear).lte('work_date', endOfYear)
   ]);
+
+  if (skelF.parentNode) skelF.parentNode.removeChild(skelF);
 
   var invoices = invMonthRes.data || [];
   var expenses = expMonthRes.data || [];
