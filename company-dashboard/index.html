@@ -406,6 +406,74 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .cal-sync-info{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);margin-bottom:16px}
 .cal-sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
 .cal-sync-dot.stale{background:var(--amber)}
+
+/* === UX Improvements === */
+
+/* P0: Skeleton loading */
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.skeleton{border-radius:var(--r);background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;min-height:20px}
+.skeleton-card{height:120px;border-radius:var(--r2);margin-bottom:14px}
+.skeleton-kpi{height:90px;border-radius:var(--r2)}
+.skeleton-row{height:52px;border-radius:var(--r);margin-bottom:8px}
+.skeleton-text{height:14px;border-radius:4px;width:60%}
+.skeleton-text-short{height:14px;border-radius:4px;width:30%}
+
+/* P0: Confirm modal (destructive) */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);z-index:160;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .15s}
+.confirm-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:24px;max-width:400px;width:100%;box-shadow:var(--shadow-lg);animation:slideUp .2s cubic-bezier(.16,1,.3,1)}
+.confirm-box h4{font-size:15px;font-weight:600;margin-bottom:8px;letter-spacing:-.02em}
+.confirm-box p{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5}
+.confirm-actions{display:flex;gap:10px;justify-content:flex-end}
+
+/* P0: Undo toast */
+.toast-undo{display:flex;align-items:center;gap:12px;pointer-events:auto}
+.toast-undo .undo-btn{background:none;border:1px solid var(--accent-border);color:var(--accent);padding:4px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
+.toast-undo .undo-btn:hover{background:var(--accent-bg)}
+
+/* P1: Empty state (unified) */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text3)}
+.empty-state .empty-icon{font-size:36px;margin-bottom:12px;opacity:.5}
+.empty-state .empty-msg{font-size:13px;margin-bottom:16px;line-height:1.5}
+.empty-state .empty-action{display:inline-block}
+
+/* P1: Inline error */
+.inline-error{background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--red);margin-bottom:16px}
+.inline-error .retry-btn{background:none;border:1px solid var(--red-border);color:var(--red);padding:5px 14px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap;transition:all .15s}
+.inline-error .retry-btn:hover{background:var(--red-bg)}
+
+/* P1: Cmd+K command palette */
+.cmd-palette-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:min(20vh,160px);animation:fadeIn .12s}
+.cmd-palette{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);width:100%;max-width:560px;box-shadow:0 16px 48px rgba(0,0,0,.15);overflow:hidden;animation:slideUp .2s cubic-bezier(.16,1,.3,1)}
+.cmd-palette-input{width:100%;border:none;outline:none;padding:16px 20px;font-size:15px;font-family:var(--font);background:transparent;color:var(--text)}
+.cmd-palette-input::placeholder{color:var(--text3)}
+.cmd-palette-divider{height:1px;background:var(--border)}
+.cmd-palette-results{max-height:360px;overflow-y:auto;padding:8px}
+.cmd-palette-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--text2);transition:all .1s}
+.cmd-palette-item:hover,.cmd-palette-item.selected{background:var(--accent-bg);color:var(--accent)}
+.cmd-palette-item .cmd-icon{width:20px;text-align:center;font-size:14px;opacity:.6}
+.cmd-palette-item .cmd-label{flex:1;font-weight:500}
+.cmd-palette-item .cmd-hint{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.cmd-palette-footer{padding:8px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);display:flex;gap:16px}
+.cmd-palette-footer kbd{background:var(--surface2);border:1px solid var(--border);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:10px}
+
+/* P2: Sidebar groups */
+.nav-group-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--text3);padding:16px 20px 6px;opacity:.7}
+.nav-group-label:first-child{padding-top:8px}
+
+/* P3: Row highlight on update */
+@keyframes rowFlash{0%{background:var(--green-bg)}100%{background:transparent}}
+.row-updated{animation:rowFlash .8s ease-out}
+
+/* P3: Check animation */
+@keyframes checkPop{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+.check-anim{animation:checkPop .3s cubic-bezier(.16,1,.3,1)}
+
+/* Mobile fullscreen sheet */
+@media(max-width:768px){
+  .modal-overlay.mobile-sheet{align-items:flex-end;padding:0}
+  .modal-overlay.mobile-sheet .modal{max-width:100%;border-radius:var(--r3) var(--r3) 0 0;max-height:85vh;animation:sheetUp .3s cubic-bezier(.16,1,.3,1)}
+}
+@keyframes sheetUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -433,25 +501,29 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     </div>
     <button class="nav-item active" data-page="dashboard"><span class="nav-icon">◉</span> Dashboard</button>
     <button class="nav-item" data-page="calendar"><span class="nav-icon">📅</span> Calendar</button>
+    <div class="nav-group-label">Management</div>
     <button class="nav-item" data-page="inbox"><span class="nav-icon">＋</span> Inbox</button>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
     <button class="nav-item" data-page="orgchart"><span class="nav-icon">⊞</span> Org Chart</button>
-    <button class="nav-item" data-page="portfolio"><span class="nav-icon">◆</span> Portfolio</button>
     <button class="nav-item" data-page="finance"><span class="nav-icon">¥</span> Finance</button>
-    <button class="nav-item" data-page="career"><span class="nav-icon">☆</span> Career</button>
-    <button class="nav-item" data-page="knowledge"><span class="nav-icon">◈</span> Knowledge</button>
-    <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
+    <div class="nav-group-label">Analytics</div>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
+    <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
     <button class="nav-item" data-page="intelligence"><span class="nav-icon">◎</span> Intelligence</button>
+    <button class="nav-item" data-page="api-costs"><span class="nav-icon">$</span> API Costs</button>
+    <button class="nav-item" data-page="growth"><span class="nav-icon">↗</span> Growth</button>
+    <div class="nav-group-label">Personal</div>
+    <button class="nav-item" data-page="portfolio"><span class="nav-icon">◆</span> Portfolio</button>
+    <button class="nav-item" data-page="career"><span class="nav-icon">☆</span> Career</button>
     <button class="nav-item" data-page="diary"><span class="nav-icon">✎</span> Diary</button>
+    <div class="nav-group-label">Tools</div>
+    <button class="nav-item" data-page="knowledge"><span class="nav-icon">◈</span> Knowledge</button>
     <button class="nav-item" data-page="artifacts"><span class="nav-icon">📄</span> Artifacts</button>
     <button class="nav-item" data-page="chat"><span class="nav-icon">💬</span> AI Chat</button>
-    <button class="nav-item" data-page="api-costs"><span class="nav-icon">$</span> API Costs</button>
     <button class="nav-item" data-page="commands"><span class="nav-icon">⌘</span> Commands</button>
-    <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <div class="nav-spacer"></div>
-    <button class="nav-item" data-page="growth"><span class="nav-icon">↗</span> Growth</button>
+    <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <button class="nav-item" data-page="how-it-works"><span class="nav-icon">?</span> How it Works</button>
     <div class="nav-user" id="nav-user"></div>
     <button class="nav-item" id="btn-logout"><span class="nav-icon">→</span> Sign out</button>
@@ -609,6 +681,10 @@ async function showApp(user) {
   await loadTabClicksAndBuild();
   setupNav();
   setupGlobalQuickAsk();
+  // Cmd+K command palette
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCommandPalette(); }
+  });
   var startPage = (window.location.hash || '').replace('#', '') || 'dashboard';
   navigate(startPage);
 }
@@ -912,11 +988,181 @@ function el(tag, attrs, children) {
 
 function clearEl(id) { var e = document.getElementById(id); while (e && e.firstChild) e.removeChild(e.firstChild); return e; }
 
-function toast(msg) {
+function toast(msg, opts) {
   var t = document.getElementById('toast');
-  t.textContent = msg;
+  while (t.firstChild) t.removeChild(t.firstChild);
+  if (opts && opts.undo) {
+    var wrap = el('div', {className: 'toast-undo'}, [
+      document.createTextNode(msg),
+      el('button', {className: 'undo-btn', textContent: '取消', onClick: function(e) {
+        e.stopPropagation();
+        t.classList.remove('show');
+        clearTimeout(t._timer);
+        opts.undo();
+      }})
+    ]);
+    t.appendChild(wrap);
+  } else {
+    t.textContent = msg;
+  }
   t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 2500);
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function() { t.classList.remove('show'); }, opts && opts.undo ? 5000 : 2500);
+}
+
+// P0: Skeleton loader helpers
+function skeletonGrid(cols, count, className) {
+  var items = [];
+  for (var i = 0; i < count; i++) items.push(el('div', {className: 'skeleton ' + (className || 'skeleton-card')}));
+  return el('div', {className: 'g' + cols}, items);
+}
+function skeletonRows(count) {
+  var rows = [];
+  for (var i = 0; i < count; i++) rows.push(el('div', {className: 'skeleton skeleton-row'}));
+  return el('div', {}, rows);
+}
+
+// P0: Confirm modal for destructive actions
+function showConfirm(title, message, onConfirm, opts) {
+  var root = document.body;
+  var overlay;
+  var close = function() { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+  overlay = el('div', {className: 'confirm-overlay', onClick: function(e) { if (e.target === overlay) close(); }}, [
+    el('div', {className: 'confirm-box'}, [
+      el('h4', {textContent: title}),
+      el('p', {textContent: message}),
+      el('div', {className: 'confirm-actions'}, [
+        el('button', {className: 'btn btn-g btn-sm', textContent: 'キャンセル', onClick: close}),
+        el('button', {className: 'btn btn-sm', textContent: (opts && opts.label) || '削除する',
+          style: 'background:var(--red);color:#fff',
+          onClick: function() { close(); onConfirm(); }
+        })
+      ])
+    ])
+  ]);
+  root.appendChild(overlay);
+  return close;
+}
+
+// P1: Unified empty state
+function emptyState(icon, msg, actionLabel, actionFn) {
+  var children = [
+    el('div', {className: 'empty-icon', textContent: icon}),
+    el('div', {className: 'empty-msg', textContent: msg})
+  ];
+  if (actionLabel && actionFn) {
+    children.push(el('button', {className: 'btn btn-p btn-sm empty-action', textContent: actionLabel, onClick: actionFn}));
+  }
+  return el('div', {className: 'empty-state'}, children);
+}
+
+// P1: Inline error with retry
+function inlineError(msg, retryFn) {
+  return el('div', {className: 'inline-error'}, [
+    el('span', {textContent: '\u26a0 ' + msg, style: 'flex:1'}),
+    retryFn ? el('button', {className: 'retry-btn', textContent: '再試行', onClick: retryFn}) : null
+  ]);
+}
+
+// P1: Cmd+K command palette
+var cmdPaletteOpen = false;
+function openCommandPalette() {
+  if (cmdPaletteOpen) return;
+  cmdPaletteOpen = true;
+
+  var NAV_ITEMS = [
+    {icon: '◉', label: 'Dashboard', page: 'dashboard', group: 'Pages'},
+    {icon: '📅', label: 'Calendar', page: 'calendar', group: 'Pages'},
+    {icon: '＋', label: 'Inbox', page: 'inbox', group: 'Management'},
+    {icon: '☐', label: 'Tasks', page: 'tasks', group: 'Management'},
+    {icon: '◫', label: 'Companies', page: 'companies', group: 'Management'},
+    {icon: '⊞', label: 'Org Chart', page: 'orgchart', group: 'Management'},
+    {icon: '¥', label: 'Finance', page: 'finance', group: 'Management'},
+    {icon: '◇', label: 'Insights', page: 'insights', group: 'Analytics'},
+    {icon: '▷', label: 'Prompts', page: 'prompts', group: 'Analytics'},
+    {icon: '◎', label: 'Intelligence', page: 'intelligence', group: 'Analytics'},
+    {icon: '$', label: 'API Costs', page: 'api-costs', group: 'Analytics'},
+    {icon: '↗', label: 'Growth', page: 'growth', group: 'Analytics'},
+    {icon: '◆', label: 'Portfolio', page: 'portfolio', group: 'Personal'},
+    {icon: '☆', label: 'Career', page: 'career', group: 'Personal'},
+    {icon: '✎', label: 'Diary', page: 'diary', group: 'Personal'},
+    {icon: '◈', label: 'Knowledge', page: 'knowledge', group: 'Tools'},
+    {icon: '📄', label: 'Artifacts', page: 'artifacts', group: 'Tools'},
+    {icon: '💬', label: 'AI Chat', page: 'chat', group: 'Tools'},
+    {icon: '⌘', label: 'Commands', page: 'commands', group: 'Tools'},
+    {icon: '⚙', label: 'Settings', page: 'settings', group: 'Tools'},
+    {icon: '?', label: 'How it Works', page: 'how-it-works', group: 'Tools'}
+  ];
+
+  var selectedIdx = 0;
+  var filtered = NAV_ITEMS.slice();
+  var overlay, input, resultsList;
+
+  function close() {
+    cmdPaletteOpen = false;
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+
+  function renderResults() {
+    while (resultsList.firstChild) resultsList.removeChild(resultsList.firstChild);
+    if (filtered.length === 0) {
+      resultsList.appendChild(el('div', {className: 'cmd-palette-item', style: 'justify-content:center;color:var(--text3)'}, [
+        document.createTextNode('一致する結果がありません')
+      ]));
+      return;
+    }
+    filtered.forEach(function(item, i) {
+      var row = el('div', {className: 'cmd-palette-item' + (i === selectedIdx ? ' selected' : ''), onClick: function() { close(); navigate(item.page); }}, [
+        el('span', {className: 'cmd-icon', textContent: item.icon}),
+        el('span', {className: 'cmd-label', textContent: item.label}),
+        el('span', {className: 'cmd-hint', textContent: item.group})
+      ]);
+      resultsList.appendChild(row);
+    });
+  }
+
+  function onInput() {
+    var q = input.value.toLowerCase().trim();
+    selectedIdx = 0;
+    filtered = q ? NAV_ITEMS.filter(function(n) {
+      return n.label.toLowerCase().indexOf(q) >= 0 || n.page.indexOf(q) >= 0 || n.group.toLowerCase().indexOf(q) >= 0;
+    }) : NAV_ITEMS.slice();
+    renderResults();
+  }
+
+  input = el('input', {className: 'cmd-palette-input', placeholder: 'ページを検索...', onInput: onInput});
+  resultsList = el('div', {className: 'cmd-palette-results'});
+
+  overlay = el('div', {className: 'cmd-palette-overlay', onClick: function(e) { if (e.target === overlay) close(); }}, [
+    el('div', {className: 'cmd-palette'}, [
+      input,
+      el('div', {className: 'cmd-palette-divider'}),
+      resultsList,
+      el('div', {className: 'cmd-palette-footer'}, [
+        el('span', {}, [el('kbd', {textContent: '↑↓'}), document.createTextNode(' 移動')]),
+        el('span', {}, [el('kbd', {textContent: '↵'}), document.createTextNode(' 開く')]),
+        el('span', {}, [el('kbd', {textContent: 'esc'}), document.createTextNode(' 閉じる')])
+      ])
+    ])
+  ]);
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); selectedIdx = Math.min(selectedIdx + 1, filtered.length - 1); renderResults(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); selectedIdx = Math.max(selectedIdx - 1, 0); renderResults(); }
+    else if (e.key === 'Enter' && filtered[selectedIdx]) { close(); navigate(filtered[selectedIdx].page); }
+    else if (e.key === 'Escape') { close(); }
+  });
+
+  document.body.appendChild(overlay);
+  renderResults();
+  setTimeout(function() { input.focus(); }, 50);
+}
+
+// P3: Highlight row on update
+function flashRow(element) {
+  element.classList.remove('row-updated');
+  void element.offsetWidth; // force reflow
+  element.classList.add('row-updated');
 }
 
 function fmtDate(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('ja-JP'); }
@@ -1087,10 +1333,19 @@ async function renderDashboard(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'Dashboard'}));
   root.appendChild(el('div', {className: 'page-desc', textContent: '全PJ会社の横断ビュー'}));
 
+  // Skeleton while loading
+  var skelContainer = el('div', {}, [skeletonGrid(4, 4, 'skeleton-kpi'), el('div', {style:'height:14px'}), skeletonGrid(3, 3, 'skeleton-card')]);
+  root.appendChild(skelContainer);
+
   var [companies, tasks] = await Promise.all([
     sb.from('companies').select('*').eq('status', 'active'),
     sb.from('tasks').select('*').in('status', ['open', 'in_progress'])
   ]);
+
+  skelContainer.parentNode.removeChild(skelContainer);
+
+  if (companies.error) { root.appendChild(inlineError('データの取得に失敗しました: ' + companies.error.message, function() { renderPage('dashboard'); })); return; }
+
   var cos = (companies.data || []);
   var ts = (tasks.data || []);
   var highTasks = ts.filter(function(t) { return t.priority === 'high'; });
@@ -1120,7 +1375,7 @@ async function renderDashboard(root) {
   // Companies
   root.appendChild(el('div', {className: 'section-title', textContent: 'PJ Companies'}));
   if (cos.length === 0) {
-    root.appendChild(el('div', {className: 'card empty', textContent: 'まだPJ会社がありません。Companies から作成してください。'}));
+    root.appendChild(emptyState('◫', 'まだPJ会社がありません', 'Companies を開く', function() { navigate('companies'); }));
   } else {
     var grid = el('div', {className: 'g3', style: 'margin-bottom:28px'});
     cos.forEach(function(co) {
@@ -1150,7 +1405,7 @@ async function renderDashboard(root) {
   var actRes = await sb.from('activity_log').select('*, companies(name)').order('created_at', {ascending: false}).limit(10);
   var acts = actRes.data || [];
   if (acts.length === 0) {
-    root.appendChild(el('div', {className: 'card empty', textContent: 'アクティビティはまだありません'}));
+    root.appendChild(emptyState('◉', 'アクティビティはまだありません'));
   } else {
     var actCard = el('div', {className: 'card'});
     acts.forEach(function(a) {
@@ -1241,10 +1496,18 @@ async function renderInbox(root) {
 // Tasks Page
 // ============================================================
 async function renderTasks(root) {
+  // Skeleton
+  var skelT = el('div', {}, [skeletonRows(6)]);
+  root.appendChild(skelT);
+
   var [cosRes, tasksRes] = await Promise.all([
     sb.from('companies').select('id, name').eq('status', 'active'),
     sb.from('tasks').select('*, companies(name)').order('created_at', {ascending: false})
   ]);
+
+  skelT.parentNode.removeChild(skelT);
+  if (tasksRes.error) { root.appendChild(inlineError('タスクの取得に失敗しました: ' + tasksRes.error.message, function() { renderPage('tasks'); })); return; }
+
   var cos = cosRes.data || [];
   var allTasks = tasksRes.data || [];
 
@@ -1265,7 +1528,10 @@ async function renderTasks(root) {
     while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
     var filtered = applyFilters();
     if (filtered.length === 0) {
-      listEl.appendChild(el('div', {className: 'empty', textContent: 'フィルターに一致するタスクはありません'}));
+      listEl.appendChild(emptyState('☐', 'フィルターに一致するタスクはありません', 'フィルターをリセット', function() {
+        filters.status = ''; filters.company = ''; filters.priority = '';
+        renderPage('tasks');
+      }));
       return;
     }
     filtered.forEach(function(t) {
@@ -1274,8 +1540,9 @@ async function renderTasks(root) {
         var newStatus = isDone ? 'open' : 'done';
         await sb.from('tasks').update({status: newStatus, completed_at: newStatus === 'done' ? new Date().toISOString() : null}).eq('id', t.id);
         t.status = newStatus;
+        if (newStatus === 'done') { check.classList.add('check-anim'); }
         renderTaskList();
-        toast(newStatus === 'done' ? '完了!' : '再オープン');
+        toast('"' + t.title + '" を' + (newStatus === 'done' ? '完了' : '再オープン') + 'しました');
       }});
       var item = el('div', {className: 'task-item'}, [
         check,
@@ -1291,12 +1558,13 @@ async function renderTasks(root) {
         ]),
         el('div', {className: 'task-actions'}, [
           el('button', {className: 'task-act-btn', textContent: '\u270e', title: 'Edit', onClick: function() { showEditTask(t); }}),
-          el('button', {className: 'task-act-btn', textContent: '\u00d7', title: 'Delete', onClick: async function() {
-            if (!confirm('"' + t.title + '" を削除しますか？')) return;
-            await sb.from('tasks').delete().eq('id', t.id);
-            allTasks = allTasks.filter(function(x) { return x.id !== t.id; });
-            renderTaskList();
-            toast('削除しました');
+          el('button', {className: 'task-act-btn', textContent: '\u00d7', title: 'Delete', onClick: function() {
+            showConfirm('タスクを削除', '"' + t.title + '" を削除しますか？この操作は取り消せません。', async function() {
+              await sb.from('tasks').delete().eq('id', t.id);
+              allTasks = allTasks.filter(function(x) { return x.id !== t.id; });
+              renderTaskList();
+              toast('"' + t.title + '" を削除しました');
+            });
           }})
         ])
       ]);
@@ -1829,7 +2097,7 @@ async function renderPortfolio(root) {
     btnRow.appendChild(el('button', {className: 'btn btn-g', textContent: 'Cancel', onClick: function() { document.body.removeChild(modal); }}));
     if (onDelete) {
       btnRow.appendChild(el('button', {className: 'btn btn-sm', style: 'margin-left:auto;color:var(--red)', textContent: 'Delete', onClick: function() {
-        if (confirm('Delete?')) { onDelete(); document.body.removeChild(modal); }
+        showConfirm('削除の確認', 'このアイテムを削除しますか？', function() { onDelete(); document.body.removeChild(modal); });
       }}));
     }
     box.appendChild(btnRow);
@@ -2017,10 +2285,10 @@ async function renderCareer(root) {
           actions.appendChild(doneBtn);
         }
         var delBtn = el('button', {className: 'btn btn-sm', style: 'font-size:11px;color:var(--red)', textContent: 'Delete'});
-        delBtn.addEventListener('click', async function() {
-          if (confirm('Delete "' + item.title + '"?')) {
+        delBtn.addEventListener('click', function() {
+          showConfirm('削除の確認', '"' + item.title + '" を削除しますか？', async function() {
             await sb.from('career').delete().eq('id', item.id);
-            toast('Deleted');
+            toast('"' + item.title + '" を削除しました');
             loadAndRender();
           }
         });
@@ -3113,7 +3381,7 @@ async function uploadInvoicePdf(file) {
 // Invoice modal (shared for create + edit)
 function openInvoiceModal(existingInv, onSaved) {
   var isEdit = !!existingInv;
-  var inv = existingInv || {client_name:'',amount:0,tax_amount:0,invoice_date:'',invoice_number:'',status:'draft',company_id:'',file_url:'',notes:''};
+  var inv = existingInv || {client_name:'',amount:0,invoice_date:'',company_id:'',file_url:'',notes:''};
 
   // Overlay
   var overlay = el('div', {style: 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center'});
@@ -3189,14 +3457,15 @@ function openInvoiceModal(existingInv, onSaved) {
   var btnRow = el('div', {style: 'display:flex;justify-content:' + (isEdit ? 'space-between' : 'flex-end') + ';gap:8px;margin-top:20px'});
 
   if (isEdit) {
-    var delBtn = el('button', {textContent: '削除', style: 'background:none;border:1px solid #ef4444;color:#ef4444;border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:var(--font)', onClick: async function() {
-      if (!confirm('この請求書を削除しますか？')) return;
-      delBtn.disabled = true;
-      saveStatus.textContent = '削除中...';
-      if (inv.file_url) await sb.storage.from('invoices').remove([inv.file_url]);
-      await sb.from('invoices').delete().eq('id', inv.id);
-      overlay.remove();
-      if (onSaved) onSaved();
+    var delBtn = el('button', {textContent: '削除', style: 'background:none;border:1px solid #ef4444;color:#ef4444;border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:var(--font)', onClick: function() {
+      showConfirm('請求書を削除', 'この請求書を削除し���すか？', async function() {
+        delBtn.disabled = true;
+        saveStatus.textContent = '削��中...';
+        if (inv.file_url) await sb.storage.from('invoices').remove([inv.file_url]);
+        await sb.from('invoices').delete().eq('id', inv.id);
+        overlay.remove();
+        if (onSaved) onSaved();
+      });
     }});
     btnRow.appendChild(delBtn);
   }
