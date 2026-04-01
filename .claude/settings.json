@@ -149,7 +149,9 @@
       "WebFetch(domain:danielmiessler.com)",
       "WebFetch(domain:dev.to)",
       "Bash(supabase --version)",
-      "Bash(supabase projects:*)"
+      "Bash(supabase projects:*)",
+      "WebFetch(domain:developers.openai.com)",
+      "WebFetch(domain:pecollective.com)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
