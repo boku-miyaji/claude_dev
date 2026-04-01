@@ -7,6 +7,12 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◆</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs" type="module" id="pdfjs-script"></script>
+<script type="module">
+  import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.worker.min.mjs';
+  window.pdfjsLib = pdfjsLib;
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -2788,35 +2794,307 @@ async function finProjects(root) {
 }
 
 // --- Finance: Invoices ---
-async function finInvoices(root) {
-  var res = await sb.from('invoices').select('*').order('invoice_date', {ascending:false});
-  var invoices = res.data || [];
-  var statusColors = {draft:'var(--text3)',sent:'#3b82f6',paid:'#22c55e',overdue:'#ef4444',cancelled:'var(--text3)'};
-  var statusLabels = {draft:'下書',sent:'送付済',paid:'入金済',overdue:'期限超過',cancelled:'取消'};
+var invoiceStatusColors = {draft:'var(--text3)',sent:'#3b82f6',paid:'#22c55e',overdue:'#ef4444',cancelled:'var(--text3)'};
+var invoiceStatusLabels = {draft:'下書',sent:'送付済',paid:'入金済',overdue:'期限超過',cancelled:'取消'};
 
-  if (invoices.length === 0) {
-    root.appendChild(el('div', {textContent: '請求書が未登録です。/invoice add <ファイル> で追加してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
-    return;
+// PDF text extraction using PDF.js
+async function extractPdfText(file) {
+  if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
+  var arrayBuffer = await file.arrayBuffer();
+  var pdf = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise;
+  var fullText = '';
+  for (var i = 1; i <= pdf.numPages; i++) {
+    var page = await pdf.getPage(i);
+    var content = await page.getTextContent();
+    var pageText = content.items.map(function(item) { return item.str; }).join(' ');
+    fullText += pageText + '\n';
+  }
+  return fullText;
+}
+
+// Parse invoice metadata from PDF text + filename
+function parseInvoice(pdfText, filename) {
+  var result = {client_name:'', amount:0, tax_amount:0, invoice_date:'', invoice_number:'', company_id:''};
+
+  // --- Filename parsing: {company}_{name}_請求書_{yyyy-mm月分}.pdf ---
+  var fnMatch = filename.match(/^(.+?)_.*?請求書_(\d{4})-?(\d{1,2})月?分/);
+  if (fnMatch) {
+    result.client_name = fnMatch[1];
+    var y = fnMatch[2], m = fnMatch[3].padStart(2,'0');
+    // Invoice date = last day of the billed month
+    var lastDay = new Date(parseInt(y), parseInt(m), 0).getDate();
+    result.invoice_date = y + '-' + m + '-' + String(lastDay).padStart(2,'0');
   }
 
-  var tbl = el('table', {style: 'width:100%;border-collapse:collapse;font-size:13px'});
-  tbl.appendChild(el('thead', {}, [el('tr', {}, ['日付','請求先','番号','金額','状態','入金日'].map(function(h){return el('th',{textContent:h,style:'text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:500'})}))]));
-  var tbody = el('tbody');
-  invoices.forEach(function(inv) {
-    var sc = statusColors[inv.status]||'var(--text3)';
-    tbody.appendChild(el('tr', {}, [
-      el('td', {textContent: fmtDate(inv.invoice_date), style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
-      el('td', {textContent: inv.client_name, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}),
-      el('td', {textContent: inv.invoice_number||'-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'}),
-      el('td', {textContent: fmtYen(inv.amount), style: 'padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600'}),
-      el('td', {style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}, [
-        el('span', {textContent: statusLabels[inv.status]||inv.status, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+sc+'20;color:'+sc})
-      ]),
-      el('td', {textContent: inv.paid_date ? fmtDate(inv.paid_date) : '-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'})
-    ]));
+  // --- PDF text parsing (overrides filename where found) ---
+  // Amount (tax-inclusive total)
+  var amtMatch = pdfText.match(/(?:合計|請求金額|ご請求額|総額|請求額)[\s\S]{0,30}?([0-9,]+)\s*円/) ||
+                 pdfText.match(/¥\s*([0-9,]+)[\s\S]{0,10}(?:合計|税込)/);
+  if (amtMatch) result.amount = parseInt(amtMatch[1].replace(/,/g, ''), 10);
+
+  // Tax amount
+  var taxMatch = pdfText.match(/(?:消費税|税額|うち税)[\s\S]{0,30}?([0-9,]+)\s*円/) ||
+                 pdfText.match(/(?:消費税|税額)[\s\S]{0,20}?¥?\s*([0-9,]+)/);
+  if (taxMatch) result.tax_amount = parseInt(taxMatch[1].replace(/,/g, ''), 10);
+
+  // Invoice date
+  var dateMatch = pdfText.match(/(?:請求日|発行日|日付)[\s:：\s]*(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/) ||
+                  pdfText.match(/(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})日?/);
+  if (dateMatch) {
+    result.invoice_date = dateMatch[1] + '-' + dateMatch[2].padStart(2,'0') + '-' + dateMatch[3].padStart(2,'0');
+  }
+
+  // Invoice number
+  var numMatch = pdfText.match(/(?:請求書番号|請求番号|No\.?|番号)[\s:：\s]*([A-Za-z0-9\-_]+)/);
+  if (numMatch) result.invoice_number = numMatch[1];
+
+  // Company ID mapping
+  var clientLower = result.client_name.toLowerCase();
+  if (clientLower.match(/aces/i)) result.company_id = '';
+  if (clientLower.match(/polaris/i)) result.company_id = 'polaris';
+  if (clientLower.match(/sompo|scotch|foundry/i)) result.company_id = 'foundry';
+  if (clientLower.match(/りそな|rikyu|risona/i)) result.company_id = 'rikyu';
+  if (clientLower.match(/denso|circuit|回路/i)) result.company_id = 'circuit';
+
+  return result;
+}
+
+// Upload PDF to Supabase Storage
+async function uploadInvoicePdf(file) {
+  var timestamp = Date.now();
+  var safeName = file.name.replace(/[^a-zA-Z0-9._\-\u3000-\u9fff]/g, '_');
+  var path = timestamp + '_' + safeName;
+  var res = await sb.storage.from('invoices').upload(path, file, {contentType: 'application/pdf'});
+  if (res.error) throw new Error(res.error.message);
+  return path;
+}
+
+// Invoice modal (shared for create + edit)
+function openInvoiceModal(existingInv, onSaved) {
+  var isEdit = !!existingInv;
+  var inv = existingInv || {client_name:'',amount:0,tax_amount:0,invoice_date:'',invoice_number:'',status:'draft',company_id:'',file_url:'',notes:''};
+
+  // Overlay
+  var overlay = el('div', {style: 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center'});
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+
+  var modal = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:480px;max-width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)'});
+
+  // Title
+  modal.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px'}, [
+    el('div', {textContent: isEdit ? '請求書を編集' : '請求書アップロード', style: 'font-size:16px;font-weight:600'}),
+    el('button', {textContent: '×', style: 'background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:0 4px', onClick: function() { overlay.remove(); }})
+  ]));
+
+  // PDF upload area (only for new)
+  var pdfStatus = el('div', {style: 'font-size:12px;color:var(--text3);margin-top:8px'});
+  if (!isEdit) {
+    var fileInput = el('input', {type: 'file', accept: '.pdf', style: 'display:none'});
+    var uploadArea = el('div', {style: 'border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;margin-bottom:16px;transition:border-color .2s'});
+    uploadArea.addEventListener('dragover', function(e) { e.preventDefault(); uploadArea.style.borderColor = 'var(--accent)'; });
+    uploadArea.addEventListener('dragleave', function() { uploadArea.style.borderColor = 'var(--border)'; });
+    uploadArea.addEventListener('drop', function(e) { e.preventDefault(); uploadArea.style.borderColor = 'var(--border)'; if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+    uploadArea.addEventListener('click', function() { fileInput.click(); });
+    fileInput.addEventListener('change', function() { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+    uploadArea.appendChild(el('div', {textContent: '📄 PDFファイルをドロップ、またはクリックして選択', style: 'color:var(--text2);font-size:13px'}));
+    uploadArea.appendChild(pdfStatus);
+    modal.appendChild(uploadArea);
+    modal.appendChild(fileInput);
+  } else if (inv.file_url) {
+    var dlBtn = el('button', {textContent: '📄 PDF を表示', style: 'background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;margin-bottom:16px;color:var(--text2)', onClick: async function() {
+      var res = await sb.storage.from('invoices').createSignedUrl(inv.file_url, 300);
+      if (res.data) window.open(res.data.signedUrl, '_blank');
+    }});
+    modal.appendChild(dlBtn);
+  }
+
+  // Form fields
+  var fields = [
+    {key:'client_name', label:'請求先', type:'text', required:true},
+    {key:'amount', label:'請求額（税込・円）', type:'number', required:true},
+    {key:'tax_amount', label:'うち消費税（円）', type:'number'},
+    {key:'invoice_date', label:'請求日', type:'date', required:true},
+    {key:'invoice_number', label:'請求書番号', type:'text'},
+    {key:'status', label:'ステータス', type:'select', options:['draft','sent','paid','overdue','cancelled'], optionLabels:invoiceStatusLabels},
+    {key:'due_date', label:'支払期日', type:'date'},
+    {key:'paid_date', label:'入金日', type:'date'},
+    {key:'company_id', label:'PJ会社', type:'select', options:['','foundry','rikyu','circuit','polaris'], optionLabels:{'':'(なし)',foundry:'Foundry',rikyu:'りきゅう',circuit:'回路設計',polaris:'Polaris'}},
+    {key:'notes', label:'メモ', type:'textarea'}
+  ];
+  var inputs = {};
+  var form = el('div', {style: 'display:flex;flex-direction:column;gap:12px'});
+  fields.forEach(function(f) {
+    var label = el('label', {textContent: f.label, style: 'font-size:11px;color:var(--text3);margin-bottom:2px;display:block'});
+    var inputStyle = 'width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:13px;font-family:var(--font);box-sizing:border-box';
+    var input;
+    if (f.type === 'select') {
+      input = el('select', {style: inputStyle});
+      f.options.forEach(function(o) {
+        var opt = el('option', {value: o, textContent: f.optionLabels[o] || o});
+        if (String(inv[f.key] || '') === o) opt.selected = true;
+        input.appendChild(opt);
+      });
+    } else if (f.type === 'textarea') {
+      input = el('textarea', {style: inputStyle + ';min-height:48px;resize:vertical', value: inv[f.key] || ''});
+    } else {
+      input = el('input', {type: f.type, style: inputStyle, value: inv[f.key] || ''});
+    }
+    inputs[f.key] = input;
+    var wrapper = el('div', {}, [label, input]);
+    form.appendChild(wrapper);
   });
-  tbl.appendChild(tbody);
-  root.appendChild(tbl);
+  modal.appendChild(form);
+
+  // Saving indicator
+  var saveStatus = el('div', {style: 'font-size:12px;color:var(--text3);margin-top:8px;min-height:18px'});
+
+  // Buttons
+  var btnRow = el('div', {style: 'display:flex;justify-content:' + (isEdit ? 'space-between' : 'flex-end') + ';gap:8px;margin-top:20px'});
+
+  if (isEdit) {
+    var delBtn = el('button', {textContent: '削除', style: 'background:none;border:1px solid #ef4444;color:#ef4444;border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:var(--font)', onClick: async function() {
+      if (!confirm('この請求書を削除しますか？')) return;
+      delBtn.disabled = true;
+      saveStatus.textContent = '削除中...';
+      if (inv.file_url) await sb.storage.from('invoices').remove([inv.file_url]);
+      await sb.from('invoices').delete().eq('id', inv.id);
+      overlay.remove();
+      if (onSaved) onSaved();
+    }});
+    btnRow.appendChild(delBtn);
+  }
+
+  var rightBtns = el('div', {style: 'display:flex;gap:8px'});
+  rightBtns.appendChild(el('button', {textContent: 'キャンセル', style: 'background:none;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:var(--font)', onClick: function() { overlay.remove(); }}));
+
+  var selectedFile = null;
+  var uploadedPath = null;
+
+  var saveBtn = el('button', {textContent: '保存', style: 'background:var(--accent);border:none;color:#fff;border-radius:6px;padding:8px 20px;font-size:13px;cursor:pointer;font-weight:500;font-family:var(--font)', onClick: async function() {
+    var clientName = inputs.client_name.value.trim();
+    var amount = parseInt(inputs.amount.value, 10);
+    var invoiceDate = inputs.invoice_date.value;
+    if (!clientName || !amount || !invoiceDate) { saveStatus.textContent = '請求先・金額・請求日は必須です'; saveStatus.style.color = '#ef4444'; return; }
+
+    saveBtn.disabled = true;
+    saveStatus.textContent = '保存中...';
+    saveStatus.style.color = 'var(--text3)';
+
+    // Upload PDF if new file selected
+    if (selectedFile && !uploadedPath) {
+      try {
+        saveStatus.textContent = 'PDF アップロード中...';
+        uploadedPath = await uploadInvoicePdf(selectedFile);
+      } catch (e) {
+        saveStatus.textContent = 'アップロード失敗: ' + e.message;
+        saveStatus.style.color = '#ef4444';
+        saveBtn.disabled = false;
+        return;
+      }
+    }
+
+    var row = {
+      client_name: clientName,
+      amount: amount,
+      tax_amount: parseInt(inputs.tax_amount.value, 10) || 0,
+      invoice_date: invoiceDate,
+      invoice_number: inputs.invoice_number.value.trim() || null,
+      status: inputs.status.value,
+      due_date: inputs.due_date.value || null,
+      paid_date: inputs.paid_date.value || null,
+      company_id: inputs.company_id.value || null,
+      notes: inputs.notes.value.trim() || null
+    };
+    if (uploadedPath) row.file_url = uploadedPath;
+
+    var res;
+    if (isEdit) {
+      res = await sb.from('invoices').update(row).eq('id', inv.id);
+    } else {
+      res = await sb.from('invoices').insert(row);
+    }
+    if (res.error) {
+      saveStatus.textContent = 'エラー: ' + res.error.message;
+      saveStatus.style.color = '#ef4444';
+      saveBtn.disabled = false;
+      return;
+    }
+    overlay.remove();
+    if (onSaved) onSaved();
+  }});
+  rightBtns.appendChild(saveBtn);
+  btnRow.appendChild(rightBtns);
+  modal.appendChild(saveStatus);
+  modal.appendChild(btnRow);
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Handle file selection (PDF parse)
+  async function handleFile(file) {
+    if (file.type !== 'application/pdf') { pdfStatus.textContent = 'PDFファイルのみ対応しています'; pdfStatus.style.color = '#ef4444'; return; }
+    selectedFile = file;
+    pdfStatus.textContent = '📄 ' + file.name + ' — 解析中...';
+    pdfStatus.style.color = 'var(--accent)';
+    try {
+      var text = await extractPdfText(file);
+      var parsed = parseInvoice(text, file.name);
+      // Fill form with parsed values (only if field is empty or zero)
+      if (parsed.client_name && !inputs.client_name.value) inputs.client_name.value = parsed.client_name;
+      if (parsed.amount && !parseInt(inputs.amount.value)) inputs.amount.value = parsed.amount;
+      if (parsed.tax_amount && !parseInt(inputs.tax_amount.value)) inputs.tax_amount.value = parsed.tax_amount;
+      if (parsed.invoice_date && !inputs.invoice_date.value) inputs.invoice_date.value = parsed.invoice_date;
+      if (parsed.invoice_number && !inputs.invoice_number.value) inputs.invoice_number.value = parsed.invoice_number;
+      if (parsed.company_id) inputs.company_id.value = parsed.company_id;
+      pdfStatus.textContent = '📄 ' + file.name + ' — 解析完了 ✓';
+      pdfStatus.style.color = '#22c55e';
+    } catch (e) {
+      pdfStatus.textContent = '📄 ' + file.name + ' — 解析失敗（手動入力してください）';
+      pdfStatus.style.color = '#f59e0b';
+    }
+  }
+}
+
+async function finInvoices(root) {
+  async function render() {
+    while (root.firstChild) root.removeChild(root.firstChild);
+
+    // Header with upload button
+    root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [
+      el('div'),
+      el('button', {textContent: '+ 請求書アップロード', style: 'background:var(--accent);border:none;color:#fff;border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;font-family:var(--font)', onClick: function() { openInvoiceModal(null, render); }})
+    ]));
+
+    var res = await sb.from('invoices').select('*').order('invoice_date', {ascending:false});
+    var invoices = res.data || [];
+
+    if (invoices.length === 0) {
+      root.appendChild(el('div', {textContent: '請求書が未登録です。上のボタンからPDFをアップロードしてください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
+      return;
+    }
+
+    var tbl = el('table', {style: 'width:100%;border-collapse:collapse;font-size:13px'});
+    tbl.appendChild(el('thead', {}, [el('tr', {}, ['日付','請求先','番号','金額','状態','入金日'].map(function(h){return el('th',{textContent:h,style:'text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:500'})}))]));
+    var tbody = el('tbody');
+    invoices.forEach(function(inv) {
+      var sc = invoiceStatusColors[inv.status]||'var(--text3)';
+      var tr = el('tr', {style: 'cursor:pointer;transition:background .15s', onClick: function() { openInvoiceModal(inv, render); }});
+      tr.addEventListener('mouseenter', function() { tr.style.background = 'var(--surface2)'; });
+      tr.addEventListener('mouseleave', function() { tr.style.background = 'none'; });
+      tr.appendChild(el('td', {textContent: fmtDate(inv.invoice_date), style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}));
+      tr.appendChild(el('td', {textContent: inv.client_name, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}));
+      tr.appendChild(el('td', {textContent: inv.invoice_number||'-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'}));
+      tr.appendChild(el('td', {textContent: fmtYen(inv.amount), style: 'padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600'}));
+      tr.appendChild(el('td', {style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}, [
+        el('span', {textContent: invoiceStatusLabels[inv.status]||inv.status, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+sc+'20;color:'+sc})
+      ]));
+      tr.appendChild(el('td', {textContent: inv.paid_date ? fmtDate(inv.paid_date) : '-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'}));
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    root.appendChild(tbl);
+  }
+  await render();
 }
 
 // --- Finance: Expenses ---
