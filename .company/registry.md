@@ -16,13 +16,13 @@
 <!-- GENERATED:DEPT_TABLE:START -->
 | 部署 | パス | 役割 |
 |------|------|------|
-| AI開発 | departments/ai-dev/ | LLM/AIの要件定義・設計・実装・評価・運用 |
-| システム開発 | departments/sys-dev/ | バックエンド・フロントエンド・QA |
-| PM | departments/pm/ | プロジェクト管理・マイルストーン |
-| 資料制作 | departments/materials/ | 提案書・デモ資料・説明資料 |
-| リサーチ | departments/research/ | 市場・技術・企業調査 |
-| 情報収集 | departments/intelligence/ | X監視・キーワード検索・Web巡回 |
-| セキュリティ | departments/security/ | サプライチェーンセキュリティ・監査・ポリシー管理 |
+| AI開発部署 | departments/ai-dev/ | LLM/AIシステムの要件定義・設計・実装・評価・運用を一貫して担当する。 |
+| 情報収集部 | departments/intelligence/ | 社長が常に最新の情報にキャッチアップできるよう、指定されたソースから情報を収集・要約・報告する。 |
+| 資料制作部署 | departments/materials/ | 顧客説明用のプレゼン、提案書、デモ資料、技術説明資料を作成する。 |
+| PM | departments/pm/ | プロジェクトの立ち上げから完了まで進捗を管理する。 |
+| リサーチ部署 | departments/research/ | 市場調査、技術調査、対象企業調査を行い、組織全体に情報を提供する。 |
+| セキュリティ部 | departments/security/ | 全PJ会社のソフトウェアサプライチェーンセキュリティを統括管理する。 |
+| システム開発部署 | departments/sys-dev/ | バックエンド・フロントエンド・QAを担当し、PJのシステム部分を構築する。 |
 <!-- GENERATED:DEPT_TABLE:END -->
 
 ## アーキテクチャ概要

@@ -157,7 +157,8 @@
       "Bash(/tmp/final_check.sh:*)",
       "Bash(/tmp/qa_check.sh:*)",
       "Bash(/tmp/complete_check.sh:*)",
-      "Bash(find /workspace/.company -type f \\\\\\(-name *.json -o -name *.md -o -name *.txt -o -name *.yaml -o -name *.yml \\\\\\))"
+      "Bash(find /workspace/.company -type f \\\\\\(-name *.json -o -name *.md -o -name *.txt -o -name *.yaml -o -name *.yml \\\\\\))",
+      "Read(//workspace/{gsub\\(/ /**)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",

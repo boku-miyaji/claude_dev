@@ -44,15 +44,20 @@ if [ -z "$COMPANY_ID" ]; then
   COMPANY_ID=$(echo "$PROMPT" | grep -oP '/company\s+\K[a-z0-9-]+' | head -1 || true)
 fi
 # Infer from prompt keywords if still empty
+# GENERATED:COMPANY_PATTERNS:START
 if [ -z "$COMPANY_ID" ]; then
-  echo "$PROMPT" | grep -qi "rikyu\|りきゅう\|りそな\|proposal\|アンケート" && COMPANY_ID="rikyu"
+  echo "$PROMPT" | grep -qi "rikyu\|りきゅう\|りそな\|proposal\|アンケート\|営業支援\|設問\|集計" && COMPANY_ID="rikyu"
 fi
 if [ -z "$COMPANY_ID" ]; then
-  echo "$PROMPT" | grep -qi "回路\|circuit\|polaris\|図面\|暗黙知" && COMPANY_ID="circuit"
+  echo "$PROMPT" | grep -qi "回路\|circuit\|図面\|暗黙知\|tacit" && COMPANY_ID="circuit"
 fi
 if [ -z "$COMPANY_ID" ]; then
-  echo "$PROMPT" | grep -qi "sompo\|foundry\|scotch\|SOMPOケア" && COMPANY_ID="foundry"
+  echo "$PROMPT" | grep -qi "polaris\|ポラリス\|坂本\|協業\|図面暗黙知" && COMPANY_ID="polaris"
 fi
+if [ -z "$COMPANY_ID" ]; then
+  echo "$PROMPT" | grep -qi "sompo\|foundry\|scotch\|SOMPOケア\|Lakehouse" && COMPANY_ID="foundry"
+fi
+# GENERATED:COMPANY_PATTERNS:END
 
 # Auto-tag based on content
 TAGS="[]"

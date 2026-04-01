@@ -8,10 +8,7 @@
 | タグ | 意味 |
 |------|------|
 | `hd` | HD全社横断 |
-| `pj:foundry` | Foundry移行会社 |
-| `pj:rikyu` | りきゅう |
-| `pj:circuit` | 回路設計支援システム会社 |
-| `pj:polaris` | Polaris AI |
+| `pj:` |  |
 | `personal` | 個人のこと |
 <!-- GENERATED:SCOPE_TAGS:END -->
 
@@ -20,13 +17,13 @@
 <!-- GENERATED:DEPT_TAGS:START -->
 | タグ | 意味 |
 |------|------|
-| `dept:ai-dev` | AI開発 |
-| `dept:sys-dev` | システム開発 |
+| `dept:ai-dev` | AI開発部署 |
+| `dept:intelligence` | 情報収集部 |
+| `dept:materials` | 資料制作部署 |
 | `dept:pm` | PM |
-| `dept:materials` | 資料制作 |
-| `dept:research` | リサーチ |
-| `dept:intelligence` | 情報収集 |
-| `dept:security` | セキュリティ |
+| `dept:research` | リサーチ部署 |
+| `dept:security` | セキュリティ部 |
+| `dept:sys-dev` | システム開発部署 |
 | `dept:hr` | 人事 |
 | `dept:secretary` | 秘書室 |
 <!-- GENERATED:DEPT_TAGS:END -->

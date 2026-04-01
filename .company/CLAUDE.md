@@ -23,18 +23,15 @@
 │   ├── proposals/
 │   └── retrospectives/
 └── departments/                       ← 共通部署群
-    ├── ai-dev/CLAUDE.md               ← AI開発
-    ├── sys-dev/CLAUDE.md              ← システム開発
-    ├── pm/CLAUDE.md                   ← PM
-    ├── materials/CLAUDE.md            ← 資料制作
-    ├── research/CLAUDE.md             ← リサーチ
-    ├── intelligence/CLAUDE.md         ← 情報収集部
-    └── security/CLAUDE.md             ← セキュリティ部
+    ├── ai-dev/CLAUDE.md             ← AI開発部署
+    ├── intelligence/CLAUDE.md             ← 情報収集部
+    ├── materials/CLAUDE.md             ← 資料制作部署
+    ├── pm/CLAUDE.md             ← PM
+    ├── research/CLAUDE.md             ← リサーチ部署
+    ├── security/CLAUDE.md             ← セキュリティ部
+    └── sys-dev/CLAUDE.md             ← システム開発部署
 
-.company-foundry/                      Foundry移行会社
-.company-rikyu/                        りきゅう
-.company-circuit/                      回路設計支援システム会社
-.company-polaris/                      Polaris AI
+.company-/                      
 ```
 <!-- GENERATED:ARCH_TREE:END -->
 
@@ -230,13 +227,13 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority
 <!-- GENERATED:AGENT_TABLE:START -->
 | Agent | ファイル | キーワード |
 |-------|---------|-----------|
-| AI開発部 | `.claude/agents/dept-ai-dev.md` | LLM、プロンプト、RAG、エージェント、モデル |
-| システム開発部 | `.claude/agents/dept-sys-dev.md` | API、DB、フロント、バックエンド、UI |
-| PM部 | `.claude/agents/dept-pm.md` | プロジェクト、マイルストーン、進捗 |
-| 資料制作部 | `.claude/agents/dept-materials.md` | 資料、プレゼン、提案書、デモ |
-| リサーチ部 | `.claude/agents/dept-research.md` | 調べて、調査、競合、市場 |
-| 情報収集部 | `.claude/agents/dept-intelligence.md` | 最新情報、ニュース、X、キャッチアップ |
-| セキュリティ部 | — | サプライチェーンセキュリティ、Actions SHA固定、依存関係ガバナンス |
+| AI開発部署 | `.claude/agents/dept-ai-dev.md` | ai-dev |
+| 情報収集部 | `.claude/agents/dept-intelligence.md` | キーワード検索・X監視・Web巡回で最新情報を収集し、CEO向けブリーフィングレポートを生成するエージェント。 |
+| 資料制作部署 | `.claude/agents/dept-materials.md` | materials |
+| PM | `.claude/agents/dept-pm.md` | pm |
+| リサーチ部署 | `.claude/agents/dept-research.md` | research |
+| セキュリティ部 | — | security |
+| システム開発部署 | `.claude/agents/dept-sys-dev.md` | sys-dev |
 <!-- GENERATED:AGENT_TABLE:END -->
 
 **並列実行例**: リサーチ + 資料制作が独立している場合、2つのAgentを同時起動可能
