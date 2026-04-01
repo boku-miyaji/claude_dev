@@ -1637,10 +1637,17 @@ function showEditTask(t) {
 // Companies Page
 // ============================================================
 async function renderCompanies(root) {
+  var skelC = skeletonGrid(3, 6, 'skeleton-card');
+  root.appendChild(skelC);
+
   var [catRes, cosRes] = await Promise.all([
     sb.from('categories').select('*').order('sort_order'),
     sb.from('companies').select('*').order('created_at')
   ]);
+
+  skelC.parentNode.removeChild(skelC);
+  if (cosRes.error) { root.appendChild(inlineError('会社データの取得に失敗しました: ' + cosRes.error.message, function() { renderPage('companies'); })); return; }
+
   var cats = catRes.data || [];
   var cos = cosRes.data || [];
 
@@ -2382,7 +2389,11 @@ async function renderKnowledge(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'Knowledge Base'}));
   root.appendChild(el('div', {className: 'page-desc', textContent: 'LLMデフォルトとの差分ルール — 毎回指示しなくても適用される知識'}));
 
+  var skelK = skeletonRows(5);
+  root.appendChild(skelK);
   var res = await sb.from('knowledge_base').select('*,companies(name)').order('confidence', {ascending: false});
+  skelK.parentNode.removeChild(skelK);
+  if (res.error) { root.appendChild(inlineError('ナレッジの取得に失敗しました: ' + res.error.message, function() { renderPage('knowledge'); })); return; }
   var items = res.data || [];
   var active = items.filter(function(i){return i.status === 'active'});
   var promoted = items.filter(function(i){return i.status === 'promoted'});
@@ -4388,11 +4399,12 @@ async function renderArtifacts(root) {
     var fullscreenBtn = el('button', {className: 'btn btn-primary', style: 'font-size:12px', textContent: '\u26F6 \u5168\u753B\u9762\u3067\u898B\u308B'});
     fullscreenBtn.onclick = function() { openFullscreen(artifact); };
     var archiveBtn = el('button', {className: 'btn', style: 'font-size:12px;color:var(--red)', textContent: '\u30A2\u30FC\u30AB\u30A4\u30D6\uFF08\u8FFD\u8DE1\u505C\u6B62\uFF09'});
-    archiveBtn.onclick = async function() {
-      if (!confirm('\u3053\u306E\u6210\u679C\u7269\u306E\u8FFD\u8DE1\u3092\u505C\u6B62\u3057\u307E\u3059\u304B\uFF1F')) return;
-      await sb.from('artifacts').update({status: 'archived'}).eq('id', artifact.id);
-      window.location.hash = 'artifacts';
-      loadList();
+    archiveBtn.onclick = function() {
+      showConfirm('追跡を停止', 'この成果物の追跡を停止しますか？', async function() {
+        await sb.from('artifacts').update({status: 'archived'}).eq('id', artifact.id);
+        window.location.hash = 'artifacts';
+        loadList();
+      }, {label: '停止する'});
     };
     detailContainer.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [backBtn, el('div', {style: 'display:flex;gap:8px'}, [reloadDetailBtn, fullscreenBtn, archiveBtn])]));
 
@@ -5146,11 +5158,12 @@ async function renderSourcesTab(root) {
         className: 'btn btn-g btn-sm',
         textContent: '削除',
         style: 'font-size:10px;padding:2px 8px;color:var(--red)',
-        onClick: async function() {
-          if (!confirm(src.name + ' を削除しますか？')) return;
-          await sb.from('intelligence_sources').delete().eq('id', src.id);
-          row.remove();
-          toast('削除しました: ' + src.name);
+        onClick: function() {
+          showConfirm('ソースを削除', '"' + src.name + '" を削除しますか？', async function() {
+            await sb.from('intelligence_sources').delete().eq('id', src.id);
+            row.remove();
+            toast('"' + src.name + '" を削除しました');
+          });
         }
       });
 

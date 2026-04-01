@@ -178,7 +178,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/prompt-log.sh",
+            "command": "/workspace/.claude/hooks/prompt-log.sh",
             "async": true
           }
         ]
@@ -188,7 +188,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/company-pull.sh"
+            "command": "/workspace/.claude/hooks/company-pull.sh"
           }
         ]
       }
@@ -199,7 +199,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/permission-guard.sh"
+            "command": "/workspace/.claude/hooks/permission-guard.sh"
           }
         ]
       }
@@ -210,19 +210,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/auto-pull.sh"
+            "command": "/workspace/.claude/hooks/auto-pull.sh"
           },
           {
             "type": "command",
-            "command": ".claude/hooks/session-start-marker.sh"
+            "command": "/workspace/.claude/hooks/session-start-marker.sh"
           },
           {
             "type": "command",
-            "command": ".claude/hooks/supabase-status.sh"
+            "command": "/workspace/.claude/hooks/supabase-status.sh"
           },
           {
             "type": "command",
-            "command": ".claude/hooks/config-sync.sh",
+            "command": "/workspace/.claude/hooks/config-sync.sh",
             "async": true
           }
         ]
@@ -234,11 +234,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/auto-push.sh"
+            "command": "/workspace/.claude/hooks/auto-push.sh"
           },
           {
             "type": "command",
-            "command": ".claude/hooks/session-summary.sh",
+            "command": "/workspace/.claude/hooks/session-summary.sh",
             "async": true
           }
         ]
@@ -250,7 +250,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/bash-guard.sh"
+            "command": "/workspace/.claude/hooks/bash-guard.sh"
           }
         ]
       }
@@ -261,12 +261,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/post-edit-check.sh",
+            "command": "/workspace/.claude/hooks/post-edit-check.sh",
             "async": true
           },
           {
             "type": "command",
-            "command": ".claude/hooks/artifact-auto-sync.sh",
+            "command": "/workspace/.claude/hooks/artifact-auto-sync.sh",
             "async": true
           }
         ]
@@ -276,7 +276,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/tool-collector.sh",
+            "command": "/workspace/.claude/hooks/tool-collector.sh",
             "async": true
           }
         ]
