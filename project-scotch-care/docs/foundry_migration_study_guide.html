@@ -338,6 +338,7 @@
   <a href="#s7b" class="section-title" style="color:var(--green);">★ 結局どうすべきか<span class="nav-badge badge-strategy">ACES</span></a>
   <a href="#s7b-position">ACESの立場</a>
   <a href="#s7b-recommendation">推奨事項</a>
+  <a href="#s7b-llm">LLM論点整理</a>
   <a href="#s7b-actions">5つのアクション</a>
   <a href="#s7b-mtg">MTGで言うべきこと</a>
   <a href="#s9" class="section-title">11. 最終成果物の深掘り<span class="nav-badge badge-core">PDF</span></a>
@@ -2140,6 +2141,75 @@ models:
           <li>ただし <strong>SOMPOグループ HD が Azure 路線ならば将来的に検討対象になりうる</strong>。L0 インフラの議論次第</li>
         </ul>
       </div>
+    </div>
+
+    <h3 id="s7b-llm">LLM周りの論点整理 — 「Snowflakeでもできますよね？」への備え</h3>
+    <p>MTGで「Snowflake Cortex AIもLLM充実してるのでは？」と聞かれる可能性が高い。以下を整理しておく。</p>
+
+    <div class="callout warn">
+      <strong>結論: LLMの話は決め手にならない。PySpark互換とML訓練で押すのが最も安全。</strong>
+    </div>
+
+    <h4>Snowflake Cortex AI のLLMラインナップ（2026年4月時点）</h4>
+    <p>Claude (Anthropic $200M提携)、GPT-5.2 (Private Preview)、Llama 4、Mistral、Gemini、DeepSeek-R1、Snowflake Arctic。<strong>ラインナップはDatabricks（Bedrock経由）と遜色ない。</strong></p>
+
+    <h4>「Bedrockが使えるからDatabricks有利」は正しくない</h4>
+    <table>
+      <tr><th>論点</th><th>実態</th></tr>
+      <tr>
+        <td>SnowflakeからBedrock呼べる？</td>
+        <td><strong>呼べる。</strong> External Access IntegrationやSPCS経由で可能。セットアップの手間は多少増えるが、技術的には可能</td>
+      </tr>
+      <tr>
+        <td>SnowflakeもAWS上で動く？</td>
+        <td><strong>動く。</strong> Snowflake on AWSを選択すれば同一リージョン。ただしDatabricksは「あなたのAWSアカウント内」に住み、Snowflakeは「Snowflake管理のAWSインフラ」に住む違いはある</td>
+      </tr>
+      <tr>
+        <td>Cortex AIのSQL関数は便利？</td>
+        <td><strong>便利。</strong> <code>CORTEX.SUMMARIZE(text)</code> のようにSQL 1行でLLMが呼べる。ETLパイプライン内でのLLM利用はSnowflakeの方がむしろ手軽な面がある</td>
+      </tr>
+    </table>
+
+    <h4>では本当に差がつくのはどこか</h4>
+    <table>
+      <tr><th>#</th><th>差別化要因</th><th>Snowflakeで代替できるか</th><th>強度</th></tr>
+      <tr>
+        <td><strong>1</strong></td>
+        <td><strong>PySpark 219本がそのまま動く</strong></td>
+        <td style="color:var(--red);font-weight:600;">できない。Snowparkに全面書き換え（数千万円）</td>
+        <td style="color:var(--red);">決定的</td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td>
+        <td><strong>MLflow（OSS）で実験管理・モデル蓄積</strong></td>
+        <td style="color:var(--red);font-weight:600;">できない。相当機能なし</td>
+        <td style="color:var(--red);">大きい</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Unity Catalog でデータ〜AI一元管理</td>
+        <td>部分的（Horizon はSF内のみ）</td>
+        <td style="color:var(--amber);">中</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Bedrock との統合の自然さ</td>
+        <td>やや手間だが可能</td>
+        <td>小</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>LLM のラインナップ</td>
+        <td>ほぼ同等</td>
+        <td>差なし</td>
+      </tr>
+    </table>
+
+    <p><strong>1と2は「できない」。ここが決定的で、ここだけで説明が成立する。</strong> LLMの話に深入りすると「Snowflakeでもできますよね？」の応酬になるので避ける。</p>
+
+    <div class="callout success">
+      <strong>MTGでの推奨フレーズ</strong>
+      <p style="margin-top:8px;">「基盤を Databricks に推奨する最大の理由は2つです。<strong>1つ目、219本の PySpark パイプラインをそのまま移植できること</strong>。Snowflake だと全面書き換えで数千万円の追加コストです。<strong>2つ目、MLflow という OSS の実験管理基盤があること</strong>。将来の AI モデル開発でナレッジが蓄積され、かつベンダーに縛られない。LLM の推論はどちらの基盤でも Bedrock 経由で呼べるので、そこは決め手になりません」</p>
     </div>
 
     <h3 id="s7b-actions">ACESとして具体的にやるべきこと（5つ）</h3>
