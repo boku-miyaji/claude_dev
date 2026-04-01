@@ -270,6 +270,16 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/tool-collector.sh",
+            "async": true
+          }
+        ]
       }
     ]
   },

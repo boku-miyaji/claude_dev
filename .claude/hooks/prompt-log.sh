@@ -97,7 +97,18 @@ if [ ${#TAG_LIST[@]} -gt 0 ]; then
   TAGS=$(printf '%s\n' "${TAG_LIST[@]}" | jq -R . | jq -s .)
 fi
 
-# Build JSON payload (with server_host, cwd, company_id)
+# Flush tool usage from previous prompt (collected by tool-collector.sh)
+TOOLS_FILE="/tmp/claude-tools-used.txt"
+TOOLS_USED="{}"
+TOOL_COUNT=0
+if [ -f "$TOOLS_FILE" ] && [ -s "$TOOLS_FILE" ]; then
+  # Count occurrences of each tool: {"Read": 5, "Edit": 2, ...}
+  TOOLS_USED=$(sort "$TOOLS_FILE" | uniq -c | awk '{print $2, $1}' | jq -Rn '[inputs | split(" ") | {(.[0]): (.[1] | tonumber)}] | add // {}')
+  TOOL_COUNT=$(wc -l < "$TOOLS_FILE" | tr -d ' ')
+  rm -f "$TOOLS_FILE"
+fi
+
+# Build JSON payload (with server_host, cwd, company_id, tools_used)
 PAYLOAD=$(jq -n \
   --arg prompt "$PROMPT" \
   --arg context "$CONTEXT" \
@@ -105,8 +116,11 @@ PAYLOAD=$(jq -n \
   --arg server_host "$SERVER_HOST" \
   --arg cwd "$CWD" \
   --arg company_id "$COMPANY_ID" \
+  --argjson tools_used "$TOOLS_USED" \
+  --argjson tool_count "$TOOL_COUNT" \
   '{prompt: $prompt, context: $context, tags: $tags, server_host: $server_host, cwd: $cwd}
-   | if $company_id != "" then . + {company_id: $company_id} else . end')
+   | if $company_id != "" then . + {company_id: $company_id} else . end
+   | if $tool_count > 0 then . + {tools_used: $tools_used, tool_count: $tool_count} else . end')
 
 # POST to Supabase
 curl -4 -s -o /dev/null -w "" \
