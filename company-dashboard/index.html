@@ -4469,6 +4469,175 @@ async function renderApiCosts(root) {
 
     recentCard.appendChild(recentTable);
     contentArea.appendChild(recentCard);
+
+    // === Execution Metrics Analysis ===
+    var metricsRes = await sb.from('execution_metrics')
+      .select('*').gte('created_at', since).order('created_at', {ascending: false}).limit(500);
+    var metrics = metricsRes.data || [];
+
+    if (metrics.length > 0) {
+      // --- TTFT Analysis ---
+      var chatMetrics = metrics.filter(function(m) { return m.source === 'ai_chat' && m.time_to_first_token_ms; });
+      if (chatMetrics.length > 0) {
+        contentArea.appendChild(el('div', {className: 'section-title', textContent: 'TTFT Analysis (Time to First Token)'}));
+        var ttftCard = el('div', {className: 'card', style: 'margin-bottom:24px'});
+
+        // Group by model
+        var ttftByModel = {};
+        chatMetrics.forEach(function(m) {
+          var mod = m.model || 'unknown';
+          if (!ttftByModel[mod]) ttftByModel[mod] = [];
+          ttftByModel[mod].push(m.time_to_first_token_ms);
+        });
+
+        var ttftTable = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px'});
+        var ttftHead = el('tr', {style: 'border-bottom:2px solid var(--border)'});
+        ['Model', 'Avg TTFT', 'Min', 'Max', 'P50', 'Samples'].forEach(function(h) {
+          ttftHead.appendChild(el('th', {style: 'text-align:left;padding:8px 12px;font-weight:600', textContent: h}));
+        });
+        ttftTable.appendChild(ttftHead);
+
+        Object.keys(ttftByModel).sort().forEach(function(mod) {
+          var vals = ttftByModel[mod].sort(function(a,b){return a-b;});
+          var avg = Math.round(vals.reduce(function(s,v){return s+v;},0) / vals.length);
+          var p50 = vals[Math.floor(vals.length/2)];
+          var tr = el('tr', {style: 'border-bottom:1px solid var(--border)'});
+          [mod, avg+'ms', vals[0]+'ms', vals[vals.length-1]+'ms', p50+'ms', vals.length].forEach(function(v,i) {
+            tr.appendChild(el('td', {style: 'padding:8px 12px;font-family:var(--mono);font-size:11px', textContent: v}));
+          });
+          ttftTable.appendChild(tr);
+        });
+        ttftCard.appendChild(ttftTable);
+        contentArea.appendChild(ttftCard);
+      }
+
+      // --- Tool Usage Analysis (AI Chat) ---
+      var toolMetrics = metrics.filter(function(m) { return m.tools_used && m.tools_used.length; });
+      if (toolMetrics.length > 0) {
+        contentArea.appendChild(el('div', {className: 'section-title', textContent: 'AI Chat Tool Usage'}));
+        var toolCard = el('div', {className: 'card', style: 'margin-bottom:24px'});
+
+        var toolStats = {};
+        toolMetrics.forEach(function(m) {
+          (m.tools_used || []).forEach(function(t) {
+            if (!toolStats[t.name]) toolStats[t.name] = {count: 0, totalMs: 0, durations: []};
+            toolStats[t.name].count++;
+            if (t.duration_ms) { toolStats[t.name].totalMs += t.duration_ms; toolStats[t.name].durations.push(t.duration_ms); }
+          });
+        });
+
+        var toolTable = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px'});
+        var tHead = el('tr', {style: 'border-bottom:2px solid var(--border)'});
+        ['Tool', 'Calls', 'Avg Duration', 'Total Time', 'Share'].forEach(function(h) {
+          tHead.appendChild(el('th', {style: 'text-align:left;padding:8px 12px;font-weight:600', textContent: h}));
+        });
+        toolTable.appendChild(tHead);
+
+        var totalCalls = Object.keys(toolStats).reduce(function(s,k){return s+toolStats[k].count;},0);
+        Object.keys(toolStats).sort(function(a,b){return toolStats[b].count-toolStats[a].count;}).forEach(function(name) {
+          var s = toolStats[name];
+          var avgMs = s.durations.length ? Math.round(s.totalMs / s.durations.length) : '-';
+          var tr = el('tr', {style: 'border-bottom:1px solid var(--border)'});
+          [name, s.count, avgMs === '-' ? '-' : avgMs+'ms', s.totalMs ? (s.totalMs/1000).toFixed(1)+'s' : '-', (s.count/totalCalls*100).toFixed(1)+'%'].forEach(function(v) {
+            tr.appendChild(el('td', {style: 'padding:8px 12px;font-family:var(--mono);font-size:11px', textContent: v}));
+          });
+          toolTable.appendChild(tr);
+        });
+        toolCard.appendChild(toolTable);
+        contentArea.appendChild(toolCard);
+      }
+
+      // --- Response Time Distribution ---
+      var withTime = chatMetrics.filter(function(m) { return m.total_time_ms; });
+      if (withTime.length > 0) {
+        contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Response Time Distribution'}));
+        var rtCard = el('div', {className: 'card', style: 'margin-bottom:24px;padding:16px'});
+        // Buckets: <1s, 1-3s, 3-5s, 5-10s, 10s+
+        var buckets = {'<1s':0, '1-3s':0, '3-5s':0, '5-10s':0, '10s+':0};
+        withTime.forEach(function(m) {
+          var s = m.total_time_ms / 1000;
+          if (s < 1) buckets['<1s']++;
+          else if (s < 3) buckets['1-3s']++;
+          else if (s < 5) buckets['3-5s']++;
+          else if (s < 10) buckets['5-10s']++;
+          else buckets['10s+']++;
+        });
+        var maxBucket = Math.max.apply(null, Object.values(buckets)) || 1;
+        var barContainer = el('div', {style: 'display:flex;align-items:flex-end;gap:12px;height:80px'});
+        Object.keys(buckets).forEach(function(label) {
+          var pct = (buckets[label] / maxBucket) * 100;
+          var col = el('div', {style: 'flex:1;display:flex;flex-direction:column;align-items:center;gap:4px'});
+          col.appendChild(el('div', {style: 'font-size:10px;font-family:var(--mono);color:var(--text2)', textContent: buckets[label]}));
+          col.appendChild(el('div', {style: 'width:100%;background:var(--accent2);border-radius:4px 4px 0 0;height:'+Math.max(2,pct)+'%'}));
+          col.appendChild(el('div', {style: 'font-size:10px;color:var(--text3)', textContent: label}));
+          barContainer.appendChild(col);
+        });
+        rtCard.appendChild(barContainer);
+        contentArea.appendChild(rtCard);
+      }
+    }
+
+    // === Claude Code Tool Usage (from prompt_log) ===
+    var plRes = await sb.from('prompt_log').select('tools_used,tool_count,created_at')
+      .gte('created_at', since).not('tools_used', 'is', null).order('created_at', {ascending: false}).limit(200);
+    var promptLogs = plRes.data || [];
+
+    if (promptLogs.length > 0) {
+      contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Claude Code Tool Usage'}));
+      var ccCard = el('div', {className: 'card', style: 'margin-bottom:24px'});
+
+      // Aggregate tool counts
+      var ccToolStats = {};
+      var totalPrompts = promptLogs.length;
+      var totalTools = 0;
+      promptLogs.forEach(function(p) {
+        var tu = p.tools_used || {};
+        Object.keys(tu).forEach(function(name) {
+          if (!ccToolStats[name]) ccToolStats[name] = 0;
+          ccToolStats[name] += tu[name];
+          totalTools += tu[name];
+        });
+      });
+
+      // KPI row
+      ccCard.appendChild(el('div', {className: 'g3', style: 'margin-bottom:16px'}, [
+        el('div', {style: 'text-align:center'}, [
+          el('div', {style: 'font-size:20px;font-weight:700', textContent: totalPrompts}),
+          el('div', {style: 'font-size:11px;color:var(--text3)', textContent: 'Prompts w/ Tools'})
+        ]),
+        el('div', {style: 'text-align:center'}, [
+          el('div', {style: 'font-size:20px;font-weight:700', textContent: totalTools}),
+          el('div', {style: 'font-size:11px;color:var(--text3)', textContent: 'Total Tool Calls'})
+        ]),
+        el('div', {style: 'text-align:center'}, [
+          el('div', {style: 'font-size:20px;font-weight:700', textContent: totalPrompts > 0 ? (totalTools / totalPrompts).toFixed(1) : '0'}),
+          el('div', {style: 'font-size:11px;color:var(--text3)', textContent: 'Avg Tools/Prompt'})
+        ])
+      ]));
+
+      // Tool frequency table
+      var ccTable = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px'});
+      var ccHead = el('tr', {style: 'border-bottom:2px solid var(--border)'});
+      ['Tool', 'Total Calls', 'Share', 'Bar'].forEach(function(h) {
+        ccHead.appendChild(el('th', {style: 'text-align:left;padding:8px 12px;font-weight:600', textContent: h}));
+      });
+      ccTable.appendChild(ccHead);
+
+      var maxToolCount = Math.max.apply(null, Object.values(ccToolStats)) || 1;
+      Object.keys(ccToolStats).sort(function(a,b){return ccToolStats[b]-ccToolStats[a];}).forEach(function(name) {
+        var cnt = ccToolStats[name];
+        var tr = el('tr', {style: 'border-bottom:1px solid var(--border)'});
+        tr.appendChild(el('td', {style: 'padding:8px 12px;font-weight:500', textContent: name}));
+        tr.appendChild(el('td', {style: 'padding:8px 12px;font-family:var(--mono);font-size:11px', textContent: cnt}));
+        tr.appendChild(el('td', {style: 'padding:8px 12px;font-family:var(--mono);font-size:11px', textContent: (cnt/totalTools*100).toFixed(1)+'%'}));
+        var barTd = el('td', {style: 'padding:8px 12px'});
+        barTd.appendChild(el('div', {style: 'height:8px;border-radius:4px;background:var(--accent2);width:'+Math.round(cnt/maxToolCount*100)+'%'}));
+        tr.appendChild(barTd);
+        ccTable.appendChild(tr);
+      });
+      ccCard.appendChild(ccTable);
+      contentArea.appendChild(ccCard);
+    }
   }
 
   periodSelect.onchange = function() { loadCosts(parseInt(periodSelect.value)); };
