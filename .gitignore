@@ -68,3 +68,5 @@ project-review/project-rikyu-sales-proposals-poc/
 .config/google/credentials.json
 token.json
 .claude/hooks/supabase.env
+.vercel
+node_modules

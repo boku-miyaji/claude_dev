@@ -48,3 +48,9 @@
 | `expenses` | 経費 | `/invoice` |
 | `time_entries` | 稼働時間 | `/invoice sync` (Calendar) |
 | `tax_payments` | 税金スケジュール | `/invoice tax` |
+
+## UI・パーソナライズ
+
+| テーブル | 用途 | 書き込み元 |
+|---------|------|-----------|
+| `tab_clicks` | モバイルタブのクリック数集計（ナビ優先順位の自動調整） | Dashboard (navigate) |

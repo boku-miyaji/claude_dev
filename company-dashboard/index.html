@@ -320,31 +320,13 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <div id="page-container"></div>
   </div>
 
-  <!-- Mobile nav -->
+  <!-- Mobile nav (dynamically reordered by tab click frequency) -->
   <div class="mobile-nav">
-    <div class="mobile-nav-inner">
-      <button class="mob-nav-item active" data-page="dashboard"><span class="mob-icon">◉</span>Home</button>
-      <button class="mob-nav-item" data-page="inbox"><span class="mob-icon">＋</span>Inbox</button>
-      <button class="mob-nav-item" data-page="finance"><span class="mob-icon">¥</span>Finance</button>
-      <button class="mob-nav-item" data-page="tasks"><span class="mob-icon">☐</span>Tasks</button>
-      <button class="mob-nav-item" data-page="companies"><span class="mob-icon">◫</span>Co.</button>
-      <button class="mob-nav-item" id="mob-more-btn"><span class="mob-icon">⋯</span>More</button>
-    </div>
+    <div class="mobile-nav-inner" id="mob-nav-bar"></div>
   </div>
   <!-- Mobile more menu -->
   <div id="mob-more-menu" style="display:none;position:fixed;bottom:70px;right:8px;left:8px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:8px;z-index:101;box-shadow:0 -4px 24px rgba(0,0,0,.12)">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
-      <button class="mob-nav-item" data-page="portfolio" style="padding:12px 8px"><span class="mob-icon">◆</span>Portfolio</button>
-      <button class="mob-nav-item" data-page="career" style="padding:12px 8px"><span class="mob-icon">☆</span>Career</button>
-      <button class="mob-nav-item" data-page="orgchart" style="padding:12px 8px"><span class="mob-icon">⊞</span>Org</button>
-      <button class="mob-nav-item" data-page="prompts" style="padding:12px 8px"><span class="mob-icon">▷</span>Prompts</button>
-      <button class="mob-nav-item" data-page="insights" style="padding:12px 8px"><span class="mob-icon">◇</span>Insights</button>
-      <button class="mob-nav-item" data-page="knowledge" style="padding:12px 8px"><span class="mob-icon">◈</span>Knowledge</button>
-      <button class="mob-nav-item" data-page="diary" style="padding:12px 8px"><span class="mob-icon">✎</span>Diary</button>
-      <button class="mob-nav-item" data-page="artifacts" style="padding:12px 8px"><span class="mob-icon">📄</span>Artifacts</button>
-      <button class="mob-nav-item" data-page="commands" style="padding:12px 8px"><span class="mob-icon">⌘</span>Commands</button>
-      <button class="mob-nav-item" data-page="settings" style="padding:12px 8px"><span class="mob-icon">⚙</span>Settings</button>
-    </div>
+    <div id="mob-more-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px"></div>
   </div>
 </div>
 
@@ -368,6 +350,29 @@ var SUPABASE_ANON_KEY = 'sb_publishable_VYgxoltXaSlEIjcH1dpa7w_TPc3mYBf';
 // No URL parameter override (phishing risk) or localStorage override needed
 
 var sb = null;
+
+// ============================================================
+// Mobile tab definitions & click-based priority
+// ============================================================
+var ALL_MOB_TABS = [
+  {page: 'dashboard', icon: '◉', label: 'Home'},
+  {page: 'inbox', icon: '＋', label: 'Inbox'},
+  {page: 'finance', icon: '¥', label: 'Finance'},
+  {page: 'tasks', icon: '☐', label: 'Tasks'},
+  {page: 'companies', icon: '◫', label: 'Co.'},
+  {page: 'portfolio', icon: '◆', label: 'Portfolio'},
+  {page: 'career', icon: '☆', label: 'Career'},
+  {page: 'orgchart', icon: '⊞', label: 'Org'},
+  {page: 'prompts', icon: '▷', label: 'Prompts'},
+  {page: 'insights', icon: '◇', label: 'Insights'},
+  {page: 'knowledge', icon: '◈', label: 'Knowledge'},
+  {page: 'diary', icon: '✎', label: 'Diary'},
+  {page: 'artifacts', icon: '📄', label: 'Artifacts'},
+  {page: 'commands', icon: '⌘', label: 'Commands'},
+  {page: 'settings', icon: '⚙', label: 'Settings'}
+];
+var MOB_PRIMARY_COUNT = 5; // Number of primary tabs (excluding "More")
+var tabClickCounts = {}; // {page: count}
 var currentPage = 'dashboard';
 
 // ============================================================
@@ -454,6 +459,8 @@ async function showApp(user) {
   document.getElementById('app-screen').classList.remove('hidden');
   document.getElementById('nav-user').textContent = '@' + (user.user_metadata.user_name || user.email || '');
   document.getElementById('btn-logout').addEventListener('click', function() { sb.auth.signOut(); });
+  // Load tab click counts first, then build mobile nav
+  await loadTabClicksAndBuild();
   setupNav();
   var startPage = (window.location.hash || '').replace('#', '') || 'dashboard';
   navigate(startPage);
@@ -463,24 +470,126 @@ async function showApp(user) {
 // Navigation
 // ============================================================
 function setupNav() {
-  document.querySelectorAll('[data-page]').forEach(function(btn) {
+  // Sidebar nav (desktop) - attach click handlers
+  document.querySelectorAll('.sidebar [data-page]').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var moreMenu = document.getElementById('mob-more-menu');
       if (moreMenu) moreMenu.style.display = 'none';
       navigate(btn.getAttribute('data-page'));
     });
   });
-  // Mobile "More" menu toggle
-  var moreBtn = document.getElementById('mob-more-btn');
-  var moreMenu = document.getElementById('mob-more-menu');
-  if (moreBtn && moreMenu) {
-    moreBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      moreMenu.style.display = moreMenu.style.display === 'none' ? 'block' : 'none';
-    });
-    document.addEventListener('click', function() { moreMenu.style.display = 'none'; });
-    moreMenu.addEventListener('click', function(e) { e.stopPropagation(); });
+  // Build mobile nav from click data
+  buildMobileNav();
+}
+
+/** Fetch tab click counts from Supabase and rebuild mobile nav */
+async function loadTabClicksAndBuild() {
+  if (!sb) return;
+  var session = (await sb.auth.getSession()).data.session;
+  if (!session) return;
+  var res = await sb.from('tab_clicks').select('page, click_count').eq('user_id', session.user.id);
+  if (res.data) {
+    tabClickCounts = {};
+    res.data.forEach(function(r) { tabClickCounts[r.page] = r.click_count; });
   }
+  buildMobileNav();
+}
+
+/** Create a mob-nav-item button using safe DOM methods */
+function createMobBtn(t, extraStyle) {
+  var btn = document.createElement('button');
+  btn.className = 'mob-nav-item' + (t.page === currentPage ? ' active' : '');
+  btn.setAttribute('data-page', t.page);
+  if (extraStyle) btn.style.cssText = extraStyle;
+  var span = document.createElement('span');
+  span.className = 'mob-icon';
+  span.textContent = t.icon;
+  btn.appendChild(span);
+  btn.appendChild(document.createTextNode(t.label));
+  return btn;
+}
+
+/** Sort tabs by click frequency and render primary bar + more menu */
+function buildMobileNav() {
+  var bar = document.getElementById('mob-nav-bar');
+  var grid = document.getElementById('mob-more-grid');
+  if (!bar || !grid) return;
+
+  // Sort tabs: highest click count first, ties keep default order
+  var sorted = ALL_MOB_TABS.slice().sort(function(a, b) {
+    var ca = tabClickCounts[a.page] || 0;
+    var cb = tabClickCounts[b.page] || 0;
+    return cb - ca; // descending
+  });
+
+  var primary = sorted.slice(0, MOB_PRIMARY_COUNT);
+  var secondary = sorted.slice(MOB_PRIMARY_COUNT);
+
+  // Clear existing
+  while (bar.firstChild) bar.removeChild(bar.firstChild);
+  while (grid.firstChild) grid.removeChild(grid.firstChild);
+
+  var moreMenu = document.getElementById('mob-more-menu');
+
+  // Build primary tabs
+  primary.forEach(function(t) {
+    var btn = createMobBtn(t);
+    btn.addEventListener('click', function() {
+      if (moreMenu) moreMenu.style.display = 'none';
+      navigate(t.page);
+    });
+    bar.appendChild(btn);
+  });
+
+  // "More" button (always last in primary bar)
+  var moreBtn = document.createElement('button');
+  moreBtn.className = 'mob-nav-item';
+  moreBtn.id = 'mob-more-btn';
+  var moreSpan = document.createElement('span');
+  moreSpan.className = 'mob-icon';
+  moreSpan.textContent = '⋯';
+  moreBtn.appendChild(moreSpan);
+  moreBtn.appendChild(document.createTextNode('More'));
+  moreBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (moreMenu) moreMenu.style.display = moreMenu.style.display === 'none' ? 'block' : 'none';
+  });
+  bar.appendChild(moreBtn);
+
+  // Build secondary tabs in more menu
+  secondary.forEach(function(t) {
+    var btn = createMobBtn(t, 'padding:12px 8px');
+    btn.addEventListener('click', function() {
+      if (moreMenu) moreMenu.style.display = 'none';
+      navigate(t.page);
+    });
+    grid.appendChild(btn);
+  });
+
+  // Close more menu on outside click
+  document.removeEventListener('click', closeMobMore);
+  document.addEventListener('click', closeMobMore);
+  if (moreMenu) {
+    moreMenu.removeEventListener('click', stopMobMoreProp);
+    moreMenu.addEventListener('click', stopMobMoreProp);
+  }
+}
+
+function closeMobMore() {
+  var m = document.getElementById('mob-more-menu');
+  if (m) m.style.display = 'none';
+}
+function stopMobMoreProp(e) { e.stopPropagation(); }
+
+/** Record a tab click to Supabase (fire-and-forget upsert) */
+function recordTabClick(page) {
+  if (!sb) return;
+  tabClickCounts[page] = (tabClickCounts[page] || 0) + 1;
+  sb.auth.getSession().then(function(res) {
+    if (!res.data.session) return;
+    var uid = res.data.session.user.id;
+    sb.rpc('upsert_tab_click', {p_user_id: uid, p_page: page}).then(function() {});
+  });
 }
 
 function navigate(page) {
@@ -490,6 +599,7 @@ function navigate(page) {
   window.location.hash = page;
   document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.toggle('active', n.getAttribute('data-page') === basePage); });
   document.querySelectorAll('.mob-nav-item').forEach(function(n) { n.classList.toggle('active', n.getAttribute('data-page') === basePage); });
+  recordTabClick(basePage);
   renderPage(basePage);
 }
 
