@@ -1,0 +1,2712 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>Foundry → AWS/Databricks 移行 勉強ガイド</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface2: #f5f5f5;
+    --border: #e0e0e0;
+    --text: #1a1a2e;
+    --text-muted: #6b7280;
+    --accent: #4f46e5;
+    --accent-light: #6366f1;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+    --blue: #2563eb;
+    --purple: #9333ea;
+    --teal: #0d9488;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; color-scheme: light; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  /* Navigation */
+  nav {
+    position: fixed;
+    top: 0; left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    overflow-y: auto;
+    z-index: 100;
+  }
+  nav h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  nav a {
+    display: block;
+    padding: 6px 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: all 0.15s;
+  }
+  nav a:hover { color: var(--text); background: var(--surface2); }
+  nav a.section-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 16px;
+    font-size: 14px;
+  }
+  nav .nav-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .badge-core { background: rgba(99,102,241,0.2); color: var(--accent-light); }
+  .badge-tech { background: rgba(34,197,94,0.2); color: var(--green); }
+  .badge-strategy { background: rgba(245,158,11,0.2); color: var(--amber); }
+  .badge-trend { background: rgba(168,85,247,0.2); color: var(--purple); }
+  /* Main */
+  main {
+    margin-left: 280px;
+    padding: 40px 60px;
+    max-width: 1100px;
+  }
+  /* Hero */
+  .hero {
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .hero h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--accent-light), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+  }
+  .hero .meta {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .hero .meta span { display: flex; align-items: center; gap: 6px; }
+  /* Section */
+  section {
+    margin-bottom: 64px;
+    scroll-margin-top: 24px;
+  }
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.3px;
+  }
+  h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 32px 0 16px;
+    color: var(--accent-light);
+  }
+  h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: var(--text);
+  }
+  p { margin-bottom: 16px; }
+  /* Cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h4 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: var(--accent-light);
+  }
+  .card p { font-size: 14px; color: var(--text-muted); margin: 0; }
+  .card .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+  /* Comparison table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--surface);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+  }
+  tr:hover td { background: rgba(99,102,241,0.03); }
+  /* Code blocks */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 16px 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.8;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    color: var(--text-muted);
+  }
+  .code-block .highlight { color: var(--accent-light); font-weight: 600; }
+  .code-block .comment { color: #9ca3af; }
+  .code-block .green { color: var(--green); }
+  .code-block .amber { color: var(--amber); }
+  .code-block .red { color: var(--red); }
+  /* Callout */
+  .callout {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+  .callout.warn { border-left-color: var(--amber); }
+  .callout.success { border-left-color: var(--green); }
+  .callout.danger { border-left-color: var(--red); }
+  .callout strong { display: block; margin-bottom: 4px; }
+  /* Flow diagrams */
+  .flow {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 2;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+  /* Quiz */
+  .quiz {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  .quiz h4 { color: var(--amber); margin: 0 0 12px; }
+  .quiz-answer {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    color: var(--green);
+    font-size: 14px;
+  }
+  .quiz button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+  .quiz button:hover { background: var(--accent-light); }
+  /* List */
+  ul, ol { margin: 12px 0 16px 24px; }
+  li { margin-bottom: 6px; font-size: 14px; }
+  li strong { color: var(--text); }
+  /* Tags */
+  .tag-foundry { background: rgba(239,68,68,0.15); color: var(--red); }
+  .tag-databricks { background: rgba(99,102,241,0.15); color: var(--accent-light); }
+  .tag-aws { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .tag-snowflake { background: rgba(59,130,246,0.15); color: var(--blue); }
+  /* Responsive */
+  @media (max-width: 900px) {
+    nav { display: none; }
+    main { margin-left: 0; padding: 24px; }
+  }
+  /* Print */
+  @media print {
+    nav { display: none; }
+    main { margin-left: 0; }
+    body { background: white; color: black; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <h2>Study Guide</h2>
+  <a href="#hero" class="section-title">Overview</a>
+  <a href="#s1" class="section-title">1. Palantir Foundry<span class="nav-badge badge-core">基礎</span></a>
+  <a href="#s1-arch">アーキテクチャ</a>
+  <a href="#s1-strengths">強み・弱み</a>
+  <a href="#s1-lockin">ロックイン要素</a>
+  <a href="#s2" class="section-title">2. AWS + Databricks<span class="nav-badge badge-tech">技術</span></a>
+  <a href="#s2-databricks">Databricksコンポーネント</a>
+  <a href="#s2-aws">AWSデータサービス</a>
+  <a href="#s2-arch">アーキテクチャパターン</a>
+  <a href="#s3" class="section-title">3. 移行の注意点<span class="nav-badge badge-core">重要</span></a>
+  <a href="#s3-mapping">機能マッピング</a>
+  <a href="#s3-data">データ移行課題</a>
+  <a href="#s3-security">セキュリティ移行</a>
+  <a href="#s3-ops">運用面の変化</a>
+  <a href="#s4" class="section-title">4. 議論ポイント<span class="nav-badge badge-strategy">戦略</span></a>
+  <a href="#s4-dbvs">Databricks vs AWS Native</a>
+  <a href="#s4-medallion">メダリオンアーキテクチャ</a>
+  <a href="#s4-mesh">Data Mesh vs Lakehouse</a>
+  <a href="#s4-cost">コスト最適化</a>
+  <a href="#s5" class="section-title">5. 技術スタック方針<span class="nav-badge badge-strategy">方針</span></a>
+  <a href="#s5-4principles">4原則</a>
+  <a href="#s5-recommend">推奨アーキテクチャ</a>
+  <a href="#s5-ai">AI/ML拡張性</a>
+  <a href="#s6" class="section-title">6. 最新動向<span class="nav-badge badge-trend">2025-2026</span></a>
+  <a href="#s6-databricks">Databricks最新</a>
+  <a href="#s6-aws">AWS最新</a>
+  <a href="#s6-trends">業界トレンド</a>
+  <a href="#s6-competitors">競合比較</a>
+  <a href="#s6-partnership" class="section-title" style="color:var(--green);">★ Databricks-Palantir提携</a>
+  <a href="#s6b" class="section-title">7. 基盤プラットフォーム比較<span class="nav-badge badge-tech">NEW</span></a>
+  <a href="#s6b-major">メジャー4基盤</a>
+  <a href="#s6b-emerging">新興プラットフォーム</a>
+  <a href="#s6b-format">テーブルフォーマット収束</a>
+  <a href="#s6c" class="section-title">8. クラウド連携<span class="nav-badge badge-tech">NEW</span></a>
+  <a href="#s6c-cloud">クラウド対応状況</a>
+  <a href="#s6c-iam">IAM/ID統合</a>
+  <a href="#s6c-interop">基盤間連携</a>
+  <a href="#s6d" class="section-title">9. 運用設計<span class="nav-badge badge-strategy">NEW</span></a>
+  <a href="#s6d-auth">権限管理設計</a>
+  <a href="#s6d-code">加工コード管理</a>
+  <a href="#s6d-ops">運用体制・FinOps</a>
+  <a href="#s7" class="section-title">10. SOMPOケア固有<span class="nav-badge badge-core">PJ</span></a>
+  <a href="#s7-context">PJ背景</a>
+  <a href="#s7-rfi">RFI 5社評価</a>
+  <a href="#s7-discussion">明日のMTG論点</a>
+  <a href="#s9" class="section-title">11. 最終成果物の深掘り<span class="nav-badge badge-core">PDF</span></a>
+  <a href="#s9-evolution">4原則→7観点の進化</a>
+  <a href="#s9-numbers">現行環境の数値</a>
+  <a href="#s9-6vendors">6社評価の読み方</a>
+  <a href="#s9-rfp">RFP依頼事項の背景</a>
+  <a href="#s9-appendix">Appendix技術判断</a>
+  <a href="#s9-ontology">オントロジー復元ガイド</a>
+  <a href="#s9-qa">想定質問集</a>
+  <a href="#s8" class="section-title">12. 理解度チェック</a>
+</nav>
+
+<main>
+  <div class="hero" id="hero">
+    <h1>Foundry → AWS/Databricks 移行<br>勉強ガイド</h1>
+    <p class="subtitle">SOMPOケア 新分析環境構築PJT — データ基盤プロフェッショナルへの道</p>
+    <div class="meta">
+      <span>2026-04-01 作成</span>
+      <span>対象: 明日 4/2 Sケアレビュー</span>
+      <span>Foundry会社 リサーチ部</span>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 1: Palantir Foundry -->
+  <!-- ================================================================ -->
+  <section id="s1">
+    <h2>1. Palantir Foundry を理解する</h2>
+    <p>Palantir Foundryは、Palantir Technologies社が提供する<strong>エンタープライズ向けデータ統合・分析プラットフォーム</strong>です。元々は政府・国防向けだった技術を民間向けに展開したもので、「データを繋いで、分析して、意思決定に使う」を一気通貫で行える点が特徴です。</p>
+
+    <h3 id="s1-arch">アーキテクチャの全体像</h3>
+    <p>Foundryは大きく5つのレイヤーで構成されています。一つのプラットフォームで「取り込み → 加工 → モデリング → 分析 → アプリ化」を全てカバーするのが設計思想です。</p>
+
+    <div class="flow">
+<span class="comment">── Foundry のレイヤー構造 ──</span>
+
+<span class="highlight">Layer 1: Data Connection（データ取り込み）</span>
+  ・外部DB、API、ファイル、ストリームからデータを吸い上げる
+  ・Magritte（コネクタ基盤）でRDB/CSV/API等に対応
+  ・コネクタは独自仕様 → 汎用コネクタ（Fivetran等）とは非互換
+
+<span class="highlight">Layer 2: Data Pipeline（データ加工）</span>
+  ・Code Repositories: PySpark/SQLでパイプライン定義
+  ・Transforms: Foundry独自ラッパーでSpark処理を抽象化
+  ・DAG（有向非巡回グラフ）でパイプライン依存関係を自動管理
+  ・データセットは全て<span class="green">不変（Immutable）</span>＝ 上書き不可、常にバージョン管理
+
+<span class="highlight">Layer 3: Ontology（オントロジー）</span>  <span class="red">← 最もFoundry固有で移行困難</span>
+  ・データの「意味」と「関係性」を定義するセマンティックレイヤー
+  ・Object Types（入居者、施設、ケアプラン等）を定義
+  ・Link Types（入居者→施設、入居者→ケアプラン等）で関係を定義
+  ・Action Types（入居者を移動、ケアプランを更新等）で操作を定義
+  ・「稼働率 = 入居者数 ÷ 定員」のようなビジネスロジックを一元管理
+
+<span class="highlight">Layer 4: Analytics & Visualization（分析・可視化）</span>
+  ・Contour: ドラッグ&ドロップの分析ツール
+  ・Quiver: グラフ・チャート作成
+  ・Notepad: ドキュメント + インラインデータ
+
+<span class="highlight">Layer 5: Operational Apps（業務アプリ）</span>
+  ・Workshop: ノーコードでオントロジーベースのアプリを構築
+  ・Slate: カスタムWebアプリ構築（より自由度が高い）
+  ・SOMPOケアの4モジュール（CMC、モニター、ナースコール、施設360）はここで稼働
+    </div>
+
+    <h3 id="s1-strengths">Foundry の強み・弱み</h3>
+    <div class="card-grid">
+      <div class="card">
+        <h4>強み</h4>
+        <ul>
+          <li><strong>オールインワン</strong>: 取り込み→加工→分析→アプリが1プラットフォーム</li>
+          <li><strong>オントロジー</strong>: データの意味・関係を一元的に定義でき、全アプリで共有</li>
+          <li><strong>データリネージ</strong>: 全データの来歴を自動追跡。「この数字はどこから来た？」に即答</li>
+          <li><strong>セキュリティ</strong>: 政府機関向けに鍛えられた堅牢なアクセス制御</li>
+          <li><strong>Branching</strong>: パイプラインのGitライクなブランチ管理</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>弱み</h4>
+        <ul>
+          <li><strong>コスト</strong>: ライセンス費用が高額。ユーザー数に比例して増加</li>
+          <li><strong>ベンダーロックイン</strong>: 独自概念が多く、他基盤への移行が困難</li>
+          <li><strong>エコシステム</strong>: OSS/第三者ツールとの統合が限定的</li>
+          <li><strong>透明性</strong>: 内部処理がブラックボックス化しやすい</li>
+          <li><strong>UIの頻繁な変更</strong>: SaaS型リリースで現場が混乱</li>
+          <li><strong>AI/LLM対応</strong>: 2025時点ではLLM統合がDatabricks等に比べ後発</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="s1-lockin">ロックイン要素（移行が困難なもの）</h3>
+    <div class="callout danger">
+      <strong>最重要: Foundry固有のロックイン要素</strong>
+      以下の要素はFoundry独自の概念であり、1対1で他プラットフォームにマッピングできない。移行時に「再設計」が必要。
+    </div>
+
+    <table>
+      <tr><th>要素</th><th>Foundryでの実装</th><th>移行の困難さ</th><th>移行先での代替</th></tr>
+      <tr>
+        <td><strong>オントロジー</strong></td>
+        <td>Object/Link/Action Types でデータ間の関係と操作を定義</td>
+        <td style="color:var(--red);">最も困難</td>
+        <td>Unity Catalog + セマンティックレイヤー + dbt で部分再現。完全互換は不可</td>
+      </tr>
+      <tr>
+        <td><strong>Transforms</strong></td>
+        <td>Foundry独自APIでSpark処理をラップ</td>
+        <td style="color:var(--amber);">中程度</td>
+        <td>標準PySpark/SQL に書き換え。ロジック自体は流用可能</td>
+      </tr>
+      <tr>
+        <td><strong>Workshop Apps</strong></td>
+        <td>オントロジーベースのノーコードアプリ</td>
+        <td style="color:var(--red);">困難</td>
+        <td>Retool/Streamlit等で再構築、またはカスタム開発</td>
+      </tr>
+      <tr>
+        <td><strong>Branching</strong></td>
+        <td>データセット・パイプラインのブランチ管理</td>
+        <td style="color:var(--amber);">中程度</td>
+        <td>Git + dbt の branching で代替。データのブランチは Delta Lake clone</td>
+      </tr>
+      <tr>
+        <td><strong>Magritte コネクタ</strong></td>
+        <td>独自コネクタ仕様</td>
+        <td style="color:var(--green);">比較的容易</td>
+        <td>Fivetran/Airbyte/AWS DMS で代替</td>
+      </tr>
+      <tr>
+        <td><strong>権限モデル</strong></td>
+        <td>プロジェクト・データセット単位の細粒度権限</td>
+        <td style="color:var(--amber);">中程度</td>
+        <td>Unity Catalog + Row/Column Level Security</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <strong>補足: オントロジーのバックエンド — 裏側で何が動いているか</strong>
+      <p style="margin-top:8px;font-size:14px;">オントロジーは「概念の定義」だけでなく、裏側に <strong>3つのバックエンドサービス</strong> が動いている。これを理解すると、なぜ移行が難しいかがよりクリアになる。</p>
+
+      <div style="margin:16px 0;padding:16px;background:var(--surface2);border-radius:8px;font-size:13px;line-height:1.8;">
+        <strong style="color:var(--accent-light);">1. Ontology Metadata Service (OMS)</strong> — 「辞書」の役割<br>
+        &nbsp;&nbsp;「入居者とは何か」「施設とは何か」「入居者と施設はどう関連するか」の<strong>定義そのもの</strong>を管理。<br>
+        &nbsp;&nbsp;RDBで言うとテーブル定義（DDL）に近いが、ビジネスの意味（「稼働率 = 入居者数÷定員」等）も含む。<br>
+        &nbsp;&nbsp;<span style="color:var(--amber);">→ 移行時: Unity Catalog のメタデータ + dbt のセマンティックレイヤーで部分再現</span><br><br>
+
+        <strong style="color:var(--accent-light);">2. Object Data Funnel</strong> — 「データの入口」の役割<br>
+        &nbsp;&nbsp;CareBaseやほのぼの等のソースシステムからデータを吸い上げ、OMS の定義に従って<strong>オントロジーに書き込む</strong>。<br>
+        &nbsp;&nbsp;「生データ→ビジネスオブジェクト」への変換もここで行われる。<br>
+        &nbsp;&nbsp;<span style="color:var(--amber);">→ 移行時: ETLパイプライン（PySpark + dbt）で再構築。ロジック自体は流用可能</span><br><br>
+
+        <strong style="color:var(--accent-light);">3. Object Set Service (OSS)</strong> — 「データの出口」の役割<br>
+        &nbsp;&nbsp;Workshop アプリやContour分析ツールが「入居者一覧」「施設Aの全データ」を取得するときの<strong>読み取りAPI</strong>。<br>
+        &nbsp;&nbsp;権限制御もここで行われる（「この人は施設Aのデータしか見れない」等）。<br>
+        &nbsp;&nbsp;<span style="color:var(--amber);">→ 移行時: Unity Catalog の行/列レベルセキュリティ + SQL API で代替</span>
+      </div>
+
+      <p style="font-size:13px;color:var(--text-muted);">つまり、オントロジーの移行とは「辞書（OMS）の再定義 + 入口（Funnel）のETL再構築 + 出口（OSS）の権限/API再設計」の3つをまとめてやる必要があるということ。だから最も困難。</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">※ 2026年6月にObject Storage V1 (Phonograph)が廃止予定。V2への移行がPalantir内部で進行中。移行タイミングと重なるため要注意。</p>
+    </div>
+
+    <div class="quiz">
+      <h4>理解度チェック Q1</h4>
+      <p>Foundryの「オントロジー」とは何か？なぜ移行が最も困難なのか？</p>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        オントロジーは「データの意味と関係性の定義」。入居者・施設・ケアプランなどの「概念（Object Type）」と、それらの「関係（Link Type）」、さらに「操作（Action Type）」を定義する。全アプリがこの定義を参照するため、Foundryの最大の資産かつ最大のロックイン要素。移行先には1対1の互換概念がないため「再設計」が必要。Databricksの場合、Unity Catalog（メタデータ管理）+ セマンティックレイヤー（AI-BI Genie等）+ dbt models（変換ロジック）を組み合わせて部分的に再現する。
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 2: AWS + Databricks -->
+  <!-- ================================================================ -->
+  <section id="s2">
+    <h2>2. AWS + Databricks 基盤を理解する</h2>
+
+    <h3 id="s2-databricks">Databricks の主要コンポーネント</h3>
+    <p>Databricksは<strong>「レイクハウス」</strong>というアーキテクチャを提唱する企業です。データレイク（安い大容量ストレージ）とデータウェアハウス（高速なクエリエンジン）の長所を1つのプラットフォームで統合します。</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>Delta Lake</h4>
+        <p>S3上のファイル（Parquet）に<strong>トランザクション機能</strong>を追加するストレージレイヤー。ACIDトランザクション、Time Travel（過去の時点のデータに遡れる）、スキーマ進化をサポート。</p>
+        <span class="tag tag-databricks">ストレージ</span>
+      </div>
+      <div class="card">
+        <h4>Unity Catalog</h4>
+        <p>データ・AI資産の<strong>統合ガバナンス基盤</strong>。テーブル、ML モデル、ファイルを1つのカタログで管理。行/列レベルのアクセス制御、データリネージ、監査ログを提供。</p>
+        <span class="tag tag-databricks">ガバナンス</span>
+      </div>
+      <div class="card">
+        <h4>SQL Warehouse</h4>
+        <p>SQL クエリ専用のサーバーレスコンピュート。BIツールやAIからのSQLアクセスに最適化。自動スケーリングで使った分だけ課金。</p>
+        <span class="tag tag-databricks">コンピュート</span>
+      </div>
+      <div class="card">
+        <h4>Databricks Workflows</h4>
+        <p>ETL/ML パイプラインの<strong>ジョブスケジューラ</strong>。ノートブック、Pythonスクリプト、dbt、JAR等のタスクをDAGで定義・実行。</p>
+        <span class="tag tag-databricks">オーケストレーション</span>
+      </div>
+      <div class="card">
+        <h4>MLflow</h4>
+        <p>ML実験の<strong>ライフサイクル管理</strong>（OSS）。実験トラッキング、モデルレジストリ、デプロイメントを統合管理。LLM評価にも対応。</p>
+        <span class="tag tag-databricks">AI/ML</span>
+      </div>
+      <div class="card">
+        <h4>AI-BI Genie</h4>
+        <p><strong>自然言語でデータに質問</strong>できるBI機能。セマンティックモデルを参照し、SQLを自動生成。「稼働率が低い施設は？」→即回答。</p>
+        <span class="tag tag-databricks">AI-BI</span>
+      </div>
+      <div class="card">
+        <h4>Delta Live Tables (DLT)</h4>
+        <p><strong>宣言的パイプライン</strong>フレームワーク。「このテーブルはこう定義」と書けば、依存関係・データ品質チェック・エラー処理を自動化。</p>
+        <span class="tag tag-databricks">ETL</span>
+      </div>
+      <div class="card">
+        <h4>Vector Search</h4>
+        <p><strong>ベクトル検索</strong>エンジン。テキストの意味検索（RAG）に使用。介護記録の類似検索などに活用可能。</p>
+        <span class="tag tag-databricks">AI/ML</span>
+      </div>
+      <div class="card">
+        <h4>Mosaic AI</h4>
+        <p>LLMのファインチューニング、サービング、評価を統合。<strong>Compound AI Systems</strong>（複数AIの連携）の構築基盤。AI Gateway（複数LLMへの統一API）、Agent Framework、Agent Bricks（タスク記述だけでエージェント自動構築）も含む。</p>
+        <span class="tag tag-databricks">GenAI</span>
+      </div>
+    </div>
+
+    <h3 id="s2-aws">AWS のデータ基盤関連サービス</h3>
+    <p>AWSは「サービスを組み合わせて基盤を作る」思想。それぞれが独立したサービスで、自由に選択・組み合わせできる反面、全体の設計は自分で行う必要があります。</p>
+
+    <table>
+      <tr><th>サービス</th><th>役割</th><th>一言で</th><th>Foundry対応</th></tr>
+      <tr><td><strong>S3</strong></td><td>オブジェクトストレージ</td><td>全データの格納先。安価で無限スケール</td><td>Foundry内部ストレージの代替</td></tr>
+      <tr><td><strong>AWS Glue</strong></td><td>ETL + データカタログ</td><td>サーバーレスSpark ETL。メタデータも管理</td><td>Foundry Pipeline (部分)</td></tr>
+      <tr><td><strong>Redshift</strong></td><td>DWH（データウェアハウス）</td><td>PostgreSQL互換のカラムナDB。大規模SQL分析向け</td><td>Foundry Analytics (部分)</td></tr>
+      <tr><td><strong>Athena</strong></td><td>サーバーレスクエリ</td><td>S3上のデータに直接SQLを投げる。Presto/Trino基盤</td><td>アドホック分析</td></tr>
+      <tr><td><strong>Lake Formation</strong></td><td>データレイクガバナンス</td><td>S3/Glue Catalogの権限管理を統合</td><td>Foundryの権限管理</td></tr>
+      <tr><td><strong>EMR</strong></td><td>マネージドSpark/Hadoop</td><td>大規模分散処理。バッチ向け</td><td>Foundry Transforms</td></tr>
+      <tr><td><strong>Step Functions</strong></td><td>ワークフローオーケストレーション</td><td>Lambda/Glue等を組み合わせたジョブ管理</td><td>Foundry DAG</td></tr>
+      <tr><td><strong>Bedrock</strong></td><td>マネージドLLM基盤</td><td>Claude/GPT/Llama等を統一APIで利用</td><td>Foundryにはない</td></tr>
+      <tr><td><strong>SageMaker</strong></td><td>ML基盤</td><td>モデル構築・学習・デプロイの統合環境</td><td>Foundryにはない</td></tr>
+      <tr><td><strong>QuickSight</strong></td><td>BI</td><td>AWS純正BI。安価だが機能はTableau/Lookerに劣る</td><td>Foundry Contour/Quiver</td></tr>
+      <tr><td><strong>DMS</strong></td><td>データベース移行</td><td>RDB間のデータ移行・レプリケーション</td><td>Magritte (一部)</td></tr>
+    </table>
+
+    <h3 id="s2-arch">Databricks on AWS のアーキテクチャパターン</h3>
+    <p>SOMPOケアの要件を踏まえた推奨アーキテクチャ:</p>
+
+    <div class="flow">
+<span class="comment">── Databricks on AWS 推奨構成 ──</span>
+
+<span class="highlight">データソース</span>
+  CareBase(ほのぼの) → <span class="amber">Fivetran/DMS</span> → S3 (Raw Zone)
+  眠りSCAN(IoT)    → <span class="amber">Kinesis</span>     → S3 (Raw Zone)
+  ナースコール      → <span class="amber">API/File</span>    → S3 (Raw Zone)
+  介護記録テキスト  → <span class="amber">Batch Upload</span> → S3 (Raw Zone)
+
+<span class="highlight">メダリオンアーキテクチャ（Databricks）</span>
+  S3 Raw → <span class="green">Bronze</span>（生データそのまま保存、監査用）
+         → <span class="green">Silver</span>（クレンジング済み、型変換、名寄せ済み）
+         → <span class="green">Gold</span>（ビジネスKPI集計、BIダッシュボード用）= <span class="red">SSOT</span>
+
+<span class="highlight">統合ガバナンス</span>
+  <span class="amber">Unity Catalog</span>: 全レイヤーのメタデータ・権限・リネージを一元管理
+  行レベル/列レベルセキュリティ: 施設ごと × データ種別ごとの制御
+
+<span class="highlight">AI/ML レイヤー</span>
+  構造化データ → <span class="green">SQL Warehouse</span> → AI-BI Genie（自然言語クエリ）
+  非構造データ → <span class="green">Bedrock</span>(LLM) → 構造化抽出 → <span class="green">Vector Search</span>(RAG)
+  ML実験      → <span class="green">MLflow</span> → Model Registry → Serving Endpoint
+
+<span class="highlight">BI/アプリ</span>
+  Tableau / AI-BI Genie / カスタムアプリ
+    </div>
+
+    <div class="callout success">
+      <strong>ポイント: なぜ「Databricks on AWS」が有力か</strong>
+      SOMPOケアは既にAWS環境を持っている（Direct Connect接続済み）。Databricksのコンピュートは裏でAWS（S3, EC2）を使うため、既存のAWSネットワーク・セキュリティ設計をそのまま活かせる。さらにPySpark互換性が高く、Foundryで書いたPySparkコードの移行が最もスムーズ。
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 3: 移行の注意点 -->
+  <!-- ================================================================ -->
+  <section id="s3">
+    <h2>3. 移行時の注意点・リスク</h2>
+
+    <h3 id="s3-mapping">Foundry機能 → AWS/Databricks マッピング</h3>
+    <table>
+      <tr><th>Foundry機能</th><th>Databricks on AWS</th><th>移行難度</th><th>注意点</th></tr>
+      <tr>
+        <td>Data Connection (Magritte)</td>
+        <td>Fivetran / Airbyte / AWS DMS + Glue Connectors</td>
+        <td style="color:var(--green);">低</td>
+        <td>介護系システム（ほのぼの等）にFivetranコネクタがない可能性。CSV/独自プロトコル対応要調査</td>
+      </tr>
+      <tr>
+        <td>Transforms (PySpark)</td>
+        <td>Databricks Notebooks / dbt / DLT</td>
+        <td style="color:var(--amber);">中</td>
+        <td>Foundry独自APIのラッパーを標準PySparkに書き換え。ロジック自体は流用可能だが工数がかかる</td>
+      </tr>
+      <tr>
+        <td>Ontology</td>
+        <td>Unity Catalog + セマンティックレイヤー + dbt</td>
+        <td style="color:var(--red);">高</td>
+        <td>1対1対応不可。Object/Link/Actionの概念を分解して再設計。RFI 5社すべてが未言及</td>
+      </tr>
+      <tr>
+        <td>Contour/Quiver (分析)</td>
+        <td>Databricks SQL + Tableau / AI-BI Genie</td>
+        <td style="color:var(--green);">低</td>
+        <td>SQL化すれば何のBIツールにも繋がる</td>
+      </tr>
+      <tr>
+        <td>Workshop/Slate (アプリ)</td>
+        <td>Retool / Streamlit / カスタム開発</td>
+        <td style="color:var(--red);">高</td>
+        <td>4モジュール（CMC、モニター等）の業務ロジック再実装が必要</td>
+      </tr>
+      <tr>
+        <td>Data Lineage</td>
+        <td>Unity Catalog Lineage + dbt docs</td>
+        <td style="color:var(--green);">低</td>
+        <td>Databricksは自動リネージ。dbtと組み合わせればFoundry同等以上</td>
+      </tr>
+      <tr>
+        <td>Branching</td>
+        <td>Git + dbt branching + Delta Lake CLONE</td>
+        <td style="color:var(--amber);">中</td>
+        <td>コードのブランチはGitで自然。データのブランチはDelta CLONEで近い機能</td>
+      </tr>
+      <tr>
+        <td>権限管理</td>
+        <td>Unity Catalog + Row/Column Level Security</td>
+        <td style="color:var(--amber);">中</td>
+        <td>基本機能はカバー。AI経由のアクセス権限継承はPoC検証必要</td>
+      </tr>
+    </table>
+
+    <h3 id="s3-data">データ移行の技術的課題</h3>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>フォーマット変換</h4>
+        <p>Foundry内部データ → S3 (Parquet/Delta) への変換。Foundryのエクスポート機能でCSV/Parquetで取り出し、S3に配置してDelta Lakeとして登録する流れ。<strong>データ量が大きい場合（眠りSCAN 1.92TB等）はバッチ転送の設計が必要。</strong></p>
+      </div>
+      <div class="card">
+        <h4>スキーマ管理</h4>
+        <p>Foundryのスキーマ定義をDelta Lakeのスキーマに変換。Delta Lakeはスキーマ進化（Schema Evolution）をサポートするため、カラム追加は非破壊的に行える。<strong>2028年CareBase刷新に備え、データコントラクト設計が重要。</strong></p>
+      </div>
+      <div class="card">
+        <h4>データ品質</h4>
+        <p>移行時のデータ整合性検証が最大の工数。行数・集計値の一致確認、NULL/欠損値の扱い、日時フォーマット、文字コード。<strong>DLT Expectations や Great Expectations でデータ品質チェックを自動化。</strong></p>
+      </div>
+      <div class="card">
+        <h4>マスタデータ名寄せ</h4>
+        <p>ほのぼの・Axist・眠りSCAN・ナースコール間で同じ入居者/施設が異なるIDで管理されている。<strong>移行のタイミングでMDM（マスタデータ管理）を設計すべき。RFI ではPwCのみが明示的に提案。</strong></p>
+      </div>
+    </div>
+
+    <h3 id="s3-security">セキュリティ・ガバナンスの移行</h3>
+
+    <div class="callout warn">
+      <strong>介護データ特有のセキュリティ要件</strong>
+      介護データには要配慮個人情報（病歴、障害等）が含まれる。さらにAI推論結果（「認知症リスク高」等）自体が新たな要配慮個人情報になる可能性がある。アクセス制御は最大4次元（施設×データ種別×時間×AI経由）で設計する必要がある。
+    </div>
+
+    <table>
+      <tr><th>セキュリティ要素</th><th>Foundry</th><th>Databricks on AWS</th><th>ギャップ</th></tr>
+      <tr>
+        <td>認証</td>
+        <td>Foundry内蔵 or SAML</td>
+        <td>Azure AD / Okta → Databricks SCIM</td>
+        <td>SOMPOグループのAzure ADと連携設計が必要</td>
+      </tr>
+      <tr>
+        <td>行レベルセキュリティ</td>
+        <td>プロジェクト・データセット単位</td>
+        <td>Unity Catalog Row Filter</td>
+        <td>施設ごとのフィルタ定義の移行。1,000+施設分</td>
+      </tr>
+      <tr>
+        <td>列レベルセキュリティ</td>
+        <td>カラム単位の非表示</td>
+        <td>Unity Catalog Column Masking</td>
+        <td>要配慮個人情報カラムのマスキングルール再定義</td>
+      </tr>
+      <tr>
+        <td>監査ログ</td>
+        <td>Foundry Audit Log</td>
+        <td>Unity Catalog Audit + CloudTrail</td>
+        <td>Foundryは監査ログが弱い（現行の課題）。移行でむしろ改善</td>
+      </tr>
+      <tr>
+        <td>AI経由のアクセス制御</td>
+        <td>未対応</td>
+        <td>PoC検証が必要</td>
+        <td>両者とも成熟度低い。RFP評価軸に含めるべき</td>
+      </tr>
+    </table>
+
+    <h3 id="s3-ops">運用面の変化</h3>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>監視・アラート</h4>
+        <p><strong>Foundry</strong>: プラットフォーム内蔵の監視<br><strong>Databricks</strong>: Databricks Workflows + CloudWatch + PagerDuty等で構築。<br>パイプライン障害の検知→通知→対応のフローを新たに設計。DLT の Expectations でデータ品質も自動監視。</p>
+      </div>
+      <div class="card">
+        <h4>コスト管理</h4>
+        <p><strong>Foundry</strong>: ライセンス型（年額固定が多い）<br><strong>Databricks</strong>: DBU (Databricks Unit) 従量課金 + S3ストレージ<br>クラスタの自動停止、Serverless SQL Warehouse の活用でコスト最適化。<strong>Foundryからの移行でコスト構造が透明化する</strong>のは大きなメリット。</p>
+      </div>
+      <div class="card">
+        <h4>テスト環境</h4>
+        <p><strong>Foundry</strong>: テスト/本番分離がない（SOMPOケアの現行課題）<br><strong>Databricks</strong>: ワークスペース分離 + Unity Catalog でカタログレベルで環境分離可能。dev/staging/prod の明確な分離が実現。</p>
+      </div>
+      <div class="card">
+        <h4>スキル要件の変化</h4>
+        <p><strong>Foundry</strong>: Foundry GUI操作 + PySpark<br><strong>Databricks</strong>: SQL + Python + dbt + Git + AWS基礎<br><strong>学習コストは上がるが、汎用的なスキルが身につく。</strong>Foundry固有スキルは社外で使えないが、Databricks/AWSスキルは市場価値がある。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 4: 議論ポイント -->
+  <!-- ================================================================ -->
+  <section id="s4">
+    <h2>4. 議論ポイント・意思決定フレームワーク</h2>
+
+    <h3 id="s4-dbvs">Databricks vs Snowflake vs AWS Native — 3構成の全体像</h3>
+    <p>移行先の基盤構成は大きく3パターンに分かれます。それぞれの<strong>構成図・特徴・向いている組織・SOMPOケアへの適合度</strong>を整理します。</p>
+
+    <h4>パターン A: Databricks on AWS（推奨）</h4>
+    <div class="flow">
+<span class="comment">── 構成図 ──</span>
+
+<span class="highlight">ユーザー層</span>
+  施設長・本部スタッフ → <span class="green">Tableau</span>（BIダッシュボード）
+  データ分析者         → <span class="green">Databricks SQL / Notebooks</span>
+  AI/LLM              → <span class="green">AI-BI Genie / Mosaic AI</span>
+
+<span class="highlight">統合管理層</span>
+  <span class="amber">Unity Catalog</span> ── メタデータ / 権限(RLS/CLS) / リネージ / 監査ログ
+  → テーブル、MLモデル、ベクトルIndex、LLMエンドポイントを一元管理
+  → <span class="green">1つのカタログで全資産を統治</span>
+
+<span class="highlight">処理層</span>
+  ETL:        <span class="green">PySpark</span>（Foundryから移植）+ <span class="green">dbt Core</span>（SQL変換）
+  ジョブ管理: <span class="green">Lakeflow Jobs</span>（サーバーレス、DAG定義）
+  品質管理:   <span class="green">DLT Expectations</span>（データ品質チェック自動化）
+  ML:         <span class="green">MLflow</span>（実験管理）+ <span class="green">Model Serving</span>
+  GenAI:      <span class="green">Mosaic AI</span> + <span class="green">Vector Search</span> + <span class="green">Bedrock</span>(LLM)
+
+<span class="highlight">ストレージ層</span>
+  <span class="green">Delta Lake</span> on <span class="amber">Amazon S3</span>
+  フォーマット: Delta + <span class="green">UniForm</span>（Iceberg互換メタデータ自動生成）
+  階層: Bronze → Silver → Gold（メダリオン）
+
+<span class="highlight">インフラ層（AWS）</span>
+  VPC / Direct Connect / IAM / KMS / CloudTrail / CloudWatch
+    </div>
+
+    <div class="card-grid">
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>パターンAの特徴</h4>
+        <ul>
+          <li><strong>統合プラットフォーム</strong>: ETL→DWH→ML→AIが1つのワークスペース内で完結</li>
+          <li><strong>PySpark互換</strong>: Foundryの@transform_dfからデコレーター除去だけでそのまま動作（PDF A-8）</li>
+          <li><strong>ガバナンス統合</strong>: Unity Catalogでデータ〜AIまでを1つのカタログで管理</li>
+          <li><strong>OSS基盤</strong>: Delta Lake, MLflow, dbt がコアでロックイン軽減</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>なぜSOMPOケアに最適か（根拠5つ）</h4>
+        <ol>
+          <li><strong>移植コスト最小</strong>: 219本のPySparkパイプラインがほぼそのまま動く。Snowflakeだと全面書き換え（Snowpark）が必要</li>
+          <li><strong>Foundryに最も近い体験</strong>: 統合PFなのでFoundryユーザーの学習曲線が緩やか</li>
+          <li><strong>AI-Ready</strong>: MLflow+Vector Search+Mosaic AIが標準統合。将来のAI活用にそのまま拡張</li>
+          <li><strong>運用人材2名で回る</strong>: 分散管理不要。Snowflakeは1-2名(SQL)、AWS Nativeは3-4名(インフラ+データ)</li>
+          <li><strong>RFI 2社が提案</strong>: Deloitte(有力候補)とFujitsuがDatabricks構成。実績ある構成パターン</li>
+        </ol>
+      </div>
+    </div>
+
+    <h4>パターン B: Snowflake on AWS</h4>
+    <div class="flow">
+<span class="comment">── 構成図 ──</span>
+
+<span class="highlight">ユーザー層</span>
+  施設長・本部       → <span class="green">Tableau / Power BI</span>
+  データ分析者       → <span class="green">Snowflake SQL</span>（Snowsightエディタ）
+  AI/LLM            → <span class="amber">Cortex Analyst</span>（限定的）
+
+<span class="highlight">管理層</span>
+  <span class="amber">Snowflake Access Control</span> ── RBAC / RLS / マスキング
+  + <span class="amber">Horizon</span>（ガバナンス、Data Clean Rooms）
+  → <span class="red">ML モデル管理は別途必要</span>（Snowflake単体では不十分）
+
+<span class="highlight">処理層</span>
+  ETL:     <span class="red">Snowpark（Python）</span> ← PySpark全面書き換えが必要
+  ジョブ:  <span class="amber">Snowflake Tasks</span>（シンプルだが機能限定）
+  ML:      <span class="amber">Cortex ML</span>（Databricks MLflowに比べ限定的）
+  GenAI:   <span class="amber">Cortex LLM Functions</span>（Claude/Llama等、ただしモデル選択肢少）
+
+<span class="highlight">ストレージ層</span>
+  <span class="red">Snowflake内部ストレージ</span>（独自形式 + Apache Polaris経由でIceberg）
+  → データエクスポート時にコスト発生（Egress課金）
+  → S3にもデータを持つ場合は2箇所管理になる
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>パターンBの特徴</h4>
+        <ul>
+          <li><strong>SQL中心</strong>: SQL操作だけで完結する範囲が広い。学習コスト低</li>
+          <li><strong>最速のSQL性能</strong>: OLAP（分析クエリ）でDatabricksより高速な場面あり</li>
+          <li><strong>フルマネージド</strong>: インフラ管理ゼロ。運用負荷が最小</li>
+          <li><strong>データシェアリング</strong>: 組織間のセキュアなデータ共有が強い</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 style="color:var(--red);">SOMPOケアで不利な理由（根拠4つ）</h4>
+        <ol>
+          <li><strong>PySpark全面書き換え</strong>: 219本のパイプラインをSnowpark(Python)に変換。RDD/UDF/ML全てが書き換え対象。<strong>コスト大</strong></li>
+          <li><strong>AI/ML統合が弱い</strong>: Cortex MLは発展途上。MLflow相当の実験管理がない。Vector Search非提供</li>
+          <li><strong>独自形式のロックイン</strong>: データエクスポートにコスト発生。Apache Polaris経由のIceberg対応は進行中だが未成熟</li>
+          <li><strong>非構造データ</strong>: 介護記録テキスト340GBのLLMパイプラインをSnowflake単体で構築するのは現実的でない</li>
+        </ol>
+      </div>
+    </div>
+
+    <h4>パターン C: AWS Native（Glue + Redshift + Athena）</h4>
+    <div class="flow">
+<span class="comment">── 構成図 ──</span>
+
+<span class="highlight">ユーザー層</span>
+  施設長・本部       → <span class="amber">QuickSight</span>（AWS純正BI、Tableauより機能限定）
+  データ分析者       → <span class="green">Athena</span>（S3直接クエリ）/ <span class="green">Redshift</span>（DWH）
+  AI/LLM            → <span class="green">Bedrock</span> + <span class="amber">SageMaker</span>（別サービス）
+
+<span class="highlight">管理層（分散）</span>  <span class="red">← 統合カタログがない。各サービスで個別管理</span>
+  データカタログ: <span class="amber">Glue Data Catalog</span>
+  権限管理:      <span class="amber">Lake Formation</span>
+  監査:          <span class="amber">CloudTrail</span>
+  → 3つのサービスを横断的に設定。統合ビューがない
+
+<span class="highlight">処理層（6-8サービスを組み合わせ）</span>
+  ETL:     <span class="green">AWS Glue</span>（PySpark）or <span class="amber">EMR</span>（大規模Spark）
+  SQL:     <span class="green">Redshift</span>（DWH）+ <span class="green">Athena</span>（アドホック）
+  ジョブ:  <span class="amber">Step Functions</span> + <span class="amber">Lambda</span>（複雑なDAG構築が必要）
+  ML:      <span class="amber">SageMaker</span>（独立サービス、データ取り出しが必要）
+  GenAI:   <span class="green">Bedrock</span>（マルチLLM、これは強み）
+
+<span class="highlight">ストレージ層</span>
+  <span class="green">S3</span> + <span class="green">Iceberg</span> or Parquet
+  → OSSベースでロックインは最小
+  → <span class="red">ただし統合カタログ不在のため管理が煩雑</span>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>パターンCの特徴</h4>
+        <ul>
+          <li><strong>最安構成が可能</strong>: 各サービスをサーバーレスで使えば従量課金のみ</li>
+          <li><strong>OSSベース</strong>: S3+Iceberg+Parquetで完全にオープン。ロックイン最小</li>
+          <li><strong>Bedrock</strong>: マルチLLM対応はAWSの強み。Claude/GPT/Llama等を統一APIで利用</li>
+          <li><strong>AWSスキルの汎用性</strong>: AWS認定資格等、市場での人材確保がしやすい</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 style="color:var(--red);">SOMPOケアで不利な理由（根拠4つ）</h4>
+        <ol>
+          <li><strong>統合管理の欠如</strong>: Glue Catalog+Lake Formation+CloudTrailを個別設定。Unity Catalogのような統合ビューがなく<strong>障害切り分けが困難</strong></li>
+          <li><strong>運用人材3-4名必要</strong>: 各サービスの専門知識が必要。「全サービス横断の人材」が最も希少で確保困難</li>
+          <li><strong>設計負荷</strong>: パイプラインの設計（Step Functions + Lambda + Glue の組み合わせ）が複雑。Foundryの統合体験から大きく後退</li>
+          <li><strong>PwCのみが提案</strong>: RFIでAWS Native構成を提案したのはPwCのみ。PwCは<strong>OSSを明示的に拒否</strong>しており、設計思想が保守的</li>
+        </ol>
+      </div>
+    </div>
+
+    <h4>3パターン総合比較（最終成果物 PDF A-4/A-5 の根拠付き）</h4>
+    <table>
+      <tr><th>評価軸</th><th>Databricks</th><th>Snowflake</th><th>AWS Native</th><th style="color:var(--amber);">判断根拠</th></tr>
+      <tr>
+        <td><strong>PySpark互換性</strong></td>
+        <td style="color:var(--green);">◎ そのまま動作<br><span style="font-size:12px;">デコレーター除去のみ</span></td>
+        <td style="color:var(--red);">× Snowparkへ全面書き換え<br><span style="font-size:12px;">RDD/UDF/ML全て変換必要</span></td>
+        <td style="color:var(--amber);">○ EMR/Glueで動作可能<br><span style="font-size:12px;">ただしGlue PySparkは制約あり</span></td>
+        <td style="font-size:13px;">219本のパイプライン資産を活かせるか。書き換えコストは数千万円規模の差</td>
+      </tr>
+      <tr>
+        <td><strong>AI/ML統合</strong></td>
+        <td style="color:var(--green);">◎ MLflow, Vector Search<br>Model Serving, Feature Store</td>
+        <td style="color:var(--amber);">△ Cortex ML（限定的）<br><span style="font-size:12px;">Databricksに比べ機能限定</span></td>
+        <td style="color:var(--amber);">○ SageMaker+Bedrock<br><span style="font-size:12px;">連携可能だが統合度低い</span></td>
+        <td style="font-size:13px;">「今選ぶ基盤が将来のAI活用の天井」。介護記録テキスト分析(Phase3)にVector Search+LLMが必要</td>
+      </tr>
+      <tr>
+        <td><strong>SQL分析性能</strong></td>
+        <td style="color:var(--amber);">○ 十分高速<br><span style="font-size:12px;">Photonエンジンで改善中</span></td>
+        <td style="color:var(--green);">◎ 最速クラス<br><span style="font-size:12px;">OLAP分析に最適化</span></td>
+        <td style="color:var(--amber);">○ Athena/Redshift<br><span style="font-size:12px;">用途別に使い分け</span></td>
+        <td style="font-size:13px;">BI閲覧者3,000名だがピーク同時40-80人。Tableau Extract併用でDatabricksでも十分（PDF A-6）</td>
+      </tr>
+      <tr>
+        <td><strong>ガバナンス</strong></td>
+        <td style="color:var(--green);">◎ Unity Catalog統合管理<br><span style="font-size:12px;">データ〜AI資産を一元管理</span></td>
+        <td style="color:var(--amber);">○ Horizon<br><span style="font-size:12px;">SF内は強いがSF外は弱い</span></td>
+        <td style="color:var(--amber);">△ Lake Formation<br><span style="font-size:12px;">IAMとの二重管理が複雑</span></td>
+        <td style="font-size:13px;">介護データの要配慮個人情報。施設×データ種別×時間×AI経由の4次元制御が必要</td>
+      </tr>
+      <tr>
+        <td><strong>ベンダーロックイン</strong></td>
+        <td style="color:var(--green);">○ UC(コアOSS化), Delta+Iceberg<br><span style="font-size:12px;">懸念大幅に軽減</span></td>
+        <td style="color:var(--red);">× 独自形式+Apache Polaris<br><span style="font-size:12px;">エクスポートにコスト発生</span></td>
+        <td style="color:var(--green);">○ OSSベース<br><span style="font-size:12px;">S3+Icebergで最もオープン</span></td>
+        <td style="font-size:13px;">Foundryからの脱却なのに新たなロックインは避けたい。Delta+UniFormでIceberg互換を確保</td>
+      </tr>
+      <tr>
+        <td><strong>運用負荷</strong></td>
+        <td style="color:var(--green);">○ 統合PF<br><span style="font-size:12px;">Foundryに最も近い体験<br>サーバーレス化進行中</span></td>
+        <td style="color:var(--green);">◎ フルマネージド<br><span style="font-size:12px;">運用負荷は最小</span></td>
+        <td style="color:var(--red);">× 6-8個のサービス統合<br><span style="font-size:12px;">障害切り分けが複雑</span></td>
+        <td style="font-size:13px;">社内データエンジニアリング経験が浅い。管理すべきサービス数を最小化すべき</td>
+      </tr>
+      <tr>
+        <td><strong>必要人材</strong></td>
+        <td>2名〜<br><span style="font-size:12px;">データエンジニア中心</span></td>
+        <td>1-2名<br><span style="font-size:12px;">SQL人材。ただしSnowpark人材は少数</span></td>
+        <td>3-4名<br><span style="font-size:12px;">インフラ+データ。全横断人材は希少</span></td>
+        <td style="font-size:13px;">市場でのSpark/Python人材 > SQL人材 > AWS全横断人材。確保しやすさも考慮</td>
+      </tr>
+      <tr>
+        <td><strong>コスト構造</strong></td>
+        <td style="color:var(--amber);">中〜高<br><span style="font-size:12px;">DBU+インフラ二重<br>Commit割引で最適化可能</span></td>
+        <td style="color:var(--amber);">△ 高め<br><span style="font-size:12px;">クレジット制+PySpark書き換え工数加算</span></td>
+        <td style="color:var(--green);">○ 最安<br><span style="font-size:12px;">ただし人件費含むと差は縮小</span></td>
+        <td style="font-size:13px;">初期構築費だけでなく、移行工数+運用人件費+将来拡張費の総コストで判断すべき</td>
+      </tr>
+      <tr style="background:var(--surface);font-weight:600;">
+        <td>総合評価</td>
+        <td style="color:var(--green);">◎ 最も適合度が高い</td>
+        <td style="color:var(--amber);">△ 本PJでは不利</td>
+        <td style="color:var(--amber);">○ 安いが運用が重い</td>
+        <td></td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <strong>結論: Databricks on AWS を推奨（PDF A-5結論）</strong>
+      <p style="margin-top:8px;">PySpark互換性、AI拡張性、Unity CatalogのオープンGovが、Foundry移行の要件に最も合致する。SnowflakeはPySpark書き換えコスト大、AWS NativeはOSS運用工数が見えにくいリスクあり。</p>
+      <p style="margin-top:8px;"><strong>補足判断:</strong> BI層にSnowflakeを挟む必要もない（PDF A-6）。以前はTableau同時接続のためSnowflakeをサービングレイヤーに置くパターンがあったが、現在はDatabricks SQL Serverlessの性能改善+Tableau Extractキャッシュにより不要。<strong>年間1,500-3,000万円のコスト削減</strong>。</p>
+    </div>
+
+    <h4>「BI層にSnowflakeを挟む」パターンが不要な理由（PDF A-6 詳細）</h4>
+    <div class="flow">
+<span class="comment">── パターン比較 ──</span>
+
+<span class="red">パターンX（不採用）: Databricks → Snowflake → Tableau</span>
+  Databricks(ETL/加工) → Snowflake(BIサービング層) → Tableau(ダッシュボード)
+  <span class="red">追加コスト: 年間 1,500-3,000万円</span>（ライセンス + 同期パイプライン + 運用）
+  昔の理由: Tableau同時多数接続にSnowflakeが高速だった
+
+<span class="green">パターンY（推奨）: Databricks → Tableau 直接接続</span>
+  Databricks(ETL/加工/サービング) → Tableau(ダッシュボード)
+  <span class="green">追加コストなし。シンプル。手間が一層減る</span>
+  今の理由: Databricks SQL Serverless の性能改善で十分
+
+<span class="highlight">なぜ大丈夫か（数値根拠）</span>
+  ・登録ユーザー 800-1,000人 ≠ 同時接続
+  ・日次アクティブ率: 20-30%（施設長は毎日閲覧しない）
+  ・ピーク同時接続: 40-80人（朝の業務開始・月初レポート時）
+  ・平常時: 10-30人
+  ・Databricks SQL Serverless: 10並行クエリ/クラスター × 自動スケーリング
+    → ピーク80人 → 8クラスターで対応（自動）→ 全く問題なし
+  ・さらにTableau Extract（定期キャッシュ）を使えば
+    Databricksへの同時接続数は<span class="green">実質ゼロ</span>
+    </div>
+
+    <h3 id="s4-medallion">メダリオンアーキテクチャ（Bronze/Silver/Gold）</h3>
+    <p>Databricksが提唱するデータレイクハウスの設計パターン。データを<strong>3つの品質レイヤー</strong>に分けて管理します。</p>
+
+    <div class="flow">
+<span class="highlight">Bronze（ブロンズ）= 生データ</span>
+  ・ソースシステムからのデータをそのまま保存
+  ・変換なし。「来たまま」を記録
+  ・目的: 監査証跡、リプレイ可能性
+  ・例: CareBaseから抽出したCSVをParquetに変換してそのまま格納
+
+<span class="highlight">Silver（シルバー）= クレンジング済みデータ</span>
+  ・Bronze を洗浄・型変換・正規化したもの
+  ・重複排除、NULL処理、マスタ結合
+  ・ここで名寄せも実施（ほのぼのID ↔ AxistID ↔ 眠りSCAN ID）
+  ・データサイエンティストが直接分析に使えるレベル
+  ・例: 入居者テーブル（全ソース統合済み、スキーマ統一済み）
+
+<span class="highlight">Gold（ゴールド）= ビジネスKPI</span>  <span class="red">= SSOT（信頼できる唯一の情報源）</span>
+  ・Silver からビジネスKPIを集計したもの
+  ・「稼働率」「人員配置率」等の公式定義がここに集約
+  ・BIダッシュボード、経営レポートはGoldからのみ参照
+  ・<span class="amber">READ ONLY</span>。定義変更はPRレビュー + 承認フロー
+  ・例: 月次施設別稼働率テーブル（計算ロジック = dbt model で定義）
+    </div>
+
+    <div class="callout success">
+      <strong>なぜメダリオンが重要か</strong>
+      Foundryの現状課題「処理のブラックボックス化」「過去データとの不整合」を構造的に解決する。Bronze に生データが残るため、加工ミスがあっても遡って修正可能。Gold がSSOTとなることで「数字の定義が人によって違う」問題を排除。AIはGoldを参照するため、回答の一貫性が保証される。
+    </div>
+
+    <h3 id="s4-mesh">データメッシュ vs データレイクハウス</h3>
+
+    <table>
+      <tr><th>項目</th><th>データレイクハウス</th><th>データメッシュ</th><th>SOMPOケアへの適用</th></tr>
+      <tr>
+        <td>思想</td>
+        <td>中央集権型。1つの基盤に全データを集約</td>
+        <td>分散型。ドメインごとにデータを管理</td>
+        <td rowspan="4" style="vertical-align:middle;color:var(--green);"><strong>レイクハウスを推奨。</strong>現状のデータチームの規模・成熟度から、中央集権型で始めてドメインごとの自律性は段階的に拡大すべき</td>
+      </tr>
+      <tr>
+        <td>データの所有</td>
+        <td>中央のデータチームが管理</td>
+        <td>ドメインチーム（施設運営、人事等）が各自管理</td>
+      </tr>
+      <tr>
+        <td>前提条件</td>
+        <td>データエンジニアリングチームの存在</td>
+        <td>各ドメインにデータリテラシーが必要</td>
+      </tr>
+      <tr>
+        <td>向いている組織</td>
+        <td>データチームが小〜中規模</td>
+        <td>大規模組織で各部門にデータ人材がいる</td>
+      </tr>
+    </table>
+
+    <h3 id="s4-cost">コスト最適化の考え方</h3>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>Foundryのコスト構造</h4>
+        <p><strong>年額ライセンス</strong>（不透明）。SOMPOケアの現行課題「コスト不透明性」の原因。ユーザー数・データ量の増加でコストが急増するリスク。</p>
+      </div>
+      <div class="card">
+        <h4>Databricksのコスト構造</h4>
+        <p><strong>DBU従量課金</strong> + S3ストレージ。何にいくらかかっているか可視化可能。SQLクエリ、ETLジョブ、ML学習を分けて最適化。</p>
+      </div>
+      <div class="card">
+        <h4>コスト最適化テクニック</h4>
+        <ul>
+          <li>SQL Warehouse の自動停止・Serverless化</li>
+          <li>Spot Instance 活用（ML学習で70%削減可能）</li>
+          <li>S3 Intelligent-Tiering（アクセス頻度で自動階層化）</li>
+          <li>Delta Lake の OPTIMIZE/VACUUM</li>
+          <li>Photon エンジン（SQL高速化で処理時間短縮）</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>RFI各社のコスト見積もり</h4>
+        <ul>
+          <li><strong>PwC</strong>: Step1 1.2〜1.7億 + 年間2,200万</li>
+          <li><strong>デロイト</strong>: 詳細は未提示</li>
+          <li><strong>富士通</strong>: 詳細は未提示（最も詳細な技術提案）</li>
+          <li>→ RFPで全社に統一フォーマットのコスト提示を求めるべき</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>理解度チェック Q2</h4>
+      <p>メダリオンアーキテクチャのBronze/Silver/Goldの違いを、SOMPOケアのデータ（入居者情報）を具体例にして説明してください。</p>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        <strong>Bronze</strong>: ほのぼのからエクスポートされた入居者CSVをそのままParquet化。「施設ID=H001, 入居者名=山田太郎, 入居日=2024/01/15」— ソースの表記揺れ、NULL、重複もそのまま保存。<br>
+        <strong>Silver</strong>: Bronzeを洗浄。施設IDをAxist・眠りSCANと名寄せして統合入居者IDを付与。入居日をISO8601に統一。NULLは業務ルールに従い補完。バイタルデータ（眠りSCAN）、ナースコールデータも入居者IDで結合可能に。<br>
+        <strong>Gold</strong>: 「施設A 2026年3月 稼働率 = 87.3%」のようなKPIテーブル。計算定義（稼働率 = 入居者数÷定員、ショートステイ含む/含まないの定義）はdbtモデルでコード化。BIダッシュボードもAI-BI Genieもここを参照するため、「稼働率」の定義が全社で統一される。
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 5: 技術スタック方針 -->
+  <!-- ================================================================ -->
+  <section id="s5">
+    <h2>5. 技術スタック採用方針</h2>
+
+    <h3 id="s5-4principles">4原則（RFP評価の柱）</h3>
+    <p>個別製品の比較ではなく、<strong>製品に依存しない設計原則</strong>を定め、RFPの評価軸とする。SOMPOケアPJTで策定済みの4原則:</p>
+
+    <div class="card-grid">
+      <div class="card" style="border-left: 3px solid var(--accent);">
+        <h4>原則 1: AIと対話できるインターフェース</h4>
+        <p>基盤がAIと接続する標準的な口を持っているか。<br><strong>SQL API</strong>（最重要）、<strong>MCP</strong>（加点要素）、<strong>セマンティックモデル</strong>、<strong>マルチモデル対応</strong>の4つのインターフェースを評価。</p>
+        <p style="margin-top:8px;font-size:13px;color:var(--text-muted);">例: 施設長が「先月の稼働率が低い施設は？」と聞く → AI がSQL APIでGoldレイヤーを照会 → セマンティックモデルで「稼働率」の定義を参照 → 正確な回答</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>原則 2: 組織の学習が蓄積する基盤</h4>
+        <p>実験・コード・プロンプト・評価結果が蓄積・検索・再利用できるか。<br><strong>MLflow</strong>（実験管理）、<strong>Git連携</strong>、<strong>Model Registry</strong>、<strong>評価パイプライン</strong>を評価。</p>
+        <p style="margin-top:8px;font-size:13px;color:var(--text-muted);">例: ベンダーAの検証結果がMLflowに残る → 半年後ベンダーBが着手時に参照 → ゼロスタートを回避</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--amber);">
+        <h4>原則 3: ガバナンスが拡張可能な基盤</h4>
+        <p>一度作った統制が新しいAIにも自動適用される設計か。<br>データアクセス制御、AI固有の統制（入出力チェック）、監査・説明責任の3レイヤー。</p>
+        <p style="margin-top:8px;font-size:13px;color:var(--text-muted);">例: 新AIツール導入時、Unity Catalogの権限設定がそのまま適用 → 都度セキュリティチェック不要</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--purple);">
+        <h4>原則 4: ナレッジが社内に残る基盤</h4>
+        <p>ベンダーが去ってもナレッジが残る設計か。<br>段階的自走（Phase1: 学習 → Phase2: 日常運用移管 → Phase3: 社内主導）。セルフサービス性、運用透明性、変更安全性を評価。</p>
+        <p style="margin-top:8px;font-size:13px;color:var(--text-muted);">例: KPI定義変更をGUIで社内完結 / パイプライン障害を社内で一次判断可能</p>
+      </div>
+    </div>
+
+    <h3 id="s5-recommend">推奨アーキテクチャ</h3>
+
+    <div class="flow">
+<span class="comment">── 推奨構成のレイヤー分解 ──</span>
+
+<span class="highlight">Layer 0: インフラ</span>  → <span class="green">SOMPOグループ共通化（合理的）</span>
+  AWS契約, VPC, Direct Connect, IdP (Azure AD)
+
+<span class="highlight">Layer 1: ストレージ・コンピュート</span>  → <span class="amber">条件付き共有（マルチテナント設計が前提）</span>
+  S3, Databricks Workspace, SQL Warehouse
+  → HD基盤がケア専用ワークスペースを許容するか確認必要
+
+<span class="highlight">Layer 2: データアーキテクチャ</span>  → <span class="red">ケア独自設計（必須）</span>
+  スキーマ設計, ETLパイプライン, セマンティックレイヤー
+  データコントラクト, マスタ名寄せ, 非構造データレーン
+  → ケアのドメイン固有。グループ共通化は構造的に困難
+
+<span class="highlight">Layer 3: アプリケーション</span>  → <span class="red">ケア独自構築（必須）</span>
+  BI定義, AI/ML実験環境, 評価基盤, エージェント管理
+  → ユースケース直結。ケアの業務に最適化
+    </div>
+
+    <h3 id="s5-ai">AI/ML基盤としての拡張性</h3>
+    <p>SOMPOケアの将来的なAI活用を見据えた設計:</p>
+
+    <table>
+      <tr><th>フェーズ</th><th>AI活用内容</th><th>必要な基盤機能</th><th>技術スタック</th></tr>
+      <tr>
+        <td><strong>Phase 1</strong><br>(~6ヶ月)</td>
+        <td>自然言語KPI照会<br>定型レポート自動生成</td>
+        <td>SQL API, セマンティックレイヤー</td>
+        <td>SQL Warehouse + AI-BI Genie + Bedrock</td>
+      </tr>
+      <tr>
+        <td><strong>Phase 2</strong><br>(~12ヶ月)</td>
+        <td>ナースコールパターン分析<br>稼働率予測</td>
+        <td>ML実験管理, 特徴量ストア</td>
+        <td>MLflow + Feature Store + Workflows</td>
+      </tr>
+      <tr>
+        <td><strong>Phase 3</strong><br>(~18ヶ月)</td>
+        <td>介護記録テキスト分析<br>転倒リスク予測</td>
+        <td>非構造データパイプライン, ベクトル検索</td>
+        <td>Bedrock(LLM) + Vector Search + DLT</td>
+      </tr>
+      <tr>
+        <td><strong>Phase 4</strong><br>(将来)</td>
+        <td>AIエージェント（業務自動化）<br>カメラ映像分析</td>
+        <td>エージェント管理, ストリーム処理</td>
+        <td>Mosaic AI + Structured Streaming</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 6: 最新動向 -->
+  <!-- ================================================================ -->
+  <section id="s6">
+    <h2>6. 最新動向（2025-2026）</h2>
+
+    <h3 id="s6-databricks">Databricks の最新動向</h3>
+    <div class="card-grid">
+      <div class="card">
+        <h4>Databricks AI-BI Genie（GA）</h4>
+        <p>自然言語 → SQL → データ取得 → 回答。セマンティックモデルベースで高精度。SOMPOケアのPhase 1 PoCの核となる機能。2025年にGA（一般提供）。</p>
+        <span class="tag tag-databricks">GA</span>
+      </div>
+      <div class="card">
+        <h4>Unity Catalog for AI（2025〜）</h4>
+        <p>テーブルだけでなく、MLモデル、Feature Table、Vector Index、LLM EndpointをUnity Catalogで統合管理。AIガバナンスの核。</p>
+        <span class="tag tag-databricks">ガバナンス</span>
+      </div>
+      <div class="card">
+        <h4>Lakeflow（旧Auto Loader + DLT強化）</h4>
+        <p>データ取り込み → 変換 → 品質チェックを統合したETLソリューション。Foundryの「データ取り込み〜パイプライン」に相当する機能をDatabricksが本格提供。</p>
+        <span class="tag tag-databricks">ETL</span>
+      </div>
+      <div class="card">
+        <h4>Mosaic AI Agent Framework</h4>
+        <p>RAG（検索拡張生成）ベースのAIエージェントを構築・評価・デプロイ。介護記録の検索、ケアプラン支援等に適用可能。MLflow連携で実験管理も統合。</p>
+        <span class="tag tag-databricks">GenAI</span>
+      </div>
+      <div class="card">
+        <h4>Delta Lake 4.0 / UniForm</h4>
+        <p>Delta Lake、Iceberg、Hudi 間の互換性を確保するUniFormが成熟。特定フォーマットへのロックインリスクが低下。</p>
+        <span class="tag tag-databricks">OSS</span>
+      </div>
+      <div class="card">
+        <h4>Serverless Compute（全面展開）</h4>
+        <p>クラスタ管理不要のサーバーレス実行環境。SQL、ノートブック、ジョブ全てでServerless対応が進行。起動時間短縮 + コスト最適化。</p>
+        <span class="tag tag-databricks">インフラ</span>
+      </div>
+    </div>
+
+    <h3 id="s6-aws">AWS の最新動向</h3>
+    <div class="card-grid">
+      <div class="card">
+        <h4>Amazon Bedrock 大幅強化</h4>
+        <p>Claude 4、GPT系、Llama 4等の最新モデルを統一APIで提供。Knowledge Bases（RAG）、Guardrails（安全制御）、Agents（自律型AI）機能が充実。SOMPOケアのAI基盤の核。</p>
+        <span class="tag tag-aws">GenAI</span>
+      </div>
+      <div class="card">
+        <h4>AWS Clean Rooms + AI</h4>
+        <p>データを移動させずに安全に分析。プライバシー保護しながらの横断分析に活用可能。介護データの要配慮個人情報を直接共有せずにAI活用するシナリオ。</p>
+        <span class="tag tag-aws">セキュリティ</span>
+      </div>
+      <div class="card">
+        <h4>SageMaker Unified Studio（2025 re:Invent）</h4>
+        <p>SageMakerの統合IDE。データ準備→モデル構築→デプロイを一画面で。Databricks MLflow との機能競合が激化。</p>
+        <span class="tag tag-aws">ML</span>
+      </div>
+      <div class="card">
+        <h4>S3 Tables（プレビュー〜GA）</h4>
+        <p>S3にIceberg形式のテーブルをネイティブサポート。Athena/Redshift から直接クエリ。Delta Lake の対抗軸として注目。</p>
+        <span class="tag tag-aws">ストレージ</span>
+      </div>
+    </div>
+
+    <h3 id="s6-trends">業界トレンド</h3>
+    <div class="card-grid">
+      <div class="card">
+        <h4>Lakehouse が主流に</h4>
+        <p>データレイク + DWH の統合（レイクハウス）がデータ基盤のデファクトに。Databricks（Delta Lake）とSnowflake（Iceberg）の両陣営がレイクハウスを標榜。2025-2026で「レイクハウスか否か」ではなく「どのレイクハウスか」の議論に。</p>
+      </div>
+      <div class="card">
+        <h4>セマンティックレイヤー復権</h4>
+        <p>LLMの台頭で「データの意味を機械が理解する」必要性が急増。dbt Semantic Layer、Databricks AI-BI、Snowflake Cortex Analyst がセマンティックレイヤーの重要性を再認識させた。Foundryのオントロジーは先見的だった。</p>
+      </div>
+      <div class="card">
+        <h4>MCP（Model Context Protocol）の台頭</h4>
+        <p>Anthropicが提唱した、外部AIツールからデータ基盤にアクセスする標準規格（2024末〜）。Tableau、Databricks等がMCP対応を発表。「AIがデータに繋がる」ための標準インターフェースとして急速に普及中。ただしエンタープライズ本番運用の実績はまだ限定的。</p>
+      </div>
+      <div class="card">
+        <h4>Data Fabric / Data Mesh の収束</h4>
+        <p>2022-2023に話題になったData Meshは、実装の難しさから「ハイブリッド」に収束。中央基盤（レイクハウス） + ドメインごとの自律性を段階的に拡大する「Federated Lakehouse」が現実的な着地点。</p>
+      </div>
+    </div>
+
+    <h3 id="s6-partnership">★ Databricks-Palantir 戦略提携（2025年3月発表）</h3>
+    <div class="callout success">
+      <strong>明日のMTGで最も重要な新情報</strong>
+      2025年3月、DatabricksとPalantirが戦略的プロダクトパートナーシップを発表。これにより<strong>段階的移行（フェーズドアプローチ）が技術的に可能</strong>になった。一気に移行するリスクを大幅に軽減できる。
+    </div>
+
+    <div class="card-grid">
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>Virtual Tables</h4>
+        <p>FoundryからDatabricks上のデータに<strong>直接アクセス</strong>。データのコピーやETLが不要。移行中も既存のFoundryアプリがDatabricks側のデータを参照できる。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>Compute Pushdown</h4>
+        <p>Foundryで定義したパイプラインの計算を<strong>Databricksのサーバーレスコンピュートに自動委譲</strong>。Foundryのコストを削減しつつ、Databricksの処理性能を活用。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>Unity Catalog統合</h4>
+        <p>DatabricksのUnity Catalogのアクセス制御が<strong>Foundryにフェデレーション</strong>。ガバナンスを統一しつつ段階的にデータ層を移行可能。</p>
+      </div>
+    </div>
+
+    <h4>段階的移行シナリオ（パートナーシップ活用）</h4>
+    <div class="flow">
+<span class="comment">── パートナーシップを活用した段階的移行 ──</span>
+
+<span class="highlight">Phase A: データ層の移行（並行稼働）</span>
+  ・新規データはDatabricks (Delta Lake on S3) に直接格納
+  ・FoundryからVirtual TablesでDatabricksのデータを参照
+  ・既存Foundryアプリは変更なしで稼働継続
+  ・<span class="green">リスク: 低（既存に影響なし）</span>
+
+<span class="highlight">Phase B: パイプラインの移行</span>
+  ・Compute PushdownでFoundryパイプラインをDatabricksで実行
+  ・段階的にdbt/Databricks Workflowsに書き換え
+  ・<span class="amber">リスク: 中（ロジック変換が必要）</span>
+
+<span class="highlight">Phase C: セマンティック層の移行</span>
+  ・オントロジー → Unity Catalog + dbt Semantic Layer に段階移行
+  ・<span class="red">リスク: 高（最も困難、最も時間がかかる）</span>
+
+<span class="highlight">Phase D: アプリケーション層の移行</span>
+  ・Workshop/Slate → カスタムWebアプリに再構築
+  ・Foundry完全廃止
+  ・<span class="red">リスク: 高（業務アプリの再構築）</span>
+
+<span class="amber">注意: Phase A〜D の並行稼働期間中はFoundry + Databricks 両方のコストが発生</span>
+    </div>
+
+    <div class="callout warn">
+      <strong>議論ポイント: 一括移行 vs 段階的移行</strong>
+      <table style="margin-top:8px;">
+        <tr><th></th><th>一括移行</th><th>段階的移行（パートナーシップ活用）</th></tr>
+        <tr><td><strong>メリット</strong></td><td>コスト二重負担なし、移行期間短い</td><td>リスクが低い、既存業務に影響なし</td></tr>
+        <tr><td><strong>デメリット</strong></td><td>リスク大、全機能の同時再構築</td><td>並行コスト発生、移行期間が長い</td></tr>
+        <tr><td><strong>推奨</strong></td><td>小規模、シンプルな基盤の場合</td><td style="color:var(--green);font-weight:600;">SOMPOケアのように大規模・複雑な場合</td></tr>
+      </table>
+    </div>
+
+    <h3 id="s6-competitors">競合比較: Databricks vs Snowflake vs Microsoft Fabric</h3>
+    <table>
+      <tr><th>観点</th><th>Databricks</th><th>Snowflake</th><th>Microsoft Fabric</th><th>SOMPOケア適合</th></tr>
+      <tr>
+        <td><strong>強み</strong></td>
+        <td>AI/ML統合、PySpark互換、OSS(Delta Lake)</td>
+        <td>SQL中心で学習コスト低、データシェアリング</td>
+        <td>Microsoft製品統合、Power BI直結</td>
+        <td rowspan="5" style="vertical-align:middle;font-weight:600;color:var(--accent-light);">Databricksが最適。<br>理由:<br>1. PySpark互換(Foundry移行)<br>2. AI/ML統合(将来のAI活用)<br>3. AWS上で動作(既存環境活用)<br>4. RFI 2社が提案(富士通・デロイト)</td>
+      </tr>
+      <tr>
+        <td><strong>弱み</strong></td>
+        <td>学習コスト、コスト管理の複雑さ</td>
+        <td>AI/ML機能がDatabricksに劣後</td>
+        <td>Azure前提、成熟度がまだ低い</td>
+      </tr>
+      <tr>
+        <td><strong>AI/ML</strong></td>
+        <td style="color:var(--green);">◎ MLflow + Mosaic AI</td>
+        <td style="color:var(--amber);">○ Cortex(急速改善中)</td>
+        <td style="color:var(--amber);">○ Azure OpenAI連携</td>
+      </tr>
+      <tr>
+        <td><strong>セマンティック</strong></td>
+        <td style="color:var(--green);">◎ AI-BI Genie</td>
+        <td style="color:var(--green);">◎ Cortex Analyst</td>
+        <td style="color:var(--amber);">○ Copilot</td>
+      </tr>
+      <tr>
+        <td><strong>AWS対応</strong></td>
+        <td style="color:var(--green);">◎ ネイティブ対応</td>
+        <td style="color:var(--green);">◎ マルチクラウド</td>
+        <td style="color:var(--red);">× Azure専用</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 6.5: データ基盤プラットフォーム徹底比較 -->
+  <!-- ================================================================ -->
+  <section id="s6b">
+    <h2>7. データ基盤プラットフォーム徹底比較</h2>
+    <p>Foundry移行先の候補は Databricks / Snowflake / Fabric だけではない。新興プラットフォームを含めた <strong>全体像</strong> を押さえ、選択の根拠を厚くする。</p>
+
+    <h3 id="s6b-major">メジャー4基盤の包括比較</h3>
+
+    <table>
+      <tr><th>観点</th><th>Palantir Foundry</th><th>Databricks</th><th>Snowflake</th><th>Microsoft Fabric</th></tr>
+      <tr>
+        <td><strong>設計思想</strong></td>
+        <td>統合PF + Ontology<br><span style="font-size:12px;">「データの意味」を一元管理</span></td>
+        <td>Data Intelligence Platform<br><span style="font-size:12px;">Lakehouse + AI統合</span></td>
+        <td>Data Cloud<br><span style="font-size:12px;">SQL中心 + データシェアリング</span></td>
+        <td>統合分析PF<br><span style="font-size:12px;">Microsoft全製品統合</span></td>
+      </tr>
+      <tr>
+        <td><strong>コンピュート</strong></td>
+        <td>専用クラスタ<br><span style="font-size:12px;">サーバーレス非対応</span></td>
+        <td style="color:var(--green);">Serverless全面GA<br><span style="font-size:12px;">SQL/Jobs/Notebooks</span></td>
+        <td style="color:var(--green);">Serverless GA<br><span style="font-size:12px;">Virtual Warehouse</span></td>
+        <td>Capacity Unit<br><span style="font-size:12px;">月額固定 + バースト</span></td>
+      </tr>
+      <tr>
+        <td><strong>ストレージ</strong></td>
+        <td style="color:var(--red);">独自形式<br><span style="font-size:12px;">ポータビリティ低</span></td>
+        <td style="color:var(--green);">Delta Lake + UniForm<br><span style="font-size:12px;">Iceberg自動互換 GA</span></td>
+        <td>独自(FDN) + Iceberg<br><span style="font-size:12px;">Polaris REST APIで公開</span></td>
+        <td>Delta Lake (OneLake)<br><span style="font-size:12px;">ショートカットで外部接続</span></td>
+      </tr>
+      <tr>
+        <td><strong>AI/ML統合</strong></td>
+        <td>AIP (Ontology統合)<br><span style="font-size:12px;">LLM連携は発展途上</span></td>
+        <td style="color:var(--green);">◎ Mosaic AI全GA<br><span style="font-size:12px;">Vector Search, Agent FW, MLflow</span></td>
+        <td>○ Cortex AI<br><span style="font-size:12px;">6,100+アカウント利用。Claude統合</span></td>
+        <td>○ Copilot + AzureML<br><span style="font-size:12px;">MS AIスタック全体と統合</span></td>
+      </tr>
+      <tr>
+        <td><strong>ガバナンス</strong></td>
+        <td>Ontologyベース<br><span style="font-size:12px;">強力だが独自</span></td>
+        <td style="color:var(--green);">Unity Catalog (OSS)<br><span style="font-size:12px;">データ〜AI一元管理</span></td>
+        <td>Horizon + Polaris<br><span style="font-size:12px;">SF内は強い</span></td>
+        <td>OneLake Security<br><span style="font-size:12px;">Preview。Purview連携</span></td>
+      </tr>
+      <tr>
+        <td><strong>オープン性</strong></td>
+        <td style="color:var(--red);">× プロプライエタリ</td>
+        <td style="color:var(--green);">◎ Delta/MLflow/UC OSS</td>
+        <td>○ Polaris寄贈、Iceberg採用</td>
+        <td>△ Delta Lake採用だがAzure前提</td>
+      </tr>
+      <tr>
+        <td><strong>課金体系</strong></td>
+        <td>年額ライセンス<br><span style="font-size:12px;">不透明・高額</span></td>
+        <td>DBU従量 + インフラ<br><span style="font-size:12px;">$15k-25k/月(中規模)</span></td>
+        <td>Credit従量 + ストレージ<br><span style="font-size:12px;">$10k-20k/月(中規模)</span></td>
+        <td>月額固定(Capacity)<br><span style="font-size:12px;">F64: ~$5k/月〜</span></td>
+      </tr>
+      <tr>
+        <td><strong>必要人材</strong></td>
+        <td>3-5名<br><span style="font-size:12px;">Ontologyエンジニア（希少）</span></td>
+        <td>2-3名〜<br><span style="font-size:12px;">Spark/Python人材</span></td>
+        <td>2-3名〜<br><span style="font-size:12px;">SQL人材（ただしSnowpark人材は少数）</span></td>
+        <td>1-2名〜<br><span style="font-size:12px;">Power BI + Azure管理</span></td>
+      </tr>
+    </table>
+
+    <h3 id="s6b-emerging">新興・注目プラットフォーム</h3>
+    <p>以下は Databricks / Snowflake / Fabric の「対抗馬」ではなく、<strong>特定ユースケースで補完的に使えるもの</strong>。SOMPOケアの基盤選定では主軸にはならないが、知っておくと議論の幅が広がる。</p>
+
+    <table>
+      <tr><th>プラットフォーム</th><th>特徴</th><th>強み</th><th>SOMPOケアとの関連</th></tr>
+      <tr>
+        <td><strong>Dremio</strong></td>
+        <td>Iceberg中心のレイクハウスエンジン。Arrow Flightで超高速転送</td>
+        <td>Built-in Open Catalog。JDBC/ODBCの10-100倍高速データ転送</td>
+        <td>△ Icebergネイティブだが、AI/ML統合がなく、ETL→BI→AIの一気通貫は困難</td>
+      </tr>
+      <tr>
+        <td><strong>StarRocks / Doris</strong></td>
+        <td>リアルタイム分析特化のMPPデータベース。元は同じコードベース</td>
+        <td>StarRocks v4.0: TPC-DSで前年比60%高速化。低レイテンシ分析に強い</td>
+        <td>△ BI用のサービングレイヤーとしては候補になりうるが、基盤としては機能不足</td>
+      </tr>
+      <tr>
+        <td><strong>DuckDB / MotherDuck</strong></td>
+        <td>インプロセス分析DB（SQLite的）。MotherDuckはクラウド版</td>
+        <td>v1.4.0: Iceberg書き込み対応、1TB/30秒。開発・探索分析に最適</td>
+        <td>○ データエンジニアのローカル開発環境やCI/CDでの品質チェックに活用可能</td>
+      </tr>
+      <tr>
+        <td><strong>ClickHouse Cloud</strong></td>
+        <td>列指向OLAP。超高速スキャン・文字列処理</td>
+        <td>フルテーブルスキャンに強い。リアルタイムログ分析向き</td>
+        <td>× SQL互換性限定的。チューニングに専門知識要。エンジニアリング主導向き</td>
+      </tr>
+      <tr>
+        <td><strong>Starburst / Trino</strong></td>
+        <td>クエリフェデレーション。複数データソースにin-placeクエリ</td>
+        <td>Unity CatalogのIceberg REST APIからアクセス可能。移行期の橋渡し</td>
+        <td>○ Foundry→Databricks移行中の並行参照用に使える可能性</td>
+      </tr>
+    </table>
+
+    <h3 id="s6b-format">テーブルフォーマット戦争の終結 — Icebergへの収束</h3>
+
+    <div class="flow">
+<span class="comment">── 2026年のテーブルフォーマット相互運用 ──</span>
+
+<span class="highlight">Delta Lake</span> ←──── <span class="green">UniForm (GA)</span> ────→ <span class="highlight">Iceberg</span>
+  Databricks/Fabric が                    Snowflake/Dremio/
+  ネイティブ利用                           StarRocks がネイティブ利用
+         │                                      │
+         └──── <span class="amber">Apache XTable</span> ────→ <span class="highlight">Hudi</span>（レガシー環境のみ）
+              （メタデータ変換）
+
+<span class="green">結論: データは1コピー、メタデータで相互運用する時代</span>
+  ・Delta UniForm: Delta で書き込み → Iceberg メタデータを自動生成 → Snowflake/Trino から読み取り可能
+  ・Apache Polaris: 2026年2月に Apache TLP 昇格。Iceberg カタログの標準 API
+  ・Iceberg REST Catalog API: Databricks Unity Catalog が公開 → Snowflake/Trino/EMR からアクセス
+
+<span class="amber">つまり: 「Databricks vs Snowflake」の二者択一ではなく、両方が同じデータにアクセスできる</span>
+    </div>
+
+    <div class="callout success">
+      <strong>SOMPOケアへの示唆</strong>
+      <p style="margin-top:8px;">Databricksを主軸にしつつ、UniFormでIceberg互換メタデータを自動生成しておけば、将来Snowflakeや他ツールから同じデータにアクセスできる。<strong>「今Databricksを選ぶ = 将来の選択肢を狭める」ではない</strong>。むしろ、Foundryのような独自形式に閉じ込められるリスクを完全に回避できる。</p>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 6.6: クラウド連携マトリクス -->
+  <!-- ================================================================ -->
+  <section id="s6c">
+    <h2>8. クラウド連携マトリクス — AWS / Azure / GCP</h2>
+    <p>データ基盤はクラウド上で動く。<strong>どのクラウド × どの基盤</strong> の組み合わせが使えるか、制約はどこにあるかを整理する。</p>
+
+    <h3 id="s6c-cloud">クラウド対応状況</h3>
+
+    <table>
+      <tr><th>プラットフォーム</th><th>AWS</th><th>Azure</th><th>GCP</th><th>備考</th></tr>
+      <tr>
+        <td><strong>Databricks</strong></td>
+        <td style="color:var(--green);">◎ ネイティブ</td>
+        <td style="color:var(--green);">◎ ネイティブ</td>
+        <td style="color:var(--green);">◎ ネイティブ</td>
+        <td>全クラウドでフルマネージド。AWS上が最も機能先行</td>
+      </tr>
+      <tr>
+        <td><strong>Snowflake</strong></td>
+        <td style="color:var(--green);">◎ ネイティブ</td>
+        <td style="color:var(--green);">◎ ネイティブ</td>
+        <td style="color:var(--green);">◎ ネイティブ</td>
+        <td>マルチクラウド。データレプリケーションで跨ぎ可能</td>
+      </tr>
+      <tr>
+        <td><strong>Fabric</strong></td>
+        <td>ショートカット接続</td>
+        <td style="color:var(--green);">◎ ネイティブ（限定）</td>
+        <td>ショートカット接続</td>
+        <td style="color:var(--red);"><strong>Azure限定</strong>。他クラウドはショートカット経由</td>
+      </tr>
+      <tr>
+        <td><strong>Foundry</strong></td>
+        <td>デプロイ可</td>
+        <td>デプロイ可</td>
+        <td>デプロイ可</td>
+        <td>オンプレも可（Gov用途）</td>
+      </tr>
+    </table>
+
+    <h3 id="s6c-iam">IAM / ID統合の深さ</h3>
+
+    <table>
+      <tr><th>プラットフォーム</th><th>Entra ID (Azure AD)</th><th>AWS IAM</th><th>GCP IAM</th><th>Okta / SAML</th></tr>
+      <tr>
+        <td><strong>Databricks</strong></td>
+        <td>ネイティブ (SCIM)</td>
+        <td>ネイティブ</td>
+        <td>ネイティブ</td>
+        <td>SAML/SCIM</td>
+      </tr>
+      <tr>
+        <td><strong>Snowflake</strong></td>
+        <td>ネイティブ (SCIM)</td>
+        <td>IAMフェデレーション</td>
+        <td>IAMフェデレーション</td>
+        <td>SAML/SCIM</td>
+      </tr>
+      <tr>
+        <td><strong>Fabric</strong></td>
+        <td style="color:var(--green);"><strong>完全ネイティブ</strong></td>
+        <td>—</td>
+        <td>—</td>
+        <td>Entra ID経由</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <strong>SOMPOケアの場合: AWS + Databricks</strong>
+      <p style="margin-top:8px;">既存のAWS環境（Direct Connect接続済み）を活用するため、<strong>Databricks on AWS</strong> が最も合理的。Entra ID (Azure AD) をIdPとして使っている場合もDatabricksはSCIMで統合可能。Fabricは Azure限定のためAWS環境では主軸にできない。</p>
+    </div>
+
+    <h3 id="s6c-interop">異なるデータ基盤間の連携</h3>
+    <p>「1つの基盤に全てを閉じ込める」時代は終わり、<strong>基盤間をまたいでデータにアクセス</strong>する方法が充実している。</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>Databricks ↔ Snowflake</h4>
+        <ul>
+          <li><strong>Delta Sharing (Iceberg対応)</strong>: データコピーなしでSnowflakeからDatabricksのテーブルを参照</li>
+          <li><strong>Lakehouse Federation</strong>: DatabricksからSnowflakeへフェデレーテッドクエリ（OAuth対応）</li>
+          <li><strong>Iceberg REST Catalog</strong>: Unity CatalogのIcebergテーブルをSnowflakeが直接参照</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Databricks ↔ Fabric</h4>
+        <ul>
+          <li><strong>OneLakeショートカット</strong> (GA): FabricからDatabricksデータを参照（移動不要）</li>
+          <li><strong>Catalog Mirroring</strong> (Preview): Unity CatalogテーブルをOneLakeにミラーリング</li>
+          <li><strong>ネイティブ読み取り</strong> (Preview): DatabricksからOneLakeデータを直接読み取り</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Lakehouse Federation</h4>
+        <p>Databricksから以下のデータソースにフェデレーテッドクエリ可能:</p>
+        <p style="font-size:13px;color:var(--text-muted);">MySQL, PostgreSQL, Amazon Redshift, Snowflake, SQL Server, Azure Synapse, Google BigQuery, 他のDatabricksワークスペース</p>
+      </div>
+      <div class="card">
+        <h4>Apache Polaris（標準カタログ）</h4>
+        <p>2026年2月にApache TLPに昇格。Icebergカタログの業界標準REST APIとなり、どのエンジンからでもIcebergテーブルにアクセスできる共通言語になった。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 6.7: 運用設計の深掘り -->
+  <!-- ================================================================ -->
+  <section id="s6d">
+    <h2>9. 運用設計の深掘り — 選定の先にあるもの</h2>
+    <p>技術選定はゴールではなくスタート。本番運用で <strong>実際に問題になるのは権限管理、加工コードの発散、変更管理</strong>。ここを設計しないと「Foundryの方がマシだった」になりかねない。</p>
+
+    <h3 id="s6d-auth">権限管理設計 — 要配慮個人情報を守る</h3>
+    <p>介護データは<strong>要配慮個人情報</strong>を大量に含む。「誰が何を見れるか」の設計は基盤選定と同等以上に重要。</p>
+
+    <h4>権限モデルの比較</h4>
+    <table>
+      <tr><th>プラットフォーム</th><th>基本モデル</th><th>行レベル</th><th>列レベル</th><th>動的マスキング</th><th>タグベースACL</th></tr>
+      <tr>
+        <td><strong>Databricks</strong></td>
+        <td>RBAC</td>
+        <td style="color:var(--green);">GA</td>
+        <td style="color:var(--green);">GA</td>
+        <td style="color:var(--green);">GA</td>
+        <td>Unity Catalog Tags</td>
+      </tr>
+      <tr>
+        <td><strong>Snowflake</strong></td>
+        <td>RBAC + DAC</td>
+        <td style="color:var(--green);">GA</td>
+        <td style="color:var(--green);">GA</td>
+        <td style="color:var(--green);">GA</td>
+        <td>Tag-based Masking</td>
+      </tr>
+      <tr>
+        <td><strong>Fabric</strong></td>
+        <td>RBAC</td>
+        <td style="color:var(--amber);">Preview</td>
+        <td style="color:var(--amber);">Preview</td>
+        <td>Purview連携</td>
+        <td>Sensitivity Labels</td>
+      </tr>
+      <tr>
+        <td><strong>Foundry</strong></td>
+        <td>RBAC（Ontology単位）</td>
+        <td>オブジェクトレベル</td>
+        <td>オブジェクトレベル</td>
+        <td>独自実装</td>
+        <td>—</td>
+      </tr>
+    </table>
+
+    <h4>推奨: RBAC + ABAC ハイブリッド設計（4レイヤー）</h4>
+    <div class="flow">
+<span class="comment">── 介護データの権限設計 4レイヤー ──</span>
+
+<span class="highlight">レイヤー1: RBAC（ベースライン）</span>
+  役割: データエンジニア / データアナリスト / 経営層 / 施設管理者
+  → 基本的なテーブル・ビュー単位のアクセス制御
+
+<span class="highlight">レイヤー2: ABAC（動的制御）</span>  <span class="red">← ここが介護データで最も重要</span>
+  ユーザー属性: 所属事業所、職種、資格
+  リソース属性: データ機密度（要配慮 / 一般 / 公開）
+  環境属性: アクセス元ネットワーク、時間帯
+  <span class="amber">例: 「施設Aの管理者は、施設Aの入居者データのみアクセス可」</span>
+  <span class="amber">例: 「本部経営層は全施設の集計KPIのみ。個人名は見えない」</span>
+
+<span class="highlight">レイヤー3: 行/列レベルセキュリティ</span>
+  行レベル: 事業所ID / 入居者担当者ID でフィルタ
+  列レベル: 氏名・住所・診断名等の要配慮項目をマスキング
+
+<span class="highlight">レイヤー4: 動的データマスキング</span>
+  分析用途 → 匿名化（ハッシュ/トークン化）
+  運用用途 → フル表示（権限があれば）
+  <span class="green">同じテーブル、同じSQLでも見る人によって表示が変わる</span>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>要配慮個人情報の設計パターン</h4>
+        <table style="font-size:13px;">
+          <tr><th>パターン</th><th>実装方法</th><th>適用場面</th></tr>
+          <tr><td>匿名化ビュー</td><td>要配慮列をハッシュ化したビューを提供</td><td>分析・レポート用途</td></tr>
+          <tr><td>動的マスキング</td><td>ユーザーロールに応じて同一テーブルの表示を変更</td><td>混在アクセス環境</td></tr>
+          <tr><td>データ分離</td><td>要配慮データを別スキーマに物理分離</td><td>規制遵守が最優先</td></tr>
+          <tr><td>監査ログ強化</td><td>全アクセスログ保持 + 定期レビュー</td><td>コンプライアンス</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h4 style="color:var(--red);">やりがちな失敗</h4>
+        <ul>
+          <li><strong>「後から権限設計」</strong>: データが入った後に設計すると、既存クエリが権限で壊れてカオスに</li>
+          <li><strong>「権限を増やしすぎて管理不能」</strong>: 施設700×データ種別×時間で組合せ爆発。<strong>タグベースACL</strong>で汎用ルールに</li>
+          <li><strong>「BIツール側で制御すればいい」</strong>: Tableauで隠しても、SQLで直接叩けば見える。<strong>基盤レイヤーで制御が鉄則</strong></li>
+          <li><strong>「本番データで開発」</strong>: 開発環境にも要配慮データが流れる。<strong>サンプルデータ戦略</strong>が必須</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>権限設計は Phase 0（基盤構築と同時）で行う</strong>
+      <p style="margin-top:8px;">データが入る前にIAM統合、ロール設計、マスキングルール、監査ポリシーを定義する。後付けは指数関数的にコストが増える。RFPの評価項目に「権限設計の具体性」を入れるべき。</p>
+    </div>
+
+    <h3 id="s6d-code">加工コード管理 — 発散させない仕組み</h3>
+    <p>Foundryではパイプラインがプラットフォーム内で管理されていたが、移行後は<strong>自分たちでコードを管理</strong>する必要がある。ルールがないと数ヶ月で「誰が何を書いたかわからないパイプラインの山」になる。</p>
+
+    <h4>ETLコード発散の典型的アンチパターン</h4>
+    <table>
+      <tr><th>アンチパターン</th><th>症状</th><th>対策</th></tr>
+      <tr>
+        <td><strong>コピペETL</strong></td>
+        <td>似たロジックが微妙に異なる形で増殖。「稼働率計算」が5バージョン存在</td>
+        <td>dbtマクロ/パッケージで共通化。ビジネスロジックをコード化</td>
+      </tr>
+      <tr>
+        <td><strong>シャドウパイプライン</strong></td>
+        <td>公式パイプライン外で非公式にExcel加工。「本部のあの人のPCにだけある」</td>
+        <td>セルフサービス環境（SQL Warehouse + Notebook）を提供。非公式を公式に</td>
+      </tr>
+      <tr>
+        <td><strong>スキーマドリフト</strong></td>
+        <td>上流（CareBase等）の変更が下流全てに波及して障害</td>
+        <td>データコントラクト + dbt source tests。上流変更を自動検知</td>
+      </tr>
+      <tr>
+        <td><strong>環境間不整合</strong></td>
+        <td>dev/staging/prodでロジックが違う。「devでは動いたのに本番で壊れた」</td>
+        <td>CI/CD + 環境分離 + dbt slim CI（変更分だけテスト）</td>
+      </tr>
+      <tr>
+        <td><strong>オーナー不明</strong></td>
+        <td>誰が管理しているかわからないジョブ。壊れても誰も直さない</td>
+        <td>メタデータにオーナー必須タグ。Unity Catalogのオーナー機能で管理</td>
+      </tr>
+    </table>
+
+    <h4>dbt によるモデル管理のベストプラクティス</h4>
+    <div class="flow">
+<span class="comment">── dbt プロジェクト構成（SOMPOケア推奨） ──</span>
+
+<span class="highlight">models/</span>
+├── <span class="green">staging/</span>          ソースに最も近い層（1:1マッピング）
+│   ├── stg_care_records.sql     ← ほのぼの（介護記録）
+│   ├── stg_nurse_calls.sql      ← ナースコールシステム
+│   └── stg_sleep_scan.sql       ← 眠りSCAN
+│
+├── <span class="amber">intermediate/</span>     ビジネスロジックの集約
+│   ├── int_daily_care_summary.sql    ← 日次ケアサマリー
+│   ├── int_staff_utilization.sql     ← スタッフ稼働率
+│   └── int_resident_timeline.sql     ← 入居者タイムライン
+│
+├── <span class="highlight">marts/</span>            消費者向け最終テーブル（Gold層）
+│   ├── fct_care_events.sql      ← ケアイベントファクト
+│   ├── dim_facilities.sql       ← 施設ディメンション
+│   └── kpi_occupancy_rate.sql   ← <span class="green">稼働率KPI（定義がここで一元化）</span>
+│
+└── <span class="red">_sources.yml</span>      ソース定義 + freshness（鮮度チェック）
+    </div>
+
+    <h4>データコントラクト — 「約束」をコードで定義する</h4>
+    <div class="card-grid">
+      <div class="card">
+        <h4>dbt Contracts（スキーマ強制）</h4>
+        <p style="font-size:13px;">モデル出力がスキーマ・データ型・制約に合致するかを <strong>実体化前に検証</strong>。違反時は dbt run が失敗する。</p>
+        <div class="code-block">
+<span class="comment"># schema.yml</span>
+models:
+  - name: fct_care_events
+    config:
+      contract:
+        <span class="green">enforced: true</span>
+    columns:
+      - name: care_event_id
+        data_type: string
+        constraints:
+          - type: <span class="green">not_null</span>
+          - type: <span class="green">unique</span>
+      - name: facility_id
+        data_type: string
+        constraints:
+          - type: not_null
+        </div>
+      </div>
+      <div class="card">
+        <h4>4層のデータコントラクト</h4>
+        <table style="font-size:13px;">
+          <tr><th>層</th><th>ツール</th><th>内容</th></tr>
+          <tr><td>スキーマ契約</td><td>dbt contracts</td><td>列名・型・制約の定義</td></tr>
+          <tr><td>品質契約</td><td>dbt tests / Great Expectations</td><td>NULL率、値域、参照整合性</td></tr>
+          <tr><td>SLA契約</td><td>dbt source freshness</td><td>データ到着の遅延許容値</td></tr>
+          <tr><td>セマンティック契約</td><td>Semantic Layer (dbt Metrics)</td><td>ビジネス指標の定義</td></tr>
+        </table>
+        <p style="font-size:13px;margin-top:8px;color:var(--text-muted);">2028年のCareBaseリプレース時、スキーマが変わってもデータコントラクトが変更を自動検知 → 局所対応で済む。なければETL全面改修（基盤費用の30-50%追加リスク）。</p>
+      </div>
+    </div>
+
+    <h4>Gitフロー × データパイプラインの統合</h4>
+    <div class="flow">
+<span class="comment">── CI/CD パイプライン ──</span>
+
+<span class="highlight">feature branch</span>
+  ├── dbt model 変更
+  ├── CI: <span class="green">dbt build --select state:modified+</span>（slim CI: 変更分だけテスト）
+  ├── CI: <span class="green">dbt test</span>（単体テスト + データテスト）
+  ├── CI: <span class="green">SQLFluff lint</span>（SQL品質チェック）
+  └── <span class="amber">PR Review</span> → merge to main
+
+<span class="highlight">main branch</span>
+  ├── CD: dbt build（staging環境）
+  ├── データ品質チェック（DLT Expectations）
+  └── <span class="green">承認</span> → production deploy
+
+<span class="highlight">ロールバック</span>
+  └── <span class="green">Delta/Iceberg Time Travel で即時復元</span>（デプロイ後に問題があればすぐ戻せる）
+    </div>
+
+    <h3 id="s6d-ops">運用体制とFinOps</h3>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>運用体制のスケール感</h4>
+        <table style="font-size:13px;">
+          <tr><th>基盤</th><th>最小体制</th><th>推奨体制</th></tr>
+          <tr><td>Databricks</td><td>2-3名</td><td>5-8名</td></tr>
+          <tr><td>Snowflake</td><td>2-3名</td><td>4-6名</td></tr>
+          <tr><td>Fabric</td><td>1-2名</td><td>3-5名</td></tr>
+          <tr><td>Foundry</td><td>3-5名</td><td>5-10名</td></tr>
+        </table>
+        <p style="font-size:13px;margin-top:8px;color:var(--text-muted);">Foundryは「Ontologyエンジニア」という希少人材が必要。Databricksは市場のSpark/Python人材で対応可能。この人材流動性の違いが中長期の運用コストに大きく効く。</p>
+      </div>
+      <div class="card">
+        <h4>FinOps（コスト最適化）</h4>
+        <ul>
+          <li><strong>オートサスペンド</strong>: SQL Warehouseの自動停止。5分アイドルで停止 → 再起動30秒</li>
+          <li><strong>Serverless</strong>: コンピュートの起動/停止を自動管理。過剰プロビジョニングを排除</li>
+          <li><strong>Commit割引</strong>: 1年/3年のDBUコミットメントで20-40%割引</li>
+          <li><strong>チャージバック</strong>: 部門/チーム別にDBU使用量を可視化。「誰のクエリが高い」を特定</li>
+          <li><strong>ストレージ最適化</strong>: Delta OPTIMIZE/VACUUM + S3 Intelligent-Tiering</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>変更管理（パイプライン変更のデプロイ）</h4>
+        <ul>
+          <li><strong>バージョン管理</strong>: Git（GitHub/GitLab）+ trunk-based development</li>
+          <li><strong>CI/CD</strong>: Databricks Asset Bundles or GitHub Actions</li>
+          <li><strong>テスト</strong>: dbt test + カスタムデータ品質テスト + 統合テスト</li>
+          <li><strong>デプロイ</strong>: Blue/Green（ダウンタイムゼロ）</li>
+          <li><strong>ロールバック</strong>: Delta Time Travel で即時復元（30日間）</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>障害対応・SLA</h4>
+        <table style="font-size:13px;">
+          <tr><th>項目</th><th>Databricks</th><th>Snowflake</th></tr>
+          <tr><td>SLA</td><td>99.95%</td><td>99.9%+</td></tr>
+          <tr><td>DR</td><td>マルチリージョンレプリケーション</td><td>DBレプリケーション (GA)</td></tr>
+          <tr><td>バックアップ</td><td>Delta Time Travel (30日)</td><td>Time Travel + Fail-safe</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>理解度チェック Q8</h4>
+      <p>SOMPOケアで「施設長は自施設のデータのみ閲覧可能、本部経営層は全施設の集計KPIのみ閲覧可能（個人名は不可）」を実現するには、どのレイヤーの権限設計が必要か？</p>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        <strong>レイヤー2（ABAC）+ レイヤー3（行/列レベルセキュリティ）</strong> の組み合わせ。<br>
+        施設長: ABAC属性「所属事業所=施設A」→ 行レベルセキュリティで facility_id = '施設A' に自動フィルタ。氏名・住所は閲覧可（担当施設の業務利用）。<br>
+        経営層: ABAC属性「役割=経営層」→ 行レベルは全施設アクセス可だが、<strong>列レベルセキュリティで氏名・住所・診断名を動的マスキング</strong>。KPIテーブル（Gold層）は集計済みのため個人情報なし。<br>
+        ポイント: BIツール（Tableau）側ではなく、<strong>Databricks Unity Catalog の行/列レベルセキュリティ</strong>で制御する。これにより、SQLで直接叩いても同じ制御が効く。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>理解度チェック Q9</h4>
+      <p>dbtの「staging → intermediate → marts」の3層構成を、SOMPOケアのデータ（ほのぼの、ナースコール、眠りSCAN）で具体的に説明してください。</p>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        <strong>staging</strong>: 各ソースを1:1でクレンジング。stg_care_records（ほのぼの介護記録をParquet化+型統一）、stg_nurse_calls（ナースコールログの時刻をJST正規化）、stg_sleep_scan（眠りSCAN睡眠データの欠損補完）。<br>
+        <strong>intermediate</strong>: ビジネスロジックの集約。int_daily_care_summary（日次ケアサマリー: 介護記録+ナースコール+睡眠データを入居者IDで結合）、int_resident_timeline（入居者タイムライン: 入居者の全イベントを時系列に統合）。<br>
+        <strong>marts</strong>: 消費者向けKPIテーブル。kpi_occupancy_rate（<strong>稼働率 = 入居者数÷定員。ショートステイ含む/含まないの定義がSQLで一元管理</strong>）、fct_care_events（ケアイベントファクトテーブル。BIもAI-BI Genieもここを参照）。<br>
+        ポイント: 「稼働率」の計算ロジックがkpi_occupancy_rate.sqlの1箇所にしか存在しないため、定義変更はこのファイルだけ修正すれば全ダッシュボード・AIに反映される。コピペETLの防止。
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 7: SOMPOケア固有 -->
+  <!-- ================================================================ -->
+  <section id="s7">
+    <h2>10. SOMPOケア固有のコンテキスト</h2>
+
+    <h3 id="s7-context">PJ背景の再確認</h3>
+    <div class="card-grid">
+      <div class="card">
+        <h4>プロジェクト概要</h4>
+        <ul>
+          <li><strong>目的</strong>: Palantir Foundryからの移行に向けたRFP策定</li>
+          <li><strong>支援範囲</strong>: 計画策定支援（ACESとして）</li>
+          <li><strong>ステータス</strong>: RFI完了 → RFP策定準備</li>
+          <li><strong>期間</strong>: 2026/2/5 - 3/31（本来は終了、延長の可能性）</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>SOMPOケアのデータ資産</h4>
+        <ul>
+          <li>1,000+ 施設の運営データ</li>
+          <li>眠りSCAN: 1.92TB（バイタル時系列）</li>
+          <li>ナースコール: 7.5GB</li>
+          <li>介護記録テキスト: 340GB（年間数百万件）</li>
+          <li>DDA17プロジェクト全てがデータ基盤に依存</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Foundryの現行課題</h4>
+        <ul>
+          <li>処理のブラックボックス化</li>
+          <li>コスト不透明性</li>
+          <li>テスト/本番環境の分離欠如</li>
+          <li>監査ログの管理不足</li>
+          <li>データ構造・分析知見の属人化</li>
+          <li>UIの頻繁な変更による現場混乱</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>重要マイルストーン</h4>
+        <ul>
+          <li><strong>2027/12</strong>: 新分析環境 開発・リリース目標</li>
+          <li><strong>2028/5</strong>: CareBase（介護業務システム）リプレース</li>
+          <li>→ 基盤のデータコントラクト設計が2028年のスキーマ変更に耐える必要がある</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="s7-rfi">RFI 5社の4原則適合度</h3>
+
+    <table>
+      <tr><th>原則</th><th>富士通<br>(Databricks)</th><th>デロイト<br>(Databricks)</th><th>日立<br>(Snowflake)</th><th>PwC<br>(AWS Native)</th><th>Salesforce</th></tr>
+      <tr>
+        <td><strong>1. AI接続</strong></td>
+        <td style="color:var(--green);">◎◎</td>
+        <td style="color:var(--green);">◎◎</td>
+        <td style="color:var(--green);">◎</td>
+        <td style="color:var(--amber);">○</td>
+        <td style="color:var(--red);">△</td>
+      </tr>
+      <tr>
+        <td><strong>2. 学習蓄積</strong></td>
+        <td style="color:var(--green);">◎</td>
+        <td style="color:var(--green);">○</td>
+        <td style="color:var(--amber);">△</td>
+        <td style="color:var(--amber);">△</td>
+        <td style="color:var(--red);">×</td>
+      </tr>
+      <tr>
+        <td><strong>3. ガバナンス</strong></td>
+        <td style="color:var(--green);">◎</td>
+        <td style="color:var(--green);">◎</td>
+        <td style="color:var(--green);">◎</td>
+        <td style="color:var(--amber);">○</td>
+        <td style="color:var(--amber);">△</td>
+      </tr>
+      <tr>
+        <td><strong>4. ナレッジ蓄積</strong></td>
+        <td style="color:var(--amber);">○</td>
+        <td style="color:var(--amber);">○</td>
+        <td style="color:var(--green);">◎</td>
+        <td style="color:var(--amber);">△</td>
+        <td style="color:var(--amber);">○</td>
+      </tr>
+      <tr style="font-weight:600;">
+        <td>総合</td>
+        <td style="color:var(--green);">A</td>
+        <td style="color:var(--green);">A-</td>
+        <td style="color:var(--amber);">B+</td>
+        <td style="color:var(--amber);">B</td>
+        <td style="color:var(--red);">C</td>
+      </tr>
+    </table>
+
+    <div class="callout warn">
+      <strong>RFI 5社すべてに欠けている観点</strong>
+      <ul>
+        <li>Foundryオントロジーの移行方針（全社未言及）</li>
+        <li>非構造データパイプライン（テキスト/画像/音声）の設計</li>
+        <li>MDM（マスタデータ管理）→ PwCのみが提案</li>
+        <li>セマンティックレイヤーの初期構築 + 継続メンテの運用設計</li>
+      </ul>
+      → RFPでこれらを明確に問うべき
+    </div>
+
+    <h3 id="s7-discussion">明日のMTG（Sケアレビュー）で議論すべきポイント</h3>
+
+    <div class="card-grid">
+      <div class="card" style="border-left: 3px solid var(--red);">
+        <h4>1. プロジェクト期間について</h4>
+        <p>当初期間（〜3/31）は終了。今後のフェーズ（RFP策定、PoC、要件定義）の計画とACESの関与範囲を確認する必要がある。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--amber);">
+        <h4>2. HD基盤との境界線</h4>
+        <p>L0-L1の共通化範囲とL2-L3のケア独自設計の境界をHDと合意する必要がある。特にL1のマルチテナント設計の有無がクリティカル。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--accent);">
+        <h4>3. RFP策定の方針</h4>
+        <p>4原則をRFP評価項目に組み込む方針の合意。オントロジー移行、非構造データ、MDM、セマンティックレイヤーをRFPで問う設問設計。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>4. PoC計画</h4>
+        <p>Phase 1 PoCとして「自然言語KPI照会」を推奨。技術面だけでなく組織面（データアクセス承認フロー、マスキング設計等）の検証シナリオも含める。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--teal);">
+        <h4>5. ★ Databricks-Palantir提携の活用</h4>
+        <p>2025年3月発表のパートナーシップにより段階的移行が可能に。Virtual Tables + Compute Pushdownで既存Foundryアプリを維持しながらデータ層から移行する戦略を提案すべきか。コスト二重負担との兼ね合い。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 9: 最終成果物の深掘り -->
+  <!-- ================================================================ -->
+  <section id="s9">
+    <h2>11. 最終成果物「技術スタック採用方針」の深掘り</h2>
+    <p>3/31納品の最終成果物PDF（26ページ）の各パートについて、背景理解・想定質問・深掘りポイントを整理します。</p>
+
+    <h3 id="s9-evolution">勉強ガイドの「4原則」→ 最終成果物の「7観点」への進化</h3>
+    <div class="callout">
+      <strong>なぜフレームワークが変わったか</strong>
+      <p style="margin-top:8px;">勉強ガイドのセクション5で説明した「4原則」（AI接続・学習蓄積・ガバナンス・ナレッジ）は、初期検討段階のフレーム。最終成果物ではこれを<strong>「AI活用基盤に求められる7つの観点」</strong>に発展させた。4原則が「製品に依存しない設計原則」だったのに対し、7観点は「RFP評価に直結する具体的な評価軸」として再構成されている。</p>
+    </div>
+
+    <table>
+      <tr><th>#</th><th>観点</th><th>分類</th><th>今回のRFP範囲</th><th>将来のAI論点</th></tr>
+      <tr>
+        <td><strong>1</strong></td><td><strong>連携性</strong></td><td style="color:var(--green);">今回選定</td>
+        <td>多様なデータソースに対応可能か</td>
+        <td>グループ会社間連携、リアルタイム連携</td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td><td><strong>安全性</strong></td><td style="color:var(--green);">今回選定</td>
+        <td>データアクセス制御・監査ログ</td>
+        <td>AIのID・権限、ガードレール</td>
+      </tr>
+      <tr>
+        <td><strong>3</strong></td><td><strong>進化性</strong></td><td style="color:var(--amber);">余地確認</td>
+        <td>将来の機能追加しやすいか</td>
+        <td>マルチLLM、評価パイプライン</td>
+      </tr>
+      <tr>
+        <td><strong>4</strong></td><td><strong>実効性</strong></td><td style="color:var(--amber);">余地確認</td>
+        <td>非構造化データの格納・加工に対応可能か</td>
+        <td>AIが活用しやすい構造化、Agent設計</td>
+      </tr>
+      <tr>
+        <td><strong>5</strong></td><td><strong>運用性</strong></td><td style="color:var(--amber);">余地確認</td>
+        <td>ログ・トレース・コスト管理</td>
+        <td>Agentの挙動追跡</td>
+      </tr>
+      <tr>
+        <td><strong>6</strong></td><td><strong>開発速度</strong></td><td style="color:var(--amber);">余地確認</td>
+        <td>AI開発環境の標準構成案が具体か</td>
+        <td>PoC→本番の標準化・運用ルール</td>
+      </tr>
+      <tr>
+        <td><strong>7</strong></td><td><strong>規模</strong></td><td style="color:var(--text-muted);">将来検討</td>
+        <td>対象外</td>
+        <td>AI/Agent増加時の標準化、コスト統制</td>
+      </tr>
+    </table>
+
+    <div class="callout warn">
+      <strong>ポイント: ①②は今回の選定基準、③〜⑥は「余地確認」</strong>
+      <p style="margin-top:8px;">ML/AI機能自体の実装は今回のRFPの対象外。しかし<strong>「将来拡張を阻害しない前提条件」は今回確認する</strong>。これが最終成果物の戦略的な位置づけ。「AI基盤を作る」のではなく「AIに対応できるデータ基盤を作る」。</p>
+    </div>
+
+    <h4>4原則 → 7観点 のマッピング</h4>
+    <table>
+      <tr><th>旧: 4原則</th><th>新: 7観点</th><th>変更の意図</th></tr>
+      <tr><td>原則1: AI接続インターフェース</td><td>①連携性 + ④実効性</td><td>「AI接続」を「データソース連携」と「非構造データ対応」に分離して具体化</td></tr>
+      <tr><td>原則2: 学習蓄積</td><td>⑥開発速度 + ⑦規模</td><td>実験管理をPoC→本番のスピードと規模管理に落とし込み</td></tr>
+      <tr><td>原則3: ガバナンス</td><td>②安全性 + ⑤運用性</td><td>権限管理と運用監視を分離</td></tr>
+      <tr><td>原則4: ナレッジ蓄積</td><td>③進化性</td><td>「社内に残す」→「将来拡張しやすい」にリフレーム</td></tr>
+    </table>
+
+    <h3 id="s9-numbers">現行Foundry環境の具体的数値（PDFフッターより）</h3>
+    <div class="callout success">
+      <strong>これらの数値は移行規模の見積もりに直結する。把握必須。</strong>
+    </div>
+    <div class="card-grid">
+      <div class="card">
+        <h4>データ規模</h4>
+        <ul>
+          <li><strong>Pipeline</strong>: 219本</li>
+          <li><strong>Row Data合計</strong>: 約2.35TB</li>
+          <li><strong>Summary Data</strong>: 約101GB</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>利用規模</h4>
+        <ul>
+          <li><strong>ダッシュボード</strong>: 15画面</li>
+          <li><strong>BI閲覧者数</strong>: 約3,000名</li>
+          <li><strong>外部連携</strong>: Tableau 7接続</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>運用規模</h4>
+        <ul>
+          <li><strong>施設数</strong>: 300（Foundry接続分）</li>
+          <li><strong>月間アクセス</strong>: 約万アクセス</li>
+          <li><strong>登録ユーザー</strong>: 800-1,000人</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>同時接続の実態</h4>
+        <ul>
+          <li><strong>ピーク</strong>: 40-80人（朝の業務開始/月初レポート時）</li>
+          <li><strong>平常時</strong>: 10-30人</li>
+          <li><strong>日次アクティブ率</strong>: 20-30%</li>
+          <li>→ Databricks SQL Serverlessで十分対応可能</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="s9-6vendors">6社RFI評価の読み方</h3>
+    <p>最終成果物では5社→<strong>6社</strong>（Sky社が追加）で評価。AI観点・非AI観点の2軸で整理されている。</p>
+
+    <table>
+      <tr><th>会社</th><th>現時点の評価</th><th>総括（強み）</th><th>主な懸念</th></tr>
+      <tr>
+        <td><strong style="color:var(--green);">Deloitte</strong></td>
+        <td style="color:var(--green);font-weight:600;">有力候補</td>
+        <td>Sケアデータに基づく詳細試算。OSSベースでロックイン回避。AI/ML・非構造進化・開発環境すべてに死角がない唯一の提案。24/365運用体制</td>
+        <td>運用条件の具体性（マネージド体制の日本側員数・対応範囲）。Dify等特定ツール依存（databricks構成推奨なので大きな問題ではない）</td>
+      </tr>
+      <tr>
+        <td><strong>Fujitsu</strong></td>
+        <td style="color:var(--amber);">比較継続</td>
+        <td>egaku/Foundry運用経験者が在籍する唯一の会社。「移せるか」の不確実性が最も低い。インフラ構成も具体的</td>
+        <td><strong style="color:var(--red);">Kozuchi/DIPの独自ロックイン</strong>。AI拡張性の弱さ。Foundryパイプラインの移行マッピングは未提示</td>
+      </tr>
+      <tr>
+        <td><strong>Sky</strong></td>
+        <td style="color:var(--amber);">比較継続</td>
+        <td>AI/ML構成提案が最も具体的（Mosaic AI+MLflow+Agent Bricks）。マルチLLM実績も最多。コスト透明性が高い。将来のAI活用を見据えた設計力が強い</td>
+        <td><strong>Tableau非対応（QuickSight固定）</strong>。推進体制に具体性がない</td>
+      </tr>
+      <tr>
+        <td><strong>Hitachi</strong></td>
+        <td style="color:var(--amber);">比較継続</td>
+        <td>介護業界のSnowflake実績あり。データ分析民主化の推進計画が具体的。業界理解</td>
+        <td>PySpark移行の工数・実現性。オープン標準への言及ゼロ。統合カタログの言及なし</td>
+      </tr>
+      <tr>
+        <td><strong>PwC</strong></td>
+        <td style="color:var(--amber);">比較継続</td>
+        <td>SOMPOグループとの関係性。ガバナンス設計の具体性。コンサル力は強い。「仕組みづくり」の伴走者としては最適</td>
+        <td><strong>運用負荷が高い（AWS群の個別管理）</strong>。OSSを明示的に拒否</td>
+      </tr>
+      <tr>
+        <td><strong style="color:var(--text-muted);">SF</strong></td>
+        <td style="color:var(--red);">優先度低</td>
+        <td>CRM連携が主目的なら検討余地</td>
+        <td>オーバースペック（年62M〜248M円）。AI機能は松プラン限定。SF閉域のロックイン</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <strong>評価の読み方のコツ</strong>
+      <p style="margin-top:8px;">PDF p.5-7 の評価表は<strong>色で読む</strong>。◎緑=強い、○黄=対応あり、△=弱い/不明、×赤=非対応。AI観点（p.5）では<strong>Deloitte/Skyが最も緑が多い</strong>。非AI観点（p.6）では<strong>Deloitte/Fujitsuが安定</strong>。<br>
+      重要なのは「弱い箇所」を<strong>RFPで質問する</strong>こと。例: Fujitsuへ「Kozuchi以外の選択肢は？」、Hitachiへ「PySpark移行の具体的工数は？」</p>
+    </div>
+
+    <h3 id="s9-rfp">RFP依頼事項の背景理解（PDF p.8）</h3>
+    <p>RFPでベンダーに何を問うか。各依頼事項の<strong>背景にある課題</strong>と<strong>なぜ重要か</strong>を理解しておくと、MTGで質問に答えやすい。</p>
+
+    <table>
+      <tr><th>RFP評価観点</th><th>依頼内容</th><th style="color:var(--amber);">背景の課題</th><th>聞かれたら</th></tr>
+      <tr>
+        <td><strong>移行実現性</strong></td>
+        <td>Foundryパイプラインの移行/再構築の進め方、再利用可能範囲、想定工数</td>
+        <td style="color:var(--amber);">219本のパイプラインの移行工数が最大の不確定要素。ベンダーごとにアプローチが全く異なる</td>
+        <td>「PySpark部分はデコレーター除去のみでほぼ動く。問題はPipeline Builderで作ったノーコード部分と、Workshop/Slateアプリ」</td>
+      </tr>
+      <tr>
+        <td><strong>コスト妥当性</strong></td>
+        <td>初期費用・月額/年額費用・従量課金の内訳と算出根拠</td>
+        <td style="color:var(--amber);">Foundryのコスト不透明性が現行課題。新基盤では透明性を確保したい</td>
+        <td>「DBU単価の不透明性が懸念。見積段階で開示を要求する」</td>
+      </tr>
+      <tr>
+        <td><strong>運用負荷</strong></td>
+        <td>マネージド/アンマネージド/ハイブリッドの対応可否、役割分担</td>
+        <td style="color:var(--amber);">社内のデータエンジニアリングスキルが限定的。段階的自走が必要</td>
+        <td>「初期はベンダー主導で、1年後に日常運用を社内に移管するフェーズ計画を求める」</td>
+      </tr>
+      <tr>
+        <td><strong>オープン性</strong></td>
+        <td>採用するデータ形式（Iceberg/Delta等）の明記。標準形式でない部分の再構築・追加対応の明示</td>
+        <td style="color:var(--amber);">Foundryからの脱却が目的なのに、新たなロックインを作りたくない</td>
+        <td>「Delta Lake + UniForm（Iceberg互換）で、将来の再移行リスクを最小化する」</td>
+      </tr>
+      <tr>
+        <td><strong>カタログ</strong></td>
+        <td>カタログ管理対象の範囲、リネージの追跡範囲、自動/手動の設定</td>
+        <td style="color:var(--amber);">Foundryのオントロジーに蓄積されたビジネス定義（最大の資産）を失いたくない</td>
+        <td>「Unity Catalogで技術メタデータは自動取得。ビジネス定義はGoverned Tags + Metric Viewsで管理」</td>
+      </tr>
+      <tr>
+        <td><strong>AI拡張性</strong></td>
+        <td>AI開発環境の構成案、OSS/業界標準/独自製品の依存度、PoC→本番の前提条件</td>
+        <td style="color:var(--amber);">「今選ぶ基盤が将来のAI活用の天井になりうる」（PDF p.1のキーメッセージ）</td>
+        <td>「Sケア・HDのAI検討状況も参考として提示する。Mosaic AI + MLflow + Bedrockの組み合わせが最も柔軟」</td>
+      </tr>
+      <tr>
+        <td><strong>LLM柔軟性</strong></td>
+        <td>利用可能なLLM（GPT/Claude等）と制約事項</td>
+        <td style="color:var(--amber);">LLMは半年で世代交代する。特定モデルに絞り込むリスク</td>
+        <td>「Bedrock経由でマルチモデル対応。Kozuchi(富士通)やEinstein(SF)は独自LLM縛りのリスク」</td>
+      </tr>
+      <tr>
+        <td><strong>プロジェクト体制</strong></td>
+        <td>本PJ向けの体制図（役割・人数・主要メンバーの経歴・経験）</td>
+        <td style="color:var(--amber);">ベンダーの提案力≠実行力。実際に誰がやるかが成否を分ける</td>
+        <td>「富士通はegaku経験者が在籍（唯一）。Deloitteは24/365だが日本側体制が不明」</td>
+      </tr>
+    </table>
+
+    <h3 id="s9-appendix">Appendixの技術判断の要点</h3>
+    <p>最終成果物のAppendix（別紙A-1〜C-2）は、各技術判断の根拠を詳細に説明している。MTGで「なぜその判断か」を聞かれた時の武器。</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>A-1: DWH+DL vs Lakehouse</h4>
+        <p><strong>結論: Lakehouse推奨。</strong>従来の2層構成（Data Lake + DWH）はデータの2箇所管理、同期コスト、整合性問題がある。Lakehouse（S3上にDelta Lake）なら1箇所で統合管理。BI/ML/AIが同一基盤でアクセス。</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">想定質問: 「LakehouseだとBI性能が落ちないか？」→ 「2025年のSQL Warehouse性能改善で実用上十分。Tableau ExtractでDatabricksへの負荷もゼロにできる」</p>
+      </div>
+      <div class="card">
+        <h4>A-2/A-3: テーブルフォーマット</h4>
+        <p><strong>結論: Delta Lake + UniForm（Iceberg互換）推奨。</strong>Delta LakeはDatabricks上で最高性能。UniFormでIceberg互換メタデータを自動生成し、Snowflake/Athena/Trino等からも読取り可能。</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">想定質問: 「UniFormに制約はないか？」→ 「読み取り専用（外部エンジンからの書き込み不可）、メタデータ遅延あり、Snowflakeからの読み取りは約20%性能低下。要認識だが実用上許容範囲」</p>
+      </div>
+      <div class="card">
+        <h4>A-5: プラットフォーム評価</h4>
+        <p><strong>結論: Databricksが最も適合度が高い。</strong>PySpark互換（そのまま動く）、AI/ML統合（MLflow+Vector Search）、ベンダーロックイン（Unity Catalog OSS化で懸念大幅に軽減）、運用負荷（統合PFでFoundryに最も近い体験）。</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">想定質問: 「Snowflakeは？」→ 「SQL分析は最速だが、PySpark全面書き換え（Snowpark）が必要でコスト大。Cortex MLもDatabricksに比べ限定的。介護テキスト分析のような非構造データ処理に不向き」</p>
+      </div>
+      <div class="card">
+        <h4>A-6: BI層にSnowflake不要</h4>
+        <p><strong>結論: Databricks → Tableau直接接続を推奨。</strong>以前はTableau同時多数接続のためSnowflakeを挟むパターンがあったが、現在は性能差が少なく、Snowflake追加コスト（年1,500-3,000万円）に見合わない。</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">想定質問: 「3,000人が使って大丈夫か？」→ 「登録3,000人≠同時接続。ピーク40-80人程度。SQL Warehouse自動スケーリングで対応。さらにTableau Extractで定期キャッシュすれば負荷ゼロ」</p>
+      </div>
+      <div class="card">
+        <h4>A-7: オーケストレーション</h4>
+        <p><strong>結論: Lakeflow（Databricks）単体推奨。</strong>外部連携が複雑な場合のみAirflow追加。フルマネージドで運用負荷最小、Unity Catalogとネイティブ統合。</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">想定質問: 「Airflowの方が汎用的では？」→ 「汎用性は高いがMWAA環境構築・運用コストが追加。Databricks中心なら不要。外部API連携が増えた段階で追加しても遅くない」</p>
+      </div>
+      <div class="card">
+        <h4>A-8: PySpark移植戦略</h4>
+        <p><strong>結論: デコレーター除去のみでほぼ動作。</strong>@transform_df, @configureはFoundry固有だが、中のPySpark DataFrame APIはそのまま。Code Repositories→GitHub+Asset Bundles+Lakeflow Jobsに移行。ブランチベースのデータ管理は開発/本番分離で代替。</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">想定質問: 「全ビルド無期限保持は？」→ 「非現実的。スナップショット・保持ポリシーの設計が必要。Delta Lake Time Travelで代替だが保持期間は有限」</p>
+      </div>
+      <div class="card">
+        <h4>A-9: セマンティックレイヤー</h4>
+        <p><strong>結論: 初期構築では不要。AIチャット導入時に必要。</strong>ダッシュボード4つの維持だけならTableauの計算フィールドで十分。10+のダッシュボード追加時は推奨、AIチャット（自然言語分析）導入時は実質必須（SQL精度が16%→54%に向上）。</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">想定質問: 「Foundryのオントロジーはどうなる？」→ 「セマンティックレイヤーがオントロジーの"部分的な代替"。Object Types→テーブル/ビュー、Properties→カラム定義、Links→JOINキー、Actions→ワークフロー/API。完全互換は不可能だが、ビジネスKPI定義は引き継げる」</p>
+      </div>
+      <div class="card">
+        <h4>B-1: ガバナンス移行</h4>
+        <p><strong>Foundry機能→Unity Catalogの対応度:</strong> RLS/監査ログ=そのまま代替可能。Markings（タグ自動伝播）=CI/CDで自動化。リネージ=PySpark列レベルはGA済み。PII検出=別途Presidio(OSS)導入が必要。</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">想定質問: 「Unity CatalogはOSS？」→ 「コアカタログ機能はApache 2.0でOSS化済み。ただし高度なガバナンス（列リネージ、動的ポリシー、PII分類）はDatabricks商用版が必要」</p>
+      </div>
+      <div class="card" style="grid-column: 1 / -1; border-left: 3px solid var(--green);">
+        <h4>C-1: 推奨技術スタック総括</h4>
+        <p><strong>最終推奨構成:</strong></p>
+        <table style="margin:12px 0;">
+          <tr><td>BI/分析</td><td><strong>Tableau</strong>（既存維持）</td></tr>
+          <tr><td>セマンティック</td><td>初期は不要 → AI導入時に<strong>Metric Views</strong>等を検討</td></tr>
+          <tr><td>データ変換</td><td><strong>PySpark (Python) + dbt Core (SQL)</strong></td></tr>
+          <tr><td>オーケストレーション</td><td><strong>Lakeflow Jobs</strong>（+ 必要時Airflow）</td></tr>
+          <tr><td>ガバナンス</td><td><strong>Unity Catalog</strong>（データ + ML + AI 統合管理）</td></tr>
+          <tr><td>テーブルフォーマット</td><td><strong>Delta Lake + UniForm</strong>（Iceberg互換）</td></tr>
+          <tr><td>ストレージ</td><td><strong>S3 + Lakehouseアーキテクチャ</strong></td></tr>
+        </table>
+        <p><strong>この構成のメリット:</strong> ①PySpark移植コスト最小（デコレーター除去のみ）、②ツール数最小（Databricks + dbt + Tableauの3つが中核）、③ロックイン回避（UC OSS化 + Delta+UniForm）、④AI拡張性（MLflow, Vector Search統合済み）、⑤運用人材2名程度で回る</p>
+        <p style="font-size:13px;color:var(--red);margin-top:8px;"><strong>リスク・注意点:</strong> DBU単価の不透明性（見積段階で開示要求）、Markings自動伝播の欠如（CI/CD自動化で補完）、ストレージ膨張（VACUUMポリシーの設計必須）</p>
+      </div>
+    </div>
+
+    <h3 id="s9-qa">想定質問集（明日のMTGで聞かれそうなこと）</h3>
+    <p>クライアント（SOMPOケア IT企画部・DDA戦略部）やACES内部から想定される質問と、回答の骨子。</p>
+
+    <div class="quiz">
+      <h4>Q: 「Databricksを選ぶと、Databricksへのロックインにならないか？」</h4>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        正当な懸念。対策は3つ。<br>
+        <strong>①データ層</strong>: Delta Lake + UniForm でIceberg互換。データ自体はオープンフォーマットでS3に保存。どのエンジンからも読める。<br>
+        <strong>②カタログ層</strong>: Unity CatalogのコアがApache 2.0でOSS化済み。メタデータの持ち出しが可能。<br>
+        <strong>③処理層</strong>: PySpark/SQL/dbt は業界標準。Databricks固有のAPIはLakeflow程度で、Airflowに置き換え可能。<br>
+        「Foundryは全レイヤーがロックイン。Databricksはデータ層・処理層がオープンで、ロックインは管理層（Workflows等）に限定される」
+      </div>
+    </div>
+
+    <h3 id="s9-ontology">オントロジー移行の全体像 — 何をいつ復元するか</h3>
+
+    <div class="callout">
+      <strong>最重要ポイント: オントロジーは「1つのモノ」ではない</strong>
+      <p style="margin-top:8px;">Foundryの「オントロジー」は4つの機能の束。それぞれ<strong>必要度・タイミング・代替手段</strong>が全く異なる。「オントロジーの移行」を一枚岩で考えると判断を誤る。</p>
+    </div>
+
+    <h4>オントロジーの4機能を分解する</h4>
+    <table>
+      <tr><th>機能</th><th>Foundryでの例</th><th>新基盤での代替</th><th>必要タイミング</th><th>難度</th></tr>
+      <tr>
+        <td><strong>A. KPI定義<br>(セマンティック)</strong></td>
+        <td>「稼働率 = 入居者数÷定員」<br>「人員配置率 = 実配置÷基準」</td>
+        <td>dbt models / Databricks Metric Views</td>
+        <td style="color:var(--text-muted);">後述（条件次第）</td>
+        <td style="color:var(--amber);">中（技術より合意形成）</td>
+      </tr>
+      <tr>
+        <td><strong>B. エンティティ関係</strong></td>
+        <td>入居者→施設→スタッフのリンク<br>ナースコール→居室→入居者</td>
+        <td>Silver層のテーブルJOIN設計<br>外部キー + dbt relationships test</td>
+        <td style="color:var(--green);font-weight:600;">移行時に自然に対応<br>（Silver層設計の一部）</td>
+        <td style="color:var(--green);">低</td>
+      </tr>
+      <tr>
+        <td><strong>C. ビジネス用語集</strong></td>
+        <td>「CMC」「施設360」等の定義<br>Object Typeの説明文</td>
+        <td>Unity Catalog Governed Tags<br>+ Confluence/Wiki</td>
+        <td style="color:var(--text-muted);">いつでもOK<br>（ドキュメントの話）</td>
+        <td style="color:var(--green);">低</td>
+      </tr>
+      <tr>
+        <td><strong>D. 業務アクション</strong></td>
+        <td>「ケアプランを承認」ボタン<br>Workshop/Slateのアプリ操作</td>
+        <td>カスタムWebアプリ<br>Retool / Streamlit / React</td>
+        <td style="color:var(--text-muted);">Workshop移行時<br>（Phase D = 最後）</td>
+        <td style="color:var(--red);">高（完全再構築）</td>
+      </tr>
+    </table>
+
+    <div class="callout success">
+      <strong>結論: B は移行時に自動的に対応される。C/D は別タイミング。問題は A だけ。</strong>
+    </div>
+
+    <h4>そもそも「KPI定義」「dbt model」「セマンティックレイヤー」とは何か</h4>
+
+    <div class="card-grid">
+      <div class="card" style="grid-column: 1 / -1;">
+        <h4>KPI定義 = 数字の「計算ルール」を全社で統一すること</h4>
+        <p>例えば「稼働率」。一見単純だが、人によって計算方法が違う:</p>
+        <table style="margin:12px 0;">
+          <tr><th>誰が</th><th>計算方法</th><th>結果</th></tr>
+          <tr><td>IT企画部</td><td>入居者数 ÷ 定員</td><td>87%</td></tr>
+          <tr><td>施設長</td><td>入居者数 ÷ ベッド数（空室含む）</td><td>83%</td></tr>
+          <tr><td>DDA推進部</td><td>入居者数 ÷ 定員（ショートステイ除く）</td><td>91%</td></tr>
+        </table>
+        <p>同じ「稼働率」で3人が違う数字を出す → 経営会議で「数字が合わない」→「信用できない」→「使わない」。<br><strong>KPI定義 = 「稼働率とはこの計算式」と全社で1箇所に書いて統一すること。</strong></p>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>dbt model = SQLの「設計図管理」ツール</h4>
+        <p>新しい言語ではない。<strong>普通のSQLをGitで管理する仕組み</strong>。</p>
+        <div class="code-block" style="margin:8px 0;">
+<span class="comment">-- 普通のSQL（Excelやメモ帳にある。誰がいつ変えたか不明）</span>
+SELECT 入居者数 / 定員 AS 稼働率 FROM ...
+
+<span class="comment">-- dbt model（Git管理。変更履歴が残る。テスト付き）</span>
+<span class="comment">-- models/gold/kpi_occupancy.sql</span>
+SELECT 入居者数 / 定員 AS 稼働率 FROM ...
+        </div>
+        <p>やっていることは同じSQL。違いは:<br>
+        <strong>1.</strong> Gitで管理 → 誰がいつ何を変えたか分かる<br>
+        <strong>2.</strong> テスト付き → 「稼働率が0〜100%か」自動チェック<br>
+        <strong>3.</strong> 依存関係追跡 → 元テーブルが変わったら自動再計算<br>
+        <strong>SQLが書ければ使える。</strong></p>
+      </div>
+      <div class="card">
+        <h4>AI活用でなぜセマンティックレイヤーが必須になるか</h4>
+        <p><strong>セマンティックレイヤーなし:</strong></p>
+        <div class="code-block" style="margin:8px 0;">
+社長: 「稼働率が低い施設を教えて」
+AI:   SQLを<span class="red">自分で推測して生成</span>
+      → 入居者数 / ベッド数 ... <span class="red">(勝手な計算式)</span>
+      → 「施設Aが72%」<span class="red">(正しいか不明)</span>
+        </div>
+        <p><strong>セマンティックレイヤーあり:</strong></p>
+        <div class="code-block" style="margin:8px 0;">
+社長: 「稼働率が低い施設を教えて」
+AI:   セマンティックレイヤーを<span class="green">参照</span>
+      → 定義発見: 入居者数 ÷ 定員(ショートステイ含)
+      → <span class="green">定義通りのSQL</span>を生成
+      → 「施設Aが85%」<span class="green">(全社統一の正しい数字)</span>
+        </div>
+        <p>AIは賢いが<strong>「御社の稼働率の定義」は知らない</strong>。セマンティックレイヤーがAIへの「辞書」になる。<br>学術研究: SQL精度が<strong>16%→54%に向上</strong>（約3倍）</p>
+      </div>
+    </div>
+
+    <h4>A. セマンティックレイヤー（KPI定義）— いつ必要か？</h4>
+    <p>PDF A-9 の判断基準がそのまま答えになります:</p>
+
+    <table>
+      <tr><th>ユースケース</th><th>セマンティックレイヤー</th><th>理由</th></tr>
+      <tr>
+        <td><strong>ダッシュボード4つの維持<br>（現状と同じ）</strong></td>
+        <td style="color:var(--green);font-weight:600;">不要（後から追加可能）</td>
+        <td>Tableauの計算フィールドで十分。現行の4ダッシュボード（CMC/モニター/ナースコール/施設360）のKPI定義はTableau内で持てる</td>
+      </tr>
+      <tr>
+        <td><strong>ダッシュボード10+に増加</strong></td>
+        <td style="color:var(--amber);font-weight:600;">推奨</td>
+        <td>Tableau計算フィールドが増殖すると定義の食い違いが発生。「稼働率の計算方法がダッシュボードAとBで違う」問題が起きる</td>
+      </tr>
+      <tr>
+        <td><strong>AIチャット（自然言語分析）</strong></td>
+        <td style="color:var(--red);font-weight:600;">実質必須</td>
+        <td>AIがSQLを自動生成する際、KPI定義を参照しないと毎回違う計算をする。<strong>学術研究でSQL精度が16%→54%に向上</strong>（約3倍）</td>
+      </tr>
+      <tr>
+        <td><strong>予測AI + 自動レポート</strong></td>
+        <td style="color:var(--red);font-weight:600;">必須</td>
+        <td>Feature Store（AI学習用の特徴量）との連携も必要</td>
+      </tr>
+    </table>
+
+    <div class="flow">
+<span class="comment">── つまりこういうこと ──</span>
+
+<span class="highlight">Phase 1（移行直後）: セマンティックレイヤーなしでOK</span>
+  ・ダッシュボード4つをTableauで再現するだけ
+  ・KPI定義はTableauの計算フィールドで持つ
+  ・<span class="green">追加コスト: ゼロ</span>
+
+<span class="highlight">Phase 2（ダッシュボード増加時）: セマンティックレイヤー推奨</span>
+  ・10+のダッシュボードでKPI定義が分散し始める
+  ・dbt models で「稼働率 = ...」をSQL化して一元管理
+  ・<span class="amber">追加コスト: 小（dbtの定義作成のみ）</span>
+
+<span class="highlight">Phase 3（AI活用時）: セマンティックレイヤー必須</span>
+  ・AIチャット（AI-BI Genie等）を導入する場合
+  ・Databricks Metric Views でKPIをファーストクラスの定義に
+  ・<span class="red">ここで初めて「Foundryオントロジーの本格的な代替」が必要</span>
+    </div>
+
+    <h4>具体的なイメージ: セマンティックレイヤーの「復元」とは何をするか</h4>
+
+    <div class="flow">
+<span class="comment">── Foundry のオントロジー定義（例）──</span>
+
+Object Type: <span class="highlight">施設</span>
+  Properties:
+    - 施設ID: string
+    - 施設名: string
+    - 定員: integer
+    - 入居者数: integer    ← 日次で変動する値
+  <span class="amber">Derived Property:</span>
+    - <span class="amber">稼働率 = 入居者数 / 定員</span>   ← これがKPI定義
+  Links:
+    - 入居者（1:N）
+    - スタッフ（1:N）
+    - ナースコール（1:N）
+
+<span class="comment">── 新基盤（Databricks + dbt）での復元 ──</span>
+
+<span class="highlight">Step 1: テーブル設計（Silver層）= エンティティ関係の復元</span>
+  CREATE TABLE silver.facilities (
+    facility_id STRING,
+    facility_name STRING,
+    capacity INT
+  );
+  CREATE TABLE silver.residents (
+    resident_id STRING,
+    facility_id STRING,   ← <span class="green">Link復元 = 外部キー</span>
+    ...
+  );
+  → <span class="green">これは移行時のSilver層設計で自然にやること。特別な作業ではない</span>
+
+<span class="highlight">Step 2: KPI定義（dbt model）= セマンティック復元（Phase 2以降）</span>
+  <span class="comment">-- models/gold/kpi_facility_monthly.sql</span>
+  SELECT
+    f.facility_id,
+    f.facility_name,
+    DATE_TRUNC('month', d.date) AS month,
+    COUNT(DISTINCT r.resident_id) AS resident_count,
+    f.capacity,
+    <span class="amber">COUNT(DISTINCT r.resident_id) / f.capacity AS occupancy_rate</span>
+      <span class="comment">-- ↑ 「稼働率」の定義。全社でこの1箇所だけ。</span>
+  FROM silver.facilities f
+  JOIN silver.residents r ON f.facility_id = r.facility_id
+  JOIN silver.dates d ON ...
+  GROUP BY 1, 2, 3, 5
+
+  → Tableauも AI-BI Genieも Excelも、全てこのGoldテーブルを参照
+  → <span class="green">「稼働率とは何か」が全社で統一される = SSOT</span>
+
+<span class="highlight">Step 3: Metric Views（Phase 3 = AI活用時）</span>
+  <span class="comment">-- Databricks Metric Views（2025年後半GA予定）</span>
+  CREATE METRIC VIEW occupancy_metrics AS
+    MEASURE occupancy_rate = SUM(resident_count) / SUM(capacity)
+    DIMENSIONS: facility, month, region
+    FILTERS: active_only = (status = 'active')
+
+  → AI-BI Genie が「稼働率が低い施設は？」と聞かれた時
+    この定義を参照して正確なSQLを生成する
+  → <span class="green">セマンティックレイヤーがないと、AIは毎回違う計算をしてしまう</span>
+    </div>
+
+    <h4>まとめ: オントロジーは最初から全部作る必要はない</h4>
+
+    <div class="card-grid">
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>移行時に自動的にやること</h4>
+        <p><strong>エンティティ関係（B）</strong>= Silver層のテーブル設計。入居者↔施設↔スタッフの関係はJOINキー（外部キー）で表現。これはデータ移行の一部であり、「オントロジー復元」として特別に意識する必要はない。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--amber);">
+        <h4>後からでOKだが、設計思想だけ入れておくこと</h4>
+        <p><strong>KPI定義（A）</strong>= dbt models / Metric Views。初期はTableau計算フィールドで十分。ただし<strong>「Gold層はdbt modelで定義する」という設計方針だけは初期に決めておく</strong>。後からGold層にKPI定義を集約する際の土台になる。</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--red);">
+        <h4>AI活用時に本格対応</h4>
+        <p><strong>セマンティックレイヤー（A の発展形）</strong>= Metric Views。AIチャット導入時に「AIが参照できるKPI定義集」として構築。これが「Foundryオントロジーの本格的な代替」にあたるが、<strong>Phase 3（~18ヶ月後）で十分</strong>。</p>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>ただし1つだけ初期にやるべきこと: Foundryオントロジーの「棚卸し」</strong>
+      <p style="margin-top:8px;">セマンティックレイヤーの構築は後でいい。しかし<strong>Foundryに今あるオントロジー定義の「一覧化・文書化」はFoundry廃止前にやる必要がある</strong>。廃止後は参照できなくなるため。</p>
+      <ul style="margin-top:8px;">
+        <li>Object Types（何種類あるか、プロパティは何か）</li>
+        <li>Derived Properties（計算KPIの定義式）</li>
+        <li>Links（どのオブジェクト間にリンクがあるか）</li>
+        <li>Actions（Workshop/Slateで使われている業務アクション）</li>
+      </ul>
+      <p style="margin-top:8px;">→ RFPでベンダーに「オントロジー棚卸し支援」を依頼事項に含めるべき（現時点でRFI 6社すべてが未言及）</p>
+    </div>
+
+    <div class="quiz">
+      <h4>Q: 「Foundryのオントロジーは移行できるのか？全社で使っているものを失うリスクは？」</h4>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        オントロジーの「完全移行」は不可能。但し「価値の移行」は可能。<br>
+        <strong>移行可能な価値</strong>: Object Types→テーブル/ビュー定義、Properties→カラム定義、KPI計算ロジック→dbt models/Metric Views<br>
+        <strong>移行困難な価値</strong>: Links（関係性定義）→JOIN設計で再構築必要、Actions（業務操作）→ワークフロー/API再構築、Workshop/Slateアプリ→完全再構築<br>
+        <strong>まず必要なのは棚卸し</strong>: オントロジーに何が定義されているか一覧化し、移行優先度を決める。RFPでベンダーにオントロジー移行方針を問う。<br>
+        <strong>2025年のDatabricks-Palantirパートナーシップ</strong>により、段階的移行（Virtual Tables経由でFoundryオントロジーがDatabricksデータを参照可能）という選択肢も出てきた。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>Q: 「コストは今と比べてどうなるのか？」</h4>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        Foundryのライセンス費用（年額、不透明）→ Databricks（DBU従量課金、透明）への移行で<strong>コスト構造が変わる</strong>。<br>
+        <strong>初期構築</strong>: RFI各社の見積り幅は大きい（PwC Step2で1.6-2.3億。他社は未提示多い）。RFPで統一フォーマットの見積りを要求。<br>
+        <strong>年間運用</strong>: AWS(S3+ネットワーク) + Databricks(DBU) + Tableau(ライセンス) + 運用人件費。PDF A-6の分析により<strong>Snowflakeを挟まないことで年間1,500-3,000万円削減</strong>。<br>
+        <strong>コスト最適化</strong>: SQL Warehouse自動停止、Spot Instance（ML学習で70%削減）、Delta OPTIMIZE/VACUUM、Tableau Extractキャッシュ。<br>
+        <strong>「安くなるか」より「何にいくらかかっているか見えるようになる」が最大のメリット</strong>。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>Q: 「AI活用は本当にこの基盤移行のタイミングで考えるべきか？まずは移行を確実にすべきでは？」</h4>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        最終成果物のキーメッセージ: <strong>「今選ぶ基盤が将来のAI活用の天井になりうる」</strong>。<br>
+        ①②（連携性・安全性）は今回の選定基準。③〜⑥は「余地確認」= <strong>AI機能を今作るのではなく、将来阻害しない設計かを確認するだけ</strong>。<br>
+        具体的な追加作業は: 製品選定の評価軸に7観点を追加する / パイプライン設計に非構造データレーンを入れる / 基盤構築と並行してPoCを1つ走らせる。<br>
+        <strong>追加されないもの</strong>: AI基盤の全面構築、AIモデルの本格開発、大規模な追加予算。設計判断の話であり、別建てのシステム構築ではない。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>Q: 「Deloitteが有力とあるが、Fujitsuの方がFoundry知見があって安全では？」</h4>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        正しい指摘。<strong>Fujitsuの最大の強みは「egaku/Foundry運用経験者が在籍する唯一の会社」</strong>。移行の不確実性が最も低い。<br>
+        しかし懸念は: <strong>Kozuchi/DIPという富士通独自のAIプラットフォームへのロックインリスク</strong>。Foundryから脱却するのに、新たな独自基盤に依存するのは戦略的矛盾。AI拡張性の提案も弱い。<br>
+        <strong>Deloitteの強み</strong>: OSSベースでロックイン回避。AI/ML・非構造進化・開発環境すべてに死角がない。Sケアデータに基づく詳細試算（唯一）。<br>
+        <strong>落とし所</strong>: RFPで両社に具体的な提案を求め、特にFujitsuには「Kozuchi以外の選択肢」、Deloitteには「日本側運用体制の具体性」を問う。最終判断はRFP回答後。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>Q: 「HD（SOMPOグループ）基盤との整合性は？勝手に進めていいのか？」</h4>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        4レイヤー分解で整理済み（勉強ガイド セクション5参照）。<br>
+        <strong>L0（インフラ）</strong>: AWS契約・VPC・Direct Connect → グループ共通化OK。既に接続済み。<br>
+        <strong>L1（ストレージ・コンピュート）</strong>: S3・Databricks → 条件付き共有。HD基盤がマルチテナント設計（ケア専用ワークスペース許容）かを確認必要。<br>
+        <strong>L2-L3（データアーキテクチャ・アプリ）</strong>: ケア独自で設計する。理由は4つの構造的差異（データモデル、非構造パイプライン、アクセス制御粒度、実験速度）。<br>
+        <strong>「HDの完成を待つリスク」</strong>の方が大きい: データ蓄積期間の遅延、PoC経験の喪失、要件定義の主導権喪失、ケア固有要件が埋もれる。<br>
+        L2-L3は「HDがどうなろうと必要な作業」であり、待つ理由がない。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>Q: 「3,000人のBI閲覧者がいるが、移行で業務に支障は出ないか？」</h4>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        <strong>登録3,000人 ≠ 同時接続3,000人</strong>。実態は施設長700名+本部スタッフ。日次アクティブ率20-30%、ピーク同時接続40-80人。<br>
+        <strong>対策</strong>: ①Tableau Extractで定期的にデータをキャッシュ → Databricksへの同時接続は実質ゼロ。②Databricks SQL Serverlessは自動スケーリングで80人同時接続は問題なし。③並行運用期間を設け、段階的に移行。<br>
+        <strong>むしろ改善される点</strong>: Foundryの「UIの頻繁な変更で現場が混乱」という現行課題がTableau移行で解消。Tableauは安定したUIを持つ。
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 8: 理解度チェック -->
+  <!-- ================================================================ -->
+  <section id="s8">
+    <h2>12. 理解度チェック（全体）</h2>
+
+    <div class="quiz">
+      <h4>Q3: レイヤー分解</h4>
+      <p>基盤の4レイヤー（L0〜L3）を説明し、SOMPOケアにおいてどのレイヤーはグループ共通化でき、どのレイヤーはケア独自で設計する必要があるか？</p>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        L0（インフラ: AWS契約、VPC、Direct Connect）→ グループ共通化が合理的。L1（ストレージ・コンピュート: S3、Databricks）→ 条件付き共有（マルチテナント設計が前提）。L2（データアーキテクチャ: スキーマ、ETL、セマンティックレイヤー）→ ケア独自（ドメイン固有）。L3（アプリケーション: BI、AI/ML）→ ケア独自。ケアのデータはTemporal Table + Event Sourcing + 非構造パイプラインが必要であり、保険ドメインのFact/Dimension設計とは構造的に異なるため、L2-L3は共通化できない。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>Q4: データコントラクト</h4>
+      <p>データコントラクトとは何か？なぜ今設計する必要があるか？2028年CareBase刷新との関係は？</p>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        データコントラクトは、ソースシステムとデータ基盤の間で「約束」を定義する仕組み。必須カラム、データ型、NULLルール、値の範囲などを明文化し、約束が破られたら自動検知・アラートする。dbt schema tests / Great Expectations / DLT Expectations 等で実装。2028年にCareBaseがリプレースされるとソースのスキーマが変わる。データコントラクトがあれば変更を自動検知→局所対応で済む。なければETL全面改修（基盤構築費用の30-50%追加リスク）。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>Q5: なぜDatabricksか</h4>
+      <p>SOMPOケアの移行先としてDatabricks on AWSが有力な理由を3つ挙げてください。</p>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        1. <strong>PySpark互換性</strong>: Foundry Transforms で書かれた既存PySpark コードの移行が最もスムーズ。2. <strong>AI/ML統合</strong>: MLflow、Mosaic AI、Vector Search、AI-BI Genie が統合されており、Phase 1〜3のAI活用ロードマップに対応。3. <strong>AWS上で動作</strong>: 既存のAWS環境（Direct Connect接続済み）をそのまま活かせる。加えて、Unity CatalogによるAI時代のガバナンス（行/列セキュリティ + AIアクセス制御 + リネージ）が統合されている点も重要。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>Q6: セマンティックレイヤーの落とし穴</h4>
+      <p>セマンティックレイヤーの技術的実装は比較的容易だが、本当に難しいのは何か？</p>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        組織的な合意形成が最も難しい。具体的には: 1.「稼働率にショートステイを含めるか」等の部門間合意、2. 既存BIダッシュボードとの定義整合、3. 定義変更のガバナンス（誰が承認し、いつ反映するか）、4. 継続的なメンテナンス（新KPIの追加、定義の改訂）。YAML/SQLでの技術実装より、「部門間で用語の定義を揃える政治的プロセス」がボトルネックになる。
+      </div>
+    </div>
+
+    <div class="quiz">
+      <h4>Q7: Phase 1 PoC の推奨</h4>
+      <p>Phase 1 PoCとして「自然言語KPI照会」を推奨する理由と、PoCで検証すべき「技術面以外」の要素は？</p>
+      <button onclick="this.nextElementSibling.style.display='block'">回答を見る</button>
+      <div class="quiz-answer">
+        推奨理由: 1. データが既にある（構造化データは移行対象）、2. 基盤のAI-Readyさを直接検証（SQL API、セマンティックレイヤー、権限継承が全て試される）、3. 現場に見せやすいデモ、4. 組織面の検証も可能。<br>技術面以外の検証: データアクセス承認フローは実用的な速度で回るか、PoCで使えるデータの範囲は十分か（マスキング設計）、社内チームがPoC環境を自走運用できるか、結果をどうドキュメント化し次のPoCに繋げるか。
+      </div>
+    </div>
+  </section>
+
+  <footer style="padding: 40px 0; border-top: 1px solid var(--border); margin-top: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">
+    <p>Foundry会社 リサーチ部 作成 | 2026-04-01 | SOMPOケア 新分析環境構築PJT</p>
+    <p style="margin-top: 8px;">参照: project-scotch-care/docs/ (00〜12), reference_docs/</p>
+  </footer>
+</main>
+
+<script>
+// Smooth scroll for nav links
+document.querySelectorAll('nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    const href = a.getAttribute('href');
+    if (href && href.startsWith('#')) {
+      e.preventDefault();
+      document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+});
+
+// Active nav highlight
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('nav a').forEach(a => a.style.color = '');
+      const id = entry.target.id;
+      const link = document.querySelector(`nav a[href="#${id}"]`);
+      if (link) link.style.color = '#818cf8';
+    }
+  });
+}, { threshold: 0.3 });
+
+document.querySelectorAll('section[id], div[id]').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
