@@ -335,6 +335,11 @@
   <a href="#s7-context">PJ背景</a>
   <a href="#s7-rfi">RFI 5社評価</a>
   <a href="#s7-discussion">明日のMTG論点</a>
+  <a href="#s7b" class="section-title" style="color:var(--green);">★ 結局どうすべきか<span class="nav-badge badge-strategy">ACES</span></a>
+  <a href="#s7b-position">ACESの立場</a>
+  <a href="#s7b-recommendation">推奨事項</a>
+  <a href="#s7b-actions">5つのアクション</a>
+  <a href="#s7b-mtg">MTGで言うべきこと</a>
   <a href="#s9" class="section-title">11. 最終成果物の深掘り<span class="nav-badge badge-core">PDF</span></a>
   <a href="#s9-evolution">4原則→7観点の進化</a>
   <a href="#s9-numbers">現行環境の数値</a>
@@ -2036,6 +2041,177 @@ models:
         <h4>5. ★ Databricks-Palantir提携の活用</h4>
         <p>2025年3月発表のパートナーシップにより段階的移行が可能に。Virtual Tables + Compute Pushdownで既存Foundryアプリを維持しながらデータ層から移行する戦略を提案すべきか。コスト二重負担との兼ね合い。</p>
       </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 10.5: ACESとしての立場と行動指針 -->
+  <!-- ================================================================ -->
+  <section id="s7b">
+    <h2>10.5 結局どうすべきか — ACESとしての立場と行動指針</h2>
+    <p>技術の比較は十分にやった。ここからは <strong>「で、ACESとして何を言い、何をすべきか」</strong> を整理する。</p>
+
+    <h3 id="s7b-position">ACESの立場を明確にする</h3>
+
+    <div class="flow">
+<span class="comment">── ACESのポジション ──</span>
+
+<span class="highlight">ACESは「AI × データ基盤」の計画策定支援者</span>
+
+  <span class="green">できること（強み）</span>
+    ・AI/LLM活用の設計力（プロンプト、RAG、エージェント）
+    ・技術スタック選定の目利き（4原則→7観点のフレーム策定実績）
+    ・RFP設計（ベンダーに何を問うべきかの設計）
+    ・PoC設計・技術検証の並走
+
+  <span class="red">できないこと（明示すべき）</span>
+    ・大規模データ移行の実行（→ SIerの領域。デロイト/富士通が候補）
+    ・Foundryのオントロジー棚卸しの実務（→ 現行ベンダーまたはSOMPOケア内部）
+    ・インフラ構築・運用（→ AWS/Databricks + SIer）
+
+  <span class="amber">つまり</span>
+    ACESは「何を作るべきか」「どう選ぶべきか」「AIをどう載せるか」を設計する。
+    「作る」のは別の人。<span class="amber">この境界をSOMPOケアと合意しておくことが最も重要。</span>
+    </div>
+
+    <h3 id="s7b-recommendation">結論: ACESとしての推奨事項</h3>
+
+    <div class="callout success">
+      <strong>一言で言うと</strong>
+      <p style="margin-top:8px;font-size:16px;"><strong>Databricks on AWS を主軸に、RFPで「オントロジー移行計画」と「権限設計の具体性」を評価軸に入れ、Phase 1 PoCを並行で走らせるべき。</strong></p>
+    </div>
+
+    <h4>なぜ Databricks on AWS なのか（改めて、最新情報を踏まえて）</h4>
+
+    <div class="card-grid">
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>1. 技術的に最も合理的</h4>
+        <ul>
+          <li>219本のPySparkパイプラインがほぼそのまま動く（Snowflakeだと全面書き換え）</li>
+          <li>Unity Catalog + 行/列レベルセキュリティで要配慮個人情報の権限設計が一元管理可能</li>
+          <li>MLflow 3.0 + Agent Bricks + Vector Search で Phase 1-4 の AI ロードマップに対応</li>
+          <li>Delta UniForm (GA) で Iceberg 互換メタデータを自動生成 → 将来のポータビリティ確保</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--green);">
+        <h4>2. リスクが最小</h4>
+        <ul>
+          <li>RFI でデロイト・富士通の2社が Databricks 構成を提案済み → ベンダー候補がいる</li>
+          <li>SMBC の 20+ 基幹系移行事例 → 日本大企業での実績あり</li>
+          <li>Databricks-Palantir 提携 → 段階的移行パスも視野に入る</li>
+          <li>Serverless 全面 GA → インフラ管理の負荷が下がっている</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--amber);">
+        <h4>3. 注意すべき点</h4>
+        <ul>
+          <li><strong>Iceberg REST Catalog API はまだ Preview</strong> — 外部エンジンとの相互運用を本番で使うならGA待ち</li>
+          <li><strong>Serverless は便利だが高い</strong> — 長時間稼働ワークロードではクラシックコンピュートの方が安い場合あり</li>
+          <li><strong>学習コスト</strong> — SOMPOケア社内のデータエンジニアリング経験が浅い場合、立ち上げ支援の設計が必要</li>
+          <li><strong>コスト管理</strong> — DBU + インフラの二重課金構造。FinOps 設計を RFP に組み込むべき</li>
+        </ul>
+      </div>
+    </div>
+
+    <h4>Snowflake / Fabric は「なぜ今回は選ばないのか」を説明できるようにする</h4>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4>Snowflake を選ばない理由</h4>
+        <ul>
+          <li>PySpark 219 本の全面書き換えコスト（数千万円規模の差）</li>
+          <li>モデル訓練/FT は Databricks に劣後（Snowflake は「消費型 AI」志向）</li>
+          <li>Cortex AI のコスト暴走リスク（単一クエリ$5K 事例）が介護データ量だと深刻</li>
+          <li>ただし <strong>Cortex Analyst はセマンティック分析で強い</strong>。将来の BI サービングレイヤーとして部分的に使う可能性は残る</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Fabric を選ばない理由</h4>
+        <ul>
+          <li><strong>Azure 限定</strong> — SOMPOケアの既存環境は AWS（Direct Connect 接続済み）</li>
+          <li>OneLake Security はまだ GA 前 → 要配慮個人情報の本番運用には時期尚早</li>
+          <li>日本の介護事例はヤマシタ（介護用品レンタル）のみ → 大規模介護データ基盤の実績なし</li>
+          <li>ただし <strong>SOMPOグループ HD が Azure 路線ならば将来的に検討対象になりうる</strong>。L0 インフラの議論次第</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="s7b-actions">ACESとして具体的にやるべきこと（5つ）</h3>
+
+    <table>
+      <tr><th>#</th><th>アクション</th><th>なぜ</th><th>いつ</th><th>成果物</th></tr>
+      <tr>
+        <td><strong>1</strong></td>
+        <td><strong>RFP の評価軸に「運用設計」を組み込む</strong></td>
+        <td>RFI 5 社すべてがオントロジー移行・権限設計・加工コード管理に未言及。ここを問わないと「作ったけど運用できない」基盤になる</td>
+        <td>次回MTGで方針合意</td>
+        <td>RFP 評価項目の追加提案書</td>
+      </tr>
+      <tr>
+        <td><strong>2</strong></td>
+        <td><strong>Phase 1 PoC を並行で走らせる提案</strong></td>
+        <td>RFP → ベンダー選定 → 構築だと 2027/12 に間に合わないリスク。PoC で「自然言語 KPI 照会」を先行検証すれば選定根拠が厚くなる</td>
+        <td>4-5月で PoC 設計</td>
+        <td>PoC 計画書（技術 + 組織面）</td>
+      </tr>
+      <tr>
+        <td><strong>3</strong></td>
+        <td><strong>オントロジー棚卸しの方法論を提供</strong></td>
+        <td>ACESが棚卸しを実行するのは難しいが、「何を棚卸すべきか」のフレームワークは提供できる。OMS → Funnel → OSS の 3 層で整理</td>
+        <td>4月中</td>
+        <td>オントロジー移行チェックリスト</td>
+      </tr>
+      <tr>
+        <td><strong>4</strong></td>
+        <td><strong>権限設計のフレームワークを先行提供</strong></td>
+        <td>RBAC + ABAC 4 レイヤーの設計は基盤選定と同時に始める必要がある。後付けは指数関数的にコスト増</td>
+        <td>RFP 策定と並行</td>
+        <td>権限設計テンプレート（施設 × データ種別 × ロール）</td>
+      </tr>
+      <tr>
+        <td><strong>5</strong></td>
+        <td><strong>ACES の関与範囲を明確化</strong></td>
+        <td>計画策定支援の契約期間は 3/31 で終了。次フェーズ（RFP 策定、PoC 並走、要件定義支援）の関与範囲と契約を合意する</td>
+        <td><strong>最優先</strong></td>
+        <td>次フェーズ提案書</td>
+      </tr>
+    </table>
+
+    <h3 id="s7b-mtg">明日のMTGで「あなたが言うべきこと」</h3>
+
+    <div class="flow">
+<span class="comment">── MTGでのスタンス ──</span>
+
+<span class="highlight">1. 結論を明確に言う</span>
+  「Databricks on AWS が技術的に最も合理的です。理由は3つ: PySpark互換、AI統合、ガバナンス統合」
+  → 聞かれたら Snowflake/Fabric/AWS Native をなぜ選ばないかも説明できる状態にしておく
+
+<span class="highlight">2. RFIで見えた「穴」を指摘する</span>
+  「5社のRFI回答には共通して欠けている観点があります」
+  → オントロジー移行、権限設計、加工コード管理、セマンティックレイヤー運用
+  → 「RFPでここを明確に問うべき」という提案
+
+<span class="highlight">3. 「選定」と「運用」は別の話だと伝える</span>
+  「基盤を選ぶだけでは解決しません。権限設計・コード管理・FinOpsの運用設計が同時に必要です」
+  → ここがACESの次フェーズの価値提案ポイント
+
+<span class="highlight">4. 次のアクションを提案する</span>
+  「3つを並行で進めることを提案します:
+    ① RFP策定（4-5月） ← 評価軸に運用設計を追加
+    ② Phase 1 PoC（4-6月） ← 自然言語KPI照会で技術検証
+    ③ オントロジー棚卸し（4月〜） ← 移行対象の全量把握」
+
+<span class="red">5. 言わないこと</span>
+  ・「全部ACESでやれます」（→ SIer領域まで背負うと破綻する）
+  ・「Snowflakeは駄目です」（→ 日立が提案しているので攻撃的にならない。「本PJの要件には合わない」）
+  ・ 細かい技術論（→ 社長レベルの会議では判断材料だけ出す）
+    </div>
+
+    <div class="callout">
+      <strong>ACESの「本当の価値」はどこにあるか</strong>
+      <p style="margin-top:8px;">SIer（デロイト、富士通等）は「作る力」がある。でも「何を作るべきか」「AIをどう載せるか」の設計力は ACES の方が強い。<br>
+      <strong>「技術スタック採用方針」の 4原則→7観点 のフレームワークを作ったのが ACES</strong> であり、これがRFPの評価軸になっている。この「フレームを作る力」と「AIの目利き力」が次フェーズでも ACES の関与を正当化する根拠。<br>
+      → 次フェーズ提案では<strong>「RFP評価支援 + PoC並走 + AI活用設計」</strong>の3本柱で提案するのが良い。</p>
     </div>
   </section>
 
