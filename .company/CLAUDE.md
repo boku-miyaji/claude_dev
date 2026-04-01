@@ -29,7 +29,8 @@
     ├── pm/CLAUDE.md             ← PM
     ├── research/CLAUDE.md             ← リサーチ部署
     ├── security/CLAUDE.md             ← セキュリティ部
-    └── sys-dev/CLAUDE.md             ← システム開発部署
+    ├── sys-dev/CLAUDE.md             ← システム開発部署
+    └── ux-design/CLAUDE.md             ← UXデザイン部
 
 .company-foundry/                      Foundry移行会社
 .company-rikyu/                      りきゅう
@@ -257,6 +258,7 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority
 | リサーチ部署 | `.claude/agents/dept-research.md` | research |
 | セキュリティ部 | — | security |
 | システム開発部署 | `.claude/agents/dept-sys-dev.md` | sys-dev |
+| UXデザイン部 | `.claude/agents/dept-ux-design.md` | ux-design |
 <!-- GENERATED:AGENT_TABLE:END -->
 
 **並列実行例**: リサーチ + 資料制作が独立している場合、2つのAgentを同時起動可能
