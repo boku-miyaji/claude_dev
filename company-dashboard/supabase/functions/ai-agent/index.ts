@@ -749,7 +749,18 @@ async function agentLoop(
     userContent = blocks;
   }
 
-  var systemPrompt = await buildSystemPrompt(companyId || undefined);
+  const { prompt: systemPrompt_, report: contextReport } = await buildSystemPrompt(companyId || undefined);
+  var systemPrompt = systemPrompt_;
+
+  // Notify frontend what personal data is being sent to the LLM API
+  send({
+    type: "context_injection",
+    knowledge_rules: contextReport.knowledge_rules,
+    diary_entries: contextReport.diary_entries,
+    ceo_insights: contextReport.ceo_insights,
+    personalization_fields: contextReport.personalization_fields,
+  });
+
   if (precisionMode) {
     systemPrompt += `\n\n## PRECISION MODE ACTIVE
 - Take your time. Accuracy is more important than speed.

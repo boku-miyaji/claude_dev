@@ -5460,6 +5460,20 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 if (evt.model) metrics.model = evt.model;
                 if (evt.complexity) metrics.complexity = evt.complexity;
                 break;
+              case 'context_injection': {
+                var parts = [];
+                if (evt.knowledge_rules) parts.push(evt.knowledge_rules + ' knowledge rules');
+                if (evt.diary_entries) parts.push(evt.diary_entries + ' diary entries');
+                if (evt.ceo_insights) parts.push(evt.ceo_insights + ' insights');
+                if (evt.personalization_fields && evt.personalization_fields.length) parts.push('profile: ' + evt.personalization_fields.join(', '));
+                if (parts.length) {
+                  var ctxNote = el('div', {className:'chat-tool-block', style:'opacity:0.6;font-size:11px'});
+                  ctxNote.appendChild(el('span',{textContent:'\uD83D\uDD12 '}));
+                  ctxNote.appendChild(el('span',{textContent:'Context sent to LLM: ' + parts.join(' \u00B7 ')}));
+                  msgContainer.insertBefore(el('div',{className:'chat-msg-row assistant'},[ctxNote]), assistantRow);
+                }
+                break;
+              }
               case 'step_start':
                 metaDiv.textContent = 'Step '+evt.step+'/'+evt.maxSteps+' \u00B7 '+evt.model+(evt.reasoning?' \u00B7 '+evt.reasoning:'');
                 metrics.stepCount = evt.step;
