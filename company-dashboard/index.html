@@ -1453,43 +1453,14 @@ async function renderPortfolio(root) {
 // ============================================================
 
 async function renderCareer(root) {
-  root.appendChild(el('div', {className: 'page-title', textContent: 'Career'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: 'キャリアロードマップ・市場価値・目標管理'}));
-
-  var items = (await sb.from('career').select('*').order('priority,created_at', {ascending: false})).data || [];
-  var active = items.filter(function(i){return i.status === 'active'});
-
-  // Stats
-  var goals = items.filter(function(i){return i.type === 'goal'});
-  var completed = items.filter(function(i){return i.status === 'completed'});
-  root.appendChild(el('div', {className: 'g4', style: 'margin-bottom:24px'}, [
-    el('div', {className: 'card kpi'}, [
-      el('div', {className: 'kpi-val', textContent: goals.length}),
-      el('div', {className: 'kpi-lbl', textContent: 'Goals'})
-    ]),
-    el('div', {className: 'card kpi'}, [
-      el('div', {className: 'kpi-val', textContent: active.length}),
-      el('div', {className: 'kpi-lbl', textContent: 'Active Items'})
-    ]),
-    el('div', {className: 'card kpi'}, [
-      el('div', {className: 'kpi-val good', textContent: completed.length}),
-      el('div', {className: 'kpi-lbl', textContent: 'Completed'})
-    ]),
-    el('div', {className: 'card kpi'}, [
-      el('div', {className: 'kpi-val', textContent: items.filter(function(i){return i.type==='market_insight'}).length}),
-      el('div', {className: 'kpi-lbl', textContent: 'Market Insights'})
-    ])
+  root.appendChild(el('div', {className: 'page-title', style:'display:flex;justify-content:space-between;align-items:center'}, [
+    el('span', {textContent: 'Career'}),
+    el('button', {className: 'btn btn-p', textContent: '+ Add', onClick: function() { showAddForm(); }})
   ]));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'キャリアロードマップ — いつ何をやったか、詳細な記録とともに管理'}));
 
-  if (items.length === 0) {
-    root.appendChild(el('div', {className: 'card'}, [
-      el('div', {className: 'empty'}, [
-        el('div', {textContent: 'キャリア情報なし'}),
-        el('div', {style: 'margin-top:8px;font-size:12px;color:var(--text3)', textContent: '/company で「キャリアについて相談したい」と秘書に話しかけてください'})
-      ])
-    ]));
-    return;
-  }
+  var contentArea = el('div');
+  root.appendChild(contentArea);
 
   var typeConfig = {
     goal: {label: '目標', icon: '◎', color: 'var(--accent2)'},
@@ -1500,36 +1471,188 @@ async function renderCareer(root) {
     reflection: {label: '振り返り', icon: '↻', color: 'var(--text2)'},
     action_item: {label: 'アクション', icon: '→', color: 'var(--blue)'}
   };
-
   var statusCls = {active: 'tag-open', completed: 'tag-done', on_hold: 'tag-low', dropped: 'tag-low'};
-
-  // Group by type
-  var grouped = {};
-  items.forEach(function(i) { if (!grouped[i.type]) grouped[i.type] = []; grouped[i.type].push(i); });
-
-  // Render goals first, then others
   var typeOrder = ['goal', 'action_item', 'milestone', 'strength', 'weakness', 'market_insight', 'reflection'];
-  typeOrder.forEach(function(type) {
-    var typeItems = grouped[type]; if (!typeItems) return;
-    var cfg = typeConfig[type] || {label: type, icon: '·', color: 'var(--text2)'};
 
-    root.appendChild(el('div', {className: 'section-title', textContent: cfg.icon + ' ' + cfg.label + ' (' + typeItems.length + ')'}));
-    var card = el('div', {className: 'card', style: 'margin-bottom:20px'});
+  async function loadAndRender() {
+    while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
+    var items = (await sb.from('career').select('*').order('updated_at', {ascending: false})).data || [];
+    var active = items.filter(function(i){return i.status==='active';});
+    var completed = items.filter(function(i){return i.status==='completed';});
 
-    typeItems.forEach(function(item) {
-      card.appendChild(el('div', {style: 'padding:12px 0;border-bottom:1px solid var(--border)'}, [
-        el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:4px'}, [
-          el('span', {style: 'color:' + cfg.color + ';font-size:14px', textContent: cfg.icon}),
-          el('span', {style: 'font-weight:500;font-size:13px;flex:1', textContent: item.title}),
-          item.priority === 'high' ? el('span', {className: 'tag tag-high', textContent: 'high'}) : null,
-          el('span', {className: 'tag ' + (statusCls[item.status] || 'tag-low'), textContent: item.status})
-        ].filter(Boolean)),
-        item.description ? el('div', {style: 'font-size:12px;color:var(--text2);margin-left:26px;margin-bottom:4px', textContent: item.description}) : null,
-        item.target_date ? el('div', {style: 'font-size:10px;color:var(--text3);margin-left:26px;font-family:var(--mono)', textContent: '期限: ' + item.target_date}) : null
-      ].filter(Boolean)));
+    // KPI
+    contentArea.appendChild(el('div', {className: 'g4', style: 'margin-bottom:24px'}, [
+      el('div', {className: 'card kpi'}, [el('div', {className: 'kpi-val', textContent: items.filter(function(i){return i.type==='goal';}).length}), el('div', {className: 'kpi-lbl', textContent: 'Goals'})]),
+      el('div', {className: 'card kpi'}, [el('div', {className: 'kpi-val', textContent: active.length}), el('div', {className: 'kpi-lbl', textContent: 'Active'})]),
+      el('div', {className: 'card kpi'}, [el('div', {className: 'kpi-val good', textContent: completed.length}), el('div', {className: 'kpi-lbl', textContent: 'Completed'})]),
+      el('div', {className: 'card kpi'}, [el('div', {className: 'kpi-val', textContent: items.length}), el('div', {className: 'kpi-lbl', textContent: 'Total'})])
+    ]));
+
+    if (items.length === 0) {
+      contentArea.appendChild(el('div', {className: 'card'}, [el('div', {className: 'empty', textContent: '+ Add ボタンでキャリアアイテムを追加してください'})]));
+      return;
+    }
+
+    // === Timeline view (completed items with dates) ===
+    var timeline = completed.filter(function(i){return i.completed_at;}).sort(function(a,b){return b.completed_at > a.completed_at ? 1 : -1;});
+    if (timeline.length > 0) {
+      contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Timeline'}));
+      var tlCard = el('div', {className: 'card', style: 'margin-bottom:24px;position:relative;padding-left:24px'});
+      // Vertical line
+      tlCard.appendChild(el('div', {style: 'position:absolute;left:11px;top:12px;bottom:12px;width:2px;background:var(--border)'}));
+      timeline.forEach(function(item) {
+        var cfg = typeConfig[item.type] || {icon:'·',color:'var(--text2)'};
+        var row = el('div', {style: 'padding:12px 0;position:relative'});
+        // Dot
+        row.appendChild(el('div', {style: 'position:absolute;left:-20px;top:16px;width:10px;height:10px;border-radius:50%;background:'+cfg.color+';border:2px solid var(--surface)'}));
+        row.appendChild(el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:4px'}, [
+          el('span', {style: 'font-family:var(--mono);font-size:11px;color:var(--text3)', textContent: item.completed_at}),
+          el('span', {style: 'font-weight:600;font-size:13px', textContent: item.title})
+        ]));
+        if (item.description) row.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);margin-bottom:4px', textContent: item.description}));
+        if (item.notes) row.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);background:var(--surface2);padding:8px 10px;border-radius:var(--r);margin-top:4px;white-space:pre-wrap;line-height:1.6', textContent: item.notes}));
+        // Edit button
+        var editBtn = el('button', {className: 'btn btn-g btn-sm', style: 'margin-top:4px;font-size:11px', textContent: 'Edit'});
+        editBtn.addEventListener('click', function() { showEditForm(item); });
+        row.appendChild(editBtn);
+        tlCard.appendChild(row);
+      });
+      contentArea.appendChild(tlCard);
+    }
+
+    // === Group active by type ===
+    var grouped = {};
+    items.forEach(function(i) { if (!grouped[i.type]) grouped[i.type] = []; grouped[i.type].push(i); });
+
+    typeOrder.forEach(function(type) {
+      var typeItems = grouped[type]; if (!typeItems) return;
+      var cfg = typeConfig[type] || {label: type, icon: '·', color: 'var(--text2)'};
+      contentArea.appendChild(el('div', {className: 'section-title', textContent: cfg.icon + ' ' + cfg.label + ' (' + typeItems.length + ')'}));
+      var card = el('div', {className: 'card', style: 'margin-bottom:20px'});
+
+      typeItems.forEach(function(item) {
+        var row = el('div', {style: 'padding:12px 0;border-bottom:1px solid var(--border)'});
+        // Header row
+        var header = el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:4px'});
+        header.appendChild(el('span', {style: 'color:'+cfg.color+';font-size:14px', textContent: cfg.icon}));
+        header.appendChild(el('span', {style: 'font-weight:500;font-size:13px;flex:1', textContent: item.title}));
+        if (item.priority === 'high') header.appendChild(el('span', {className: 'tag tag-high', textContent: 'high'}));
+        header.appendChild(el('span', {className: 'tag ' + (statusCls[item.status]||'tag-low'), textContent: item.status}));
+        row.appendChild(header);
+
+        if (item.description) row.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);margin-left:26px;margin-bottom:4px', textContent: item.description}));
+        if (item.notes) row.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);margin-left:26px;background:var(--surface2);padding:8px 10px;border-radius:var(--r);margin-top:4px;margin-bottom:4px;white-space:pre-wrap;line-height:1.6', textContent: item.notes}));
+
+        // Dates
+        var dates = [];
+        if (item.target_date) dates.push('Target: ' + item.target_date);
+        if (item.completed_at) dates.push('Done: ' + item.completed_at);
+        dates.push('Updated: ' + (item.updated_at||'').substring(0,10));
+        row.appendChild(el('div', {style: 'font-size:10px;color:var(--text3);margin-left:26px;font-family:var(--mono)', textContent: dates.join(' | ')}));
+
+        // Action buttons
+        var actions = el('div', {style: 'display:flex;gap:6px;margin-left:26px;margin-top:6px'});
+        var editBtn = el('button', {className: 'btn btn-g btn-sm', style: 'font-size:11px', textContent: 'Edit'});
+        editBtn.addEventListener('click', function() { showEditForm(item); });
+        actions.appendChild(editBtn);
+        if (item.status === 'active') {
+          var doneBtn = el('button', {className: 'btn btn-sm', style: 'font-size:11px;background:var(--green);color:#fff', textContent: 'Complete'});
+          doneBtn.addEventListener('click', async function() {
+            var today = new Date().toISOString().substring(0,10);
+            await sb.from('career').update({status:'completed',completed_at:today}).eq('id',item.id);
+            toast('Completed!');
+            loadAndRender();
+          });
+          actions.appendChild(doneBtn);
+        }
+        var delBtn = el('button', {className: 'btn btn-sm', style: 'font-size:11px;color:var(--red)', textContent: 'Delete'});
+        delBtn.addEventListener('click', async function() {
+          if (confirm('Delete "' + item.title + '"?')) {
+            await sb.from('career').delete().eq('id', item.id);
+            toast('Deleted');
+            loadAndRender();
+          }
+        });
+        actions.appendChild(delBtn);
+        row.appendChild(actions);
+        card.appendChild(row);
+      });
+      contentArea.appendChild(card);
     });
-    root.appendChild(card);
-  });
+  }
+
+  // === Add / Edit Form (modal-like) ===
+  function showAddForm() { showEditForm(null); }
+
+  function showEditForm(item) {
+    var isEdit = !!item;
+    var modal = el('div', {style: 'position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3)'});
+    var box = el('div', {style: 'background:var(--surface);border-radius:var(--r2);padding:24px;max-width:520px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)'});
+
+    box.appendChild(el('div', {style: 'font-size:16px;font-weight:700;margin-bottom:16px', textContent: isEdit ? 'Edit Career Item' : 'New Career Item'}));
+
+    function field(label, tag, attrs, val) {
+      box.appendChild(el('div', {style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;margin-top:12px', textContent: label}));
+      var inp = el(tag, Object.assign({className: 'input', style: 'width:100%;font-size:13px'}, attrs));
+      if (tag === 'select') {
+        (attrs.options || []).forEach(function(o) { inp.appendChild(el('option', {value: o[0], textContent: o[1]})); });
+        inp.value = val || '';
+      } else if (tag === 'textarea') {
+        inp.style.minHeight = '80px';
+        inp.style.resize = 'vertical';
+        inp.value = val || '';
+      } else {
+        inp.value = val || '';
+      }
+      box.appendChild(inp);
+      return inp;
+    }
+
+    var fTitle = field('Title', 'input', {placeholder: 'e.g. GPT-5 Agent Loop Implementation'}, item ? item.title : '');
+    var fType = field('Type', 'select', {options: typeOrder.map(function(t){return [t, typeConfig[t] ? typeConfig[t].icon+' '+typeConfig[t].label : t];})}, item ? item.type : 'goal');
+    var fStatus = field('Status', 'select', {options: [['active','Active'],['completed','Completed'],['on_hold','On Hold'],['dropped','Dropped']]}, item ? item.status : 'active');
+    var fPriority = field('Priority', 'select', {options: [['normal','Normal'],['high','High'],['low','Low']]}, item ? item.priority : 'normal');
+    var fDescription = field('Description', 'input', {placeholder: 'Short summary'}, item ? item.description : '');
+    var fNotes = field('Notes (detailed)', 'textarea', {placeholder: 'What exactly did you do? What did you learn? Details...'}, item ? item.notes : '');
+    var fTargetDate = field('Target Date', 'input', {type: 'date'}, item ? item.target_date : '');
+    var fCompletedAt = field('Completed Date', 'input', {type: 'date'}, item ? item.completed_at : '');
+
+    var btnRow = el('div', {style: 'display:flex;gap:8px;margin-top:20px'});
+    var saveBtn = el('button', {className: 'btn btn-p', textContent: isEdit ? 'Update' : 'Create'});
+    saveBtn.addEventListener('click', async function() {
+      var data = {
+        title: fTitle.value.trim(),
+        type: fType.value,
+        status: fStatus.value,
+        priority: fPriority.value,
+        description: fDescription.value.trim() || null,
+        notes: fNotes.value.trim() || null,
+        target_date: fTargetDate.value || null,
+        completed_at: fCompletedAt.value || null
+      };
+      if (!data.title) { toast('Title is required'); return; }
+      if (isEdit) {
+        await sb.from('career').update(data).eq('id', item.id);
+        toast('Updated!');
+      } else {
+        await sb.from('career').insert(data);
+        toast('Created!');
+      }
+      document.body.removeChild(modal);
+      loadAndRender();
+    });
+    var cancelBtn = el('button', {className: 'btn btn-g', textContent: 'Cancel'});
+    cancelBtn.addEventListener('click', function() { document.body.removeChild(modal); });
+    btnRow.appendChild(saveBtn);
+    btnRow.appendChild(cancelBtn);
+    box.appendChild(btnRow);
+
+    modal.appendChild(box);
+    modal.addEventListener('click', function(e) { if (e.target === modal) document.body.removeChild(modal); });
+    document.body.appendChild(modal);
+  }
+
+  loadAndRender();
 }
 
 // ============================================================
