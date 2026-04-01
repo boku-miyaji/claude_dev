@@ -60,17 +60,18 @@ const MAX_HISTORY = 20;
 const MAX_TOOL_RESULT_CHARS = 4000;
 
 const MODEL_MAP: Record<string, string> = {
-  simple: "gpt-4.1-nano",
-  moderate: "gpt-4.1",
-  complex: "o4-mini",
+  simple: "gpt-5-nano",
+  moderate: "gpt-5-mini",
+  complex: "gpt-5",
 };
 
 const COST_TABLE: Record<string, { input: number; output: number }> = {
+  "gpt-5-nano": { input: 0.05 / 1e6, output: 0.40 / 1e6 },
+  "gpt-5-mini": { input: 0.25 / 1e6, output: 2.0 / 1e6 },
+  "gpt-5": { input: 1.25 / 1e6, output: 10.0 / 1e6 },
   "gpt-4.1-nano": { input: 0.10 / 1e6, output: 0.40 / 1e6 },
-  "gpt-4.1-mini": { input: 0.40 / 1e6, output: 1.60 / 1e6 },
   "gpt-4.1": { input: 2.0 / 1e6, output: 8.0 / 1e6 },
   "o4-mini": { input: 1.10 / 1e6, output: 4.40 / 1e6 },
-  "o3": { input: 2.0 / 1e6, output: 8.0 / 1e6 },
   "claude-sonnet-4-6": { input: 3.0 / 1e6, output: 15.0 / 1e6 },
   "claude-haiku-4-5": { input: 1.0 / 1e6, output: 5.0 / 1e6 },
 };
@@ -524,7 +525,7 @@ async function classifyComplexity(message: string): Promise<string> {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-4.1-nano", temperature: 0, max_tokens: 5,
+        model: "gpt-5-nano", temperature: 0, max_tokens: 5,
         messages: [{ role: "user", content: `Classify complexity as "simple","moderate","complex":\n- simple: translation, factual, casual, short summary\n- moderate: code explanation, analysis, comparison\n- complex: architecture, long reasoning, strategy, multi-step\nMessage: "${message.substring(0, 200)}"\nOne word:` }],
       }),
     });
@@ -603,14 +604,14 @@ async function agentLoop(
   if (!selectedModel || selectedModel === "auto") {
     send({ type: "routing", status: "classifying" });
     const c = await classifyComplexity(userMessage);
-    selectedModel = MODEL_MAP[c] || "gpt-4.1";
+    selectedModel = MODEL_MAP[c] || "gpt-5-mini";
     routingReason = `auto: ${c}`;
     send({ type: "routing", status: "done", complexity: c, model: selectedModel, reason: routingReason });
   }
 
   // API key fallback
   if (isAnthropicModel(selectedModel) && !ANTHROPIC_API_KEY) {
-    selectedModel = OPENAI_API_KEY ? "gpt-4.1" : null as unknown as string;
+    selectedModel = OPENAI_API_KEY ? "gpt-5-mini" : null as unknown as string;
     if (!selectedModel) { send({ type: "error", message: "No API keys configured." }); return; }
     routingReason += " (fallback)";
   }
@@ -638,7 +639,7 @@ async function agentLoop(
     totalOut += result.tokensOutput;
 
     if (result.stopReason === "end_turn" || result.toolCalls.length === 0) {
-      const rate = COST_TABLE[selectedModel] || COST_TABLE["gpt-4.1"];
+      const rate = COST_TABLE[selectedModel] || COST_TABLE["gpt-5-mini"];
       const cost = totalIn * rate.input + totalOut * rate.output;
 
       await sb.from("messages").insert({
@@ -684,7 +685,7 @@ async function generateTitle(msg: string): Promise<string> {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-4.1-nano", max_tokens: 20, temperature: 0.5,
+        model: "gpt-5-nano", max_tokens: 20, temperature: 0.5,
         messages: [{ role: "user", content: `Short title (max 6 words, same language as message):\n"${msg.substring(0, 200)}"\nTitle only:` }],
       }),
     });

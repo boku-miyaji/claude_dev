@@ -3957,7 +3957,7 @@ async function renderChat(root) {
       var testRes = await fetch(edgeFnUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session ? session.access_token : ''), 'apikey': SUPABASE_ANON_KEY },
-        body: JSON.stringify({ message: 'ping', model: 'gpt-4.1-nano', context_mode: 'none' })
+        body: JSON.stringify({ message: 'ping', model: 'gpt-5-nano', context_mode: 'none' })
       });
       if (!testRes.ok) chatState.directMode = true;
     } catch (e) { chatState.directMode = true; }
@@ -4034,10 +4034,9 @@ function renderChatMain(container, edgeFnUrl) {
   // Controls bar
   var modelSelect = el('select', {className: 'input', style: 'font-size:11px;width:auto;padding:4px 8px'}, [
     el('option', {value: 'auto', textContent: 'Auto (Recommended)'}),
-    el('option', {value: 'gpt-4.1-nano', textContent: 'GPT-4.1-nano ($0.10/M)'}),
-    el('option', {value: 'gpt-4.1-mini', textContent: 'GPT-4.1-mini ($0.40/M)'}),
-    el('option', {value: 'gpt-4.1', textContent: 'GPT-4.1 ($2.00/M)'}),
-    el('option', {value: 'o4-mini', textContent: 'o4-mini ($1.10/M)'})
+    el('option', {value: 'gpt-5-nano', textContent: 'GPT-5 nano ($0.05/M)'}),
+    el('option', {value: 'gpt-5-mini', textContent: 'GPT-5 mini ($0.25/M)'}),
+    el('option', {value: 'gpt-5', textContent: 'GPT-5 ($1.25/M)'})
   ]);
   modelSelect.value = chatState.model;
   modelSelect.onchange = function() { chatState.model = modelSelect.value; };
@@ -4130,7 +4129,7 @@ function renderChatMain(container, edgeFnUrl) {
   /** Direct Mode: call OpenAI API from browser */
   async function sendDirectMode(text, statusDiv, contentDiv, messagesArea, assistantDiv) {
     var apiKey = getChatApiKey();
-    var model = chatState.model === 'auto' ? 'gpt-4.1-nano' : chatState.model;
+    var model = chatState.model === 'auto' ? 'gpt-5-nano' : chatState.model;
     statusDiv.textContent = 'Direct Mode \u00B7 ' + model;
 
     // Build conversation history from Supabase (if available)
@@ -4433,11 +4432,11 @@ function renderChatSpec(root) {
     '',
     '| Complexity | Model | Cost (input/1M tokens) |',
     '|-----------|-------|----------------------|',
-    '| Simple (translation, factual) | GPT-4.1-nano | $0.10 |',
-    '| Moderate (analysis, code) | GPT-4.1 | $2.00 |',
-    '| Complex (reasoning, strategy) | o4-mini | $1.10 |',
+    '| Simple (translation, factual) | GPT-5 nano | $0.05 |',
+    '| Moderate (analysis, code) | GPT-5 mini | $0.25 |',
+    '| Complex (reasoning, strategy) | GPT-5 | $1.25 |',
     '',
-    'Classification itself uses GPT-4.1-nano (~$0.0001/call).',
+    'Classification itself uses GPT-5 nano (~$0.00005/call).',
     '',
     '---',
     '',
@@ -4449,7 +4448,7 @@ function renderChatSpec(root) {
     '| Normal | 30 | ~$0.02 | ~$18 |',
     '| Heavy | 50 | ~$0.03 | ~$45 |',
     '',
-    'Auto-routing saves ~60% vs using GPT-4.1 for everything.',
+    'Auto-routing saves ~80% vs using GPT-5 for everything.',
     '',
     '---',
     '',
@@ -4547,7 +4546,7 @@ async function renderSettings(root) {
       var r = await fetch(SUPABASE_URL + '/functions/v1/ai-agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.data.session?.access_token, 'apikey': SUPABASE_ANON_KEY },
-        body: JSON.stringify({ message: 'ping', model: 'gpt-4.1-nano', context_mode: 'none' })
+        body: JSON.stringify({ message: 'ping', model: 'gpt-5-nano', context_mode: 'none' })
       });
       if (r.ok) { toast('AI Chat is working!'); testChatBtn.textContent = '\u2713 Connected'; }
       else { toast('Error: ' + r.status); testChatBtn.textContent = 'Failed (' + r.status + ')'; }
