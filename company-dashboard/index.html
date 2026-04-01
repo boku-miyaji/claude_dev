@@ -5608,6 +5608,7 @@ async function renderChat(root) {
   // Auto-detect Edge Function
   if (!chatState.directMode && !getChatApiKey()) {
     try {
+      await sb.auth.refreshSession();
       var session = (await sb.auth.getSession()).data.session;
       var testRes = await fetch(edgeFnUrl, {method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?session.access_token:''),'apikey':SUPABASE_ANON_KEY},body:JSON.stringify({message:'ping',model:'gpt-5-nano',context_mode:'none'})});
       if (!testRes.ok) chatState.directMode = true;
@@ -5957,7 +5958,9 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     var fullText = '';
     var images = (attachments||[]).filter(function(a){return a.type.startsWith('image/');}).map(function(a){return {data_url:a.dataUrl,name:a.name,type:a.type};});
     try {
-      var session = await sb.auth.getSession();
+      // Refresh session to avoid expired JWT → 401 from Supabase gateway
+      var refreshed = await sb.auth.refreshSession();
+      var session = refreshed.data.session ? refreshed : await sb.auth.getSession();
       var token = session.data.session ? session.data.session.access_token : '';
       var res = await fetch(edgeFnUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
         body:JSON.stringify({conversation_id:chatState.conversationId,message:text,model:chatState.model,context_mode:chatState.contextMode,company_id:chatState.companyId,reasoning_effort:chatState.reasoningEffort,images:images.length?images:undefined,precision_mode:chatState.precisionMode||undefined}),signal:signal});
