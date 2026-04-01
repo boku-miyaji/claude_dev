@@ -253,6 +253,11 @@
             "type": "command",
             "command": ".claude/hooks/post-edit-check.sh",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/artifact-auto-sync.sh",
+            "async": true
           }
         ]
       }

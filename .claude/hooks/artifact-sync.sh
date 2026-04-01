@@ -25,6 +25,22 @@ echo "$ARTIFACTS" | python3 -c "import sys,json; json.load(sys.stdin)" 2>/dev/nu
 COUNT=$(echo "$ARTIFACTS" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")
 [ "$COUNT" = "0" ] && exit 0
 
+# Generate local cache for PostToolUse auto-sync
+CACHE_FILE="$SCRIPT_DIR/artifacts-cache.json"
+echo "$ARTIFACTS" | python3 -c "
+import sys, json, os
+artifacts = json.load(sys.stdin)
+project_dir = '$PROJECT_DIR'
+cache = {}
+for art in artifacts:
+    fp = art['file_path']
+    if not fp.startswith('/'):
+        fp = os.path.join(project_dir, fp)
+    fp = os.path.normpath(fp)
+    cache[fp] = art['id']
+json.dump(cache, sys.stdout)
+" > "$CACHE_FILE" 2>/dev/null || true
+
 # Process each artifact
 echo "$ARTIFACTS" | python3 -c "
 import sys, json, hashlib, subprocess, os
@@ -66,7 +82,12 @@ for art in artifacts:
         'last_synced_at': 'now()'
     }).encode()
 
-    # Use curl for consistency with other hooks
+    # Write payload to temp file to avoid argument list too long
+    import tempfile
+    tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+    json.dump({'content': content, 'content_hash': new_hash}, tmp)
+    tmp.close()
+
     subprocess.run([
         'curl', '-4', '-s', '-o', '/dev/null',
         f'{supabase_url}/rest/v1/artifacts?id=eq.{art_id}',
@@ -76,9 +97,11 @@ for art in artifacts:
         '-H', 'Content-Type: application/json',
         '-H', 'Prefer: return=minimal',
         '-H', f'x-ingest-key: {ingest_key}',
-        '-d', json.dumps({'content': content, 'content_hash': new_hash}),
-        '--connect-timeout', '5', '--max-time', '15'
+        '-d', f'@{tmp.name}',
+        '--connect-timeout', '5', '--max-time', '30'
     ], capture_output=True)
+
+    os.unlink(tmp.name)
 " 2>/dev/null || true
 
 exit 0
