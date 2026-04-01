@@ -18,6 +18,7 @@
 | 資料制作 | departments/materials/ | 提案書・デモ資料・説明資料 |
 | リサーチ | departments/research/ | 市場・技術・企業調査 |
 | 情報収集 | departments/intelligence/ | X監視・キーワード検索・Web巡回 |
+| セキュリティ | departments/security/ | サプライチェーンセキュリティ・監査・ポリシー管理 |
 
 ## アーキテクチャ概要
 

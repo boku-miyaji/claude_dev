@@ -27,9 +27,13 @@
     ├── pm/CLAUDE.md                   ← PM
     ├── materials/CLAUDE.md            ← 資料制作
     ├── research/CLAUDE.md             ← リサーチ
-    └── intelligence/                  ← 情報収集部
+    ├── intelligence/                  ← 情報収集部
+    │   ├── CLAUDE.md
+    │   ├── sources.yaml
+    └── security/                      ← セキュリティ部
         ├── CLAUDE.md
-        ├── sources.yaml
+        ├── audits/
+        └── policies/
         └── reports/
 
 .company-{name}/                       子会社（PJ固有コンテキストのみ）
@@ -178,6 +182,7 @@ PJ会社一覧は `registry.md` を参照。
 | 資料制作部 | `.claude/agents/dept-materials.md` | 資料、プレゼン、提案書、デモ |
 | リサーチ部 | `.claude/agents/dept-research.md` | 調べて、調査、競合、市場 |
 | 情報収集部 | `.claude/agents/dept-intelligence.md` | 最新情報、ニュース、X、キャッチアップ |
+| セキュリティ部 | — | サプライチェーンセキュリティ、Actions SHA固定、依存関係ガバナンス |
 | QA検証部 | `.claude/agents/dept-qa.md` | パイプライン検証ゲート |
 
 **並列実行例**: リサーチ + 資料制作が独立している場合、2つのAgentを同時起動可能
