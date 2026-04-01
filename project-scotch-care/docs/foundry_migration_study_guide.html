@@ -1226,18 +1226,18 @@
         <span class="tag tag-databricks">ETL</span>
       </div>
       <div class="card">
-        <h4>Mosaic AI Agent Framework</h4>
-        <p>RAG（検索拡張生成）ベースのAIエージェントを構築・評価・デプロイ。介護記録の検索、ケアプラン支援等に適用可能。MLflow連携で実験管理も統合。</p>
+        <h4>Mosaic AI — Agent Bricks / MLflow 3.0</h4>
+        <p>Agent Framework (GA)に加え、<strong>Agent Bricks (Beta)</strong>でノーコードAIエージェント構築が可能に。<strong>MLflow 3.0 (GA)</strong>はGenAI特化に再設計。AI Gateway (GA)で全AIサービスを統一管理。</p>
         <span class="tag tag-databricks">GenAI</span>
       </div>
       <div class="card">
-        <h4>Delta Lake 4.0 / UniForm</h4>
-        <p>Delta Lake、Iceberg、Hudi 間の互換性を確保するUniFormが成熟。特定フォーマットへのロックインリスクが低下。</p>
+        <h4>Delta Lake 4.0-4.1 / UniForm</h4>
+        <p>Delta 4.0 (2025-09): Coordinated Commits（マルチエンジン書き込み）、Variant型。4.1.0 (2026-03)が最新安定版。UniForm (GA)でIceberg互換メタデータ自動生成。<strong>ただしIceberg側からの書き込みは不可（読み取り専用）</strong>。</p>
         <span class="tag tag-databricks">OSS</span>
       </div>
       <div class="card">
-        <h4>Serverless Compute（全面展開）</h4>
-        <p>クラスタ管理不要のサーバーレス実行環境。SQL、ノートブック、ジョブ全てでServerless対応が進行。起動時間短縮 + コスト最適化。</p>
+        <h4>Serverless全面GA + Lakebase</h4>
+        <p>SQL/Notebooks/Jobs/Pipelines全てServerless GA。GPU Computeはまだ Beta。新発表の<strong>Lakebase</strong> (Preview)はNeonベースのPostgres互換OLTPデータベース。OLTPとOLAPの統合基盤を志向。</p>
         <span class="tag tag-databricks">インフラ</span>
       </div>
     </div>
@@ -1281,8 +1281,8 @@
         <p>Anthropicが提唱した、外部AIツールからデータ基盤にアクセスする標準規格（2024末〜）。Tableau、Databricks等がMCP対応を発表。「AIがデータに繋がる」ための標準インターフェースとして急速に普及中。ただしエンタープライズ本番運用の実績はまだ限定的。</p>
       </div>
       <div class="card">
-        <h4>Data Fabric / Data Mesh の収束</h4>
-        <p>2022-2023に話題になったData Meshは、実装の難しさから「ハイブリッド」に収束。中央基盤（レイクハウス） + ドメインごとの自律性を段階的に拡大する「Federated Lakehouse」が現実的な着地点。</p>
+        <h4>Data Mesh → ハイブリッド収束（Gartner 2025）</h4>
+        <p>「対立」から「統合」へ。Lakehouseが技術基盤、Meshが組織モデルとして補完関係に収束。Gartner 2025: 67%の企業で中央データチームが過負荷、分析リクエスト対応は平均34日に悪化。<strong>Lakehouse基盤 + Mesh原則のハイブリッド</strong>が2026年の主流。</p>
       </div>
     </div>
 
@@ -1351,20 +1351,20 @@
         <td><strong>強み</strong></td>
         <td>AI/ML統合、PySpark互換、OSS(Delta Lake)</td>
         <td>SQL中心で学習コスト低、データシェアリング</td>
-        <td>Microsoft製品統合、Power BI直結</td>
+        <td>MS全製品統合、31,000+顧客(MS最速成長PF)</td>
         <td rowspan="5" style="vertical-align:middle;font-weight:600;color:var(--accent-light);">Databricksが最適。<br>理由:<br>1. PySpark互換(Foundry移行)<br>2. AI/ML統合(将来のAI活用)<br>3. AWS上で動作(既存環境活用)<br>4. RFI 2社が提案(富士通・デロイト)</td>
       </tr>
       <tr>
         <td><strong>弱み</strong></td>
-        <td>学習コスト、コスト管理の複雑さ</td>
-        <td>AI/ML機能がDatabricksに劣後</td>
-        <td>Azure前提、成熟度がまだ低い</td>
+        <td>学習コスト、Serverless長時間利用のコスト</td>
+        <td>モデル訓練/FTがDatabricksに劣後。Cortex AIコスト暴走リスク</td>
+        <td>Azure限定。日本事例は増加中だが大規模介護PJは未確認</td>
       </tr>
       <tr>
         <td><strong>AI/ML</strong></td>
-        <td style="color:var(--green);">◎ MLflow + Mosaic AI</td>
-        <td style="color:var(--amber);">○ Cortex(急速改善中)</td>
-        <td style="color:var(--amber);">○ Azure OpenAI連携</td>
+        <td style="color:var(--green);">◎ MLflow 3.0 + Agent Bricks + Mosaic AI</td>
+        <td style="color:var(--amber);">○ Cortex AI (9,100+アカウント) + Anthropic $200M提携</td>
+        <td style="color:var(--amber);">○ Fabric IQ + Data Agents (GA) + Copilot全SKU開放</td>
       </tr>
       <tr>
         <td><strong>セマンティック</strong></td>
@@ -1416,16 +1416,16 @@
       <tr>
         <td><strong>AI/ML統合</strong></td>
         <td>AIP (Ontology統合)<br><span style="font-size:12px;">LLM連携は発展途上</span></td>
-        <td style="color:var(--green);">◎ Mosaic AI全GA<br><span style="font-size:12px;">Vector Search, Agent FW, MLflow</span></td>
-        <td>○ Cortex AI<br><span style="font-size:12px;">6,100+アカウント利用。Claude統合</span></td>
-        <td>○ Copilot + AzureML<br><span style="font-size:12px;">MS AIスタック全体と統合</span></td>
+        <td style="color:var(--green);">◎ Mosaic AI全GA<br><span style="font-size:12px;">Agent Bricks, MLflow 3.0, Vector Search</span></td>
+        <td>○ Cortex AI<br><span style="font-size:12px;">週9,100+アカウント利用。AI WL 200%超成長</span></td>
+        <td>○ Copilot + AzureML<br><span style="font-size:12px;">Fabric IQ/Data Agents GA。31,000+顧客</span></td>
       </tr>
       <tr>
         <td><strong>ガバナンス</strong></td>
         <td>Ontologyベース<br><span style="font-size:12px;">強力だが独自</span></td>
         <td style="color:var(--green);">Unity Catalog (OSS)<br><span style="font-size:12px;">データ〜AI一元管理</span></td>
         <td>Horizon + Polaris<br><span style="font-size:12px;">SF内は強い</span></td>
-        <td>OneLake Security<br><span style="font-size:12px;">Preview。Purview連携</span></td>
+        <td>OneLake Security<br><span style="font-size:12px;">間もなくGA。行/列/オブジェクトレベル統一</span></td>
       </tr>
       <tr>
         <td><strong>オープン性</strong></td>
@@ -1458,25 +1458,25 @@
       <tr>
         <td><strong>Dremio</strong></td>
         <td>Iceberg中心のレイクハウスエンジン。Arrow Flightで超高速転送</td>
-        <td>Built-in Open Catalog。JDBC/ODBCの10-100倍高速データ転送</td>
+        <td>2025年11月「Agentic Lakehouse」発表。Open Catalog (Polarisベース) が全アカウント標準搭載</td>
         <td>△ Icebergネイティブだが、AI/ML統合がなく、ETL→BI→AIの一気通貫は困難</td>
       </tr>
       <tr>
         <td><strong>StarRocks / Doris</strong></td>
         <td>リアルタイム分析特化のMPPデータベース。元は同じコードベース</td>
-        <td>StarRocks v4.0: TPC-DSで前年比60%高速化。低レイテンシ分析に強い</td>
+        <td>StarRocks v4.0: TPC-DS 60%高速化。<strong>Icebergネイティブ書き込み対応</strong>。JSON処理3-15x高速化</td>
         <td>△ BI用のサービングレイヤーとしては候補になりうるが、基盤としては機能不足</td>
       </tr>
       <tr>
         <td><strong>DuckDB / MotherDuck</strong></td>
         <td>インプロセス分析DB（SQLite的）。MotherDuckはクラウド版</td>
-        <td>v1.4.0: Iceberg書き込み対応、1TB/30秒。開発・探索分析に最適</td>
+        <td>v1.5.0 (2026-03): v1.0比40-46%高速化。MotherDuckはMCP Server対応（Claude/Cursor連携）</td>
         <td>○ データエンジニアのローカル開発環境やCI/CDでの品質チェックに活用可能</td>
       </tr>
       <tr>
         <td><strong>ClickHouse Cloud</strong></td>
         <td>列指向OLAP。超高速スキャン・文字列処理</td>
-        <td>フルテーブルスキャンに強い。リアルタイムログ分析向き</td>
+        <td>2025年: BYOC(AWS) GA、Langfuse買収(LLMオブザーバビリティ)、Postgres CDCも GA</td>
         <td>× SQL互換性限定的。チューニングに専門知識要。エンジニアリング主導向き</td>
       </tr>
       <tr>
@@ -1500,9 +1500,10 @@
               （メタデータ変換）
 
 <span class="green">結論: データは1コピー、メタデータで相互運用する時代</span>
-  ・Delta UniForm: Delta で書き込み → Iceberg メタデータを自動生成 → Snowflake/Trino から読み取り可能
-  ・Apache Polaris: 2026年2月に Apache TLP 昇格。Iceberg カタログの標準 API
-  ・Iceberg REST Catalog API: Databricks Unity Catalog が公開 → Snowflake/Trino/EMR からアクセス
+  ・Delta UniForm (GA): Delta で書き込み → Iceberg メタデータを自動生成 → Snowflake/Trino から読み取り可能
+  ・Snowflake Iceberg 双方向Write (2025年10月GA): 外部エンジンからSnowflake管理Icebergテーブルへ書き込み可能に
+  ・Apache Polaris: 2026年2月に Apache TLP 昇格。100名超のコントリビューター、2,800超のPR
+  ・Iceberg REST Catalog API: Unity Catalog が公開（ただしまだPublic Preview）→ GA待ちに注意
 
 <span class="amber">つまり: 「Databricks vs Snowflake」の二者択一ではなく、両方が同じデータにアクセスできる</span>
     </div>
@@ -1608,8 +1609,8 @@
       </div>
       <div class="card">
         <h4>Lakehouse Federation</h4>
-        <p>Databricksから以下のデータソースにフェデレーテッドクエリ可能:</p>
-        <p style="font-size:13px;color:var(--text-muted);">MySQL, PostgreSQL, Amazon Redshift, Snowflake, SQL Server, Azure Synapse, Google BigQuery, 他のDatabricksワークスペース</p>
+        <p>Databricksから12+データソースにフェデレーテッドクエリ可能:</p>
+        <p style="font-size:13px;color:var(--text-muted);">MySQL, PostgreSQL, Amazon Redshift, Snowflake, SQL Server, Azure Synapse, Google BigQuery, <strong>Teradata, Oracle</strong> (2025年7月GA追加), Salesforce Data Cloud, Hive Metastore, 他のDatabricksワークスペース</p>
       </div>
       <div class="card">
         <h4>Apache Polaris（標準カタログ）</h4>
@@ -1650,8 +1651,8 @@
       <tr>
         <td><strong>Fabric</strong></td>
         <td>RBAC</td>
-        <td style="color:var(--amber);">Preview</td>
-        <td style="color:var(--amber);">Preview</td>
+        <td style="color:var(--green);">間もなくGA</td>
+        <td style="color:var(--green);">間もなくGA</td>
         <td>Purview連携</td>
         <td>Sensitivity Labels</td>
       </tr>
@@ -1715,6 +1716,11 @@
     <div class="callout warn">
       <strong>権限設計は Phase 0（基盤構築と同時）で行う</strong>
       <p style="margin-top:8px;">データが入る前にIAM統合、ロール設計、マスキングルール、監査ポリシーを定義する。後付けは指数関数的にコストが増える。RFPの評価項目に「権限設計の具体性」を入れるべき。</p>
+    </div>
+
+    <div class="callout">
+      <strong>補足: 個人情報保護法の2026年改正動向</strong>
+      <p style="margin-top:8px;">2026年1月、個人情報保護委員会が「制度改正方針」を公表。<strong>要配慮個人情報（病歴・診療情報等）の取得について、統計作成目的に限定し本人同意不要とする条件の緩和</strong>を検討中。2026年通常国会で改正法案提出見込み。介護データ基盤の権限設計は現行ガイダンスに基づきつつ、改正の方向性も視野に入れておくべき。</p>
     </div>
 
     <h3 id="s6d-code">加工コード管理 — 発散させない仕組み</h3>
@@ -1806,7 +1812,7 @@ models:
           <tr><td>SLA契約</td><td>dbt source freshness</td><td>データ到着の遅延許容値</td></tr>
           <tr><td>セマンティック契約</td><td>Semantic Layer (dbt Metrics)</td><td>ビジネス指標の定義</td></tr>
         </table>
-        <p style="font-size:13px;margin-top:8px;color:var(--text-muted);">2028年のCareBaseリプレース時、スキーマが変わってもデータコントラクトが変更を自動検知 → 局所対応で済む。なければETL全面改修（基盤費用の30-50%追加リスク）。</p>
+        <p style="font-size:13px;margin-top:8px;color:var(--text-muted);">dbt model contractsはGA済み。<strong>Gartner Hype Cycle for Data Management 2025</strong>でもデータコントラクトが新興メカニズムとして登場。ベストプラクティスは全モデルではなく<strong>公開APIモデルに限定適用</strong>。2028年のCareBaseリプレース時、スキーマ変更をデータコントラクトが自動検知 → 局所対応で済む。</p>
       </div>
     </div>
 
@@ -1816,7 +1822,7 @@ models:
 
 <span class="highlight">feature branch</span>
   ├── dbt model 変更
-  ├── CI: <span class="green">dbt build --select state:modified+</span>（slim CI: 変更分だけテスト）
+  ├── CI: <span class="green">dbt build --select state:modified+</span>（slim CI: 変更分だけテスト。<span class="amber">CIコスト90%以上削減の実績</span>）
   ├── CI: <span class="green">dbt test</span>（単体テスト + データテスト）
   ├── CI: <span class="green">SQLFluff lint</span>（SQL品質チェック）
   └── <span class="amber">PR Review</span> → merge to main
@@ -1851,14 +1857,16 @@ models:
           <li><strong>Serverless</strong>: コンピュートの起動/停止を自動管理。過剰プロビジョニングを排除</li>
           <li><strong>Commit割引</strong>: 1年/3年のDBUコミットメントで20-40%割引</li>
           <li><strong>チャージバック</strong>: 部門/チーム別にDBU使用量を可視化。「誰のクエリが高い」を特定</li>
-          <li><strong>ストレージ最適化</strong>: Delta OPTIMIZE/VACUUM + S3 Intelligent-Tiering</li>
+          <li><strong>FOCUS形式</strong>: 標準課金フォーマット。Databricksがプライベートプレビュー提供開始</li>
+          <li><strong>Agentic FinOps</strong>: ML+リアルタイムテレメトリで自動リサイズ・アイドル停止。Flexera等が提供</li>
+          <li><strong>ストレージ最適化</strong>: Delta OPTIMIZE/VACUUM LITE (4.0新機能) + S3 Intelligent-Tiering</li>
         </ul>
       </div>
       <div class="card">
         <h4>変更管理（パイプライン変更のデプロイ）</h4>
         <ul>
           <li><strong>バージョン管理</strong>: Git（GitHub/GitLab）+ trunk-based development</li>
-          <li><strong>CI/CD</strong>: Databricks Asset Bundles or GitHub Actions</li>
+          <li><strong>CI/CD</strong>: Databricks Asset Bundles (DABs) + GitHub Actions OIDC認証（PAT不要のセキュアデプロイ）</li>
           <li><strong>テスト</strong>: dbt test + カスタムデータ品質テスト + 統合テスト</li>
           <li><strong>デプロイ</strong>: Blue/Green（ダウンタイムゼロ）</li>
           <li><strong>ロールバック</strong>: Delta Time Travel で即時復元（30日間）</li>
