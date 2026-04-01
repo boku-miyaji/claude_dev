@@ -2969,8 +2969,7 @@ async function finProjects(root) {
 }
 
 // --- Finance: Invoices ---
-var invoiceStatusColors = {draft:'var(--text3)',sent:'#3b82f6',paid:'#22c55e',overdue:'#ef4444',cancelled:'var(--text3)'};
-var invoiceStatusLabels = {draft:'下書',sent:'送付済',paid:'入金済',overdue:'期限超過',cancelled:'取消'};
+// Invoice status constants removed — status is auto-set to 'sent' on save
 
 // PDF text extraction using PDF.js
 async function extractPdfText(file) {
