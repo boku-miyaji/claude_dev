@@ -7,6 +7,7 @@
     "shd101wyy.markdown-preview-enhanced": ["ui"]
   },
   "workbench.colorCustomizations": {
+<<<<<<< Updated upstream
     "activityBar.activeBackground": "#e8d154",
     "activityBar.background": "#e8d154",
     "activityBar.foreground": "#15202b",
@@ -44,4 +45,25 @@
     "**/.expo/**": true,
     "**/coverage/**": true
   }
+=======
+    "activityBar.activeBackground": "#7ea7dc",
+    "activityBar.background": "#7ea7dc",
+    "activityBar.foreground": "#15202b",
+    "activityBar.inactiveForeground": "#15202b99",
+    "activityBarBadge.background": "#f8e6ee",
+    "activityBarBadge.foreground": "#15202b",
+    "commandCenter.border": "#15202b99",
+    "sash.hoverBorder": "#7ea7dc",
+    "statusBar.background": "#568cd1",
+    "statusBar.foreground": "#15202b",
+    "statusBarItem.hoverBackground": "#3471c0",
+    "statusBarItem.remoteBackground": "#568cd1",
+    "statusBarItem.remoteForeground": "#15202b",
+    "titleBar.activeBackground": "#568cd1",
+    "titleBar.activeForeground": "#15202b",
+    "titleBar.inactiveBackground": "#568cd199",
+    "titleBar.inactiveForeground": "#15202b99"
+  },
+  "peacock.remoteColor": "#568cd1"
+>>>>>>> Stashed changes
 }
