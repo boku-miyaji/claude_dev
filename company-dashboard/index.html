@@ -3155,11 +3155,8 @@ function openInvoiceModal(existingInv, onSaved) {
   var fields = [
     {key:'client_name', label:'請求先', type:'text', required:true},
     {key:'amount', label:'請求額（税込・円）', type:'number', required:true},
-    {key:'tax_amount', label:'うち消費税（円）', type:'number'},
     {key:'invoice_date', label:'請求日', type:'date', required:true},
-    {key:'invoice_number', label:'請求書番号', type:'text'},
     {key:'status', label:'ステータス', type:'select', options:['draft','sent','paid','overdue','cancelled'], optionLabels:invoiceStatusLabels},
-    {key:'due_date', label:'支払期日', type:'date'},
     {key:'paid_date', label:'入金日', type:'date'},
     {key:'company_id', label:'PJ会社', type:'select', options:['','foundry','rikyu','circuit','polaris'], optionLabels:{'':'(なし)',foundry:'Foundry',rikyu:'りきゅう',circuit:'回路設計',polaris:'Polaris'}},
     {key:'notes', label:'メモ', type:'textarea'}
@@ -3236,15 +3233,27 @@ function openInvoiceModal(existingInv, onSaved) {
       }
     }
 
+    // Auto-calculate paid_date if not manually set
+    var paidDate = inputs.paid_date.value || null;
+    if (!paidDate && invoiceDate) {
+      var cl = clientName.toLowerCase();
+      if (cl.match(/polaris/i)) {
+        // Polaris: 25th of invoice month
+        paidDate = invoiceDate.substring(0, 8) + '25';
+      } else if (cl.match(/aces/i)) {
+        // ACES: last day of invoice month
+        var parts = invoiceDate.split('-');
+        var ld = new Date(parseInt(parts[0]), parseInt(parts[1]), 0).getDate();
+        paidDate = parts[0] + '-' + parts[1] + '-' + String(ld).padStart(2,'0');
+      }
+    }
+
     var row = {
       client_name: clientName,
       amount: amount,
-      tax_amount: parseInt(inputs.tax_amount.value, 10) || 0,
       invoice_date: invoiceDate,
-      invoice_number: inputs.invoice_number.value.trim() || null,
       status: inputs.status.value,
-      due_date: inputs.due_date.value || null,
-      paid_date: inputs.paid_date.value || null,
+      paid_date: paidDate,
       company_id: inputs.company_id.value || null,
       notes: inputs.notes.value.trim() || null
     };
@@ -3285,10 +3294,19 @@ function openInvoiceModal(existingInv, onSaved) {
       // Fill form with parsed values (only if field is empty or zero)
       if (parsed.client_name && !inputs.client_name.value) inputs.client_name.value = parsed.client_name;
       if (parsed.amount && !parseInt(inputs.amount.value)) inputs.amount.value = parsed.amount;
-      if (parsed.tax_amount && !parseInt(inputs.tax_amount.value)) inputs.tax_amount.value = parsed.tax_amount;
       if (parsed.invoice_date && !inputs.invoice_date.value) inputs.invoice_date.value = parsed.invoice_date;
-      if (parsed.invoice_number && !inputs.invoice_number.value) inputs.invoice_number.value = parsed.invoice_number;
       if (parsed.company_id) inputs.company_id.value = parsed.company_id;
+      // Auto-calculate paid_date from client + invoice_date
+      if (parsed.invoice_date && !inputs.paid_date.value) {
+        var cl = (parsed.client_name || '').toLowerCase();
+        if (cl.match(/polaris/i)) {
+          inputs.paid_date.value = parsed.invoice_date.substring(0, 8) + '25';
+        } else if (cl.match(/aces/i)) {
+          var dp = parsed.invoice_date.split('-');
+          var ld = new Date(parseInt(dp[0]), parseInt(dp[1]), 0).getDate();
+          inputs.paid_date.value = dp[0] + '-' + dp[1] + '-' + String(ld).padStart(2,'0');
+        }
+      }
       pdfStatus.textContent = '📄 ' + file.name + ' — 解析完了 ✓';
       pdfStatus.style.color = '#22c55e';
     } catch (e) {
