@@ -342,6 +342,40 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
   .chat-layout{height:calc(100vh - 70px)}
   .quick-ask-panel{width:95vw;max-height:60vh}
 }
+
+/* Growth Timeline */
+.growth-timeline{position:relative;padding-left:32px}
+.growth-timeline::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:2px;background:var(--border)}
+.growth-phase{margin-bottom:32px}
+.growth-phase-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:16px;padding:4px 12px;background:var(--surface2);border-radius:var(--r);display:inline-block;position:relative;left:-32px;margin-left:32px}
+.growth-event{position:relative;margin-bottom:16px;cursor:pointer}
+.growth-dot{position:absolute;left:-32px;top:6px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;z-index:1;border:2px solid var(--surface)}
+.growth-dot.failure{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.growth-dot.countermeasure{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)}
+.growth-dot.milestone{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.growth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 20px;transition:all .2s}
+.growth-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.growth-card.expanded{border-color:var(--accent-border);box-shadow:0 0 0 1px var(--accent-border)}
+.growth-card-header{display:flex;align-items:flex-start;gap:10px;justify-content:space-between}
+.growth-card-title{font-size:14px;font-weight:600;letter-spacing:-.01em;flex:1}
+.growth-card-date{font-size:11px;font-family:var(--mono);color:var(--text3);white-space:nowrap}
+.growth-card-meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.growth-detail{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.7;display:none}
+.growth-card.expanded .growth-detail{display:block}
+.growth-detail-section{margin-bottom:12px}
+.growth-detail-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px}
+.growth-detail-text{font-size:13px;line-height:1.6}
+.growth-metric{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border-radius:var(--r);margin-top:8px;font-family:var(--mono);font-size:12px}
+.growth-metric .arrow{color:var(--green);font-weight:700;font-size:16px}
+.growth-chain{border-left:2px dashed var(--accent-border);margin-left:-22px;padding-left:20px;margin-top:-8px;margin-bottom:-8px}
+.growth-filters{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.growth-filter-btn{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .2s;font-family:var(--font)}
+.growth-filter-btn:hover{border-color:var(--border2)}
+.growth-filter-btn.active{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-border)}
+.growth-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+@media(max-width:768px){.growth-summary{grid-template-columns:repeat(2,1fr)}}
+.growth-cat-bar{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;margin-top:6px}
+.growth-cat-fill{height:100%;border-radius:3px;background:var(--green);transition:width .5s}
 </style>
 </head>
 <body>
@@ -386,6 +420,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="commands"><span class="nav-icon">⌘</span> Commands</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <div class="nav-spacer"></div>
+    <button class="nav-item" data-page="growth"><span class="nav-icon">↗</span> Growth</button>
     <button class="nav-item" data-page="how-it-works"><span class="nav-icon">?</span> How it Works</button>
     <div class="nav-user" id="nav-user"></div>
     <button class="nav-item" id="btn-logout"><span class="nav-icon">→</span> Sign out</button>
@@ -445,6 +480,7 @@ var ALL_MOB_TABS = [
   {page: 'diary', icon: '✎', label: 'Diary', pinned: true},
   {page: 'artifacts', icon: '📄', label: 'Artifacts', pinned: true},
   {page: 'chat', icon: '💬', label: 'AI Chat', pinned: true},
+  {page: 'growth', icon: '↗', label: 'Growth'},
   {page: 'api-costs', icon: '$', label: 'Costs'},
   {page: 'commands', icon: '⌘', label: 'Commands'},
   {page: 'settings', icon: '⚙', label: 'Settings'}
@@ -898,6 +934,7 @@ function renderPage(page) {
     chat: renderChat,
     'chat-spec': renderChatSpec,
     'api-costs': renderApiCosts,
+    growth: renderGrowth,
     'how-it-works': renderHowItWorks,
     commands: renderSlashCommands,
     settings: renderSettings
@@ -4020,6 +4057,255 @@ async function renderArtifacts(root) {
     }
   }
   loadList();
+}
+
+// ============================================================
+// Growth Chronicle Page
+// ============================================================
+async function renderGrowth(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Growth Chronicle'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '失敗と進化の記録 — どう壊れ、どう直し、どう成長したか'}));
+
+  var res = await sb.from('growth_events').select('*').order('event_date', {ascending: true}).order('created_at', {ascending: true});
+  var events = res.data || [];
+
+  if (events.length === 0) {
+    root.appendChild(el('div', {className: 'card empty', textContent: 'まだ成長記録がありません。seed データを投入してください。'}));
+    return;
+  }
+
+  // --- KPI Summary ---
+  var totalCount = events.length;
+  var failures = events.filter(function(e) { return e.event_type === 'failure'; });
+  var countermeasures = events.filter(function(e) { return e.event_type === 'countermeasure'; });
+  var milestones = events.filter(function(e) { return e.event_type === 'milestone'; });
+  var resolved = events.filter(function(e) { return e.status === 'resolved'; });
+
+  var summaryGrid = el('div', {className: 'growth-summary'}, [
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', style: 'color:var(--text)', textContent: String(totalCount)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Total Events'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val bad', textContent: String(failures.length)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Failures'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', style: 'color:var(--amber)', textContent: String(countermeasures.length)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Countermeasures'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val good', textContent: String(milestones.length)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Milestones'})
+    ])
+  ]);
+  root.appendChild(summaryGrid);
+
+  // --- Category Progress ---
+  var categories = ['security', 'architecture', 'devops', 'automation', 'tooling', 'organization', 'process'];
+  var catSection = el('div', {className: 'section', style: 'margin-bottom:28px'});
+  catSection.appendChild(el('div', {className: 'section-title', textContent: 'Category Progress'}));
+  var catGrid = el('div', {className: 'g2'});
+  categories.forEach(function(cat) {
+    var catEvents = events.filter(function(e) { return e.category === cat; });
+    if (catEvents.length === 0) return;
+    var catResolved = catEvents.filter(function(e) { return e.status === 'resolved'; });
+    var pct = Math.round(catResolved.length / catEvents.length * 100);
+    var catIcons = {security: '🛡', architecture: '🏗', devops: '⚙', automation: '🤖', tooling: '🔧', organization: '🏢', process: '📋'};
+    catGrid.appendChild(el('div', {className: 'card', style: 'padding:14px 18px'}, [
+      el('div', {style: 'display:flex;align-items:center;justify-content:space-between'}, [
+        el('span', {style: 'font-size:13px;font-weight:600'}, [
+          document.createTextNode((catIcons[cat] || '') + ' ' + cat)
+        ]),
+        el('span', {style: 'font-size:12px;font-family:var(--mono);color:var(--text2)', textContent: catResolved.length + '/' + catEvents.length})
+      ]),
+      el('div', {className: 'growth-cat-bar'}, [
+        el('div', {className: 'growth-cat-fill', style: 'width:' + pct + '%;background:' + (pct === 100 ? 'var(--green)' : pct >= 50 ? 'var(--amber)' : 'var(--red)')})
+      ])
+    ]));
+  });
+  catSection.appendChild(catGrid);
+  root.appendChild(catSection);
+
+  // --- Filters ---
+  var currentFilter = 'all';
+  var filterBar = el('div', {className: 'growth-filters'});
+  var filterOptions = [
+    {key: 'all', label: 'All'},
+    {key: 'failure', label: 'Failures'},
+    {key: 'countermeasure', label: 'Countermeasures'},
+    {key: 'milestone', label: 'Milestones'},
+    {key: 'security', label: 'Security'},
+    {key: 'architecture', label: 'Architecture'},
+    {key: 'devops', label: 'DevOps'},
+    {key: 'automation', label: 'Automation'},
+    {key: 'tooling', label: 'Tooling'},
+    {key: 'organization', label: 'Organization'}
+  ];
+  var timelineContainer;
+
+  function renderTimeline() {
+    if (timelineContainer) timelineContainer.parentNode.removeChild(timelineContainer);
+    timelineContainer = el('div');
+
+    var filtered = events;
+    if (currentFilter !== 'all') {
+      filtered = events.filter(function(e) {
+        return e.event_type === currentFilter || e.category === currentFilter;
+      });
+    }
+
+    // Group by phase
+    var phases = [];
+    var phaseMap = {};
+    filtered.forEach(function(e) {
+      var phaseName = e.phase || 'Other';
+      if (!phaseMap[phaseName]) {
+        phaseMap[phaseName] = [];
+        phases.push(phaseName);
+      }
+      phaseMap[phaseName].push(e);
+    });
+
+    phases.forEach(function(phaseName) {
+      var phaseEl = el('div', {className: 'growth-phase'});
+      phaseEl.appendChild(el('div', {className: 'growth-phase-label', textContent: phaseName}));
+
+      var timeline = el('div', {className: 'growth-timeline'});
+
+      phaseMap[phaseName].forEach(function(evt) {
+        var dotIcons = {failure: '✕', countermeasure: '◆', milestone: '★'};
+        var typeLabels = {failure: 'FAILURE', countermeasure: 'COUNTERMEASURE', milestone: 'MILESTONE'};
+        var typeColors = {failure: 'var(--red)', countermeasure: 'var(--amber)', milestone: 'var(--green)'};
+        var sevColors = {critical: 'var(--red)', high: 'var(--amber)', medium: 'var(--blue)', low: 'var(--text3)'};
+
+        var card = el('div', {className: 'growth-card'});
+        var dot = el('div', {className: 'growth-dot ' + evt.event_type, textContent: dotIcons[evt.event_type] || '·'});
+
+        // Header
+        card.appendChild(el('div', {className: 'growth-card-header'}, [
+          el('div', {className: 'growth-card-title', textContent: evt.title}),
+          el('div', {className: 'growth-card-date', textContent: evt.event_date})
+        ]));
+
+        // Meta tags
+        var metaRow = el('div', {className: 'growth-card-meta'});
+        metaRow.appendChild(el('span', {
+          className: 'tag',
+          style: 'background:' + (typeColors[evt.event_type] || 'var(--text3)') + '11;color:' + (typeColors[evt.event_type] || 'var(--text3)') + ';border:1px solid ' + (typeColors[evt.event_type] || 'var(--text3)') + '33',
+          textContent: typeLabels[evt.event_type] || evt.event_type
+        }));
+        metaRow.appendChild(el('span', {className: 'tag tag-co', textContent: evt.category}));
+        if (evt.severity === 'critical' || evt.severity === 'high') {
+          metaRow.appendChild(el('span', {
+            className: 'tag',
+            style: 'background:' + (sevColors[evt.severity]) + '11;color:' + sevColors[evt.severity] + ';border:1px solid ' + sevColors[evt.severity] + '33',
+            textContent: evt.severity
+          }));
+        }
+        if (evt.status === 'resolved') {
+          metaRow.appendChild(el('span', {className: 'tag', style: 'background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)', textContent: 'resolved'}));
+        }
+        card.appendChild(metaRow);
+
+        // What happened (always visible summary)
+        card.appendChild(el('div', {style: 'margin-top:10px;font-size:13px;color:var(--text2);line-height:1.6', textContent: evt.what_happened}));
+
+        // Detail (expandable)
+        var detail = el('div', {className: 'growth-detail'});
+
+        if (evt.root_cause) {
+          detail.appendChild(el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Root Cause'}),
+            el('div', {className: 'growth-detail-text', textContent: evt.root_cause})
+          ]));
+        }
+        if (evt.countermeasure) {
+          detail.appendChild(el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Countermeasure'}),
+            el('div', {className: 'growth-detail-text', textContent: evt.countermeasure})
+          ]));
+        }
+        if (evt.result) {
+          detail.appendChild(el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Result / Learning'}),
+            el('div', {className: 'growth-detail-text', textContent: evt.result})
+          ]));
+        }
+
+        // Related commits
+        if (evt.related_commits && evt.related_commits.length > 0) {
+          var commitRow = el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Related Commits'})
+          ]);
+          var commitTags = el('div', {style: 'display:flex;gap:4px;flex-wrap:wrap'});
+          evt.related_commits.forEach(function(c) {
+            commitTags.appendChild(el('span', {className: 'tag', style: 'font-family:var(--mono);font-size:10px;background:var(--surface2);color:var(--text2);border:1px solid var(--border)', textContent: c}));
+          });
+          commitRow.appendChild(commitTags);
+          detail.appendChild(commitRow);
+        }
+
+        // Related migrations
+        if (evt.related_migrations && evt.related_migrations.length > 0) {
+          var migRow = el('div', {className: 'growth-detail-section'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Related Migrations'})
+          ]);
+          var migTags = el('div', {style: 'display:flex;gap:4px;flex-wrap:wrap'});
+          evt.related_migrations.forEach(function(m) {
+            migTags.appendChild(el('span', {className: 'tag', style: 'font-family:var(--mono);font-size:10px;background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-border)', textContent: m}));
+          });
+          migRow.appendChild(migTags);
+          detail.appendChild(migRow);
+        }
+
+        // Tags
+        if (evt.tags && evt.tags.length > 0) {
+          var tagRow = el('div', {className: 'growth-detail-section', style: 'margin-bottom:0'}, [
+            el('div', {className: 'growth-detail-label', textContent: 'Tags'})
+          ]);
+          var tagContainer = el('div', {style: 'display:flex;gap:4px;flex-wrap:wrap'});
+          evt.tags.forEach(function(t) {
+            tagContainer.appendChild(el('span', {className: 'tag', style: 'font-size:10px;background:var(--surface2);color:var(--text3);border:1px solid var(--border)', textContent: t}));
+          });
+          tagRow.appendChild(tagContainer);
+          detail.appendChild(tagRow);
+        }
+
+        card.appendChild(detail);
+
+        // Click to expand
+        card.addEventListener('click', function() {
+          card.classList.toggle('expanded');
+        });
+
+        var eventEl = el('div', {className: 'growth-event'}, [dot, card]);
+        timeline.appendChild(eventEl);
+      });
+
+      phaseEl.appendChild(timeline);
+      timelineContainer.appendChild(phaseEl);
+    });
+
+    root.appendChild(timelineContainer);
+  }
+
+  filterOptions.forEach(function(opt) {
+    var btn = el('button', {
+      className: 'growth-filter-btn' + (opt.key === 'all' ? ' active' : ''),
+      textContent: opt.label,
+      onClick: function() {
+        currentFilter = opt.key;
+        filterBar.querySelectorAll('.growth-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        renderTimeline();
+      }
+    });
+    filterBar.appendChild(btn);
+  });
+  root.appendChild(filterBar);
+
+  renderTimeline();
 }
 
 // ============================================================
