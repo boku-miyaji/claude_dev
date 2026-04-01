@@ -3933,7 +3933,7 @@ function toggleReportDetail(card, data) {
 // AI Chat Page (Agent-loop, OpenCode-inspired)
 // ============================================================
 
-var chatState = { conversationId: null, conversations: [], model: 'auto', contextMode: 'full', companyId: null, streaming: false, directMode: false };
+var chatState = { conversationId: null, conversations: [], model: 'auto', contextMode: 'full', companyId: null, streaming: false, directMode: false, reasoningEffort: 'auto' };
 
 /** Get stored OpenAI API key for direct mode */
 function getChatApiKey() { return localStorage.getItem('hd-chat-api-key') || ''; }
@@ -4049,7 +4049,17 @@ function renderChatMain(container, edgeFnUrl) {
   contextSelect.value = chatState.contextMode;
   contextSelect.onchange = function() { chatState.contextMode = contextSelect.value; };
 
-  var controls = el('div', {style: 'display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-shrink:0'}, [modelSelect, contextSelect]);
+  var thinkingSelect = el('select', {className: 'input', style: 'font-size:11px;width:auto;padding:4px 8px'}, [
+    el('option', {value: 'auto', textContent: 'Thinking: Auto'}),
+    el('option', {value: 'none', textContent: 'Thinking: None'}),
+    el('option', {value: 'low', textContent: 'Thinking: Low'}),
+    el('option', {value: 'medium', textContent: 'Thinking: Medium'}),
+    el('option', {value: 'high', textContent: 'Thinking: High'})
+  ]);
+  thinkingSelect.value = chatState.reasoningEffort;
+  thinkingSelect.onchange = function() { chatState.reasoningEffort = thinkingSelect.value; };
+
+  var controls = el('div', {style: 'display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-shrink:0;flex-wrap:wrap'}, [modelSelect, thinkingSelect, contextSelect]);
   container.appendChild(controls);
 
   // Messages area
@@ -4170,7 +4180,9 @@ function renderChatMain(container, edgeFnUrl) {
       var res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey},
-        body: JSON.stringify({model: model, messages: oaiMessages, stream: true, stream_options: {include_usage: true}})
+        body: JSON.stringify(Object.assign({model: model, messages: oaiMessages, stream: true, stream_options: {include_usage: true}},
+          (function() { var re = chatState.reasoningEffort === 'auto' ? (model === 'gpt-5-nano' ? 'none' : model === 'gpt-5-mini' ? 'low' : 'medium') : chatState.reasoningEffort; return re && re !== 'none' ? {reasoning_effort: re} : {}; })()
+        ))
       });
 
       if (!res.ok) {
@@ -4239,7 +4251,8 @@ function renderChatMain(container, edgeFnUrl) {
           message: text,
           model: chatState.model,
           context_mode: chatState.contextMode,
-          company_id: chatState.companyId
+          company_id: chatState.companyId,
+          reasoning_effort: chatState.reasoningEffort
         })
       });
 
@@ -4275,7 +4288,7 @@ function renderChatMain(container, edgeFnUrl) {
                 else if (evt.status === 'done') statusDiv.textContent = evt.reason + ' \u2192 ' + evt.model;
                 break;
               case 'step_start':
-                statusDiv.textContent = 'Step ' + evt.step + '/' + evt.maxSteps + ' \u00B7 ' + evt.model;
+                statusDiv.textContent = 'Step ' + evt.step + '/' + evt.maxSteps + ' \u00B7 ' + evt.model + (evt.reasoning ? ' \u00B7 thinking:' + evt.reasoning : '');
                 break;
               case 'delta':
                 fullText += evt.content;

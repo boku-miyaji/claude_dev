@@ -65,6 +65,14 @@ const MODEL_MAP: Record<string, string> = {
   complex: "gpt-5",
 };
 
+// Reasoning effort per complexity tier (none/minimal/low/medium/high)
+// Reasoning tokens are billed as output tokens
+const REASONING_MAP: Record<string, string> = {
+  simple: "none",       // no thinking — fast & cheap
+  moderate: "low",      // minimal thinking — reliable
+  complex: "high",      // extended thinking — deep reasoning
+};
+
 const COST_TABLE: Record<string, { input: number; output: number }> = {
   "gpt-5-nano": { input: 0.05 / 1e6, output: 0.40 / 1e6 },
   "gpt-5-mini": { input: 0.25 / 1e6, output: 2.0 / 1e6 },
@@ -363,12 +371,12 @@ interface LLMResult {
   model: string;
 }
 
-async function callLLM(model: string, messages: Message[], tools: ToolDef[], onDelta: (text: string) => void): Promise<LLMResult> {
+async function callLLM(model: string, messages: Message[], tools: ToolDef[], onDelta: (text: string) => void, reasoningEffort?: string): Promise<LLMResult> {
   if (isAnthropicModel(model)) return callAnthropic(model, messages, tools, onDelta);
-  return callOpenAI(model, messages, tools, onDelta);
+  return callOpenAI(model, messages, tools, onDelta, reasoningEffort);
 }
 
-async function callOpenAI(model: string, messages: Message[], tools: ToolDef[], onDelta: (text: string) => void): Promise<LLMResult> {
+async function callOpenAI(model: string, messages: Message[], tools: ToolDef[], onDelta: (text: string) => void, reasoningEffort?: string): Promise<LLMResult> {
   const oaiMessages = messages.map(m => {
     if (m.role === "tool") return { role: "tool" as const, content: m.content as string, tool_call_id: m.tool_call_id || "" };
     if (m.role === "assistant" && m.tool_calls) {
@@ -383,6 +391,10 @@ async function callOpenAI(model: string, messages: Message[], tools: ToolDef[], 
 
   const body: Record<string, unknown> = { model, messages: oaiMessages, stream: true, stream_options: { include_usage: true } };
   if (tools.length > 0) body.tools = toolsToOpenAI(tools);
+  // GPT-5 reasoning effort (none/minimal/low/medium/high)
+  if (reasoningEffort && reasoningEffort !== "none") {
+    body.reasoning_effort = reasoningEffort;
+  }
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -575,7 +587,8 @@ PJ Company: ${companyId || "HD (all projects)"}
 
 async function agentLoop(
   conversationId: string, userMessage: string, model: string | null,
-  contextMode: string, companyId: string | null, send: (e: SSEEvent) => void
+  contextMode: string, companyId: string | null, send: (e: SSEEvent) => void,
+  userReasoningEffort?: string
 ) {
   const sb = getSupabase();
 
@@ -598,15 +611,24 @@ async function agentLoop(
 
   await sb.from("messages").insert({ conversation_id: conversationId, role: "user", content: userMessage, step: 0 });
 
-  // Model selection
+  // Model selection + reasoning effort
   let selectedModel = model;
   let routingReason = "manual";
+  let reasoningEffort = userReasoningEffort || "auto";
   if (!selectedModel || selectedModel === "auto") {
     send({ type: "routing", status: "classifying" });
     const c = await classifyComplexity(userMessage);
     selectedModel = MODEL_MAP[c] || "gpt-5-mini";
+    if (reasoningEffort === "auto") reasoningEffort = REASONING_MAP[c] || "low";
     routingReason = `auto: ${c}`;
-    send({ type: "routing", status: "done", complexity: c, model: selectedModel, reason: routingReason });
+    send({ type: "routing", status: "done", complexity: c, model: selectedModel, reason: routingReason, reasoning: reasoningEffort });
+  } else {
+    // Manual model: default reasoning effort if not specified
+    if (reasoningEffort === "auto") {
+      if (selectedModel === "gpt-5-nano") reasoningEffort = "none";
+      else if (selectedModel === "gpt-5-mini") reasoningEffort = "low";
+      else reasoningEffort = "medium";
+    }
   }
 
   // API key fallback
@@ -626,11 +648,11 @@ async function agentLoop(
 
   while (step < MAX_STEPS) {
     step++;
-    send({ type: "step_start", step, maxSteps: MAX_STEPS, model: selectedModel });
+    send({ type: "step_start", step, maxSteps: MAX_STEPS, model: selectedModel, reasoning: reasoningEffort });
 
     let result: LLMResult;
     try {
-      result = await callLLM(selectedModel, messages, activeTools, delta => send({ type: "delta", content: delta }));
+      result = await callLLM(selectedModel, messages, activeTools, delta => send({ type: "delta", content: delta }), reasoningEffort);
     } catch (err) {
       send({ type: "error", message: `LLM error: ${(err as Error).message}` }); return;
     }
@@ -711,7 +733,7 @@ Deno.serve(async (req) => {
 
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
-  let body: { conversation_id?: string; message: string; model?: string; context_mode?: string; company_id?: string };
+  let body: { conversation_id?: string; message: string; model?: string; context_mode?: string; company_id?: string; reasoning_effort?: string };
   try { body = await req.json(); } catch { return new Response("Invalid JSON", { status: 400 }); }
   if (!body.message) return new Response("message is required", { status: 400 });
 
@@ -735,7 +757,7 @@ Deno.serve(async (req) => {
       }
       send({ type: "conversation", id: conversationId });
       try {
-        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send);
+        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort);
       } catch (err) { send({ type: "error", message: (err as Error).message }); }
       controller.close();
     },
