@@ -3104,8 +3104,54 @@ async function renderArtifacts(root) {
       var synced = a.last_synced_at ? new Date(a.last_synced_at).toLocaleString('ja-JP') : '未同期';
       var openComments = commentCounts[a.id] || 0;
       var commentBadge = openComments > 0
-        ? el('span', {style: 'background:var(--orange);color:#000;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600', textContent: openComments + ' コメント'})
-        : el('span', {style: 'color:var(--text3);font-size:11px', textContent: 'コメントなし'});
+        ? el('span', {style: 'background:var(--orange);color:#000;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;position:relative', textContent: openComments + ' コメント'})
+        : el('span', {style: 'color:var(--text3);font-size:11px;cursor:pointer;position:relative', textContent: 'コメントなし'});
+
+      // Comment popover on badge click
+      (function(art, badge) {
+        badge.onclick = async function(e) {
+          e.stopPropagation();
+          // Close any existing popover
+          var existing = document.querySelector('.comment-popover');
+          if (existing) { existing.remove(); return; }
+
+          var popover = el('div', {className: 'comment-popover', style: 'position:absolute;top:100%;right:0;margin-top:8px;z-index:999;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);width:320px;max-height:360px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)'});
+
+          popover.appendChild(el('div', {style: 'padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2)', textContent: art.title + ' \u2014 \u30B3\u30E1\u30F3\u30C8'}));
+
+          var loadingEl = el('div', {style: 'padding:16px;text-align:center;color:var(--text3);font-size:12px', textContent: '\u8AAD\u307F\u8FBC\u307F\u4E2D...'});
+          popover.appendChild(loadingEl);
+          badge.style.position = 'relative';
+          badge.appendChild(popover);
+
+          var res = await sb.from('artifact_comments').select('*').eq('artifact_id', art.id).order('created_at', {ascending: false});
+          var comments = (res.data || []).filter(function(c) { return c.status === 'open'; });
+          loadingEl.remove();
+
+          if (comments.length === 0) {
+            popover.appendChild(el('div', {style: 'padding:16px;text-align:center;color:var(--text3);font-size:12px', textContent: '\u30B3\u30E1\u30F3\u30C8\u306A\u3057'}));
+          } else {
+            comments.forEach(function(c) {
+              var time = new Date(c.created_at).toLocaleString('ja-JP', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+              var srcLabel = c.source === 'dashboard' ? '\uD83C\uDF10' : c.source === 'claude' ? '\uD83E\uDD16' : '\uD83D\uDCF1';
+              popover.appendChild(el('div', {style: 'padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;line-height:1.5'}, [
+                el('div', {style: 'display:flex;justify-content:space-between;margin-bottom:4px'}, [
+                  el('span', {style: 'font-size:11px;color:var(--text3)', textContent: srcLabel + ' ' + c.source}),
+                  el('span', {style: 'font-size:11px;color:var(--text3)', textContent: time})
+                ]),
+                el('div', {style: 'color:var(--text1);white-space:pre-wrap;word-break:break-word', textContent: c.body})
+              ]));
+            });
+          }
+
+          // Close on outside click
+          setTimeout(function() {
+            document.addEventListener('click', function closePopover(ev) {
+              if (!popover.contains(ev.target)) { popover.remove(); document.removeEventListener('click', closePopover); }
+            });
+          }, 0);
+        };
+      })(a, commentBadge);
 
       var fsBtn = el('button', {className: 'btn', style: 'font-size:11px;padding:3px 10px;flex-shrink:0', textContent: '\u26F6 全画面'});
       (function(art) { fsBtn.onclick = function(e) { e.stopPropagation(); openFullscreen(art); }; })(a);
