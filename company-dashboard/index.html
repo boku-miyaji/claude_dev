@@ -976,6 +976,111 @@ function renderPage(page) {
 }
 
 // ============================================================
+// Calendar Page
+// ============================================================
+var CAL_TYPES = {
+  'yumzzz.my6223@gmail.com': {type: 'primary', label: 'Personal'},
+  'yuta.miyaji.xyz@gmail.com': {type: 'secondary', label: 'Other'},
+  'yuta.miyaji@acesinc.co.jp': {type: 'work', label: 'Work (ACES)'}
+};
+var CAL_DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+async function renderCalendar(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Calendar'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'Google Calendar 7-day view'}));
+
+  // Fetch events from Supabase
+  var now = new Date();
+  var startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var endDate = new Date(startOfDay);
+  endDate.setDate(endDate.getDate() + 7);
+
+  var res = await sb.from('calendar_events')
+    .select('*')
+    .gte('start_time', startOfDay.toISOString())
+    .lt('start_time', endDate.toISOString())
+    .order('start_time', {ascending: true});
+
+  var events = res.data || [];
+
+  // Sync info
+  var latestSync = events.length > 0
+    ? events.reduce(function(max, e) { return e.synced_at > max ? e.synced_at : max; }, events[0].synced_at)
+    : null;
+  var isStale = !latestSync || (now - new Date(latestSync)) > 3600000; // >1h
+
+  var syncInfo = el('div', {className: 'cal-sync-info'}, [
+    el('div', {className: 'cal-sync-dot' + (isStale ? ' stale' : '')}),
+    el('span', {textContent: latestSync
+      ? 'Last sync: ' + new Date(latestSync).toLocaleString('ja-JP', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
+      : 'Not synced yet'
+    }),
+    events.length === 0
+      ? el('span', {style: 'color:var(--text3)', textContent: ' \u2014 /company \u3092\u8d77\u52d5\u3059\u308b\u3068\u540c\u671f\u3055\u308c\u307e\u3059'})
+      : el('span', {style: 'color:var(--text3)', textContent: ' (' + events.length + ' events)'})
+  ]);
+  root.appendChild(syncInfo);
+
+  // Build 7-day grid
+  var grid = el('div', {className: 'cal-grid'});
+
+  for (var d = 0; d < 7; d++) {
+    var date = new Date(startOfDay);
+    date.setDate(date.getDate() + d);
+    var dateStr = date.toISOString().slice(0, 10);
+    var isToday = d === 0;
+
+    var dayEl = el('div', {className: 'cal-day' + (isToday ? ' cal-today' : '')}, [
+      el('div', {className: 'cal-day-hdr'}, [
+        el('span', {className: 'cal-day-dow', textContent: CAL_DOW[date.getDay()]}),
+        el('span', {className: 'cal-day-num', textContent: String(date.getDate())})
+      ])
+    ]);
+
+    // Filter events for this day
+    var dayEvents = events.filter(function(e) {
+      var eDate = new Date(e.start_time);
+      return eDate.toISOString().slice(0, 10) === dateStr;
+    });
+
+    if (dayEvents.length === 0) {
+      dayEl.appendChild(el('div', {className: 'cal-empty', textContent: 'No events'}));
+    } else {
+      dayEvents.forEach(function(e) {
+        var calInfo = CAL_TYPES[e.calendar_id] || {type: 'primary'};
+        var eStart = new Date(e.start_time);
+        var eEnd = new Date(e.end_time);
+        var timeClass = '';
+        if (isToday) {
+          if (eEnd < now) timeClass = ' cal-past';
+          else if (eStart <= now && eEnd > now) timeClass = ' cal-now';
+        }
+
+        var timeStr = e.all_day ? '' : eStart.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit', hour12: false});
+
+        var evtEl = el('div', {className: 'cal-evt cal-' + calInfo.type + timeClass}, [
+          timeStr ? el('span', {className: 'cal-evt-time', textContent: timeStr}) : null,
+          el('span', {className: 'cal-evt-title', textContent: e.summary || '(No title)'})
+        ].filter(Boolean));
+
+        dayEl.appendChild(evtEl);
+      });
+    }
+
+    grid.appendChild(dayEl);
+  }
+
+  root.appendChild(grid);
+
+  // Legend
+  root.appendChild(el('div', {className: 'cal-legend'}, [
+    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot p'}), 'Personal']),
+    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot w'}), 'Work (ACES)']),
+    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot s'}), 'Other'])
+  ]));
+}
+
+// ============================================================
 // Dashboard Page
 // ============================================================
 async function renderDashboard(root) {
