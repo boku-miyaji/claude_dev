@@ -9,10 +9,11 @@
 
 ## アーキテクチャ
 
+<!-- GENERATED:ARCH_TREE:START -->
 ```
 .company/                              HD（統括）
 ├── CLAUDE.md                          ← このファイル
-├── registry.md                        ← PJ会社一覧
+├── registry.md                        ← PJ会社一覧（SSOT）
 ├── secretary/                         ← HD秘書室
 │   ├── inbox/
 │   ├── todos/
@@ -27,19 +28,15 @@
     ├── pm/CLAUDE.md                   ← PM
     ├── materials/CLAUDE.md            ← 資料制作
     ├── research/CLAUDE.md             ← リサーチ
-    ├── intelligence/                  ← 情報収集部
-    │   ├── CLAUDE.md
-    │   ├── sources.yaml
-    └── security/                      ← セキュリティ部
-        ├── CLAUDE.md
-        ├── audits/
-        └── policies/
-        └── reports/
+    ├── intelligence/CLAUDE.md         ← 情報収集部
+    └── security/CLAUDE.md             ← セキュリティ部
 
-.company-{name}/                       子会社（PJ固有コンテキストのみ）
-├── CLAUDE.md                          ← PJ固有情報（クライアント、技術スタック、リポジトリ等）
-└── secretary/                         ← PJ秘書
+.company-foundry/                      Foundry移行会社
+.company-rikyu/                        りきゅう
+.company-circuit/                      回路設計支援システム会社
+.company-polaris/                      Polaris AI
 ```
+<!-- GENERATED:ARCH_TREE:END -->
 
 ## 設計思想
 
