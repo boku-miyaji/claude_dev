@@ -252,8 +252,9 @@ const TOOLS: ToolDef[] = [
 // Tool Execution (all Supabase queries or safe HTTP fetches)
 // ============================================================
 
-async function executeTool(name: string, input: Record<string, unknown>): Promise<string> {
-  const sb = getSupabase();
+async function executeTool(name: string, input: Record<string, unknown>, userJwt?: string): Promise<string> {
+  // Use user-scoped client (RLS enforced) when JWT is available; fall back to service role
+  const sb = userJwt ? getUserSupabase(userJwt) : getServiceSupabase();
 
   switch (name) {
     case "tasks_search": {
@@ -670,9 +671,10 @@ async function agentLoop(
   conversationId: string, userMessage: string, model: string | null,
   contextMode: string, companyId: string | null, send: (e: SSEEvent) => void,
   userReasoningEffort?: string, images?: { data_url: string; name: string; type: string }[],
-  precisionMode?: boolean
+  precisionMode?: boolean, userJwt?: string
 ) {
-  const sb = getSupabase();
+  // Service client for server-side writes (messages, cost tracking)
+  const sb = getServiceSupabase();
 
   // Load history
   const { data: hist } = await sb.from("messages")
@@ -812,7 +814,7 @@ async function agentLoop(
 
       send({ type: "tool_start", tool: tc.name, input: tc.input, step });
       const toolStart = Date.now();
-      const toolResult = await executeTool(tc.name, tc.input);
+      const toolResult = await executeTool(tc.name, tc.input, userJwt);
       const toolDuration = Date.now() - toolStart;
       const truncated = toolResult.substring(0, MAX_TOOL_RESULT_CHARS);
 
