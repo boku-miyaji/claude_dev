@@ -59,6 +59,8 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const MAX_STEPS = 10;
 const MAX_STEPS_PRECISION = 20;
 const MAX_COST_PRECISION = 0.50;  // $0.50 per request cost cap
+const MAX_COST_DAILY = 5.00;     // $5.00 daily cost cap
+const MAX_COST_MONTHLY = 50.00;  // $50.00 monthly cost cap
 const MAX_HISTORY = 20;
 const MAX_TOOL_RESULT_CHARS = 4000;
 
@@ -664,6 +666,34 @@ ${knowledgeSection}${diarySection}${insightsSection}`;
 }
 
 // ============================================================
+// Cost guardrails (daily / monthly)
+// ============================================================
+
+async function checkCostLimits(): Promise<string | null> {
+  const sb = getServiceSupabase();
+  const today = new Date().toISOString().slice(0, 10);
+  const monthStart = today.slice(0, 7) + "-01";
+
+  // Daily cost
+  const { data: dailyData } = await sb.from("chat_usage")
+    .select("cost_usd").eq("date", today);
+  const dailyCost = (dailyData || []).reduce((sum: number, r: { cost_usd: number }) => sum + Number(r.cost_usd || 0), 0);
+  if (dailyCost >= MAX_COST_DAILY) {
+    return `Daily cost limit reached ($${dailyCost.toFixed(2)} / $${MAX_COST_DAILY}). Please try again tomorrow.`;
+  }
+
+  // Monthly cost
+  const { data: monthlyData } = await sb.from("chat_usage")
+    .select("cost_usd").gte("date", monthStart).lte("date", today);
+  const monthlyCost = (monthlyData || []).reduce((sum: number, r: { cost_usd: number }) => sum + Number(r.cost_usd || 0), 0);
+  if (monthlyCost >= MAX_COST_MONTHLY) {
+    return `Monthly cost limit reached ($${monthlyCost.toFixed(2)} / $${MAX_COST_MONTHLY}). Please wait until next month or adjust limits.`;
+  }
+
+  return null; // within limits
+}
+
+// ============================================================
 // Agent Loop
 // ============================================================
 
@@ -675,6 +705,13 @@ async function agentLoop(
 ) {
   // Service client for server-side writes (messages, cost tracking)
   const sb = getServiceSupabase();
+
+  // Cost guardrail: check daily/monthly limits before proceeding
+  const costError = await checkCostLimits();
+  if (costError) {
+    send({ type: "error", message: costError });
+    return;
+  }
 
   // Load history
   const { data: hist } = await sb.from("messages")
@@ -878,7 +915,20 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { return new Response("Invalid JSON", { status: 400 }); }
   if (!body.message) return new Response("message is required", { status: 400 });
 
-  const sb = getSupabase();
+  // Extract user JWT for RLS-scoped tool execution
+  const authHeader = req.headers.get("Authorization") || "";
+  const userJwt = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+
+  // Decode user ID from JWT for ownership tracking
+  let userId: string | null = null;
+  if (userJwt) {
+    try {
+      const payload = JSON.parse(atob(userJwt.split(".")[1]));
+      userId = payload.sub || null;
+    } catch { /* invalid JWT — will fail auth downstream */ }
+  }
+
+  const sb = getServiceSupabase();
 
   let conversationId = body.conversation_id;
   if (!conversationId) {
@@ -898,7 +948,7 @@ Deno.serve(async (req) => {
       }
       send({ type: "conversation", id: conversationId });
       try {
-        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images, body.precision_mode);
+        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images, body.precision_mode, userJwt);
       } catch (err) { send({ type: "error", message: (err as Error).message }); }
       controller.close();
     },

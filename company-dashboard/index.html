@@ -4563,18 +4563,26 @@ function renderFeedbackSection() {
   return section;
 }
 
-/** Render markdown string to a safe DOM fragment (strips scripts, externalizes links) */
+/** Render markdown string to a safe DOM fragment (strips scripts, event handlers, dangerous protocols) */
 function renderMarkdownSafe(md) {
   var wrapper = document.createElement('div');
   if (typeof marked !== 'undefined' && marked.parse) {
-    // marked.parse output is from owner-only Supabase data (authenticated writes only)
     var parsed = marked.parse(md);
-    // Defense-in-depth: strip scripts and sanitize via DOM
     var tpl = document.createElement('template');
-    tpl.innerHTML = parsed; // eslint-disable-line -- owner-only data, script-stripped below
+    tpl.innerHTML = parsed; // eslint-disable-line -- owner-only data, sanitized below
     var frag = tpl.content;
-    frag.querySelectorAll('script,iframe,object,embed').forEach(function(s) { s.remove(); });
-    frag.querySelectorAll('a').forEach(function(a) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); });
+    frag.querySelectorAll('script,iframe,object,embed,math,svg[onload],form').forEach(function(s) { s.remove(); });
+    // Strip all on* event handler attributes
+    frag.querySelectorAll('*').forEach(function(node) {
+      Array.from(node.attributes).forEach(function(attr) {
+        if (attr.name.startsWith('on')) node.removeAttribute(attr.name);
+      });
+    });
+    frag.querySelectorAll('a').forEach(function(a) {
+      var href = (a.getAttribute('href') || '').trim().toLowerCase();
+      if (href.startsWith('javascript:') || href.startsWith('data:') || href.startsWith('vbscript:')) { a.removeAttribute('href'); a.textContent = '[link removed]'; }
+      a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer');
+    });
     wrapper.appendChild(frag);
   } else {
     wrapper.textContent = md;
@@ -5499,10 +5507,21 @@ function renderMarkdownSafe(text, target) {
   while (target.firstChild) target.removeChild(target.firstChild);
   if (typeof marked!=='undefined'&&marked.parse) {
     var tpl = document.createElement('template');
-    tpl.innerHTML = marked.parse(text);
+    // Note: innerHTML on template is used for markdown rendering; sanitized below
+    tpl.innerHTML = marked.parse(text); // eslint-disable-line -- sanitized via DOM below
     var frag = tpl.content;
-    frag.querySelectorAll('script,iframe,object,embed').forEach(function(s){s.remove();});
-    frag.querySelectorAll('a').forEach(function(a){a.setAttribute('target','_blank');a.setAttribute('rel','noopener');});
+    frag.querySelectorAll('script,iframe,object,embed,math,svg[onload],form').forEach(function(s){s.remove();});
+    // Strip all on* event handler attributes and dangerous href protocols
+    frag.querySelectorAll('*').forEach(function(node) {
+      Array.from(node.attributes).forEach(function(attr) {
+        if (attr.name.startsWith('on')) node.removeAttribute(attr.name);
+      });
+    });
+    frag.querySelectorAll('a').forEach(function(a) {
+      var href = (a.getAttribute('href') || '').trim().toLowerCase();
+      if (href.startsWith('javascript:') || href.startsWith('data:') || href.startsWith('vbscript:')) { a.removeAttribute('href'); a.textContent = '[link removed]'; }
+      a.setAttribute('target','_blank'); a.setAttribute('rel','noopener noreferrer');
+    });
     target.appendChild(frag);
   } else { target.textContent = text; }
 }
