@@ -2976,7 +2976,11 @@ var invoiceStatusLabels = {draft:'下書',sent:'送付済',paid:'入金済',over
 async function extractPdfText(file) {
   if (!window.pdfjsLib) throw new Error('PDF.js not loaded');
   var arrayBuffer = await file.arrayBuffer();
-  var pdf = await window.pdfjsLib.getDocument({data: arrayBuffer}).promise;
+  var pdf = await window.pdfjsLib.getDocument({
+    data: arrayBuffer,
+    cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/cmaps/',
+    cMapPacked: true
+  }).promise;
   var lines = [];
   for (var i = 1; i <= pdf.numPages; i++) {
     var page = await pdf.getPage(i);
