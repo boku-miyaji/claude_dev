@@ -185,7 +185,7 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority
 1. **タイトルにプレフィックス**: `[security]`, `[dashboard]`, `[ops]`, `[infra]` 等
 2. **description に tags を記載**: `tags: スコープ, 部署, カテゴリ, 技術` の形式
 3. **priority**: high / normal / low
-4. **company_id**: hd / rikyu / circuit / foundry
+4. **company_id**: hd / rikyu / circuit / foundry / polaris
 
 #### 分類体系（`.company/secretary/policies/task-classification.md` 参照）
 
@@ -227,6 +227,7 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority
 
 **Agent 一覧:**
 
+<!-- GENERATED:AGENT_TABLE:START -->
 | Agent | ファイル | キーワード |
 |-------|---------|-----------|
 | AI開発部 | `.claude/agents/dept-ai-dev.md` | LLM、プロンプト、RAG、エージェント、モデル |
@@ -236,7 +237,7 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority
 | リサーチ部 | `.claude/agents/dept-research.md` | 調べて、調査、競合、市場 |
 | 情報収集部 | `.claude/agents/dept-intelligence.md` | 最新情報、ニュース、X、キャッチアップ |
 | セキュリティ部 | — | サプライチェーンセキュリティ、Actions SHA固定、依存関係ガバナンス |
-| QA検証部 | `.claude/agents/dept-qa.md` | パイプライン検証ゲート |
+<!-- GENERATED:AGENT_TABLE:END -->
 
 **並列実行例**: リサーチ + 資料制作が独立している場合、2つのAgentを同時起動可能
 

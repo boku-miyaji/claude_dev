@@ -4,27 +4,32 @@
 
 ### 軸1: スコープ（どこの仕事か）
 
+<!-- GENERATED:SCOPE_TAGS:START -->
 | タグ | 意味 |
 |------|------|
 | `hd` | HD全社横断 |
-| `pj:rikyu` | りきゅうPJ |
-| `pj:circuit` | 回路PJ |
-| `pj:foundry` | Foundry PJ |
+| `pj:foundry` | Foundry移行会社 |
+| `pj:rikyu` | りきゅう |
+| `pj:circuit` | 回路設計支援システム会社 |
+| `pj:polaris` | Polaris AI |
 | `personal` | 個人のこと |
+<!-- GENERATED:SCOPE_TAGS:END -->
 
 ### 軸2: 部署
 
+<!-- GENERATED:DEPT_TAGS:START -->
 | タグ | 意味 |
 |------|------|
-| `dept:security` | セキュリティ部 |
 | `dept:ai-dev` | AI開発 |
 | `dept:sys-dev` | システム開発 |
 | `dept:pm` | PM |
 | `dept:materials` | 資料制作 |
 | `dept:research` | リサーチ |
 | `dept:intelligence` | 情報収集 |
+| `dept:security` | セキュリティ |
 | `dept:hr` | 人事 |
 | `dept:secretary` | 秘書室 |
+<!-- GENERATED:DEPT_TAGS:END -->
 
 ### 軸3: カテゴリ
 
