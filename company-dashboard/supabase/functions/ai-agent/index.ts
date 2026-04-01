@@ -57,6 +57,8 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 
 const MAX_STEPS = 10;
+const MAX_STEPS_PRECISION = 20;
+const MAX_COST_PRECISION = 0.50;  // $0.50 per request cost cap
 const MAX_HISTORY = 20;
 const MAX_TOOL_RESULT_CHARS = 4000;
 
@@ -647,7 +649,8 @@ ${knowledgeSection}${diarySection}${insightsSection}`;
 async function agentLoop(
   conversationId: string, userMessage: string, model: string | null,
   contextMode: string, companyId: string | null, send: (e: SSEEvent) => void,
-  userReasoningEffort?: string, images?: { data_url: string; name: string; type: string }[]
+  userReasoningEffort?: string, images?: { data_url: string; name: string; type: string }[],
+  precisionMode?: boolean
 ) {
   const sb = getSupabase();
 
@@ -672,8 +675,20 @@ async function agentLoop(
     userContent = blocks;
   }
 
+  var systemPrompt = await buildSystemPrompt(companyId || undefined);
+  if (precisionMode) {
+    systemPrompt += `\n\n## PRECISION MODE ACTIVE
+- Take your time. Accuracy is more important than speed.
+- Use MULTIPLE tools to cross-verify information before answering.
+- Search broadly first, then narrow down. Don't stop at the first result.
+- If one tool doesn't give enough info, try a different tool or query.
+- Synthesize findings from multiple sources into a comprehensive answer.
+- Max ${MAX_STEPS_PRECISION} steps available. Use them wisely.
+- Cost cap: $${MAX_COST_PRECISION} per request.`;
+  }
+
   const messages: Message[] = [
-    { role: "system", content: await buildSystemPrompt(companyId || undefined) },
+    { role: "system", content: systemPrompt },
     ...history,
     { role: "user", content: userContent },
   ];
@@ -713,11 +728,19 @@ async function agentLoop(
   }
 
   const activeTools = contextMode === "none" ? [] : TOOLS;
+  const maxSteps = precisionMode ? MAX_STEPS_PRECISION : MAX_STEPS;
   let step = 0, totalIn = 0, totalOut = 0;
 
-  while (step < MAX_STEPS) {
+  // Precision mode: override model + reasoning
+  if (precisionMode) {
+    if (!model || model === "auto") selectedModel = "gpt-5";
+    reasoningEffort = "high";
+    send({ type: "routing", status: "done", complexity: "precision", model: selectedModel, reason: "precision mode", reasoning: "high" });
+  }
+
+  while (step < maxSteps) {
     step++;
-    send({ type: "step_start", step, maxSteps: MAX_STEPS, model: selectedModel, reasoning: reasoningEffort });
+    send({ type: "step_start", step, maxSteps, model: selectedModel, reasoning: reasoningEffort });
 
     let result: LLMResult;
     try {
@@ -729,9 +752,19 @@ async function agentLoop(
     totalIn += result.tokensInput;
     totalOut += result.tokensOutput;
 
+    // Cost check (precision mode guardrail)
+    const rate = COST_TABLE[selectedModel] || COST_TABLE["gpt-5-mini"];
+    const runningCost = totalIn * rate.input + totalOut * rate.output;
+    if (precisionMode && runningCost > MAX_COST_PRECISION) {
+      send({ type: "error", message: `Cost cap reached ($${runningCost.toFixed(4)} > $${MAX_COST_PRECISION}). Stopping to prevent runaway costs.` });
+      // Still save what we have
+      await sb.from("messages").insert({ conversation_id: conversationId, role: "assistant", content: result.text || "(cost cap reached)", model: selectedModel, tokens_input: totalIn, tokens_output: totalOut, cost_usd: runningCost, step });
+      send({ type: "done", step, model: selectedModel, tokensInput: totalIn, tokensOutput: totalOut, costUsd: runningCost, routingReason: routingReason + " (cost-capped)" });
+      return;
+    }
+
     if (result.stopReason === "end_turn" || result.toolCalls.length === 0) {
-      const rate = COST_TABLE[selectedModel] || COST_TABLE["gpt-5-mini"];
-      const cost = totalIn * rate.input + totalOut * rate.output;
+      const cost = runningCost;
 
       await sb.from("messages").insert({
         conversation_id: conversationId, role: "assistant", content: result.text,
@@ -804,7 +837,7 @@ Deno.serve(async (req) => {
 
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
-  let body: { conversation_id?: string; message: string; model?: string; context_mode?: string; company_id?: string; reasoning_effort?: string; images?: { data_url: string; name: string; type: string }[] };
+  let body: { conversation_id?: string; message: string; model?: string; context_mode?: string; company_id?: string; reasoning_effort?: string; images?: { data_url: string; name: string; type: string }[]; precision_mode?: boolean };
   try { body = await req.json(); } catch { return new Response("Invalid JSON", { status: 400 }); }
   if (!body.message) return new Response("message is required", { status: 400 });
 
@@ -828,7 +861,7 @@ Deno.serve(async (req) => {
       }
       send({ type: "conversation", id: conversationId });
       try {
-        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images);
+        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images, body.precision_mode);
       } catch (err) { send({ type: "error", message: (err as Error).message }); }
       controller.close();
     },

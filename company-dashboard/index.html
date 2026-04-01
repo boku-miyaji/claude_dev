@@ -4797,7 +4797,7 @@ async function renderApiCosts(root) {
 // AI Chat Page (Agent-loop, OpenCode-inspired)
 // ============================================================
 
-var chatState = { conversationId: null, conversations: [], model: 'auto', contextMode: 'full', companyId: null, streaming: false, directMode: false, reasoningEffort: 'auto' };
+var chatState = { conversationId: null, conversations: [], model: 'auto', contextMode: 'full', companyId: null, streaming: false, directMode: false, reasoningEffort: 'auto', precisionMode: false };
 
 /** Get stored OpenAI API key for direct mode */
 function getChatApiKey() { return localStorage.getItem('hd-chat-api-key') || ''; }
@@ -4929,12 +4929,28 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   function makePillSelect(opts, stateKey) {
     var sel = el('select', {className: ''}, opts.map(function(o) { return el('option', {value: o[0], textContent: o[1]}); }));
     sel.value = chatState[stateKey];
+    sel.dataset.stateKey = stateKey;
     sel.onchange = function() { chatState[stateKey] = sel.value; };
     return sel;
   }
   controlsRow.appendChild(makePillSelect([['auto','Auto'],['gpt-5-nano','GPT-5 nano'],['gpt-5-mini','GPT-5 mini'],['gpt-5','GPT-5']], 'model'));
   controlsRow.appendChild(makePillSelect([['auto','Thinking: Auto'],['none','Thinking: None'],['low','Thinking: Low'],['medium','Thinking: Med'],['high','Thinking: High']], 'reasoningEffort'));
   controlsRow.appendChild(makePillSelect([['full','Context: Full'],['supabase','Context: DB'],['none','Context: None']], 'contextMode'));
+
+  // Precision Mode toggle
+  var precBtn = el('button', {style: 'font-size:11px;padding:4px 10px;border-radius:16px;border:1px solid var(--border);background:' + (chatState.precisionMode ? 'var(--accent)' : 'var(--surface)') + ';color:' + (chatState.precisionMode ? '#fff' : 'var(--text2)') + ';cursor:pointer;font-family:var(--font);font-weight:600;transition:all .15s', textContent: chatState.precisionMode ? 'Precision ON' : 'Precision'});
+  precBtn.addEventListener('click', function() {
+    chatState.precisionMode = !chatState.precisionMode;
+    precBtn.style.background = chatState.precisionMode ? 'var(--accent)' : 'var(--surface)';
+    precBtn.style.color = chatState.precisionMode ? '#fff' : 'var(--text2)';
+    precBtn.textContent = chatState.precisionMode ? 'Precision ON' : 'Precision';
+    if (chatState.precisionMode) {
+      // Override settings for precision
+      chatState.model = 'gpt-5'; chatState.reasoningEffort = 'high'; chatState.contextMode = 'full';
+      controlsRow.querySelectorAll('select').forEach(function(s) { s.value = chatState[s.dataset.stateKey || '']; });
+    }
+  });
+  controlsRow.appendChild(precBtn);
   inputWrap.appendChild(controlsRow);
 
   // Attachment preview
@@ -5140,7 +5156,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
       var session = await sb.auth.getSession();
       var token = session.data.session ? session.data.session.access_token : '';
       var res = await fetch(edgeFnUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
-        body:JSON.stringify({conversation_id:chatState.conversationId,message:text,model:chatState.model,context_mode:chatState.contextMode,company_id:chatState.companyId,reasoning_effort:chatState.reasoningEffort,images:images.length?images:undefined})});
+        body:JSON.stringify({conversation_id:chatState.conversationId,message:text,model:chatState.model,context_mode:chatState.contextMode,company_id:chatState.companyId,reasoning_effort:chatState.reasoningEffort,images:images.length?images:undefined,precision_mode:chatState.precisionMode||undefined})});
       if (!res.ok) { contentDiv.textContent = 'Edge Function error: HTTP ' + res.status; contentDiv.style.color='var(--red)'; return; }
 
       var reader = res.body.getReader(), decoder = new TextDecoder(), buf = '';
