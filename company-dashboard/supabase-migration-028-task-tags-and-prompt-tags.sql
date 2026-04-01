@@ -1,0 +1,75 @@
+-- Migration 028: タスク分類タグ + プロンプトタグ体系強化
+-- 目的: タスクとプロンプトを多次元で分類し、忘却防止・横断分析を可能にする
+
+-- ============================================================
+-- 1. tasks テーブルに tags カラムを追加
+-- ============================================================
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS tags text[] DEFAULT '{}';
+
+-- タグ検索用のGINインデックス
+CREATE INDEX IF NOT EXISTS idx_tasks_tags ON tasks USING gin (tags);
+
+-- ============================================================
+-- 2. tasks テーブルに追加メタデータ
+-- ============================================================
+-- source: タスクの発生元（ceo_instruction, auto_scan, intelligence, pipeline など）
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS source text DEFAULT 'ceo_instruction';
+
+-- ============================================================
+-- タグ体系ドキュメント（コメントとして記録）
+-- ============================================================
+--
+-- ## タスク tags の分類軸（複数付与可）
+--
+-- ### 軸1: スコープ（どの会社/個人か）
+--   hd          — HD全社横断
+--   pj:rikyu    — りきゅうPJ
+--   pj:circuit  — 回路PJ
+--   pj:foundry  — Foundry PJ
+--   personal    — 個人のこと
+--
+-- ### 軸2: 部署
+--   dept:security     — セキュリティ部
+--   dept:ai-dev       — AI開発
+--   dept:sys-dev      — システム開発
+--   dept:pm           — PM
+--   dept:materials    — 資料制作
+--   dept:research     — リサーチ
+--   dept:intelligence — 情報収集
+--   dept:hr           — 人事
+--   dept:secretary    — 秘書室
+--
+-- ### 軸3: カテゴリ
+--   cat:feature       — 新機能開発
+--   cat:bugfix        — バグ修正
+--   cat:security      — セキュリティ対策
+--   cat:infra         — インフラ/CI/CD
+--   cat:docs          — ドキュメント
+--   cat:design        — 設計
+--   cat:research      — 調査
+--   cat:ops           — 運用改善
+--   cat:dashboard     — ダッシュボード
+--
+-- ### 軸4: 技術領域
+--   tech:github-actions
+--   tech:supabase
+--   tech:nextjs
+--   tech:python
+--   tech:mcp
+--   tech:llm
+--
+-- ## プロンプト tags の分類軸（複数付与可）
+--
+-- ### 軸1: 指示の種類
+--   intent:implement  — 実装指示
+--   intent:fix        — 修正指示
+--   intent:investigate — 調査指示
+--   intent:design     — 設計指示
+--   intent:review     — レビュー依頼
+--   intent:brainstorm — 壁打ち/相談
+--   intent:manage     — 管理/運用指示
+--   intent:info       — 情報提供/確認
+--
+-- ### 軸2: スコープ（タスクと同じ）
+-- ### 軸3: 部署（タスクと同じ）
+-- ### 軸4: カテゴリ（タスクと同じ）

@@ -173,6 +173,39 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority
 
 **注意**: `x-ingest-key` なしでは RLS で空配列が返る。必ず付与すること。
 
+### タスク管理ルール（必須）
+
+**社長からの依頼は必ずタスク化してから作業に入る。** 完了したらタスクを閉じる。
+
+#### 運用フロー
+
+```
+依頼受付 → タスク作成（Supabase INSERT） → 作業実行 → タスク完了（status=done）
+```
+
+#### タスク作成時の必須事項
+
+1. **タイトルにプレフィックス**: `[security]`, `[dashboard]`, `[ops]`, `[infra]` 等
+2. **description に tags を記載**: `tags: スコープ, 部署, カテゴリ, 技術` の形式
+3. **priority**: high / normal / low
+4. **company_id**: hd / rikyu / circuit / foundry
+
+#### 分類体系（`.company/secretary/policies/task-classification.md` 参照）
+
+| 軸 | プレフィックス | 例 |
+|----|-------------|-----|
+| スコープ | なし | `hd`, `pj:rikyu`, `personal` |
+| 部署 | `dept:` | `dept:security`, `dept:sys-dev` |
+| カテゴリ | `cat:` | `cat:feature`, `cat:security` |
+| 技術 | `tech:` | `tech:github-actions`, `tech:supabase` |
+| 指示種類 | `intent:` | `intent:implement`, `intent:fix` |
+
+#### 放置防止
+
+- `/company` 起動時: 7日以上 open のタスクをブリーフィングでリマインド
+- タスク作業中にセッションが切れても、次回起動時に open タスクとして表示される
+- **作業完了時は必ず status=done + completed_at を更新**
+
 ### 自動記録
 - 意思決定 → `secretary/notes/YYYY-MM-DD-decisions.md`
 - 学び → `secretary/notes/YYYY-MM-DD-learnings.md`

@@ -553,15 +553,70 @@ async function classifyComplexity(message: string): Promise<string> {
 // System prompt
 // ============================================================
 
-function buildSystemPrompt(companyId?: string): string {
-  return `You are an AI assistant embedded in a management dashboard.
-You help the CEO manage multiple projects, tasks, knowledge, and business operations.
+async function buildSystemPrompt(companyId?: string, personalization?: Record<string, unknown>): Promise<string> {
+  const sb = getSupabase();
+  const p = personalization || {};
 
+  // Load personalization from user_settings if not provided
+  if (!p.chat_nickname) {
+    const { data } = await sb.from("user_settings").select("chat_nickname,chat_occupation,chat_about,chat_style,chat_warmth,chat_emoji,chat_custom_instructions,chat_memory_enabled,chat_diary_enabled").limit(1).single();
+    if (data) Object.assign(p, data);
+  }
+
+  // Build personalization section
+  let personSection = "";
+  if (p.chat_nickname || p.chat_occupation || p.chat_about) {
+    personSection = "\n## About the User\n";
+    if (p.chat_nickname) personSection += `- Name: ${p.chat_nickname}\n`;
+    if (p.chat_occupation) personSection += `- Occupation: ${p.chat_occupation}\n`;
+    if (p.chat_about) personSection += `- About: ${p.chat_about}\n`;
+  }
+
+  // Style instructions
+  let styleSection = "";
+  const styleMap: Record<string, string> = { formal: "Use formal, polished language.", casual: "Be casual and friendly.", concise: "Be extremely concise. Short sentences.", detailed: "Provide detailed, thorough answers." };
+  const warmthMap: Record<string, string> = { warm: "Be warm and encouraging.", neutral: "Be neutral and professional.", direct: "Be direct and to the point. No filler." };
+  const emojiMap: Record<string, string> = { none: "Never use emoji.", some: "Use emoji sparingly for emphasis.", lots: "Use emoji freely to add personality." };
+  if (styleMap[p.chat_style as string]) styleSection += "- " + styleMap[p.chat_style as string] + "\n";
+  if (warmthMap[p.chat_warmth as string]) styleSection += "- " + warmthMap[p.chat_warmth as string] + "\n";
+  if (emojiMap[p.chat_emoji as string]) styleSection += "- " + emojiMap[p.chat_emoji as string] + "\n";
+  if (p.chat_custom_instructions) styleSection += "- " + p.chat_custom_instructions + "\n";
+
+  // Load knowledge rules (active, high confidence)
+  let knowledgeSection = "";
+  if (p.chat_memory_enabled !== false) {
+    const { data: rules } = await sb.from("knowledge_base").select("rule,category").eq("status", "active").gte("confidence", 2).order("confidence", { ascending: false }).limit(15);
+    if (rules && rules.length > 0) {
+      knowledgeSection = "\n## Accumulated Knowledge (apply silently)\n" + rules.map(r => `- [${r.category}] ${r.rule}`).join("\n") + "\n";
+    }
+  }
+
+  // Load recent diary entries for deeper understanding
+  let diarySection = "";
+  if (p.chat_diary_enabled !== false) {
+    const since = new Date(Date.now() - 14 * 86400000).toISOString();
+    const { data: diary } = await sb.from("secretary_notes").select("title,body,note_date").eq("type", "diary").gte("created_at", since).order("note_date", { ascending: false }).limit(5);
+    if (diary && diary.length > 0) {
+      diarySection = "\n## Recent Diary Entries (for context, do not mention unless asked)\n" + diary.map(d => `### ${d.note_date}\n${(d.body || "").substring(0, 300)}`).join("\n") + "\n";
+    }
+  }
+
+  // Load recent CEO insights
+  let insightsSection = "";
+  if (p.chat_memory_enabled !== false) {
+    const { data: insights } = await sb.from("ceo_insights").select("category,insight").order("created_at", { ascending: false }).limit(8);
+    if (insights && insights.length > 0) {
+      insightsSection = "\n## User Insights (apply silently to personalize)\n" + insights.map(i => `- [${i.category}] ${i.insight}`).join("\n") + "\n";
+    }
+  }
+
+  return `You are the user's personal AI assistant. You know them deeply through their diary, knowledge base, behavior insights, and work history. You are the AI that understands them best.
+${personSection}
 ## Behavior
 - Use tools to gather real data before answering. Do NOT guess.
 - Combine multiple tools for comprehensive answers.
 - If tool results are insufficient, try different tools or queries.
-- Be concise but thorough. Cite data sources.
+- You have access to the user's diary, tasks, knowledge, insights, and work artifacts. Use them proactively.
 
 ## Available Context (via tools)
 - tasks: Task/TODO management across PJ companies
@@ -580,7 +635,9 @@ PJ Company: ${companyId || "HD (all projects)"}
 ## Response Style
 - Respond in the user's language (Japanese for Japanese input)
 - Use Markdown formatting
-- Cite source tools when showing data`;
+- Cite source tools when showing data
+${styleSection ? "## Style Preferences\n" + styleSection : ""}
+${knowledgeSection}${diarySection}${insightsSection}`;
 }
 
 // ============================================================
@@ -616,7 +673,7 @@ async function agentLoop(
   }
 
   const messages: Message[] = [
-    { role: "system", content: buildSystemPrompt(companyId || undefined) },
+    { role: "system", content: await buildSystemPrompt(companyId || undefined) },
     ...history,
     { role: "user", content: userContent },
   ];
