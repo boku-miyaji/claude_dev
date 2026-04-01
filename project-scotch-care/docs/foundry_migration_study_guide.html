@@ -2205,11 +2205,54 @@ models:
       </tr>
     </table>
 
-    <p><strong>1と2は「できない」。ここが決定的で、ここだけで説明が成立する。</strong> LLMの話に深入りすると「Snowflakeでもできますよね？」の応酬になるので避ける。</p>
+    <p><strong>1と2は「できない」。ここが決定的。</strong> ただし、それだけではない。3つ目の決め手がある。</p>
+
+    <h4>3つ目の決め手: 統合プラットフォームとしての運用のしやすさ</h4>
+
+    <div class="callout danger">
+      <strong>「技術的にできる」と「運用に乗る」は全然違う</strong>
+      <p style="margin-top:8px;">Snowflake + Bedrock で「LLMも呼べます」は正しい。しかしそれは<strong>2つのサービスを跨いだ運用設計</strong>を意味する。SOMPOケアのデータエンジニアリング経験が浅い中で、これを本番運用に乗せるのは現実的か？</p>
+    </div>
+
+    <table>
+      <tr><th>運用場面</th><th>Databricks（統合PF）</th><th>Snowflake + Bedrock（2サービス）</th></tr>
+      <tr>
+        <td><strong>ETL内でLLM呼び出し</strong></td>
+        <td>同一PF内。Notebook でそのまま</td>
+        <td>External Access Integration設定 or 別サービス連携</td>
+      </tr>
+      <tr>
+        <td><strong>権限管理</strong></td>
+        <td>Unity Catalog でデータもAIも<strong>1箇所</strong></td>
+        <td>Horizon(データ) + Bedrock IAM(AI) の <strong>2系統管理</strong></td>
+      </tr>
+      <tr>
+        <td><strong>コスト監視</strong></td>
+        <td>Usage Dashboard で<strong>全部見える</strong></td>
+        <td>Snowflake Credit + Bedrock per-token の<strong>2画面</strong></td>
+      </tr>
+      <tr>
+        <td><strong>障害切り分け</strong></td>
+        <td><strong>1社に聞けばいい</strong></td>
+        <td>「Snowflake？ Bedrock？ ネットワーク？」</td>
+      </tr>
+      <tr>
+        <td><strong>学習コスト</strong></td>
+        <td>1つのPFを覚えればいい</td>
+        <td>2つのサービスの概念・操作・課金を覚える</td>
+      </tr>
+      <tr>
+        <td><strong>開発者体験</strong></td>
+        <td>Notebook → ETL → ML → デプロイが<strong>同一UI内</strong></td>
+        <td>Snowflake UI + AWS Console の<strong>行き来</strong></td>
+      </tr>
+    </table>
+
+    <p>これは「DWH不要、S3+Athenaで十分」と同じ議論構造。技術的にはできるが、<strong>統合管理・運用のしやすさを考えたら統合PFを選ぶ</strong>。SOMPOケアがFoundryから移行する理由はFoundryが嫌だからではなく、コスト・透明性・ロックインが問題だから。<strong>「統合されている良さ」は引き継ぎたい</strong>。Databricksがその点で最もFoundryに近い。</p>
 
     <div class="callout success">
       <strong>MTGでの推奨フレーズ</strong>
-      <p style="margin-top:8px;">「基盤を Databricks に推奨する最大の理由は2つです。<strong>1つ目、219本の PySpark パイプラインをそのまま移植できること</strong>。Snowflake だと全面書き換えで数千万円の追加コストです。<strong>2つ目、MLflow という OSS の実験管理基盤があること</strong>。将来の AI モデル開発でナレッジが蓄積され、かつベンダーに縛られない。LLM の推論はどちらの基盤でも Bedrock 経由で呼べるので、そこは決め手になりません」</p>
+      <p style="margin-top:8px;">「基盤を Databricks に推奨する理由は3つです。<strong>1つ目、219本の PySpark パイプラインをそのまま移植できること</strong>。Snowflake だと全面書き換えで数千万円の追加コストです。<strong>2つ目、MLflow という OSS の実験管理基盤があること</strong>。将来の AI モデル開発でナレッジが蓄積され、かつベンダーに縛られない。<strong>3つ目、データ加工からAI活用まで1つのプラットフォームで統合管理できること</strong>。Foundryの「統合されている良さ」を引き継ぎつつ、コスト透明性とオープン性を確保できます。LLM の推論はどちらの基盤でも Bedrock 経由で呼べますが、それを運用に乗せるときの統合度が違います」</p>
     </div>
 
     <h3 id="s7b-actions">ACESとして具体的にやるべきこと（5つ）</h3>
