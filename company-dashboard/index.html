@@ -4514,8 +4514,14 @@ function renderChatMain(container, edgeFnUrl) {
   }
 
   /** Edge Function Mode: SSE streaming from Supabase */
-  async function sendEdgeFnMode(text, edgeFnUrl, statusDiv, contentDiv, messagesArea, assistantDiv) {
+  async function sendEdgeFnMode(text, edgeFnUrl, statusDiv, contentDiv, messagesArea, assistantDiv, attachments) {
     var fullText = '';
+
+    // Prepare image data for Edge Function
+    var images = (attachments || []).filter(function(a) { return a.type.startsWith('image/'); }).map(function(a) {
+      return {data_url: a.dataUrl, name: a.name, type: a.type};
+    });
+
     try {
       var session = await sb.auth.getSession();
       var token = session.data.session ? session.data.session.access_token : '';
@@ -4528,7 +4534,8 @@ function renderChatMain(container, edgeFnUrl) {
           model: chatState.model,
           context_mode: chatState.contextMode,
           company_id: chatState.companyId,
-          reasoning_effort: chatState.reasoningEffort
+          reasoning_effort: chatState.reasoningEffort,
+          images: images.length > 0 ? images : undefined
         })
       });
 
@@ -4630,12 +4637,27 @@ function renderMarkdownSafe(text, contentDiv) {
   }
 }
 
-function appendUserMsg(container, text) {
-  container.appendChild(el('div', {
+function appendUserMsg(container, text, attachments) {
+  var div = el('div', {
     className: 'chat-msg chat-user',
-    style: 'padding:10px 14px;border-radius:8px;background:var(--accent-bg, rgba(99,102,241,0.08));font-size:13px;align-self:flex-end;max-width:80%;white-space:pre-wrap',
-    textContent: text
-  }));
+    style: 'padding:10px 14px;border-radius:8px;background:var(--accent-bg, rgba(99,102,241,0.08));font-size:13px;align-self:flex-end;max-width:80%'
+  });
+  if (text) div.appendChild(el('div', {style: 'white-space:pre-wrap', textContent: text}));
+  if (attachments && attachments.length > 0) {
+    var attRow = el('div', {style: 'display:flex;gap:6px;flex-wrap:wrap;margin-top:6px'});
+    attachments.forEach(function(att) {
+      if (att.type.startsWith('image/')) {
+        var img = el('img', {style: 'max-width:200px;max-height:150px;border-radius:6px;cursor:pointer'});
+        img.src = att.dataUrl;
+        img.addEventListener('click', function() { window.open(att.dataUrl, '_blank'); });
+        attRow.appendChild(img);
+      } else {
+        attRow.appendChild(el('div', {style: 'padding:4px 8px;background:var(--surface);border-radius:4px;font-size:11px', textContent: att.name}));
+      }
+    });
+    div.appendChild(attRow);
+  }
+  container.appendChild(div);
 }
 
 function appendAssistantMsg(container, text, model, tokIn, tokOut, cost, step) {

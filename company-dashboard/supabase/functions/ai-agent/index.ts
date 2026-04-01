@@ -27,6 +27,7 @@ interface ContentBlock {
   input?: Record<string, unknown>;
   tool_use_id?: string;
   content?: string;
+  image_url?: { url: string; detail?: string };
 }
 
 interface ToolCall {
@@ -386,7 +387,8 @@ async function callOpenAI(model: string, messages: Message[], tools: ToolDef[], 
         tool_calls: m.tool_calls.map(tc => ({ id: tc.id, type: "function" as const, function: { name: tc.name, arguments: JSON.stringify(tc.input) } })),
       };
     }
-    return { role: m.role, content: typeof m.content === "string" ? m.content : JSON.stringify(m.content) };
+    // Pass content blocks (e.g. image_url) as-is for OpenAI Vision
+    return { role: m.role, content: m.content };
   });
 
   const body: Record<string, unknown> = { model, messages: oaiMessages, stream: true, stream_options: { include_usage: true } };
@@ -588,7 +590,7 @@ PJ Company: ${companyId || "HD (all projects)"}
 async function agentLoop(
   conversationId: string, userMessage: string, model: string | null,
   contextMode: string, companyId: string | null, send: (e: SSEEvent) => void,
-  userReasoningEffort?: string
+  userReasoningEffort?: string, images?: { data_url: string; name: string; type: string }[]
 ) {
   const sb = getSupabase();
 
@@ -603,10 +605,20 @@ async function agentLoop(
     tool_calls: m.tool_calls || undefined, tool_call_id: m.tool_call_id || undefined, name: m.tool_name || undefined,
   }));
 
+  // Build user message (with images if provided)
+  let userContent: string | ContentBlock[] = userMessage;
+  if (images && images.length > 0) {
+    const blocks: ContentBlock[] = [{ type: "text", text: userMessage }];
+    for (const img of images) {
+      blocks.push({ type: "image_url", image_url: { url: img.data_url, detail: "auto" } } as unknown as ContentBlock);
+    }
+    userContent = blocks;
+  }
+
   const messages: Message[] = [
     { role: "system", content: buildSystemPrompt(companyId || undefined) },
     ...history,
-    { role: "user", content: userMessage },
+    { role: "user", content: userContent },
   ];
 
   await sb.from("messages").insert({ conversation_id: conversationId, role: "user", content: userMessage, step: 0 });
@@ -733,7 +745,7 @@ Deno.serve(async (req) => {
 
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
-  let body: { conversation_id?: string; message: string; model?: string; context_mode?: string; company_id?: string; reasoning_effort?: string };
+  let body: { conversation_id?: string; message: string; model?: string; context_mode?: string; company_id?: string; reasoning_effort?: string; images?: { data_url: string; name: string; type: string }[] };
   try { body = await req.json(); } catch { return new Response("Invalid JSON", { status: 400 }); }
   if (!body.message) return new Response("message is required", { status: 400 });
 
@@ -757,7 +769,7 @@ Deno.serve(async (req) => {
       }
       send({ type: "conversation", id: conversationId });
       try {
-        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort);
+        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images);
       } catch (err) { send({ type: "error", message: (err as Error).message }); }
       controller.close();
     },

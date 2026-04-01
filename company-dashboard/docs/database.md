@@ -54,3 +54,12 @@
 | テーブル | 用途 | 書き込み元 |
 |---------|------|-----------|
 | `tab_clicks` | モバイルタブのクリック数集計（ナビ優先順位の自動調整） | Dashboard (navigate) |
+
+## AI Chat
+
+| テーブル | 用途 | 書き込み元 |
+|---------|------|-----------|
+| `conversations` | チャット会話 | AI Chat (Edge Fn / Direct) |
+| `messages` | メッセージ（user/assistant/tool） + attachments JSONB | AI Chat |
+| `chat_usage` | 日次コスト集計 | AI Chat |
+| `chat-attachments` (Storage) | 画像・ファイルの永続保存 | AI Chat |
