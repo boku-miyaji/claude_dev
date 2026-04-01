@@ -115,6 +115,34 @@ data_sources:
       score = score + (1.0 - score) * 0.1
       （デフォルト1.0に向かって10%回帰）
 
+  # ── 優先度2.5: セキュリティ（サプライチェーン保護） ──
+
+  security_audit:
+    priority: 4
+    max_age_days: 30
+    auto_update: false
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/security/audits/"
+    stale_condition: "最終セキュリティ監査から30日超過"
+    update_action: |
+      リマインド:
+        「セキュリティ監査が30日以上更新されていません。
+         全PJの GitHub Actions SHA固定状況、依存関係、CI権限を再チェックしませんか？
+         最終監査: audits/YYYY-MM-DD.md」
+
+  security_scan:
+    priority: 5
+    max_age_days: 7
+    auto_update: true
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/security/audits/scan-latest.md"
+    stale_condition: "週次セキュリティスキャンが7日以上前（GitHub Actions障害の可能性）"
+    update_action: |
+      GitHub Actions の security-scan ワークフローが正常に動いているか確認。
+      障害時は手動で python scripts/security/scan.py を実行。
+
   # ── 優先度3: 基盤データ（自動更新済みだが確認は必要） ──
 
   intelligence_reports:
