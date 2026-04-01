@@ -150,6 +150,29 @@ PJ会社一覧は `registry.md` を参照。
 - 現在時刻を基準に「✅完了」「▶️進行中」「⏳これから」を明示
 - `[仕事]`/`[In]`/`[Ex]` タグ付きは仕事関連として強調
 
+### 起動時のコメント・タスク取得（必須）
+
+ブリーフィングでSupabaseからコメントとタスクを取得する。
+**anon key + x-ingest-key ヘッダー** が必要（RLS のため）。
+
+```bash
+source /workspace/.claude/hooks/supabase.env
+
+# 未処理コメント
+curl -4 -s "${SUPABASE_URL}/rest/v1/comments?select=*&order=created_at.desc&limit=20" \
+  -H "apikey: ${SUPABASE_ANON_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}"
+
+# 未完了タスク
+curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority.asc,created_at.desc" \
+  -H "apikey: ${SUPABASE_ANON_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}"
+```
+
+**注意**: `x-ingest-key` なしでは RLS で空配列が返る。必ず付与すること。
+
 ### 自動記録
 - 意思決定 → `secretary/notes/YYYY-MM-DD-decisions.md`
 - 学び → `secretary/notes/YYYY-MM-DD-learnings.md`
