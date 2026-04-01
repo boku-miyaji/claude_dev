@@ -31,7 +31,10 @@
     ├── security/CLAUDE.md             ← セキュリティ部
     └── sys-dev/CLAUDE.md             ← システム開発部署
 
-.company-/                      
+.company-foundry/                      Foundry移行会社
+.company-rikyu/                      りきゅう
+.company-circuit/                      回路設計支援システム会社
+.company-polaris/                      Polaris AI
 ```
 <!-- GENERATED:ARCH_TREE:END -->
 
@@ -41,6 +44,26 @@
 - ai-dev, sys-dev, pm, materials, research, intelligence はHDが管理
 - 子会社はPJ固有コンテキスト（クライアント情報、リポジトリ、ドメイン知識）のみ保持
 - 部署がPJ作業する際は、該当子会社のCLAUDE.mdからコンテキストを読み込む
+
+### SSOT（Single Source of Truth）ルール
+
+**会社・部署情報は複数ファイルに散在している。必ず以下のプロトコルに従うこと。**
+
+| マスター | 派生 |
+|---------|------|
+| `registry.md` PJ会社一覧 | CLAUDE.md アーキテクチャ図、task-classification.md 軸1、prompt-log.sh パターン、Supabase |
+| `departments/*/` ディレクトリ | registry.md 部署テーブル、CLAUDE.md Agent一覧、task-classification.md 軸2 |
+| `.company-*/` ディレクトリ | registry.md 会社テーブル（存在確認） |
+
+**会社・部署の追加/変更/削除時の手順（必須）:**
+1. マスターを編集（registry.md に行追加、departments/ にフォルダ作成等）
+2. `bash scripts/company/sync-registry.sh` を実行 → 全派生ファイルが自動更新
+3. `git add + commit + push`
+
+**手動で派生ファイルを個別編集してはいけない。** 必ず `sync-registry.sh` 経由で更新する。
+マーカー（`<!-- GENERATED:...:START/END -->`）で囲まれたセクションは自動生成領域。
+
+**`/company` 起動時**: `validate-registry.sh` が自動実行され、不整合があればブリーフィングで警告。
 
 ### 部署移管ルール
 | 条件 | アクション |

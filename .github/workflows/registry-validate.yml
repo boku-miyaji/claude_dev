@@ -1,0 +1,46 @@
+name: Registry Consistency Check
+
+on:
+  push:
+    paths:
+      - '.company/registry.md'
+      - '.company/departments/**'
+      - '.company-*/**'
+  schedule:
+    # 毎日 09:00 JST = 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate registry consistency
+        id: validate
+        run: |
+          RESULT=$(bash scripts/company/validate-registry.sh)
+          echo "$RESULT" | jq .
+          STATUS=$(echo "$RESULT" | jq -r '.status')
+          ISSUES=$(echo "$RESULT" | jq -r '.issues | length')
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "issues=$ISSUES" >> "$GITHUB_OUTPUT"
+
+      - name: Auto-sync if inconsistent
+        if: steps.validate.outputs.status == 'inconsistent'
+        env:
+          ISSUE_COUNT: ${{ steps.validate.outputs.issues }}
+        run: |
+          bash scripts/company/sync-registry.sh
+          git config user.name "registry-bot"
+          git config user.email "registry-bot@users.noreply.github.com"
+          git add .company/ .claude/hooks/prompt-log.sh
+          git diff --cached --quiet || \
+            git commit -m "chore(registry): auto-sync from SSOT [issues: ${ISSUE_COUNT}]"
+          git push

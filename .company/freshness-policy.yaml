@@ -10,6 +10,20 @@
 
 data_sources:
 
+  # ── 優先度0: レジストリ整合性（全データの基盤） ──
+
+  registry_consistency:
+    priority: 0
+    max_age_days: 0
+    auto_update: true
+    blocking: true
+    check_method: script
+    check_script: "scripts/company/validate-registry.sh"
+    stale_condition: "会社・部署の情報が1箇所でも不整合"
+    update_action: |
+      scripts/company/sync-registry.sh を実行し、全派生ファイルを更新。
+      更新後、git diff で変更内容を社長に報告。
+
   # ── 優先度1: 分析系（意思決定に直結、最も古くなりやすい） ──
 
   ceo_insights:
