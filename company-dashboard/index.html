@@ -4288,7 +4288,48 @@ function renderChatMain(container, edgeFnUrl) {
     ]));
   }
 
-  // Input bar
+  // Attachments state
+  var pendingAttachments = []; // [{name, type, dataUrl, base64}]
+  var previewArea = el('div', {style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:4px'});
+
+  // Hidden file input
+  var fileInput = el('input', {type: 'file', accept: 'image/*,.pdf,.txt,.md,.csv,.json', multiple: true, style: 'display:none'});
+  fileInput.addEventListener('change', function() {
+    Array.from(fileInput.files).forEach(function(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var dataUrl = e.target.result;
+        var base64 = dataUrl.split(',')[1];
+        pendingAttachments.push({name: file.name, type: file.type, dataUrl: dataUrl, base64: base64, size: file.size});
+        renderPreviews();
+      };
+      reader.readAsDataURL(file);
+    });
+    fileInput.value = '';
+  });
+
+  function renderPreviews() {
+    while (previewArea.firstChild) previewArea.removeChild(previewArea.firstChild);
+    pendingAttachments.forEach(function(att, idx) {
+      var pill = el('div', {style: 'display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--surface2);border-radius:6px;font-size:11px'});
+      if (att.type.startsWith('image/')) {
+        var thumb = el('img', {style: 'width:24px;height:24px;object-fit:cover;border-radius:4px'});
+        thumb.src = att.dataUrl;
+        pill.appendChild(thumb);
+      }
+      pill.appendChild(el('span', {textContent: att.name.length > 20 ? att.name.substring(0, 17) + '...' : att.name}));
+      var removeBtn = el('span', {style: 'cursor:pointer;color:var(--text3);margin-left:2px', textContent: '\u00D7'});
+      removeBtn.addEventListener('click', function() { pendingAttachments.splice(idx, 1); renderPreviews(); });
+      pill.appendChild(removeBtn);
+      previewArea.appendChild(pill);
+    });
+  }
+
+  // Input bar with attach button
+  var attachBtn = el('button', {className: 'btn', style: 'flex-shrink:0;height:48px;padding:0 12px;font-size:18px', title: 'Attach image or file'});
+  attachBtn.appendChild(document.createTextNode('\uD83D\uDCCE'));
+  attachBtn.addEventListener('click', function() { fileInput.click(); });
+
   var input = el('textarea', {
     className: 'input',
     placeholder: 'Message the AI agent...',
@@ -4296,14 +4337,36 @@ function renderChatMain(container, edgeFnUrl) {
   });
   var sendBtn = el('button', {className: 'btn btn-primary', style: 'flex-shrink:0;height:48px;padding:0 20px', textContent: 'Send'});
 
-  var inputBar = el('div', {style: 'display:flex;gap:8px;margin-top:8px;flex-shrink:0'}, [input, sendBtn]);
+  var inputRow = el('div', {style: 'display:flex;gap:8px;align-items:flex-end'}, [attachBtn, input, sendBtn]);
+  var inputBar = el('div', {style: 'margin-top:8px;flex-shrink:0'}, [previewArea, inputRow]);
   container.appendChild(inputBar);
+
+  // Paste image support (Ctrl+V)
+  input.addEventListener('paste', function(e) {
+    var items = e.clipboardData && e.clipboardData.items;
+    if (!items) return;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        var file = items[i].getAsFile();
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          var dataUrl = ev.target.result;
+          pendingAttachments.push({name: 'pasted-image.png', type: file.type, dataUrl: dataUrl, base64: dataUrl.split(',')[1], size: file.size});
+          renderPreviews();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  });
 
   // Send handler
   async function sendMessage() {
     var text = input.value.trim();
-    if (!text || chatState.streaming) return;
+    var attachments = pendingAttachments.slice();
+    if ((!text && attachments.length === 0) || chatState.streaming) return;
     input.value = '';
+    pendingAttachments = [];
+    renderPreviews();
     chatState.streaming = true;
     sendBtn.disabled = true;
     sendBtn.textContent = '...';
@@ -4311,7 +4374,7 @@ function renderChatMain(container, edgeFnUrl) {
     // Clear welcome if new chat
     if (!chatState.conversationId) { while (messagesArea.firstChild) messagesArea.removeChild(messagesArea.firstChild); }
 
-    appendUserMsg(messagesArea, text);
+    appendUserMsg(messagesArea, text, attachments);
     messagesArea.scrollTop = messagesArea.scrollHeight;
 
     // Streaming assistant container
@@ -4326,9 +4389,9 @@ function renderChatMain(container, edgeFnUrl) {
 
     // Choose mode: Direct (browser-side OpenAI) or Edge Function
     if (chatState.directMode && getChatApiKey()) {
-      await sendDirectMode(text, statusDiv, contentDiv, messagesArea, assistantDiv);
+      await sendDirectMode(text, statusDiv, contentDiv, messagesArea, assistantDiv, attachments);
     } else {
-      await sendEdgeFnMode(text, edgeFnUrl, statusDiv, contentDiv, messagesArea, assistantDiv);
+      await sendEdgeFnMode(text, edgeFnUrl, statusDiv, contentDiv, messagesArea, assistantDiv, attachments);
     }
 
     chatState.streaming = false;
@@ -4337,10 +4400,10 @@ function renderChatMain(container, edgeFnUrl) {
   }
 
   /** Direct Mode: call OpenAI API from browser */
-  async function sendDirectMode(text, statusDiv, contentDiv, messagesArea, assistantDiv) {
+  async function sendDirectMode(text, statusDiv, contentDiv, messagesArea, assistantDiv, attachments) {
     var apiKey = getChatApiKey();
     var model = chatState.model === 'auto' ? 'gpt-5-nano' : chatState.model;
-    statusDiv.textContent = 'Direct Mode \u00B7 ' + model;
+    statusDiv.textContent = 'Direct Mode \u00B7 ' + model + (attachments.length ? ' \u00B7 ' + attachments.length + ' file(s)' : '');
 
     // Build conversation history from Supabase (if available)
     var oaiMessages = [
@@ -4358,7 +4421,20 @@ function renderChatMain(container, edgeFnUrl) {
         });
       }
     }
-    oaiMessages.push({role: 'user', content: text});
+
+    // Build user message with image attachments (OpenAI Vision format)
+    var imageAtts = attachments.filter(function(a) { return a.type.startsWith('image/'); });
+    var fileAtts = attachments.filter(function(a) { return !a.type.startsWith('image/'); });
+    if (imageAtts.length > 0) {
+      var contentParts = [{type: 'text', text: text + (fileAtts.length ? '\n\n[Attached files: ' + fileAtts.map(function(f){return f.name;}).join(', ') + ']' : '')}];
+      imageAtts.forEach(function(img) {
+        contentParts.push({type: 'image_url', image_url: {url: img.dataUrl, detail: 'auto'}});
+      });
+      oaiMessages.push({role: 'user', content: contentParts});
+    } else {
+      var msgText = text + (fileAtts.length ? '\n\n[Attached files: ' + fileAtts.map(function(f){return f.name;}).join(', ') + ']' : '');
+      oaiMessages.push({role: 'user', content: msgText});
+    }
 
     // Create conversation in Supabase if new
     if (!chatState.conversationId) {
