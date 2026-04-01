@@ -307,6 +307,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="diary"><span class="nav-icon">✎</span> Diary</button>
     <button class="nav-item" data-page="artifacts"><span class="nav-icon">📄</span> Artifacts</button>
     <button class="nav-item" data-page="chat"><span class="nav-icon">💬</span> AI Chat</button>
+    <button class="nav-item" data-page="api-costs"><span class="nav-icon">$</span> API Costs</button>
     <button class="nav-item" data-page="commands"><span class="nav-icon">⌘</span> Commands</button>
     <button class="nav-item" data-page="settings"><span class="nav-icon">⚙</span> Settings</button>
     <div class="nav-spacer"></div>
@@ -369,6 +370,7 @@ var ALL_MOB_TABS = [
   {page: 'diary', icon: '✎', label: 'Diary', pinned: true},
   {page: 'artifacts', icon: '📄', label: 'Artifacts', pinned: true},
   {page: 'chat', icon: '💬', label: 'AI Chat', pinned: true},
+  {page: 'api-costs', icon: '$', label: 'Costs'},
   {page: 'commands', icon: '⌘', label: 'Commands'},
   {page: 'settings', icon: '⚙', label: 'Settings'}
 ];
@@ -684,6 +686,7 @@ function renderPage(page) {
     artifacts: renderArtifacts,
     chat: renderChat,
     'chat-spec': renderChatSpec,
+    'api-costs': renderApiCosts,
     'how-it-works': renderHowItWorks,
     commands: renderSlashCommands,
     settings: renderSettings
@@ -3927,6 +3930,203 @@ function toggleReportDetail(card, data) {
   });
 
   card.appendChild(detail);
+}
+
+// ============================================================
+// API Costs Page
+// ============================================================
+
+async function renderApiCosts(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'API Costs'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'AI Chat のAPI利用コストをモデル別・日別に集計'}));
+
+  // Period selector
+  var periodDays = 30;
+  var periodSelect = el('select', {className: 'input', style: 'font-size:12px;width:auto;margin-bottom:16px'}, [
+    el('option', {value: '7', textContent: '過去7日'}),
+    el('option', {value: '30', textContent: '過去30日', selected: true}),
+    el('option', {value: '90', textContent: '過去90日'}),
+    el('option', {value: '365', textContent: '過去1年'})
+  ]);
+  root.appendChild(periodSelect);
+
+  var contentArea = el('div');
+  root.appendChild(contentArea);
+
+  async function loadCosts(days) {
+    while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
+    var since = new Date(Date.now() - days * 86400000).toISOString();
+
+    // Fetch all messages with cost data
+    var res = await sb.from('messages')
+      .select('role,model,tokens_input,tokens_output,cost_usd,created_at')
+      .eq('role', 'assistant')
+      .gte('created_at', since)
+      .not('cost_usd', 'is', null)
+      .order('created_at', {ascending: false});
+
+    var msgs = res.data || [];
+
+    if (msgs.length === 0) {
+      contentArea.appendChild(el('div', {className: 'card', style: 'padding:40px;text-align:center;color:var(--text3)'}, [
+        el('div', {style: 'font-size:24px;margin-bottom:8px', textContent: '$'}),
+        el('div', {textContent: 'この期間のAPI利用データはありません'})
+      ]));
+      return;
+    }
+
+    // === Summary cards ===
+    var totalCost = 0, totalIn = 0, totalOut = 0, totalRequests = 0;
+    var byModel = {};
+    var byDay = {};
+
+    msgs.forEach(function(m) {
+      var cost = parseFloat(m.cost_usd) || 0;
+      var tokIn = m.tokens_input || 0;
+      var tokOut = m.tokens_output || 0;
+      var model = m.model || 'unknown';
+      var day = m.created_at.substring(0, 10);
+
+      totalCost += cost;
+      totalIn += tokIn;
+      totalOut += tokOut;
+      totalRequests++;
+
+      if (!byModel[model]) byModel[model] = {cost: 0, tokIn: 0, tokOut: 0, count: 0};
+      byModel[model].cost += cost;
+      byModel[model].tokIn += tokIn;
+      byModel[model].tokOut += tokOut;
+      byModel[model].count++;
+
+      if (!byDay[day]) byDay[day] = {cost: 0, tokIn: 0, tokOut: 0, count: 0};
+      byDay[day].cost += cost;
+      byDay[day].tokIn += tokIn;
+      byDay[day].tokOut += tokOut;
+      byDay[day].count++;
+    });
+
+    var avgPerDay = totalCost / Math.max(1, Object.keys(byDay).length);
+    var projectedMonthly = avgPerDay * 30;
+
+    // KPI cards
+    var kpiGrid = el('div', {className: 'g4', style: 'margin-bottom:24px'});
+    function kpiCard(label, value, sub) {
+      return el('div', {className: 'card', style: 'padding:16px'}, [
+        el('div', {style: 'font-size:11px;color:var(--text3);margin-bottom:4px', textContent: label}),
+        el('div', {style: 'font-size:22px;font-weight:700;letter-spacing:-0.5px', textContent: value}),
+        sub ? el('div', {style: 'font-size:11px;color:var(--text3);margin-top:4px', textContent: sub}) : null
+      ].filter(Boolean));
+    }
+    kpiGrid.appendChild(kpiCard('Total Cost', '$' + totalCost.toFixed(4), days + ' days'));
+    kpiGrid.appendChild(kpiCard('Projected Monthly', '$' + projectedMonthly.toFixed(2), '$' + avgPerDay.toFixed(4) + '/day avg'));
+    kpiGrid.appendChild(kpiCard('Requests', totalRequests.toLocaleString(), (totalRequests / Math.max(1, Object.keys(byDay).length)).toFixed(1) + '/day avg'));
+    kpiGrid.appendChild(kpiCard('Total Tokens', ((totalIn + totalOut) / 1000).toFixed(1) + 'K', 'In:' + (totalIn/1000).toFixed(1) + 'K Out:' + (totalOut/1000).toFixed(1) + 'K'));
+    contentArea.appendChild(kpiGrid);
+
+    // === Model breakdown ===
+    contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Model Breakdown'}));
+    var modelCard = el('div', {className: 'card', style: 'margin-bottom:24px;overflow-x:auto'});
+    var modelTable = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px'});
+
+    var thead = el('tr', {style: 'border-bottom:2px solid var(--border)'});
+    ['Model', 'Requests', 'Input Tokens', 'Output Tokens', 'Cost', 'Avg/Req', 'Share'].forEach(function(h) {
+      thead.appendChild(el('th', {style: 'text-align:left;padding:8px 12px;font-weight:600;white-space:nowrap', textContent: h}));
+    });
+    modelTable.appendChild(thead);
+
+    // Sort by cost descending
+    var modelKeys = Object.keys(byModel).sort(function(a, b) { return byModel[b].cost - byModel[a].cost; });
+    modelKeys.forEach(function(model) {
+      var d = byModel[model];
+      var share = totalCost > 0 ? (d.cost / totalCost * 100) : 0;
+      var tr = el('tr', {style: 'border-bottom:1px solid var(--border)'});
+      var cells = [
+        model,
+        d.count.toLocaleString(),
+        d.tokIn.toLocaleString(),
+        d.tokOut.toLocaleString(),
+        '$' + d.cost.toFixed(4),
+        '$' + (d.cost / Math.max(1, d.count)).toFixed(6),
+        share.toFixed(1) + '%'
+      ];
+      cells.forEach(function(val, i) {
+        tr.appendChild(el('td', {style: 'padding:8px 12px;white-space:nowrap' + (i >= 4 ? ';font-family:var(--mono)' : ''), textContent: val}));
+      });
+      modelTable.appendChild(tr);
+    });
+
+    modelCard.appendChild(modelTable);
+    contentArea.appendChild(modelCard);
+
+    // === Cost bar chart (daily) ===
+    contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Daily Cost'}));
+    var chartCard = el('div', {className: 'card', style: 'margin-bottom:24px;padding:16px'});
+
+    // Get sorted days
+    var dayKeys = Object.keys(byDay).sort();
+    var maxDayCost = Math.max.apply(null, dayKeys.map(function(k) { return byDay[k].cost; }));
+    if (maxDayCost === 0) maxDayCost = 1;
+
+    var chartContainer = el('div', {style: 'display:flex;align-items:flex-end;gap:2px;height:120px;overflow-x:auto'});
+    dayKeys.forEach(function(day) {
+      var d = byDay[day];
+      var pct = (d.cost / maxDayCost) * 100;
+      var barWrap = el('div', {style: 'flex:1;min-width:' + Math.max(8, Math.floor(600 / dayKeys.length)) + 'px;display:flex;flex-direction:column;align-items:center;gap:2px'});
+      var bar = el('div', {
+        style: 'width:100%;background:var(--accent2);border-radius:3px 3px 0 0;min-height:2px;height:' + Math.max(2, pct) + '%;transition:height .3s',
+        title: day + ': $' + d.cost.toFixed(4) + ' (' + d.count + ' req)'
+      });
+      barWrap.appendChild(bar);
+      // Show label for every Nth day
+      if (dayKeys.length <= 14 || dayKeys.indexOf(day) % Math.ceil(dayKeys.length / 10) === 0) {
+        barWrap.appendChild(el('div', {style: 'font-size:9px;color:var(--text3);white-space:nowrap;transform:rotate(-45deg);transform-origin:top left;margin-top:2px', textContent: day.substring(5)}));
+      }
+      chartContainer.appendChild(barWrap);
+    });
+
+    chartCard.appendChild(chartContainer);
+
+    // Y-axis labels
+    var yLabel = el('div', {style: 'display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:24px'}, [
+      el('span', {textContent: '$0'}),
+      el('span', {textContent: '$' + maxDayCost.toFixed(4)})
+    ]);
+    chartCard.appendChild(yLabel);
+    contentArea.appendChild(chartCard);
+
+    // === Recent requests ===
+    contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Recent Requests (last 20)'}));
+    var recentCard = el('div', {className: 'card', style: 'overflow-x:auto'});
+    var recentTable = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px'});
+
+    var rHead = el('tr', {style: 'border-bottom:2px solid var(--border)'});
+    ['Time', 'Model', 'In', 'Out', 'Cost'].forEach(function(h) {
+      rHead.appendChild(el('th', {style: 'text-align:left;padding:8px 12px;font-weight:600', textContent: h}));
+    });
+    recentTable.appendChild(rHead);
+
+    msgs.slice(0, 20).forEach(function(m) {
+      var tr = el('tr', {style: 'border-bottom:1px solid var(--border)'});
+      var t = new Date(m.created_at);
+      var timeStr = (t.getMonth()+1) + '/' + t.getDate() + ' ' + t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+      [
+        timeStr,
+        m.model || '-',
+        (m.tokens_input || 0).toLocaleString(),
+        (m.tokens_output || 0).toLocaleString(),
+        '$' + (parseFloat(m.cost_usd) || 0).toFixed(6)
+      ].forEach(function(val, i) {
+        tr.appendChild(el('td', {style: 'padding:8px 12px;white-space:nowrap' + (i >= 2 ? ';font-family:var(--mono)' : ''), textContent: val}));
+      });
+      recentTable.appendChild(tr);
+    });
+
+    recentCard.appendChild(recentTable);
+    contentArea.appendChild(recentCard);
+  }
+
+  periodSelect.onchange = function() { loadCosts(parseInt(periodSelect.value)); };
+  loadCosts(periodDays);
 }
 
 // ============================================================
