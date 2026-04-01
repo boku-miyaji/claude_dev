@@ -286,5 +286,6 @@
     "organizationUuid": "39030fbb-3ef1-463b-827e-00dfd1aafe83"
   },
   "opusProMigrationComplete": true,
-  "cachedExtraUsageDisabledReason": "org_level_disabled"
+  "cachedExtraUsageDisabledReason": "org_level_disabled",
+  "showSpinnerTree": false
 }

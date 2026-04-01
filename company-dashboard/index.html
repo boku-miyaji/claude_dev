@@ -6,6 +6,7 @@
 <title>宮路HD</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◆</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs" type="module" id="pdfjs-script"></script>
 <script type="module">
@@ -1223,52 +1224,96 @@ function renderPage(page) {
 }
 
 // ============================================================
-// Calendar Page
+// Calendar Page — Google Calendar API direct
 // ============================================================
-var CAL_TYPES = {
-  'yumzzz.my6223@gmail.com': {type: 'primary', label: 'Personal'},
-  'yuta.miyaji.xyz@gmail.com': {type: 'secondary', label: 'Other'},
-  'yuta.miyaji@acesinc.co.jp': {type: 'work', label: 'Work (ACES)'}
-};
+var GCAL_CLIENT_ID = '855851839827-hfijpvgal6m3hgrjgus6bdf8it8ibr9h.apps.googleusercontent.com';
+var GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+var GCAL_CALENDARS = [
+  {id: 'yumzzz.my6223@gmail.com', type: 'primary', label: 'Personal'},
+  {id: 'yuta.miyaji.xyz@gmail.com', type: 'secondary', label: 'Other'},
+  {id: 'yuta.miyaji@acesinc.co.jp', type: 'work', label: 'Work (ACES)'}
+];
 var CAL_DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var gcalToken = null;
+var gcalTokenClient = null;
 
-async function renderCalendar(root) {
-  root.appendChild(el('div', {className: 'page-title', textContent: 'Calendar'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: 'Google Calendar 7-day view'}));
+function initGcalTokenClient(callback) {
+  if (typeof google === 'undefined' || !google.accounts) {
+    setTimeout(function() { initGcalTokenClient(callback); }, 200);
+    return;
+  }
+  gcalTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GCAL_CLIENT_ID,
+    scope: GCAL_SCOPES,
+    callback: function(resp) {
+      if (resp.error) { console.error('GCal auth error:', resp); return; }
+      gcalToken = resp.access_token;
+      sessionStorage.setItem('gcal_token', gcalToken);
+      if (callback) callback();
+    }
+  });
+}
 
-  // Fetch events from Supabase
+function getGcalToken() {
+  if (gcalToken) return gcalToken;
+  var stored = sessionStorage.getItem('gcal_token');
+  if (stored) { gcalToken = stored; return gcalToken; }
+  return null;
+}
+
+async function fetchGcalEvents(token) {
   var now = new Date();
   var startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   var endDate = new Date(startOfDay);
   endDate.setDate(endDate.getDate() + 7);
+  var timeMin = startOfDay.toISOString();
+  var timeMax = endDate.toISOString();
 
-  var res = await sb.from('calendar_events')
-    .select('*')
-    .gte('start_time', startOfDay.toISOString())
-    .lt('start_time', endDate.toISOString())
-    .order('start_time', {ascending: true});
+  var allEvents = [];
+  var fetchErrors = [];
 
-  var events = res.data || [];
+  await Promise.all(GCAL_CALENDARS.map(async function(cal) {
+    try {
+      var url = 'https://www.googleapis.com/calendar/v3/calendars/'
+        + encodeURIComponent(cal.id)
+        + '/events?timeMin=' + encodeURIComponent(timeMin)
+        + '&timeMax=' + encodeURIComponent(timeMax)
+        + '&singleEvents=true&orderBy=startTime&maxResults=50'
+        + '&timeZone=Asia/Tokyo';
+      var resp = await fetch(url, {headers: {'Authorization': 'Bearer ' + token}});
+      if (resp.status === 401) { gcalToken = null; sessionStorage.removeItem('gcal_token'); throw new Error('Token expired'); }
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      var data = await resp.json();
+      (data.items || []).forEach(function(ev) {
+        var start = ev.start.dateTime || ev.start.date;
+        var end = ev.end.dateTime || ev.end.date;
+        var isAllDay = !ev.start.dateTime;
+        allEvents.push({
+          id: ev.id,
+          calendar_id: cal.id,
+          calendar_type: cal.type,
+          summary: ev.summary || '(No title)',
+          start_time: start,
+          end_time: end,
+          all_day: isAllDay,
+          status: ev.status,
+          response_status: (ev.attendees || []).find(function(a) { return a.self; })
+            ? (ev.attendees.find(function(a) { return a.self; }).responseStatus) : null
+        });
+      });
+    } catch(e) {
+      fetchErrors.push({cal: cal.id, error: e.message});
+    }
+  }));
 
-  // Sync info
-  var latestSync = events.length > 0
-    ? events.reduce(function(max, e) { return e.synced_at > max ? e.synced_at : max; }, events[0].synced_at)
-    : null;
-  var isStale = !latestSync || (now - new Date(latestSync)) > 3600000; // >1h
+  allEvents.sort(function(a, b) { return new Date(a.start_time) - new Date(b.start_time); });
+  return {events: allEvents, errors: fetchErrors};
+}
 
-  var syncInfo = el('div', {className: 'cal-sync-info'}, [
-    el('div', {className: 'cal-sync-dot' + (isStale ? ' stale' : '')}),
-    el('span', {textContent: latestSync
-      ? 'Last sync: ' + new Date(latestSync).toLocaleString('ja-JP', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
-      : 'Not synced yet'
-    }),
-    events.length === 0
-      ? el('span', {style: 'color:var(--text3)', textContent: ' \u2014 /company \u3092\u8d77\u52d5\u3059\u308b\u3068\u540c\u671f\u3055\u308c\u307e\u3059'})
-      : el('span', {style: 'color:var(--text3)', textContent: ' (' + events.length + ' events)'})
-  ]);
-  root.appendChild(syncInfo);
+function renderCalendarGrid(root, events) {
+  var now = new Date();
+  var startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  // Build 7-day grid
   var grid = el('div', {className: 'cal-grid'});
 
   for (var d = 0; d < 7; d++) {
@@ -1284,17 +1329,15 @@ async function renderCalendar(root) {
       ])
     ]);
 
-    // Filter events for this day
     var dayEvents = events.filter(function(e) {
-      var eDate = new Date(e.start_time);
-      return eDate.toISOString().slice(0, 10) === dateStr;
+      return e.start_time.slice(0, 10) === dateStr
+        || new Date(e.start_time).toLocaleDateString('sv-SE') === dateStr;
     });
 
     if (dayEvents.length === 0) {
       dayEl.appendChild(el('div', {className: 'cal-empty', textContent: 'No events'}));
     } else {
       dayEvents.forEach(function(e) {
-        var calInfo = CAL_TYPES[e.calendar_id] || {type: 'primary'};
         var eStart = new Date(e.start_time);
         var eEnd = new Date(e.end_time);
         var timeClass = '';
@@ -1302,15 +1345,12 @@ async function renderCalendar(root) {
           if (eEnd < now) timeClass = ' cal-past';
           else if (eStart <= now && eEnd > now) timeClass = ' cal-now';
         }
-
         var timeStr = e.all_day ? '' : eStart.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit', hour12: false});
 
-        var evtEl = el('div', {className: 'cal-evt cal-' + calInfo.type + timeClass}, [
+        dayEl.appendChild(el('div', {className: 'cal-evt cal-' + e.calendar_type + timeClass}, [
           timeStr ? el('span', {className: 'cal-evt-time', textContent: timeStr}) : null,
-          el('span', {className: 'cal-evt-title', textContent: e.summary || '(No title)'})
-        ].filter(Boolean));
-
-        dayEl.appendChild(evtEl);
+          el('span', {className: 'cal-evt-title', textContent: e.summary})
+        ].filter(Boolean)));
       });
     }
 
@@ -1325,6 +1365,82 @@ async function renderCalendar(root) {
     el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot w'}), 'Work (ACES)']),
     el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot s'}), 'Other'])
   ]));
+}
+
+async function renderCalendar(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Calendar'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'Google Calendar \u2014 7-day view (realtime)'}));
+
+  var contentArea = el('div');
+  root.appendChild(contentArea);
+
+  var token = getGcalToken();
+
+  async function loadAndRender() {
+    while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
+    contentArea.appendChild(el('div', {className: 'cal-sync-info'}, [
+      el('div', {className: 'cal-sync-dot'}),
+      el('span', {textContent: 'Loading...'})
+    ]));
+
+    var result = await fetchGcalEvents(gcalToken);
+
+    while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
+
+    if (result.errors.length > 0 && result.errors[0].error === 'Token expired') {
+      contentArea.appendChild(el('div', {className: 'card', style: 'text-align:center;padding:32px'}, [
+        el('div', {style: 'font-size:15px;margin-bottom:12px', textContent: 'Google\u8A8D\u8A3C\u304C\u671F\u9650\u5207\u308C\u3067\u3059'}),
+        el('button', {className: 'btn btn-p', textContent: 'Re-authenticate', onClick: function() {
+          gcalTokenClient.requestAccessToken();
+        }})
+      ]));
+      return;
+    }
+
+    // Status bar
+    var statusBar = el('div', {style: 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px'}, [
+      el('div', {className: 'cal-sync-info', style: 'margin-bottom:0'}, [
+        el('div', {className: 'cal-sync-dot'}),
+        el('span', {textContent: 'Live \u2014 ' + result.events.length + ' events'}),
+        result.errors.length > 0
+          ? el('span', {style: 'color:var(--amber);margin-left:8px', textContent: '(' + result.errors.length + ' calendar errors)'})
+          : null
+      ].filter(Boolean)),
+      el('button', {className: 'btn btn-ghost btn-sm', textContent: '\u21BB Refresh', onClick: loadAndRender})
+    ]);
+    contentArea.appendChild(statusBar);
+
+    renderCalendarGrid(contentArea, result.events);
+  }
+
+  if (token) {
+    // Verify token is still valid
+    var testResp = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=1', {
+      headers: {'Authorization': 'Bearer ' + token}
+    });
+    if (testResp.ok) {
+      await loadAndRender();
+      return;
+    }
+    // Token invalid, clear it
+    gcalToken = null;
+    sessionStorage.removeItem('gcal_token');
+  }
+
+  // Show sign-in prompt
+  var signInCard = el('div', {className: 'card', style: 'text-align:center;padding:40px 20px'}, [
+    el('div', {style: 'font-size:36px;margin-bottom:16px', textContent: '\uD83D\uDCC5'}),
+    el('div', {style: 'font-size:15px;font-weight:600;margin-bottom:8px', textContent: 'Google Calendar \u3068\u9023\u643A'}),
+    el('div', {style: 'font-size:13px;color:var(--text2);margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto',
+      textContent: 'Google\u30A2\u30AB\u30A6\u30F3\u30C8\u3067\u30B5\u30A4\u30F3\u30A4\u30F3\u3059\u308B\u3068\u30013\u3064\u306E\u30AB\u30EC\u30F3\u30C0\u30FC\u304B\u3089\u30EA\u30A2\u30EB\u30BF\u30A4\u30E0\u3067\u4E88\u5B9A\u3092\u53D6\u5F97\u3057\u307E\u3059\u3002\u30C8\u30FC\u30AF\u30F3\u306F\u30D6\u30E9\u30A6\u30B6\u30BB\u30C3\u30B7\u30E7\u30F3\u5185\u306E\u307F\u4FDD\u6301\u3055\u308C\u307E\u3059\u3002'}),
+    el('button', {className: 'btn btn-p', style: 'font-size:14px;padding:12px 32px', textContent: '\uD83D\uDD12 Sign in with Google', onClick: function() {
+      initGcalTokenClient(function() {
+        renderPage('calendar');
+      });
+      gcalTokenClient.requestAccessToken();
+    }})
+  ]);
+  contentArea.appendChild(signInCard);
 }
 
 // ============================================================
