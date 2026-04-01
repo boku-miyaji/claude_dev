@@ -23,6 +23,7 @@
 | リサーチ部署 | departments/research/ | 市場調査、技術調査、対象企業調査を行い、組織全体に情報を提供する。 |
 | セキュリティ部 | departments/security/ | 全PJ会社のソフトウェアサプライチェーンセキュリティを統括管理する。 |
 | システム開発部署 | departments/sys-dev/ | バックエンド・フロントエンド・QAを担当し、PJのシステム部分を構築する。 |
+| UXデザイン部 | departments/ux-design/ | システムの体験設計を専門とするプロフェッショナルチーム。 |
 <!-- GENERATED:DEPT_TABLE:END -->
 
 ## アーキテクチャ概要

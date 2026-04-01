@@ -27,6 +27,7 @@
 | `dept:research` | リサーチ部署 |
 | `dept:security` | セキュリティ部 |
 | `dept:sys-dev` | システム開発部署 |
+| `dept:ux-design` | UXデザイン部 |
 | `dept:hr` | 人事 |
 | `dept:secretary` | 秘書室 |
 <!-- GENERATED:DEPT_TAGS:END -->
