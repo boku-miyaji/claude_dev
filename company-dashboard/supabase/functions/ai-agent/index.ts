@@ -749,9 +749,11 @@ async function agentLoop(
 
     for (const tc of result.toolCalls) {
       send({ type: "tool_start", tool: tc.name, input: tc.input, step });
+      const toolStart = Date.now();
       const toolResult = await executeTool(tc.name, tc.input);
+      const toolDuration = Date.now() - toolStart;
       const truncated = toolResult.substring(0, MAX_TOOL_RESULT_CHARS);
-      send({ type: "tool_result", tool: tc.name, output: truncated.substring(0, 500), fullLength: toolResult.length, step });
+      send({ type: "tool_result", tool: tc.name, output: truncated.substring(0, 500), fullLength: toolResult.length, step, duration_ms: toolDuration });
 
       await sb.from("messages").insert({
         conversation_id: conversationId, role: "tool", content: truncated,

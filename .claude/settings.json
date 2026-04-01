@@ -156,14 +156,16 @@
       "Bash(/tmp/check_companies.sh:*)",
       "Bash(/tmp/final_check.sh:*)",
       "Bash(/tmp/qa_check.sh:*)",
-      "Bash(/tmp/complete_check.sh:*)"
+      "Bash(/tmp/complete_check.sh:*)",
+      "Bash(find /workspace/.company -type f \\\\\\(-name *.json -o -name *.md -o -name *.txt -o -name *.yaml -o -name *.yml \\\\\\))"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0/.claude-plugin",
       "/home/node/.claude/plugins/marketplaces/ai-company/.claude-plugin",
       "/home/node/.claude/knowledge",
-      "/workspace/.company/departments/security"
+      "/workspace/.company/departments/security",
+      "/workspace/.claude/hooks"
     ]
   },
   "hooks": {
@@ -248,6 +250,16 @@
             "command": ".claude/hooks/bash-guard.sh"
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/tool-metrics.sh",
+            "async": true
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -262,6 +274,16 @@
           {
             "type": "command",
             "command": ".claude/hooks/artifact-auto-sync.sh",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/tool-metrics.sh",
             "async": true
           }
         ]
