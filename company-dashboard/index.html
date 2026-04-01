@@ -3105,8 +3105,7 @@ function parseInvoice(pdfText, filename) {
 // Upload PDF to Supabase Storage
 async function uploadInvoicePdf(file) {
   var timestamp = Date.now();
-  var safeName = file.name.replace(/[^a-zA-Z0-9._\-\u3000-\u9fff]/g, '_');
-  var path = timestamp + '_' + safeName;
+  var path = timestamp + '.pdf';
   var res = await sb.storage.from('invoices').upload(path, file, {contentType: 'application/pdf'});
   if (res.error) throw new Error(res.error.message);
   return path;
