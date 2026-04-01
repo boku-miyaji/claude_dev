@@ -3155,7 +3155,6 @@ function openInvoiceModal(existingInv, onSaved) {
     {key:'client_name', label:'請求先', type:'text', required:true},
     {key:'amount', label:'請求額（税込・円）', type:'number', required:true},
     {key:'invoice_date', label:'請求日', type:'date', required:true},
-    {key:'status', label:'ステータス', type:'select', options:['draft','sent','paid','overdue','cancelled'], optionLabels:invoiceStatusLabels},
     {key:'paid_date', label:'入金日', type:'date'},
     {key:'company_id', label:'PJ会社', type:'select', options:['','foundry','rikyu','circuit','polaris'], optionLabels:{'':'(なし)',foundry:'Foundry',rikyu:'りきゅう',circuit:'回路設計',polaris:'Polaris'}},
     {key:'notes', label:'メモ', type:'textarea'}
@@ -3251,7 +3250,7 @@ function openInvoiceModal(existingInv, onSaved) {
       client_name: clientName,
       amount: amount,
       invoice_date: invoiceDate,
-      status: inputs.status.value,
+      status: 'sent',
       paid_date: paidDate,
       company_id: inputs.company_id.value || null,
       notes: inputs.notes.value.trim() || null
@@ -3334,21 +3333,17 @@ async function finInvoices(root) {
     }
 
     var tbl = el('table', {style: 'width:100%;border-collapse:collapse;font-size:13px'});
-    tbl.appendChild(el('thead', {}, [el('tr', {}, ['日付','請求先','番号','金額','状態','入金日'].map(function(h){return el('th',{textContent:h,style:'text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:500'})}))]));
+    tbl.appendChild(el('thead', {}, [el('tr', {}, ['日付','請求先','金額','入金日','PJ'].map(function(h){return el('th',{textContent:h,style:'text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-weight:500'})}))]));
     var tbody = el('tbody');
     invoices.forEach(function(inv) {
-      var sc = invoiceStatusColors[inv.status]||'var(--text3)';
       var tr = el('tr', {style: 'cursor:pointer;transition:background .15s', onClick: function() { openInvoiceModal(inv, render); }});
       tr.addEventListener('mouseenter', function() { tr.style.background = 'var(--surface2)'; });
       tr.addEventListener('mouseleave', function() { tr.style.background = 'none'; });
       tr.appendChild(el('td', {textContent: fmtDate(inv.invoice_date), style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}));
       tr.appendChild(el('td', {textContent: inv.client_name, style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}));
-      tr.appendChild(el('td', {textContent: inv.invoice_number||'-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'}));
       tr.appendChild(el('td', {textContent: fmtYen(inv.amount), style: 'padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600'}));
-      tr.appendChild(el('td', {style: 'padding:8px 12px;border-bottom:1px solid var(--border)'}, [
-        el('span', {textContent: invoiceStatusLabels[inv.status]||inv.status, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+sc+'20;color:'+sc})
-      ]));
       tr.appendChild(el('td', {textContent: inv.paid_date ? fmtDate(inv.paid_date) : '-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3)'}));
+      tr.appendChild(el('td', {textContent: inv.company_id || '-', style: 'padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text3);font-size:11px'}));
       tbody.appendChild(tr);
     });
     tbl.appendChild(tbody);
