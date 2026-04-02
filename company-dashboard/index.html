@@ -1561,15 +1561,24 @@ async function renderCalendar(root) {
   }
 
   if (token) {
-    // Verify token is still valid
+    // Verify token has write scope by attempting a dry-run
     var testResp = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=1', {
       headers: {'Authorization': 'Bearer ' + token}
     });
+    // Also check token info for correct scope
+    var scopeOk = false;
     if (testResp.ok) {
+      try {
+        var tokenInfo = await fetch('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token);
+        var info = await tokenInfo.json();
+        scopeOk = info.scope && info.scope.indexOf('calendar.events') >= 0;
+      } catch(e) { scopeOk = false; }
+    }
+    if (testResp.ok && scopeOk) {
       await loadAndRender();
       return;
     }
-    // Token invalid, clear it
+    // Token invalid or missing write scope, clear it for re-auth
     gcalToken = null;
     sessionStorage.removeItem('gcal_token');
   }
