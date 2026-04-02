@@ -350,6 +350,11 @@
   <a href="#s9-ontology">オントロジー復元ガイド</a>
   <a href="#s9-qa">想定質問集</a>
   <a href="#s8" class="section-title">12. 理解度チェック</a>
+  <a href="#faq" class="section-title" style="color:var(--amber);">FAQ（レビュー疑問点）<span class="nav-badge badge-core">NEW</span></a>
+  <a href="#faq-llm">LLM SaaS連携</a>
+  <a href="#faq-ontology-mapping">オントロジー紐付け</a>
+  <a href="#faq-semantic">セマンティックレイヤー</a>
+  <a href="#faq-phonograph">Phonograph</a>
 </nav>
 
 <main>
@@ -2976,6 +2981,96 @@ Object Type: <span class="highlight">施設</span>
       <div class="quiz-answer">
         推奨理由: 1. データが既にある（構造化データは移行対象）、2. 基盤のAI-Readyさを直接検証（SQL API、セマンティックレイヤー、権限継承が全て試される）、3. 現場に見せやすいデモ、4. 組織面の検証も可能。<br>技術面以外の検証: データアクセス承認フローは実用的な速度で回るか、PoCで使えるデータの範囲は十分か（マスキング設計）、社内チームがPoC環境を自走運用できるか、結果をどうドキュメント化し次のPoCに繋げるか。
       </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section: レビュー疑問点 -->
+  <section id="faq">
+    <h2 style="color:var(--amber);">FAQ — レビュー疑問点への回答</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">勉強ガイドに対して社長から寄せられた疑問への回答（2026-04-02 調査）</p>
+
+    <h3 id="faq-llm">Q1: Claude Code, ChatGPTなどのLLM SaaSとのつなぎ込みはできる？</h3>
+    <div class="callout success">
+      <strong>回答: できる。Foundry AIP (Artificial Intelligence Platform) 経由で主要LLMと統合済み。</strong>
+    </div>
+    <h4>Foundryでの仕組み</h4>
+    <ul>
+      <li><strong>AIP プロキシAPI方式</strong>: Foundryが外部LLMへのAPIコールを中継。OpenAI (GPT-4o)、Anthropic (Claude)、Google (Gemini)、Meta (Llama)、xAI (Grok) に対応</li>
+      <li><strong>ゼロデータ保持</strong>: LLMプロバイダーにFoundryのデータが学習利用されないガバナンスを維持</li>
+      <li><strong>AIP Logic</strong>: ノーコードでLLM関数を構築。プロンプトテンプレート + Ontologyオブジェクトの注入を GUI で設定可能</li>
+      <li><strong>OAG (Ontology Augmented Generation)</strong>: Foundry独自のRAG。Ontologyのオブジェクトを直接LLMコンテキストに注入し、構造化データに基づく回答を生成</li>
+    </ul>
+    <h4>移行先での代替</h4>
+    <table>
+      <tr><th>Foundry機能</th><th>AWS代替</th><th>Databricks代替</th></tr>
+      <tr><td>AIP プロキシ</td><td>Amazon Bedrock</td><td>Databricks AI Functions / Model Serving</td></tr>
+      <tr><td>AIP Logic</td><td>Step Functions + Bedrock</td><td>MLflow + AI Functions</td></tr>
+      <tr><td>OAG</td><td>Bedrock Knowledge Bases</td><td>Vector Search + RAG</td></tr>
+    </table>
+    <div class="callout warn">
+      <strong>注意:</strong> OAGはOntologyと密結合のためFoundry固有。移行先ではRAGパイプラインを新規構築する必要がある。
+    </div>
+
+    <h3 id="faq-ontology-mapping">Q2: Foundryではオントロジーの辞書と各データの紐付けはどうやってるの？</h3>
+    <div class="callout success">
+      <strong>回答: 「バッキングデータセット」方式。1 Object Type = 1 Foundryデータセット で 1:1 マッピング。</strong>
+    </div>
+    <h4>紐付けメカニズム</h4>
+    <div class="flow">
+<span class="highlight">データソース</span> (S3, DB, API...)
+    ↓ コネクタで取り込み
+<span class="highlight">Foundry データセット</span> (Parquet)
+    ↓ ETLパイプラインで変換・統合
+<span class="highlight">バッキングデータセット</span> (整形済みテーブル)
+    ↓ Ontology Managerで紐付け設定
+<span class="highlight">Object Type</span> (プロパティ = 列, オブジェクト = 行)
+    ↓ Link定義で関連付け
+<span class="highlight">オントロジーグラフ</span> (Object同士の関係性)
+    </div>
+    <ul>
+      <li><strong>Ontology Manager (GUI)</strong>: バッキングデータセットの列をObject Typeのプロパティにドラッグ&ドロップでマッピング</li>
+      <li><strong>主キー指定</strong>: データセットの一意列をObject TypeのRIDとして設定</li>
+      <li><strong>Link (関連)</strong>: 外部キー相当の列を指定し、Object Type間のリレーションを定義</li>
+      <li><strong>自動同期</strong>: パイプラインでバッキングデータセットが更新されると、Ontologyも自動反映</li>
+    </ul>
+    <h4>移行先での代替</h4>
+    <p>Databricks <strong>Unity Catalog</strong> のテーブル + カラムコメント + タグが最も近い。ただしOntologyのようなグラフ構造の関係性表現は、別途 <strong>Business Semantics</strong>（2025年発表）やナレッジグラフツールで補完が必要。</p>
+
+    <h3 id="faq-semantic">Q3: セマンティックレイヤーはどう紐づいてる？表記揺れ・自然言語のブレへの対処は？</h3>
+    <div class="callout success">
+      <strong>回答: スキーマ定義は人間が行い、LLMはユーザーの自然言語入力とOntologyの「橋渡し」を担う。表記揺れはETL正規化 + LLMクエリ拡張の2段構え。</strong>
+    </div>
+    <h4>Ontologyの3層構造</h4>
+    <table>
+      <tr><th>層</th><th>役割</th><th>例</th></tr>
+      <tr><td><strong>Semantic層</strong></td><td>ビジネス概念の定義</td><td>「入居者」「ケアプラン」「施設」</td></tr>
+      <tr><td><strong>Kinetic層</strong></td><td>アクション・ワークフロー</td><td>「ケアプラン更新」「請求処理」</td></tr>
+      <tr><td><strong>Dynamic層</strong></td><td>リアルタイムイベント</td><td>「バイタル異常検知」「転倒アラート」</td></tr>
+    </table>
+    <h4>表記揺れへの対処</h4>
+    <ul>
+      <li><strong>(a) ETL段階での正規化</strong>: パイプライン内で表記統一ルールを適用。「東京都」「東京」「TOKYO」→統一コードに変換</li>
+      <li><strong>(b) Ontologyプロパティのエイリアス</strong>: 1つのプロパティに複数の表示名・検索名を設定可能</li>
+      <li><strong>(c) AIP (LLM) によるクエリ拡張</strong>: ユーザーが「入居者の体温」と入力 → LLMが「バイタルサイン.体温」プロパティにマッピング。同義語展開・略称解決をLLMが担当</li>
+    </ul>
+    <div class="callout">
+      <strong>重要:</strong> LLMがスキーマを自動生成するわけではない。スキーマ（Object Type, プロパティ, Link）は人間が設計・定義し、LLMはエンドユーザーの曖昧な入力を正しいスキーマ要素に解決する役割。
+    </div>
+    <h4>移行先での代替</h4>
+    <p>Databricks <strong>Unity Catalog Business Semantics</strong>（2025年発表）が最も近い対応機能。表記揺れ対処は dbt のセマンティックレイヤー + LLM Text-to-SQL の組み合わせで実現可能。</p>
+
+    <h3 id="faq-phonograph">Q4: Phonographとは？何に変わる予定？</h3>
+    <div class="callout success">
+      <strong>回答: Object Storage V1 (OSv1) の内部名称。後継は Object Storage V2 (OSv2)。2026年6月30日に OSv1 は完全廃止予定。</strong>
+    </div>
+    <h4>詳細</h4>
+    <ul>
+      <li><strong>Phonograph = OSv1</strong>: Foundry Ontologyのバックエンドストレージエンジン（旧世代）。Ontologyオブジェクトのインデックス構築・クエリ応答を担当</li>
+      <li><strong>OSv2（後継）</strong>: インデックスとクエリの分離アーキテクチャ、増分インデックス更新、水平スケーリング対応。大規模Ontology（数十億オブジェクト）でもパフォーマンス維持</li>
+      <li><strong>移行タイムライン</strong>: Palantirは2026年6月30日にOSv1を完全廃止予定。SOMPOケアの移行スケジュールとの兼ね合いに注意</li>
+    </ul>
+    <div class="callout warn">
+      <strong>SOMPOケアへの影響:</strong> 現行FoundryがOSv1を使用している場合、AWS/Databricksへの移行前にOSv2へのアップグレードが必要になる可能性がある。移行プロジェクトのスケジュールで確認すべき事項。
     </div>
   </section>
 
