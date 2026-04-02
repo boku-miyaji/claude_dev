@@ -6063,10 +6063,49 @@ function toggleReportDetail(card, data) {
     return;
   }
 
-  // JSON data (auto collection via GitHub Actions)
-  if (!data.collections) return;
+  // JSON data
+  var detail = el('div', {className: 'report-detail', style: 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px;max-height:600px;overflow-y:auto'});
 
-  var detail = el('div', {className: 'report-detail', style: 'margin-top:16px;border-top:1px solid var(--border);padding-top:16px'});
+  // Format: alerts + items (from /company intelligence)
+  if (data.alerts || data.items) {
+    // Alerts
+    (data.alerts || []).forEach(function(alert) {
+      var alertCard = el('div', {style: 'background:var(--red-bg);border:1px solid var(--red-border);border-radius:8px;padding:12px 16px;margin-bottom:10px'});
+      alertCard.appendChild(el('div', {style: 'font-size:13px;font-weight:600;color:var(--red);margin-bottom:4px', textContent: (alert.id || '') + ' ' + (alert.title || '')}));
+      if (alert.summary) alertCard.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);margin-bottom:4px', textContent: alert.summary}));
+      if (alert.relevance) alertCard.appendChild(el('div', {style: 'font-size:11px;color:var(--text3)', textContent: '→ ' + alert.relevance}));
+      (alert.urls || []).forEach(function(url) {
+        var a = el('a', {href: url, target: '_blank', rel: 'noopener noreferrer', style: 'font-size:11px;color:var(--accent)', textContent: url.substring(0, 80) + (url.length > 80 ? '...' : '')});
+        alertCard.appendChild(el('div', {style: 'margin-top:4px'}, [a]));
+      });
+      detail.appendChild(alertCard);
+    });
+
+    // Items
+    (data.items || []).forEach(function(item) {
+      var itemEl = el('div', {style: 'margin-bottom:10px;padding-left:12px;border-left:2px solid var(--border)'});
+      var titleEl = el('div', {style: 'font-size:13px;font-weight:500;color:var(--text1)'});
+      if (item.urls && item.urls.length > 0) {
+        var link = el('a', {href: item.urls[0], target: '_blank', rel: 'noopener noreferrer', style: 'color:var(--accent)', textContent: item.title || 'No title'});
+        link.addEventListener('click', function() { trackIntelligence('intelligence_click', item.id, item.urls[0], item.category); });
+        titleEl.appendChild(link);
+        titleEl.appendChild(createLikeBtn(item.id, item.category));
+      } else {
+        titleEl.textContent = item.title || 'No title';
+      }
+      itemEl.appendChild(titleEl);
+      if (item.summary) itemEl.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);margin-top:2px', textContent: item.summary}));
+      if (item.relevance) itemEl.appendChild(el('div', {style: 'font-size:11px;color:var(--text3);margin-top:2px', textContent: '→ ' + item.relevance}));
+      if (item.date) itemEl.appendChild(el('div', {style: 'font-size:10px;color:var(--text3);margin-top:2px', textContent: item.date + ' · ' + (item.category || '')}));
+      detail.appendChild(itemEl);
+    });
+
+    card.appendChild(detail);
+    return;
+  }
+
+  // Legacy format: collections (from GitHub Actions auto collection)
+  if (!data.collections) return;
 
   data.collections.forEach(function(coll) {
     var label = coll.type === 'keyword' ? '"' + coll.term + '"' : coll.handle;
