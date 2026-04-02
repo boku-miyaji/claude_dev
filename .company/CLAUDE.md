@@ -22,25 +22,19 @@
 │   ├── evaluations/
 │   ├── proposals/
 │   └── retrospectives/
-├── departments/                       ← 共通部署群
-│   ├── ai-dev/CLAUDE.md             ← AI開発部署
-│   ├── intelligence/CLAUDE.md             ← 情報収集部
-│   ├── materials/CLAUDE.md             ← 資料制作部署
-│   ├── pm/CLAUDE.md             ← PM
-│   ├── research/CLAUDE.md             ← リサーチ部署
-│   ├── security/CLAUDE.md             ← セキュリティ部
-│   ├── sys-dev/CLAUDE.md             ← システム開発部署
-│   └── ux-design/CLAUDE.md             ← UXデザイン部
-└── references/                        ← 手順・テンプレート（必要時に Read）
-    ├── briefing-procedure.md          ← ブリーフィング手順詳細
-    ├── supabase-queries.md            ← curl/SQLテンプレート
-    ├── agent-delegation-template.md   ← Agent委譲・パイプライン仕様
-    └── growth-chronicle.md            ← 成長記録仕様
+└── departments/                       ← 共通部署群
+    ├── ai-dev/CLAUDE.md             ← AI開発部署
+    ├── intelligence/CLAUDE.md             ← 情報収集部
+    ├── materials/CLAUDE.md             ← 資料制作部署
+    ├── pm/CLAUDE.md             ← PM
+    ├── research/CLAUDE.md             ← リサーチ部署
+    ├── security/CLAUDE.md             ← セキュリティ部
+    ├── sys-dev/CLAUDE.md             ← システム開発部署
+    └── ux-design/CLAUDE.md             ← UXデザイン部
 
 .company-foundry/                      Foundry移行会社
 .company-rikyu/                      りきゅう
 .company-circuit/                      回路設計支援システム会社
-.company-polaris/                      Polaris AI
 ```
 <!-- GENERATED:ARCH_TREE:END -->
 

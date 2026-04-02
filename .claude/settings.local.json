@@ -73,7 +73,8 @@
       "WebFetch(domain:www.cerbos.dev)",
       "WebFetch(domain:help.tableau.com)",
       "WebFetch(domain:www.palantir.com)",
-      "WebFetch(domain:dasroot.net)"
+      "WebFetch(domain:dasroot.net)",
+      "Bash(bash /workspace/scripts/company/sync-registry.sh)"
     ]
   }
 }

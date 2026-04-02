@@ -11,7 +11,6 @@
 | `pj:foundry` | Foundry移行会社 |
 | `pj:rikyu` | りきゅう |
 | `pj:circuit` | 回路設計支援システム会社 |
-| `pj:polaris` | Polaris AI |
 | `personal` | 個人のこと |
 <!-- GENERATED:SCOPE_TAGS:END -->
 

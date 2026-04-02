@@ -7,8 +7,7 @@
 |----|--------|------|-----------|--------|-----------|
 | foundry | Foundry移行会社 | SOMPOケア Foundry移行PJT支援 | project-scotch-care/ | 2026-03-20 | active |
 | rikyu | りきゅう | りそな向け営業支援DX | project-rikyu-sales-proposals-poc/ | 2026-03-20 | active |
-| circuit | 回路設計支援システム会社 | 電子回路設計DX + Polaris AI協業 | circuit_diagram/ | 2026-03-21 | active |
-| polaris | Polaris AI | 図面暗黙知抽出（Polaris AI社協業） | なし | 2026-03-29 | active |
+| circuit | 回路設計支援システム会社 | 電子回路設計DX + Polaris AI協業（図面暗黙知抽出含む） | circuit_diagram/ | 2026-03-21 | active |
 <!-- GENERATED:COMPANY_TABLE:END -->
 
 ## HD共通部署一覧
@@ -23,7 +22,7 @@
 | リサーチ部署 | departments/research/ | 市場調査、技術調査、対象企業調査を行い、組織全体に情報を提供する。 |
 | セキュリティ部 | departments/security/ | 全PJ会社のソフトウェアサプライチェーンセキュリティを統括管理する。 |
 | システム開発部署 | departments/sys-dev/ | バックエンド・フロントエンド・QAを担当し、PJのシステム部分を構築する。 |
-| UXデザイン部 | departments/ux-design/ | システムの体験設計を専門とするプロフェッショナルチーム。 |
+| UXデザイン部 | departments/ux-design/ | **「ユーザーが考える前に、欲しいものが手に届く」体験を設計する。** |
 <!-- GENERATED:DEPT_TABLE:END -->
 
 ## アーキテクチャ概要
