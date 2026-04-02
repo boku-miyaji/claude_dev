@@ -9,7 +9,8 @@
   ├── カレンダー取得（Google Calendar MCP）
   ├── コメント取得（Supabase curl）
   ├── タスク取得（Supabase curl）
-  └── 鮮度チェック（freshness-check.sh）
+  ├── 鮮度チェック（freshness-check.sh）
+  └── リポジトリマップ更新（repo-map-scan.sh）
 
 [統合] → ブリーフィング表示
 ```
@@ -33,6 +34,20 @@
 **anon key + x-ingest-key ヘッダー** が必要（RLS のため）。
 
 → 具体的な curl コマンドは `references/supabase-queries.md` を参照
+
+## リポジトリマップ更新
+
+**手順:**
+1. `bash scripts/company/repo-map-scan.sh` を実行
+2. `.company/repo-map.md` が存在しなければ自動生成、存在すれば差分検出＆更新
+3. リポジトリの追加・削除があればブリーフィングで報告
+
+**表示形式（変更時のみ）:**
+```
+🗺️ リポジトリマップ:
+  ➕ 追加: new-project/（独自リポジトリ）
+  ➖ 削除: old-project/
+```
 
 ## データ鮮度チェック
 

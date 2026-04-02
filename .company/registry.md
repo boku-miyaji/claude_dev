@@ -31,43 +31,11 @@
 母艦（claude_dev）から全リポジトリを横断参照するためのマッピング。
 ナレッジが最も濃い claude_dev を起点に、兄弟リポジトリの読み書きを行う。
 
-### マッピングテーブル
+**→ `.company/repo-map.md`（ローカル専用・自動生成）**
 
-<!-- GENERATED:REPO_MAP:START -->
-| リポジトリ | パス | git | リモート | 紐づきPJ会社 | 用途 |
-|-----------|------|-----|---------|-------------|------|
-| claude_dev（母艦） | `/workspace` | 本体 | `boku-miyaji/claude_dev` | HD | PJ横断開発基盤・ナレッジ集約 |
-| company-dashboard | `company-dashboard/` | claude_dev配下 | 同上 | HD | 全社ダッシュボード |
-| project-scotch-care | `project-scotch-care/` | claude_dev配下 | 同上 | foundry | SOMPOケア Foundry移行 |
-| diary-codex | `diary-codex/` | 独自 | `boku-miyaji/diary` | — | 日記分析・AI連携 |
-| diary | `diary/` | 独自 | `boku-miyaji/diary` | — | 日記データ |
-| sancha-app | `sancha-app/` | 独自 | `boku-miyaji/sancha-app` | — | 三茶アプリ |
-| learn-claude-code | `learn-claude-code/` | 独自 | `shareAI-lab/learn-claude-code` | — | OSS（他者メンテ・参照のみ） |
-| mokumoku-mate | `mokumoku-mate/` | 独自 | — | — | もくもく会マッチング |
-| youtube_translater | `youtube_translater/` | 独自 | `boku-miyaji/youtube_translater` | — | YouTube翻訳ツール |
-<!-- GENERATED:REPO_MAP:END -->
-
-### claude_dev 内部ディレクトリ（リポジトリではない）
-
-| ディレクトリ | 用途 |
-|-------------|------|
-| `apps/` | 共通アプリ |
-| `base_framework/` | 基盤フレームワーク |
-| `delta_project_ops/` | 運用ツール |
-| `docs/` | 横断ドキュメント |
-| `invoice/` | 請求・財務 |
-| `plugins/` | Claude Codeプラグイン |
-| `scripts/` | 共通スクリプト |
-| `tasks/` | タスクファイル |
-
-### 参照パターン
-
-| パターン | 例 | 操作 |
-|---------|-----|------|
-| 母艦内PJ | `project-scotch-care/` | 読み書き（コミット先はclaude_dev） |
-| 独自リポジトリ | `sancha-app/` | 読み書き（コミット先はそのリポジトリ） |
-| 他者OSSリポジトリ | `learn-claude-code/` | 参照のみ（PR提出は可） |
-| 未紐づき独自リポジトリ | `mokumoku-mate/` | PJ会社作成で紐づけ可能 |
+- `/company` 起動時に自動スキャン＆生成
+- リポジトリ追加・削除を自動検出
+- 手動更新: `bash scripts/company/repo-map-scan.sh`
 
 ## アーキテクチャ概要
 

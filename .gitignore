@@ -64,6 +64,9 @@ project-review/project-rikyu-sales-proposals-poc/
 # .company/ → tracked (HD structure, departments, registry)
 # .company-*/ → tracked (PJ company context, secretary)
 
+# company - local repo map (server-specific, auto-generated)
+.company/repo-map.md
+
 # secrets & tokens (NEVER commit)
 .config/google/credentials.json
 token.json
