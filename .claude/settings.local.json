@@ -74,7 +74,8 @@
       "WebFetch(domain:help.tableau.com)",
       "WebFetch(domain:www.palantir.com)",
       "WebFetch(domain:dasroot.net)",
-      "Bash(bash /workspace/scripts/company/sync-registry.sh)"
+      "Bash(bash /workspace/scripts/company/sync-registry.sh)",
+      "WebFetch(domain:www.smashingmagazine.com)"
     ]
   }
 }
