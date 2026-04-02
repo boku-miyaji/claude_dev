@@ -75,7 +75,8 @@
       "WebFetch(domain:www.palantir.com)",
       "WebFetch(domain:dasroot.net)",
       "Bash(bash /workspace/scripts/company/sync-registry.sh)",
-      "WebFetch(domain:www.smashingmagazine.com)"
+      "WebFetch(domain:www.smashingmagazine.com)",
+      "Bash(bash:*)"
     ]
   }
 }
