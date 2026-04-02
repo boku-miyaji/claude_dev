@@ -67,7 +67,13 @@
       "WebFetch(domain:www.montecarlodata.com)",
       "WebFetch(domain:www.oriongovernance.com)",
       "WebFetch(domain:www.thoughtworks.com)",
-      "WebFetch(domain:atlan.com)"
+      "WebFetch(domain:atlan.com)",
+      "WebFetch(domain:python.plainenglish.io)",
+      "WebFetch(domain:www.databricks.com)",
+      "WebFetch(domain:www.cerbos.dev)",
+      "WebFetch(domain:help.tableau.com)",
+      "WebFetch(domain:www.palantir.com)",
+      "WebFetch(domain:dasroot.net)"
     ]
   }
 }
