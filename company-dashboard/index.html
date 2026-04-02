@@ -3881,7 +3881,7 @@ async function finTax(root) {
      {l:'月の手取り目安', v:fmtYen(Math.floor(taxEst.takeHome / 12)), c:'#22c55e', sub:'売上 - 経費 - 税金'},
      {l:'実効税率', v:(rev > 0 ? (taxEst.totalTax / rev * 100).toFixed(1) : '0')+'%', c:'#ef4444', sub:'税金合計 ÷ 売上'}
     ].forEach(function(d) {
-      kpiRow.appendChild(el('div', {style: 'padding:14px 16px;border-radius:8px;background:var(--bg2);border:1px solid var(--border)'}, [
+      kpiRow.appendChild(el('div', {style: 'padding:14px 16px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)'}, [
         el('div', {textContent: d.l, style: 'font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px'}),
         el('div', {textContent: d.v, style: 'font-size:20px;font-weight:700;color:'+d.c}),
         el('div', {textContent: d.sub, style: 'font-size:10px;color:var(--text3);margin-top:4px'})
@@ -4119,7 +4119,7 @@ async function finTax(root) {
       {label:'手取り', val: fmtYen(t.takeHome), color:'#22c55e'}
     ];
     kpis.forEach(function(k) {
-      cards.appendChild(el('div', {style: 'padding:14px;border-radius:8px;background:var(--bg2);border:1px solid var(--border)'}, [
+      cards.appendChild(el('div', {style: 'padding:14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border)'}, [
         el('div', {textContent: k.label, style: 'font-size:11px;color:var(--text3);margin-bottom:4px'}),
         el('div', {textContent: k.val, style: 'font-size:16px;font-weight:600;color:'+k.color})
       ]));
