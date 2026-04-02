@@ -363,6 +363,10 @@
   <a href="#faq-llm-freedom-overview">総合評価</a>
   <a href="#faq-llm-freedom-detail">軸別比較</a>
   <a href="#faq-llm-freedom-verdict">SOMPOケアへの示唆</a>
+  <a href="#faq-llm-constraints" class="section-title" style="color:var(--amber);">LLM制約比較<span class="nav-badge badge-core">NEW</span></a>
+  <a href="#faq-constraints-critical">要注意の制約</a>
+  <a href="#faq-constraints-detail">軸別制約一覧</a>
+  <a href="#faq-constraints-sompo">SOMPOケアへの影響</a>
   <a href="#faq-lockin" class="section-title" style="color:var(--amber);">ロックイン比較<span class="nav-badge badge-strategy">NEW</span></a>
   <a href="#faq-lockin-overview">総合評価</a>
   <a href="#faq-lockin-detail">軸別比較</a>
@@ -3449,6 +3453,204 @@ Object Type: <span class="highlight">施設</span>
         <li><strong>カスタムモデル訓練・エージェント構築まで</strong> → Databricks 一択</li>
         <li><strong>ガードレール重視 + マネージド志向</strong> → Bedrock</li>
         <li><strong>段階的に拡大したい</strong> → Snowflakeで開始 → 必要に応じてDatabricks追加</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- LLM制約比較 -->
+  <section id="faq-llm-constraints">
+    <h2>LLM制約比較 — 各プラットフォームの「できないこと」</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">LLM活用時に直面する具体的な制限・上限・落とし穴（2026-04-02 調査）</p>
+
+    <h3 id="faq-constraints-critical">各プラットフォームの最も危険な制約</h3>
+
+    <div class="card-grid">
+      <div class="card" style="border-left:3px solid var(--blue);">
+        <h4 style="color:var(--blue);">Snowflake Cortex AI</h4>
+        <ul style="font-size:13px;">
+          <li><strong style="color:var(--red);">コスト暴発リスク</strong>: SQLで<code>SELECT AI_COMPLETE(...) FROM large_table</code>をWHERE句なしで実行 → 全行にLLM呼び出し → <strong>$5,000超の請求事例あり</strong></li>
+          <li><strong>レート制限が非公開</strong>: TPM/RPMの具体値がドキュメントに明示されず、キャパシティプランニングが困難</li>
+          <li><strong>Cross-region推論がAWS限定</strong>: Azure/GCPアカウントのSnowflakeでも、LLM推論がAWSリージョンに流れる場合がある</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left:3px solid var(--purple);">
+        <h4 style="color:var(--purple);">Databricks</h4>
+        <ul style="font-size:13px;">
+          <li><strong style="color:var(--red);">料金の不透明さ</strong>: レート制限・DBU単価の詳細が営業経由でしか確認できない（3社中最も不透明）</li>
+          <li><strong>モデル自動リダイレクト</strong>: 旧モデルが廃止されると後継モデルに自動切替。本番で意図しない挙動変化のリスク</li>
+          <li><strong>東京リージョン制限</strong>: 一部モデルのServingがソウルリージョン経由の可能性（要確認）</li>
+        </ul>
+      </div>
+      <div class="card" style="border-left:3px solid var(--amber);">
+        <h4 style="color:var(--amber);">AWS Bedrock</h4>
+        <ul style="font-size:13px;">
+          <li><strong style="color:var(--red);">出力トークンのバーンダウン</strong>: Claude 3.7以降で<strong>出力1トークン = クォータ5トークン消費</strong>。max_tokens未設定が予期せぬスロットリングの最大原因</li>
+          <li><strong>クォータ増加申請の壁</strong>: 利用実績がないと拒否される。PoC開始時に即座にスケールできない</li>
+          <li><strong>デフォルト制限が低い</strong>: モデルによっては数 req/min レベル。本番利用には必ず引き上げが必要</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="faq-constraints-detail">軸別制約一覧</h3>
+
+    <h4>トークン制限</h4>
+    <table>
+      <tr><th></th><th>Snowflake Cortex</th><th>Databricks</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>コンテキスト上限</strong></td>
+        <td>モデル依存<br><span style="font-size:11px;color:var(--text-muted)">Claude: 200K, GPT-4o: 128K<br>プラットフォーム独自制限の有無は非公開</span></td>
+        <td>モデル依存<br><span style="font-size:11px;color:var(--text-muted)">Foundation APIs: モデルのネイティブ上限<br>External Models: API先の制限に準拠</span></td>
+        <td>モデル依存<br><span style="font-size:11px;color:var(--text-muted)">Claude: 200K<br>プラットフォーム側での追加制限あり（モデルごとに異なる）</span></td>
+      </tr>
+      <tr>
+        <td><strong>出力トークン上限</strong></td>
+        <td>モデル依存</td>
+        <td>モデル依存</td>
+        <td style="color:var(--red);">モデル依存 + <strong>バーンダウンレート5倍</strong><br><span style="font-size:11px;color:var(--text-muted)">Claude 3.7+: 出力1tok = クォータ5tok</span></td>
+      </tr>
+    </table>
+
+    <h4>レート制限・スループット</h4>
+    <table>
+      <tr><th></th><th>Snowflake Cortex</th><th>Databricks</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>RPM (req/min)</strong></td>
+        <td style="color:var(--red);">非公開</td>
+        <td style="color:var(--red);">非公開（営業経由）</td>
+        <td>モデル別に公開<br><span style="font-size:11px;color:var(--text-muted)">例: Claude Sonnet ap-northeast-1: 要確認</span></td>
+      </tr>
+      <tr>
+        <td><strong>TPM (tokens/min)</strong></td>
+        <td style="color:var(--red);">非公開</td>
+        <td style="color:var(--red);">非公開（営業経由）</td>
+        <td>モデル別に公開<br><span style="font-size:11px;color:var(--text-muted)">引き上げ可能（利用実績必要）</span></td>
+      </tr>
+      <tr>
+        <td><strong>同時リクエスト</strong></td>
+        <td>ウェアハウスサイズに依存</td>
+        <td>Serving Endpoint設定で制御</td>
+        <td>InvokeModel API制限</td>
+      </tr>
+      <tr>
+        <td><strong>引き上げ方法</strong></td>
+        <td>ウェアハウスサイズ増加</td>
+        <td>Endpoint設定変更</td>
+        <td>Service Quotas申請<br><span style="font-size:11px;color:var(--text-muted);color:var(--red)">実績なしだと拒否リスク</span></td>
+      </tr>
+    </table>
+
+    <h4>リージョン制限</h4>
+    <table>
+      <tr><th></th><th>Snowflake Cortex</th><th>Databricks</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>東京リージョン</strong></td>
+        <td style="color:var(--amber);">一部モデルのみ<br><span style="font-size:11px;color:var(--text-muted)">Cross-region推論で補完<br>ただしレイテンシ増加</span></td>
+        <td style="color:var(--amber);">利用可能<br><span style="font-size:11px;color:var(--text-muted)">一部モデルはソウル経由の可能性</span></td>
+        <td style="color:var(--green);">ap-northeast-1 対応<br><span style="font-size:11px;color:var(--text-muted)">ただしモデルごとに異なる</span></td>
+      </tr>
+      <tr>
+        <td><strong>データレジデンシー</strong></td>
+        <td style="color:var(--amber);">Cross-region推論時にデータが別リージョンに移動する可能性</td>
+        <td style="color:var(--green);">リージョン内完結（自前Servingの場合）</td>
+        <td style="color:var(--green);">リージョン内完結</td>
+      </tr>
+    </table>
+
+    <h4>機能制限</h4>
+    <table>
+      <tr><th>機能</th><th>Snowflake Cortex</th><th>Databricks</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>Function Calling</strong></td>
+        <td style="color:var(--red);">非対応</td>
+        <td style="color:var(--green);">対応</td>
+        <td style="color:var(--green);">対応（Converse API）</td>
+      </tr>
+      <tr>
+        <td><strong>Vision（画像入力）</strong></td>
+        <td style="color:var(--amber);">Document AI（PDF/画像からテキスト抽出のみ）</td>
+        <td style="color:var(--green);">対応（マルチモーダルモデル経由）</td>
+        <td style="color:var(--green);">対応（Claude, Titan等）</td>
+      </tr>
+      <tr>
+        <td><strong>Embedding</strong></td>
+        <td>Snowflake Arctic Embed<br><span style="font-size:11px;color:var(--text-muted)">選択肢は少ない</span></td>
+        <td style="color:var(--green);">BGE + 任意モデル持ち込み可</td>
+        <td>Titan Embeddings, Cohere</td>
+      </tr>
+      <tr>
+        <td><strong>音声</strong></td>
+        <td style="color:var(--red);">非対応</td>
+        <td style="color:var(--amber);">カスタムモデルで可</td>
+        <td style="color:var(--red);">非対応（Transcribe別サービス）</td>
+      </tr>
+      <tr>
+        <td><strong>動画</strong></td>
+        <td style="color:var(--red);">非対応</td>
+        <td style="color:var(--red);">非対応（フレーム分割で代替）</td>
+        <td style="color:var(--red);">非対応</td>
+      </tr>
+    </table>
+
+    <h4>コスト制限</h4>
+    <table>
+      <tr><th></th><th>Snowflake Cortex</th><th>Databricks</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>課金モデル</strong></td>
+        <td>クレジット（トークン換算）</td>
+        <td>DBU（計算量）</td>
+        <td>トークン単価</td>
+      </tr>
+      <tr>
+        <td><strong>予算上限設定</strong></td>
+        <td style="color:var(--amber);">Resource Monitors（ウェアハウス単位）<br><span style="font-size:11px;color:var(--text-muted);color:var(--red)">SQL関数単位の制御は不可 → コスト暴発リスク</span></td>
+        <td style="color:var(--green);">クラスタポリシー + DBU上限</td>
+        <td style="color:var(--green);">Budgets + レート制限</td>
+      </tr>
+      <tr>
+        <td><strong>最低コミットメント</strong></td>
+        <td style="color:var(--amber);">年間コミットメント前提</td>
+        <td style="color:var(--amber);">年間コミットメント（クラウド横断共有可）</td>
+        <td style="color:var(--green);">On-demand利用可（コミットメント不要）</td>
+      </tr>
+    </table>
+
+    <h4>セキュリティ・コンプライアンス</h4>
+    <table>
+      <tr><th></th><th>Snowflake Cortex</th><th>Databricks</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>データ外部送信</strong></td>
+        <td style="color:var(--green);">なし（Snowflake内ホスト）<br><span style="font-size:11px;color:var(--text-muted);color:var(--red)">Cross-region推論時は別リージョンへ</span></td>
+        <td style="color:var(--amber);">Foundation APIs: なし<br>External Models: API先に送信</td>
+        <td style="color:var(--green);">なし（AWS内完結）</td>
+      </tr>
+      <tr>
+        <td><strong>HIPAA</strong></td>
+        <td style="color:var(--green);">対応</td>
+        <td style="color:var(--green);">対応</td>
+        <td style="color:var(--green);">対応</td>
+      </tr>
+      <tr>
+        <td><strong>SOC 2</strong></td>
+        <td style="color:var(--green);">Type II</td>
+        <td style="color:var(--green);">Type II</td>
+        <td style="color:var(--green);">Type II</td>
+      </tr>
+      <tr>
+        <td><strong>監査ログ</strong></td>
+        <td style="color:var(--green);">Access History + Query History</td>
+        <td style="color:var(--green);">Unity Catalog Audit Logs</td>
+        <td style="color:var(--green);">CloudTrail</td>
+      </tr>
+    </table>
+
+    <h3 id="faq-constraints-sompo">SOMPOケアにとっての重要制約</h3>
+    <div class="callout danger">
+      <strong>要確認事項（PoCまたはベンダーへの質問）:</strong>
+      <ul style="margin-top:8px;">
+        <li><strong>Cortex AI</strong>: 東京リージョンで使えるモデル一覧と、Cross-region推論時のデータフロー → 介護データが海外リージョンに流れないか</li>
+        <li><strong>Databricks</strong>: 東京リージョンでのModel Serving対応モデルと実際のレイテンシ → レート制限の具体値を営業に確認</li>
+        <li><strong>Bedrock</strong>: ap-northeast-1 でのClaudeクォータ上限と引き上げ可能量 → バーンダウンレート込みの実コスト試算</li>
+        <li><strong>共通</strong>: 介護記録のPII（個人情報）をLLMに入力する場合の各社のデータ処理ポリシー</li>
       </ul>
     </div>
   </section>
