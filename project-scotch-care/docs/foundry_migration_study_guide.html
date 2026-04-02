@@ -362,6 +362,9 @@
   <a href="#faq-llm-breadth" class="section-title" style="color:var(--amber);">LLMの幅と自由度<span class="nav-badge badge-core">NEW</span></a>
   <a href="#faq-llm-breadth-matrix">活用マトリクス</a>
   <a href="#faq-llm-breadth-scenarios">ユースケース別</a>
+  <a href="#faq-bedrock-gpt" class="section-title" style="color:var(--amber);">Bedrock + GPT構成<span class="nav-badge badge-strategy">NEW</span></a>
+  <a href="#faq-bedrock-gpt-patterns">接続パターン</a>
+  <a href="#faq-bedrock-gpt-security">セキュリティ評価</a>
   <a href="#faq-llm-freedom" class="section-title" style="color:var(--amber);">LLM自由度比較<span class="nav-badge badge-tech">NEW</span></a>
   <a href="#faq-llm-freedom-overview">総合評価</a>
   <a href="#faq-llm-freedom-detail">軸別比較</a>
@@ -3387,6 +3390,154 @@ Object Type: <span class="highlight">施設</span>
           <td><strong>ガードレールの「堅さ」が最大</strong>（PII、ハルシネーション検出が突出）。<br>ただし<strong>OpenAI非対応で「幅」が狭い</strong>。<br>→ <strong>安全性最優先でClaudeを使いたい</strong>ならベスト。</td>
         </tr>
       </table>
+    </div>
+  </section>
+
+  <!-- Bedrock + GPT構成 -->
+  <section id="faq-bedrock-gpt">
+    <h2>Bedrock環境でGPTも使いたい場合の構成</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">BedrockにはOpenAIモデルがない。GPTも使いたい場合の選択肢とセキュリティ評価（2026-04-02）</p>
+
+    <h3 id="faq-bedrock-gpt-patterns">接続パターン</h3>
+
+    <table>
+      <tr>
+        <th style="width:8%;">案</th>
+        <th style="width:22%;">構成</th>
+        <th style="width:25%;">仕組み</th>
+        <th style="width:15%;">安全性</th>
+        <th style="width:30%;">メリット / デメリット</th>
+      </tr>
+      <tr>
+        <td><strong>A</strong></td>
+        <td><strong>Bedrock + Azure OpenAI</strong><br><span style="font-size:11px;color:var(--text-muted)">マルチクラウド</span></td>
+        <td>
+          Claude → Bedrock (AWS)<br>
+          GPT → Azure OpenAI Service<br>
+          <span style="font-size:11px;color:var(--text-muted)">AWS ↔ Azure をPrivateLink or VPN で接続</span>
+        </td>
+        <td style="color:var(--green);font-weight:600;">最も安全</td>
+        <td>
+          <span style="color:var(--green);">+</span> データがOpenAI社に渡らない（Microsoftが管理）<br>
+          <span style="color:var(--green);">+</span> エンタープライズ契約でデータ学習利用なし保証<br>
+          <span style="color:var(--green);">+</span> Azure側もHIPAA/SOC2対応<br>
+          <span style="color:var(--red);">−</span> 2クラウドの運用コスト<br>
+          <span style="color:var(--red);">−</span> ネットワーク構成が複雑
+        </td>
+      </tr>
+      <tr>
+        <td><strong>B</strong></td>
+        <td><strong>Bedrock + OpenAI API直接</strong><br><span style="font-size:11px;color:var(--text-muted)">APIコール</span></td>
+        <td>
+          Claude → Bedrock (AWS)<br>
+          GPT → OpenAI API (外部)<br>
+          <span style="font-size:11px;color:var(--text-muted)">Lambda/ECS からHTTPSで呼び出し</span>
+        </td>
+        <td style="color:var(--amber);font-weight:600;">条件付き</td>
+        <td>
+          <span style="color:var(--green);">+</span> 構成が最もシンプル<br>
+          <span style="color:var(--green);">+</span> 最新モデルに即日アクセス<br>
+          <span style="color:var(--red);">−</span> データがOpenAI社のインフラを通過<br>
+          <span style="color:var(--red);">−</span> Enterprise契約でないと学習利用される可能性<br>
+          <span style="color:var(--red);">−</span> データレジデンシーの保証が弱い
+        </td>
+      </tr>
+      <tr>
+        <td><strong>C</strong></td>
+        <td><strong>Bedrock + SageMaker<br>(OSSモデル)</strong><br><span style="font-size:11px;color:var(--text-muted)">AWS内完結</span></td>
+        <td>
+          Claude → Bedrock<br>
+          GPT相当 → Llama等をSageMakerでセルフホスト<br>
+          <span style="font-size:11px;color:var(--text-muted)">全てAWS内で完結</span>
+        </td>
+        <td style="color:var(--green);font-weight:600;">安全</td>
+        <td>
+          <span style="color:var(--green);">+</span> データが一切外に出ない<br>
+          <span style="color:var(--green);">+</span> AWS内完結でネットワーク構成シンプル<br>
+          <span style="color:var(--red);">−</span> GPT-4oとは別モデル（性能差あり）<br>
+          <span style="color:var(--red);">−</span> GPU運用コストが高い<br>
+          <span style="color:var(--red);">−</span> モデル運用の専門知識が必要
+        </td>
+      </tr>
+      <tr>
+        <td><strong>D</strong></td>
+        <td><strong>Bedrock をやめて<br>Snowflake Cortex に統一</strong></td>
+        <td>
+          Claude + GPT → Cortex AI<br>
+          <span style="font-size:11px;color:var(--text-muted)">両方Snowflake内ホスト</span>
+        </td>
+        <td style="color:var(--green);font-weight:600;">安全</td>
+        <td>
+          <span style="color:var(--green);">+</span> 両モデルがSnowflake内で完結<br>
+          <span style="color:var(--green);">+</span> 構成が最もシンプル<br>
+          <span style="color:var(--green);">+</span> データが外に出ない<br>
+          <span style="color:var(--red);">−</span> Bedrockのガードレールが使えない<br>
+          <span style="color:var(--red);">−</span> エージェント構築不可
+        </td>
+      </tr>
+    </table>
+
+    <h3 id="faq-bedrock-gpt-security">セキュリティ評価 — マルチクラウドは安全か？</h3>
+
+    <div class="callout">
+      <strong>マルチクラウド接続自体は安全にできる。問題は「データがどこを通るか」。</strong>
+    </div>
+
+    <h4>データフロー別の安全性</h4>
+    <div class="flow">
+<span class="comment">── 案A: Bedrock + Azure OpenAI ──</span>
+
+介護データ → <span class="highlight">AWS VPC</span> → <span class="green">PrivateLink / VPN</span> → <span class="highlight">Azure VNet</span> → Azure OpenAI
+                                    ↑
+                          <span class="green">暗号化トンネル（データは公衆インターネットを通らない）</span>
+
+  データの行き先: Microsoft管理のAzure基盤（OpenAI社ではない）
+  学習利用: Enterprise契約で明示的にオプトアウト可能
+  データ保存: Azure側で30日後自動削除（Abuse Monitoring無効化も可能）
+  → <span class="green">介護データでも許容範囲</span>
+
+
+<span class="comment">── 案B: Bedrock + OpenAI API直接 ──</span>
+
+介護データ → <span class="highlight">AWS VPC</span> → <span class="red">インターネット (HTTPS)</span> → <span class="highlight">OpenAI API</span>
+                                    ↑
+                          <span class="red">TLS暗号化はあるが、OpenAI社のインフラを通過</span>
+
+  データの行き先: OpenAI社のインフラ
+  学習利用: API利用はデフォルトで学習不使用（2023年3月〜）
+                ただしEnterprise契約でないと保証レベルが下がる
+  データ保存: 最大30日保存（Abuse Monitoring目的）
+  → <span class="amber">個人情報を含まないデータなら許容。介護記録は要検討</span>
+    </div>
+
+    <h4>SOMPOケアの場合の推奨</h4>
+    <table>
+      <tr><th>データの種類</th><th>推奨構成</th><th>理由</th></tr>
+      <tr>
+        <td><strong>介護記録・個人情報</strong><br><span style="font-size:11px;color:var(--text-muted)">入居者名、バイタル、ケアプラン</span></td>
+        <td style="color:var(--green);font-weight:600;">案A (Azure OpenAI) or 案D (Cortex)</td>
+        <td>データが第三者に渡らない保証が必要</td>
+      </tr>
+      <tr>
+        <td><strong>匿名化済みデータ</strong><br><span style="font-size:11px;color:var(--text-muted)">統計、集計、マスク済み</span></td>
+        <td>案B (OpenAI API直接) でも可</td>
+        <td>個人特定不可なので学習リスクが低い</td>
+      </tr>
+      <tr>
+        <td><strong>社内ナレッジ・マニュアル</strong><br><span style="font-size:11px;color:var(--text-muted)">業務手順、FAQ</span></td>
+        <td>どれでも可</td>
+        <td>機密度が低い</td>
+      </tr>
+    </table>
+
+    <div class="callout warn">
+      <strong>MTGでの論点:</strong>
+      <ul style="margin-top:8px;">
+        <li><strong>そもそもGPTは必須か？</strong> ClaudeとLlamaだけで要件を満たせるなら、Bedrock単体で完結し構成が最もシンプル</li>
+        <li><strong>GPTが必須なら</strong>、Azure OpenAI (案A) か Cortex (案D) が安全。OpenAI API直接 (案B) は介護データには避けたい</li>
+        <li><strong>マルチクラウドのコスト</strong>: AWS + Azure の2契約になる。PrivateLink/VPNの月額コストも発生</li>
+        <li><strong>将来的にGemini等も使いたくなったら？</strong> → モデル追加のたびに接続先が増えるのでCortexの「全部入り」が楽</li>
+      </ul>
     </div>
   </section>
 
