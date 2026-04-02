@@ -3078,6 +3078,170 @@ Object Type: <span class="highlight">施設</span>
     </div>
   </section>
 
+  <!-- LLMプラットフォーム比較 -->
+  <section id="faq-llm-platforms">
+    <h2>LLMプラットフォーム比較 — Bedrock / Databricks / Snowflake</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">移行先でLLM（Claude + OpenAI等）を活用する際の選択肢比較（2026-04-02 調査）</p>
+
+    <h3 id="faq-llm-models">各プラットフォームのLLMモデル対応表</h3>
+    <table>
+      <tr>
+        <th>モデル</th>
+        <th>Amazon Bedrock</th>
+        <th>Databricks</th>
+        <th>Snowflake Cortex AI</th>
+      </tr>
+      <tr>
+        <td><strong>Anthropic Claude</strong></td>
+        <td style="color:var(--green);">ネイティブ対応<br><span style="font-size:11px;color:var(--text-muted)">Opus/Sonnet/Haiku</span></td>
+        <td>External Models経由<br><span style="font-size:11px;color:var(--text-muted)">APIプロキシ</span></td>
+        <td style="color:var(--green);">ネイティブ対応<br><span style="font-size:11px;color:var(--text-muted)">Snowflake内ホスト</span></td>
+      </tr>
+      <tr>
+        <td><strong>OpenAI GPT-4o/5</strong></td>
+        <td style="color:var(--red);">非対応</td>
+        <td>External Models経由<br><span style="font-size:11px;color:var(--text-muted)">APIプロキシ</span></td>
+        <td style="color:var(--green);">ネイティブ対応<br><span style="font-size:11px;color:var(--text-muted)">Snowflake内ホスト</span></td>
+      </tr>
+      <tr>
+        <td><strong>Meta Llama 3.x/4</strong></td>
+        <td style="color:var(--green);">マネージド</td>
+        <td style="color:var(--green);">Foundation APIs</td>
+        <td style="color:var(--green);">ネイティブ対応</td>
+      </tr>
+      <tr>
+        <td><strong>Mistral / Mixtral</strong></td>
+        <td style="color:var(--green);">マネージド</td>
+        <td style="color:var(--green);">Foundation APIs</td>
+        <td style="color:var(--green);">ネイティブ対応</td>
+      </tr>
+      <tr>
+        <td><strong>Google Gemini</strong></td>
+        <td style="color:var(--red);">非対応</td>
+        <td>External Models経由</td>
+        <td style="color:var(--green);">ネイティブ対応</td>
+      </tr>
+      <tr>
+        <td><strong>DeepSeek-R1</strong></td>
+        <td>Custom Import</td>
+        <td style="color:var(--green);">Foundation APIs</td>
+        <td style="color:var(--green);">ネイティブ対応</td>
+      </tr>
+      <tr>
+        <td><strong>自社製モデル</strong></td>
+        <td>Amazon Titan</td>
+        <td>DBRX (480B MoE)</td>
+        <td>Arctic (480B MoE)</td>
+      </tr>
+      <tr>
+        <td><strong>カスタムモデル</strong></td>
+        <td>Custom Model Import</td>
+        <td style="color:var(--green);">Model Serving（任意）</td>
+        <td>Snowpark Container Services</td>
+      </tr>
+    </table>
+    <div class="callout">
+      <strong>ポイント:</strong> Claude + OpenAI の両方をネイティブで使いたい場合、<strong>Snowflake Cortex AI が唯一の選択肢</strong>。Bedrockは OpenAI 非対応、DatabricksはどちらもAPIプロキシ経由。
+    </div>
+
+    <h3 id="faq-llm-snowflake">Snowflake Cortex AI vs Databricks AI — 核心的な違い</h3>
+    <table>
+      <tr><th></th><th>Snowflake Cortex AI</th><th>Databricks AI</th></tr>
+      <tr>
+        <td><strong>設計思想</strong></td>
+        <td>DWHにAIを追加<br><span style="font-size:11px;color:var(--text-muted)">「SQLアナリストがAIを使える」</span></td>
+        <td>AIネイティブのデータ基盤<br><span style="font-size:11px;color:var(--text-muted)">「MLエンジニアがデータも扱える」</span></td>
+      </tr>
+      <tr>
+        <td><strong>LLM呼び出し方法</strong></td>
+        <td><code>SELECT AI_COMPLETE('claude-sonnet', prompt) FROM table</code><br><span style="font-size:11px;color:var(--text-muted)">SQL一行で完結</span></td>
+        <td>Python SDK / REST API / AI Functions<br><span style="font-size:11px;color:var(--text-muted)">コード記述が必要</span></td>
+      </tr>
+      <tr>
+        <td><strong>組み込みAI関数</strong></td>
+        <td style="color:var(--green);"><code>AI_COMPLETE()</code>, <code>AI_SUMMARIZE()</code>, <code>AI_TRANSLATE()</code>, <code>AI_CLASSIFY()</code>, <code>AI_FILTER()</code>, <code>AI_AGG()</code></td>
+        <td>ai_query() + カスタム関数</td>
+      </tr>
+      <tr>
+        <td><strong>RAG</strong></td>
+        <td>Cortex Search（設定不要RAG）<br>Document AI（PDF/画像解析）</td>
+        <td>Vector Search + MLflow<br>構築は柔軟だが設定が必要</td>
+      </tr>
+      <tr>
+        <td><strong>Fine-tuning</strong></td>
+        <td>Cortex Fine-tuning（Llama/Mistral対応）</td>
+        <td style="color:var(--green);">全モデル対応、GPU直接制御</td>
+      </tr>
+      <tr>
+        <td><strong>MLOps / MLライフサイクル</strong></td>
+        <td style="color:var(--red);">なし（推論特化）</td>
+        <td style="color:var(--green);">MLflow（業界標準）</td>
+      </tr>
+      <tr>
+        <td><strong>ガバナンス</strong></td>
+        <td style="color:var(--green);">データがSnowflake外に一切出ない<br>RBAC/マスキング自動適用</td>
+        <td>Unity Catalog + ACL<br>External ModelsはAPI先にデータ送信</td>
+      </tr>
+      <tr>
+        <td><strong>想定ユーザー</strong></td>
+        <td>SQLアナリスト、BI担当、業務部門</td>
+        <td>MLエンジニア、データサイエンティスト</td>
+      </tr>
+    </table>
+
+    <div class="card-grid">
+      <div class="card">
+        <h4 style="color:var(--blue);">Snowflakeが強い場面</h4>
+        <ul style="font-size:13px;">
+          <li>既存DWHにLLMを足したい</li>
+          <li>SQLだけでAI活用を始めたい</li>
+          <li>データを外に出せない厳格なガバナンス要件</li>
+          <li>Claude + OpenAI を両方使いたい</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 style="color:var(--purple);">Databricksが強い場面</h4>
+        <ul style="font-size:13px;">
+          <li>カスタムモデルの学習・チューニング</li>
+          <li>MLパイプライン全体の管理（MLflow）</li>
+          <li>大規模バッチ処理 + ストリーミング</li>
+          <li>GPU直接制御が必要な研究開発</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 id="faq-llm-architecture">SOMPOケア移行における推奨アーキテクチャ</h3>
+    <div class="flow">
+<span class="comment">── パターン A: Databricks中心 + Bedrock ──</span>
+<span class="highlight">データソース</span> → <span class="highlight">Databricks</span> (ETL/分析/ML) → <span class="highlight">Bedrock</span> (Claude推論)
+                                              └→ <span class="amber">OpenAI API直接</span> (GPT-4o)
+<span class="green">✓ ML訓練が必要な場合に最適</span>
+<span class="red">✗ OpenAIはマネージドでない、ガバナンスが分散</span>
+
+<span class="comment">── パターン B: Databricks + Snowflake Cortex ──</span>
+<span class="highlight">データソース</span> → <span class="highlight">Databricks</span> (ETL/ML) → <span class="highlight">Snowflake</span> (DWH + Cortex AI)
+                                                    ├→ Claude
+                                                    └→ OpenAI
+<span class="green">✓ Claude + OpenAI両方ネイティブ、ガバナンス統一</span>
+<span class="red">✗ コスト増（2基盤の維持）、データ二重管理リスク</span>
+
+<span class="comment">── パターン C: Snowflake一本化 ──</span>
+<span class="highlight">データソース</span> → <span class="highlight">Snowflake</span> (DWH + Cortex AI + Cortex Search)
+                         ├→ Claude / OpenAI / Llama (全てネイティブ)
+                         └→ Cortex Fine-tuning
+<span class="green">✓ 運用シンプル、ガバナンス最強、SQL完結</span>
+<span class="red">✗ カスタムML訓練に弱い、Foundryからの移行パスが少ない</span>
+    </div>
+    <div class="callout warn">
+      <strong>SOMPOケア固有の検討事項:</strong>
+      <ul style="margin-top:8px;">
+        <li>医療・介護データの<strong>ガバナンス要件</strong>が厳格 → Snowflakeの「データが外に出ない」保証は大きな強み</li>
+        <li>RFI段階で<strong>Databricksが有力候補</strong>に入っている場合、パターンA or Bが現実的</li>
+        <li>Claude + OpenAIの両方を使うニーズが確定なら、Snowflake Cortex の採用可否をMTGで議論すべき</li>
+      </ul>
+    </div>
+  </section>
+
   <footer style="padding: 40px 0; border-top: 1px solid var(--border); margin-top: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">
     <p>Foundry会社 リサーチ部 作成 | 2026-04-01 | SOMPOケア 新分析環境構築PJT</p>
     <p style="margin-top: 8px;">参照: project-scotch-care/docs/ (00〜12), reference_docs/</p>
