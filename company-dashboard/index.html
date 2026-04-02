@@ -1229,9 +1229,9 @@ function renderPage(page) {
 var GCAL_CLIENT_ID = '855851839827-hfijpvgal6m3hgrjgus6bdf8it8ibr9h.apps.googleusercontent.com';
 var GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 var GCAL_CALENDARS = [
-  {id: 'yumzzz.my6223@gmail.com', type: 'primary', label: 'Personal'},
-  {id: 'yuta.miyaji.xyz@gmail.com', type: 'secondary', label: 'Other'},
-  {id: 'yuta.miyaji@acesinc.co.jp', type: 'work', label: 'Work (ACES)'}
+  {id: 'yumzzz.my6223@gmail.com', type: 'primary', label: 'yumzzz.my6223'},
+  {id: 'yuta.miyaji.xyz@gmail.com', type: 'secondary', label: 'yuta.miyaji.xyz'},
+  {id: 'yuta.miyaji@acesinc.co.jp', type: 'work', label: 'ACES'}
 ];
 var CAL_DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var gcalToken = null;
@@ -1508,9 +1508,9 @@ function renderCalendarGrid(root, events, onRefresh) {
 
   // Legend
   root.appendChild(el('div', {className: 'cal-legend'}, [
-    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot p'}), 'Personal']),
-    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot w'}), 'Work (ACES)']),
-    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot s'}), 'Other'])
+    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot p'}), 'yumzzz.my6223']),
+    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot w'}), 'ACES']),
+    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot s'}), 'yuta.miyaji.xyz'])
   ]));
 }
 
