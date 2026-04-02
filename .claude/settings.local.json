@@ -76,7 +76,9 @@
       "WebFetch(domain:dasroot.net)",
       "Bash(bash /workspace/scripts/company/sync-registry.sh)",
       "WebFetch(domain:www.smashingmagazine.com)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(gh run:*)",
+      "Bash(gh api:*)"
     ]
   }
 }
