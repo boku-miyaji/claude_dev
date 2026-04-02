@@ -2415,7 +2415,7 @@ async function renderCareer(root) {
             await sb.from('career').delete().eq('id', item.id);
             toast('"' + item.title + '" を削除しました');
             loadAndRender();
-          }
+          });
         });
         actions.appendChild(delBtn);
         row.appendChild(actions);
