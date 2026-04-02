@@ -2153,7 +2153,7 @@ function showAddCategory(cats) {
 
 async function renderOrgChart(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'Organization Chart'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: 'HD → 子会社 → 部署 → チームのツリー構造'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'HD（共通部署） → 子会社（秘書室 + HDの部署を利用）'}));
 
   var companies = (await sb.from('companies').select('*').order('created_at')).data || [];
   var departments = (await sb.from('departments').select('*').order('company_id,name')).data || [];
@@ -2182,78 +2182,82 @@ async function renderOrgChart(root) {
     return;
   }
 
+  // Separate HD departments and child company departments
+  var hdDepts = (deptsByCompany['hd'] || []);
+  var activeCompanies = companies.filter(function(c) { return c.status === 'active' && c.id !== 'hd'; });
+  var archivedCompanies = companies.filter(function(c) { return c.status !== 'active'; });
+
   // Build tree
   var tree = el('div', {className: 'tree'});
 
   // HD node
   var hdNode = el('div', {className: 'tree-node tree-node-hd'}, [
     el('div', {className: 'tn-title', textContent: '宮路HD'}),
-    el('div', {className: 'tn-sub', textContent: companies.length + ' companies'}),
+    el('div', {className: 'tn-sub', textContent: activeCompanies.length + ' companies / ' + hdDepts.length + ' depts'}),
   ]);
   tree.appendChild(hdNode);
 
-  // Company level
-  var activeCompanies = companies.filter(function(c) { return c.status === 'active'; });
-  var archivedCompanies = companies.filter(function(c) { return c.status !== 'active'; });
+  // Two branches from HD: shared departments + child companies
+  var hdChildren = el('div', {className: 'tree-children'});
 
-  if (activeCompanies.length > 0) {
-    var coChildren = el('div', {className: 'tree-children'});
-
-    activeCompanies.forEach(function(co) {
-      var branch = el('div', {className: 'tree-branch'});
-
-      // Company node
-      var statusDot = co.status === 'active' ? 'dot-active' : co.status === 'paused' ? 'dot-paused' : 'dot-archived';
-      var coNode = el('div', {className: 'tree-node tree-node-co'}, [
-        el('div', {style: 'display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:4px'}, [
-          el('span', {className: 'dot ' + statusDot}),
-          el('div', {className: 'tn-title', textContent: co.name})
-        ]),
-        co.description ? el('div', {className: 'tn-sub', textContent: co.description.substring(0, 30)}) : null,
-        el('div', {className: 'tn-id', textContent: co.id})
-      ].filter(Boolean));
-      branch.appendChild(coNode);
-
-      // Department level
-      var depts = deptsByCompany[co.id] || [];
-      if (depts.length > 0) {
-        var deptChildren = el('div', {className: 'tree-children'});
-
-        depts.forEach(function(dept) {
-          var deptBranch = el('div', {className: 'tree-branch'});
-          var teams = dept.teams || [];
-
-          var deptNode = el('div', {className: 'tree-node tree-node-dept'}, [
-            el('div', {className: 'tn-title', textContent: dept.name}),
-            teams.length > 0 ? el('div', {className: 'tn-sub', textContent: teams.length + ' teams'}) : null
-          ].filter(Boolean));
-          deptBranch.appendChild(deptNode);
-
-          // Team level
-          if (teams.length > 0) {
-            var teamChildren = el('div', {className: 'tree-children'});
-            teams.forEach(function(team) {
-              var teamName = typeof team === 'string' ? team : (team.name || team);
-              teamChildren.appendChild(el('div', {className: 'tree-branch'}, [
-                el('div', {className: 'tree-node tree-node-team'}, [
-                  el('div', {className: 'tn-title', textContent: teamName})
-                ])
-              ]));
-            });
-            deptBranch.appendChild(teamChildren);
-          }
-
-          deptChildren.appendChild(deptBranch);
-        });
-
-        branch.appendChild(deptChildren);
-      }
-
-      coChildren.appendChild(branch);
+  // --- HD Shared Departments branch ---
+  if (hdDepts.length > 0) {
+    var deptBranch = el('div', {className: 'tree-branch'});
+    var deptGroupNode = el('div', {className: 'tree-node tree-node-co', style: 'background:var(--surface3)'}, [
+      el('div', {className: 'tn-title', textContent: '共通部署'}),
+      el('div', {className: 'tn-sub', textContent: '全子会社が利用'})
+    ]);
+    deptBranch.appendChild(deptGroupNode);
+    var deptChildren = el('div', {className: 'tree-children'});
+    hdDepts.forEach(function(dept) {
+      var shortName = dept.name.replace(/（HD共通）|（HD常設）| — HD 常設部門/g, '').trim();
+      deptChildren.appendChild(el('div', {className: 'tree-branch'}, [
+        el('div', {className: 'tree-node tree-node-dept'}, [
+          el('div', {className: 'tn-title', textContent: shortName})
+        ])
+      ]));
     });
-
-    tree.appendChild(coChildren);
+    deptBranch.appendChild(deptChildren);
+    hdChildren.appendChild(deptBranch);
   }
+
+  // --- Child Companies branch ---
+  activeCompanies.forEach(function(co) {
+    var branch = el('div', {className: 'tree-branch'});
+    var coNode = el('div', {className: 'tree-node tree-node-co'}, [
+      el('div', {style: 'display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:4px'}, [
+        el('span', {className: 'dot dot-active'}),
+        el('div', {className: 'tn-title', textContent: co.name})
+      ]),
+      co.description ? el('div', {className: 'tn-sub', textContent: co.description.substring(0, 40)}) : null,
+      el('div', {className: 'tn-id', textContent: co.id})
+    ].filter(Boolean));
+    branch.appendChild(coNode);
+
+    // Show child company's own departments (secretary only) + note about HD depts
+    var childDepts = deptsByCompany[co.id] || [];
+    if (childDepts.length > 0 || hdDepts.length > 0) {
+      var dChildren = el('div', {className: 'tree-children'});
+      childDepts.forEach(function(dept) {
+        dChildren.appendChild(el('div', {className: 'tree-branch'}, [
+          el('div', {className: 'tree-node tree-node-dept'}, [
+            el('div', {className: 'tn-title', textContent: dept.name})
+          ])
+        ]));
+      });
+      // Reference to HD shared departments
+      dChildren.appendChild(el('div', {className: 'tree-branch'}, [
+        el('div', {className: 'tree-node tree-node-team', style: 'border-style:dashed;opacity:.6'}, [
+          el('div', {className: 'tn-title', textContent: '+ HD共通部署 (' + hdDepts.length + ')'})
+        ])
+      ]));
+      branch.appendChild(dChildren);
+    }
+
+    hdChildren.appendChild(branch);
+  });
+
+  tree.appendChild(hdChildren);
 
   // Archived (collapsed)
   if (archivedCompanies.length > 0) {
