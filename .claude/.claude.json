@@ -1,5 +1,5 @@
 {
-  "numStartups": 33,
+  "numStartups": 34,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -674,7 +674,7 @@
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 11,
-  "opus1mMergeNoticeSeenCount": 3,
+  "opus1mMergeNoticeSeenCount": 4,
   "passesUpsellSeenCount": 3,
   "effortCalloutV2Dismissed": true,
   "groveConfigCache": {
@@ -692,7 +692,7 @@
         "amount_minor_units": null,
         "currency": null
       },
-      "timestamp": 1775090383086
+      "timestamp": 1775124763441
     }
   },
   "clientDataCache": {},
@@ -705,8 +705,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 3,
-      "lastUsedAt": 1775118705326
+      "usageCount": 4,
+      "lastUsedAt": 1775124771707
     }
   }
 }
