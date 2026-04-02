@@ -2974,12 +2974,11 @@ async function finOverview(root) {
   projects.forEach(function(p) { projMap[p.id] = p; });
   var projColors = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6'];
 
-  // Gather unique clients from invoices
+  // Gather unique clients from invoices (keyed by client_name to avoid duplicates)
   var clientSet = {};
   allInv.forEach(function(inv) {
-    var key = inv.project_id || 'other';
     var name = projMap[inv.project_id] ? projMap[inv.project_id].client_name : (inv.client_name || '未割当');
-    clientSet[key] = name;
+    clientSet[name] = name;
   });
   var clientKeys = Object.keys(clientSet);
 
@@ -2991,9 +2990,9 @@ async function finOverview(root) {
   }
   allInv.forEach(function(inv) {
     var mon = parseInt(inv.invoice_date.substring(5, 7));
-    var key = inv.project_id || 'other';
-    if (!monthlyByClient[mon].clients[key]) monthlyByClient[mon].clients[key] = 0;
-    monthlyByClient[mon].clients[key] += inv.amount;
+    var name = projMap[inv.project_id] ? projMap[inv.project_id].client_name : (inv.client_name || '未割当');
+    if (!monthlyByClient[mon].clients[name]) monthlyByClient[mon].clients[name] = 0;
+    monthlyByClient[mon].clients[name] += inv.amount;
     monthlyByClient[mon].total += inv.amount;
   });
   allExp.forEach(function(exp) {
@@ -3016,7 +3015,7 @@ async function finOverview(root) {
   var legendItems = clientKeys.map(function(ck, i) {
     return el('span', {style: 'display:flex;align-items:center;gap:3px'}, [
       el('span', {style: 'display:inline-block;width:8px;height:8px;border-radius:2px;background:'+projColors[i%projColors.length]}),
-      document.createTextNode(clientSet[ck])
+      document.createTextNode(ck)
     ]);
   });
   chartCard.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px'}, [
@@ -3047,7 +3046,7 @@ async function finOverview(root) {
 
     // Build tooltip
     var tipParts = [mi+'月: 合計'+fmtYen(md.total)];
-    clientKeys.forEach(function(ck) { if (md.clients[ck]) tipParts.push(clientSet[ck]+': '+fmtYen(md.clients[ck])); });
+    clientKeys.forEach(function(ck) { if (md.clients[ck]) tipParts.push(ck+': '+fmtYen(md.clients[ck])); });
     if (md.hrs > 0) tipParts.push('稼働: '+md.hrs.toFixed(1)+'h');
 
     var barGroup = el('div', {style: 'flex:1;display:flex;flex-direction:column;align-items:center', title: tipParts.join('\n')});
