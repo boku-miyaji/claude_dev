@@ -5859,9 +5859,9 @@ function showAddSourceModal(parentRoot) {
 // --- Reports Tab ---
 async function renderReportsTab(root) {
 
-  // Fetch reports from secretary_notes where type = 'intelligence_report'
+  // Fetch report list (body excluded for performance — fetched on click)
   var res = await sb.from('secretary_notes')
-    .select('*')
+    .select('id,title,type,tags,created_at')
     .eq('type', 'intelligence_report')
     .order('created_at', {ascending: false})
     .limit(20);
@@ -5870,7 +5870,7 @@ async function renderReportsTab(root) {
   if (reports.length === 0) {
     root.appendChild(el('div', {className: 'card empty', style: 'padding:40px;text-align:center'}, [
       el('div', {style: 'font-size:32px;margin-bottom:12px', textContent: '◎'}),
-      el('div', {style: 'font-size:14px;color:var(--text2)', textContent: 'まだレポートがありません。GitHub Actions が初回実行されると表示されます。'}),
+      el('div', {style: 'font-size:14px;color:var(--text2)', textContent: 'まだレポートがありません。'}),
       el('div', {style: 'font-size:12px;color:var(--text3);margin-top:8px', textContent: 'スケジュール: 09:00 JST / 21:00 JST'})
     ]));
     return;
@@ -5879,39 +5879,31 @@ async function renderReportsTab(root) {
   // Report list
   var section = el('div', {className: 'section'});
   reports.forEach(function(report) {
-    var body = report.body || '';
-    var data = null;
-    var isJson = false;
-    try { data = JSON.parse(body); isJson = true; } catch(e) { data = null; }
-
-    var totalResults = data ? (data.total_results || 0) : 0;
-    var totalSources = data ? (data.total_sources || 0) : 0;
     var ts = report.created_at ? new Date(report.created_at) : new Date();
     var timeStr = ts.toLocaleString('ja-JP', {timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
     var title = report.title || timeStr;
     var source = (report.tags || []).indexOf('auto') > -1 ? 'auto' : 'manual';
+    var reportId = report.id;
 
     var card = el('div', {className: 'card', style: 'margin-bottom:12px;cursor:pointer'});
-    (function(rpt, isJ, d, b) {
-      card.addEventListener('click', async function() {
-        var existing = card.querySelector('.report-detail');
-        if (existing) { existing.remove(); return; }
-        // If body was empty in initial fetch, re-fetch individually
-        var finalData = isJ ? d : b;
-        if (!finalData || finalData === '') {
-          var bodyRes = await sb.from('secretary_notes').select('body').eq('id', rpt.id).single();
-          var freshBody = (bodyRes.data && bodyRes.data.body) || '';
-          if (!freshBody) return;
-          try { finalData = JSON.parse(freshBody); } catch(e) { finalData = freshBody; }
-        }
-        toggleReportDetail(card, finalData);
-      });
-    })(report, isJson, data, body);
+    card.addEventListener('click', async function() {
+      var existing = card.querySelector('.report-detail');
+      if (existing) { existing.remove(); return; }
+      // Fetch body on demand
+      try {
+        var bodyRes = await sb.from('secretary_notes').select('body').eq('id', reportId).single();
+        var body = (bodyRes.data && bodyRes.data.body) || '';
+        if (!body) { toast('レポートの本文が空です'); return; }
+        var parsed = null;
+        try { parsed = JSON.parse(body); } catch(e) { parsed = null; }
+        toggleReportDetail(card, parsed || body);
+      } catch(err) { toast('レポート取得エラー'); console.error(err); }
+    });
 
     var header = el('div', {style: 'display:flex;justify-content:space-between;align-items:center'}, [
       el('div', {}, [
         el('div', {style: 'font-size:14px;font-weight:600', textContent: title}),
-        el('div', {style: 'font-size:12px;color:var(--text3);margin-top:2px', textContent: isJson ? totalSources + ' sources / ' + totalResults + ' results' : 'Markdown report'})
+        el('div', {style: 'font-size:12px;color:var(--text3);margin-top:2px', textContent: timeStr})
       ]),
       el('div', {className: 'badge ' + (source === 'auto' ? 'badge-blue' : 'badge-green'), textContent: source})
     ]);
