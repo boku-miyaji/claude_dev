@@ -376,6 +376,11 @@
   <a href="#faq-constraints-critical">要注意の制約</a>
   <a href="#faq-constraints-detail">軸別制約一覧</a>
   <a href="#faq-constraints-sompo">SOMPOケアへの影響</a>
+  <a href="#faq-catalog" class="section-title" style="color:var(--amber);">カタログの現実<span class="nav-badge badge-core">NEW</span></a>
+  <a href="#faq-catalog-fail">失敗パターン</a>
+  <a href="#faq-catalog-works">本当に効く場面</a>
+  <a href="#faq-catalog-ops">運用フロー</a>
+  <a href="#faq-catalog-trends">最新事例</a>
   <a href="#faq-lockin" class="section-title" style="color:var(--amber);">ロックイン比較<span class="nav-badge badge-strategy">NEW</span></a>
   <a href="#faq-lockin-overview">総合評価</a>
   <a href="#faq-lockin-detail">軸別比較</a>
@@ -4072,6 +4077,216 @@ Object Type: <span class="highlight">施設</span>
         <li><strong>Databricks</strong>: 東京リージョンでのModel Serving対応モデルと実際のレイテンシ → レート制限の具体値を営業に確認</li>
         <li><strong>Bedrock</strong>: ap-northeast-1 でのClaudeクォータ上限と引き上げ可能量 → バーンダウンレート込みの実コスト試算</li>
         <li><strong>共通</strong>: 介護記録のPII（個人情報）をLLMに入力する場合の各社のデータ処理ポリシー</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- カタログの現実 -->
+  <section id="faq-catalog">
+    <h2>データカタログの現実 — 入れたら解決、ではない</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">カタログは「機能」ではなく「運用」。導入しても使われなければ無意味で、使われるためには組織的な仕組みが必要（2026-04-02）</p>
+
+    <div class="callout danger">
+      <strong>Gartner予測:</strong> データガバナンスイニシアチブの<strong>80%が2027年までに失敗する</strong>。主因は技術ではなく、組織・プロセス・文化の問題。
+    </div>
+
+    <h3 id="faq-catalog-fail">カタログを入れても失敗する4パターン</h3>
+
+    <div class="card-grid">
+      <div class="card" style="border-left:3px solid var(--red);">
+        <h4 style="color:var(--red);">1. 誰も使わない</h4>
+        <p style="font-size:13px;">カタログを導入したが、データチームが直接SQLを叩く方が早いので、カタログを経由しない。検索UIが使いにくい、情報が古い、BI閲覧者はカタログの存在すら知らない。</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">→ <strong>SOMPOケアの3,000名のBI閲覧者はカタログを直接使わない。</strong> 直接ユーザーはデータチーム（推定10-30名）のみ。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--red);">
+        <h4 style="color:var(--red);">2. メタデータが腐る</h4>
+        <p style="font-size:13px;">初期登録は頑張るが、テーブル追加・カラム変更のたびにカタログを更新する運用が定着しない。半年後にはカタログの情報と実態が乖離し、「カタログの情報は信用できない」状態に。</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">→ <strong>自動同期できるのはスキーマ情報まで。</strong> ビジネス説明（「この列は何の意味か」）は人間が書くしかなく、ここが腐る。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--red);">
+        <h4 style="color:var(--red);">3. 責任が曖昧</h4>
+        <p style="font-size:13px;">「誰がカタログを更新するか」「誰がデータ品質を担保するか」が決まっていない。データスチュワードを任命しても、本業と兼務で後回しにされる。</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">→ <strong>専任のデータスチュワードがいない組織では、カタログは形骸化する。</strong></p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--red);">
+        <h4 style="color:var(--red);">4. スコープが広すぎる</h4>
+        <p style="font-size:13px;">「全テーブル・全カラムにメタデータを付ける」から始めて、膨大な初期コストで疲弊。価値が出る前にプロジェクトが頓挫。</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">→ <strong>Gold層のBIテーブル（15画面分）から始め、価値を実感してから拡大すべき。</strong></p>
+      </div>
+    </div>
+
+    <h3>自動リネージの限界 — 追えるものと追えないもの</h3>
+    <table>
+      <tr><th>追跡可能</th><th>追跡困難 / 不可</th></tr>
+      <tr>
+        <td>
+          <ul style="font-size:13px;margin:0;">
+            <li>Unity Catalog内のSQL変換（Spark SQL, dbt）</li>
+            <li>テーブル間の依存関係（自動検出）</li>
+            <li>カラムレベルのリネージ（Unity Catalog）</li>
+          </ul>
+        </td>
+        <td>
+          <ul style="font-size:13px;margin:0;">
+            <li>外部ツール経由の変換（Airflow, 外部ETL）</li>
+            <li>JDBC/ODBC経由のアドホッククエリ</li>
+            <li>BI層への伝播（Tableauの計算フィールド等）</li>
+            <li>Pythonコード内のデータ変換ロジック</li>
+            <li>手動Excel加工 → 再アップロード</li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+    <div class="callout warn">
+      <strong>Foundryとの差:</strong> Foundryは全パイプラインが統合環境内で動くため、リネージが端から端まで自動追跡できた。<strong>移行先ではツールが分散するため、同等のリネージは実現困難。</strong> この現実をSOMPOケア側と合意しておく必要がある。
+    </div>
+
+    <h3 id="faq-catalog-works">カタログが本当に効く場面 — 具体シナリオ</h3>
+
+    <h4>シナリオ1: テーブル変更の影響分析（最大のROI）</h4>
+    <div class="flow">
+<span class="comment">── カタログなし ──</span>
+
+施設マスタの「施設コード」列の型を変更したい
+  ↓
+<span class="red">「このテーブルを使っているパイプライン、BI、レポートは？」</span>
+  ↓
+Slackで聞く → 誰も全容を把握していない → 恐る恐る変更 → BIが壊れる → 緊急対応
+  ↓
+<span class="red">300施設 × 15画面のダッシュボードが止まる</span>
+
+
+<span class="comment">── カタログあり ──</span>
+
+施設マスタの「施設コード」列の型を変更したい
+  ↓
+<span class="green">Unity Catalog のリネージで下流を自動検出</span>
+  ↓
+影響: パイプライン3本、Gold テーブル5個、Tableau ダッシュボード2画面
+  ↓
+事前に全て修正 → 安全にリリース
+    </div>
+
+    <h4>シナリオ2: 「このデータ何？」問い合わせ地獄</h4>
+    <div class="flow">
+<span class="comment">── 3,000名BI閲覧者 × 300施設 ──</span>
+
+施設長: 「ダッシュボードの"稼働率"って、ベッド数ベース？入居者数ベース？」
+  ↓ カタログなし → <span class="red">データチームに問い合わせ</span> → 調査 → 回答 (1-2日)
+  ↓ カタログあり → <span class="green">BIの列名からカタログを参照</span> → 定義・計算式が即わかる
+                   （ただしBI閲覧者がカタログを見る動線設計が必要）
+
+<span class="amber">現実的には: BI上のツールチップや注釈で定義を埋め込む方が効果的。
+カタログは「定義のマスター管理」、BIは「閲覧者向けの表示」と分離。</span>
+    </div>
+
+    <h4>シナリオ3: 監査対応（介護データの追跡）</h4>
+    <div class="flow">
+<span class="comment">── 介護情報基盤（2026年度〜規制強化の方向） ──</span>
+
+監査: 「入居者Aのケア記録はどのシステムから取り込まれ、
+       どう加工されて、誰がいつアクセスしたか？」
+  ↓
+<span class="green">カタログ + 監査ログで回答可能:</span>
+  - リネージ: 施設システム → Bronze → Silver → Gold → BI
+  - アクセスログ: 誰が・いつ・どのクエリで参照したか
+  - 権限設定: なぜこのユーザーがアクセスできたか
+    </div>
+
+    <h3 id="faq-catalog-ops">実際の運用フロー — 誰が何をするか</h3>
+
+    <table>
+      <tr><th>役割</th><th>頻度</th><th>やること</th><th>工数目安</th></tr>
+      <tr>
+        <td><strong>データエンジニア</strong></td>
+        <td>テーブル作成・変更時</td>
+        <td>テーブル/カラムのビジネス説明をカタログに記載。タグ付け（PII, 機密等）</td>
+        <td>1テーブルあたり15-30分</td>
+      </tr>
+      <tr>
+        <td><strong>データスチュワード</strong><br><span style="font-size:11px;color:var(--text-muted)">（専任 or 兼務）</span></td>
+        <td>週次</td>
+        <td>メタデータの品質チェック（説明が空のテーブルがないか）。アクセス権限の棚卸し</td>
+        <td>週2-4時間</td>
+      </tr>
+      <tr>
+        <td><strong>データアナリスト</strong></td>
+        <td>分析着手時</td>
+        <td>カタログでテーブルを検索。定義・鮮度・品質スコアを確認してからクエリ作成</td>
+        <td>（業務の一部）</td>
+      </tr>
+      <tr>
+        <td><strong>BI閲覧者（3,000名）</strong></td>
+        <td>—</td>
+        <td><strong>カタログを直接使わない。</strong> BIツール上の定義表示で間接的に恩恵を受ける</td>
+        <td>0</td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <strong>最小限の運用で効果を出すルール:</strong>
+      <ol style="margin-top:8px;font-size:13px;">
+        <li><strong>Gold層のテーブルだけ</strong>にビジネス定義を付ける（Bronze/Silverは技術メタデータの自動同期のみ）</li>
+        <li><strong>新テーブル作成時のPRチェックリスト</strong>に「カタログ説明記載」を含める（コードレビューで強制）</li>
+        <li><strong>週次の自動レポート</strong>で「説明なしテーブル」を検出し、Slackに通知</li>
+        <li>それ以上のガバナンスは、<strong>半年間の運用実績を見てから段階的に追加</strong></li>
+      </ol>
+    </div>
+
+    <h3 id="faq-catalog-trends">最新事例・トレンド（2025-2026）</h3>
+
+    <h4>AI × カタログの統合</h4>
+    <table>
+      <tr><th>機能</th><th>内容</th><th>プラットフォーム</th></tr>
+      <tr>
+        <td><strong>自然言語でデータ検索</strong></td>
+        <td>「先月の東京エリアの稼働率が低い施設」→ 該当テーブル・カラムを自動提示</td>
+        <td>Databricks AI/BI Genie, Snowflake Cortex Analyst</td>
+      </tr>
+      <tr>
+        <td><strong>メタデータ自動生成</strong></td>
+        <td>LLMがカラム名・サンプルデータからビジネス説明を自動生成（人間がレビュー）</td>
+        <td>Unity Catalog AI-generated comments (2025〜)</td>
+      </tr>
+      <tr>
+        <td><strong>Text-to-SQL</strong></td>
+        <td>BI閲覧者が自然言語で質問 → カタログのメタデータを参照してSQL自動生成</td>
+        <td>Databricks AI/BI, Snowflake Cortex Analyst</td>
+      </tr>
+    </table>
+    <div class="callout">
+      <strong>ポイント:</strong> これらのAI機能は<strong>カタログのメタデータ品質に完全に依存する</strong>。カタログの定義が腐っていれば、AIの回答も腐る。つまり「AI時代だからこそカタログ運用が重要」という逆説。
+    </div>
+
+    <h4>データコントラクト（2025-2026のトレンド）</h4>
+    <div class="flow">
+<span class="comment">── 従来: 暗黙的な依存 ──</span>
+チームA（データ提供） ──暗黙の前提──→ チームB（データ利用）
+  テーブル変えたら下流が壊れた。<span class="red">「聞いてない」</span>
+
+<span class="comment">── データコントラクト: 明示的な合意 ──</span>
+チームA ──<span class="green">コントラクト（YAML/JSON）</span>──→ チームB
+  - スキーマ（型・必須列）
+  - SLA（更新頻度・鮮度保証）
+  - 品質ルール（NULL率 < 1%等）
+  - 破壊的変更時の通知ルール
+  → CI/CDでコントラクト違反を自動検出 → <span class="green">壊れる前に止まる</span>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);">SOMPOケアの300施設からのデータ取り込みでは、施設側システムの変更がBronze層を壊すリスクがある。データコントラクトで「施設データのスキーマ保証」を入れるのは有効。</p>
+
+    <h4>SOMPOケアへの示唆</h4>
+    <div class="callout warn">
+      <strong>MTGでの提案:</strong>
+      <ul style="margin-top:8px;">
+        <li><strong>RFP評価軸の変更</strong>: 「カタログ機能の有無」ではなく「カタログの運用設計の具体性」で評価すべき
+          <ul style="font-size:12px;margin-top:4px;">
+            <li>メタデータ更新の責任者・フローは具体的か？</li>
+            <li>自動追跡の範囲と手動補完の範囲を明示しているか？</li>
+            <li>段階的導入計画があるか（初日から全テーブルは無理）？</li>
+          </ul>
+        </li>
+        <li><strong>Foundry時代の運用実態を棚卸し</strong>: 「Foundryではカタログ的な機能を実際にどう使っていたか？」をSOMPOケア側に確認。使っていなかったなら、移行先でも同じ</li>
+        <li><strong>小さく始める</strong>: Gold層の15ダッシュボード用テーブルだけにビジネス定義を付けるところから。Bronze/Silverは自動メタデータのみ</li>
       </ul>
     </div>
   </section>
