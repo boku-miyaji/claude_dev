@@ -504,7 +504,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <div class="nav-group-label">Management</div>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
-    <button class="nav-item" data-page="orgchart"><span class="nav-icon">⊞</span> Org Chart</button>
+    <button class="nav-item" data-page="orgchart"><span class="nav-icon">⊞</span> Organization</button>
     <button class="nav-item" data-page="finance"><span class="nav-icon">¥</span> Finance</button>
     <div class="nav-group-label">Analytics</div>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
@@ -1071,7 +1071,7 @@ function openCommandPalette() {
     {icon: '📅', label: 'Calendar', page: 'calendar', group: 'Pages'},
     {icon: '☐', label: 'Tasks', page: 'tasks', group: 'Management'},
     {icon: '◫', label: 'Companies', page: 'companies', group: 'Management'},
-    {icon: '⊞', label: 'Org Chart', page: 'orgchart', group: 'Management'},
+    {icon: '⊞', label: 'Organization', page: 'orgchart', group: 'Management'},
     {icon: '¥', label: 'Finance', page: 'finance', group: 'Management'},
     {icon: '◇', label: 'Insights', page: 'insights', group: 'Analytics'},
     {icon: '▷', label: 'Prompts', page: 'prompts', group: 'Analytics'},
@@ -2152,132 +2152,122 @@ function showAddCategory(cats) {
 // ============================================================
 
 async function renderOrgChart(root) {
-  root.appendChild(el('div', {className: 'page-title', textContent: 'Organization Chart'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: 'HD（共通部署） → 子会社（秘書室 + HDの部署を利用）'}));
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Organization'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '組織構成・部署の役割・PJ会社・利用可能なスキル'}));
 
   var companies = (await sb.from('companies').select('*').order('created_at')).data || [];
-  var departments = (await sb.from('departments').select('*').order('company_id,name')).data || [];
-  var categories = (await sb.from('categories').select('*').order('sort_order')).data || [];
-
-  // Group departments by company
-  var deptsByCompany = {};
-  departments.forEach(function(d) {
-    if (!deptsByCompany[d.company_id]) deptsByCompany[d.company_id] = [];
-    deptsByCompany[d.company_id].push(d);
-  });
-
-  // Group companies by category
-  var companiesByCat = {_none: []};
-  categories.forEach(function(c) { companiesByCat[c.id] = []; });
-  companies.forEach(function(c) {
-    var key = c.category_id || '_none';
-    if (!companiesByCat[key]) companiesByCat[key] = [];
-    companiesByCat[key].push(c);
-  });
-
-  if (companies.length === 0) {
-    root.appendChild(el('div', {className: 'card'}, [
-      el('div', {className: 'empty', textContent: 'まだ会社がありません。/company で作成してください'})
-    ]));
-    return;
-  }
-
-  // Separate HD departments and child company departments
-  var hdDepts = (deptsByCompany['hd'] || []);
   var activeCompanies = companies.filter(function(c) { return c.status === 'active' && c.id !== 'hd'; });
   var archivedCompanies = companies.filter(function(c) { return c.status !== 'active'; });
 
-  // Build tree
-  var tree = el('div', {className: 'tree'});
+  var cardStyle = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px';
+  var labelStyle = 'font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px';
+  var tagStyle = 'display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text2);margin-right:4px';
 
-  // HD node
-  var hdNode = el('div', {className: 'tree-node tree-node-hd'}, [
-    el('div', {className: 'tn-title', textContent: '宮路HD'}),
-    el('div', {className: 'tn-sub', textContent: activeCompanies.length + ' companies / ' + hdDepts.length + ' depts'}),
-  ]);
-  tree.appendChild(hdNode);
+  // ===== How it works =====
+  var howCard = el('div', {style: cardStyle});
+  howCard.appendChild(el('div', {style: labelStyle, textContent: 'Architecture'}));
+  howCard.appendChild(el('div', {style: 'font-size:13px;color:var(--text2);line-height:1.8', innerHTML:
+    '<b>宮路HD</b> が全体を統括。共通部署はHDに集約し、子会社（PJ）が共有利用する。<br>' +
+    '<b>秘書室</b>: 各PJ会社の窓口。社長の指示を受け、適切な部署に振り分けるオーケストレーター。<br>' +
+    '<b>CLAUDE.md</b>: 各部署・PJ会社のルールブック。AI Agentがこれに従って動く。<br>' +
+    '<b>スキル（/command）</b>: Claude Code の拡張コマンド。特定のワークフローを1コマンドで実行する。'
+  }));
+  root.appendChild(howCard);
 
-  // Two branches from HD: shared departments + child companies
-  var hdChildren = el('div', {className: 'tree-children'});
+  // ===== HD Shared Departments =====
+  root.appendChild(el('div', {style: labelStyle + ';margin-top:24px', textContent: 'HD共通部署（全PJ会社が利用）'}));
 
-  // --- HD Shared Departments branch ---
-  if (hdDepts.length > 0) {
-    var deptBranch = el('div', {className: 'tree-branch'});
-    var deptGroupNode = el('div', {className: 'tree-node tree-node-co', style: 'background:var(--surface3)'}, [
-      el('div', {className: 'tn-title', textContent: '共通部署'}),
-      el('div', {className: 'tn-sub', textContent: '全子会社が利用'})
-    ]);
-    deptBranch.appendChild(deptGroupNode);
-    var deptChildren = el('div', {className: 'tree-children'});
-    hdDepts.forEach(function(dept) {
-      var shortName = dept.name.replace(/（HD共通）|（HD常設）| — HD 常設部門/g, '').trim();
-      deptChildren.appendChild(el('div', {className: 'tree-branch'}, [
-        el('div', {className: 'tree-node tree-node-dept'}, [
-          el('div', {className: 'tn-title', textContent: shortName})
-        ])
-      ]));
-    });
-    deptBranch.appendChild(deptChildren);
-    hdChildren.appendChild(deptBranch);
-  }
+  var deptInfo = [
+    {name: 'AI開発部署', slug: 'ai-dev', icon: '🤖', role: 'LLM/AIシステムの要件定義・設計・実装・評価・運用を一貫して担当', keywords: ['プロンプト設計', 'RAG', 'エージェント', 'モデル評価', 'AIOps']},
+    {name: 'システム開発部署', slug: 'sys-dev', icon: '⚙', role: 'バックエンド・フロントエンド・QAを担当し、PJのシステム部分を構築', keywords: ['API', 'DB', 'UI', 'テスト', 'デプロイ']},
+    {name: 'PM', slug: 'pm', icon: '📋', role: 'プロジェクトの立ち上げから完了まで進捗を管理。部署横断のタスクを可視化', keywords: ['マイルストーン', 'チケット', '進捗管理']},
+    {name: '資料制作部署', slug: 'materials', icon: '📝', role: '顧客説明用のプレゼン・提案書・デモ資料を作成。「壁打ちの素材」として提供', keywords: ['提案書', 'プレゼン', 'PPTX', '10原則']},
+    {name: 'リサーチ部署', slug: 'research', icon: '🔍', role: '市場調査・技術調査・対象企業調査を行い、組織全体に情報を提供', keywords: ['市場調査', '技術調査', '競合分析']},
+    {name: '情報収集部', slug: 'intelligence', icon: '📡', role: '最新情報のキャッチアップ。キーワード検索・Web巡回でブリーフィングレポート生成', keywords: ['ニュース', 'トレンド', '定期収集']},
+    {name: 'セキュリティ部', slug: 'security', icon: '🛡', role: '全PJ会社のソフトウェアサプライチェーンセキュリティを統括管理', keywords: ['脆弱性', '依存関係', 'SBOM', '監査']},
+    {name: 'UXデザイン部', slug: 'ux-design', icon: '✦', role: 'ユーザーが考える前に、欲しいものが手に届く体験を設計する', keywords: ['行動文脈', '感情設計', '認知心理学']}
+  ];
 
-  // --- Child Companies branch ---
-  activeCompanies.forEach(function(co) {
-    var branch = el('div', {className: 'tree-branch'});
-    var coNode = el('div', {className: 'tree-node tree-node-co'}, [
-      el('div', {style: 'display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:4px'}, [
-        el('span', {className: 'dot dot-active'}),
-        el('div', {className: 'tn-title', textContent: co.name})
-      ]),
-      co.description ? el('div', {className: 'tn-sub', textContent: co.description.substring(0, 40)}) : null,
-      el('div', {className: 'tn-id', textContent: co.id})
-    ].filter(Boolean));
-    branch.appendChild(coNode);
-
-    // Show child company's own departments (secretary only) + note about HD depts
-    var childDepts = deptsByCompany[co.id] || [];
-    if (childDepts.length > 0 || hdDepts.length > 0) {
-      var dChildren = el('div', {className: 'tree-children'});
-      childDepts.forEach(function(dept) {
-        dChildren.appendChild(el('div', {className: 'tree-branch'}, [
-          el('div', {className: 'tree-node tree-node-dept'}, [
-            el('div', {className: 'tn-title', textContent: dept.name})
-          ])
-        ]));
-      });
-      // Reference to HD shared departments
-      dChildren.appendChild(el('div', {className: 'tree-branch'}, [
-        el('div', {className: 'tree-node tree-node-team', style: 'border-style:dashed;opacity:.6'}, [
-          el('div', {className: 'tn-title', textContent: '+ HD共通部署 (' + hdDepts.length + ')'})
-        ])
-      ]));
-      branch.appendChild(dChildren);
-    }
-
-    hdChildren.appendChild(branch);
+  var deptGrid = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-bottom:28px'});
+  deptInfo.forEach(function(d) {
+    var card = el('div', {style: cardStyle + ';margin-bottom:0'});
+    card.appendChild(el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:8px'}, [
+      el('span', {textContent: d.icon, style: 'font-size:18px'}),
+      el('span', {textContent: d.name, style: 'font-size:14px;font-weight:600'}),
+      el('span', {textContent: d.slug, style: 'font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:auto'})
+    ]));
+    card.appendChild(el('div', {textContent: d.role, style: 'font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:10px'}));
+    var tags = el('div');
+    d.keywords.forEach(function(kw) { tags.appendChild(el('span', {textContent: kw, style: tagStyle})); });
+    card.appendChild(tags);
+    deptGrid.appendChild(card);
   });
+  root.appendChild(deptGrid);
 
-  tree.appendChild(hdChildren);
+  // ===== PJ Companies =====
+  root.appendChild(el('div', {style: labelStyle, textContent: 'PJ会社（子会社）'}));
 
-  // Archived (collapsed)
+  var coInfo = {
+    circuit: {icon: '⚡', desc: '電子回路設計DXシステム開発。仕様決め→回路ブロック図→部品選定のAI自動化。Polaris AI社との協業含む', repo: 'circuit_diagram/'},
+    foundry: {icon: '🏭', desc: 'SOMPOケアのPalantir Foundryからの移行支援。RFP策定・データ統合基盤の設計方針策定', repo: 'project-scotch-care/'},
+    rikyu: {icon: '🏦', desc: 'りそな銀行向けの営業支援DXプロジェクト。法人営業のデジタル化・効率化', repo: 'project-rikyu-sales-proposals-poc/'}
+  };
+
+  var coGrid = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-bottom:28px'});
+  activeCompanies.forEach(function(co) {
+    var info = coInfo[co.id] || {icon: '📁', desc: co.description || '', repo: ''};
+    var card = el('div', {style: cardStyle + ';margin-bottom:0'});
+    card.appendChild(el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:8px'}, [
+      el('span', {textContent: info.icon, style: 'font-size:18px'}),
+      el('span', {textContent: co.name, style: 'font-size:14px;font-weight:600'}),
+      el('span', {className: 'dot dot-active', style: 'margin-left:auto'}),
+      el('span', {textContent: co.id, style: 'font-size:10px;color:var(--text3);font-family:var(--mono)'})
+    ]));
+    card.appendChild(el('div', {textContent: info.desc, style: 'font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px'}));
+    if (info.repo) {
+      card.appendChild(el('div', {style: 'font-size:11px;color:var(--text3);font-family:var(--mono);padding:4px 8px;background:var(--surface2);border-radius:4px;display:inline-block', textContent: info.repo}));
+    }
+    card.appendChild(el('div', {textContent: '秘書室 + HD共通部署を利用', style: 'font-size:10px;color:var(--text3);margin-top:8px'}));
+    coGrid.appendChild(card);
+  });
+  root.appendChild(coGrid);
+
+  // ===== Skills / Commands =====
+  root.appendChild(el('div', {style: labelStyle, textContent: 'スキル（/command）'}));
+
+  var skills = [
+    {cmd: '/company', desc: 'HD秘書を起動。タスク管理・ブリーフィング・部署への作業委譲。引数でPJ会社を指定可能', example: '/company rikyu'},
+    {cmd: '/company:invoice', desc: '売上・経費・稼働時間・税金を管理。請求書の登録・解析、稼働同期、実質時給の計算', example: '/invoice add ファイル.pdf'},
+    {cmd: '/company:diary', desc: '日記の分析・壁打ち。感情分析、PERMA+Vスコアリング', example: '/diary'},
+    {cmd: '/company:auto-prep', desc: 'MTG準備を自動化。カレンダーから検出→クライアント企業の最新情報収集→事前分析', example: '/auto-prep'},
+    {cmd: '/company:weekly-digest', desc: '週次CEOレポート。時間配分 vs 予定密度の比較、改善提案', example: '/weekly-digest'},
+    {cmd: '/commit', desc: 'Conventional Commits でコミット作成', example: '/commit'},
+    {cmd: '/review-pr', desc: 'PR番号を指定してコードレビュー実施', example: '/review-pr 42'},
+    {cmd: '/visualize', desc: 'ファイルやディレクトリをMermaidダイアグラムで可視化', example: '/visualize src/'},
+    {cmd: '/explain', desc: 'ファイルやディレクトリの中身を詳細に説明するHTMLレポート', example: '/explain src/api/'}
+  ];
+
+  var skillGrid = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px;margin-bottom:28px'});
+  skills.forEach(function(s) {
+    var card = el('div', {style: 'padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;gap:12px;align-items:flex-start'});
+    card.appendChild(el('code', {textContent: s.cmd, style: 'font-size:12px;font-family:var(--mono);color:var(--accent);white-space:nowrap;padding:2px 6px;background:var(--surface2);border-radius:4px;flex-shrink:0'}));
+    card.appendChild(el('div', {}, [
+      el('div', {textContent: s.desc, style: 'font-size:12px;color:var(--text2);line-height:1.5'}),
+      el('div', {textContent: s.example, style: 'font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:4px'})
+    ]));
+    skillGrid.appendChild(card);
+  });
+  root.appendChild(skillGrid);
+
+  // ===== Archived =====
   if (archivedCompanies.length > 0) {
-    var archSection = el('div', {style: 'margin-top:24px;text-align:center'});
-    archSection.appendChild(el('div', {className: 'section-title', textContent: 'Archived (' + archivedCompanies.length + ')'}));
-    var archList = el('div', {style: 'display:flex;gap:8px;justify-content:center;flex-wrap:wrap'});
+    root.appendChild(el('div', {style: labelStyle, textContent: 'Archived (' + archivedCompanies.length + ')'}));
+    var archRow = el('div', {style: 'display:flex;gap:8px;flex-wrap:wrap'});
     archivedCompanies.forEach(function(co) {
-      archList.appendChild(el('div', {className: 'tree-node tree-node-co', style: 'opacity:.5'}, [
-        el('div', {style: 'display:flex;align-items:center;gap:6px;justify-content:center'}, [
-          el('span', {className: 'dot dot-archived'}),
-          el('div', {className: 'tn-title', textContent: co.name})
-        ]),
-        el('div', {className: 'tn-id', textContent: co.id})
-      ]));
+      archRow.appendChild(el('span', {textContent: co.name + ' (' + co.id + ')', style: 'font-size:12px;color:var(--text3);padding:4px 10px;background:var(--surface2);border-radius:4px'}));
     });
-    archSection.appendChild(archList);
-    tree.appendChild(archSection);
+    root.appendChild(archRow);
   }
-
-  root.appendChild(el('div', {className: 'card', style: 'overflow-x:auto'}, [tree]));
 }
 
 // ============================================================
