@@ -5965,27 +5965,39 @@ function renderFeedbackSection() {
   return section;
 }
 
-/** Render markdown string to a safe DOM fragment (strips scripts, event handlers, dangerous protocols) */
+/** Render markdown string to a safe DOM element.
+ *  Data source: owner-only Supabase table (authenticated writes only).
+ *  Sanitization: scripts, iframes, on* handlers, dangerous protocols are stripped after rendering. */
 function renderMarkdownSafe(md) {
   var wrapper = document.createElement('div');
+  if (!md || typeof md !== 'string') { wrapper.textContent = String(md || ''); return wrapper; }
   if (typeof marked !== 'undefined' && marked.parse) {
-    var parsed = marked.parse(md);
-    var tpl = document.createElement('template');
-    tpl.innerHTML = parsed; // eslint-disable-line -- owner-only data, sanitized below
-    var frag = tpl.content;
-    frag.querySelectorAll('script,iframe,object,embed,math,svg[onload],form').forEach(function(s) { s.remove(); });
-    // Strip all on* event handler attributes
-    frag.querySelectorAll('*').forEach(function(node) {
-      Array.from(node.attributes).forEach(function(attr) {
-        if (attr.name.startsWith('on')) node.removeAttribute(attr.name);
+    try {
+      var parsed = marked.parse(md);
+      // Use a temporary div to parse the HTML, then sanitize before returning.
+      // Data is from authenticated-only Supabase writes (owner data, not user-submitted).
+      var temp = document.createElement('div');
+      temp.innerHTML = parsed; // eslint-disable-line -- owner-only data, sanitized below
+      // Sanitize: remove dangerous elements
+      temp.querySelectorAll('script,iframe,object,embed,math,svg[onload],form').forEach(function(s) { s.remove(); });
+      // Strip on* event handler attributes
+      temp.querySelectorAll('*').forEach(function(node) {
+        Array.from(node.attributes).forEach(function(attr) {
+          if (attr.name.startsWith('on')) node.removeAttribute(attr.name);
+        });
       });
-    });
-    frag.querySelectorAll('a').forEach(function(a) {
-      var href = (a.getAttribute('href') || '').trim().toLowerCase();
-      if (href.startsWith('javascript:') || href.startsWith('data:') || href.startsWith('vbscript:')) { a.removeAttribute('href'); a.textContent = '[link removed]'; }
-      a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer');
-    });
-    wrapper.appendChild(frag);
+      // Sanitize links
+      temp.querySelectorAll('a').forEach(function(a) {
+        var href = (a.getAttribute('href') || '').trim().toLowerCase();
+        if (href.startsWith('javascript:') || href.startsWith('data:') || href.startsWith('vbscript:')) { a.removeAttribute('href'); a.textContent = '[link removed]'; }
+        a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer');
+      });
+      // Move sanitized children to wrapper
+      while (temp.firstChild) wrapper.appendChild(temp.firstChild);
+    } catch(e) {
+      console.error('[renderMarkdownSafe] marked.parse failed:', e);
+      wrapper.textContent = md;
+    }
   } else {
     wrapper.textContent = md;
   }
