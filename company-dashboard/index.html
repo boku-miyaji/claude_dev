@@ -502,7 +502,6 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     </div>
     <button class="nav-item active" data-page="calendar"><span class="nav-icon">📅</span> Calendar</button>
     <div class="nav-group-label">Management</div>
-    <button class="nav-item" data-page="inbox"><span class="nav-icon">＋</span> Inbox</button>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
     <button class="nav-item" data-page="orgchart"><span class="nav-icon">⊞</span> Org Chart</button>
@@ -570,7 +569,6 @@ var sb = null;
 // ============================================================
 var ALL_MOB_TABS = [
   {page: 'calendar', icon: '📅', label: 'Calendar'},
-  {page: 'inbox', icon: '＋', label: 'Inbox'},
   {page: 'finance', icon: '¥', label: 'Finance'},
   {page: 'tasks', icon: '☐', label: 'Tasks'},
   {page: 'companies', icon: '◫', label: 'Co.'},
@@ -1071,7 +1069,6 @@ function openCommandPalette() {
 
   var NAV_ITEMS = [
     {icon: '📅', label: 'Calendar', page: 'calendar', group: 'Pages'},
-    {icon: '＋', label: 'Inbox', page: 'inbox', group: 'Management'},
     {icon: '☐', label: 'Tasks', page: 'tasks', group: 'Management'},
     {icon: '◫', label: 'Companies', page: 'companies', group: 'Management'},
     {icon: '⊞', label: 'Org Chart', page: 'orgchart', group: 'Management'},
@@ -1195,7 +1192,6 @@ function renderPage(page) {
   c.appendChild(p);
   var renderers = {
     calendar: renderCalendar,
-    inbox: renderInbox,
     tasks: renderTasks,
     companies: renderCompanies,
     orgchart: renderOrgChart,
@@ -1785,6 +1781,61 @@ async function renderTasks(root) {
   var cos = cosRes.data || [];
   var allTasks = tasksRes.data || [];
 
+  // ===== Inline add form (collapsed by default) =====
+  var addFormVisible = false;
+  var addFormContainer = el('div', {style: 'margin-bottom:20px'});
+
+  var typeSelect = el('select', {className: 'input'});
+  ['todo', 'task', 'request'].forEach(function(t) { typeSelect.appendChild(el('option', {value: t, textContent: t.charAt(0).toUpperCase() + t.slice(1)})); });
+  var coSelect = el('select', {className: 'input'});
+  coSelect.appendChild(el('option', {value: '', textContent: 'HD（全社）'}));
+  cos.forEach(function(c) { coSelect.appendChild(el('option', {value: c.id, textContent: c.name})); });
+  var priSelect = el('select', {className: 'input'});
+  ['normal', 'high', 'low'].forEach(function(p) { priSelect.appendChild(el('option', {value: p, textContent: p})); });
+  var titleInput = el('input', {className: 'input', placeholder: '何をする？'});
+  var descInput = el('textarea', {className: 'input', placeholder: '詳細（任意）', style: 'min-height:50px'});
+
+  var saveBtn = el('button', {className: 'btn btn-p', style: 'width:100%', textContent: '追加', onClick: async function() {
+    var title = titleInput.value.trim();
+    var coId = coSelect.value || null;
+    if (!title) return;
+    var res = await sb.from('tasks').insert({company_id: coId, type: typeSelect.value, title: title, description: descInput.value.trim() || null, priority: priSelect.value}).select('*, companies(name)');
+    if (res.data && res.data[0]) { allTasks.unshift(res.data[0]); }
+    titleInput.value = ''; descInput.value = '';
+    toast('"' + title + '" を追加しました');
+    renderTaskList();
+  }});
+  titleInput.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveBtn.click(); } });
+
+  var addForm = el('div', {className: 'card', style: 'display:none'}, [
+    el('div', {className: 'form-row', style: 'margin-bottom:8px'}, [typeSelect, coSelect, priSelect]),
+    el('div', {style: 'margin-bottom:8px'}, [titleInput]),
+    el('div', {style: 'margin-bottom:10px'}, [descInput]),
+    saveBtn
+  ]);
+  addFormContainer.appendChild(addForm);
+
+  // Quick comment (collapsed)
+  var commentForm = el('div', {style: 'display:none;margin-top:12px'});
+  var commentCoSelect = el('select', {className: 'input'});
+  cos.forEach(function(c) { commentCoSelect.appendChild(el('option', {value: c.id, textContent: c.name})); });
+  var commentInput = el('textarea', {className: 'input', placeholder: 'メモやコメントを残す...', style: 'min-height:50px'});
+  var commentBtn = el('button', {className: 'btn btn-g', style: 'width:100%', textContent: 'コメント追加', onClick: async function() {
+    var body = commentInput.value.trim();
+    var coId = commentCoSelect.value;
+    if (!body || !coId) return;
+    await sb.from('comments').insert({company_id: coId, body: body, source: window.innerWidth <= 768 ? 'mobile' : 'web'});
+    commentInput.value = '';
+    toast('コメント追加しました');
+  }});
+  commentForm.appendChild(el('div', {className: 'card'}, [
+    el('div', {style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px', textContent: 'Quick Comment'}),
+    el('div', {className: 'form-row', style: 'margin-bottom:8px'}, [commentCoSelect]),
+    el('div', {style: 'margin-bottom:10px'}, [commentInput]),
+    commentBtn
+  ]));
+  addFormContainer.appendChild(commentForm);
+
   var filters = {status: 'open', company: '', priority: ''};
 
   function applyFilters() {
@@ -1846,13 +1897,22 @@ async function renderTasks(root) {
     });
   }
 
+  var addToggle = el('button', {className: 'btn btn-p btn-sm', textContent: '+ タスク追加', onClick: function() {
+    addFormVisible = !addFormVisible;
+    addForm.style.display = addFormVisible ? '' : 'none';
+    commentForm.style.display = addFormVisible ? '' : 'none';
+    addToggle.textContent = addFormVisible ? '- 閉じる' : '+ タスク追加';
+    if (addFormVisible) titleInput.focus();
+  }});
+
   root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px'}, [
     el('div', {}, [
       el('div', {className: 'page-title', textContent: 'Tasks'}),
-      el('div', {className: 'page-desc', style: 'margin-bottom:0', textContent: '全PJ会社のタスク一覧'})
+      el('div', {className: 'page-desc', style: 'margin-bottom:0', textContent: '全PJ会社のタスク一覧・追加・コメント'})
     ]),
-    el('button', {className: 'btn btn-p btn-sm', textContent: '+ 追加', onClick: function() { navigate('inbox'); }})
+    addToggle
   ]));
+  root.appendChild(addFormContainer);
 
   var statusSel = el('select', {className: 'input', onChange: function() { filters.status = statusSel.value; renderTaskList(); }});
   [{v:'',l:'すべて'},{v:'open',l:'Open'},{v:'in_progress',l:'In Progress'},{v:'done',l:'Done'},{v:'cancelled',l:'Cancelled'}].forEach(function(o) {
