@@ -5902,13 +5902,17 @@ async function renderReportsTab(root) {
       if (existing) { existing.remove(); return; }
       // Fetch body on demand
       try {
+        console.log('[News] Fetching body for id=' + reportId);
         var bodyRes = await sb.from('secretary_notes').select('body').eq('id', reportId).single();
+        console.log('[News] Response:', bodyRes.status, bodyRes.error, 'bodyLength:', bodyRes.data && bodyRes.data.body ? bodyRes.data.body.length : 0);
+        if (bodyRes.error) { toast('取得エラー: ' + bodyRes.error.message); console.error('[News] Error:', bodyRes.error); return; }
         var body = (bodyRes.data && bodyRes.data.body) || '';
         if (!body) { toast('レポートの本文が空です'); return; }
         var parsed = null;
         try { parsed = JSON.parse(body); } catch(e) { parsed = null; }
+        console.log('[News] Rendering. isJson:', !!parsed, 'bodyLength:', body.length);
         toggleReportDetail(card, parsed || body);
-      } catch(err) { toast('レポート取得エラー'); console.error(err); }
+      } catch(err) { toast('レポート取得エラー: ' + err.message); console.error('[News] Exception:', err); }
     });
 
     var header = el('div', {style: 'display:flex;justify-content:space-between;align-items:center'}, [
