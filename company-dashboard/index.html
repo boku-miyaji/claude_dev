@@ -6640,7 +6640,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
         else if (m.role === 'assistant') appendAssistantMsg(messagesInner, m.content, m.model, m.tokens_input, m.tokens_output, m.cost_usd, m.step);
         else if (m.role === 'tool') appendToolMsg(messagesInner, m.tool_name, m.tool_input, m.content);
       });
-      if (chatAutoScroll) messagesArea.scrollTop = messagesArea.scrollHeight;
+      messagesArea.scrollTop = messagesArea.scrollHeight;
     })();
   } else {
     window.location.hash = 'chat';
