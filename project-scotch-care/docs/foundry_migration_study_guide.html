@@ -359,6 +359,9 @@
   <a href="#faq-llm-models">モデル対応表</a>
   <a href="#faq-llm-snowflake">Snowflake vs Databricks</a>
   <a href="#faq-llm-architecture">推奨アーキテクチャ</a>
+  <a href="#faq-llm-breadth" class="section-title" style="color:var(--amber);">LLMの幅と自由度<span class="nav-badge badge-core">NEW</span></a>
+  <a href="#faq-llm-breadth-matrix">活用マトリクス</a>
+  <a href="#faq-llm-breadth-scenarios">ユースケース別</a>
   <a href="#faq-llm-freedom" class="section-title" style="color:var(--amber);">LLM自由度比較<span class="nav-badge badge-tech">NEW</span></a>
   <a href="#faq-llm-freedom-overview">総合評価</a>
   <a href="#faq-llm-freedom-detail">軸別比較</a>
@@ -3251,6 +3254,139 @@ Object Type: <span class="highlight">施設</span>
         <li>RFI段階で<strong>Databricksが有力候補</strong>に入っている場合、パターンA or Bが現実的</li>
         <li>Claude + OpenAIの両方を使うニーズが確定なら、Snowflake Cortex の採用可否をMTGで議論すべき</li>
       </ul>
+    </div>
+  </section>
+
+  <!-- LLMの幅と自由度 -->
+  <section id="faq-llm-breadth">
+    <h2>活用できるLLMの幅・自由度</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">「どのLLMを」「どうやって」「どこまで」使えるか — 3プラットフォームの本質的な違い（2026-04-02）</p>
+
+    <h3 id="faq-llm-breadth-matrix">活用マトリクス — 何が・どこまでできるか</h3>
+
+    <table>
+      <tr>
+        <th style="width:22%;">やりたいこと</th>
+        <th style="width:26%;">Snowflake Cortex</th>
+        <th style="width:26%;">Databricks</th>
+        <th style="width:26%;">AWS Bedrock</th>
+      </tr>
+      <tr>
+        <td><strong>Claudeを使う</strong></td>
+        <td style="color:var(--green);">SQL一行<br><code style="font-size:11px;">AI_COMPLETE('claude-sonnet', ...)</code></td>
+        <td>External Models設定後に利用<br><span style="font-size:11px;color:var(--text-muted)">APIキー登録が必要</span></td>
+        <td style="color:var(--green);">即利用可<br><span style="font-size:11px;color:var(--text-muted)">ネイティブ統合</span></td>
+      </tr>
+      <tr>
+        <td><strong>OpenAI GPTを使う</strong></td>
+        <td style="color:var(--green);">SQL一行<br><code style="font-size:11px;">AI_COMPLETE('gpt-4o', ...)</code></td>
+        <td>External Models設定後に利用</td>
+        <td style="color:var(--red);">使えない</td>
+      </tr>
+      <tr>
+        <td><strong>Claude + GPTを<br>同じ基盤で使う</strong></td>
+        <td style="color:var(--green);font-weight:600;">最も簡単<br><span style="font-size:11px;">モデル名を変えるだけ</span></td>
+        <td style="color:var(--amber);">可能だが設定が必要<br><span style="font-size:11px;color:var(--text-muted)">各API先を個別に登録</span></td>
+        <td style="color:var(--red);">GPT不可</td>
+      </tr>
+      <tr>
+        <td><strong>Llama等OSSモデルを使う</strong></td>
+        <td style="color:var(--green);">ネイティブ対応</td>
+        <td style="color:var(--green);">ネイティブ + 任意バージョン指定可</td>
+        <td style="color:var(--green);">ネイティブ対応</td>
+      </tr>
+      <tr>
+        <td><strong>用途に応じてモデルを<br>使い分ける</strong></td>
+        <td style="color:var(--green);">SQLで呼び分け<br><span style="font-size:11px;color:var(--text-muted)">要約→安いモデル<br>分析→高性能モデル</span></td>
+        <td style="color:var(--green);">AI Gatewayで自動ルーティング<br><span style="font-size:11px;color:var(--text-muted)">コスト/精度で自動選択</span></td>
+        <td style="color:var(--amber);">アプリ側で分岐実装</td>
+      </tr>
+      <tr>
+        <td><strong>自社データで<br>Fine-tuningする</strong></td>
+        <td style="color:var(--amber);">Llama/Mistralのみ<br><span style="font-size:11px;color:var(--text-muted)">手法・パラメータの制御は限定的</span></td>
+        <td style="color:var(--green);">任意モデル<br><span style="font-size:11px;color:var(--text-muted)">LoRA/QLoRA/Full FT<br>GPU・ハイパラ完全制御</span></td>
+        <td style="color:var(--amber);">一部モデル<br><span style="font-size:11px;color:var(--text-muted)">Titan, Llama等</span></td>
+      </tr>
+      <tr>
+        <td><strong>HuggingFace等から<br>任意モデルを持ち込む</strong></td>
+        <td style="color:var(--red);">不可<br><span style="font-size:11px;color:var(--text-muted)">Snowflake提供モデルのみ</span></td>
+        <td style="color:var(--green);">自由<br><span style="font-size:11px;color:var(--text-muted)">Model Servingにデプロイ</span></td>
+        <td style="color:var(--amber);">制限あり<br><span style="font-size:11px;color:var(--text-muted)">Custom Model Import<br>対応フォーマット限定</span></td>
+      </tr>
+      <tr>
+        <td><strong>テーブルデータに対して<br>一括LLM処理</strong></td>
+        <td style="color:var(--green);font-weight:600;">最も得意<br><code style="font-size:11px;">SELECT AI_SUMMARIZE(col)<br>FROM table</code></td>
+        <td style="color:var(--green);">Sparkで分散バッチ<br><span style="font-size:11px;color:var(--text-muted)">コード記述が必要</span></td>
+        <td style="color:var(--amber);">Batch Inference API<br><span style="font-size:11px;color:var(--text-muted)">S3経由でジョブ投入</span></td>
+      </tr>
+      <tr>
+        <td><strong>LLMで検索を強化<br>（RAG）</strong></td>
+        <td style="color:var(--green);">Cortex Search<br><span style="font-size:11px;color:var(--text-muted)">設定最小限で動く<br>カスタマイズは限定的</span></td>
+        <td style="color:var(--green);">Vector Search + 自由構成<br><span style="font-size:11px;color:var(--text-muted)">Embedding/チャンキング/リランカー全て選択可</span></td>
+        <td style="color:var(--green);">Knowledge Bases<br><span style="font-size:11px;color:var(--text-muted)">S3+OpenSearch<br>チャンキング戦略選択可</span></td>
+      </tr>
+      <tr>
+        <td><strong>LLMエージェント<br>（マルチステップ）</strong></td>
+        <td style="color:var(--red);">不可<br><span style="font-size:11px;color:var(--text-muted)">Cortex Analyst（SQL対話のみ）</span></td>
+        <td style="color:var(--green);">Mosaic AI Agent Framework<br><span style="font-size:11px;color:var(--text-muted)">マルチエージェント、ツール連携</span></td>
+        <td style="color:var(--green);">Bedrock Agents<br><span style="font-size:11px;color:var(--text-muted)">Function Calling + Lambda</span></td>
+      </tr>
+      <tr>
+        <td><strong>画像をLLMに入力</strong></td>
+        <td style="color:var(--amber);">Document AIのみ<br><span style="font-size:11px;color:var(--text-muted)">PDF/画像→テキスト抽出</span></td>
+        <td style="color:var(--green);">マルチモーダルモデル<br><span style="font-size:11px;color:var(--text-muted)">Claude/GPT Vision等</span></td>
+        <td style="color:var(--green);">Claude/Titan Vision</td>
+      </tr>
+      <tr>
+        <td><strong>LLMの応答を<br>安全にフィルタリング</strong></td>
+        <td style="color:var(--amber);">Trust Center<br><span style="font-size:11px;color:var(--text-muted)">基本的なポリシー</span></td>
+        <td style="color:var(--amber);">AI Gateway<br><span style="font-size:11px;color:var(--text-muted)">基本フィルタ</span></td>
+        <td style="color:var(--green);font-weight:600;">Guardrails（最も充実）<br><span style="font-size:11px;color:var(--text-muted)">PII検出、ハルシネーション検出<br>有害コンテンツ6カテゴリ</span></td>
+      </tr>
+    </table>
+
+    <h3 id="faq-llm-breadth-scenarios">結局どれを選ぶか — ユースケース別の最適解</h3>
+
+    <div class="flow">
+<span class="comment">── 判断フロー ──</span>
+
+<span class="highlight">Q: Claude + OpenAI 両方使いたい？</span>
+  ├─ Yes → <span class="green">Snowflake Cortex</span> が最もシンプル（Bedrockは GPT 不可）
+  └─ Claudeだけ → Bedrock or Cortex
+
+<span class="highlight">Q: Fine-tuning や独自モデルが必要？</span>
+  ├─ Yes → <span class="green">Databricks</span> 一択（GPU制御、任意モデル、MLflow）
+  └─ No → Cortex or Bedrock
+
+<span class="highlight">Q: SQLチームが中心？コード書ける人が少ない？</span>
+  ├─ SQLチーム → <span class="green">Snowflake Cortex</span>（SQL一行でLLM）
+  └─ エンジニアチーム → Databricks or Bedrock
+
+<span class="highlight">Q: 医療・介護データのガードレールが最優先？</span>
+  ├─ Yes → <span class="green">Bedrock Guardrails</span>（PII/ハルシネーション検出）
+  └─ 標準レベルでOK → どれでも（3社ともHIPAA/SOC2対応）
+
+<span class="highlight">Q: LLMエージェント（自律的に複数ステップ実行）を作りたい？</span>
+  ├─ Yes → <span class="green">Databricks</span> or <span class="green">Bedrock</span>（Cortexは不可）
+  └─ No → どれでも
+    </div>
+
+    <div class="callout">
+      <strong>3プラットフォームの本質を一言で:</strong>
+      <table style="margin-top:12px;">
+        <tr>
+          <td style="width:30%;font-weight:600;color:var(--blue);">Snowflake Cortex</td>
+          <td><strong>LLMの「幅」は広い</strong>（Claude, GPT, Llama, Gemini等を全てネイティブ提供）。<br>ただし<strong>「深さ」に限界</strong>（Fine-tuning制限、エージェント不可、モデル持ち込み不可）。<br>→ <strong>多くのモデルを手軽に使いたい</strong>ならベスト。</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:var(--purple);">Databricks</td>
+          <td><strong>LLMの「深さ」が最大</strong>（任意モデル、フルFT、エージェント、MLOps全対応）。<br>ただし<strong>「手軽さ」がない</strong>（コード必須、設定が多い）。<br>→ <strong>LLMを本格的に作り込みたい</strong>ならベスト。</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;color:var(--amber);">AWS Bedrock</td>
+          <td><strong>ガードレールの「堅さ」が最大</strong>（PII、ハルシネーション検出が突出）。<br>ただし<strong>OpenAI非対応で「幅」が狭い</strong>。<br>→ <strong>安全性最優先でClaudeを使いたい</strong>ならベスト。</td>
+        </tr>
+      </table>
     </div>
   </section>
 
