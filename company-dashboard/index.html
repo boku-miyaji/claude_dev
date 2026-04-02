@@ -1830,8 +1830,17 @@ async function renderDashboard(root) {
         var data = await res.json();
         var text = data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'';
         if (text) { sessionStorage.setItem(cacheKey, text); renderBriefing(briefingArea, text, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths); return; }
+      } else {
+        var errBody = ''; try { errBody = await res.text(); } catch(x){}
+        console.error('Briefing API error:', res.status, errBody);
+        // Show error for debugging then fall through to fallback
+        briefingArea.appendChild(el('div', {style:'font-size:11px;color:#ef4444;margin-bottom:8px;padding:8px 12px;background:var(--surface2);border-radius:6px',
+          textContent:'Briefing API error: '+res.status+' — '+(errBody||'').substring(0,200)}));
       }
-    } catch(e) { console.error('Briefing error:', e); }
+    } catch(e) { console.error('Briefing error:', e);
+      briefingArea.appendChild(el('div', {style:'font-size:11px;color:#ef4444;margin-bottom:8px;padding:8px 12px;background:var(--surface2);border-radius:6px',
+        textContent:'Briefing error: '+e.message}));
+    }
   }
 
   // Fallback
