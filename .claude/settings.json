@@ -304,5 +304,6 @@
         "path": "."
       }
     }
-  }
+  },
+  "skipDangerousModePermissionPrompt": true
 }

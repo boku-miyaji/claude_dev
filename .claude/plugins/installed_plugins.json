@@ -3,92 +3,112 @@
   "plugins": {
     "document-skills@anthropic-agent-skills": [
       {
-        "scope": "user",
+        "scope": "project",
+        "projectPath": "/workspace",
         "installPath": "/home/node/.claude/plugins/cache/anthropic-agent-skills/document-skills/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T12:18:43.406Z",
-        "lastUpdated": "2026-01-07T12:18:43.406Z"
+        "lastUpdated": "2026-04-02T00:39:42.575Z"
       }
     ],
     "frontend-design@claude-plugins-official": [
       {
-        "scope": "user",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/frontend-design/e30768372b41",
-        "version": "e30768372b41",
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
+        "version": "unknown",
         "installedAt": "2026-01-07T12:54:54.553Z",
-        "lastUpdated": "2026-01-21T13:50:07.681Z"
+        "lastUpdated": "2026-04-02T00:40:24.901Z"
       }
     ],
     "context7@claude-plugins-official": [
       {
-        "scope": "user",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/context7/e30768372b41",
-        "version": "e30768372b41",
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/context7/unknown",
+        "version": "unknown",
         "installedAt": "2026-01-07T12:58:36.018Z",
-        "lastUpdated": "2026-01-21T13:50:07.682Z"
+        "lastUpdated": "2026-04-02T00:40:24.902Z"
       }
     ],
     "serena@claude-plugins-official": [
       {
-        "scope": "user",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/serena/e30768372b41",
-        "version": "e30768372b41",
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/serena/unknown",
+        "version": "unknown",
         "installedAt": "2026-01-07T13:00:59.145Z",
-        "lastUpdated": "2026-01-21T13:50:07.684Z"
+        "lastUpdated": "2026-04-02T00:40:24.904Z"
       }
     ],
     "pr-review-toolkit@claude-plugins-official": [
       {
-        "scope": "user",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/e30768372b41",
-        "version": "e30768372b41",
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown",
+        "version": "unknown",
         "installedAt": "2026-01-07T13:01:18.329Z",
-        "lastUpdated": "2026-01-21T13:50:07.685Z"
+        "lastUpdated": "2026-04-02T00:40:24.903Z"
       }
     ],
     "github@claude-plugins-official": [
       {
-        "scope": "user",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/github/e30768372b41",
-        "version": "e30768372b41",
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/github/unknown",
+        "version": "unknown",
         "installedAt": "2026-01-07T13:01:28.812Z",
-        "lastUpdated": "2026-01-21T13:50:07.687Z"
+        "lastUpdated": "2026-04-02T00:40:24.903Z"
       }
     ],
     "code-review@claude-plugins-official": [
       {
-        "scope": "user",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/code-review/e30768372b41",
-        "version": "e30768372b41",
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/code-review/unknown",
+        "version": "unknown",
         "installedAt": "2026-01-07T13:01:39.462Z",
-        "lastUpdated": "2026-01-21T13:50:07.689Z"
+        "lastUpdated": "2026-04-02T00:40:24.905Z"
       }
     ],
     "security-guidance@claude-plugins-official": [
       {
-        "scope": "user",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/security-guidance/e30768372b41",
-        "version": "e30768372b41",
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/security-guidance/unknown",
+        "version": "unknown",
         "installedAt": "2026-01-07T13:01:48.792Z",
-        "lastUpdated": "2026-01-21T13:50:07.688Z"
+        "lastUpdated": "2026-04-02T00:40:24.904Z"
       }
     ],
     "supabase@claude-plugins-official": [
       {
-        "scope": "user",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/supabase/e30768372b41",
-        "version": "e30768372b41",
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/supabase/unknown",
+        "version": "unknown",
         "installedAt": "2026-01-07T13:01:55.514Z",
-        "lastUpdated": "2026-01-21T13:50:07.694Z"
+        "lastUpdated": "2026-04-02T00:40:24.905Z"
       }
     ],
     "commit-commands@claude-plugins-official": [
       {
-        "scope": "user",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/commit-commands/e30768372b41",
-        "version": "e30768372b41",
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/commit-commands/unknown",
+        "version": "unknown",
         "installedAt": "2026-01-07T13:02:05.228Z",
-        "lastUpdated": "2026-01-21T13:50:07.695Z"
+        "lastUpdated": "2026-04-02T00:40:24.906Z"
+      }
+    ],
+    "company@ai-company": [
+      {
+        "scope": "project",
+        "projectPath": "/workspace",
+        "installPath": "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-04-02T00:39:44.000Z",
+        "lastUpdated": "2026-04-02T00:39:44.000Z"
       }
     ]
   }
