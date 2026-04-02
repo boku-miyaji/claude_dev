@@ -15,6 +15,12 @@ create policy "anon_insert_secretary_notes_with_key"
   on secretary_notes for insert to anon
   with check (public.check_ingest_key());
 
+-- authenticated ユーザーに全操作を許可（ダッシュボードログインユーザー）
+create policy "auth_full_secretary_notes"
+  on secretary_notes for all to authenticated
+  using (true)
+  with check (true);
+
 -- ============================================================
 -- テスト:
 --   x-ingest-key ヘッダーありで SELECT → 200 + データ

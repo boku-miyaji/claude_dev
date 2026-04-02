@@ -509,7 +509,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <div class="nav-group-label">Analytics</div>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
     <button class="nav-item" data-page="prompts"><span class="nav-icon">▷</span> Prompts</button>
-    <button class="nav-item" data-page="intelligence"><span class="nav-icon">◎</span> Intelligence</button>
+    <button class="nav-item" data-page="intelligence"><span class="nav-icon">◎</span> News</button>
     <button class="nav-item" data-page="api-costs"><span class="nav-icon">$</span> API Costs</button>
     <button class="nav-item" data-page="growth"><span class="nav-icon">↗</span> Growth</button>
     <div class="nav-group-label">Personal</div>
@@ -1075,7 +1075,7 @@ function openCommandPalette() {
     {icon: '¥', label: 'Finance', page: 'finance', group: 'Management'},
     {icon: '◇', label: 'Insights', page: 'insights', group: 'Analytics'},
     {icon: '▷', label: 'Prompts', page: 'prompts', group: 'Analytics'},
-    {icon: '◎', label: 'Intelligence', page: 'intelligence', group: 'Analytics'},
+    {icon: '◎', label: 'News', page: 'intelligence', group: 'Analytics'},
     {icon: '$', label: 'API Costs', page: 'api-costs', group: 'Analytics'},
     {icon: '↗', label: 'Growth', page: 'growth', group: 'Analytics'},
     {icon: '☆', label: 'Career', page: 'career', group: 'Personal'},
@@ -5641,8 +5641,8 @@ async function renderSlashCommands(root) {
 // Intelligence Page
 // ============================================================
 async function renderIntelligence(root) {
-  root.appendChild(el('div', {className: 'page-title', textContent: 'Intelligence'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: '情報収集レポート（09:00 / 21:00 JST 自動収集）'}));
+  root.appendChild(el('div', {className: 'page-title', textContent: 'News'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '最新ニュース・技術トレンド（09:00 / 21:00 JST 自動収集）'}));
 
   // Tab navigation
   var activeTab = 'reports';
