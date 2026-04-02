@@ -1765,7 +1765,7 @@ async function renderDashboard(root) {
     sb.from('invoices').select('amount,invoice_date,client_name,status').gte('invoice_date',startOfYear).lte('invoice_date',endOfYear),
     sb.from('expenses').select('amount').gte('expense_date',startOfYear).lte('expense_date',endOfYear),
     sb.from('ceo_insights').select('category,insight,created_at').order('created_at',{ascending:false}).limit(5),
-    sb.from('diary_entries').select('entry_date,body,wbi_score').order('entry_date',{ascending:false}).limit(3),
+    sb.from('diary_entries').select('entry_date,body,wbi').order('entry_date',{ascending:false}).limit(3),
     sb.from('comments').select('body,company_id,created_at').order('created_at',{ascending:false}).limit(5)
   ]);
 
@@ -1805,7 +1805,7 @@ async function renderDashboard(root) {
   ctx.push('## タスク (open:'+tasks.length+', high:'+highTasks.length+')\n'+tasks.slice(0,8).map(function(t){return '- ['+t.priority+'] '+t.title+(t.company_id?' ('+t.company_id+')':'')+(t.due_date?' 期限:'+t.due_date:'');}).join('\n'));
   ctx.push('## 財務 ('+year+'年 '+dataMonths+'ヶ月実績)\n- 売上: '+fmtYen(yearRev)+' (月平均:'+fmtYen(Math.round(yearRev/dataMonths))+')\n- 経費: '+fmtYen(yearExp)+'\n- 粗利: '+fmtYen(yearRev-yearExp)+'\n- 年間予測: '+fmtYen(projRev)+'\n- 税金積立: '+fmtYen(Math.ceil(taxEst.totalTax/12))+'/月\n- 未入金: '+unpaidInv.length+'件 '+fmtYen(unpaidInv.reduce(function(s,i){return s+i.amount;},0)));
   if (insights.length>0) ctx.push('## CEO分析 (最終:'+(insights[0].created_at||'').substring(0,10)+')\n'+insights.map(function(i){return '- ['+i.category+'] '+i.insight;}).join('\n'));
-  if (diaries.length>0) ctx.push('## 日記\n'+diaries.map(function(d){return '- '+d.entry_date+(d.wbi_score?' (WBI:'+d.wbi_score+')':'')+': '+(d.body||'').substring(0,100);}).join('\n'));
+  if (diaries.length>0) ctx.push('## 日記\n'+diaries.map(function(d){return '- '+d.entry_date+(d.wbi?' (WBI:'+d.wbi+')':'')+': '+(d.body||'').substring(0,100);}).join('\n'));
   if (comments.length>0) ctx.push('## コメント\n'+comments.slice(0,3).map(function(c){return '- ['+(c.company_id||'hd')+'] '+(c.body||'').substring(0,80);}).join('\n'));
   var contextStr = ctx.join('\n\n');
 
