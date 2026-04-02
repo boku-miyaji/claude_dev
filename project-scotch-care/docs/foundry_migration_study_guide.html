@@ -359,6 +359,10 @@
   <a href="#faq-llm-models">モデル対応表</a>
   <a href="#faq-llm-snowflake">Snowflake vs Databricks</a>
   <a href="#faq-llm-architecture">推奨アーキテクチャ</a>
+  <a href="#faq-llm-freedom" class="section-title" style="color:var(--amber);">LLM自由度比較<span class="nav-badge badge-tech">NEW</span></a>
+  <a href="#faq-llm-freedom-overview">総合評価</a>
+  <a href="#faq-llm-freedom-detail">軸別比較</a>
+  <a href="#faq-llm-freedom-verdict">SOMPOケアへの示唆</a>
   <a href="#faq-lockin" class="section-title" style="color:var(--amber);">ロックイン比較<span class="nav-badge badge-strategy">NEW</span></a>
   <a href="#faq-lockin-overview">総合評価</a>
   <a href="#faq-lockin-detail">軸別比較</a>
@@ -3242,6 +3246,209 @@ Object Type: <span class="highlight">施設</span>
         <li>医療・介護データの<strong>ガバナンス要件</strong>が厳格 → Snowflakeの「データが外に出ない」保証は大きな強み</li>
         <li>RFI段階で<strong>Databricksが有力候補</strong>に入っている場合、パターンA or Bが現実的</li>
         <li>Claude + OpenAIの両方を使うニーズが確定なら、Snowflake Cortex の採用可否をMTGで議論すべき</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- LLM自由度比較 -->
+  <section id="faq-llm-freedom">
+    <h2>LLM自由度比較 — 何がどこまでできるか</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">各プラットフォームでLLMをどこまで自由に使えるか、6軸で評価（2026-04-02 調査）</p>
+
+    <h3 id="faq-llm-freedom-overview">総合評価</h3>
+    <table>
+      <tr><th>評価軸</th><th>Databricks</th><th>Snowflake</th><th>Amazon Bedrock</th></tr>
+      <tr>
+        <td><strong>1. モデル選択</strong></td>
+        <td style="color:var(--green);font-weight:700;">A</td>
+        <td style="font-weight:700;">B+</td>
+        <td style="font-weight:700;">A-</td>
+      </tr>
+      <tr>
+        <td><strong>2. カスタマイズ</strong></td>
+        <td style="color:var(--green);font-weight:700;">A</td>
+        <td style="color:var(--red);font-weight:700;">C+</td>
+        <td style="font-weight:700;">B+</td>
+      </tr>
+      <tr>
+        <td><strong>3. 呼び出し方法</strong></td>
+        <td style="color:var(--green);font-weight:700;">A</td>
+        <td style="font-weight:700;">B</td>
+        <td style="font-weight:700;">A-</td>
+      </tr>
+      <tr>
+        <td><strong>4. オーケストレーション</strong></td>
+        <td style="color:var(--green);font-weight:700;">A</td>
+        <td style="color:var(--red);font-weight:700;">B-</td>
+        <td style="font-weight:700;">A-</td>
+      </tr>
+      <tr>
+        <td><strong>5. 運用制御</strong></td>
+        <td style="color:var(--green);font-weight:700;">A</td>
+        <td style="color:var(--red);font-weight:700;">C</td>
+        <td style="font-weight:700;">B+</td>
+      </tr>
+      <tr>
+        <td><strong>6. 開発体験</strong></td>
+        <td style="color:var(--green);font-weight:700;">A</td>
+        <td style="font-weight:700;">B</td>
+        <td style="font-weight:700;">B</td>
+      </tr>
+    </table>
+
+    <h3 id="faq-llm-freedom-detail">軸別の詳細比較</h3>
+
+    <h4>1. モデル選択の自由度</h4>
+    <table>
+      <tr><th></th><th>Databricks</th><th>Snowflake</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>プリセットモデル</strong></td>
+        <td>Llama, Mixtral, DBRX + External Models（任意API）</td>
+        <td>Claude, GPT, Llama, Mistral, Gemini, DeepSeek, Arctic</td>
+        <td>Claude, Llama, Mistral, Titan, Cohere, AI21</td>
+      </tr>
+      <tr>
+        <td><strong>任意OSSモデル持ち込み</strong></td>
+        <td style="color:var(--green);">可能（HuggingFace等を Model Serving にデプロイ）</td>
+        <td style="color:var(--red);">不可（Snowpark Container Servicesで一部可能だが制限多い）</td>
+        <td style="color:var(--amber);">Custom Model Import（対応フォーマットに制限あり）</td>
+      </tr>
+      <tr>
+        <td><strong>新モデル対応速度</strong></td>
+        <td>自分で持ち込めるので即日</td>
+        <td>Snowflake側の対応待ち（数週間〜）</td>
+        <td>AWS側の対応待ち（数週間〜）</td>
+      </tr>
+    </table>
+
+    <h4>2. カスタマイズの自由度</h4>
+    <table>
+      <tr><th></th><th>Databricks</th><th>Snowflake</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>Fine-tuning</strong></td>
+        <td style="color:var(--green);">全モデル対応<br><span style="font-size:11px;color:var(--text-muted)">LoRA / QLoRA / Full FT<br>GPU直接制御、データ量制限なし</span></td>
+        <td style="color:var(--amber);">Llama / Mistralのみ<br><span style="font-size:11px;color:var(--text-muted)">手法非公開<br>Snowflake内データのみ</span></td>
+        <td style="color:var(--amber);">一部モデル対応<br><span style="font-size:11px;color:var(--text-muted)">Titan, Llama等<br>S3からデータ投入</span></td>
+      </tr>
+      <tr>
+        <td><strong>RAG構築</strong></td>
+        <td style="color:var(--green);">完全自由<br><span style="font-size:11px;color:var(--text-muted)">Vector Search + 任意Embedding<br>チャンキング・リランカー選択自由</span></td>
+        <td style="color:var(--amber);">Cortex Search（マネージド）<br><span style="font-size:11px;color:var(--text-muted)">設定簡単だがカスタマイズ制限</span></td>
+        <td style="color:var(--amber);">Knowledge Bases<br><span style="font-size:11px;color:var(--text-muted)">S3/OpenSearch連携<br>チャンキング戦略は選択可</span></td>
+      </tr>
+      <tr>
+        <td><strong>プロンプト管理</strong></td>
+        <td style="color:var(--green);">MLflow Prompt Registry<br><span style="font-size:11px;color:var(--text-muted)">バージョニング・A/Bテスト</span></td>
+        <td style="color:var(--red);">なし（手動管理）</td>
+        <td style="color:var(--amber);">Prompt Flows<br><span style="font-size:11px;color:var(--text-muted)">ビジュアルフロー構築</span></td>
+      </tr>
+    </table>
+
+    <h4>3. 呼び出し方法の自由度</h4>
+    <table>
+      <tr><th></th><th>Databricks</th><th>Snowflake</th><th>Bedrock</th></tr>
+      <tr><td><strong>SQL</strong></td><td>ai_query()</td><td style="color:var(--green);">AI_COMPLETE() 等（最も自然）</td><td>別途Lambda等が必要</td></tr>
+      <tr><td><strong>Python SDK</strong></td><td style="color:var(--green);">OpenAI互換SDK</td><td>snowflake-ml-python</td><td>boto3 / Bedrock SDK</td></tr>
+      <tr><td><strong>REST API</strong></td><td style="color:var(--green);">OpenAI互換エンドポイント</td><td>Cortex REST API</td><td>Bedrock Runtime API</td></tr>
+      <tr><td><strong>バッチ推論</strong></td><td style="color:var(--green);">Spark分散バッチ</td><td>SQL SELECTで一括（ウェアハウスサイズ依存）</td><td>Batch Inference API</td></tr>
+      <tr><td><strong>ストリーミング</strong></td><td style="color:var(--green);">対応</td><td style="color:var(--green);">対応</td><td style="color:var(--green);">対応</td></tr>
+    </table>
+    <div class="callout">
+      <strong>注目:</strong> DatabricksのSDKは<strong>OpenAI互換</strong>。つまり既存のOpenAI SDKコードをほぼ無修正で使える。移行コストが非常に低い。
+    </div>
+
+    <h4>4. オーケストレーション（エージェント・マルチステップ）</h4>
+    <table>
+      <tr><th></th><th>Databricks</th><th>Snowflake</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>エージェント構築</strong></td>
+        <td style="color:var(--green);">Mosaic AI Agent Framework<br><span style="font-size:11px;color:var(--text-muted)">Supervisor Agent、マルチエージェント</span></td>
+        <td style="color:var(--red);">なし<br><span style="font-size:11px;color:var(--text-muted)">Cortex Analyst（SQL特化の対話のみ）</span></td>
+        <td style="color:var(--green);">Bedrock Agents<br><span style="font-size:11px;color:var(--text-muted)">Function Calling、アクショングループ</span></td>
+      </tr>
+      <tr>
+        <td><strong>ツール使用</strong></td>
+        <td style="color:var(--green);">Unity Catalog Functions をツールとして利用</td>
+        <td style="color:var(--red);">非対応</td>
+        <td style="color:var(--green);">Lambda連携、API呼び出し</td>
+      </tr>
+      <tr>
+        <td><strong>複数モデルルーティング</strong></td>
+        <td style="color:var(--green);">AI Gateway（コスト/レイテンシで自動選択）</td>
+        <td style="color:var(--red);">手動切り替えのみ</td>
+        <td style="color:var(--amber);">Intelligent Prompt Routing</td>
+      </tr>
+      <tr>
+        <td><strong>ガードレール</strong></td>
+        <td>Mosaic AI Gateway（基本的なフィルタ）</td>
+        <td>Trust Center（基本的なポリシー）</td>
+        <td style="color:var(--green);"><strong>Guardrails（最も充実）</strong><br><span style="font-size:11px;color:var(--text-muted)">有害コンテンツ6カテゴリ<br>PII自動検出<br>ハルシネーション検出</span></td>
+      </tr>
+    </table>
+
+    <h4>5. 運用制御</h4>
+    <table>
+      <tr><th></th><th>Databricks</th><th>Snowflake</th><th>Bedrock</th></tr>
+      <tr>
+        <td><strong>GPU/インスタンス選択</strong></td>
+        <td style="color:var(--green);">自由選択（A100, H100等）</td>
+        <td style="color:var(--red);">不可（抽象化済み）</td>
+        <td style="color:var(--amber);">Provisioned Throughputで一部指定可</td>
+      </tr>
+      <tr>
+        <td><strong>スケーリング</strong></td>
+        <td style="color:var(--green);">オートスケール + min/max制御</td>
+        <td>ウェアハウスサイズで間接制御</td>
+        <td>On-demand / Provisioned</td>
+      </tr>
+      <tr>
+        <td><strong>コスト制御</strong></td>
+        <td style="color:var(--green);">DBU上限、クラスタポリシー</td>
+        <td>クレジット上限</td>
+        <td>トークン上限、レート制限</td>
+      </tr>
+      <tr>
+        <td><strong>A/Bテスト</strong></td>
+        <td style="color:var(--green);">MLflow + Traffic Splitting</td>
+        <td style="color:var(--red);">非対応</td>
+        <td style="color:var(--amber);">手動構成で可能</td>
+      </tr>
+    </table>
+
+    <h4>6. 開発体験</h4>
+    <table>
+      <tr><th></th><th>Databricks</th><th>Snowflake</th><th>Bedrock</th></tr>
+      <tr><td><strong>Notebook</strong></td><td style="color:var(--green);">Databricks Notebooks（協同編集）</td><td>Snowflake Notebooks</td><td>SageMaker Studio</td></tr>
+      <tr><td><strong>実験管理</strong></td><td style="color:var(--green);">MLflow（業界標準）</td><td style="color:var(--red);">なし</td><td>SageMaker Experiments</td></tr>
+      <tr><td><strong>トレーシング</strong></td><td style="color:var(--green);">MLflow Tracing（LLM推論の全ステップ記録）</td><td style="color:var(--red);">なし</td><td>CloudWatch + X-Ray</td></tr>
+      <tr><td><strong>CI/CD</strong></td><td style="color:var(--green);">Databricks Asset Bundles + GitHub連携</td><td>Snowflake CLI + GitHub Actions</td><td>CDK / CloudFormation</td></tr>
+    </table>
+
+    <h3 id="faq-llm-freedom-verdict">SOMPOケアへの示唆</h3>
+    <div class="card-grid">
+      <div class="card" style="border-left:3px solid var(--green);">
+        <h4 style="color:var(--green);">Databricks = 「何でもできる」</h4>
+        <p>任意モデル持ち込み、フルFine-tuning、マルチエージェント、A/Bテスト、MLflow。<strong>AI開発チームがいる前提なら最強。</strong></p>
+        <p style="margin-top:8px;color:var(--red);font-size:13px;">裏返し: 自由度の高さ = 運用の複雑さ。専門人材が必要。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--blue);">
+        <h4 style="color:var(--blue);">Snowflake = 「SQLだけで始められる」</h4>
+        <p><code>SELECT AI_COMPLETE(...)</code> で即日LLM活用開始。<strong>既存SQLチームがAIを使い始めるのに最適。</strong></p>
+        <p style="margin-top:8px;color:var(--red);font-size:13px;">裏返し: カスタムモデル、エージェント、実験管理は不可。天井が低い。</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--amber);">
+        <h4 style="color:var(--amber);">Bedrock = 「ガードレール最強のマネージド」</h4>
+        <p>PII検出、ハルシネーション検出が充実。<strong>医療・介護データのガバナンスに最適。</strong></p>
+        <p style="margin-top:8px;color:var(--red);font-size:13px;">裏返し: AWSエコシステム依存。OpenAI非対応。</p>
+      </div>
+    </div>
+    <div class="callout warn">
+      <strong>判断の分かれ目:</strong> 「SOMPOケアはどの程度本格的にAI開発をやるのか？」
+      <ul style="margin-top:8px;">
+        <li><strong>SQLアナリストがLLMを使う程度</strong> → Snowflake Cortex で十分</li>
+        <li><strong>カスタムモデル訓練・エージェント構築まで</strong> → Databricks 一択</li>
+        <li><strong>ガードレール重視 + マネージド志向</strong> → Bedrock</li>
+        <li><strong>段階的に拡大したい</strong> → Snowflakeで開始 → 必要に応じてDatabricks追加</li>
       </ul>
     </div>
   </section>
