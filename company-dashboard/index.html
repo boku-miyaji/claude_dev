@@ -2918,12 +2918,11 @@ async function finOverview(root) {
   var startOfYear = year + '-01-01';
   var endOfYear = year + '-12-31';
 
-  var [invMonthRes, expMonthRes, timeMonthRes, projRes, taxRes, invYearRes, expYearRes, timeYearRes] = await Promise.all([
+  var [invMonthRes, expMonthRes, timeMonthRes, projRes, invYearRes, expYearRes, timeYearRes] = await Promise.all([
     sb.from('invoices').select('*').gte('invoice_date', startOfMonth).lte('invoice_date', endOfMonth),
     sb.from('expenses').select('*').gte('expense_date', startOfMonth).lte('expense_date', endOfMonth),
     sb.from('time_entries').select('*').gte('work_date', startOfMonth).lte('work_date', endOfMonth),
     sb.from('projects').select('*').eq('status', 'active'),
-    sb.from('tax_payments').select('*').eq('status', 'upcoming').order('due_date').limit(5),
     sb.from('invoices').select('*').gte('invoice_date', startOfYear).lte('invoice_date', endOfYear),
     sb.from('expenses').select('*').gte('expense_date', startOfYear).lte('expense_date', endOfYear),
     sb.from('time_entries').select('*').gte('work_date', startOfYear).lte('work_date', endOfYear)
@@ -2936,7 +2935,6 @@ async function finOverview(root) {
   var expenses = expMonthRes.data || [];
   var entries = timeMonthRes.data || [];
   var projects = projRes.data || [];
-  var taxes = taxRes.data || [];
   var allInv = invYearRes.data || [];
   var allExp = expYearRes.data || [];
   var allTime = timeYearRes.data || [];
@@ -3224,22 +3222,41 @@ async function finOverview(root) {
 
   // 案件別の詳細は「案件」タブに集約（概要では省略）
 
-  // ===== Upcoming tax =====
-  if (taxes.length > 0) {
+  // ===== Upcoming tax (dynamically calculated from invoices) =====
+  var ovProjRev = curMonth > 0 ? Math.round(yearRev / curMonth * 12) : 0;
+  var ovProjExp = curMonth > 0 ? Math.round(yearExp / curMonth * 12) : 0;
+  var ovTax = calcTax(ovProjRev, ovProjExp);
+  var ovEstPer = Math.round((ovTax.incomeTax + ovTax.reconstructionTax) / 3);
+  var ny = year + 1;
+  var ovSchedule = [
+    {label: '所得税 確定申告', due: ny+'-03-15', amount: ovTax.incomeTax + ovTax.reconstructionTax},
+    {label: '住民税 1期', due: ny+'-06-30', amount: Math.ceil(ovTax.residentTax / 4)},
+    {label: '予定納税 1期', due: ny+'-07-31', amount: ovEstPer},
+    {label: '事業税 1期', due: ny+'-08-31', amount: Math.ceil(ovTax.businessTax / 2)},
+    {label: '住民税 2期', due: ny+'-08-31', amount: Math.ceil(ovTax.residentTax / 4)},
+    {label: '住民税 3期', due: ny+'-10-31', amount: Math.ceil(ovTax.residentTax / 4)},
+    {label: '予定納税 2期', due: ny+'-11-30', amount: ovEstPer},
+    {label: '事業税 2期', due: ny+'-11-30', amount: Math.floor(ovTax.businessTax / 2)},
+    {label: '住民税 4期', due: (ny+1)+'-01-31', amount: Math.floor(ovTax.residentTax / 4)}
+  ].filter(function(s) { return s.amount > 0; }).slice(0, 5);
+
+  if (ovSchedule.length > 0) {
     var taxCard = el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:24px'});
-    taxCard.appendChild(el('div', {textContent: '次の税金支払い', style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px'}));
-    var typeLabels = {income_tax:'所得税',consumption_tax:'消費税',resident_tax:'住民税',business_tax:'事業税',estimated_tax:'予定納税'};
-    var taxTotal = taxes.reduce(function(s,t){return s+t.amount;},0);
-    var maxTax = Math.max.apply(null, taxes.map(function(t){return t.amount;})) || 1;
-    taxes.forEach(function(t) {
-      var pct = t.amount / maxTax * 100;
-      var daysLeft = Math.ceil((new Date(t.due_date) - now) / 86400000);
+    taxCard.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'}, [
+      el('div', {textContent: '次の税金支払い', style: 'font-size:12px;font-weight:600;color:var(--text2)'}),
+      el('div', {textContent: '積立目安: '+fmtYen(Math.ceil(ovTax.totalTax / 12))+'/月', style: 'font-size:11px;color:#f59e0b;font-weight:600'})
+    ]));
+    var ovTaxTotal = ovSchedule.reduce(function(s,t){return s+t.amount;},0);
+    var ovMaxTax = Math.max.apply(null, ovSchedule.map(function(t){return t.amount;})) || 1;
+    ovSchedule.forEach(function(t) {
+      var pct = t.amount / ovMaxTax * 100;
+      var daysLeft = Math.ceil((new Date(t.due) - now) / 86400000);
       var urgColor = daysLeft < 30 ? '#ef4444' : daysLeft < 90 ? '#f59e0b' : '#3b82f6';
       var row = el('div', {style: 'margin-bottom:10px'});
       row.appendChild(el('div', {style: 'display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px'}, [
         el('span', {}, [
-          el('span', {textContent: (typeLabels[t.tax_type]||t.tax_type) + (t.period ? ' '+t.period : ''), style: 'font-weight:500'}),
-          el('span', {textContent: ' · '+fmtDate(t.due_date), style: 'color:var(--text3)'})
+          el('span', {textContent: t.label, style: 'font-weight:500'}),
+          el('span', {textContent: ' · '+fmtDate(t.due), style: 'color:var(--text3)'})
         ]),
         el('span', {style: 'display:flex;gap:8px;align-items:center'}, [
           el('span', {textContent: daysLeft+'日後', style: 'font-size:10px;padding:1px 6px;border-radius:3px;background:'+urgColor+'18;color:'+urgColor}),
@@ -3252,8 +3269,8 @@ async function finOverview(root) {
       taxCard.appendChild(row);
     });
     taxCard.appendChild(el('div', {style: 'margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px'}, [
-      el('span', {textContent: '直近の支払い合計', style: 'color:var(--text3)'}),
-      el('span', {textContent: fmtYen(taxTotal), style: 'font-weight:600;color:#ef4444'})
+      el('span', {textContent: '税金合計（年間想定）', style: 'color:var(--text3)'}),
+      el('span', {textContent: fmtYen(ovTax.totalTax), style: 'font-weight:600;color:#ef4444'})
     ]));
     root.appendChild(taxCard);
   }
@@ -4178,43 +4195,74 @@ async function finTax(root) {
   // Initial render
   updateSim();
 
-  // ===== Payment Schedule Section =====
-  if (payments.length === 0) return;
-
+  // ===== Payment Schedule Section (dynamically calculated from invoices) =====
   root.appendChild(el('div', {style: 'border-top:1px solid var(--border);margin-top:24px;padding-top:24px'}));
-  root.appendChild(el('h3', {textContent: '納付スケジュール', style: 'font-size:15px;font-weight:600;margin:0 0 16px'}));
+  root.appendChild(el('h3', {textContent: '納付スケジュール（自動計算）', style: 'font-size:15px;font-weight:600;margin:0 0 4px'}));
+  root.appendChild(el('div', {textContent: '想定売上 '+fmtYen(projectedRevenue)+' / 想定経費 '+fmtYen(projectedExpense)+' から算出。売上が変わると自動で更新されます。', style: 'font-size:11px;color:var(--text3);margin-bottom:16px'}));
 
-  // Group by year
-  var byYear = {};
-  payments.forEach(function(p) { if (!byYear[p.tax_year]) byYear[p.tax_year]=[]; byYear[p.tax_year].push(p); });
+  // Calculate taxes from projected revenue
+  var projTax = calcTax(projectedRevenue, projectedExpense);
+  var estimatedPer = Math.round((projTax.incomeTax + projTax.reconstructionTax) / 3);
 
-  Object.keys(byYear).sort().reverse().forEach(function(year) {
-    var yearPayments = byYear[year];
-    var yearTotal = yearPayments.reduce(function(s,p){return s+p.amount;},0);
-    var yearPaid = yearPayments.filter(function(p){return p.status==='paid';}).reduce(function(s,p){return s+p.amount;},0);
+  // Build payment schedule for this tax year
+  var ny = year + 1;
+  var schedule = [
+    {label: '所得税 確定申告', sub: year+'年度分', due: ny+'-03-15', amount: projTax.incomeTax + projTax.reconstructionTax, type: 'income_tax'},
+    {label: '住民税 1期', sub: year+'年度分', due: ny+'-06-30', amount: Math.ceil(projTax.residentTax / 4), type: 'resident_tax'},
+    {label: '予定納税 1期', sub: (ny)+'年度前払い', due: ny+'-07-31', amount: estimatedPer, type: 'estimated_tax'},
+    {label: '個人事業税 1期', sub: year+'年度分', due: ny+'-08-31', amount: Math.ceil(projTax.businessTax / 2), type: 'business_tax'},
+    {label: '住民税 2期', sub: year+'年度分', due: ny+'-08-31', amount: Math.ceil(projTax.residentTax / 4), type: 'resident_tax'},
+    {label: '住民税 3期', sub: year+'年度分', due: ny+'-10-31', amount: Math.ceil(projTax.residentTax / 4), type: 'resident_tax'},
+    {label: '予定納税 2期', sub: (ny)+'年度前払い', due: ny+'-11-30', amount: estimatedPer, type: 'estimated_tax'},
+    {label: '個人事業税 2期', sub: year+'年度分', due: ny+'-11-30', amount: Math.floor(projTax.businessTax / 2), type: 'business_tax'},
+    {label: '住民税 4期', sub: year+'年度分', due: (ny+1)+'-01-31', amount: Math.floor(projTax.residentTax / 4), type: 'resident_tax'}
+  ].filter(function(s) { return s.amount > 0; });
 
-    root.appendChild(el('div', {style: 'margin-top:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline'}, [
-      el('h3', {textContent: year+'年度', style: 'font-size:15px;font-weight:600;margin:0'}),
-      el('div', {style: 'font-size:13px;color:var(--text3)'}, [
-        el('span', {textContent: '支払済: '+fmtYen(yearPaid)+' / '+fmtYen(yearTotal)})
+  // Match with existing payment records for paid status
+  var paidMap = {};
+  payments.forEach(function(p) {
+    if (p.status === 'paid') {
+      var key = p.tax_type + '_' + p.due_date;
+      paidMap[key] = p;
+    }
+  });
+
+  var schedTotal = schedule.reduce(function(s,p){return s+p.amount;},0);
+  var schedPaid = 0;
+
+  root.appendChild(el('div', {style: 'margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline'}, [
+    el('h4', {textContent: year+'年度の所得に対する税金', style: 'font-size:14px;font-weight:600;margin:0'}),
+    el('div', {textContent: '合計: '+fmtYen(schedTotal), style: 'font-size:13px;font-weight:600;color:#ef4444'})
+  ]));
+
+  var typeColors = {income_tax:'#ef4444', resident_tax:'#f59e0b', business_tax:'#8b5cf6', estimated_tax:'#3b82f6'};
+
+  schedule.forEach(function(s) {
+    var matchKey = s.type + '_' + s.due;
+    var isPaid = !!paidMap[matchKey];
+    if (isPaid) schedPaid += s.amount;
+    var sc = isPaid ? '#22c55e' : (new Date(s.due) < now ? '#ef4444' : typeColors[s.type] || '#3b82f6');
+    var statusText = isPaid ? '支払済' : (new Date(s.due) < now ? '期限超過' : '予定');
+    var daysLeft = Math.ceil((new Date(s.due) - now) / 86400000);
+
+    root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px'}, [
+      el('div', {style: 'display:flex;flex-direction:column;gap:2px'}, [
+        el('span', {textContent: s.label, style: 'font-weight:500'}),
+        el('span', {textContent: s.sub, style: 'font-size:10px;color:var(--text3)'})
+      ]),
+      el('div', {style: 'display:flex;gap:16px;align-items:center'}, [
+        el('span', {textContent: fmtDate(s.due) + (!isPaid && daysLeft > 0 ? ' ('+daysLeft+'日後)' : ''), style: 'color:var(--text3);font-size:12px'}),
+        el('span', {textContent: fmtYen(s.amount), style: 'font-weight:600;min-width:100px;text-align:right'}),
+        el('span', {textContent: statusText, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+sc+'20;color:'+sc+';min-width:55px;text-align:center'})
       ])
     ]));
-
-    yearPayments.forEach(function(p) {
-      var sc = statusColors[p.status]||'var(--text3)';
-      root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px'}, [
-        el('div', {}, [
-          el('span', {textContent: typeLabels[p.tax_type]||p.tax_type, style: 'font-weight:500'}),
-          p.period ? el('span', {textContent: ' '+p.period, style: 'color:var(--text3)'}) : null
-        ]),
-        el('div', {style: 'display:flex;gap:16px;align-items:center'}, [
-          el('span', {textContent: fmtDate(p.due_date), style: 'color:var(--text3)'}),
-          el('span', {textContent: fmtYen(p.amount), style: 'font-weight:600'}),
-          el('span', {textContent: statusLabels[p.status]||p.status, style: 'font-size:11px;padding:2px 8px;border-radius:4px;background:'+sc+'20;color:'+sc})
-        ])
-      ]));
-    });
   });
+
+  // Summary
+  root.appendChild(el('div', {style: 'margin-top:12px;padding:12px 16px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px'}, [
+    el('span', {textContent: '支払済: '+fmtYen(schedPaid)+' / '+fmtYen(schedTotal), style: 'color:var(--text3)'}),
+    el('span', {textContent: '残り: '+fmtYen(schedTotal - schedPaid), style: 'font-weight:600;color:#ef4444'})
+  ]));
 }
 
 // ============================================================
