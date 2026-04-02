@@ -7,7 +7,8 @@
 |----|--------|------|-----------|--------|-----------|
 | foundry | Foundry移行会社 | SOMPOケア Foundry移行PJT支援 | project-scotch-care/ | 2026-03-20 | active |
 | rikyu | りきゅう | りそな向け営業支援DX | project-rikyu-sales-proposals-poc/ | 2026-03-20 | active |
-| circuit | 回路設計支援システム会社 | 電子回路設計DX + Polaris AI協業（図面暗黙知抽出含む） | circuit_diagram/ | 2026-03-21 | active |
+| circuit | 回路設計支援システム会社 | 電子回路設計DX + Polaris AI協業（図面暗黙知抽出含む） | — | 2026-03-21 | active |
+| instagram | Instagram運用PJ | AIエンジニアの趣味探しチャンネル | — | 2026-03-23 | active |
 <!-- GENERATED:COMPANY_TABLE:END -->
 
 ## HD共通部署一覧
@@ -24,6 +25,49 @@
 | システム開発部署 | departments/sys-dev/ | バックエンド・フロントエンド・QAを担当し、PJのシステム部分を構築する。 |
 | UXデザイン部 | departments/ux-design/ | **「ユーザーが考える前に、欲しいものが手に届く」体験を設計する。** |
 <!-- GENERATED:DEPT_TABLE:END -->
+
+## リポジトリマッピング
+
+母艦（claude_dev）から全リポジトリを横断参照するためのマッピング。
+ナレッジが最も濃い claude_dev を起点に、兄弟リポジトリの読み書きを行う。
+
+### マッピングテーブル
+
+<!-- GENERATED:REPO_MAP:START -->
+| リポジトリ | パス | git | リモート | 紐づきPJ会社 | 用途 |
+|-----------|------|-----|---------|-------------|------|
+| claude_dev（母艦） | `/workspace` | 本体 | `boku-miyaji/claude_dev` | HD | PJ横断開発基盤・ナレッジ集約 |
+| company-dashboard | `company-dashboard/` | claude_dev配下 | 同上 | HD | 全社ダッシュボード |
+| project-scotch-care | `project-scotch-care/` | claude_dev配下 | 同上 | foundry | SOMPOケア Foundry移行 |
+| diary-codex | `diary-codex/` | 独自 | `boku-miyaji/diary` | — | 日記分析・AI連携 |
+| diary | `diary/` | 独自 | `boku-miyaji/diary` | — | 日記データ |
+| sancha-app | `sancha-app/` | 独自 | `boku-miyaji/sancha-app` | — | 三茶アプリ |
+| learn-claude-code | `learn-claude-code/` | 独自 | `shareAI-lab/learn-claude-code` | — | OSS（他者メンテ・参照のみ） |
+| mokumoku-mate | `mokumoku-mate/` | 独自 | — | — | もくもく会マッチング |
+| youtube_translater | `youtube_translater/` | 独自 | `boku-miyaji/youtube_translater` | — | YouTube翻訳ツール |
+<!-- GENERATED:REPO_MAP:END -->
+
+### claude_dev 内部ディレクトリ（リポジトリではない）
+
+| ディレクトリ | 用途 |
+|-------------|------|
+| `apps/` | 共通アプリ |
+| `base_framework/` | 基盤フレームワーク |
+| `delta_project_ops/` | 運用ツール |
+| `docs/` | 横断ドキュメント |
+| `invoice/` | 請求・財務 |
+| `plugins/` | Claude Codeプラグイン |
+| `scripts/` | 共通スクリプト |
+| `tasks/` | タスクファイル |
+
+### 参照パターン
+
+| パターン | 例 | 操作 |
+|---------|-----|------|
+| 母艦内PJ | `project-scotch-care/` | 読み書き（コミット先はclaude_dev） |
+| 独自リポジトリ | `sancha-app/` | 読み書き（コミット先はそのリポジトリ） |
+| 他者OSSリポジトリ | `learn-claude-code/` | 参照のみ（PR提出は可） |
+| 未紐づき独自リポジトリ | `mokumoku-mate/` | PJ会社作成で紐づけ可能 |
 
 ## アーキテクチャ概要
 
