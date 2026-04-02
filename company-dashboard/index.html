@@ -2509,201 +2509,158 @@ async function renderPortfolio(root) {
 async function renderCareer(root) {
   root.appendChild(el('div', {className: 'page-title', style:'display:flex;justify-content:space-between;align-items:center'}, [
     el('span', {textContent: 'Career'}),
-    el('button', {className: 'btn btn-p', textContent: '+ Add', onClick: function() { showAddForm(); }})
+    el('button', {className: 'btn btn-p', textContent: '+ 経歴を追加', onClick: function() { showCareerForm(null); }})
   ]));
-  root.appendChild(el('div', {className: 'page-desc', textContent: 'キャリアロードマップ — いつ何をやったか、詳細な記録とともに管理'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '経歴の時系列と概要'}));
 
   var contentArea = el('div');
   root.appendChild(contentArea);
 
-  var typeConfig = {
-    goal: {label: '目標', icon: '◎', color: 'var(--accent2)'},
-    milestone: {label: 'マイルストーン', icon: '◇', color: 'var(--blue)'},
-    strength: {label: '強み', icon: '★', color: 'var(--green)'},
-    weakness: {label: '課題', icon: '△', color: 'var(--amber)'},
-    market_insight: {label: '市場洞察', icon: '◉', color: 'var(--accent)'},
-    reflection: {label: '振り返り', icon: '↻', color: 'var(--text2)'},
-    action_item: {label: 'アクション', icon: '→', color: 'var(--blue)'}
-  };
-  var statusCls = {active: 'tag-open', completed: 'tag-done', on_hold: 'tag-low', dropped: 'tag-low'};
-  var typeOrder = ['goal', 'action_item', 'milestone', 'strength', 'weakness', 'market_insight', 'reflection'];
-
   async function loadAndRender() {
     while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
-    var items = (await sb.from('career').select('*').order('updated_at', {ascending: false})).data || [];
-    var active = items.filter(function(i){return i.status==='active';});
-    var completed = items.filter(function(i){return i.status==='completed';});
-
-    // KPI
-    contentArea.appendChild(el('div', {className: 'g4', style: 'margin-bottom:24px'}, [
-      el('div', {className: 'card kpi'}, [el('div', {className: 'kpi-val', textContent: items.filter(function(i){return i.type==='goal';}).length}), el('div', {className: 'kpi-lbl', textContent: 'Goals'})]),
-      el('div', {className: 'card kpi'}, [el('div', {className: 'kpi-val', textContent: active.length}), el('div', {className: 'kpi-lbl', textContent: 'Active'})]),
-      el('div', {className: 'card kpi'}, [el('div', {className: 'kpi-val good', textContent: completed.length}), el('div', {className: 'kpi-lbl', textContent: 'Completed'})]),
-      el('div', {className: 'card kpi'}, [el('div', {className: 'kpi-val', textContent: items.length}), el('div', {className: 'kpi-lbl', textContent: 'Total'})])
-    ]));
+    var items = (await sb.from('career_history').select('*').order('start_date', {ascending: false})).data || [];
 
     if (items.length === 0) {
-      contentArea.appendChild(el('div', {className: 'card'}, [el('div', {className: 'empty', textContent: '+ Add ボタンでキャリアアイテムを追加してください'})]));
+      contentArea.appendChild(el('div', {className: 'card', style: 'text-align:center;padding:40px'}, [
+        el('div', {style: 'font-size:28px;margin-bottom:12px', textContent: '☆'}),
+        el('div', {style: 'font-size:14px;color:var(--text2);margin-bottom:8px', textContent: '経歴がまだ登録されていません'}),
+        el('div', {style: 'font-size:12px;color:var(--text3)', textContent: '「+ 経歴を追加」から職歴・学歴・プロジェクト経験を登録してください'})
+      ]));
       return;
     }
 
-    // === Timeline view (completed items with dates) ===
-    var timeline = completed.filter(function(i){return i.completed_at;}).sort(function(a,b){return b.completed_at > a.completed_at ? 1 : -1;});
-    if (timeline.length > 0) {
-      contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Timeline'}));
-      var tlCard = el('div', {className: 'card', style: 'margin-bottom:24px;position:relative;padding-left:24px'});
-      // Vertical line
-      tlCard.appendChild(el('div', {style: 'position:absolute;left:11px;top:12px;bottom:12px;width:2px;background:var(--border)'}));
-      timeline.forEach(function(item) {
-        var cfg = typeConfig[item.type] || {icon:'·',color:'var(--text2)'};
-        var row = el('div', {style: 'padding:12px 0;position:relative'});
-        // Dot
-        row.appendChild(el('div', {style: 'position:absolute;left:-20px;top:16px;width:10px;height:10px;border-radius:50%;background:'+cfg.color+';border:2px solid var(--surface)'}));
-        row.appendChild(el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:4px'}, [
-          el('span', {style: 'font-family:var(--mono);font-size:11px;color:var(--text3)', textContent: item.completed_at}),
-          el('span', {style: 'font-weight:600;font-size:13px', textContent: item.title})
-        ]));
-        if (item.description) row.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);margin-bottom:4px', textContent: item.description}));
-        if (item.notes) row.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);background:var(--surface2);padding:8px 10px;border-radius:var(--r);margin-top:4px;white-space:pre-wrap;line-height:1.6', textContent: item.notes}));
-        // Edit button
-        var editBtn = el('button', {className: 'btn btn-g btn-sm', style: 'margin-top:4px;font-size:11px', textContent: 'Edit'});
-        editBtn.addEventListener('click', function() { showEditForm(item); });
-        row.appendChild(editBtn);
-        tlCard.appendChild(row);
-      });
-      contentArea.appendChild(tlCard);
-    }
-
-    // === Group active by type ===
-    var grouped = {};
-    items.forEach(function(i) { if (!grouped[i.type]) grouped[i.type] = []; grouped[i.type].push(i); });
-
-    typeOrder.forEach(function(type) {
-      var typeItems = grouped[type]; if (!typeItems) return;
-      var cfg = typeConfig[type] || {label: type, icon: '·', color: 'var(--text2)'};
-      contentArea.appendChild(el('div', {className: 'section-title', textContent: cfg.icon + ' ' + cfg.label + ' (' + typeItems.length + ')'}));
-      var card = el('div', {className: 'card', style: 'margin-bottom:20px'});
-
-      typeItems.forEach(function(item) {
-        var row = el('div', {style: 'padding:12px 0;border-bottom:1px solid var(--border)'});
-        // Header row
-        var header = el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:4px'});
-        header.appendChild(el('span', {style: 'color:'+cfg.color+';font-size:14px', textContent: cfg.icon}));
-        header.appendChild(el('span', {style: 'font-weight:500;font-size:13px;flex:1', textContent: item.title}));
-        if (item.priority === 'high') header.appendChild(el('span', {className: 'tag tag-high', textContent: 'high'}));
-        header.appendChild(el('span', {className: 'tag ' + (statusCls[item.status]||'tag-low'), textContent: item.status}));
-        row.appendChild(header);
-
-        if (item.description) row.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);margin-left:26px;margin-bottom:4px', textContent: item.description}));
-        if (item.notes) row.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);margin-left:26px;background:var(--surface2);padding:8px 10px;border-radius:var(--r);margin-top:4px;margin-bottom:4px;white-space:pre-wrap;line-height:1.6', textContent: item.notes}));
-
-        // Dates
-        var dates = [];
-        if (item.target_date) dates.push('Target: ' + item.target_date);
-        if (item.completed_at) dates.push('Done: ' + item.completed_at);
-        dates.push('Updated: ' + (item.updated_at||'').substring(0,10));
-        row.appendChild(el('div', {style: 'font-size:10px;color:var(--text3);margin-left:26px;font-family:var(--mono)', textContent: dates.join(' | ')}));
-
-        // Action buttons
-        var actions = el('div', {style: 'display:flex;gap:6px;margin-left:26px;margin-top:6px'});
-        var editBtn = el('button', {className: 'btn btn-g btn-sm', style: 'font-size:11px', textContent: 'Edit'});
-        editBtn.addEventListener('click', function() { showEditForm(item); });
-        actions.appendChild(editBtn);
-        if (item.status === 'active') {
-          var doneBtn = el('button', {className: 'btn btn-sm', style: 'font-size:11px;background:var(--green);color:#fff', textContent: 'Complete'});
-          doneBtn.addEventListener('click', async function() {
-            var today = new Date().toISOString().substring(0,10);
-            await sb.from('career').update({status:'completed',completed_at:today}).eq('id',item.id);
-            toast('Completed!');
-            loadAndRender();
-          });
-          actions.appendChild(doneBtn);
-        }
-        var delBtn = el('button', {className: 'btn btn-sm', style: 'font-size:11px;color:var(--red)', textContent: 'Delete'});
-        delBtn.addEventListener('click', function() {
-          showConfirm('削除の確認', '"' + item.title + '" を削除しますか？', async function() {
-            await sb.from('career').delete().eq('id', item.id);
-            toast('"' + item.title + '" を削除しました');
-            loadAndRender();
-          });
-        });
-        actions.appendChild(delBtn);
-        row.appendChild(actions);
-        card.appendChild(row);
-      });
-      contentArea.appendChild(card);
+    // ===== Summary card =====
+    var totalYears = 0;
+    var orgSet = {};
+    var allTags = {};
+    items.forEach(function(item) {
+      var end = item.end_date ? new Date(item.end_date) : new Date();
+      var start = new Date(item.start_date);
+      totalYears += (end - start) / (365.25 * 86400000);
+      if (item.organization) orgSet[item.organization] = true;
+      (item.tags || []).forEach(function(t) { allTags[t] = (allTags[t] || 0) + 1; });
     });
+    var topTags = Object.keys(allTags).sort(function(a,b) { return allTags[b] - allTags[a]; }).slice(0, 10);
+    var current = items.filter(function(i) { return !i.end_date; });
+
+    var summaryCard = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:24px'});
+    summaryCard.appendChild(el('div', {style: 'font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px', textContent: 'Summary'}));
+    summaryCard.appendChild(el('div', {style: 'display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px'}, [
+      el('div', {}, [el('div', {style: 'font-size:22px;font-weight:700', textContent: Math.round(totalYears * 10) / 10 + '年'}), el('div', {style: 'font-size:11px;color:var(--text3)', textContent: '経験年数'})]),
+      el('div', {}, [el('div', {style: 'font-size:22px;font-weight:700', textContent: Object.keys(orgSet).length}), el('div', {style: 'font-size:11px;color:var(--text3)', textContent: '所属組織'})]),
+      el('div', {}, [el('div', {style: 'font-size:22px;font-weight:700', textContent: items.length}), el('div', {style: 'font-size:11px;color:var(--text3)', textContent: '経歴数'})]),
+      el('div', {}, [el('div', {style: 'font-size:22px;font-weight:700;color:var(--accent)', textContent: current.length}), el('div', {style: 'font-size:11px;color:var(--text3)', textContent: '現在進行中'})])
+    ]));
+    if (topTags.length > 0) {
+      var tagRow = el('div', {style: 'display:flex;gap:4px;flex-wrap:wrap'});
+      topTags.forEach(function(t) { tagRow.appendChild(el('span', {textContent: t, style: 'font-size:10px;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--text2)'})); });
+      summaryCard.appendChild(tagRow);
+    }
+    contentArea.appendChild(summaryCard);
+
+    // ===== Timeline =====
+    var tlCard = el('div', {style: 'position:relative;padding-left:20px'});
+    tlCard.appendChild(el('div', {style: 'position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:var(--border)'}));
+
+    items.forEach(function(item) {
+      var isCurrent = !item.end_date;
+      var startY = item.start_date.substring(0, 7).replace('-', '/');
+      var endY = isCurrent ? '現在' : item.end_date.substring(0, 7).replace('-', '/');
+      var dotColor = isCurrent ? 'var(--accent)' : 'var(--border2)';
+
+      var row = el('div', {style: 'padding:14px 0;position:relative'});
+      row.appendChild(el('div', {style: 'position:absolute;left:-17px;top:18px;width:10px;height:10px;border-radius:50%;background:'+dotColor+';border:2px solid var(--surface)'}));
+
+      // Period
+      row.appendChild(el('div', {style: 'font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:4px', textContent: startY + ' — ' + endY}));
+
+      // Title + org
+      var header = el('div', {style: 'display:flex;align-items:baseline;gap:8px;margin-bottom:4px;flex-wrap:wrap'});
+      header.appendChild(el('span', {style: 'font-size:14px;font-weight:600', textContent: item.title}));
+      if (item.organization) header.appendChild(el('span', {style: 'font-size:12px;color:var(--text3)', textContent: item.organization}));
+      if (item.role) header.appendChild(el('span', {style: 'font-size:11px;color:var(--accent);font-weight:500', textContent: item.role}));
+      if (isCurrent) header.appendChild(el('span', {style: 'font-size:9px;padding:1px 6px;border-radius:3px;background:var(--accent);color:#fff;font-weight:600', textContent: 'NOW'}));
+      row.appendChild(header);
+
+      // Description
+      if (item.description) row.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap', textContent: item.description}));
+
+      // Tags
+      if (item.tags && item.tags.length > 0) {
+        var tags = el('div', {style: 'display:flex;gap:4px;flex-wrap:wrap;margin-top:6px'});
+        item.tags.forEach(function(t) { tags.appendChild(el('span', {textContent: t, style: 'font-size:10px;padding:1px 6px;border-radius:3px;background:var(--surface2);color:var(--text3)'})); });
+        row.appendChild(tags);
+      }
+
+      // Actions
+      var actions = el('div', {style: 'display:flex;gap:6px;margin-top:8px'});
+      actions.appendChild(el('button', {className: 'btn btn-g btn-sm', style: 'font-size:11px', textContent: '編集', onClick: function() { showCareerForm(item); }}));
+      actions.appendChild(el('button', {className: 'btn btn-sm', style: 'font-size:11px;color:var(--red);background:transparent;border:none;cursor:pointer', textContent: '削除', onClick: function() {
+        showConfirm('経歴を削除', '"' + item.title + '" を削除しますか？', async function() {
+          await sb.from('career_history').delete().eq('id', item.id);
+          toast('削除しました');
+          loadAndRender();
+        });
+      }}));
+      row.appendChild(actions);
+      tlCard.appendChild(row);
+    });
+
+    contentArea.appendChild(tlCard);
   }
 
-  // === Add / Edit Form (modal-like) ===
-  function showAddForm() { showEditForm(null); }
-
-  function showEditForm(item) {
+  function showCareerForm(item) {
     var isEdit = !!item;
-    var modal = el('div', {style: 'position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3)'});
-    var box = el('div', {style: 'background:var(--surface);border-radius:var(--r2);padding:24px;max-width:520px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)'});
+    var overlay = el('div', {style: 'position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3)'});
+    var box = el('div', {style: 'background:var(--surface);border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15)'});
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
 
-    box.appendChild(el('div', {style: 'font-size:16px;font-weight:700;margin-bottom:16px', textContent: isEdit ? 'Edit Career Item' : 'New Career Item'}));
+    box.appendChild(el('div', {style: 'font-size:16px;font-weight:600;margin-bottom:16px', textContent: isEdit ? '経歴を編集' : '経歴を追加'}));
 
-    function field(label, tag, attrs, val) {
-      box.appendChild(el('div', {style: 'font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;margin-top:12px', textContent: label}));
-      var inp = el(tag, Object.assign({className: 'input', style: 'width:100%;font-size:13px'}, attrs));
-      if (tag === 'select') {
-        (attrs.options || []).forEach(function(o) { inp.appendChild(el('option', {value: o[0], textContent: o[1]})); });
-        inp.value = val || '';
-      } else if (tag === 'textarea') {
-        inp.style.minHeight = '80px';
-        inp.style.resize = 'vertical';
-        inp.value = val || '';
-      } else {
-        inp.value = val || '';
-      }
-      box.appendChild(inp);
-      return inp;
+    var inputStyle = 'width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);box-sizing:border-box';
+
+    function field(label, inputEl) {
+      box.appendChild(el('div', {style: 'margin-bottom:12px'}, [
+        el('label', {textContent: label, style: 'font-size:12px;color:var(--text3);display:block;margin-bottom:4px'}),
+        inputEl
+      ]));
+      return inputEl;
     }
 
-    var fTitle = field('Title', 'input', {placeholder: 'e.g. GPT-5 Agent Loop Implementation'}, item ? item.title : '');
-    var fType = field('Type', 'select', {options: typeOrder.map(function(t){return [t, typeConfig[t] ? typeConfig[t].icon+' '+typeConfig[t].label : t];})}, item ? item.type : 'goal');
-    var fStatus = field('Status', 'select', {options: [['active','Active'],['completed','Completed'],['on_hold','On Hold'],['dropped','Dropped']]}, item ? item.status : 'active');
-    var fPriority = field('Priority', 'select', {options: [['normal','Normal'],['high','High'],['low','Low']]}, item ? item.priority : 'normal');
-    var fDescription = field('Description', 'input', {placeholder: 'Short summary'}, item ? item.description : '');
-    var fNotes = field('Notes (detailed)', 'textarea', {placeholder: 'What exactly did you do? What did you learn? Details...'}, item ? item.notes : '');
-    var fTargetDate = field('Target Date', 'input', {type: 'date'}, item ? item.target_date : '');
-    var fCompletedAt = field('Completed Date', 'input', {type: 'date'}, item ? item.completed_at : '');
+    var fTitle = field('タイトル（例: AI開発エンジニア、東京大学 工学部）', el('input', {style: inputStyle, placeholder: '何をしていたか', value: item ? item.title : ''}));
+    var fOrg = field('組織名（例: 株式会社ACES）', el('input', {style: inputStyle, placeholder: '所属先', value: item ? (item.organization || '') : ''}));
+    var fRole = field('役職・立場（例: テックリード、業務委託）', el('input', {style: inputStyle, placeholder: '任意', value: item ? (item.role || '') : ''}));
 
-    var btnRow = el('div', {style: 'display:flex;gap:8px;margin-top:20px'});
-    var saveBtn = el('button', {className: 'btn btn-p', textContent: isEdit ? 'Update' : 'Create'});
-    saveBtn.addEventListener('click', async function() {
-      var data = {
-        title: fTitle.value.trim(),
-        type: fType.value,
-        status: fStatus.value,
-        priority: fPriority.value,
-        description: fDescription.value.trim() || null,
-        notes: fNotes.value.trim() || null,
-        target_date: fTargetDate.value || null,
-        completed_at: fCompletedAt.value || null
-      };
-      if (!data.title) { toast('Title is required'); return; }
-      if (isEdit) {
-        await sb.from('career').update(data).eq('id', item.id);
-        toast('Updated!');
-      } else {
-        await sb.from('career').insert(data);
-        toast('Created!');
-      }
-      document.body.removeChild(modal);
+    var dateRow = el('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px'});
+    var fStart = el('input', {type: 'date', style: inputStyle, value: item ? item.start_date : ''});
+    var fEnd = el('input', {type: 'date', style: inputStyle, value: item ? (item.end_date || '') : ''});
+    dateRow.appendChild(el('div', {}, [el('label', {textContent: '開始日', style: 'font-size:12px;color:var(--text3);display:block;margin-bottom:4px'}), fStart]));
+    dateRow.appendChild(el('div', {}, [el('label', {textContent: '終了日（空欄 = 現在）', style: 'font-size:12px;color:var(--text3);display:block;margin-bottom:4px'}), fEnd]));
+    box.appendChild(dateRow);
+
+    var fDesc = field('詳細（やったこと・経験・成果）', el('textarea', {style: inputStyle + ';min-height:100px;resize:vertical', placeholder: '自由に記述', value: item ? (item.description || '') : ''}));
+    var fTags = field('タグ（カンマ区切り: AI, Python, マネジメント）', el('input', {style: inputStyle, placeholder: 'AI, LLM, Python', value: item ? (item.tags || []).join(', ') : ''}));
+
+    var statusMsg = el('div', {style: 'font-size:12px;min-height:16px;margin-bottom:8px'});
+    box.appendChild(statusMsg);
+
+    var btnRow = el('div', {style: 'display:flex;gap:8px;justify-content:flex-end'});
+    btnRow.appendChild(el('button', {textContent: 'キャンセル', style: 'padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);font-size:13px', onClick: function() { overlay.remove(); }}));
+    btnRow.appendChild(el('button', {textContent: isEdit ? '更新' : '追加', style: 'padding:8px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600', onClick: async function() {
+      var title = fTitle.value.trim();
+      if (!title) { statusMsg.textContent = 'タイトルは必須です'; statusMsg.style.color = '#ef4444'; return; }
+      if (!fStart.value) { statusMsg.textContent = '開始日は必須です'; statusMsg.style.color = '#ef4444'; return; }
+      var tags = fTags.value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+      var data = {title: title, organization: fOrg.value.trim() || null, role: fRole.value.trim() || null, start_date: fStart.value, end_date: fEnd.value || null, description: fDesc.value.trim() || null, tags: tags.length > 0 ? tags : null};
+      if (isEdit) { await sb.from('career_history').update(data).eq('id', item.id); toast('更新しました'); }
+      else { await sb.from('career_history').insert(data); toast('追加しました'); }
+      overlay.remove();
       loadAndRender();
-    });
-    var cancelBtn = el('button', {className: 'btn btn-g', textContent: 'Cancel'});
-    cancelBtn.addEventListener('click', function() { document.body.removeChild(modal); });
-    btnRow.appendChild(saveBtn);
-    btnRow.appendChild(cancelBtn);
+    }}));
     box.appendChild(btnRow);
-
-    modal.appendChild(box);
-    modal.addEventListener('click', function(e) { if (e.target === modal) document.body.removeChild(modal); });
-    document.body.appendChild(modal);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    fTitle.focus();
   }
 
   loadAndRender();
