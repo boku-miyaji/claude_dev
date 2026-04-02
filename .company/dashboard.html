@@ -201,49 +201,68 @@
   .empty-state { text-align: center; padding: 24px; color: var(--text-dim); font-size: 13px; }
 
   /* ============================================================
-     CALENDAR
+     CALENDAR — Time-grid weekly view
      ============================================================ */
   .calendar-section { margin-bottom: 32px; }
-  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-  @media (max-width: 900px) { .calendar-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 600px) { .calendar-grid { grid-template-columns: 1fr; } }
 
-  .calendar-day { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; min-height: 120px; transition: border-color 0.15s; }
-  .calendar-day:hover { border-color: var(--border-accent); }
-  .calendar-day.today { border-color: var(--accent); border-width: 2px; }
+  .calendar-week-header { display: grid; grid-template-columns: 48px repeat(7, 1fr); gap: 0; margin-bottom: 0; }
+  .calendar-week-header .cal-corner { width: 48px; }
+  .calendar-week-header .cal-day-col-header { text-align: center; padding: 10px 4px 8px; border-bottom: 1px solid var(--border); }
+  .calendar-week-header .cal-day-col-header.today { border-bottom: 2px solid var(--accent); }
+  .cal-day-col-header .cal-dow { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); display: block; }
+  .cal-day-col-header.today .cal-dow { color: var(--accent); }
+  .cal-day-col-header .cal-date-num { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--text); display: block; line-height: 1.2; }
+  .cal-day-col-header.today .cal-date-num { color: var(--accent); background: var(--accent-soft); width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
 
-  .calendar-day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .calendar-day-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
-  .calendar-day-date { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--text); }
-  .calendar-day.today .calendar-day-date { color: var(--accent); }
+  .calendar-timegrid { display: grid; grid-template-columns: 48px repeat(7, 1fr); gap: 0; position: relative; overflow-y: auto; max-height: 620px; }
+  .cal-time-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-align: right; padding-right: 8px; height: 48px; position: relative; top: -6px; }
+  .cal-day-col { position: relative; border-left: 1px solid var(--border); min-height: 48px; }
+  .cal-hour-slot { height: 48px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s; position: relative; }
+  .cal-hour-slot:hover { background: var(--accent-soft); }
+  .cal-hour-slot:hover::after { content: '+'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 16px; color: var(--accent); opacity: 0.6; pointer-events: none; }
+  .cal-time-gutter { /* empty gutter rows */ height: 48px; border-bottom: 1px solid transparent; }
 
-  .calendar-event { padding: 6px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 11px; line-height: 1.4; border-left: 3px solid var(--accent); background: var(--accent-soft); cursor: default; transition: background 0.15s; }
-  .calendar-event:hover { background: rgba(99, 102, 241, 0.18); }
-  .calendar-event:last-child { margin-bottom: 0; }
+  .cal-event { position: absolute; left: 2px; right: 2px; border-radius: 4px; padding: 3px 6px; font-size: 11px; line-height: 1.3; overflow: hidden; cursor: default; z-index: 2; border-left: 3px solid var(--accent); background: var(--accent-soft); transition: box-shadow 0.15s; }
+  .cal-event:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.3); z-index: 3; }
+  .cal-event .cal-ev-time { font-family: var(--mono); font-size: 9px; color: var(--text-muted); display: block; }
+  .cal-event .cal-ev-title { font-weight: 500; color: var(--text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal-event.cal-work { border-left-color: var(--green); background: var(--green-soft); }
+  .cal-event.cal-primary { border-left-color: var(--accent); background: var(--accent-soft); }
+  .cal-event.cal-secondary { border-left-color: var(--amber); background: var(--amber-soft); }
+  .cal-event.cal-work:hover { background: rgba(34, 197, 94, 0.18); }
+  .cal-event.cal-primary:hover { background: rgba(99, 102, 241, 0.18); }
+  .cal-event.cal-secondary:hover { background: rgba(245, 158, 11, 0.18); }
+  .cal-event.past { opacity: 0.45; }
 
-  .calendar-event.cal-primary { border-left-color: var(--accent); background: var(--accent-soft); }
-  .calendar-event.cal-work { border-left-color: var(--green); background: var(--green-soft); }
-  .calendar-event.cal-secondary { border-left-color: var(--amber); background: var(--amber-soft); }
-  .calendar-event.cal-primary:hover { background: rgba(99, 102, 241, 0.18); }
-  .calendar-event.cal-work:hover { background: rgba(34, 197, 94, 0.18); }
-  .calendar-event.cal-secondary:hover { background: rgba(245, 158, 11, 0.18); }
+  .cal-now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--red); z-index: 4; pointer-events: none; }
+  .cal-now-line::before { content: ''; position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
 
-  .calendar-event-time { font-family: var(--mono); font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 1px; }
-  .calendar-event-title { font-weight: 500; color: var(--text); }
-  .calendar-event.allday { border-left-style: dashed; }
-  .calendar-event.allday .calendar-event-time { display: none; }
-
-  .calendar-event.past { opacity: 0.5; }
-  .calendar-event.current { box-shadow: 0 0 0 1px var(--accent); }
-
-  .calendar-legend { display: flex; gap: 16px; margin-top: 8px; }
+  .calendar-legend { display: flex; gap: 16px; margin-top: 10px; }
   .calendar-legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-dim); }
   .calendar-legend-dot { width: 8px; height: 3px; border-radius: 2px; }
   .calendar-legend-dot.primary { background: var(--accent); }
   .calendar-legend-dot.work { background: var(--green); }
   .calendar-legend-dot.secondary { background: var(--amber); }
 
-  .calendar-no-events { font-size: 11px; color: var(--text-dim); padding: 8px 0; }
+  /* Add-event modal */
+  .cal-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+  .cal-modal-overlay.show { display: flex; }
+  .cal-modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; width: 340px; max-width: 90vw; }
+  .cal-modal h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .cal-modal label { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; margin-top: 10px; }
+  .cal-modal input, .cal-modal select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; }
+  .cal-modal input:focus, .cal-modal select:focus { border-color: var(--accent); }
+  .cal-modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+  @media (max-width: 900px) {
+    .calendar-week-header, .calendar-timegrid { grid-template-columns: 40px repeat(7, 1fr); }
+    .cal-time-label { font-size: 9px; padding-right: 4px; }
+  }
+  @media (max-width: 600px) {
+    .calendar-week-header, .calendar-timegrid { grid-template-columns: 36px repeat(7, 1fr); }
+    .cal-event .cal-ev-title { font-size: 10px; }
+    .cal-event .cal-ev-time { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -327,174 +346,50 @@
     </div>
   </section>
 
-  <!-- ========== Calendar ========== -->
+  <!-- ========== Calendar (Time-grid) ========== -->
   <section class="section calendar-section">
     <div class="section-header">
       <span class="section-title">Calendar</span>
-      <span class="section-badge">Apr 1 - Apr 7</span>
+      <span class="section-badge" id="cal-range-label"></span>
     </div>
-    <div class="calendar-grid">
 
-      <!-- 04/01 Wed - TODAY -->
-      <div class="calendar-day today">
-        <div class="calendar-day-header">
-          <span class="calendar-day-label">Wed</span>
-          <span class="calendar-day-date">1</span>
-        </div>
-        <div class="calendar-event cal-work past">
-          <span class="calendar-event-time">10:00</span>
-          <span class="calendar-event-title">稼働相談</span>
-        </div>
-        <div class="calendar-event cal-work past">
-          <span class="calendar-event-time">11:00</span>
-          <span class="calendar-event-title">[in] rikyu algo mtg</span>
-        </div>
-        <div class="calendar-event cal-work past">
-          <span class="calendar-event-time">12:00</span>
-          <span class="calendar-event-title">エンジニア技術的雑談会</span>
-        </div>
-        <div class="calendar-event cal-work past">
-          <span class="calendar-event-time">13:00</span>
-          <span class="calendar-event-title">Daiquiri 評価言語化</span>
-        </div>
-        <div class="calendar-event cal-work past">
-          <span class="calendar-event-time">19:00</span>
-          <span class="calendar-event-title">PE 仮説検証レビュー会</span>
-        </div>
-        <div class="calendar-event cal-primary current">
-          <span class="calendar-event-time">21:00</span>
-          <span class="calendar-event-title">ACES・Polaris請求書作成</span>
-        </div>
-      </div>
+    <!-- Day headers -->
+    <div class="calendar-week-header" id="cal-week-header"></div>
 
-      <!-- 04/02 Thu -->
-      <div class="calendar-day">
-        <div class="calendar-day-header">
-          <span class="calendar-day-label">Thu</span>
-          <span class="calendar-day-date">2</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">11:00</span>
-          <span class="calendar-event-title">[Ex] 大和証券 事務手検索</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">12:00</span>
-          <span class="calendar-event-title">[Ex] Sケアレビュー</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">15:30</span>
-          <span class="calendar-event-title">Daiquiri 事務手検索 提案方針</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">16:30</span>
-          <span class="calendar-event-title">Daiquiri Algo TP</span>
-        </div>
-      </div>
+    <!-- Time grid -->
+    <div class="calendar-timegrid" id="cal-timegrid"></div>
 
-      <!-- 04/03 Fri -->
-      <div class="calendar-day">
-        <div class="calendar-day-header">
-          <span class="calendar-day-label">Fri</span>
-          <span class="calendar-day-date">3</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">09:30</span>
-          <span class="calendar-event-title">Rikyu 最終報告会 認識合わせ</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">11:00</span>
-          <span class="calendar-event-title">[Ex] Sケアレビュー枠</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">15:00</span>
-          <span class="calendar-event-title">Rikyu Proposals 見積もり議論</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">17:00</span>
-          <span class="calendar-event-title">Claudeお勉強会</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">17:30</span>
-          <span class="calendar-event-title">全社MTG</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">18:00</span>
-          <span class="calendar-event-title">Rikyu MVP見積もりレビュー</span>
-        </div>
-      </div>
-
-      <!-- 04/04 Sat -->
-      <div class="calendar-day">
-        <div class="calendar-day-header">
-          <span class="calendar-day-label">Sat</span>
-          <span class="calendar-day-date">4</span>
-        </div>
-        <div class="calendar-event cal-primary">
-          <span class="calendar-event-time">10:00</span>
-          <span class="calendar-event-title">白井さん花見</span>
-        </div>
-      </div>
-
-      <!-- 04/05 Sun -->
-      <div class="calendar-day">
-        <div class="calendar-day-header">
-          <span class="calendar-day-label">Sun</span>
-          <span class="calendar-day-date">5</span>
-        </div>
-        <div class="calendar-no-events">No events</div>
-      </div>
-
-      <!-- 04/06 Mon -->
-      <div class="calendar-day">
-        <div class="calendar-day-header">
-          <span class="calendar-day-label">Mon</span>
-          <span class="calendar-day-date">6</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">10:00</span>
-          <span class="calendar-event-title">[in] rikyu algo mtg</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">14:00</span>
-          <span class="calendar-event-title">[Ex] SOMPOケア IT企画部</span>
-        </div>
-      </div>
-
-      <!-- 04/07 Tue -->
-      <div class="calendar-day">
-        <div class="calendar-day-header">
-          <span class="calendar-day-label">Tue</span>
-          <span class="calendar-day-date">7</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">10:00</span>
-          <span class="calendar-event-title">[in] rikyu algo mtg</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">14:00</span>
-          <span class="calendar-event-title">[Ex] SOMPOケア IT企画部</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">15:00</span>
-          <span class="calendar-event-title">[Ex] りそな銀行 期末報告会</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">16:00</span>
-          <span class="calendar-event-title">Daiquiri 事務手検索 社内定例</span>
-        </div>
-        <div class="calendar-event cal-work">
-          <span class="calendar-event-time">18:00</span>
-          <span class="calendar-event-title">Delta デリバリー全体会</span>
-        </div>
-      </div>
-
-    </div>
     <div class="calendar-legend">
-      <div class="calendar-legend-item"><div class="calendar-legend-dot primary"></div>Personal</div>
       <div class="calendar-legend-item"><div class="calendar-legend-dot work"></div>Work (ACES)</div>
+      <div class="calendar-legend-item"><div class="calendar-legend-dot primary"></div>Personal</div>
       <div class="calendar-legend-item"><div class="calendar-legend-dot secondary"></div>Other</div>
     </div>
   </section>
+
+  <!-- Add-event modal -->
+  <div class="cal-modal-overlay" id="cal-modal">
+    <div class="cal-modal">
+      <h3 id="cal-modal-title">Add Event</h3>
+      <label>Title</label>
+      <input type="text" id="cal-new-title" placeholder="Event title">
+      <label>Date</label>
+      <input type="date" id="cal-new-date">
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label>Start</label><input type="time" id="cal-new-start"></div>
+        <div style="flex:1;"><label>End</label><input type="time" id="cal-new-end"></div>
+      </div>
+      <label>Type</label>
+      <select id="cal-new-type">
+        <option value="work">Work</option>
+        <option value="primary">Personal</option>
+        <option value="secondary">Other</option>
+      </select>
+      <div class="cal-modal-actions">
+        <button class="btn btn-ghost btn-sm" id="cal-modal-cancel">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="cal-modal-save">Add to Inbox</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ========== KPI Overview ========== -->
   <section class="section">
@@ -563,7 +458,7 @@
       <span class="section-badge">Secretary</span>
     </div>
     <div class="card note-card" style="padding: 16px;">
-      <strong>Calendar integrated.</strong> 7-day view showing events from 3 calendars (primary, ACES, secondary). To add/edit/delete events, use <code style="color:var(--accent)">/company</code>.
+      <strong>Calendar integrated.</strong> Time-grid weekly view (today + 7 days). Click empty slots to add events to Inbox. Events from 3 calendars (primary, ACES, secondary).
     </div>
   </section>
 
@@ -760,6 +655,243 @@
   });
 
   renderItems();
+})();
+
+/* ============================================================
+   CALENDAR — Time-grid weekly view (today + 7 days)
+   ============================================================ */
+(function() {
+  'use strict';
+
+  var HOUR_H = 48;
+  var START_HOUR = 8;
+  var END_HOUR = 21;
+  var DAYS = 7;
+  var DOW_JA = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MONTH_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Event data (server-rendered, today = 2026-04-03)
+  var EVENTS = [
+    { date: '2026-04-03', start: '09:30', end: '10:30', title: 'Rikyu 最終報告会 認識合わせ', type: 'work' },
+    { date: '2026-04-03', start: '11:00', end: '12:00', title: '[Ex] Sケアレビュー枠', type: 'work' },
+    { date: '2026-04-03', start: '15:00', end: '16:00', title: 'Rikyu Proposals 見積もり議論', type: 'work' },
+    { date: '2026-04-03', start: '17:00', end: '17:30', title: 'Claudeお勉強会', type: 'work' },
+    { date: '2026-04-03', start: '17:30', end: '18:00', title: '全社MTG', type: 'work' },
+    { date: '2026-04-03', start: '18:00', end: '19:00', title: 'Rikyu MVP見積もりレビュー', type: 'work' },
+    { date: '2026-04-04', start: '10:00', end: '12:00', title: '白井さん花見', type: 'primary' },
+    { date: '2026-04-06', start: '10:00', end: '11:00', title: '[in] rikyu algo mtg', type: 'work' },
+    { date: '2026-04-06', start: '14:00', end: '15:00', title: '[Ex] SOMPOケア IT企画部', type: 'work' },
+    { date: '2026-04-07', start: '10:00', end: '11:00', title: '[in] rikyu algo mtg', type: 'work' },
+    { date: '2026-04-07', start: '14:00', end: '15:00', title: '[Ex] SOMPOケア IT企画部', type: 'work' },
+    { date: '2026-04-07', start: '15:00', end: '16:00', title: '[Ex] りそな銀行 期末報告会', type: 'work' },
+    { date: '2026-04-07', start: '16:00', end: '17:00', title: 'Daiquiri 事務手検索 社内定例', type: 'work' },
+    { date: '2026-04-07', start: '18:00', end: '19:00', title: 'Delta デリバリー全体会', type: 'work' }
+  ];
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function fmtDate(d) { return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function parseTime(s) { var p = s.split(':'); return parseInt(p[0],10) + parseInt(p[1],10)/60; }
+  function isToday(d) { var t = new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
+
+  function escapeText(s) {
+    var d = document.createElement('span');
+    d.textContent = s;
+    return d.textContent;
+  }
+
+  var today = new Date();
+  today.setHours(0,0,0,0);
+  var days = [];
+  for (var i = 0; i < DAYS; i++) {
+    var d = new Date(today);
+    d.setDate(today.getDate() + i);
+    days.push(d);
+  }
+
+  // Range label
+  var rangeEl = document.getElementById('cal-range-label');
+  if (rangeEl) {
+    rangeEl.textContent = MONTH_EN[days[0].getMonth()] + ' ' + days[0].getDate() + ' - ' +
+                          MONTH_EN[days[6].getMonth()] + ' ' + days[6].getDate();
+  }
+
+  // Day column headers
+  var headerEl = document.getElementById('cal-week-header');
+  var corner = document.createElement('div');
+  corner.className = 'cal-corner';
+  headerEl.appendChild(corner);
+  days.forEach(function(d) {
+    var div = document.createElement('div');
+    div.className = 'cal-day-col-header' + (isToday(d) ? ' today' : '');
+    var dowSpan = document.createElement('span');
+    dowSpan.className = 'cal-dow';
+    dowSpan.textContent = DOW_JA[d.getDay()];
+    var dateSpan = document.createElement('span');
+    dateSpan.className = 'cal-date-num';
+    dateSpan.textContent = String(d.getDate());
+    div.appendChild(dowSpan);
+    div.appendChild(dateSpan);
+    headerEl.appendChild(div);
+  });
+
+  // Time grid
+  var gridEl = document.getElementById('cal-timegrid');
+  gridEl.style.position = 'relative';
+
+  for (var h = START_HOUR; h <= END_HOUR; h++) {
+    var label = document.createElement('div');
+    label.className = 'cal-time-label';
+    label.textContent = h === START_HOUR ? '' : pad(h) + ':00';
+    gridEl.appendChild(label);
+
+    for (var di = 0; di < DAYS; di++) {
+      var slot = document.createElement('div');
+      slot.className = 'cal-hour-slot';
+      slot.setAttribute('data-day', String(di));
+      slot.setAttribute('data-hour', String(h));
+      gridEl.appendChild(slot);
+    }
+  }
+
+  // Collect slots by day
+  var slotElements = gridEl.querySelectorAll('.cal-hour-slot');
+  var daySlots = [];
+  for (var di = 0; di < DAYS; di++) daySlots.push([]);
+  slotElements.forEach(function(s) {
+    daySlots[parseInt(s.getAttribute('data-day'),10)].push(s);
+  });
+
+  var now = new Date();
+  var nowHours = now.getHours() + now.getMinutes() / 60;
+
+  // Place events after layout
+  requestAnimationFrame(function() {
+    EVENTS.forEach(function(ev) {
+      var di = -1;
+      for (var i = 0; i < days.length; i++) {
+        if (fmtDate(days[i]) === ev.date) { di = i; break; }
+      }
+      if (di < 0) return;
+
+      var startH = parseTime(ev.start);
+      var endH = parseTime(ev.end);
+      var topOffset = (startH - START_HOUR) * HOUR_H;
+      var height = (endH - startH) * HOUR_H;
+      if (height < 20) height = 20;
+
+      var firstSlot = daySlots[di][0];
+      if (!firstSlot) return;
+      var rect = firstSlot.getBoundingClientRect();
+      var gridRect = gridEl.getBoundingClientRect();
+      var left = rect.left - gridRect.left;
+      var width = rect.width;
+
+      var evDiv = document.createElement('div');
+      evDiv.className = 'cal-event cal-' + ev.type;
+      if (isToday(days[di]) && endH <= nowHours) {
+        evDiv.classList.add('past');
+      }
+      evDiv.style.position = 'absolute';
+      evDiv.style.pointerEvents = 'auto';
+      evDiv.style.top = topOffset + 'px';
+      evDiv.style.left = (left + 2) + 'px';
+      evDiv.style.width = (width - 4) + 'px';
+      evDiv.style.height = (height - 2) + 'px';
+
+      var timeSpan = document.createElement('span');
+      timeSpan.className = 'cal-ev-time';
+      timeSpan.textContent = ev.start + ' - ' + ev.end;
+      var titleSpan = document.createElement('span');
+      titleSpan.className = 'cal-ev-title';
+      titleSpan.textContent = ev.title;
+      evDiv.appendChild(timeSpan);
+      evDiv.appendChild(titleSpan);
+      gridEl.appendChild(evDiv);
+    });
+
+    // Now indicator line
+    if (nowHours >= START_HOUR && nowHours <= END_HOUR) {
+      var firstSlot = daySlots[0][0];
+      if (firstSlot) {
+        var rect = firstSlot.getBoundingClientRect();
+        var gridRect = gridEl.getBoundingClientRect();
+        var topPos = (nowHours - START_HOUR) * HOUR_H;
+        var nowLine = document.createElement('div');
+        nowLine.className = 'cal-now-line';
+        nowLine.style.position = 'absolute';
+        nowLine.style.top = topPos + 'px';
+        nowLine.style.left = (rect.left - gridRect.left) + 'px';
+        nowLine.style.width = rect.width + 'px';
+        gridEl.appendChild(nowLine);
+      }
+    }
+
+    // Scroll to around current time
+    var scrollTo = Math.max(0, (Math.min(nowHours, 10) - START_HOUR) * HOUR_H - 40);
+    gridEl.scrollTop = scrollTo;
+  });
+
+  // Click empty slot to open add modal
+  gridEl.addEventListener('click', function(e) {
+    var slot = e.target.closest('.cal-hour-slot');
+    if (!slot) return;
+    var di = parseInt(slot.getAttribute('data-day'), 10);
+    var h = parseInt(slot.getAttribute('data-hour'), 10);
+    openAddModal(days[di], h);
+  });
+
+  function openAddModal(date, hour) {
+    var modal = document.getElementById('cal-modal');
+    document.getElementById('cal-new-date').value = fmtDate(date);
+    document.getElementById('cal-new-start').value = pad(hour) + ':00';
+    document.getElementById('cal-new-end').value = pad(hour + 1) + ':00';
+    document.getElementById('cal-new-title').value = '';
+    document.getElementById('cal-modal-title').textContent =
+      'Add Event \u2014 ' + (date.getMonth()+1) + '/' + date.getDate() + ' ' + pad(hour) + ':00';
+    modal.classList.add('show');
+    setTimeout(function() { document.getElementById('cal-new-title').focus(); }, 100);
+  }
+
+  document.getElementById('cal-modal-cancel').addEventListener('click', function() {
+    document.getElementById('cal-modal').classList.remove('show');
+  });
+  document.getElementById('cal-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  document.getElementById('cal-modal-save').addEventListener('click', function() {
+    var title = document.getElementById('cal-new-title').value.trim();
+    if (!title) { document.getElementById('cal-new-title').focus(); return; }
+    var date = document.getElementById('cal-new-date').value;
+    var start = document.getElementById('cal-new-start').value;
+    var end = document.getElementById('cal-new-end').value;
+    var type = document.getElementById('cal-new-type').value;
+    var typeLabel = type === 'work' ? 'Work' : type === 'primary' ? 'Personal' : 'Other';
+
+    var STORAGE_KEY = 'hd-dashboard-inbox';
+    var items = [];
+    try { items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(ex) {}
+    items.push({
+      id: Date.now(),
+      type: 'task',
+      company: 'hd',
+      text: '[Calendar] ' + date + ' ' + start + '-' + end + ' (' + typeLabel + ') ' + title,
+      createdAt: new Date().toISOString()
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+
+    var countEl = document.getElementById('inbox-count');
+    if (countEl) countEl.textContent = String(items.length);
+
+    document.getElementById('cal-modal').classList.remove('show');
+
+    var toast = document.getElementById('toast');
+    if (toast) {
+      toast.textContent = 'Event added to Inbox';
+      toast.classList.add('show');
+      setTimeout(function() { toast.classList.remove('show'); }, 2000);
+    }
+  });
 })();
 </script>
 
