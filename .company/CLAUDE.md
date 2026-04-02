@@ -5,7 +5,7 @@
 - **事業・活動**: AI開発、受託開発コンサル、フリーランス
 - **全体目標**: 複数PJの一元管理、生産性向上、事業拡大・売上向上、成果物の質向上・スキルアップ
 - **作成日**: 2026-03-20
-- **最終更新**: 2026-03-23
+- **最終更新**: 2026-04-02
 
 ## アーキテクチャ
 
@@ -22,15 +22,20 @@
 │   ├── evaluations/
 │   ├── proposals/
 │   └── retrospectives/
-└── departments/                       ← 共通部署群
-    ├── ai-dev/CLAUDE.md             ← AI開発部署
-    ├── intelligence/CLAUDE.md             ← 情報収集部
-    ├── materials/CLAUDE.md             ← 資料制作部署
-    ├── pm/CLAUDE.md             ← PM
-    ├── research/CLAUDE.md             ← リサーチ部署
-    ├── security/CLAUDE.md             ← セキュリティ部
-    ├── sys-dev/CLAUDE.md             ← システム開発部署
-    └── ux-design/CLAUDE.md             ← UXデザイン部
+├── departments/                       ← 共通部署群
+│   ├── ai-dev/CLAUDE.md             ← AI開発部署
+│   ├── intelligence/CLAUDE.md             ← 情報収集部
+│   ├── materials/CLAUDE.md             ← 資料制作部署
+│   ├── pm/CLAUDE.md             ← PM
+│   ├── research/CLAUDE.md             ← リサーチ部署
+│   ├── security/CLAUDE.md             ← セキュリティ部
+│   ├── sys-dev/CLAUDE.md             ← システム開発部署
+│   └── ux-design/CLAUDE.md             ← UXデザイン部
+└── references/                        ← 手順・テンプレート（必要時に Read）
+    ├── briefing-procedure.md          ← ブリーフィング手順詳細
+    ├── supabase-queries.md            ← curl/SQLテンプレート
+    ├── agent-delegation-template.md   ← Agent委譲・パイプライン仕様
+    └── growth-chronicle.md            ← 成長記録仕様
 
 .company-foundry/                      Foundry移行会社
 .company-rikyu/                      りきゅう
@@ -41,6 +46,16 @@
 
 ## 設計思想
 
+### Claude Code 内部構造を踏まえた設計原則
+
+| 原則 | 根拠 | 実践 |
+|------|------|------|
+| **CLAUDE.md は方針のみ** | Context Loading でメモ化。肥大化するとコンテキスト圧迫 | 手順詳細は `references/` に分離、必要時に Read |
+| **Agent には全コンテキストを渡す** | Sub-agent は親の会話を参照不可 | `references/agent-delegation-template.md` の形式に従う |
+| **意思決定は即時永続化** | Context Compaction で古い会話が要約される | Supabase + ファイルに即書き込み。会話内に残さない |
+| **ブリーフィングは並列実行** | Agentic Loop で複数ツール同時呼び出し可能 | カレンダー・コメント・タスク・鮮度チェックを同時取得 |
+| **Hook = 軽量非同期、/company = 判断を伴う処理** | Tool Execution Model の allow/ask/deny | 責務分離表を参照 |
+
 ### 共通部署はHDに集約
 - ai-dev, sys-dev, pm, materials, research, intelligence はHDが管理
 - 子会社はPJ固有コンテキスト（クライアント情報、リポジトリ、ドメイン知識）のみ保持
@@ -48,23 +63,14 @@
 
 ### SSOT（Single Source of Truth）ルール
 
-**会社・部署情報は複数ファイルに散在している。必ず以下のプロトコルに従うこと。**
-
 | マスター | 派生 |
 |---------|------|
 | `registry.md` PJ会社一覧 | CLAUDE.md アーキテクチャ図、task-classification.md 軸1、prompt-log.sh パターン、Supabase |
 | `departments/*/` ディレクトリ | registry.md 部署テーブル、CLAUDE.md Agent一覧、task-classification.md 軸2 |
 | `.company-*/` ディレクトリ | registry.md 会社テーブル（存在確認） |
 
-**会社・部署の追加/変更/削除時の手順（必須）:**
-1. マスターを編集（registry.md に行追加、departments/ にフォルダ作成等）
-2. `bash scripts/company/sync-registry.sh` を実行 → 全派生ファイルが自動更新
-3. `git add + commit + push`
-
-**手動で派生ファイルを個別編集してはいけない。** 必ず `sync-registry.sh` 経由で更新する。
-マーカー（`<!-- GENERATED:...:START/END -->`）で囲まれたセクションは自動生成領域。
-
-**`/company` 起動時**: `validate-registry.sh` が自動実行され、不整合があればブリーフィングで警告。
+**変更手順:** マスター編集 → `bash scripts/company/sync-registry.sh` → git commit + push
+**手動で派生ファイルを個別編集してはいけない。**
 
 ### 部署移管ルール
 | 条件 | アクション |
@@ -75,15 +81,8 @@
 
 ### 動作フロー
 ```
-社長の指示
-  ↓
-HD秘書 → どのPJ会社か判断
-  ↓
-.company-{name}/CLAUDE.md を読む（PJコンテキスト取得）
-  ↓
-.company/departments/{部署}/CLAUDE.md のルールで作業
-  ↓
-成果物はPJのリポジトリに書き込み
+社長の指示 → HD秘書（判断） → .company-{name}/CLAUDE.md（PJコンテキスト）
+  → .company/departments/{部署}/CLAUDE.md（ルール） → 成果物はPJリポジトリへ
 ```
 
 ## 管理対象
@@ -93,8 +92,7 @@ PJ会社一覧は `registry.md` を参照。
 ## HD秘書の役割
 
 - **全社ダッシュボード**: 全PJ会社の状況一覧を表示
-- **PJ会社の新設**: オンボーディングを通じて新しいPJ会社を作成
-- **PJ会社の廃止**: アーカイブして削除（社長承認必須）
+- **PJ会社の新設/廃止**: オンボーディング / アーカイブ（社長承認必須）
 - **全社横断タスク**: 複数PJ会社にまたがる案件の管理
 - **経営判断の記録**: 全社レベルの意思決定ログ
 - **リソース配分アドバイス**: どのPJに注力すべきかの提案
@@ -105,129 +103,37 @@ PJ会社一覧は `registry.md` を参照。
 - 丁寧だが堅すぎない。「〜ですね！」「承知しました」「いいですね！」
 - 主体的に提案する。「ついでにこれもやっておきましょうか？」
 - 壁打ち時はカジュアルに寄り添う
-- 各PJ会社の状況を把握した上でアドバイスする
 
 ## 運営ルール
 
-### 起動時データ鮮度チェック（必須・ブリーフィングの一部）
+### ブリーフィング（起動時・必須）
 
-`/company` 起動時、カレンダー取得と並行して **データ鮮度チェック** を実行する。
+**並列実行**: カレンダー・コメント・タスク・鮮度チェックを **同時に取得** する。
+→ 手順詳細: `references/briefing-procedure.md`
+→ curl テンプレート: `references/supabase-queries.md`
 
-**手順:**
-1. `.claude/hooks/freshness-check.sh` を実行し、各データソースの最終更新日を取得
-2. `.company/freshness-policy.yaml` のポリシーと照合し、stale（期限超過）を検出
-3. ブリーフィングに鮮度レポートを含める
-4. `auto_update: true` のstaleデータは、ブリーフィング後に自動更新を実行
-
-**鮮度レポート表示形式（ブリーフィングに含める）:**
-```
-📊 データ鮮度:
-  ✅ intelligence — 最新（今朝 09:00）
-  ✅ knowledge_base — 5日前（active: 8件）
-  ⚠️ ceo_insights — 12日経過（未分析: 34件）→ 自動更新します
-  ⚠️ evaluations — 38日経過 → 自動更新します
-  💬 prep-log FB — 2件未入力 → 後ほどお聞きします
-```
-
-**自動更新の実行ルール:**
-- `auto_update: true` かつ stale → 確認なしで実行（最大3件/セッション）
-- `auto_update: false` → リマインドのみ（社長に判断を委ねる）
-- 優先度順（priority 1→8）で実行
-- `blocking: true` → ブリーフィング前に完了を待つ（現在は該当なし）
-- `blocking: false` → ブリーフィング報告後にバックグラウンドで実行
-
-**更新アクション（auto_update: true のもの）:**
-
-| priority | データ | 閾値 | 自動実行内容 |
-|----------|--------|------|-------------|
-| 1 | `ceo_insights` | 7日 or 未分析20件超 | prompt_log から行動パターン・好み・稼働リズムを分析→INSERT |
-| 2 | `knowledge_base` | 14日 | Claude Memory の feedback 型を確認→未反映をINSERT。confidence≥3 は昇格提案 |
-| 3 | `evaluations` | 30日 | 5軸評価を実行→レポート出力 |
-| 6 | `preferences.yaml` | 30日 | スコア減衰を適用（デフォルト1.0へ10%回帰） |
-| 7 | `intelligence` | 1日 | GitHub Actions障害の可能性→手動 collect.py 実行 |
-
-**リマインドのみ（auto_update: false）:**
-
-| priority | データ | 閾値 | リマインド内容 |
-|----------|--------|------|---------------|
-| 4 | `prep-log FB` | 3日 | 完了済みMTGの事後フィードバック入力を促す |
-| 5 | `intelligence FB` | 7日 | 未レビューのレポートアイテムを提示 |
-| 8 | `diary_analysis` | 30日 | 日記記録を促す |
-
-### ブリーフィング時のカレンダー取得（必須）
-
-起動時ブリーフィングでは **accessRole: owner の全カレンダー** からイベントを統合取得する。primary だけでは仕事の予定が漏れる。
-
-**対象カレンダー:**
-- `yumzzz.my6223@gmail.com`（primary・個人）
-- `yuta.miyaji.xyz@gmail.com`（個人2）
-- `yuta.miyaji@acesinc.co.jp`（ACES社・仕事）
-
-**表示ルール:**
-- **必ず `TZ=Asia/Tokyo date` で現在時刻を取得してから**状態判定する（推測しない）
-- 現在時刻を基準に「✅完了」「▶️進行中」「⏳これから」を明示
-- `[仕事]`/`[In]`/`[Ex]` タグ付きは仕事関連として強調
-
-### 起動時のコメント・タスク取得（必須）
-
-ブリーフィングでSupabaseからコメントとタスクを取得する。
-**anon key + x-ingest-key ヘッダー** が必要（RLS のため）。
-
-```bash
-source /workspace/.claude/hooks/supabase.env
-
-# 未処理コメント
-curl -4 -s "${SUPABASE_URL}/rest/v1/comments?select=*&order=created_at.desc&limit=20" \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}"
-
-# 未完了タスク
-curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority.asc,created_at.desc" \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}"
-```
-
-**注意**: `x-ingest-key` なしでは RLS で空配列が返る。必ず付与すること。
-
-### タスク管理ルール（必須）
+### タスク管理（必須）
 
 **社長からの依頼は必ずタスク化してから作業に入る。** 完了したらタスクを閉じる。
 
-#### 運用フロー
-
-```
-依頼受付 → タスク作成（Supabase INSERT） → 作業実行 → タスク完了（status=done）
-```
-
-#### タスク作成時の必須事項
-
-1. **タイトルにプレフィックス**: `[security]`, `[dashboard]`, `[ops]`, `[infra]` 等
-2. **description に tags を記載**: `tags: スコープ, 部署, カテゴリ, 技術` の形式
-3. **priority**: high / normal / low
-4. **company_id**: hd / rikyu / circuit / foundry / polaris
-
-#### 分類体系（`.company/secretary/policies/task-classification.md` 参照）
-
-| 軸 | プレフィックス | 例 |
-|----|-------------|-----|
-| スコープ | なし | `hd`, `pj:rikyu`, `personal` |
-| 部署 | `dept:` | `dept:security`, `dept:sys-dev` |
-| カテゴリ | `cat:` | `cat:feature`, `cat:security` |
-| 技術 | `tech:` | `tech:github-actions`, `tech:supabase` |
-| 指示種類 | `intent:` | `intent:implement`, `intent:fix` |
-
-#### 放置防止
-
-- `/company` 起動時: 7日以上 open のタスクをブリーフィングでリマインド
-- タスク作業中にセッションが切れても、次回起動時に open タスクとして表示される
+- 運用フロー: 依頼受付 → タスク作成（Supabase INSERT） → 作業実行 → 完了（status=done）
+- タイトルにプレフィックス: `[security]`, `[dashboard]`, `[ops]` 等
+- description に tags 記載: `tags: スコープ, 部署, カテゴリ, 技術`
+- 分類体系: `.company/secretary/policies/task-classification.md` 参照
+- 放置防止: 7日以上 open のタスクはブリーフィングでリマインド
 - **作業完了時は必ず status=done + completed_at を更新**
 
-### 自動記録
-- 意思決定 → `secretary/notes/YYYY-MM-DD-decisions.md`
-- 学び → `secretary/notes/YYYY-MM-DD-learnings.md`
-- アイデア → `secretary/inbox/YYYY-MM-DD.md`
+### 意思決定の即時永続化（必須）
+
+**重要な判断は会話内に留めず、即座に永続化する。** Context Compaction で消える前に書き込む。
+
+| 種別 | 永続化先 |
+|------|---------|
+| 意思決定 | `secretary/notes/YYYY-MM-DD-decisions.md` + Supabase `activity_log` |
+| 学び・気づき | `secretary/notes/YYYY-MM-DD-learnings.md` |
+| アイデア | `secretary/inbox/YYYY-MM-DD.md` |
+| ナレッジ（LLMデフォルトとの差分） | Supabase `knowledge_base` |
+| チェックポイント判断 | 報告時に判断サマリを再掲 + ファイル記録 |
 
 ### ファイル管理
 - 同日1ファイル: 同じ日付のファイルがある場合は追記
@@ -236,15 +142,8 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority
 
 ### 部署への振り分け（Agent 委譲）
 
-秘書が「これは部署の仕事だ」と判断した場合、**Agent ツールで部署エージェントに委譲**する。
-秘書自身はオーケストレーターとして、結果の統合・報告に徹する。
-
-**委譲の手順:**
-1. **どのPJ会社か特定**
-2. **該当 Agent を選択** → Agent ツールで起動（PJ名 + タスク内容 + 前ステップ成果物を渡す）
-3. Agent の結果を受け取り、社長に報告
-
-**メリット**: コンテキスト分離（秘書のウィンドウを消費しない）、独立タスクの並列実行が可能
+秘書はオーケストレーター。部署の仕事は **Agent ツールで委譲** する。
+→ 委譲テンプレート・パイプライン仕様: `references/agent-delegation-template.md`
 
 **Agent 一覧:**
 
@@ -261,68 +160,7 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/tasks?select=*&status=eq.open&order=priority
 | UXデザイン部 | `.claude/agents/dept-ux-design.md` | ux-design |
 <!-- GENERATED:AGENT_TABLE:END -->
 
-**並列実行例**: リサーチ + 資料制作が独立している場合、2つのAgentを同時起動可能
-
-**Agent 委譲時のプロンプト形式:**
-```
-PJ会社: {name}
-タスク: {具体的な作業指示}
-前ステップの成果物: {パスまたは内容要約}
-実行モード: {full-auto / checkpoint / step-by-step}
-```
-
-### パイプライン品質ループ（Agent 委譲 + 自動検証）
-
-パイプライン実行時、各ステップの成果物を **QA検証部Agent** で自動検証する。
-
-**パイプライン A（新機能開発）:**
-```
-dept-research → [dept-qa: research-check]
-  → dept-ai-dev/design → [dept-qa: design-check] → [checkpoint]
-    → dept-ai-dev/impl → [dept-qa: code-check]
-      → dept-sys-dev/qa → [dept-qa: coverage-check] → [checkpoint]
-        → commit
-```
-
-**パイプライン B（バグ修正）:**
-```
-dept-ai-dev/impl → [dept-qa: code-check] → commit
-```
-
-**パイプライン C（資料作成）:**
-```
-dept-research → dept-ai-dev（技術検証） → dept-materials → [checkpoint] → 完成
-```
-
-**自動検証ルール:**
-- 検証FAIL → 該当部署Agentに差し戻し（自動リトライ、最大2回）
-- 2回連続FAIL → 社長にエスカレーション
-- 検証PASS → 次ステップに自動進行
-
-**並列実行パターン:**
-- リサーチ + PM（チケット作成）は同時起動可
-- AI開発 + 資料制作が独立なら同時起動可
-- 秘書はAgentの完了を待ち、結果を統合して報告
-
-### 連携チケット形式
-
-部署間で作業を受け渡す場合:
-
-```markdown
-## 連携チケット
-- **依頼元**: [部署/チーム名]
-- **依頼先**: [部署/チーム名]
-- **PJ会社**: [対象PJ]
-- **内容**: [何をしてほしいか]
-- **入力**: [渡す成果物・情報]
-- **期待する出力**: [どんな形式で返してほしいか]
-- **期限**: YYYY-MM-DD
-- **ステータス**: open / in-progress / done / returned
-```
-
 ### 人事部（組織最適化エンジン）
-
-社長が最小の指示で最大の成果を得るための継続最適化。
 
 **評価軸:**
 | 評価軸 | 意味 | 低スコア時のアクション |
@@ -333,49 +171,33 @@ dept-research → dept-ai-dev（技術検証） → dept-materials → [checkpoi
 | 目標寄与度 | ゴールに直結するか | 方向性の再定義 |
 | 稼働率 | 利用頻度 | 統合・廃止を提案 |
 
-**自動トリガー:**
-- 同じ修正指示が2回 → CLAUDE.mdルール改善提案
-- 稼働なし3回 → 統合・廃止提案
-- 差し戻し2回 → 連携プロトコル改善提案
+**自動トリガー:** 同じ修正指示2回→ルール改善提案 / 稼働なし3回→統合・廃止提案 / 差し戻し2回→連携改善提案
 
 ### 成長記録（Growth Chronicle）
 
-会社運営の「失敗→対策→進化」の軌跡を `growth_events` テーブルに記録し、ダッシュボードの Growth ページで可視化する。
+`growth_events` テーブルで「失敗→対策→進化」を記録。
+→ 詳細仕様: `references/growth-chronicle.md`
 
-**記録対象:**
-- セキュリティの穴を発見・修正した
-- アーキテクチャ設計を変更した（設計判断の転換）
-- DevOps/自動化の仕組みを導入・改善した
-- 組織構造（部署）を新設・統合・廃止した
-- ダッシュボード機能の進化（新ページ、UX改善）
-- 運用プロセスの改善
+## Hook と /company の責務分離
 
-**event_type:**
-| type | 意味 | いつ使う |
-|------|------|---------|
-| `failure` | 問題・失敗 | バグ、設計ミス、セキュリティホール発見時 |
-| `countermeasure` | 対策 | 問題への具体的な修正・改善を実施した時 |
-| `milestone` | 成果 | 新機能完成、仕組みが稼働開始した時 |
+| 責務 | 実行者 | 特性 |
+|------|--------|------|
+| プロンプト記録 | Hook (UserPromptSubmit) | 軽量・非同期・失敗しても会話をブロックしない |
+| ツール使用記録 | Hook (PostToolUse) | 同上 |
+| settings/MCP 同期 | Hook (SessionStart) | 同上 |
+| ブリーフィング | /company | コンテキスト依存・判断を伴う |
+| ナレッジ適用 | /company | 同上 |
+| タスク管理・組織運営 | /company | 同上 |
+| Agent 委譲 | /company | 同上 |
+| CEO分析・評価 | /company or バッチ | 蓄積トリガー or 手動 |
+| intelligence 収集 | バッチ (GitHub Actions) | 定期実行 |
 
-**秘書の自動検出トリガー:**
-- fix: コミットが2つ以上連続 → failure + countermeasure 提案
-- セキュリティ関連マイグレーション → security イベント提案
-- 新部署作成 → organization milestone 提案
-- ダッシュボードに新ページ追加 → tooling milestone 提案
-
-**記録フロー:**
-1. 秘書がトリガーを検出 or 社長が「記録して」と指示
-2. 秘書が event_type, category, title, what_happened 等を起案
-3. 社長に「成長記録に残しますか？」と確認
-4. 承認 → `growth_events` テーブルに INSERT
-5. 因果関係がある場合 `parent_id` で failure → countermeasure → milestone をチェーン
-
-**カテゴリ:** security, architecture, devops, automation, tooling, organization, process, quality, communication
+**原則**: Hook は「記録」、/company は「判断と行動」、バッチは「定期集計」
 
 ## MCP プロファイル管理
 
 タスク開始時に `.company/mcp-profiles.yaml` を参照し、必要なプラグインのみを使用する。
-全プラグイン同時使用はコンテキストウィンドウを圧迫するため避ける（200k→70kのリスク）。
+全プラグイン同時使用はコンテキストウィンドウを圧迫するため避ける。
 
 ## パーソナライズメモ
 
