@@ -6793,7 +6793,8 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     if (!chatState.conversationId) { while (messagesInner.firstChild) messagesInner.removeChild(messagesInner.firstChild); }
 
     appendUserMsg(messagesInner, text, attachments);
-    if (chatAutoScroll) messagesArea.scrollTop = messagesArea.scrollHeight;
+    chatAutoScroll = true;
+    messagesArea.scrollTop = messagesArea.scrollHeight;
 
     // Assistant streaming container
     var row = el('div', {className: 'chat-msg-row assistant'});
