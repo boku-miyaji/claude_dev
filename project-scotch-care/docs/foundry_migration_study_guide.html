@@ -359,6 +359,10 @@
   <a href="#faq-llm-models">モデル対応表</a>
   <a href="#faq-llm-snowflake">Snowflake vs Databricks</a>
   <a href="#faq-llm-architecture">推奨アーキテクチャ</a>
+  <a href="#faq-lockin" class="section-title" style="color:var(--amber);">ロックイン比較<span class="nav-badge badge-strategy">NEW</span></a>
+  <a href="#faq-lockin-overview">総合評価</a>
+  <a href="#faq-lockin-detail">軸別比較</a>
+  <a href="#faq-lockin-verdict">Foundryの轍を踏まないために</a>
 </nav>
 
 <main>
@@ -3238,6 +3242,136 @@ Object Type: <span class="highlight">施設</span>
         <li>医療・介護データの<strong>ガバナンス要件</strong>が厳格 → Snowflakeの「データが外に出ない」保証は大きな強み</li>
         <li>RFI段階で<strong>Databricksが有力候補</strong>に入っている場合、パターンA or Bが現実的</li>
         <li>Claude + OpenAIの両方を使うニーズが確定なら、Snowflake Cortex の採用可否をMTGで議論すべき</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ロックイン比較 -->
+  <section id="faq-lockin">
+    <h2>ロックイン比較 — Foundryの轍を踏まないために</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">移行先選定の最重要論点: Foundryからの移行理由がロックインである以上、移行先で同じ問題を繰り返さないかを検証する（2026-04-02 調査）</p>
+
+    <h3 id="faq-lockin-overview">総合ロックインリスク評価</h3>
+    <table>
+      <tr><th>プラットフォーム</th><th>総合リスク</th><th>評価</th></tr>
+      <tr>
+        <td><strong>Foundry（現行）</strong></td>
+        <td><span style="color:var(--red);font-weight:700;">高</span></td>
+        <td>全軸で高ロックイン。独自オントロジー、独自パイプライン、独自UI。移行動機そのもの</td>
+      </tr>
+      <tr>
+        <td><strong>Databricks</strong></td>
+        <td><span style="color:var(--green);font-weight:700;">低〜中</span></td>
+        <td>OSS中心戦略（Unity Catalog OSS化、Delta Lake、MLflow）。最もオープン</td>
+      </tr>
+      <tr>
+        <td><strong>Snowflake</strong></td>
+        <td><span style="font-weight:700;color:var(--amber);">中</span></td>
+        <td>Iceberg/Polaris推進でオープン化が進行中。ただし独自テーブルに全面依存すると中リスク</td>
+      </tr>
+      <tr>
+        <td><strong>Amazon Bedrock (+AWS)</strong></td>
+        <td><span style="font-weight:700;color:var(--amber);">中〜高</span></td>
+        <td>AI単体は有用だが、AWSエコシステム全体への依存が「別の種類のロックイン」になる</td>
+      </tr>
+    </table>
+
+    <h3 id="faq-lockin-detail">軸別ロックイン比較</h3>
+    <table>
+      <tr>
+        <th>ロックイン軸</th>
+        <th>Foundry</th>
+        <th>Databricks</th>
+        <th>Snowflake</th>
+        <th>AWS (Bedrock含む)</th>
+      </tr>
+      <tr>
+        <td><strong>データフォーマット</strong></td>
+        <td style="color:var(--red);">高<br><span style="font-size:11px;color:var(--text-muted)">独自バイナリ</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">Parquet/Delta (OSS)<br>Delta UniFormでIceberg互換</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">Icebergテーブル使用時<br>独自テーブルは中</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">S3 + Parquet/Iceberg</span></td>
+      </tr>
+      <tr>
+        <td><strong>カタログ / メタデータ</strong></td>
+        <td style="color:var(--red);">高<br><span style="font-size:11px;color:var(--text-muted)">Ontology独自</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">Unity Catalog OSS化済<br>Hive互換</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">Polaris Catalog (OSS)<br>ただし成熟途上</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">Glue Data Catalog<br>AWS固有</span></td>
+      </tr>
+      <tr>
+        <td><strong>コンピュート / マルチクラウド</strong></td>
+        <td style="color:var(--red);">高<br><span style="font-size:11px;color:var(--text-muted)">Foundry SaaS固定</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">AWS/Azure/GCP全対応<br>コミットメント共有可</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">AWS/Azure/GCP対応<br>だがクロスクラウドにコスト</span></td>
+        <td style="color:var(--red);">高<br><span style="font-size:11px;color:var(--text-muted)">AWS固定</span></td>
+      </tr>
+      <tr>
+        <td><strong>LLM / AI機能</strong></td>
+        <td style="color:var(--red);">高<br><span style="font-size:11px;color:var(--text-muted)">AIP + OAG独自</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">MLflow (OSS)<br>External Modelsは標準API</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">AI_COMPLETE()等に依存すると<br>SQL書き換えが必要</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">Bedrock APIは独自<br>ただしモデル自体は標準</span></td>
+      </tr>
+      <tr>
+        <td><strong>ETL / パイプライン</strong></td>
+        <td style="color:var(--red);">高<br><span style="font-size:11px;color:var(--text-muted)">独自パイプライン</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">Spark (OSS) + dbt対応<br>Notebooks互換</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">Snowpipe/Tasks独自<br>dbt対応で軽減可</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">Glue/Step Functions<br>dbt対応で軽減可</span></td>
+      </tr>
+      <tr>
+        <td><strong>人材 / スキルセット</strong></td>
+        <td style="color:var(--red);">高<br><span style="font-size:11px;color:var(--text-muted)">Foundry専門知識</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">Spark/Python/SQL<br>市場に豊富</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">SQL中心<br>最も採用しやすい</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">AWS認定必要<br>市場に豊富</span></td>
+      </tr>
+      <tr>
+        <td><strong>契約 / Egress</strong></td>
+        <td style="color:var(--red);">高<br><span style="font-size:11px;color:var(--text-muted)">長期コミットメント</span></td>
+        <td style="color:var(--green);">低<br><span style="font-size:11px;color:var(--text-muted)">クラウド横断DBU共有<br>Egress = クラウド依存</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">年間コミットメント前提<br>Egress最適化ツールあり</span></td>
+        <td style="color:var(--amber);">中<br><span style="font-size:11px;color:var(--text-muted)">AWSコミットメント<br>Egressコスト高い</span></td>
+      </tr>
+    </table>
+
+    <h3 id="faq-lockin-verdict">Foundryの轍を踏まないために</h3>
+    <div class="callout danger">
+      <strong>Foundryのロックイン構造（これを繰り返さない）:</strong>
+      <ul style="margin-top:8px;">
+        <li>独自データフォーマット → エクスポートに数ヶ月</li>
+        <li>独自オントロジー → 移行先に同等概念がない</li>
+        <li>独自UI/ワークフロー → ユーザー再教育コスト</li>
+        <li>Foundry専門人材 → 市場に少なく単価高い</li>
+      </ul>
+    </div>
+
+    <div class="card-grid">
+      <div class="card" style="border-left:3px solid var(--green);">
+        <h4>Databricks: 最もオープン</h4>
+        <p>OSS戦略が徹底。Unity Catalog OSS化、Delta UniFormでIceberg互換、MLflowが業界標準。<strong>「いつでも出られる」設計</strong>。マルチクラウドでコミットメント共有もできるため、クラウドベンダー自体のロックインも軽減。</p>
+        <p style="margin-top:8px;"><span class="tag" style="background:rgba(34,197,94,0.2);color:var(--green);">Foundryと真逆のアプローチ</span></p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--amber);">
+        <h4>Snowflake: 条件付きでオープン</h4>
+        <p><strong>Icebergテーブルを積極採用すればリスク低減可能。</strong> 独自テーブルに全面依存するとFoundryほどではないが中リスク。Cortex AI関数（AI_COMPLETE等）への依存は、移行時にSQL書き換えが必要。Polaris Catalog (OSS) の成熟度に注意。</p>
+        <p style="margin-top:8px;"><span class="tag" style="background:rgba(245,158,11,0.2);color:var(--amber);">使い方次第</span></p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--red);">
+        <h4>AWS全面依存: 別の種類のロックイン</h4>
+        <p>Bedrock単体のロックインは中程度だが、Glue + S3 + Lambda + Step Functions + Bedrock と全面依存すると<strong>「Foundry→AWSに置き換わっただけ」</strong>になるリスク。dbt等のOSSレイヤーを挟むことで軽減可能。</p>
+        <p style="margin-top:8px;"><span class="tag" style="background:rgba(239,68,68,0.2);color:var(--red);">要注意</span></p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>MTGでの推奨論点:</strong>
+      <ul style="margin-top:8px;">
+        <li>データフォーマットは<strong>Icebergに統一</strong>する方針か？ → Databricks/Snowflake両方で読み書き可能になる</li>
+        <li>ETLは<strong>dbt等のOSSレイヤー</strong>を挟むか？ → ベンダー交換可能性が大幅向上</li>
+        <li>LLM機能は<strong>標準API呼び出し</strong>で実装するか、プラットフォーム固有関数に依存するか？</li>
+        <li>5年後に「別の基盤に移りたい」となった時の<strong>脱出コスト</strong>を各ベンダーに確認すべき</li>
       </ul>
     </div>
   </section>
