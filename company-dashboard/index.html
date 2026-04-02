@@ -500,7 +500,8 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
       <div class="logo-icon">M</div>
       宮路HD
     </div>
-    <button class="nav-item active" data-page="calendar"><span class="nav-icon">📅</span> Calendar</button>
+    <button class="nav-item active" data-page="home"><span class="nav-icon">◉</span> Home</button>
+    <button class="nav-item" data-page="calendar"><span class="nav-icon">📅</span> Calendar</button>
     <div class="nav-group-label">Management</div>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
@@ -566,6 +567,7 @@ var sb = null;
 // Mobile tab definitions & click-based priority
 // ============================================================
 var ALL_MOB_TABS = [
+  {page: 'home', icon: '◉', label: 'Home'},
   {page: 'calendar', icon: '📅', label: 'Calendar'},
   {page: 'finance', icon: '¥', label: 'Finance'},
   {page: 'tasks', icon: '☐', label: 'Tasks'},
@@ -585,7 +587,7 @@ var ALL_MOB_TABS = [
 ];
 var MOB_PRIMARY_COUNT = 5; // Number of primary tabs (excluding "More")
 var tabClickCounts = {}; // {page: count}
-var currentPage = 'calendar';
+var currentPage = 'home';
 
 // ============================================================
 // Init
@@ -679,7 +681,7 @@ async function showApp(user) {
   document.addEventListener('keydown', function(e) {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCommandPalette(); }
   });
-  var startPage = (window.location.hash || '').replace('#', '') || 'calendar';
+  var startPage = (window.location.hash || '').replace('#', '') || 'home';
   navigate(startPage);
 }
 
@@ -1065,6 +1067,7 @@ function openCommandPalette() {
   cmdPaletteOpen = true;
 
   var NAV_ITEMS = [
+    {icon: '◉', label: 'Home', page: 'home', group: 'Pages'},
     {icon: '📅', label: 'Calendar', page: 'calendar', group: 'Pages'},
     {icon: '☐', label: 'Tasks', page: 'tasks', group: 'Management'},
     {icon: '◫', label: 'Companies', page: 'companies', group: 'Management'},
@@ -1187,6 +1190,7 @@ function renderPage(page) {
   var p = el('div', {className: 'page'});
   c.appendChild(p);
   var renderers = {
+    home: renderDashboard,
     calendar: renderCalendar,
     tasks: renderTasks,
     companies: renderCompanies,
@@ -1722,93 +1726,171 @@ async function renderCalendar(root) {
 // Dashboard Page
 // ============================================================
 async function renderDashboard(root) {
-  root.appendChild(el('div', {className: 'page-title', textContent: 'Dashboard'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: '全PJ会社の横断ビュー'}));
+  var now = new Date();
+  var todayStr = toLocalDateStr(now);
+  var year = now.getFullYear();
+  var monthStr = year + '-' + String(now.getMonth()+1).padStart(2,'0');
 
-  // Skeleton while loading
-  var skelContainer = el('div', {}, [skeletonGrid(4, 4, 'skeleton-kpi'), el('div', {style:'height:14px'}), skeletonGrid(3, 3, 'skeleton-card')]);
-  root.appendChild(skelContainer);
+  // Greeting
+  var hour = now.getHours();
+  var greeting = hour < 12 ? 'おはようございます' : hour < 18 ? 'こんにちは' : 'お疲れさまです';
+  root.appendChild(el('div', {style: 'margin-bottom:24px'}, [
+    el('div', {style: 'font-size:20px;font-weight:700', textContent: greeting}),
+    el('div', {style: 'font-size:13px;color:var(--text3);margin-top:4px', textContent: now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+['日','月','火','水','木','金','土'][now.getDay()]+'）'})
+  ]));
 
-  var [companies, tasks] = await Promise.all([
-    sb.from('companies').select('*').eq('status', 'active'),
-    sb.from('tasks').select('*').in('status', ['open', 'in_progress'])
+  // Fetch all data in parallel
+  var startOfYear = year+'-01-01';
+  var endOfYear = year+'-12-31';
+  var [tasksRes, invRes, expRes, insightsRes, diaryRes, commentsRes, knowledgeRes] = await Promise.all([
+    sb.from('tasks').select('*').in('status', ['open','in_progress']).order('priority,created_at'),
+    sb.from('invoices').select('amount,invoice_date,client_name').gte('invoice_date', startOfYear).lte('invoice_date', endOfYear),
+    sb.from('expenses').select('amount').gte('expense_date', startOfYear).lte('expense_date', endOfYear),
+    sb.from('ceo_insights').select('*').order('created_at', {ascending:false}).limit(5),
+    sb.from('diary_entries').select('entry_date,body,wbi_score').order('entry_date', {ascending:false}).limit(3),
+    sb.from('comments').select('*').order('created_at', {ascending:false}).limit(5),
+    sb.from('knowledge_base').select('*').eq('status','active').order('confidence', {ascending:false}).limit(5)
   ]);
 
-  skelContainer.parentNode.removeChild(skelContainer);
+  var tasks = tasksRes.data || [];
+  var invoices = invRes.data || [];
+  var expenses = expRes.data || [];
+  var insights = insightsRes.data || [];
+  var diaries = diaryRes.data || [];
+  var comments = commentsRes.data || [];
+  var knowledge = knowledgeRes.data || [];
 
-  if (companies.error) { root.appendChild(inlineError('データの取得に失敗しました: ' + companies.error.message, function() { renderPage('dashboard'); })); return; }
+  var cardStyle = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px';
+  var sectionLabel = 'font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;font-weight:600';
 
-  var cos = (companies.data || []);
-  var ts = (tasks.data || []);
-  var highTasks = ts.filter(function(t) { return t.priority === 'high'; });
-  var overdue = ts.filter(function(t) { return t.due_date && new Date(t.due_date) < new Date(); });
+  // ===== Row 1: Finance snapshot + Tasks =====
+  var row1 = el('div', {style: 'display:grid;grid-template-columns:'+(window.innerWidth<=700?'1fr':'1fr 1fr')+';gap:16px;margin-bottom:16px'});
 
-  // KPIs
-  var kpiGrid = el('div', {className: 'g4', style: 'margin-bottom:28px'}, [
-    el('div', {className: 'card kpi'}, [
-      el('div', {className: 'kpi-val good', textContent: String(cos.length)}),
-      el('div', {className: 'kpi-lbl', textContent: 'PJ Companies'})
-    ]),
-    el('div', {className: 'card kpi'}, [
-      el('div', {className: 'kpi-val ' + (ts.length > 10 ? 'warn' : 'good'), textContent: String(ts.length)}),
-      el('div', {className: 'kpi-lbl', textContent: 'Open Tasks'})
-    ]),
-    el('div', {className: 'card kpi'}, [
-      el('div', {className: 'kpi-val ' + (highTasks.length > 0 ? 'warn' : 'good'), textContent: String(highTasks.length)}),
-      el('div', {className: 'kpi-lbl', textContent: 'High Priority'})
-    ]),
-    el('div', {className: 'card kpi'}, [
-      el('div', {className: 'kpi-val ' + (overdue.length > 0 ? 'bad' : 'good'), textContent: String(overdue.length)}),
-      el('div', {className: 'kpi-lbl', textContent: 'Overdue'})
-    ])
-  ]);
-  root.appendChild(kpiGrid);
+  // -- Finance snapshot --
+  var yearRev = invoices.reduce(function(s,i){return s+i.amount;},0);
+  var yearExp = expenses.reduce(function(s,e){return s+e.amount;},0);
+  var invMonthSet = {};
+  invoices.forEach(function(i) { invMonthSet[i.invoice_date.substring(0,7)] = true; });
+  var dataMonths = Math.max(Object.keys(invMonthSet).length, 1);
+  var projRev = Math.round(yearRev / dataMonths * 12);
+  var projExp = Math.round(yearExp / dataMonths * 12);
+  var taxEst = calcTax(projRev, projExp);
+  var monthlyReserve = Math.ceil(taxEst.totalTax / 12);
 
-  // Companies
-  root.appendChild(el('div', {className: 'section-title', textContent: 'PJ Companies'}));
-  if (cos.length === 0) {
-    root.appendChild(emptyState('◫', 'まだPJ会社がありません', 'Companies を開く', function() { navigate('companies'); }));
-  } else {
-    var grid = el('div', {className: 'g3', style: 'margin-bottom:28px'});
-    cos.forEach(function(co) {
-      var coTasks = ts.filter(function(t) { return t.company_id === co.id; });
-      var card = el('div', {className: 'card co-card card-glow', onClick: function() { navigate('tasks'); }}, [
-        el('div', {className: 'co-id', textContent: co.id}),
-        el('div', {className: 'co-name', textContent: co.name}),
-        el('div', {className: 'co-desc', textContent: co.description || ''}),
-        el('div', {className: 'co-stats'}, [
-          el('div', {}, [
-            el('div', {className: 'co-stat-val', textContent: String(coTasks.length)}),
-            el('div', {className: 'co-stat-lbl', textContent: 'Tasks'})
-          ]),
-          el('div', {style: 'display:flex;align-items:center;gap:6px'}, [
-            el('span', {className: 'dot dot-' + co.status}),
-            el('span', {textContent: co.status, style: 'font-size:11px;color:var(--text2);font-weight:500'})
-          ])
-        ])
-      ]);
-      grid.appendChild(card);
-    });
-    root.appendChild(grid);
+  var finCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('finance'); }});
+  finCard.appendChild(el('div', {style: sectionLabel, textContent: 'Finance — ' + monthStr.replace('-','/')}));
+  var finGrid = el('div', {style: 'display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px'});
+  [{l:'年間売上',v:fmtYen(yearRev),c:'var(--accent)'},{l:'年間経費',v:fmtYen(yearExp),c:'var(--text3)'},{l:'粗利',v:fmtYen(yearRev-yearExp),c:(yearRev-yearExp)>=0?'#22c55e':'#ef4444'}].forEach(function(d) {
+    finGrid.appendChild(el('div', {}, [
+      el('div', {textContent: d.v, style: 'font-size:16px;font-weight:700;color:'+d.c}),
+      el('div', {textContent: d.l, style: 'font-size:10px;color:var(--text3)'})
+    ]));
+  });
+  finCard.appendChild(finGrid);
+  finCard.appendChild(el('div', {style: 'padding:8px 12px;background:var(--surface2);border-radius:6px;display:flex;justify-content:space-between;font-size:12px'}, [
+    el('span', {textContent: '税金積立目安', style: 'color:var(--text3)'}),
+    el('span', {textContent: fmtYen(monthlyReserve)+'/月', style: 'font-weight:600;color:#f59e0b'})
+  ]));
+  row1.appendChild(finCard);
+
+  // -- Tasks --
+  var taskCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('tasks'); }});
+  taskCard.appendChild(el('div', {style: sectionLabel, textContent: 'Tasks — ' + tasks.length + ' open'}));
+  var highTasks = tasks.filter(function(t){return t.priority==='high';});
+  if (highTasks.length > 0) {
+    taskCard.appendChild(el('div', {style: 'font-size:11px;color:#ef4444;font-weight:600;margin-bottom:8px', textContent: 'High priority: '+highTasks.length+'件'}));
   }
+  tasks.slice(0, 5).forEach(function(t) {
+    var priColor = t.priority === 'high' ? '#ef4444' : t.priority === 'low' ? 'var(--text3)' : 'var(--text2)';
+    taskCard.appendChild(el('div', {style: 'display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--surface2);font-size:12px'}, [
+      el('span', {style: 'width:6px;height:6px;border-radius:50%;background:'+priColor+';flex-shrink:0'}),
+      el('span', {textContent: t.title, style: 'color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'}),
+      t.company_id ? el('span', {textContent: t.company_id, style: 'font-size:10px;color:var(--text3);font-family:var(--mono)'}) : null
+    ].filter(Boolean)));
+  });
+  if (tasks.length === 0) taskCard.appendChild(el('div', {textContent: 'タスクなし', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
+  row1.appendChild(taskCard);
+  root.appendChild(row1);
 
-  // Recent activity
-  root.appendChild(el('div', {className: 'section-title', textContent: 'Recent Activity'}));
-  var actRes = await sb.from('activity_log').select('*, companies(name)').order('created_at', {ascending: false}).limit(10);
-  var acts = actRes.data || [];
-  if (acts.length === 0) {
-    root.appendChild(emptyState('◉', 'アクティビティはまだありません'));
-  } else {
-    var actCard = el('div', {className: 'card'});
-    acts.forEach(function(a) {
-      actCard.appendChild(el('div', {className: 'task-item'}, [
-        el('span', {style: 'font-family:var(--mono);font-size:11px;color:var(--text3);min-width:90px;flex-shrink:0', textContent: fmtTime(a.created_at)}),
-        a.company_id ? el('span', {className: 'tag tag-co', textContent: a.company_id}) : null,
-        el('span', {style: 'color:var(--text2);font-size:13px', textContent: a.description || a.action})
+  // ===== Row 2: Insights + Diary =====
+  var row2 = el('div', {style: 'display:grid;grid-template-columns:'+(window.innerWidth<=700?'1fr':'1fr 1fr')+';gap:16px;margin-bottom:16px'});
+
+  // -- CEO Insights --
+  var insCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('insights'); }});
+  insCard.appendChild(el('div', {style: sectionLabel, textContent: 'Insights / 分析'}));
+  if (insights.length > 0) {
+    insights.forEach(function(ins) {
+      var catColors = {pattern:'var(--accent)',preference:'#22c55e',work_rhythm:'#f59e0b',tendency:'#8b5cf6',strength:'#06b6d4'};
+      insCard.appendChild(el('div', {style: 'padding:6px 0;border-bottom:1px solid var(--surface2)'}, [
+        el('div', {style: 'display:flex;gap:6px;align-items:center;margin-bottom:2px'}, [
+          el('span', {textContent: ins.category, style: 'font-size:9px;padding:1px 6px;border-radius:3px;background:'+(catColors[ins.category]||'var(--text3)')+'18;color:'+(catColors[ins.category]||'var(--text3)')+';font-weight:600'}),
+          el('span', {textContent: ins.confidence ? 'confidence: '+ins.confidence : '', style: 'font-size:9px;color:var(--text3)'})
+        ]),
+        el('div', {textContent: (ins.insight || '').substring(0, 80), style: 'font-size:12px;color:var(--text2);line-height:1.5'})
       ]));
     });
-    root.appendChild(actCard);
+  } else {
+    insCard.appendChild(el('div', {textContent: 'まだ分析データがありません', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
   }
+  row2.appendChild(insCard);
+
+  // -- Diary --
+  var diaryCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('diary'); }});
+  diaryCard.appendChild(el('div', {style: sectionLabel, textContent: 'Diary — 最近の記録'}));
+  if (diaries.length > 0) {
+    diaries.forEach(function(d) {
+      var wbiColor = d.wbi_score >= 7 ? '#22c55e' : d.wbi_score >= 4 ? '#f59e0b' : '#ef4444';
+      diaryCard.appendChild(el('div', {style: 'padding:6px 0;border-bottom:1px solid var(--surface2)'}, [
+        el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:2px'}, [
+          el('span', {textContent: d.entry_date, style: 'font-size:11px;font-family:var(--mono);color:var(--text3)'}),
+          d.wbi_score ? el('span', {textContent: 'WBI '+d.wbi_score, style: 'font-size:10px;font-weight:600;color:'+wbiColor}) : null
+        ].filter(Boolean)),
+        el('div', {textContent: (d.body || '').substring(0, 60) + ((d.body||'').length > 60 ? '...' : ''), style: 'font-size:12px;color:var(--text2);line-height:1.5'})
+      ]));
+    });
+  } else {
+    diaryCard.appendChild(el('div', {textContent: '日記を書いてみましょう', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
+  }
+  row2.appendChild(diaryCard);
+  root.appendChild(row2);
+
+  // ===== Row 3: Comments + Knowledge =====
+  var row3 = el('div', {style: 'display:grid;grid-template-columns:'+(window.innerWidth<=700?'1fr':'1fr 1fr')+';gap:16px;margin-bottom:16px'});
+
+  // -- Recent Comments --
+  var comCard = el('div', {style: cardStyle});
+  comCard.appendChild(el('div', {style: sectionLabel, textContent: 'Comments — 最新'}));
+  var realComments = comments.filter(function(c) { return c.body && c.body.length > 2; });
+  if (realComments.length > 0) {
+    realComments.slice(0, 4).forEach(function(c) {
+      comCard.appendChild(el('div', {style: 'padding:6px 0;border-bottom:1px solid var(--surface2)'}, [
+        el('div', {style: 'display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:2px'}, [
+          el('span', {textContent: c.company_id || 'hd'}),
+          el('span', {textContent: (c.created_at || '').substring(0, 10)})
+        ]),
+        el('div', {textContent: c.body.substring(0, 80) + (c.body.length > 80 ? '...' : ''), style: 'font-size:12px;color:var(--text2);line-height:1.5'})
+      ]));
+    });
+  } else {
+    comCard.appendChild(el('div', {textContent: 'コメントなし', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
+  }
+  row3.appendChild(comCard);
+
+  // -- Knowledge Rules --
+  var kbCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('knowledge'); }});
+  kbCard.appendChild(el('div', {style: sectionLabel, textContent: 'Knowledge — Active Rules'}));
+  if (knowledge.length > 0) {
+    knowledge.forEach(function(k) {
+      kbCard.appendChild(el('div', {style: 'padding:4px 0;border-bottom:1px solid var(--surface2);display:flex;gap:8px;align-items:flex-start'}, [
+        el('span', {textContent: k.category, style: 'font-size:9px;padding:1px 6px;border-radius:3px;background:var(--surface2);color:var(--text3);white-space:nowrap;flex-shrink:0'}),
+        el('span', {textContent: (k.rule || '').substring(0, 60), style: 'font-size:11px;color:var(--text2);line-height:1.4'})
+      ]));
+    });
+  } else {
+    kbCard.appendChild(el('div', {textContent: 'ナレッジルールなし', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
+  }
+  row3.appendChild(kbCard);
+  root.appendChild(row3);
 }
 
 // ============================================================
