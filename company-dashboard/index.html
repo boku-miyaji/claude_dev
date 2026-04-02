@@ -1319,7 +1319,7 @@ function renderCalendarGrid(root, events) {
   for (var d = 0; d < 7; d++) {
     var date = new Date(startOfDay);
     date.setDate(date.getDate() + d);
-    var dateStr = date.toISOString().slice(0, 10);
+    var dateStr = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
     var isToday = d === 0;
 
     var dayEl = el('div', {className: 'cal-day' + (isToday ? ' cal-today' : '')}, [
@@ -1330,8 +1330,9 @@ function renderCalendarGrid(root, events) {
     ]);
 
     var dayEvents = events.filter(function(e) {
-      return e.start_time.slice(0, 10) === dateStr
-        || new Date(e.start_time).toLocaleDateString('sv-SE') === dateStr;
+      var es = new Date(e.start_time);
+      var esStr = es.getFullYear() + '-' + String(es.getMonth()+1).padStart(2,'0') + '-' + String(es.getDate()).padStart(2,'0');
+      return esStr === dateStr;
     });
 
     if (dayEvents.length === 0) {
