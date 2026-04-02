@@ -1231,7 +1231,7 @@ var GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 var GCAL_CALENDARS = [
   {id: 'yumzzz.my6223@gmail.com', type: 'primary', label: 'yumzzz.my6223'},
   {id: 'yuta.miyaji.xyz@gmail.com', type: 'secondary', label: 'yuta.miyaji.xyz'},
-  {id: 'yuta.miyaji@acesinc.co.jp', type: 'work', label: 'ACES'}
+  {id: 'yuta.miyaji@acesinc.co.jp', type: 'work', label: 'yuta.miyaji@acesinc.co.jp'}
 ];
 var CAL_DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 var gcalToken = null;
@@ -1509,7 +1509,7 @@ function renderCalendarGrid(root, events, onRefresh) {
   // Legend
   root.appendChild(el('div', {className: 'cal-legend'}, [
     el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot p'}), 'yumzzz.my6223']),
-    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot w'}), 'ACES']),
+    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot w'}), 'yuta.miyaji@acesinc.co.jp']),
     el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot s'}), 'yuta.miyaji.xyz'])
   ]));
 }
