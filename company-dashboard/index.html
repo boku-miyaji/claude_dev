@@ -1252,11 +1252,11 @@ function toJstIso(d) {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
     + 'T' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':00+09:00';
 }
-async function fetchGcalEvents(token) {
+function toLocalDateStr(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+async function fetchGcalEvents(token, rangeStart, rangeEnd) {
   var now = new Date();
-  var startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  var endDate = new Date(startOfDay);
-  endDate.setDate(endDate.getDate() + 7);
+  var startOfDay = rangeStart || new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var endDate = rangeEnd || (function() { var d = new Date(startOfDay); d.setDate(d.getDate() + 7); return d; })();
   var timeMin = toJstIso(startOfDay);
   var timeMax = toJstIso(endDate);
 
@@ -1441,39 +1441,40 @@ function openCalEventModal(existingEvent, defaultDate, onSaved) {
   summaryInput.focus();
 }
 
-function renderCalendarGrid(root, events, onRefresh) {
+function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
   var now = new Date();
-  var startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var todayStr = toLocalDateStr(now);
+  var CAL_DOW_JA = ['日','月','火','水','木','金','土'];
 
-  var grid = el('div', {className: 'cal-grid'});
+  function eventsForDate(dateStr) {
+    return events.filter(function(e) {
+      var es = new Date(e.start_time);
+      return toLocalDateStr(es) === dateStr;
+    });
+  }
 
-  for (var d = 0; d < 7; d++) {
-    var date = new Date(startOfDay);
-    date.setDate(date.getDate() + d);
-    var dateStr = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
-    var isToday = d === 0;
+  function renderDayCell(date, compact) {
+    var dateStr = toLocalDateStr(date);
+    var isToday = dateStr === todayStr;
+    var dayEvents = eventsForDate(dateStr);
 
-    var addBtn = el('button', {textContent: '+', title: '予定を追加', style: 'background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:0 4px;line-height:1;opacity:.5;transition:opacity .15s', 'data-date': dateStr});
+    var addBtn = el('button', {textContent: '+', title: '予定を追加', style: 'background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:0 3px;line-height:1;opacity:.4;transition:opacity .15s'});
     addBtn.addEventListener('mouseenter', function() { this.style.opacity = '1'; });
-    addBtn.addEventListener('mouseleave', function() { this.style.opacity = '.5'; });
-    (function(ds) { addBtn.addEventListener('click', function() { openCalEventModal(null, ds, onRefresh); }); })(dateStr);
-    var dayEl = el('div', {className: 'cal-day' + (isToday ? ' cal-today' : '')}, [
-      el('div', {className: 'cal-day-hdr', style: 'display:flex;justify-content:space-between;align-items:center'}, [
-        el('div', {}, [
-          el('span', {className: 'cal-day-dow', textContent: CAL_DOW[date.getDay()]}),
-          el('span', {className: 'cal-day-num', textContent: String(date.getDate())})
-        ]),
+    addBtn.addEventListener('mouseleave', function() { this.style.opacity = '.4'; });
+    (function(ds) { addBtn.addEventListener('click', function(ev) { ev.stopPropagation(); openCalEventModal(null, ds, onRefresh); }); })(dateStr);
+
+    var numStyle = 'font-size:'+(compact?'12':'20')+'px;font-weight:700;'+(isToday?'color:#fff;background:var(--accent);border-radius:50%;width:'+(compact?'22':'28')+'px;height:'+(compact?'22':'28')+'px;display:flex;align-items:center;justify-content:center;':'color:var(--text);');
+    var dayEl = el('div', {className: 'cal-day' + (isToday ? ' cal-today' : ''), style: compact ? 'min-height:90px;padding:8px' : ''}, [
+      el('div', {className: 'cal-day-hdr'}, [
+        el('div', {style: 'display:flex;align-items:center;gap:4px'}, [
+          compact ? null : el('span', {className: 'cal-day-dow', textContent: CAL_DOW_JA[date.getDay()]}),
+          el('span', {style: numStyle, textContent: String(date.getDate())})
+        ].filter(Boolean)),
         addBtn
       ])
     ]);
 
-    var dayEvents = events.filter(function(e) {
-      var es = new Date(e.start_time);
-      var esStr = es.getFullYear() + '-' + String(es.getMonth()+1).padStart(2,'0') + '-' + String(es.getDate()).padStart(2,'0');
-      return esStr === dateStr;
-    });
-
-    if (dayEvents.length === 0) {
+    if (dayEvents.length === 0 && !compact) {
       dayEl.appendChild(el('div', {className: 'cal-empty', textContent: 'No events'}));
     } else {
       dayEvents.forEach(function(e) {
@@ -1484,47 +1485,173 @@ function renderCalendarGrid(root, events, onRefresh) {
           if (eEnd < now) timeClass = ' cal-past';
           else if (eStart <= now && eEnd > now) timeClass = ' cal-now';
         }
-        var timeStr = e.all_day ? '' : eStart.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo'});
-
-        var evtEl = el('div', {className: 'cal-evt cal-' + e.calendar_type + timeClass, style: 'cursor:pointer'}, [
-          timeStr ? el('span', {className: 'cal-evt-time', textContent: timeStr}) : null,
-          el('span', {className: 'cal-evt-title', textContent: e.summary})
+        var timeStr = e.all_day ? '' : eStart.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'});
+        var evtEl = el('div', {className: 'cal-evt cal-'+e.calendar_type+timeClass, style: 'cursor:pointer;'+(compact?'font-size:10px;padding:2px 5px;margin-bottom:2px':'')}, [
+          timeStr ? el('span', {className: 'cal-evt-time', textContent: timeStr, style: compact?'font-size:9px':''}) : null,
+          el('span', {className: 'cal-evt-title', textContent: compact ? e.summary.substring(0,15) : e.summary, style: compact?'font-size:10px':''})
         ].filter(Boolean));
         (function(ev) { evtEl.addEventListener('click', function() { openCalEventModal(ev, null, onRefresh); }); })(e);
         dayEl.appendChild(evtEl);
       });
     }
-
-    grid.appendChild(dayEl);
+    return dayEl;
   }
 
-  root.appendChild(grid);
+  if (viewMode === 'day') {
+    // Single day - detailed view
+    var grid = el('div', {style: 'display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:16px'});
+    grid.appendChild(renderDayCell(viewDate, false));
+    root.appendChild(grid);
+
+  } else if (viewMode === 'week') {
+    // 7-day view
+    var weekStart = new Date(viewDate);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // start from Sunday
+    var grid = el('div', {className: 'cal-grid'});
+    for (var d = 0; d < 7; d++) {
+      var date = new Date(weekStart);
+      date.setDate(date.getDate() + d);
+      var dayEl = renderDayCell(date, false);
+      // Add day-of-week header for week view
+      var hdr = dayEl.querySelector('.cal-day-hdr');
+      if (hdr && !hdr.querySelector('.cal-day-dow')) {
+        var dowSpan = el('span', {className: 'cal-day-dow', textContent: CAL_DOW_JA[date.getDay()]});
+        hdr.firstChild.insertBefore(dowSpan, hdr.firstChild.firstChild);
+      }
+      grid.appendChild(dayEl);
+    }
+    root.appendChild(grid);
+
+  } else if (viewMode === 'month') {
+    // Month grid (like Google Calendar)
+    var yr = viewDate.getFullYear(), mo = viewDate.getMonth();
+    var firstDay = new Date(yr, mo, 1);
+    var startOffset = firstDay.getDay(); // 0=Sun
+    var daysInMonth = new Date(yr, mo + 1, 0).getDate();
+
+    // DOW header
+    var dowRow = el('div', {style: 'display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:4px'});
+    CAL_DOW_JA.forEach(function(d, i) {
+      dowRow.appendChild(el('div', {textContent: d, style: 'text-align:center;font-size:11px;font-weight:600;color:'+(i===0?'#ef4444':i===6?'#3b82f6':'var(--text3)')+';padding:4px'}));
+    });
+    root.appendChild(dowRow);
+
+    var monthGrid = el('div', {style: 'display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:16px'});
+
+    // Blank cells before 1st
+    for (var b = 0; b < startOffset; b++) {
+      monthGrid.appendChild(el('div', {style: 'min-height:90px;background:var(--surface2);border-radius:4px;opacity:.3'}));
+    }
+
+    // Day cells
+    for (var dd = 1; dd <= daysInMonth; dd++) {
+      var cellDate = new Date(yr, mo, dd);
+      monthGrid.appendChild(renderDayCell(cellDate, true));
+    }
+
+    // Trailing blank cells
+    var trailing = (7 - (startOffset + daysInMonth) % 7) % 7;
+    for (var tb = 0; tb < trailing; tb++) {
+      monthGrid.appendChild(el('div', {style: 'min-height:90px;background:var(--surface2);border-radius:4px;opacity:.3'}));
+    }
+
+    root.appendChild(monthGrid);
+  }
 
   // Legend
-  root.appendChild(el('div', {className: 'cal-legend'}, [
-    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot p'}), 'yumzzz.my6223']),
-    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot w'}), 'yuta.miyaji@acesinc.co.jp']),
-    el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot s'}), 'yuta.miyaji.xyz'])
-  ]));
+  root.appendChild(el('div', {className: 'cal-legend'}, GCAL_CALENDARS.map(function(c) {
+    return el('div', {className: 'cal-legend-item'}, [el('div', {className: 'cal-legend-dot ' + (c.type==='primary'?'p':c.type==='work'?'w':'s')}), c.label]);
+  })));
 }
 
 async function renderCalendar(root) {
+  var calView = 'week';
+  var calDate = new Date();
+  calDate = new Date(calDate.getFullYear(), calDate.getMonth(), calDate.getDate());
+
+  // Header
   root.appendChild(el('div', {className: 'page-title', textContent: 'Calendar'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: 'Google Calendar \u2014 7-day view (realtime)'}));
+
+  // Navigation bar
+  var navBar = el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap'});
+  var dateLabel = el('span', {style: 'font-size:15px;font-weight:600;min-width:160px'});
+
+  function updateDateLabel() {
+    if (calView === 'day') dateLabel.textContent = calDate.getFullYear()+'年'+(calDate.getMonth()+1)+'月'+calDate.getDate()+'日';
+    else if (calView === 'week') {
+      var ws = new Date(calDate); ws.setDate(ws.getDate() - ws.getDay());
+      var we = new Date(ws); we.setDate(we.getDate() + 6);
+      dateLabel.textContent = ws.getFullYear()+'年'+(ws.getMonth()+1)+'月'+ws.getDate()+'日 \u2014 '+(we.getMonth()+1)+'月'+we.getDate()+'日';
+    } else dateLabel.textContent = calDate.getFullYear()+'年'+(calDate.getMonth()+1)+'月';
+  }
+
+  var prevBtn = el('button', {className: 'btn btn-g btn-sm', textContent: '\u25C0', onClick: function() { navigate(-1); }});
+  var todayBtn = el('button', {className: 'btn btn-g btn-sm', textContent: '今日', onClick: function() { calDate = new Date(); calDate = new Date(calDate.getFullYear(), calDate.getMonth(), calDate.getDate()); loadAndRender(); }});
+  var nextBtn = el('button', {className: 'btn btn-g btn-sm', textContent: '\u25B6', onClick: function() { navigate(1); }});
+
+  function navigate(dir) {
+    if (calView === 'day') calDate.setDate(calDate.getDate() + dir);
+    else if (calView === 'week') calDate.setDate(calDate.getDate() + 7 * dir);
+    else { calDate.setMonth(calDate.getMonth() + dir); calDate.setDate(1); }
+    loadAndRender();
+  }
+
+  // View mode buttons
+  var viewBtns = el('div', {style: 'display:flex;gap:2px;margin-left:auto'});
+  ['day', 'week', 'month'].forEach(function(v) {
+    var label = v === 'day' ? '日' : v === 'week' ? '週' : '月';
+    viewBtns.appendChild(el('button', {
+      textContent: label,
+      className: 'btn btn-sm',
+      style: 'font-size:12px;padding:4px 12px;border:1px solid var(--border);background:'+(v===calView?'var(--accent)':'transparent')+';color:'+(v===calView?'#fff':'var(--text2)')+';cursor:pointer;border-radius:4px',
+      onClick: function() { calView = v; loadAndRender(); }
+    }));
+  });
+
+  navBar.appendChild(prevBtn);
+  navBar.appendChild(todayBtn);
+  navBar.appendChild(nextBtn);
+  navBar.appendChild(dateLabel);
+  navBar.appendChild(viewBtns);
+  root.appendChild(navBar);
 
   var contentArea = el('div');
   root.appendChild(contentArea);
 
   var token = getGcalToken();
 
+  function getRange() {
+    if (calView === 'day') {
+      var end = new Date(calDate); end.setDate(end.getDate() + 1);
+      return [calDate, end];
+    } else if (calView === 'week') {
+      var ws = new Date(calDate); ws.setDate(ws.getDate() - ws.getDay());
+      var we = new Date(ws); we.setDate(we.getDate() + 7);
+      return [ws, we];
+    } else {
+      var ms = new Date(calDate.getFullYear(), calDate.getMonth(), 1);
+      var me = new Date(calDate.getFullYear(), calDate.getMonth() + 1, 1);
+      return [ms, me];
+    }
+  }
+
   async function loadAndRender() {
+    updateDateLabel();
+    // Update view button styles
+    viewBtns.querySelectorAll('button').forEach(function(b) {
+      var v = b.textContent === '日' ? 'day' : b.textContent === '週' ? 'week' : 'month';
+      b.style.background = v === calView ? 'var(--accent)' : 'transparent';
+      b.style.color = v === calView ? '#fff' : 'var(--text2)';
+    });
+
     while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
     contentArea.appendChild(el('div', {className: 'cal-sync-info'}, [
       el('div', {className: 'cal-sync-dot'}),
       el('span', {textContent: 'Loading...'})
     ]));
 
-    var result = await fetchGcalEvents(gcalToken);
+    var range = getRange();
+    var result = await fetchGcalEvents(gcalToken, range[0], range[1]);
 
     while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
 
@@ -1539,19 +1666,17 @@ async function renderCalendar(root) {
     }
 
     // Status bar
-    var statusBar = el('div', {style: 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px'}, [
-      el('div', {className: 'cal-sync-info', style: 'margin-bottom:0'}, [
+    var statusBar = el('div', {style: 'display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:11px;color:var(--text3)'}, [
+      el('div', {style: 'display:flex;align-items:center;gap:6px'}, [
         el('div', {className: 'cal-sync-dot'}),
-        el('span', {textContent: 'Live \u2014 ' + result.events.length + ' events'}),
-        result.errors.length > 0
-          ? el('span', {style: 'color:var(--amber);margin-left:8px', textContent: '(' + result.errors.length + ' calendar errors)'})
-          : null
+        el('span', {textContent: result.events.length + ' events'}),
+        result.errors.length > 0 ? el('span', {style: 'color:var(--amber)', textContent: '(' + result.errors.length + ' errors)'}) : null
       ].filter(Boolean)),
-      el('button', {className: 'btn btn-ghost btn-sm', textContent: '\u21BB Refresh', onClick: loadAndRender})
+      el('button', {className: 'btn btn-ghost btn-sm', style: 'font-size:11px', textContent: '\u21BB', onClick: loadAndRender})
     ]);
     contentArea.appendChild(statusBar);
 
-    renderCalendarGrid(contentArea, result.events, loadAndRender);
+    renderCalendarView(contentArea, result.events, calView, calDate, loadAndRender);
   }
 
   if (token) {
