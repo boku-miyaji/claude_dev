@@ -2948,6 +2948,11 @@ async function finOverview(root) {
   var yearExp = allExp.reduce(function(s,e){return s+e.amount;}, 0);
   var yearHrs = allTime.reduce(function(s,t){return s+parseFloat(t.hours);}, 0);
 
+  // Count months with actual invoice data
+  var ovMonthSet = {};
+  allInv.forEach(function(i) { ovMonthSet[i.invoice_date.substring(0,7)] = true; });
+  var dataMonths = Math.max(Object.keys(ovMonthSet).length, 1);
+
   // ===== Title =====
   root.appendChild(el('h3', {textContent: year+'年'+(now.getMonth()+1)+'月', style: 'margin:0 0 16px;font-size:16px;font-weight:600'}));
 
@@ -3006,7 +3011,7 @@ async function finOverview(root) {
   for (var mk = 1; mk <= 12; mk++) { maxMonthly = Math.max(maxMonthly, monthlyByClient[mk].total); }
   if (maxMonthly === 0) maxMonthly = 1;
   var curMonth = now.getMonth() + 1;
-  var avgRev = yearRev / curMonth;
+  var avgRev = yearRev / dataMonths;
 
   var chartCard = el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:24px'});
   // Header with legend
@@ -3080,7 +3085,7 @@ async function finOverview(root) {
   var monthlySummary = el('div', {style: 'display:flex;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);flex-wrap:wrap;justify-content:center'});
   monthlySummary.appendChild(el('span', {}, [document.createTextNode('月平均売上: '), el('span', {textContent: fmtYen(Math.round(avgRev)), style: 'font-weight:600;color:var(--text2)'})]));
   monthlySummary.appendChild(el('span', {}, [document.createTextNode('年間予測: '), el('span', {textContent: fmtYen(Math.round(avgRev * 12)), style: 'font-weight:600;color:var(--text2)'})]));
-  monthlySummary.appendChild(el('span', {}, [document.createTextNode('月平均稼働: '), el('span', {textContent: (yearHrs / curMonth).toFixed(1) + 'h', style: 'font-weight:600;color:var(--text2)'})]));
+  monthlySummary.appendChild(el('span', {}, [document.createTextNode('月平均稼働: '), el('span', {textContent: (yearHrs / dataMonths).toFixed(1) + 'h', style: 'font-weight:600;color:var(--text2)'})]));
   chartCard.appendChild(monthlySummary);
   root.appendChild(chartCard);
 
@@ -3223,8 +3228,8 @@ async function finOverview(root) {
   // 案件別の詳細は「案件」タブに集約（概要では省略）
 
   // ===== Upcoming tax (dynamically calculated from invoices) =====
-  var ovProjRev = curMonth > 0 ? Math.round(yearRev / curMonth * 12) : 0;
-  var ovProjExp = curMonth > 0 ? Math.round(yearExp / curMonth * 12) : 0;
+  var ovProjRev = Math.round(yearRev / dataMonths * 12);
+  var ovProjExp = Math.round(yearExp / dataMonths * 12);
   var ovTax = calcTax(ovProjRev, ovProjExp);
   var ovEstPer = Math.round((ovTax.incomeTax + ovTax.reconstructionTax) / 3);
   var ny = year + 1;
@@ -3835,20 +3840,24 @@ async function finTax(root) {
   // Fetch annual revenue from invoices
   var year = new Date().getFullYear();
   var now = new Date();
-  var monthsElapsed = now.getMonth() + 1;
-  var monthsRemaining = 12 - monthsElapsed;
 
   var [invRes, expRes] = await Promise.all([
-    sb.from('invoices').select('amount').gte('invoice_date', year+'-01-01').lte('invoice_date', year+'-12-31'),
-    sb.from('expenses').select('amount').gte('expense_date', year+'-01-01').lte('expense_date', year+'-12-31')
+    sb.from('invoices').select('amount,invoice_date').gte('invoice_date', year+'-01-01').lte('invoice_date', year+'-12-31'),
+    sb.from('expenses').select('amount,expense_date').gte('expense_date', year+'-01-01').lte('expense_date', year+'-12-31')
   ]);
   var invoices = invRes.data || [];
   var actualRevQ = invoices.reduce(function(s,i){return s+i.amount;},0);
   var actualExpQ = (expRes.data || []).reduce(function(s,e){return s+e.amount;},0);
 
-  // Projected annual revenue/expense
-  var projectedRevenue = monthsElapsed > 0 ? Math.round(actualRevQ / monthsElapsed * 12) : 0;
-  var projectedExpense = monthsElapsed > 0 ? Math.round(actualExpQ / monthsElapsed * 12) : 0;
+  // Count months with actual data (from invoices)
+  var invMonthSet = {};
+  invoices.forEach(function(i) { invMonthSet[i.invoice_date.substring(0,7)] = true; });
+  var monthsWithData = Math.max(Object.keys(invMonthSet).length, 1);
+  var monthsElapsed = monthsWithData;
+
+  // Projected annual revenue/expense (based on months with actual data)
+  var projectedRevenue = Math.round(actualRevQ / monthsWithData * 12);
+  var projectedExpense = Math.round(actualExpQ / Math.max(Object.keys(invMonthSet).length, 1) * 12);
 
   // ===== Monthly Tax Reserve Card =====
   var taxEst = calcTax(projectedRevenue, projectedExpense);
