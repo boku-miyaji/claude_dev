@@ -3868,7 +3868,7 @@ async function finTax(root) {
     var taxEst = calcTax(rev, exp);
     var monthlyReserve = Math.ceil(taxEst.totalTax / 12);
     var shouldHaveSaved = monthlyReserve * monthsWithData;
-    var reserveCard = el('div', {style: 'background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:28px'});
+    var reserveCard = el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:28px'});
 
     reserveCard.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [
       el('div', {textContent: '月次税金積立ガイド', style: 'font-size:15px;font-weight:600;color:var(--text)'}),
@@ -3881,7 +3881,7 @@ async function finTax(root) {
      {l:'月の手取り目安', v:fmtYen(Math.floor(taxEst.takeHome / 12)), c:'#22c55e', sub:'売上 - 経費 - 税金'},
      {l:'実効税率', v:(rev > 0 ? (taxEst.totalTax / rev * 100).toFixed(1) : '0')+'%', c:'#ef4444', sub:'税金合計 ÷ 売上'}
     ].forEach(function(d) {
-      kpiRow.appendChild(el('div', {style: 'padding:14px 16px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)'}, [
+      kpiRow.appendChild(el('div', {style: 'padding:14px 16px;border-radius:8px;background:var(--bg2);border:1px solid var(--border)'}, [
         el('div', {textContent: d.l, style: 'font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px'}),
         el('div', {textContent: d.v, style: 'font-size:20px;font-weight:700;color:'+d.c}),
         el('div', {textContent: d.sub, style: 'font-size:10px;color:var(--text3);margin-top:4px'})
