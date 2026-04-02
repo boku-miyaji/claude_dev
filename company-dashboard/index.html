@@ -5892,7 +5892,21 @@ async function renderReportsTab(root) {
     var source = (report.tags || []).indexOf('auto') > -1 ? 'auto' : 'manual';
 
     var card = el('div', {className: 'card', style: 'margin-bottom:12px;cursor:pointer'});
-    card.addEventListener('click', function() { toggleReportDetail(card, isJson ? data : body); });
+    (function(rpt, isJ, d, b) {
+      card.addEventListener('click', async function() {
+        var existing = card.querySelector('.report-detail');
+        if (existing) { existing.remove(); return; }
+        // If body was empty in initial fetch, re-fetch individually
+        var finalData = isJ ? d : b;
+        if (!finalData || finalData === '') {
+          var bodyRes = await sb.from('secretary_notes').select('body').eq('id', rpt.id).single();
+          var freshBody = (bodyRes.data && bodyRes.data.body) || '';
+          if (!freshBody) return;
+          try { finalData = JSON.parse(freshBody); } catch(e) { finalData = freshBody; }
+        }
+        toggleReportDetail(card, finalData);
+      });
+    })(report, isJson, data, body);
 
     var header = el('div', {style: 'display:flex;justify-content:space-between;align-items:center'}, [
       el('div', {}, [
@@ -6051,7 +6065,7 @@ function enhanceReportItems(container) {
 function toggleReportDetail(card, data) {
   var existing = card.querySelector('.report-detail');
   if (existing) { existing.remove(); return; }
-  if (!data) return;
+  if (!data) { console.warn('toggleReportDetail: no data'); return; }
 
   // Markdown string (manual collection via /company)
   if (typeof data === 'string') {
@@ -6609,6 +6623,13 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   messagesArea.appendChild(messagesInner);
   container.appendChild(messagesArea);
 
+  // Auto-scroll control: stop auto-scrolling when user scrolls up
+  var chatAutoScroll = true;
+  messagesArea.addEventListener('scroll', function() {
+    var atBottom = messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight < 60;
+    chatAutoScroll = atBottom;
+  });
+
   // Load existing messages
   if (chatState.conversationId) {
     window.location.hash = 'chat/' + chatState.conversationId;
@@ -6619,7 +6640,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
         else if (m.role === 'assistant') appendAssistantMsg(messagesInner, m.content, m.model, m.tokens_input, m.tokens_output, m.cost_usd, m.step);
         else if (m.role === 'tool') appendToolMsg(messagesInner, m.tool_name, m.tool_input, m.content);
       });
-      messagesArea.scrollTop = messagesArea.scrollHeight;
+      if (chatAutoScroll) messagesArea.scrollTop = messagesArea.scrollHeight;
     })();
   } else {
     window.location.hash = 'chat';
@@ -6661,6 +6682,13 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     }
   });
   controlsRow.appendChild(precBtn);
+  controlsRow.style.display = 'none';
+  var controlsToggle = el('button', {style:'font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text3);cursor:pointer;font-family:var(--font);margin-bottom:6px', textContent:'\u2699 Options', onClick: function() {
+    var show = controlsRow.style.display === 'none';
+    controlsRow.style.display = show ? 'flex' : 'none';
+    controlsToggle.style.color = show ? 'var(--accent)' : 'var(--text3)';
+  }});
+  inputWrap.appendChild(controlsToggle);
   inputWrap.appendChild(controlsRow);
 
   // Attachment preview
@@ -6765,7 +6793,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     if (!chatState.conversationId) { while (messagesInner.firstChild) messagesInner.removeChild(messagesInner.firstChild); }
 
     appendUserMsg(messagesInner, text, attachments);
-    messagesArea.scrollTop = messagesArea.scrollHeight;
+    if (chatAutoScroll) messagesArea.scrollTop = messagesArea.scrollHeight;
 
     // Assistant streaming container
     var row = el('div', {className: 'chat-msg-row assistant'});
@@ -6871,7 +6899,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
           try { var d = JSON.parse(line.slice(6));
             if (d.usage) { tokIn = d.usage.prompt_tokens||0; tokOut = d.usage.completion_tokens||0; }
             var delta = d.choices&&d.choices[0]&&d.choices[0].delta;
-            if (delta&&delta.content) { if (!metrics.ttft) metrics.ttft = Date.now() - metrics.startTime; fullText += delta.content; renderMarkdownSafe(fullText, contentDiv); messagesArea.scrollTop = messagesArea.scrollHeight; }
+            if (delta&&delta.content) { if (!metrics.ttft) metrics.ttft = Date.now() - metrics.startTime; fullText += delta.content; renderMarkdownSafe(fullText, contentDiv); if (chatAutoScroll) messagesArea.scrollTop = messagesArea.scrollHeight; }
           } catch(e) {}
         }
       }
@@ -6939,7 +6967,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 break;
               case 'delta':
                 if (!metrics.ttft) metrics.ttft = Date.now() - metrics.startTime;
-                fullText += evt.content; renderMarkdownSafe(fullText, contentDiv); messagesArea.scrollTop = messagesArea.scrollHeight;
+                fullText += evt.content; renderMarkdownSafe(fullText, contentDiv); if (chatAutoScroll) messagesArea.scrollTop = messagesArea.scrollHeight;
                 break;
               case 'tool_start':
                 metrics.toolsUsed.push({name: evt.tool, start: Date.now(), duration_ms: null, input_summary: JSON.stringify(evt.input).substring(0,80)});
@@ -6948,7 +6976,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 tb.appendChild(el('span',{className:'tool-name',textContent:evt.tool}));
                 tb.appendChild(el('span',{className:'tool-summary',textContent:JSON.stringify(evt.input).substring(0,60)}));
                 msgContainer.insertBefore(el('div',{className:'chat-msg-row assistant'},[tb]), assistantRow);
-                messagesArea.scrollTop = messagesArea.scrollHeight;
+                if (chatAutoScroll) messagesArea.scrollTop = messagesArea.scrollHeight;
                 break;
               case 'tool_result':
                 var lastTool = metrics.toolsUsed[metrics.toolsUsed.length - 1];
@@ -6974,7 +7002,8 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   };
   sendBtn.onclick = sendMessage;
   textarea.addEventListener('keydown', function(e) {
-    if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMessage(); }
+    // Desktop only: Enter to send (mobile uses send button)
+    if (e.key==='Enter'&&!e.shiftKey&&window.innerWidth>768) { e.preventDefault(); sendMessage(); }
   });
   textarea.focus();
 }
