@@ -3817,14 +3817,88 @@ function calcTax(revenue, expense) {
 async function finTax(root) {
   // Fetch annual revenue from invoices
   var year = new Date().getFullYear();
-  var invRes = await sb.from('invoices').select('amount').gte('invoice_date', year+'-01-01').lte('invoice_date', year+'-12-31');
-  var invoices = invRes.data || [];
-  var actualRevQ = invoices.reduce(function(s,i){return s+i.amount;},0);
-
-  // Projected annual revenue (simple: Q1 actual × 4)
   var now = new Date();
   var monthsElapsed = now.getMonth() + 1;
+  var monthsRemaining = 12 - monthsElapsed;
+
+  var [invRes, expRes] = await Promise.all([
+    sb.from('invoices').select('amount').gte('invoice_date', year+'-01-01').lte('invoice_date', year+'-12-31'),
+    sb.from('expenses').select('amount').gte('expense_date', year+'-01-01').lte('expense_date', year+'-12-31')
+  ]);
+  var invoices = invRes.data || [];
+  var actualRevQ = invoices.reduce(function(s,i){return s+i.amount;},0);
+  var actualExpQ = (expRes.data || []).reduce(function(s,e){return s+e.amount;},0);
+
+  // Projected annual revenue/expense
   var projectedRevenue = monthsElapsed > 0 ? Math.round(actualRevQ / monthsElapsed * 12) : 0;
+  var projectedExpense = monthsElapsed > 0 ? Math.round(actualExpQ / monthsElapsed * 12) : 0;
+
+  // ===== Monthly Tax Reserve Card =====
+  var taxEst = calcTax(projectedRevenue, projectedExpense);
+  var monthlyReserve = Math.ceil(taxEst.totalTax / 12);
+  var shouldHaveSaved = monthlyReserve * monthsElapsed;
+  var reserveCard = el('div', {style: 'background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:28px'});
+
+  // Header
+  reserveCard.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:16px'}, [
+    el('div', {textContent: '月次税金積立ガイド', style: 'font-size:15px;font-weight:600;color:var(--text)'}),
+    el('div', {textContent: year+'年度 想定売上 '+fmtYen(projectedRevenue), style: 'font-size:11px;color:var(--text3)'})
+  ]));
+
+  // Main KPI: monthly reserve
+  var kpiRow = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px;margin-bottom:20px'});
+  [{l:'毎月の積立目安', v:fmtYen(monthlyReserve)+'/月', c:'#f59e0b', sub:'税金合計 '+fmtYen(taxEst.totalTax)+' ÷ 12'},
+   {l:'ここまでの積立目標', v:fmtYen(shouldHaveSaved), c:'#3b82f6', sub:monthsElapsed+'ヶ月分 ('+monthsElapsed+'月まで)'},
+   {l:'月の手取り目安', v:fmtYen(Math.floor(taxEst.takeHome / 12)), c:'#22c55e', sub:'売上 - 経費 - 税金'},
+   {l:'実効税率', v:(taxEst.revenue > 0 ? (taxEst.totalTax / taxEst.revenue * 100).toFixed(1) : '0')+'%', c:'#ef4444', sub:'税金合計 ÷ 売上'}
+  ].forEach(function(d) {
+    kpiRow.appendChild(el('div', {style: 'padding:14px 16px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)'}, [
+      el('div', {textContent: d.l, style: 'font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px'}),
+      el('div', {textContent: d.v, style: 'font-size:20px;font-weight:700;color:'+d.c}),
+      el('div', {textContent: d.sub, style: 'font-size:10px;color:var(--text3);margin-top:4px'})
+    ]));
+  });
+  reserveCard.appendChild(kpiRow);
+
+  // Monthly breakdown bar: how each month's revenue should be split
+  var monthlyRev = projectedRevenue / 12;
+  var monthlyExp = projectedExpense / 12;
+  var monthlyTakeHome = Math.floor(taxEst.takeHome / 12);
+  var barData = [
+    {label: '手取り', value: monthlyTakeHome, color: '#22c55e'},
+    {label: '税金積立', value: monthlyReserve, color: '#f59e0b'},
+    {label: '経費', value: Math.round(monthlyExp), color: '#64748b'}
+  ];
+  var barTotal = barData.reduce(function(s,b){return s+b.value;}, 0) || 1;
+  var barRow = el('div', {style: 'margin-bottom:12px'});
+  barRow.appendChild(el('div', {textContent: '月収の使い道', style: 'font-size:11px;color:var(--text3);margin-bottom:6px'}));
+  var stackBar = el('div', {style: 'height:28px;display:flex;border-radius:6px;overflow:hidden'});
+  barData.forEach(function(b) {
+    var pct = b.value / barTotal * 100;
+    if (pct > 0) stackBar.appendChild(el('div', {style: 'width:'+pct+'%;background:'+b.color+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;min-width:' + (pct > 8 ? '0' : '30') + 'px', title: b.label+': '+fmtYen(b.value)}, [
+      pct > 12 ? document.createTextNode(b.label+' '+fmtYen(b.value)) : document.createTextNode('')
+    ]));
+  });
+  barRow.appendChild(stackBar);
+  // Legend
+  var barLegend = el('div', {style: 'display:flex;gap:14px;margin-top:6px'});
+  barData.forEach(function(b) {
+    var pct = (b.value / barTotal * 100).toFixed(0);
+    barLegend.appendChild(el('span', {style: 'display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)'}, [
+      el('span', {style: 'width:8px;height:8px;border-radius:2px;background:'+b.color}),
+      document.createTextNode(b.label+' '+fmtYen(b.value)+' ('+pct+'%)')
+    ]));
+  });
+  barRow.appendChild(barLegend);
+  reserveCard.appendChild(barRow);
+
+  // Alert: reminder
+  reserveCard.appendChild(el('div', {style: 'padding:10px 14px;border-radius:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.15);font-size:12px;color:#f59e0b;display:flex;align-items:center;gap:8px;margin-top:4px'}, [
+    el('span', {textContent: 'RESERVE', style: 'font-weight:700;font-size:10px;padding:2px 6px;border-radius:3px;background:rgba(245,158,11,.15)'}),
+    el('span', {textContent: '毎月の売上から '+fmtYen(monthlyReserve)+' を税金用口座に確保してください。使いすぎ防止の目安です。'})
+  ]));
+
+  root.appendChild(reserveCard);
 
   var res = await sb.from('tax_payments').select('*').order('due_date');
   var payments = res.data || [];
