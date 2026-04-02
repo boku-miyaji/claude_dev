@@ -3396,6 +3396,137 @@ Object Type: <span class="highlight">施設</span>
     </div>
   </section>
 
+  <!-- LLM拡張可能性 -->
+  <section id="faq-llm-futureproof">
+    <h2>LLMの将来拡張可能性 — 特定モデル・プラットフォームに縛られないために</h2>
+    <p style="color:var(--text-muted);margin-bottom:24px;">LLMの進化速度は速い。今日のベストモデルが半年後には旧世代になる世界で、プラットフォーム依存を最小化する設計を評価する（2026-04-02）</p>
+
+    <div class="callout danger">
+      <strong>なぜこの論点が重要か:</strong> Foundryからの移行理由が「ベンダーロックイン」。LLM選択でも同じ構造を繰り返さないために、<strong>「特定のLLMにしか依存しない」「特定のプラットフォームでしか動かない」状態を避ける</strong>必要がある。
+    </div>
+
+    <h3 id="faq-futureproof-eval">プラットフォーム別の拡張可能性評価</h3>
+
+    <table>
+      <tr>
+        <th style="width:25%;">将来起きうること</th>
+        <th style="width:25%;">Snowflake Cortex</th>
+        <th style="width:25%;">Databricks</th>
+        <th style="width:25%;">AWS Bedrock</th>
+      </tr>
+      <tr>
+        <td><strong>新しいLLMが登場</strong><br><span style="font-size:11px;color:var(--text-muted)">例: GPT-6, Claude 5, 国産LLM</span></td>
+        <td style="color:var(--amber);">Snowflakeが対応するまで待つ<br><span style="font-size:11px;color:var(--text-muted)">ただし主要モデルの対応は早い</span></td>
+        <td style="color:var(--green);font-weight:600;">自分でデプロイすれば即日<br><span style="font-size:11px;color:var(--text-muted)">HuggingFace等から持ち込み可</span></td>
+        <td style="color:var(--amber);">AWSが対応するまで待つ<br><span style="font-size:11px;color:var(--text-muted)">Custom Importで一部対応</span></td>
+      </tr>
+      <tr>
+        <td><strong>今使っているモデルが<br>廃止・劣化</strong></td>
+        <td style="color:var(--green);">モデル名変更だけで切替<br><code style="font-size:10px;">claude-sonnet → gpt-4o</code></td>
+        <td style="color:var(--green);">Endpoint切替 or ルーティング変更</td>
+        <td style="color:var(--amber);">Bedrock内モデルへの切替は可<br><span style="font-size:11px;color:var(--text-muted)">GPTへの切替は不可</span></td>
+      </tr>
+      <tr>
+        <td><strong>プラットフォーム自体を<br>乗り換えたい</strong></td>
+        <td style="color:var(--red);">AI_COMPLETE()等のSQL関数を全て書き換え<br><span style="font-size:11px;color:var(--text-muted)">Cortex固有関数への依存度が高いほど移行コスト大</span></td>
+        <td style="color:var(--green);font-weight:600;">OpenAI互換API<br><span style="font-size:11px;color:var(--text-muted)">標準的なSDKコードなので<br>他プラットフォームでも動く</span></td>
+        <td style="color:var(--amber);">Bedrock SDK固有のコード書き換えが必要<br><span style="font-size:11px;color:var(--text-muted)">Converse APIは独自仕様</span></td>
+      </tr>
+      <tr>
+        <td><strong>マルチモデル戦略<br>（用途別に最適モデル選択）</strong></td>
+        <td style="color:var(--green);">SQLで呼び分け簡単<br><span style="font-size:11px;color:var(--text-muted)">ただし自動ルーティングなし</span></td>
+        <td style="color:var(--green);font-weight:600;">AI Gatewayで自動ルーティング<br><span style="font-size:11px;color:var(--text-muted)">コスト/精度/レイテンシで最適選択</span></td>
+        <td style="color:var(--amber);">アプリ側で分岐ロジック実装</td>
+      </tr>
+      <tr>
+        <td><strong>オンプレ / プライベート<br>LLMが必要になった</strong></td>
+        <td style="color:var(--red);">不可<br><span style="font-size:11px;color:var(--text-muted)">Snowflake SaaS内のみ</span></td>
+        <td style="color:var(--green);">可能<br><span style="font-size:11px;color:var(--text-muted)">GPUクラスタでセルフホスト</span></td>
+        <td style="color:var(--red);">不可<br><span style="font-size:11px;color:var(--text-muted)">AWS SaaS内のみ</span></td>
+      </tr>
+      <tr>
+        <td><strong>Fine-tunedモデルを<br>別環境に持ち出したい</strong></td>
+        <td style="color:var(--red);">不可<br><span style="font-size:11px;color:var(--text-muted)">モデルはSnowflake内に閉じる</span></td>
+        <td style="color:var(--green);font-weight:600;">可能<br><span style="font-size:11px;color:var(--text-muted)">MLflow Modelとしてエクスポート</span></td>
+        <td style="color:var(--red);">不可<br><span style="font-size:11px;color:var(--text-muted)">Bedrock内に閉じる</span></td>
+      </tr>
+    </table>
+
+    <div class="callout">
+      <strong>総合評価:</strong>
+      <table style="margin-top:12px;">
+        <tr>
+          <td style="width:20%;font-weight:700;color:var(--purple);">Databricks</td>
+          <td><span style="color:var(--green);font-weight:700;">拡張性 A</span> — 新モデル即日対応、OpenAI互換API、モデル持ち出し可能。<strong>最もプラットフォーム非依存な設計が可能。</strong></td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--blue);">Cortex</td>
+          <td><span style="color:var(--amber);font-weight:700;">拡張性 B</span> — 主要モデルの「幅」は広いが、Cortex固有関数への依存が移行コストになる。新モデル対応はSnowflake任せ。</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700;color:var(--amber);">Bedrock</td>
+          <td><span style="color:var(--amber);font-weight:700;">拡張性 B-</span> — OpenAI非対応が最大のボトルネック。Claude/Llamaの範囲では十分だが、「何でも使える」にはならない。</td>
+        </tr>
+      </table>
+    </div>
+
+    <h3 id="faq-futureproof-strategy">プラットフォーム依存を避ける設計戦略</h3>
+
+    <h4>原則: LLM呼び出しに「抽象化レイヤー」を挟む</h4>
+    <div class="flow">
+<span class="comment">── NG: プラットフォーム直結 ──</span>
+
+アプリコード → <span class="red">Bedrock SDK (boto3)</span> → Claude
+                 <span class="red">↑ Bedrock固有。乗り換え時に全書き換え</span>
+
+アプリコード → <span class="red">AI_COMPLETE('claude-sonnet', ...)</span> → Claude
+                 <span class="red">↑ Cortex固有SQL。乗り換え時に全書き換え</span>
+
+
+<span class="comment">── OK: 抽象化レイヤーを挟む ──</span>
+
+アプリコード → <span class="green">LLM Gateway / Router</span> → Bedrock (Claude)
+                         ↓                  → Azure OpenAI (GPT)
+                         ↓                  → Cortex (Llama)
+               <span class="green">↑ 裏側の切替が自由。アプリコードの変更不要</span>
+    </div>
+
+    <h4>具体的な実装パターン</h4>
+    <table>
+      <tr><th>パターン</th><th>実装方法</th><th>メリット</th></tr>
+      <tr>
+        <td><strong>OpenAI互換API統一</strong></td>
+        <td>全LLM呼び出しをOpenAI SDK形式に統一<br><span style="font-size:11px;color:var(--text-muted)">Databricks / LiteLLM / OpenRouter が互換エンドポイント提供</span></td>
+        <td>バックエンドのモデル・プロバイダーを<br>アプリ無修正で切替可能</td>
+      </tr>
+      <tr>
+        <td><strong>LLMルーター導入</strong></td>
+        <td>LiteLLM / Databricks AI Gateway 等<br><span style="font-size:11px;color:var(--text-muted)">1つのエンドポイントから複数プロバイダーに振り分け</span></td>
+        <td>フォールバック・コスト最適化・A/Bテストが自動化</td>
+      </tr>
+      <tr>
+        <td><strong>プロンプトとモデルの分離</strong></td>
+        <td>プロンプトテンプレートをモデル非依存で管理<br><span style="font-size:11px;color:var(--text-muted)">MLflow Prompt Registry 等</span></td>
+        <td>モデル切替時にプロンプト調整が最小限</td>
+      </tr>
+      <tr>
+        <td><strong>評価パイプライン</strong></td>
+        <td>新モデルを自動評価するCI<br><span style="font-size:11px;color:var(--text-muted)">同じテストセットで精度・コスト・レイテンシを比較</span></td>
+        <td>モデル乗り換え判断が客観的データに基づく</td>
+      </tr>
+    </table>
+
+    <div class="callout warn">
+      <strong>MTGでの提案:</strong>
+      <ul style="margin-top:8px;">
+        <li><strong>LLM呼び出しコードは最初から抽象化する</strong> → どのプラットフォームを選んでも、後からモデル・プロバイダーを変更できる</li>
+        <li><strong>Cortexの<code>AI_COMPLETE()</code>は便利だが注意</strong> → SQL内にLLM呼び出しを直接埋め込むと、Cortex依存が深くなる。重要なユースケースはAPI経由に分離すべき</li>
+        <li><strong>モデル評価の仕組みを初期から入れる</strong> → 半年後に「もっといいモデルが出た」時に、客観的に比較・切替できる体制</li>
+        <li><strong>「今はClaudeだけで十分だが、1年後にGPTも使いたくなるかも」</strong>なら、最初からOpenAI互換APIで統一しておくのが保険</li>
+      </ul>
+    </div>
+  </section>
+
   <!-- Bedrock + GPT構成 -->
   <section id="faq-bedrock-gpt">
     <h2>Bedrock環境でGPTも使いたい場合の構成</h2>
