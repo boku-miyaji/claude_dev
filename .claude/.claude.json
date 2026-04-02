@@ -47,7 +47,7 @@
     "agent-flag": 30,
     "feedback-command": 30
   },
-  "promptQueueUseCount": 3,
+  "promptQueueUseCount": 4,
   "cachedStatsigGates": {
     "tengu_prompt_suggestion": true,
     "tengu_year_end_2025_campaign_promo": false,
