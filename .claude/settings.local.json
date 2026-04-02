@@ -55,7 +55,8 @@
       "Bash(docker-compose build:*)",
       "Bash(docker compose build:*)",
       "Bash(cp /workspace/company-dashboard/index.html /workspace/.claude/plugins/marketplaces/ai-company/company-dashboard/index.html)",
-      "Bash(cp /workspace/company-dashboard/index.html /workspace/.claude/plugins/cache/ai-company/company/89baddfa0ee7/company-dashboard/index.html)"
+      "Bash(cp /workspace/company-dashboard/index.html /workspace/.claude/plugins/cache/ai-company/company/89baddfa0ee7/company-dashboard/index.html)",
+      "mcp__claude_ai_Google_Calendar__gcal_list_events"
     ]
   }
 }
