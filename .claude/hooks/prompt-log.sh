@@ -93,6 +93,15 @@ echo "$PROMPT" | grep -qi "ドキュメント\|docs\|README\|説明" && TAG_LIST
 echo "$PROMPT" | grep -qi "テスト\|test\|品質" && TAG_LIST+=("cat:quality")
 echo "$PROMPT" | grep -qi "リファクタ\|refactor\|整理\|cleanup" && TAG_LIST+=("cat:ops")
 
+# --- 軸4: skill（スラッシュコマンド検出） ---
+DETECTED_SKILL=$(echo "$PROMPT" | grep -oP '^/' | head -1 || true)
+if [ -n "$DETECTED_SKILL" ]; then
+  SKILL_CMD=$(echo "$PROMPT" | grep -oP '^/[a-zA-Z0-9_:-]+' | head -1 || true)
+  if [ -n "$SKILL_CMD" ]; then
+    TAG_LIST+=("skill:${SKILL_CMD}")
+  fi
+fi
+
 if [ ${#TAG_LIST[@]} -gt 0 ]; then
   TAGS=$(printf '%s\n' "${TAG_LIST[@]}" | jq -R . | jq -s .)
 fi
