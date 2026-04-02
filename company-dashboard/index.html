@@ -1350,11 +1350,14 @@ function openCalEventModal(existingEvent, defaultDate, onSaved) {
   ]));
 
   // Date/time inputs
-  var defDate = defaultDate || new Date().toISOString().slice(0, 10);
-  var startDateInput = el('input', {type: 'date', value: isEdit ? existingEvent.start_time.slice(0, 10) : defDate, style: inputStyle});
-  var startTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? new Date(existingEvent.start_time).toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit',hour12:false}) : '10:00', style: inputStyle+';width:auto'});
-  var endDateInput = el('input', {type: 'date', value: isEdit ? (existingEvent.all_day ? existingEvent.start_time.slice(0,10) : existingEvent.end_time.slice(0, 10)) : defDate, style: inputStyle});
-  var endTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? new Date(existingEvent.end_time).toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit',hour12:false}) : '11:00', style: inputStyle+';width:auto'});
+  var _now = new Date();
+  var defDate = defaultDate || (_now.getFullYear() + '-' + String(_now.getMonth()+1).padStart(2,'0') + '-' + String(_now.getDate()).padStart(2,'0'));
+  function toLocalDate(dt) { var d = new Date(dt); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function toLocalTime(dt) { var d = new Date(dt); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  var startDateInput = el('input', {type: 'date', value: isEdit ? toLocalDate(existingEvent.start_time) : defDate, style: inputStyle});
+  var startTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.start_time) : '10:00', style: inputStyle+';width:auto'});
+  var endDateInput = el('input', {type: 'date', value: isEdit ? (existingEvent.all_day ? toLocalDate(existingEvent.start_time) : toLocalDate(existingEvent.end_time)) : defDate, style: inputStyle});
+  var endTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.end_time) : '11:00', style: inputStyle+';width:auto'});
 
   var timeRow = el('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px'});
   var startGroup = el('div', {}, [
