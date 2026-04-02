@@ -504,7 +504,6 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <div class="nav-group-label">Management</div>
     <button class="nav-item" data-page="tasks"><span class="nav-icon">☐</span> Tasks</button>
     <button class="nav-item" data-page="companies"><span class="nav-icon">◫</span> Companies</button>
-    <button class="nav-item" data-page="orgchart"><span class="nav-icon">⊞</span> Organization</button>
     <button class="nav-item" data-page="finance"><span class="nav-icon">¥</span> Finance</button>
     <div class="nav-group-label">Analytics</div>
     <button class="nav-item" data-page="insights"><span class="nav-icon">◇</span> Insights</button>
@@ -513,7 +512,6 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
     <button class="nav-item" data-page="api-costs"><span class="nav-icon">$</span> API Costs</button>
     <button class="nav-item" data-page="growth"><span class="nav-icon">↗</span> Growth</button>
     <div class="nav-group-label">Personal</div>
-    <button class="nav-item" data-page="portfolio"><span class="nav-icon">◆</span> Portfolio</button>
     <button class="nav-item" data-page="career"><span class="nav-icon">☆</span> Career</button>
     <button class="nav-item" data-page="diary"><span class="nav-icon">✎</span> Diary</button>
     <div class="nav-group-label">Tools</div>
@@ -572,7 +570,6 @@ var ALL_MOB_TABS = [
   {page: 'finance', icon: '¥', label: 'Finance'},
   {page: 'tasks', icon: '☐', label: 'Tasks'},
   {page: 'companies', icon: '◫', label: 'Co.'},
-  {page: 'portfolio', icon: '◆', label: 'Portfolio'},
   {page: 'career', icon: '☆', label: 'Career'},
   {page: 'orgchart', icon: '⊞', label: 'Org'},
   {page: 'prompts', icon: '▷', label: 'Prompts'},
@@ -1078,7 +1075,6 @@ function openCommandPalette() {
     {icon: '◎', label: 'Intelligence', page: 'intelligence', group: 'Analytics'},
     {icon: '$', label: 'API Costs', page: 'api-costs', group: 'Analytics'},
     {icon: '↗', label: 'Growth', page: 'growth', group: 'Analytics'},
-    {icon: '◆', label: 'Portfolio', page: 'portfolio', group: 'Personal'},
     {icon: '☆', label: 'Career', page: 'career', group: 'Personal'},
     {icon: '✎', label: 'Diary', page: 'diary', group: 'Personal'},
     {icon: '◈', label: 'Knowledge', page: 'knowledge', group: 'Tools'},
@@ -1195,7 +1191,6 @@ function renderPage(page) {
     tasks: renderTasks,
     companies: renderCompanies,
     orgchart: renderOrgChart,
-    portfolio: renderPortfolio,
     career: renderCareer,
     knowledge: renderKnowledge,
     prompts: renderPrompts,
@@ -2518,7 +2513,12 @@ async function renderCareer(root) {
 
   async function loadAndRender() {
     while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
-    var items = (await sb.from('career_history').select('*').order('start_date', {ascending: false})).data || [];
+    var [histRes, invRes] = await Promise.all([
+      sb.from('career_history').select('*').order('start_date', {ascending: false}),
+      sb.from('invoices').select('client_name, invoice_date').order('invoice_date')
+    ]);
+    var items = histRes.data || [];
+    var invoices = invRes.data || [];
 
     if (items.length === 0) {
       contentArea.appendChild(el('div', {className: 'card', style: 'text-align:center;padding:40px'}, [
@@ -2557,6 +2557,44 @@ async function renderCareer(root) {
       summaryCard.appendChild(tagRow);
     }
     contentArea.appendChild(summaryCard);
+
+    // ===== Auto-detected from invoices =====
+    var existingOrgs = {};
+    items.forEach(function(i) { if (i.organization) existingOrgs[i.organization] = true; });
+    var clientPeriods = {};
+    invoices.forEach(function(inv) {
+      var name = inv.client_name;
+      if (!clientPeriods[name]) clientPeriods[name] = {first: inv.invoice_date, last: inv.invoice_date};
+      if (inv.invoice_date < clientPeriods[name].first) clientPeriods[name].first = inv.invoice_date;
+      if (inv.invoice_date > clientPeriods[name].last) clientPeriods[name].last = inv.invoice_date;
+    });
+    var suggestions = Object.keys(clientPeriods).filter(function(name) { return !existingOrgs[name]; });
+
+    if (suggestions.length > 0) {
+      var sugCard = el('div', {style: 'background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:16px 20px;margin-bottom:20px'});
+      sugCard.appendChild(el('div', {style: 'font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px', textContent: '請求書データから検出（未登録）'}));
+      suggestions.forEach(function(name) {
+        var p = clientPeriods[name];
+        var row = el('div', {style: 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)'});
+        row.appendChild(el('div', {}, [
+          el('span', {textContent: name, style: 'font-size:13px;font-weight:500'}),
+          el('span', {textContent: '  ' + p.first.substring(0,7) + ' \u2014 ' + p.last.substring(0,7), style: 'font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:8px'})
+        ]));
+        row.appendChild(el('button', {className: 'btn btn-p btn-sm', style: 'font-size:11px', textContent: '+ 登録', onClick: function() {
+          showCareerForm({title: '\u696D\u52D9\u59D4\u8A17', organization: name, role: '\u696D\u52D9\u59D4\u8A17', start_date: p.first, end_date: null, description: '', tags: []});
+        }}));
+        sugCard.appendChild(row);
+      });
+      contentArea.appendChild(sugCard);
+    }
+
+    // ===== What's auto / manual =====
+    var infoCard = el('div', {style: 'background:var(--surface2);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:11px;color:var(--text3);line-height:1.7'});
+    infoCard.appendChild(el('span', {style: 'color:var(--text2);font-weight:600', textContent: '\u81EA\u52D5'}));
+    infoCard.appendChild(document.createTextNode(': Summary\uFF08\u7D4C\u9A13\u5E74\u6570\u30FB\u7D44\u7E54\u6570\u30FB\u30BF\u30B0\u96C6\u8A08\uFF09\u3001\u8ACB\u6C42\u66F8\u304B\u3089\u306E\u672A\u767B\u9332\u30AF\u30E9\u30A4\u30A2\u30F3\u30C8\u691C\u51FA\u3000|\u3000'));
+    infoCard.appendChild(el('span', {style: 'color:var(--text2);font-weight:600', textContent: '\u624B\u52D5'}));
+    infoCard.appendChild(document.createTextNode(': \u7D4C\u6B74\u306E\u8FFD\u52A0\u30FB\u7DE8\u96C6\u30FB\u524A\u9664\u3001\u8A73\u7D30\u3084\u5F79\u8077\u306E\u8A18\u5165'));
+    contentArea.appendChild(infoCard);
 
     // ===== Timeline =====
     var tlCard = el('div', {style: 'position:relative;padding-left:20px'});
