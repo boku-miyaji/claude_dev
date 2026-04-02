@@ -62,7 +62,12 @@
       "mcp__plugin_supabase_supabase__execute_sql",
       "Bash(sudo apt-get:*)",
       "Bash(pdftoppm -v)",
-      "Bash(pdftotext /workspace/temp/20260331_技術スタック採用方針.pdf -)"
+      "Bash(pdftotext /workspace/temp/20260331_技術スタック採用方針.pdf -)",
+      "WebFetch(domain:it.impress.co.jp)",
+      "WebFetch(domain:www.montecarlodata.com)",
+      "WebFetch(domain:www.oriongovernance.com)",
+      "WebFetch(domain:www.thoughtworks.com)",
+      "WebFetch(domain:atlan.com)"
     ]
   }
 }
