@@ -1723,174 +1723,179 @@ async function renderCalendar(root) {
 }
 
 // ============================================================
-// Dashboard Page
+// Home Page — AI-powered daily briefing
 // ============================================================
 async function renderDashboard(root) {
   var now = new Date();
   var todayStr = toLocalDateStr(now);
   var year = now.getFullYear();
-  var monthStr = year + '-' + String(now.getMonth()+1).padStart(2,'0');
-
-  // Greeting
   var hour = now.getHours();
   var greeting = hour < 12 ? 'おはようございます' : hour < 18 ? 'こんにちは' : 'お疲れさまです';
-  root.appendChild(el('div', {style: 'margin-bottom:24px'}, [
-    el('div', {style: 'font-size:20px;font-weight:700', textContent: greeting}),
-    el('div', {style: 'font-size:13px;color:var(--text3);margin-top:4px', textContent: now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+['日','月','火','水','木','金','土'][now.getDay()]+'）'})
+  var dayLabel = year+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+['日','月','火','水','木','金','土'][now.getDay()]+'）';
+
+  // Header
+  root.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px'}, [
+    el('div', {}, [
+      el('div', {style: 'font-size:20px;font-weight:700', textContent: greeting}),
+      el('div', {style: 'font-size:13px;color:var(--text3);margin-top:2px', textContent: dayLabel})
+    ]),
+    el('button', {className:'btn btn-g btn-sm', style:'font-size:11px', textContent:'\u21BB', onClick: function() { sessionStorage.removeItem('hd-briefing-'+todayStr+'-'+hour); renderPage('home'); }})
   ]));
 
-  // Fetch all data in parallel
-  var startOfYear = year+'-01-01';
-  var endOfYear = year+'-12-31';
-  var [tasksRes, invRes, expRes, insightsRes, diaryRes, commentsRes, knowledgeRes] = await Promise.all([
-    sb.from('tasks').select('*').in('status', ['open','in_progress']).order('priority,created_at'),
-    sb.from('invoices').select('amount,invoice_date,client_name').gte('invoice_date', startOfYear).lte('invoice_date', endOfYear),
-    sb.from('expenses').select('amount').gte('expense_date', startOfYear).lte('expense_date', endOfYear),
-    sb.from('ceo_insights').select('*').order('created_at', {ascending:false}).limit(5),
-    sb.from('diary_entries').select('entry_date,body,wbi_score').order('entry_date', {ascending:false}).limit(3),
-    sb.from('comments').select('*').order('created_at', {ascending:false}).limit(5),
-    sb.from('knowledge_base').select('*').eq('status','active').order('confidence', {ascending:false}).limit(5)
+  var briefingArea = el('div');
+  root.appendChild(briefingArea);
+
+  // Loading
+  if (!document.getElementById('briefing-anim')) {
+    var sty = document.createElement('style'); sty.id = 'briefing-anim';
+    sty.textContent = '@keyframes slideRight{0%{transform:translateX(0)}100%{transform:translateX(150%)}}';
+    document.head.appendChild(sty);
+  }
+  briefingArea.appendChild(el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;color:var(--text3);font-size:13px'}, [
+    el('div', {textContent: 'ブリーフィングを準備中...', style: 'margin-bottom:8px'}),
+    el('div', {style: 'width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto;overflow:hidden'}, [
+      el('div', {style: 'width:40%;height:100%;background:var(--accent);border-radius:2px;animation:slideRight 1s ease-in-out infinite alternate'})
+    ])
+  ]));
+
+  // Fetch all data
+  var startOfYear = year+'-01-01', endOfYear = year+'-12-31';
+  var results = await Promise.allSettled([
+    sb.from('tasks').select('id,title,priority,status,company_id,due_date').in('status',['open','in_progress']).order('priority,created_at'),
+    sb.from('invoices').select('amount,invoice_date,client_name,status').gte('invoice_date',startOfYear).lte('invoice_date',endOfYear),
+    sb.from('expenses').select('amount').gte('expense_date',startOfYear).lte('expense_date',endOfYear),
+    sb.from('ceo_insights').select('category,insight,created_at').order('created_at',{ascending:false}).limit(5),
+    sb.from('diary_entries').select('entry_date,body,wbi_score').order('entry_date',{ascending:false}).limit(3),
+    sb.from('comments').select('body,company_id,created_at').order('created_at',{ascending:false}).limit(5)
   ]);
 
-  var tasks = tasksRes.data || [];
-  var invoices = invRes.data || [];
-  var expenses = expRes.data || [];
-  var insights = insightsRes.data || [];
-  var diaries = diaryRes.data || [];
-  var comments = commentsRes.data || [];
-  var knowledge = knowledgeRes.data || [];
+  // Calendar
+  var calEvents = [];
+  var gcToken = getGcalToken();
+  if (gcToken) {
+    try {
+      var ts0 = new Date(year, now.getMonth(), now.getDate()), te0 = new Date(ts0); te0.setDate(te0.getDate()+1);
+      calEvents = (await fetchGcalEvents(gcToken, ts0, te0)).events || [];
+    } catch(e) {}
+  }
 
-  var cardStyle = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px';
-  var sectionLabel = 'font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;font-weight:600';
+  var tasks = (results[0].status==='fulfilled' && results[0].value.data) || [];
+  var invoices = (results[1].status==='fulfilled' && results[1].value.data) || [];
+  var expenses = (results[2].status==='fulfilled' && results[2].value.data) || [];
+  var insights = (results[3].status==='fulfilled' && results[3].value.data) || [];
+  var diaries = (results[4].status==='fulfilled' && results[4].value.data) || [];
+  var comments = ((results[5].status==='fulfilled' && results[5].value.data) || []).filter(function(c){return c.body&&c.body.length>2;});
 
-  // ===== Row 1: Finance snapshot + Tasks =====
-  var row1 = el('div', {style: 'display:grid;grid-template-columns:'+(window.innerWidth<=700?'1fr':'1fr 1fr')+';gap:16px;margin-bottom:16px'});
-
-  // -- Finance snapshot --
+  // Compute finance
   var yearRev = invoices.reduce(function(s,i){return s+i.amount;},0);
   var yearExp = expenses.reduce(function(s,e){return s+e.amount;},0);
-  var invMonthSet = {};
-  invoices.forEach(function(i) { invMonthSet[i.invoice_date.substring(0,7)] = true; });
-  var dataMonths = Math.max(Object.keys(invMonthSet).length, 1);
-  var projRev = Math.round(yearRev / dataMonths * 12);
-  var projExp = Math.round(yearExp / dataMonths * 12);
-  var taxEst = calcTax(projRev, projExp);
-  var monthlyReserve = Math.ceil(taxEst.totalTax / 12);
+  var invMonthSet = {}; invoices.forEach(function(i){invMonthSet[i.invoice_date.substring(0,7)]=true;});
+  var dataMonths = Math.max(Object.keys(invMonthSet).length,1);
+  var projRev = Math.round(yearRev/dataMonths*12);
+  var taxEst = calcTax(projRev, Math.round(yearExp/dataMonths*12));
+  var highTasks = tasks.filter(function(t){return t.priority==='high';});
+  var unpaidInv = invoices.filter(function(i){return i.status!=='paid';});
 
-  var finCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('finance'); }});
-  finCard.appendChild(el('div', {style: sectionLabel, textContent: 'Finance — ' + monthStr.replace('-','/')}));
-  var finGrid = el('div', {style: 'display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px'});
-  [{l:'年間売上',v:fmtYen(yearRev),c:'var(--accent)'},{l:'年間経費',v:fmtYen(yearExp),c:'var(--text3)'},{l:'粗利',v:fmtYen(yearRev-yearExp),c:(yearRev-yearExp)>=0?'#22c55e':'#ef4444'}].forEach(function(d) {
-    finGrid.appendChild(el('div', {}, [
-      el('div', {textContent: d.v, style: 'font-size:16px;font-weight:700;color:'+d.c}),
-      el('div', {textContent: d.l, style: 'font-size:10px;color:var(--text3)'})
+  // Build context for AI
+  var ctx = [];
+  ctx.push('## 日時\n'+dayLabel+' '+String(hour).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'));
+  if (calEvents.length>0) ctx.push('## 今日の予定\n'+calEvents.map(function(e){
+    var t = e.all_day?'終日':new Date(e.start_time).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'});
+    return '- '+t+' '+e.summary;}).join('\n'));
+  ctx.push('## タスク (open:'+tasks.length+', high:'+highTasks.length+')\n'+tasks.slice(0,8).map(function(t){return '- ['+t.priority+'] '+t.title+(t.company_id?' ('+t.company_id+')':'')+(t.due_date?' 期限:'+t.due_date:'');}).join('\n'));
+  ctx.push('## 財務 ('+year+'年 '+dataMonths+'ヶ月実績)\n- 売上: '+fmtYen(yearRev)+' (月平均:'+fmtYen(Math.round(yearRev/dataMonths))+')\n- 経費: '+fmtYen(yearExp)+'\n- 粗利: '+fmtYen(yearRev-yearExp)+'\n- 年間予測: '+fmtYen(projRev)+'\n- 税金積立: '+fmtYen(Math.ceil(taxEst.totalTax/12))+'/月\n- 未入金: '+unpaidInv.length+'件 '+fmtYen(unpaidInv.reduce(function(s,i){return s+i.amount;},0)));
+  if (insights.length>0) ctx.push('## CEO分析 (最終:'+(insights[0].created_at||'').substring(0,10)+')\n'+insights.map(function(i){return '- ['+i.category+'] '+i.insight;}).join('\n'));
+  if (diaries.length>0) ctx.push('## 日記\n'+diaries.map(function(d){return '- '+d.entry_date+(d.wbi_score?' (WBI:'+d.wbi_score+')':'')+': '+(d.body||'').substring(0,100);}).join('\n'));
+  if (comments.length>0) ctx.push('## コメント\n'+comments.slice(0,3).map(function(c){return '- ['+(c.company_id||'hd')+'] '+(c.body||'').substring(0,80);}).join('\n'));
+  var contextStr = ctx.join('\n\n');
+
+  // Try AI briefing
+  var apiKey = getChatApiKey();
+  var cacheKey = 'hd-briefing-'+todayStr+'-'+hour;
+  var cached = sessionStorage.getItem(cacheKey);
+
+  if (cached) { renderBriefing(briefingArea, cached, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths); return; }
+
+  if (apiKey) {
+    try {
+      var sysPrompt = 'あなたは宮路HDの秘書AIです。社長への日次ブリーフィングを生成します。\n'+
+        'ルール:\n- 日本語、簡潔、秘書の口調\n- 最初に「今日のポイント」を3行以内で\n'+
+        '- セクション: 予定→注意事項→財務→気づき\n- 問題なければ安心させる。問題あれば具体的に何をすべきか\n'+
+        '- 300-500字目安。Markdown形式\n- データない項目は省略\n- 時間帯考慮（朝=予定中心、夕方=振り返り）';
+      var res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+        body: JSON.stringify({model:'gpt-4.1-nano', messages:[{role:'system',content:sysPrompt},{role:'user',content:contextStr}], max_tokens:800})
+      });
+      if (res.ok) {
+        var data = await res.json();
+        var text = data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'';
+        if (text) { sessionStorage.setItem(cacheKey, text); renderBriefing(briefingArea, text, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths); return; }
+      }
+    } catch(e) { console.error('Briefing error:', e); }
+  }
+
+  // Fallback
+  renderBriefingFallback(briefingArea, apiKey, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
+}
+
+function renderBriefing(container, md, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths) {
+  while (container.firstChild) container.removeChild(container.firstChild);
+  var card = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px'});
+  card.appendChild(el('div', {style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'}, [
+    el('div', {style:'font-size:13px;font-weight:600;color:var(--text2)', textContent:'Daily Briefing'}),
+    el('div', {style:'font-size:10px;color:var(--text3)', textContent: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'})+' 生成'})
+  ]));
+  var mdDiv = el('div', {className:'md-body'});
+  if (typeof marked!=='undefined'&&marked.parse) {
+    var tpl = document.createElement('template');
+    tpl.innerHTML = marked.parse(md);
+    mdDiv.appendChild(tpl.content);
+  } else { mdDiv.style.whiteSpace='pre-wrap'; mdDiv.textContent=md; }
+  card.appendChild(mdDiv);
+  container.appendChild(card);
+  renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
+}
+
+function renderBriefingFallback(container, apiKey, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths) {
+  while (container.firstChild) container.removeChild(container.firstChild);
+  if (!apiKey) container.appendChild(el('div', {style:'font-size:11px;color:var(--text3);margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:6px',
+    textContent:'Settings > Chat で OpenAI API Key を設定すると、AIブリーフィングが生成されます。'}));
+  renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
+}
+
+function renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths) {
+  var now = new Date();
+  var cs = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;cursor:pointer';
+
+  // Today's schedule
+  if (calEvents.length>0) {
+    var cc = el('div', {style:cs+';margin-bottom:12px', onClick:function(){navigate('calendar');}});
+    cc.appendChild(el('div', {style:'font-size:11px;color:var(--text3);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px', textContent:'Today — '+calEvents.length+'件'}));
+    calEvents.slice(0,6).forEach(function(e) {
+      var es = new Date(e.start_time), isPast = new Date(e.end_time)<now, isCur = es<=now&&new Date(e.end_time)>now;
+      var ts = e.all_day?'終日':es.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'});
+      cc.appendChild(el('div', {style:'display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px;'+(isPast?'opacity:.4;':'')+(isCur?'font-weight:600;color:var(--accent);':'')}, [
+        el('span', {textContent:ts, style:'font-family:var(--mono);min-width:36px;color:var(--text3);font-size:11px'}),
+        el('span', {textContent:e.summary})
+      ]));
+    });
+    container.appendChild(cc);
+  }
+
+  // KPI row
+  var row = el('div', {style:'display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-bottom:12px'});
+  var highTasks = tasks.filter(function(t){return t.priority==='high';});
+  [{v:tasks.length, l:'Open Tasks'+(highTasks.length?' (!'+highTasks.length+')':''), c:highTasks.length>0?'#ef4444':'var(--text)', p:'tasks'},
+   {v:fmtYen(yearRev), l:'年間売上 ('+dataMonths+'M)', c:'var(--accent)', p:'finance'},
+   {v:fmtYen(yearRev-yearExp), l:'粗利', c:(yearRev-yearExp)>=0?'#22c55e':'#ef4444', p:'finance'},
+   {v:fmtYen(Math.ceil(taxEst.totalTax/12)), l:'月次積立', c:'#f59e0b', p:'finance'}
+  ].forEach(function(d) {
+    row.appendChild(el('div', {style:cs, onClick:function(){navigate(d.p);}}, [
+      el('div', {textContent:String(d.v), style:'font-size:18px;font-weight:700;color:'+d.c}),
+      el('div', {textContent:d.l, style:'font-size:10px;color:var(--text3);margin-top:2px'})
     ]));
   });
-  finCard.appendChild(finGrid);
-  finCard.appendChild(el('div', {style: 'padding:8px 12px;background:var(--surface2);border-radius:6px;display:flex;justify-content:space-between;font-size:12px'}, [
-    el('span', {textContent: '税金積立目安', style: 'color:var(--text3)'}),
-    el('span', {textContent: fmtYen(monthlyReserve)+'/月', style: 'font-weight:600;color:#f59e0b'})
-  ]));
-  row1.appendChild(finCard);
-
-  // -- Tasks --
-  var taskCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('tasks'); }});
-  taskCard.appendChild(el('div', {style: sectionLabel, textContent: 'Tasks — ' + tasks.length + ' open'}));
-  var highTasks = tasks.filter(function(t){return t.priority==='high';});
-  if (highTasks.length > 0) {
-    taskCard.appendChild(el('div', {style: 'font-size:11px;color:#ef4444;font-weight:600;margin-bottom:8px', textContent: 'High priority: '+highTasks.length+'件'}));
-  }
-  tasks.slice(0, 5).forEach(function(t) {
-    var priColor = t.priority === 'high' ? '#ef4444' : t.priority === 'low' ? 'var(--text3)' : 'var(--text2)';
-    taskCard.appendChild(el('div', {style: 'display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--surface2);font-size:12px'}, [
-      el('span', {style: 'width:6px;height:6px;border-radius:50%;background:'+priColor+';flex-shrink:0'}),
-      el('span', {textContent: t.title, style: 'color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'}),
-      t.company_id ? el('span', {textContent: t.company_id, style: 'font-size:10px;color:var(--text3);font-family:var(--mono)'}) : null
-    ].filter(Boolean)));
-  });
-  if (tasks.length === 0) taskCard.appendChild(el('div', {textContent: 'タスクなし', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
-  row1.appendChild(taskCard);
-  root.appendChild(row1);
-
-  // ===== Row 2: Insights + Diary =====
-  var row2 = el('div', {style: 'display:grid;grid-template-columns:'+(window.innerWidth<=700?'1fr':'1fr 1fr')+';gap:16px;margin-bottom:16px'});
-
-  // -- CEO Insights --
-  var insCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('insights'); }});
-  insCard.appendChild(el('div', {style: sectionLabel, textContent: 'Insights / 分析'}));
-  if (insights.length > 0) {
-    insights.forEach(function(ins) {
-      var catColors = {pattern:'var(--accent)',preference:'#22c55e',work_rhythm:'#f59e0b',tendency:'#8b5cf6',strength:'#06b6d4'};
-      insCard.appendChild(el('div', {style: 'padding:6px 0;border-bottom:1px solid var(--surface2)'}, [
-        el('div', {style: 'display:flex;gap:6px;align-items:center;margin-bottom:2px'}, [
-          el('span', {textContent: ins.category, style: 'font-size:9px;padding:1px 6px;border-radius:3px;background:'+(catColors[ins.category]||'var(--text3)')+'18;color:'+(catColors[ins.category]||'var(--text3)')+';font-weight:600'}),
-          el('span', {textContent: ins.confidence ? 'confidence: '+ins.confidence : '', style: 'font-size:9px;color:var(--text3)'})
-        ]),
-        el('div', {textContent: (ins.insight || '').substring(0, 80), style: 'font-size:12px;color:var(--text2);line-height:1.5'})
-      ]));
-    });
-  } else {
-    insCard.appendChild(el('div', {textContent: 'まだ分析データがありません', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
-  }
-  row2.appendChild(insCard);
-
-  // -- Diary --
-  var diaryCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('diary'); }});
-  diaryCard.appendChild(el('div', {style: sectionLabel, textContent: 'Diary — 最近の記録'}));
-  if (diaries.length > 0) {
-    diaries.forEach(function(d) {
-      var wbiColor = d.wbi_score >= 7 ? '#22c55e' : d.wbi_score >= 4 ? '#f59e0b' : '#ef4444';
-      diaryCard.appendChild(el('div', {style: 'padding:6px 0;border-bottom:1px solid var(--surface2)'}, [
-        el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:2px'}, [
-          el('span', {textContent: d.entry_date, style: 'font-size:11px;font-family:var(--mono);color:var(--text3)'}),
-          d.wbi_score ? el('span', {textContent: 'WBI '+d.wbi_score, style: 'font-size:10px;font-weight:600;color:'+wbiColor}) : null
-        ].filter(Boolean)),
-        el('div', {textContent: (d.body || '').substring(0, 60) + ((d.body||'').length > 60 ? '...' : ''), style: 'font-size:12px;color:var(--text2);line-height:1.5'})
-      ]));
-    });
-  } else {
-    diaryCard.appendChild(el('div', {textContent: '日記を書いてみましょう', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
-  }
-  row2.appendChild(diaryCard);
-  root.appendChild(row2);
-
-  // ===== Row 3: Comments + Knowledge =====
-  var row3 = el('div', {style: 'display:grid;grid-template-columns:'+(window.innerWidth<=700?'1fr':'1fr 1fr')+';gap:16px;margin-bottom:16px'});
-
-  // -- Recent Comments --
-  var comCard = el('div', {style: cardStyle});
-  comCard.appendChild(el('div', {style: sectionLabel, textContent: 'Comments — 最新'}));
-  var realComments = comments.filter(function(c) { return c.body && c.body.length > 2; });
-  if (realComments.length > 0) {
-    realComments.slice(0, 4).forEach(function(c) {
-      comCard.appendChild(el('div', {style: 'padding:6px 0;border-bottom:1px solid var(--surface2)'}, [
-        el('div', {style: 'display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:2px'}, [
-          el('span', {textContent: c.company_id || 'hd'}),
-          el('span', {textContent: (c.created_at || '').substring(0, 10)})
-        ]),
-        el('div', {textContent: c.body.substring(0, 80) + (c.body.length > 80 ? '...' : ''), style: 'font-size:12px;color:var(--text2);line-height:1.5'})
-      ]));
-    });
-  } else {
-    comCard.appendChild(el('div', {textContent: 'コメントなし', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
-  }
-  row3.appendChild(comCard);
-
-  // -- Knowledge Rules --
-  var kbCard = el('div', {style: cardStyle + ';cursor:pointer', onClick: function() { navigate('knowledge'); }});
-  kbCard.appendChild(el('div', {style: sectionLabel, textContent: 'Knowledge — Active Rules'}));
-  if (knowledge.length > 0) {
-    knowledge.forEach(function(k) {
-      kbCard.appendChild(el('div', {style: 'padding:4px 0;border-bottom:1px solid var(--surface2);display:flex;gap:8px;align-items:flex-start'}, [
-        el('span', {textContent: k.category, style: 'font-size:9px;padding:1px 6px;border-radius:3px;background:var(--surface2);color:var(--text3);white-space:nowrap;flex-shrink:0'}),
-        el('span', {textContent: (k.rule || '').substring(0, 60), style: 'font-size:11px;color:var(--text2);line-height:1.4'})
-      ]));
-    });
-  } else {
-    kbCard.appendChild(el('div', {textContent: 'ナレッジルールなし', style: 'font-size:12px;color:var(--text3);padding:12px 0;text-align:center'}));
-  }
-  row3.appendChild(kbCard);
-  root.appendChild(row3);
+  container.appendChild(row);
 }
 
 // ============================================================
