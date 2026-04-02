@@ -1261,13 +1261,17 @@ function getGcalToken() {
   return null;
 }
 
+function toJstIso(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
+    + 'T' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':00+09:00';
+}
 async function fetchGcalEvents(token) {
   var now = new Date();
   var startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   var endDate = new Date(startOfDay);
   endDate.setDate(endDate.getDate() + 7);
-  var timeMin = startOfDay.toISOString();
-  var timeMax = endDate.toISOString();
+  var timeMin = toJstIso(startOfDay);
+  var timeMax = toJstIso(endDate);
 
   var allEvents = [];
   var fetchErrors = [];
@@ -1490,7 +1494,7 @@ function renderCalendarGrid(root, events, onRefresh) {
           if (eEnd < now) timeClass = ' cal-past';
           else if (eStart <= now && eEnd > now) timeClass = ' cal-now';
         }
-        var timeStr = e.all_day ? '' : eStart.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit', hour12: false});
+        var timeStr = e.all_day ? '' : eStart.toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo'});
 
         var evtEl = el('div', {className: 'cal-evt cal-' + e.calendar_type + timeClass, style: 'cursor:pointer'}, [
           timeStr ? el('span', {className: 'cal-evt-time', textContent: timeStr}) : null,
