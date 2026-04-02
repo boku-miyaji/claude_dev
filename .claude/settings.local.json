@@ -59,7 +59,10 @@
       "mcp__claude_ai_Google_Calendar__gcal_list_events",
       "mcp__plugin_supabase_supabase__list_projects",
       "mcp__plugin_supabase_supabase__apply_migration",
-      "mcp__plugin_supabase_supabase__execute_sql"
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "Bash(sudo apt-get:*)",
+      "Bash(pdftoppm -v)",
+      "Bash(pdftotext /workspace/temp/20260331_技術スタック採用方針.pdf -)"
     ]
   }
 }
