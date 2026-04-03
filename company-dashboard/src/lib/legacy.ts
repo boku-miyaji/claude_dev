@@ -1621,7 +1621,7 @@ async function renderDashboard(root) {
       } catch(x) {}
     }
 
-    // Build quick context — 全予定をLLMに渡す
+    // Build rich context — 予定+タスク+日記+インサイトを全部渡す
     var quickCtx = dayLabel + ' ' + String(hour).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
     if (calEvents.length > 0) {
       quickCtx += '\n今日の予定 ('+calEvents.length+'件):';
@@ -1636,6 +1636,30 @@ async function renderDashboard(root) {
     }
     if (morningBriefing) quickCtx += '\n朝のブリーフィング: '+morningBriefing;
     if (highTasks.length>0) quickCtx += '\n高優先タスク: '+highTasks.slice(0,3).map(function(t){return t.title;}).join('、');
+    if (tasks.length>0) quickCtx += '\n全タスク数: '+tasks.length+'件';
+
+    // Fetch diary + CEO insights for personal context
+    var extraCtx = await Promise.allSettled([
+      sb.from('diary_entries').select('content,mood_score,created_at').order('created_at',{ascending:false}).limit(1),
+      sb.from('ceo_insights').select('insight,category').in('category',['preference','tendency','work_rhythm']).order('created_at',{ascending:false}).limit(3),
+      sb.from('prompt_sessions').select('started_at,prompt_count,tags').order('started_at',{ascending:false}).limit(1)
+    ]);
+    var latestDiary = (extraCtx[0].status==='fulfilled' && extraCtx[0].value.data && extraCtx[0].value.data[0]) || null;
+    var insights = (extraCtx[1].status==='fulfilled' && extraCtx[1].value.data) || [];
+    var lastSession = (extraCtx[2].status==='fulfilled' && extraCtx[2].value.data && extraCtx[2].value.data[0]) || null;
+
+    if (latestDiary) {
+      var diaryAge = Math.round((now.getTime() - new Date(latestDiary.created_at).getTime()) / 86400000);
+      quickCtx += '\n直近の日記(' + (diaryAge === 0 ? '今日' : diaryAge + '日前') + '): ' + (latestDiary.content || '').substring(0, 80);
+      if (latestDiary.mood_score) quickCtx += ' (気分: ' + latestDiary.mood_score + '/10)';
+    }
+    if (insights.length > 0) {
+      quickCtx += '\n社長の特徴: ' + insights.map(function(i) { return i.insight; }).join(' / ').substring(0, 120);
+    }
+    if (lastSession) {
+      var sessionAge = Math.round((now.getTime() - new Date(lastSession.started_at).getTime()) / 3600000);
+      if (sessionAge > 0) quickCtx += '\n前回の作業: ' + sessionAge + '時間前 (' + (lastSession.prompt_count||0) + 'プロンプト)';
+    }
 
     try {
       var session = await sb.auth.getSession();
@@ -1644,17 +1668,15 @@ async function renderDashboard(root) {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken,'apikey':SUPABASE_ANON_KEY},
         body: JSON.stringify({
-          message: 'あなたは社長にとって一番身近な存在。友達のような、家族のような距離感。\n'
-            + '今の時間と状況を見て、心からの一言を書いて。1文、40字以内。\n\n'
-            + '【絶対に守ること】\n'
-            + '- タスク名や件数を並べない。報告文にしない。業務用語を使わない\n'
-            + '- 「〜を優先進行」「〜を完了」のような進捗報告は禁止\n'
-            + '- 人が人に声をかけるときの自然な言葉で書く\n\n'
-            + '【良い例】\n'
-            + '- 「今日は盛りだくさんだったね、ちゃんとご飯食べた？」\n'
-            + '- 「明日の朝イチMTGに備えて、今夜は早めに寝ましょ」\n'
-            + '- 「予定なしの日って貴重ですよね、好きなことに使いましょう」\n'
-            + '- 「こんな遅くまでお疲れさま。あったかいもの飲んでね」\n\n'
+          message: 'あなたは社長のことをよく知っている秘書。日記も読んでいるし、働き方の癖も把握している。\n'
+            + '今の状況を全部踏まえて、社長にだけ通じる一言を書いて。1文、50字以内。\n\n'
+            + '【大事なこと】\n'
+            + '- 社長の今の状況・気持ちを理解した上で書く\n'
+            + '- タスクや予定に触れてもいいが、「〜を優先進行」のような報告文にしない\n'
+            + '- 「〜件完了」のような実績報告にもしない\n'
+            + '- 社長個人に向けた言葉にする。誰にでも言えることは書かない\n'
+            + '- 日記の内容を知っているなら、その気持ちを踏まえる\n'
+            + '- 体調や時間帯を気にかけてもいい\n\n'
             + quickCtx,
           model: 'gpt-5-nano',
           context_mode: 'none'
@@ -1669,8 +1691,8 @@ async function renderDashboard(root) {
           }
         });
         if (text) {
-          text = text.replace(/\n/g,' ').split(/[。！]/)[0];
-          if (text.length > 60) text = text.substring(0,60);
+          text = text.replace(/\n/g,' ').replace(/^["「]|["」]$/g,'');
+          if (text.length > 70) text = text.substring(0,70);
           localStorage.setItem(cacheKey, JSON.stringify({text:text,time:Date.now(),hour:hour}));
           onelineEl.textContent = text;
           onelineEl.style.color = 'var(--text2)';
