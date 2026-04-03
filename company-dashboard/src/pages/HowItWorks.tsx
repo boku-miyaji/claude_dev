@@ -260,6 +260,77 @@ export function HowItWorks() {
         ]} />
       </Section>
 
+      <Section title="コマンド体系 — 何がいつ動くか">
+        <P>3つのレイヤーで動作。常時自動で動くもの、コマンドで呼ぶもの、定期実行されるもの。</P>
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>常時自動（rules/ — 指示するだけで動く）</div>
+        <Tbl headers={['社長の指示', '自動判定', '実行されるパイプライン']} rows={[
+          ['「〇〇を作って」「新機能追加」', 'パイプライン A', 'リサーチ ∥ UXデザイン → AI開発 ∥ PM → 実装 → QA'],
+          ['「バグ直して」「エラー修正」', 'パイプライン B', 'システム開発 → QA'],
+          ['「資料作って」「プレゼンまとめて」', 'パイプライン C', 'リサーチ → 資料制作'],
+          ['「調べて」「比較して」', 'パイプライン D', 'リサーチ（並列可） → 統合報告'],
+          ['「セキュリティ監査」', 'パイプライン E', 'セキュリティ ∥ リサーチ → 修正 → QA'],
+        ]} />
+        <P>∥ = 並列実行。依存関係がなければ複数部署を同時に起動する。</P>
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>常時自動（ハンドオフ検出）</div>
+        <P>部署の成果物に「→ PM部への依頼」等が書いてあると、秘書が自動検出して次の部署を起動。人間が手動で振り分ける必要なし。</P>
+        <Flow steps={['部署Aが成果物作成', 'ハンドオフ検出', '部署Bを自動起動', '完了→次のハンドオフ...', '全完了→社長に報告']} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>/company コマンド（明示的に呼ぶ機能）</div>
+        <Tbl headers={['コマンド', '機能', 'いつ使う']} rows={[
+          ['/company', 'HD秘書起動（ブリーフィング + タスク管理）', '朝の確認、全体把握'],
+          ['/company {name}', 'PJ会社の秘書起動', '特定PJの作業時'],
+          ['/company:invoice', '売上・経費・税金管理', '請求書登録、稼働同期'],
+          ['/company:diary', '日記の分析・壁打ち', '振り返り、感情分析'],
+          ['/company:auto-prep', 'MTG準備の自動化', 'MTG前の事前分析'],
+          ['/company:weekly-digest', '週次CEOレポート', '週末の振り返り'],
+          ['/company:register', '成果物をReportsに登録', 'レポート完成時'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>定期自動（cron）</div>
+        <Tbl headers={['時刻', '処理', '保存先']} rows={[
+          ['毎日 7:00 JST', '朝のブリーフィング生成（タスク+日記+未入金）', 'activity_log'],
+          ['毎日 7:00 / 19:00', 'ニュース自動収集（GPT経由）', 'activity_log'],
+        ]} />
+      </Section>
+
+      <Section title="部署連携 — パイプラインの実際の流れ">
+        <P>8つの部署がどう連携するか。稼働中の部署と準備中の部署。</P>
+
+        <div className="g2" style={{ marginBottom: 16 }}>
+          <div className="card" style={{ padding: 14, borderLeft: '3px solid var(--green)' }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: 'var(--green)' }}>稼働中（自動で動く）</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+              情報収集部 — cron定期実行<br/>
+              リサーチ部 — 調査依頼で起動<br/>
+              UXデザイン部 — 機能開発時に起動<br/>
+              セキュリティ部 — 監査・スキャン
+            </div>
+          </div>
+          <div className="card" style={{ padding: 14, borderLeft: '3px solid var(--accent)' }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: 'var(--accent)' }}>トリガー定義済み（依頼で動く）</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+              PM部 — ハンドオフ検出 / 社長指示で起動<br/>
+              資料制作部 — 社長指示 / PMチケットで起動<br/>
+              システム開発部 — 設計完了 / チケットで起動<br/>
+              AI開発部 — 機能開発パイプラインで起動
+            </div>
+          </div>
+        </div>
+
+        <P>パイプラインA（新機能開発）の実際の流れ:</P>
+        <div className="card" style={{ padding: 14, marginBottom: 12, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)' }}>
+{`Step 1 [並列]: リサーチ ∥ UXデザイン  ← 同時起動
+         ↓ 両方完了
+Step 2 [並列]: AI開発(設計) ∥ PM(チケット化) ← checkpoint
+         ↓ 社長レビュー承認
+Step 3 [直列]: システム開発(実装) → QA(テスト)
+         ↓
+完了: 成果物登録 + commit + 報告`}
+        </div>
+      </Section>
+
       <Section title="設計思想 — エンハンス、代替ではない">
         <div className="card" style={{ borderLeft: '3px solid var(--accent)', marginBottom: 12 }}>
           <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>このシステムは人の仕事を完全代替するのではなく、エンハンスするもの</div>
