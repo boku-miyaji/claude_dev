@@ -698,10 +698,12 @@ function initGcalTokenClient(callback) {
   gcalTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GCAL_CLIENT_ID,
     scope: GCAL_SCOPES,
+    prompt: '',
     callback: function(resp) {
       if (resp.error) { console.error('GCal auth error:', resp); return; }
       gcalToken = resp.access_token;
-      sessionStorage.setItem('gcal_token', gcalToken);
+      localStorage.setItem('gcal_token', gcalToken);
+      localStorage.setItem('gcal_token_time', String(Date.now()));
       if (callback) callback();
     }
   });
@@ -709,9 +711,30 @@ function initGcalTokenClient(callback) {
 
 function getGcalToken() {
   if (gcalToken) return gcalToken;
-  var stored = sessionStorage.getItem('gcal_token');
+  var stored = localStorage.getItem('gcal_token');
   if (stored) { gcalToken = stored; return gcalToken; }
   return null;
+}
+
+// Silent token refresh — request new token without popup if user already granted consent
+function silentRefreshGcalToken() {
+  return new Promise(function(resolve) {
+    if (!gcalTokenClient) {
+      initGcalTokenClient(function() { resolve(!!gcalToken); });
+      if (gcalTokenClient) gcalTokenClient.requestAccessToken({prompt: ''});
+      else resolve(false);
+    } else {
+      var origCb = gcalTokenClient.callback;
+      gcalTokenClient.callback = function(resp) {
+        if (resp.error) { resolve(false); return; }
+        gcalToken = resp.access_token;
+        localStorage.setItem('gcal_token', gcalToken);
+        localStorage.setItem('gcal_token_time', String(Date.now()));
+        resolve(true);
+      };
+      gcalTokenClient.requestAccessToken({prompt: ''});
+    }
+  });
 }
 
 function toJstIso(d) {
@@ -738,7 +761,7 @@ async function fetchGcalEvents(token, rangeStart, rangeEnd) {
         + '&singleEvents=true&orderBy=startTime&maxResults=50'
         + '&timeZone=Asia/Tokyo';
       var resp = await fetch(url, {headers: {'Authorization': 'Bearer ' + token}});
-      if (resp.status === 401) { gcalToken = null; sessionStorage.removeItem('gcal_token'); throw new Error('Token expired'); }
+      if (resp.status === 401) { gcalToken = null; localStorage.removeItem('gcal_token'); localStorage.removeItem('gcal_token_time'); throw new Error('Token expired'); }
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       var data = await resp.json();
       (data.items || []).forEach(function(ev) {
@@ -1430,6 +1453,12 @@ async function renderCalendar(root) {
     while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
 
     if (result.errors.length > 0 && result.errors[0].error === 'Token expired') {
+      // Try silent refresh first
+      var refreshed = await silentRefreshGcalToken();
+      if (refreshed) {
+        await loadAndRender();
+        return;
+      }
       contentArea.appendChild(el('div', {className: 'card', style: 'text-align:center;padding:32px'}, [
         el('div', {style: 'font-size:15px;margin-bottom:12px', textContent: 'Google\u8A8D\u8A3C\u304C\u671F\u9650\u5207\u308C\u3067\u3059'}),
         el('button', {className: 'btn btn-p', textContent: 'Re-authenticate', onClick: function() {
@@ -1471,12 +1500,24 @@ async function renderCalendar(root) {
       await loadAndRender();
       return;
     }
-    // Token invalid or missing write scope, clear it for re-auth
+    // Token invalid — try silent refresh before showing sign-in
     gcalToken = null;
-    sessionStorage.removeItem('gcal_token');
+    localStorage.removeItem('gcal_token'); localStorage.removeItem('gcal_token_time');
+    var silentOk = await silentRefreshGcalToken();
+    if (silentOk) {
+      await loadAndRender();
+      return;
+    }
+  } else {
+    // No token at all — try silent refresh (user may have granted consent before)
+    var silentOk = await silentRefreshGcalToken();
+    if (silentOk) {
+      await loadAndRender();
+      return;
+    }
   }
 
-  // Show sign-in prompt
+  // Show sign-in prompt (only if silent refresh failed)
   var signInCard = el('div', {className: 'card', style: 'text-align:center;padding:40px 20px'}, [
     el('div', {style: 'font-size:36px;margin-bottom:16px', textContent: '\uD83D\uDCC5'}),
     el('div', {style: 'font-size:15px;font-weight:600;margin-bottom:8px', textContent: 'Google Calendar \u3068\u9023\u643A'}),
