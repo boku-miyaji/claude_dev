@@ -406,6 +406,33 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .cal-legend-dot{width:10px;height:3px;border-radius:2px}
 .cal-legend-dot.w{background:var(--green)}.cal-legend-dot.p{background:var(--accent)}.cal-legend-dot.s{background:var(--amber)}
 .cal-empty{font-size:11px;color:var(--text3);padding:8px 0}
+
+/* Time-grid week view (Google Calendar style) */
+.cal-tg-hdr{display:grid;grid-template-columns:56px repeat(7,1fr);border-bottom:1px solid var(--border)}
+.cal-tg-corner{width:56px}
+.cal-tg-day-hdr{text-align:center;padding:8px 2px 10px;border-left:1px solid var(--border)}
+.cal-tg-dow{font-size:11px;font-weight:500;color:var(--text3);display:block;margin-bottom:2px}
+.cal-tg-day-hdr.cal-today .cal-tg-dow{color:var(--accent)}
+.cal-tg-date{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--text);display:inline-block;line-height:1}
+.cal-tg-day-hdr.cal-today .cal-tg-date{color:#fff;background:var(--accent);width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+.cal-tg-body{display:grid;grid-template-columns:56px repeat(7,1fr);position:relative;overflow-y:auto;max-height:680px}
+.cal-tg-time{font-family:var(--mono);font-size:10px;color:var(--text3);text-align:right;padding-right:8px;height:60px;position:relative;top:-7px;line-height:1}
+.cal-tg-cell{height:60px;border-bottom:1px solid var(--border);border-left:1px solid var(--border);cursor:pointer;transition:background .1s}
+.cal-tg-cell:hover{background:rgba(99,102,241,.06)}
+.cal-tg-cell:hover::after{content:'+';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:18px;color:var(--accent);opacity:.4;pointer-events:none}
+.cal-tg-ev{position:absolute;left:3px;right:3px;border-radius:6px;padding:3px 6px;font-size:11px;line-height:1.3;overflow:hidden;cursor:pointer;z-index:2;transition:box-shadow .15s,filter .15s}
+.cal-tg-ev:hover{box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:3;filter:brightness(1.1)}
+.cal-tg-ev .cal-tg-ev-time{font-family:var(--mono);font-size:10px;opacity:.8;display:block;margin-bottom:1px}
+.cal-tg-ev .cal-tg-ev-title{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis}
+.cal-tg-ev.cal-work{background:#1a7f37;color:#e6f9ed;border:none}
+.cal-tg-ev.cal-work .cal-tg-ev-time{color:rgba(230,249,237,.7)}
+.cal-tg-ev.cal-primary{background:#5b5fc7;color:#eef0ff;border:none}
+.cal-tg-ev.cal-primary .cal-tg-ev-time{color:rgba(238,240,255,.7)}
+.cal-tg-ev.cal-secondary{background:#b45309;color:#fef3c7;border:none}
+.cal-tg-ev.cal-secondary .cal-tg-ev-time{color:rgba(254,243,199,.7)}
+.cal-tg-ev.cal-past{opacity:.4}
+.cal-tg-now{position:absolute;left:0;right:0;height:2px;background:#ef4444;z-index:5;pointer-events:none}
+.cal-tg-now::before{content:'';position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:#ef4444}
 .cal-sync-info{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);margin-bottom:16px}
 .cal-sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
 .cal-sync-dot.stale{background:var(--amber)}
@@ -1326,7 +1353,7 @@ async function gcalDeleteEvent(calendarId, eventId) {
   if (!resp.ok && resp.status !== 204) throw new Error('Delete failed: ' + resp.status);
 }
 
-function openCalEventModal(existingEvent, defaultDate, onSaved) {
+function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour) {
   var isEdit = !!existingEvent;
   var overlay = el('div', {style: 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center'});
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
@@ -1361,9 +1388,11 @@ function openCalEventModal(existingEvent, defaultDate, onSaved) {
   function toLocalDate(dt) { var d = new Date(dt); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function toLocalTime(dt) { var d = new Date(dt); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
   var startDateInput = el('input', {type: 'date', value: isEdit ? toLocalDate(existingEvent.start_time) : defDate, style: inputStyle});
-  var startTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.start_time) : '10:00', style: inputStyle+';width:auto'});
+  var defStartTime = defaultHour != null ? (String(defaultHour).padStart(2,'0')+':00') : '10:00';
+  var defEndTime = defaultHour != null ? (String(defaultHour+1).padStart(2,'0')+':00') : '11:00';
+  var startTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.start_time) : defStartTime, style: inputStyle+';width:auto'});
   var endDateInput = el('input', {type: 'date', value: isEdit ? (existingEvent.all_day ? toLocalDate(existingEvent.start_time) : toLocalDate(existingEvent.end_time)) : defDate, style: inputStyle});
-  var endTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.end_time) : '11:00', style: inputStyle+';width:auto'});
+  var endTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.end_time) : defEndTime, style: inputStyle+';width:auto'});
 
   var timeRow = el('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px'});
   var startGroup = el('div', {}, [
@@ -1510,23 +1539,118 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
     root.appendChild(grid);
 
   } else if (viewMode === 'week') {
-    // 7-day view
+    // Google Calendar style time-grid (today + 7 days)
+    var HOUR_H = 60, START_H = 8, END_H = 21;
     var weekStart = new Date(viewDate);
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // start from Sunday
-    var grid = el('div', {className: 'cal-grid'});
-    for (var d = 0; d < 7; d++) {
-      var date = new Date(weekStart);
-      date.setDate(date.getDate() + d);
-      var dayEl = renderDayCell(date, false);
-      // Add day-of-week header for week view
-      var hdr = dayEl.querySelector('.cal-day-hdr');
-      if (hdr && !hdr.querySelector('.cal-day-dow')) {
-        var dowSpan = el('span', {className: 'cal-day-dow', textContent: CAL_DOW_JA[date.getDay()]});
-        hdr.firstChild.insertBefore(dowSpan, hdr.firstChild.firstChild);
+    var days = [];
+    for (var d = 0; d < 7; d++) { var dd = new Date(weekStart); dd.setDate(dd.getDate() + d); days.push(dd); }
+
+    // Day headers
+    var hdrRow = el('div', {className: 'cal-tg-hdr'});
+    hdrRow.appendChild(el('div', {className: 'cal-tg-corner'}));
+    days.forEach(function(dt) {
+      var isT = toLocalDateStr(dt) === todayStr;
+      var col = el('div', {className: 'cal-tg-day-hdr' + (isT ? ' cal-today' : '')});
+      col.appendChild(el('span', {className: 'cal-tg-dow', textContent: CAL_DOW_JA[dt.getDay()]}));
+      col.appendChild(el('span', {className: 'cal-tg-date', textContent: String(dt.getDate())}));
+      hdrRow.appendChild(col);
+    });
+    root.appendChild(hdrRow);
+
+    // Time grid body
+    var body = el('div', {className: 'cal-tg-body'});
+    body.style.position = 'relative';
+
+    for (var h = START_H; h <= END_H; h++) {
+      var lbl = el('div', {className: 'cal-tg-time', textContent: h === START_H ? '' : (h < 10 ? '0' : '') + h + ':00'});
+      body.appendChild(lbl);
+      for (var di = 0; di < 7; di++) {
+        var cell = el('div', {className: 'cal-tg-cell'});
+        cell.style.position = 'relative';
+        cell.setAttribute('data-day', String(di));
+        cell.setAttribute('data-hour', String(h));
+        body.appendChild(cell);
       }
-      grid.appendChild(dayEl);
     }
-    root.appendChild(grid);
+
+    // Collect cells by day index
+    var dayCells = [];
+    for (var di = 0; di < 7; di++) dayCells.push([]);
+    body.querySelectorAll('.cal-tg-cell').forEach(function(c) {
+      dayCells[parseInt(c.getAttribute('data-day'), 10)].push(c);
+    });
+
+    // Place events after layout
+    requestAnimationFrame(function() {
+      events.forEach(function(ev) {
+        var eStart = new Date(ev.start_time);
+        var eEnd = new Date(ev.end_time);
+        var eDateStr = toLocalDateStr(eStart);
+        var di = -1;
+        for (var i = 0; i < days.length; i++) { if (toLocalDateStr(days[i]) === eDateStr) { di = i; break; } }
+        if (di < 0) return;
+
+        var startMin = eStart.getHours() + eStart.getMinutes() / 60;
+        var endMin = eEnd.getHours() + eEnd.getMinutes() / 60;
+        if (ev.all_day) { startMin = START_H; endMin = START_H + 0.5; }
+        var top = (startMin - START_H) * HOUR_H;
+        var height = Math.max((endMin - startMin) * HOUR_H, 22);
+
+        var firstCell = dayCells[di][0];
+        if (!firstCell) return;
+        var rect = firstCell.getBoundingClientRect();
+        var bodyRect = body.getBoundingClientRect();
+        var left = rect.left - bodyRect.left;
+        var width = rect.width;
+
+        var isPast = toLocalDateStr(eStart) === todayStr && eEnd < now;
+        var evEl = el('div', {className: 'cal-tg-ev cal-' + ev.calendar_type + (isPast ? ' cal-past' : '')});
+        evEl.style.position = 'absolute';
+        evEl.style.pointerEvents = 'auto';
+        evEl.style.top = top + 'px';
+        evEl.style.left = (left + 2) + 'px';
+        evEl.style.width = (width - 4) + 'px';
+        evEl.style.height = (height - 2) + 'px';
+
+        var timeStr = ev.all_day ? 'All day' : eStart.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'});
+        evEl.appendChild(el('span', {className: 'cal-tg-ev-time', textContent: timeStr}));
+        evEl.appendChild(el('span', {className: 'cal-tg-ev-title', textContent: ev.summary}));
+        (function(e) { evEl.addEventListener('click', function() { openCalEventModal(e, null, onRefresh); }); })(ev);
+        body.appendChild(evEl);
+      });
+
+      // Now indicator
+      var nowH = now.getHours() + now.getMinutes() / 60;
+      if (nowH >= START_H && nowH <= END_H) {
+        var todayDi = -1;
+        for (var i = 0; i < days.length; i++) { if (toLocalDateStr(days[i]) === todayStr) { todayDi = i; break; } }
+        if (todayDi >= 0 && dayCells[todayDi][0]) {
+          var rect = dayCells[todayDi][0].getBoundingClientRect();
+          var bodyRect = body.getBoundingClientRect();
+          var line = el('div', {className: 'cal-tg-now'});
+          line.style.position = 'absolute';
+          line.style.top = ((nowH - START_H) * HOUR_H) + 'px';
+          line.style.left = (rect.left - bodyRect.left) + 'px';
+          line.style.width = rect.width + 'px';
+          body.appendChild(line);
+        }
+      }
+
+      // Scroll to around current time
+      var scrollTo = Math.max(0, (Math.min(nowH, 10) - START_H) * HOUR_H - 40);
+      body.scrollTop = scrollTo;
+    });
+
+    // Click empty cell to add event
+    body.addEventListener('click', function(e) {
+      var cell = e.target.closest('.cal-tg-cell');
+      if (!cell) return;
+      var di = parseInt(cell.getAttribute('data-day'), 10);
+      var h = parseInt(cell.getAttribute('data-hour'), 10);
+      openCalEventModal(null, toLocalDateStr(days[di]), onRefresh, h);
+    });
+
+    root.appendChild(body);
 
   } else if (viewMode === 'month') {
     // Month grid (like Google Calendar)
@@ -1585,7 +1709,7 @@ async function renderCalendar(root) {
   function updateDateLabel() {
     if (calView === 'day') dateLabel.textContent = calDate.getFullYear()+'年'+(calDate.getMonth()+1)+'月'+calDate.getDate()+'日';
     else if (calView === 'week') {
-      var ws = new Date(calDate); ws.setDate(ws.getDate() - ws.getDay());
+      var ws = new Date(calDate);
       var we = new Date(ws); we.setDate(we.getDate() + 6);
       dateLabel.textContent = ws.getFullYear()+'年'+(ws.getMonth()+1)+'月'+ws.getDate()+'日 \u2014 '+(we.getMonth()+1)+'月'+we.getDate()+'日';
     } else dateLabel.textContent = calDate.getFullYear()+'年'+(calDate.getMonth()+1)+'月';
@@ -1631,7 +1755,7 @@ async function renderCalendar(root) {
       var end = new Date(calDate); end.setDate(end.getDate() + 1);
       return [calDate, end];
     } else if (calView === 'week') {
-      var ws = new Date(calDate); ws.setDate(ws.getDate() - ws.getDay());
+      var ws = new Date(calDate);
       var we = new Date(ws); we.setDate(we.getDate() + 7);
       return [ws, we];
     } else {
