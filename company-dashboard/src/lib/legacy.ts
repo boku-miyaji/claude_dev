@@ -1530,7 +1530,12 @@ async function renderDashboard(root) {
   var todayStr = toLocalDateStr(now);
   var year = now.getFullYear();
   var hour = now.getHours();
-  var greeting = hour < 12 ? 'おはようございます' : hour < 18 ? 'こんにちは' : 'お疲れさまです';
+  var greeting = hour < 5 ? 'まだ起きてるんですね' :
+                  hour < 8 ? 'おはようございます、早起きですね' :
+                  hour < 12 ? 'おはようございます' :
+                  hour < 17 ? 'お疲れさまです' :
+                  hour < 22 ? 'お疲れさまです、今日もよく頑張りましたね' :
+                  'こんな時間ですね、お疲れさまです';
   var dayLabel = year+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+['日','月','火','水','木','金','土'][now.getDay()]+'）';
 
   // Header
@@ -1639,7 +1644,11 @@ async function renderDashboard(root) {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken,'apikey':SUPABASE_ANON_KEY},
         body: JSON.stringify({
-          message: '秘書として社長に一言。1文だけ。40字以内。予定・タスクの内容を踏まえて具体的に。「予定なし」と言わないで、実際のデータを見て。\n\n'+quickCtx,
+          message: 'あなたは社長の一番の理解者である秘書。今の時間帯と状況を見て、社長の気持ちに寄り添う一言を。1文、40字以内。\n'
+            + '- 深夜/早朝なら体を気遣う（「そろそろ休みましょう」等）\n'
+            + '- 予定が詰まっていたら労う。空いていたら集中できることを前向きに\n'
+            + '- 高優先タスクがあれば具体的に触れる。ないなら無理に言及しない\n'
+            + '- 事務的な報告文ではなく、温かみのある声かけにする\n\n'+quickCtx,
           model: 'gpt-5-nano',
           context_mode: 'none'
         })
