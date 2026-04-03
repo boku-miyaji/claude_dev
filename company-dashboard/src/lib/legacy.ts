@@ -1608,21 +1608,7 @@ async function renderDashboard(root) {
 
   // ===== 非同期: LLM一言を生成して挿入（UIをブロックしない） =====
   (async function() {
-    // 深夜・早朝は無条件で休息メッセージ（LLMに任せない）
-    if (hour >= 23 || hour < 5) {
-      var lateMessages = [
-        'もう遅いですよ。今日はここまでにして、ゆっくり休んでくださいね',
-        '今日も一日お疲れさまでした。あったかくして寝てください',
-        'こんな時間まで頑張ってたんですね。もう十分です、おやすみなさい',
-        '画面から離れて、深呼吸して、布団に入りましょう',
-        '明日の自分に任せて大丈夫。今は休むのが一番の仕事です',
-      ];
-      onelineEl.textContent = lateMessages[Math.floor(Math.random() * lateMessages.length)];
-      onelineEl.style.color = 'var(--text2)';
-      return;
-    }
-
-    var cacheVer = 'v4'; // bump this when prompt changes
+    var cacheVer = 'v5'; // bump this when prompt changes
     var cacheKey = 'hd-oneliner';
     var cachedRaw = localStorage.getItem(cacheKey);
     if (cachedRaw) {
@@ -1741,15 +1727,19 @@ function renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst,
     container.appendChild(taskCard);
   }
 
-  // ===== Latest news (from intelligence reports) =====
+  // ===== Latest news (from news_items table) =====
   (async function() {
-    var newsRes = await sb.from('activity_log').select('action,metadata,created_at').eq('action','intelligence_collect').order('created_at',{ascending:false}).limit(1);
-    var latestReport = newsRes.data && newsRes.data[0];
     var newsCard = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:12px'});
+
+    // Fetch latest news + last collection time
+    var itemsRes = await sb.from('news_items').select('*').order('collected_at',{ascending:false}).limit(5);
+    var items = itemsRes.data || [];
+    var lastCollected = items.length > 0 ? new Date(items[0].collected_at) : null;
+
     newsCard.appendChild(el('div', {style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'}, [
       el('div', {style:'font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px', textContent:'NEWS'}),
       el('div', {style:'display:flex;gap:6px;align-items:center'}, [
-        latestReport ? el('span', {style:'font-size:10px;color:var(--text3)', textContent:'最終: '+new Date(latestReport.created_at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'})}) : null,
+        lastCollected ? el('span', {style:'font-size:10px;color:var(--text3)', textContent:'最終: '+lastCollected.toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'})}) : null,
         el('button', {className:'btn btn-g btn-sm', style:'font-size:10px;padding:2px 8px', textContent:'収集', onClick: function(ev) {
           ev.stopPropagation();
           collectNews(newsCard);
@@ -1757,41 +1747,84 @@ function renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst,
       ].filter(Boolean))
     ]));
 
-    // Show latest intelligence items
-    var reportsRes = await sb.from('activity_log').select('metadata,created_at').eq('action','intelligence_item').order('created_at',{ascending:false}).limit(5);
-    var items = reportsRes.data || [];
     if (items.length === 0) {
       newsCard.appendChild(el('div', {style:'font-size:12px;color:var(--text3);padding:4px 0', textContent:'ニュースはまだありません。「収集」ボタンで取得できます。'}));
     } else {
+      // Track impressions for each topic
+      var topicsSeen = {};
       items.forEach(function(item) {
-        var d = item.metadata || {};
-        newsCard.appendChild(el('div', {style:'padding:4px 0;border-bottom:1px solid var(--border);font-size:12px'}, [
-          el('div', {textContent: d.title || d.summary || JSON.stringify(d).substring(0,80), style:'color:var(--text)'}),
-          el('div', {textContent: new Date(item.created_at).toLocaleDateString('ja-JP'), style:'font-size:10px;color:var(--text3);margin-top:2px'})
-        ]));
+        var topicTag = item.topic ? el('span', {style:'font-size:9px;color:var(--accent);background:var(--bg2);padding:1px 5px;border-radius:3px;margin-left:6px', textContent:item.topic}) : null;
+        var sourceTag = item.source ? el('span', {style:'font-size:10px;color:var(--text3)', textContent:item.source}) : null;
+        var dateTag = el('span', {style:'font-size:10px;color:var(--text3)', textContent: item.published_date || new Date(item.collected_at).toLocaleDateString('ja-JP')});
+
+        var titleEl = el('div', {style:'font-size:12px;color:var(--text);cursor:pointer;display:flex;align-items:center'}, [
+          el('span', {textContent: item.title || ''})
+        ]);
+        if (topicTag) titleEl.appendChild(topicTag);
+
+        // Click handler — open URL + track click
+        if (item.url) {
+          titleEl.style.cursor = 'pointer';
+          titleEl.onmouseenter = function() { titleEl.style.color = 'var(--accent)'; };
+          titleEl.onmouseleave = function() { titleEl.style.color = 'var(--text)'; };
+          titleEl.onclick = function() {
+            window.open(item.url, '_blank');
+            // Track click
+            sb.from('news_items').update({click_count: (item.click_count||0)+1, clicked_at: new Date().toISOString()}).eq('id', item.id);
+            // Update topic preference
+            if (item.topic) {
+              sb.from('news_preferences').upsert({topic: item.topic, click_total: 1, impression_total: 0, interest_score: 0.6}, {onConflict:'topic'});
+            }
+          };
+        }
+
+        var summaryEl = item.summary ? el('div', {style:'font-size:11px;color:var(--text3);margin-top:2px;line-height:1.5', textContent: item.summary}) : null;
+        var metaRow = el('div', {style:'display:flex;gap:8px;align-items:center;margin-top:3px'}, [dateTag, sourceTag].filter(Boolean));
+
+        newsCard.appendChild(el('div', {style:'padding:8px 0;border-bottom:1px solid var(--border)'}, [titleEl, summaryEl, metaRow].filter(Boolean)));
+
+        if (item.topic) topicsSeen[item.topic] = (topicsSeen[item.topic]||0) + 1;
+      });
+
+      // Record impressions for topics
+      Object.keys(topicsSeen).forEach(function(t) {
+        sb.from('news_preferences').upsert({topic:t, impression_total: topicsSeen[t], interest_score: 0.5}, {onConflict:'topic'});
       });
     }
     container.appendChild(newsCard);
   })();
 }
 
-// News collection via Edge Function (GPT)
+// News collection via Edge Function
 async function collectNews(container) {
   var btn = container.querySelector('.btn');
   if (btn) { btn.textContent = '収集中...'; btn.disabled = true; }
   try {
+    // Fetch topic preferences for personalization
+    var prefRes = await sb.from('news_preferences').select('topic,interest_score,click_total').order('interest_score',{ascending:false});
+    var prefs = prefRes.data || [];
+    var topTopics = prefs.filter(function(p){return p.interest_score >= 0.5;}).map(function(p){return p.topic;});
+
+    var topicPrompt = 'AI/LLM、データプラットフォーム、Snowflake、Databricks、Claude、OpenAI';
+    if (topTopics.length > 0) {
+      topicPrompt += '\n\n社長が特に関心の高いトピック: ' + topTopics.join('、') + '（こちらを優先的に）';
+    }
+
     var session = await sb.auth.getSession();
     var token = session.data.session && session.data.session.access_token || '';
     var res = await fetch(SUPABASE_URL + '/functions/v1/ai-agent', {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
       body: JSON.stringify({
-        message: '【指示】質問や確認をせず、即座に結果だけを出力してください。\n\n'
-          + 'AI/LLM・データプラットフォーム・Snowflake・Databricks・Claude・OpenAIについて、最新ニュースを3-5件出してください。\n\n'
-          + '出力形式（厳守）:\n'
-          + '- [YYYY-MM-DD] タイトル — 1行要約\n'
-          + '- [YYYY-MM-DD] タイトル — 1行要約\n\n'
-          + '質問・確認・前置きは不要。上記の箇条書きのみを出力。',
+        message: '【指示】質問や確認をせず、即座にJSON配列だけを出力してください。\n\n'
+          + topicPrompt + 'について、最新ニュースを5件出してください。\n\n'
+          + '出力形式（厳守・JSON配列のみ）:\n'
+          + '[{"title":"タイトル","summary":"1行要約","url":"出典URL","source":"メディア名","topic":"トピック名","date":"YYYY-MM-DD"}]\n\n'
+          + '注意:\n'
+          + '- urlは実在する記事の正確なURLを書く。不明なら空文字にする\n'
+          + '- sourceはTechCrunch, 公式ブログ, The Verge等の媒体名\n'
+          + '- topicはAI/LLM, Snowflake, Databricks, Claude, OpenAI等\n'
+          + '- JSON配列のみ出力。前置き・説明・マークダウン記法は不要',
         model: 'gpt-5-nano',
         context_mode: 'none'
       })
@@ -1801,30 +1834,44 @@ async function collectNews(container) {
       var text = '';
       bodyText.split('\n').forEach(function(line) {
         if (line.startsWith('data: ')) {
-          try {
-            var evt = JSON.parse(line.slice(6));
-            if (evt.type === 'delta' && evt.content) text += evt.content;
-          } catch(x) {}
+          try { var evt = JSON.parse(line.slice(6)); if (evt.type==='delta'&&evt.content) text+=evt.content; } catch(x) {}
         }
       });
       if (text) {
-        // Save to activity_log
-        await sb.from('activity_log').insert({action:'intelligence_collect', metadata:{summary:text.substring(0,500),collected_at:new Date().toISOString()}});
-        // Parse items — filter out questions and non-news lines
-        var lines = text.split('\n').filter(function(l){
-          var t = l.trim();
-          return t.startsWith('-') && !t.includes('？') && !t.includes('?') && t.length > 15;
-        });
-        var insertPromises = lines.map(function(line) {
-          return sb.from('activity_log').insert({action:'intelligence_item', metadata:{title:line.replace(/^-\s*/,'').substring(0,200)}});
-        });
-        await Promise.all(insertPromises);
-        toast('ニュース '+lines.length+' 件を収集しました');
-        navigate('home'); // refresh after all inserts complete
-        return;
+        // Extract JSON array from response
+        var jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          try {
+            var newsItems = JSON.parse(jsonMatch[0]);
+            var inserts = newsItems.filter(function(n) { return n.title && n.title.length > 5; }).map(function(n) {
+              return sb.from('news_items').insert({
+                title: (n.title||'').substring(0,200),
+                summary: (n.summary||'').substring(0,300),
+                url: n.url || null,
+                source: (n.source||'').substring(0,50),
+                topic: (n.topic||'').substring(0,30),
+                published_date: n.date || null
+              });
+            });
+            await Promise.all(inserts);
+            toast(inserts.length + ' 件のニュースを収集しました');
+            navigate('home');
+            return;
+          } catch(e) { console.error('JSON parse error:', e, text); }
+        }
+        // Fallback: plain text parsing
+        var lines = text.split('\n').filter(function(l){ return l.trim().length > 15 && !l.includes('？'); });
+        if (lines.length > 0) {
+          var fallbackInserts = lines.slice(0,5).map(function(l) {
+            return sb.from('news_items').insert({title: l.replace(/^[-*]\s*/,'').substring(0,200), topic: 'misc'});
+          });
+          await Promise.all(fallbackInserts);
+          toast(fallbackInserts.length + ' 件のニュースを収集しました');
+          navigate('home');
+          return;
+        }
       }
     }
-    // If no text or not ok
     toast('ニュースを取得できませんでした');
   } catch(e) { console.error('News collect error:', e); toast('ニュース収集エラー: '+e.message); }
   if (btn) { btn.textContent = '収集'; btn.disabled = false; }
