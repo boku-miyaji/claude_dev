@@ -1,0 +1,12 @@
+{
+  "name": "Self-Focus",
+  "short_name": "Self-Focus",
+  "description": "自分が幸せに生きるためのシステム",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fb",
+  "theme_color": "#5046e5",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

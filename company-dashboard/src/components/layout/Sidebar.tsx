@@ -21,6 +21,7 @@ const NAV: NavEntry[] = [
   // Self
   { type: 'label', label: 'Self' },
   { type: 'item', page: 'goals', icon: '🎯', label: 'Goals' },
+  { type: 'item', page: 'habits', icon: '🌱', label: 'Habits' },
   { type: 'item', page: 'me', icon: '🧠', label: 'Me' },
   { type: 'item', page: 'career', icon: '☆', label: 'Career' },
   // Work (collapsible)
@@ -31,6 +32,7 @@ const NAV: NavEntry[] = [
   { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
   // Intelligence (collapsible)
   { type: 'collapsible-start', label: 'Intelligence', groupKey: 'intel' },
+  { type: 'item', page: 'weekly', icon: '📖', label: 'Weekly' },
   { type: 'item', page: 'insights', icon: '◇', label: 'Insights' },
   { type: 'item', page: 'intelligence', icon: '📄', label: 'Reports' },
   { type: 'item', page: 'growth', icon: '↗', label: 'Growth' },

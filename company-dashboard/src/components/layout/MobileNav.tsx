@@ -19,6 +19,7 @@ const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
     label: 'Self',
     items: [
       { page: 'goals', icon: '🎯', label: 'Goals' },
+      { page: 'habits', icon: '🌱', label: 'Habits' },
       { page: 'me', icon: '🧠', label: 'Me' },
       { page: 'career', icon: '☆', label: 'Career' },
     ],
@@ -35,6 +36,7 @@ const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
   {
     label: 'Intelligence',
     items: [
+      { page: 'weekly', icon: '📖', label: 'Weekly' },
       { page: 'insights', icon: '◇', label: 'Insights' },
       { page: 'intelligence', icon: '📄', label: 'Reports' },
       { page: 'growth', icon: '↗', label: 'Growth' },

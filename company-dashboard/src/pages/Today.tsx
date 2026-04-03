@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { Card } from '@/components/ui'
 import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis'
 import { useMorningBriefing } from '@/hooks/useMorningBriefing'
+import { useDreamDetection } from '@/hooks/useDreamDetection'
+import { toast } from '@/components/ui'
 
 /** Plutchik emotion labels for badge display */
 const PLUTCHIK_LABELS: Record<string, { label: string; color: string }> = {
@@ -63,6 +65,7 @@ export function Today() {
 
   const { analyze, analyzing, error: emotionError } = useEmotionAnalysis()
   const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing()
+  const { detect } = useDreamDetection()
 
   const todayStr = useMemo(() => {
     const d = new Date()
@@ -201,8 +204,15 @@ export function Today() {
           return next
         })
       }
+
+      // Dream detection in background (non-blocking)
+      detect(content.trim()).then((detections) => {
+        for (const d of detections) {
+          toast(`夢『${d.dream_title}』に近づいているかもしれません！`)
+        }
+      })
     }
-  }, [load, analyze])
+  }, [load, analyze, detect])
 
   /** Debounced auto-save */
   const handleTextChange = useCallback(
