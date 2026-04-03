@@ -431,6 +431,11 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .cal-tg-ev.cal-secondary{background:#b45309;color:#fef3c7;border:none}
 .cal-tg-ev.cal-secondary .cal-tg-ev-time{color:rgba(254,243,199,.7)}
 .cal-tg-ev.cal-past{opacity:.4}
+.cal-tg-ev.dragging{opacity:.7;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:10;cursor:grabbing;pointer-events:none}
+.cal-tg-ev .cal-tg-resize{position:absolute;bottom:0;left:0;right:0;height:6px;cursor:ns-resize;border-radius:0 0 6px 6px}
+.cal-tg-ev .cal-tg-resize:hover{background:rgba(255,255,255,.2)}
+.cal-tg-ghost{position:absolute;border-radius:6px;opacity:.35;pointer-events:none;z-index:1;border:2px dashed rgba(255,255,255,.5)}
+.cal-tg-ghost.cal-work{background:#1a7f37}.cal-tg-ghost.cal-primary{background:#5b5fc7}.cal-tg-ghost.cal-secondary{background:#b45309}
 .cal-tg-now{position:absolute;left:0;right:0;height:2px;background:#ef4444;z-index:5;pointer-events:none}
 .cal-tg-now::before{content:'';position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:#ef4444}
 .cal-sync-info{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);margin-bottom:16px}
@@ -1577,7 +1582,185 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
       dayCells[parseInt(c.getAttribute('data-day'), 10)].push(c);
     });
 
-    // Place events after layout
+    // --- Helpers for grid geometry ---
+    var SNAP = 15; // snap to 15-min increments
+    var snapPx = HOUR_H * SNAP / 60;
+    function snapY(y) { return Math.round(y / snapPx) * snapPx; }
+    function yToHours(y) { return START_H + y / HOUR_H; }
+    function hoursToY(h) { return (h - START_H) * HOUR_H; }
+    function getDayAtX(clientX) {
+      for (var i = 0; i < DAYS_COUNT; i++) {
+        if (!dayCells[i][0]) continue;
+        var r = dayCells[i][0].getBoundingClientRect();
+        if (clientX >= r.left && clientX < r.right) return i;
+      }
+      return -1;
+    }
+    function getDayLeft(di) {
+      if (!dayCells[di] || !dayCells[di][0]) return 0;
+      return dayCells[di][0].getBoundingClientRect().left - body.getBoundingClientRect().left;
+    }
+    function getDayWidth(di) {
+      if (!dayCells[di] || !dayCells[di][0]) return 100;
+      return dayCells[di][0].getBoundingClientRect().width;
+    }
+
+    // --- Build ISO datetime for API ---
+    function buildDateTime(dayIndex, hours) {
+      var d = new Date(days[dayIndex]);
+      var h = Math.floor(hours);
+      var m = Math.round((hours - h) * 60);
+      d.setHours(h, m, 0, 0);
+      // Return ISO with timezone offset
+      var off = -d.getTimezoneOffset();
+      var sign = off >= 0 ? '+' : '-';
+      var oh = String(Math.floor(Math.abs(off)/60)).padStart(2,'0');
+      var om = String(Math.abs(off)%60).padStart(2,'0');
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
+        +'T'+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':00'+sign+oh+':'+om;
+    }
+
+    // --- Drag state ---
+    var dragState = null; // {ev, evEl, mode:'move'|'resize', startY, startX, origTop, origHeight, origDi, ghost}
+
+    function onDragStart(ev, evEl, mode, e) {
+      if (ev.all_day) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      var bodyRect = body.getBoundingClientRect();
+      var origTop = parseFloat(evEl.style.top);
+      var origHeight = parseFloat(evEl.style.height);
+      var origLeft = parseFloat(evEl.style.left);
+      var origWidth = parseFloat(evEl.style.width);
+
+      // Find original day index
+      var origDi = -1;
+      var eStart = new Date(ev.start_time);
+      var eDateStr = toLocalDateStr(eStart);
+      for (var i = 0; i < days.length; i++) { if (toLocalDateStr(days[i]) === eDateStr) { origDi = i; break; } }
+
+      // Create ghost (shows original position)
+      var ghost = el('div', {className: 'cal-tg-ghost cal-' + ev.calendar_type});
+      ghost.style.position = 'absolute';
+      ghost.style.top = origTop + 'px';
+      ghost.style.left = origLeft + 'px';
+      ghost.style.width = origWidth + 'px';
+      ghost.style.height = origHeight + 'px';
+      body.appendChild(ghost);
+
+      evEl.classList.add('dragging');
+      evEl.style.pointerEvents = 'none';
+      evEl.style.zIndex = '10';
+
+      dragState = {
+        ev: ev, evEl: evEl, mode: mode, ghost: ghost,
+        startY: e.clientY, startX: e.clientX,
+        origTop: origTop, origHeight: origHeight,
+        origLeft: origLeft, origWidth: origWidth,
+        origDi: origDi, bodyRect: bodyRect,
+        scrollStart: body.scrollTop,
+        duration: parseFloat(evEl.style.height) / HOUR_H // in hours
+      };
+
+      document.addEventListener('mousemove', onDragMove);
+      document.addEventListener('mouseup', onDragEnd);
+    }
+
+    function onDragMove(e) {
+      if (!dragState) return;
+      var ds = dragState;
+      var dy = e.clientY - ds.startY;
+
+      if (ds.mode === 'move') {
+        // Vertical: snap to 15-min grid
+        var newTop = snapY(ds.origTop + dy);
+        newTop = Math.max(0, Math.min(newTop, (END_H - START_H) * HOUR_H - ds.origHeight));
+        ds.evEl.style.top = newTop + 'px';
+
+        // Horizontal: switch day column
+        var newDi = getDayAtX(e.clientX);
+        if (newDi >= 0) {
+          ds.evEl.style.left = (getDayLeft(newDi) + 2) + 'px';
+          ds.evEl.style.width = (getDayWidth(newDi) - 4) + 'px';
+          ds.currentDi = newDi;
+        }
+        ds.currentTop = newTop;
+
+      } else if (ds.mode === 'resize') {
+        // Only change height
+        var newHeight = snapY(ds.origHeight + dy);
+        newHeight = Math.max(snapPx, newHeight); // min 15 min
+        var maxH = (END_H - START_H) * HOUR_H - ds.origTop;
+        newHeight = Math.min(newHeight, maxH);
+        ds.evEl.style.height = newHeight + 'px';
+        ds.currentHeight = newHeight;
+      }
+    }
+
+    async function onDragEnd(e) {
+      document.removeEventListener('mousemove', onDragMove);
+      document.removeEventListener('mouseup', onDragEnd);
+      if (!dragState) return;
+      var ds = dragState;
+
+      // Remove ghost
+      if (ds.ghost.parentNode) ds.ghost.parentNode.removeChild(ds.ghost);
+      ds.evEl.classList.remove('dragging');
+      ds.evEl.style.pointerEvents = 'auto';
+      ds.evEl.style.zIndex = '2';
+
+      var ev = ds.ev;
+      var eStart = new Date(ev.start_time);
+      var eEnd = new Date(ev.end_time);
+      var durationH = (eEnd - eStart) / 3600000;
+
+      var changed = false;
+      var newStartH, newEndH, newDi;
+
+      if (ds.mode === 'move') {
+        var finalTop = ds.currentTop != null ? ds.currentTop : ds.origTop;
+        newDi = ds.currentDi != null ? ds.currentDi : ds.origDi;
+        newStartH = yToHours(finalTop);
+        newEndH = newStartH + durationH;
+        changed = (finalTop !== ds.origTop || newDi !== ds.origDi);
+      } else if (ds.mode === 'resize') {
+        var finalH = ds.currentHeight != null ? ds.currentHeight : ds.origHeight;
+        newDi = ds.origDi;
+        newStartH = yToHours(ds.origTop);
+        newEndH = yToHours(ds.origTop + finalH);
+        changed = (finalH !== ds.origHeight);
+      }
+
+      if (changed && newDi >= 0) {
+        // Update via Google Calendar API
+        var newStart = buildDateTime(newDi, newStartH);
+        var newEnd = buildDateTime(newDi, newEndH);
+        try {
+          await gcalUpdateEvent(ev.calendar_id, ev.id, {
+            start: { dateTime: newStart },
+            end: { dateTime: newEnd }
+          });
+          if (onRefresh) onRefresh();
+        } catch(err) {
+          // Revert on failure
+          ds.evEl.style.top = ds.origTop + 'px';
+          ds.evEl.style.left = ds.origLeft + 'px';
+          ds.evEl.style.width = ds.origWidth + 'px';
+          ds.evEl.style.height = ds.origHeight + 'px';
+          alert('更新に失敗しました: ' + err.message);
+        }
+      } else {
+        // No change — revert position
+        ds.evEl.style.top = ds.origTop + 'px';
+        ds.evEl.style.left = ds.origLeft + 'px';
+        ds.evEl.style.width = ds.origWidth + 'px';
+        ds.evEl.style.height = ds.origHeight + 'px';
+      }
+      dragState = null;
+    }
+
+    // --- Place events after layout ---
     requestAnimationFrame(function() {
       events.forEach(function(ev) {
         var eStart = new Date(ev.start_time);
@@ -1608,11 +1791,44 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
         evEl.style.left = (left + 2) + 'px';
         evEl.style.width = (width - 4) + 'px';
         evEl.style.height = (height - 2) + 'px';
+        evEl.style.cursor = ev.all_day ? 'default' : 'grab';
 
-        var timeStr = ev.all_day ? 'All day' : eStart.toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'});
-        evEl.appendChild(el('span', {className: 'cal-tg-ev-time', textContent: timeStr}));
+        evEl.appendChild(el('span', {className: 'cal-tg-ev-time', textContent: ''}));
         evEl.appendChild(el('span', {className: 'cal-tg-ev-title', textContent: ev.summary}));
-        (function(e) { evEl.addEventListener('click', function() { openCalEventModal(e, null, onRefresh); }); })(ev);
+
+        // Resize handle at bottom
+        if (!ev.all_day) {
+          var resizeHandle = el('div', {className: 'cal-tg-resize'});
+          (function(event, element) {
+            resizeHandle.addEventListener('mousedown', function(e) { onDragStart(event, element, 'resize', e); });
+          })(ev, evEl);
+          evEl.appendChild(resizeHandle);
+        }
+
+        // Drag to move (mousedown on event body, not resize handle)
+        var clickTimer = null;
+        (function(event, element) {
+          element.addEventListener('mousedown', function(e) {
+            if (e.target.classList.contains('cal-tg-resize')) return;
+            // Distinguish click from drag: start drag after 150ms or 4px movement
+            var sx = e.clientX, sy = e.clientY;
+            var moved = false;
+            clickTimer = setTimeout(function() { moved = true; onDragStart(event, element, 'move', e); }, 150);
+            function checkMove(me) {
+              if (Math.abs(me.clientX - sx) > 4 || Math.abs(me.clientY - sy) > 4) {
+                if (!moved) { clearTimeout(clickTimer); moved = true; onDragStart(event, element, 'move', e); }
+                document.removeEventListener('mousemove', checkMove);
+              }
+            }
+            document.addEventListener('mousemove', checkMove);
+            document.addEventListener('mouseup', function onUp() {
+              document.removeEventListener('mousemove', checkMove);
+              document.removeEventListener('mouseup', onUp);
+              if (!moved) { clearTimeout(clickTimer); openCalEventModal(event, null, onRefresh); }
+            });
+          });
+        })(ev, evEl);
+
         body.appendChild(evEl);
       });
 
@@ -1640,6 +1856,7 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
 
     // Click empty cell to add event
     body.addEventListener('click', function(e) {
+      if (dragState) return; // ignore clicks during drag
       var cell = e.target.closest('.cal-tg-cell');
       if (!cell) return;
       var di = parseInt(cell.getAttribute('data-day'), 10);
