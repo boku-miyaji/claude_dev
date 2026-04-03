@@ -1596,17 +1596,19 @@ async function renderDashboard(root) {
   var highTasks = tasks.filter(function(t){return t.priority==='high';});
   var unpaidInv = invoices.filter(function(i){return i.status!=='paid';});
 
-  // Build context for AI
+  // Build context for AI — 変化がある情報のみ。カレンダー・財務は除外（UIに既にある）
   var ctx = [];
   ctx.push('## 日時\n'+dayLabel+' '+String(hour).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'));
-  if (calEvents.length>0) ctx.push('## 今日の予定\n'+calEvents.map(function(e){
-    var t = e.all_day?'終日':new Date(e.start_time).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'});
-    return '- '+t+' '+e.summary;}).join('\n'));
-  ctx.push('## タスク (open:'+tasks.length+', high:'+highTasks.length+')\n'+tasks.slice(0,8).map(function(t){return '- ['+t.priority+'] '+t.title+(t.company_id?' ('+t.company_id+')':'')+(t.due_date?' 期限:'+t.due_date:'');}).join('\n'));
-  ctx.push('## 財務 ('+year+'年 '+dataMonths+'ヶ月実績)\n- 売上: '+fmtYen(yearRev)+' (月平均:'+fmtYen(Math.round(yearRev/dataMonths))+')\n- 経費: '+fmtYen(yearExp)+'\n- 粗利: '+fmtYen(yearRev-yearExp)+'\n- 年間予測: '+fmtYen(projRev)+'\n- 税金積立: '+fmtYen(Math.ceil(taxEst.totalTax/12))+'/月\n- 未入金: '+unpaidInv.length+'件 '+fmtYen(unpaidInv.reduce(function(s,i){return s+i.amount;},0)));
-  if (insights.length>0) ctx.push('## CEO分析 (最終:'+(insights[0].created_at||'').substring(0,10)+')\n'+insights.map(function(i){return '- ['+i.category+'] '+i.insight;}).join('\n'));
-  if (diaries.length>0) ctx.push('## 日記\n'+diaries.map(function(d){return '- '+d.entry_date+(d.wbi?' (WBI:'+d.wbi+')':'')+': '+(d.body||'').substring(0,100);}).join('\n'));
-  if (comments.length>0) ctx.push('## コメント\n'+comments.slice(0,3).map(function(c){return '- ['+(c.company_id||'hd')+'] '+(c.body||'').substring(0,80);}).join('\n'));
+  // High priority tasks only
+  if (highTasks.length>0) ctx.push('## 高優先タスク ('+highTasks.length+'件)\n'+highTasks.slice(0,5).map(function(t){return '- '+t.title+(t.company_id?' ('+t.company_id+')':'')+(t.due_date?' 期限:'+t.due_date:'');}).join('\n'));
+  // Yesterday's diary for reflection
+  if (diaries.length>0) ctx.push('## 昨日の日記\n'+diaries[0].entry_date+': '+(diaries[0].body||'').substring(0,200));
+  // Recent comments (new inputs)
+  if (comments.length>0) ctx.push('## 最近の指示メモ\n'+comments.slice(0,3).map(function(c){return '- ['+(c.company_id||'hd')+'] '+(c.body||'').substring(0,80);}).join('\n'));
+  // CEO insights (behavioral patterns)
+  if (insights.length>0) ctx.push('## 行動パターン分析\n'+insights.slice(0,2).map(function(i){return '- '+i.insight;}).join('\n'));
+  // Unpaid invoices (action needed)
+  if (unpaidInv.length>0) ctx.push('## 要アクション: 未入金 '+unpaidInv.length+'件 '+fmtYen(unpaidInv.reduce(function(s,i){return s+i.amount;},0)));
   var contextStr = ctx.join('\n\n');
 
   // Try AI briefing
@@ -1618,10 +1620,12 @@ async function renderDashboard(root) {
 
   // AI briefing via Edge Function (server-side API key, no client-side key needed)
   try {
-    var sysPrompt = 'あなたは宮路HDの秘書AIです。社長への日次ブリーフィングを生成します。\n'+
-      'ルール:\n- 日本語、簡潔、秘書の口調\n- 最初に「今日のポイント」を3行以内で\n'+
-      '- セクション: 予定→注意事項→財務→気づき\n- 問題なければ安心させる。問題あれば具体的に何をすべきか\n'+
-      '- 300-500字目安。Markdown形式\n- データない項目は省略\n- 時間帯考慮（朝=予定中心、夕方=振り返り）';
+    var sysPrompt = '宮路HDの秘書AI。社長への朝のひとこと。\n'+
+      'ルール:\n- 日本語、簡潔、親しみやすい口調\n- 150字以内。3-5行。\n'+
+      '- 今日やるべきことのリマインド、昨日の振り返り、注意点だけ\n'+
+      '- カレンダーの予定・財務サマリーは書かない（UIに既にある）\n'+
+      '- 変化がない情報は省略。アクションが必要なことだけ\n'+
+      '- Markdown不要。プレーンテキストで';
     var session = await sb.auth.getSession();
     var accessToken = session.data.session && session.data.session.access_token || '';
     var res = await fetch(SUPABASE_URL + '/functions/v1/ai-agent', {
@@ -1678,12 +1682,8 @@ function renderBriefing(container, md, tasks, calEvents, yearRev, yearExp, taxEs
     el('div', {style:'font-size:13px;font-weight:600;color:var(--text2)', textContent:'Daily Briefing'}),
     el('div', {style:'font-size:10px;color:var(--text3)', textContent: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'})+' 生成'})
   ]));
-  var mdDiv = el('div', {className:'md-body'});
-  if (typeof marked!=='undefined'&&marked.parse) {
-    var tpl = document.createElement('template');
-    tpl.innerHTML = marked.parse(md);
-    mdDiv.appendChild(tpl.content);
-  } else { mdDiv.style.whiteSpace='pre-wrap'; mdDiv.textContent=md; }
+  var mdDiv = el('div', {style:'font-size:14px;color:var(--text);line-height:1.8;white-space:pre-wrap'});
+  mdDiv.textContent = md;
   card.appendChild(mdDiv);
   container.appendChild(card);
   renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
@@ -1691,10 +1691,6 @@ function renderBriefing(container, md, tasks, calEvents, yearRev, yearExp, taxEs
 
 function renderBriefingFallback(container, apiKey, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths) {
   while (container.firstChild) container.removeChild(container.firstChild);
-  if (!apiKey) {
-    container.appendChild(el('div', {style:'font-size:11px;color:var(--text3);margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:6px',
-      textContent:'Settings > Chat で OpenAI API Key を設定すると、AIブリーフィングが生成されます。'}));
-  }
   renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
 }
 
