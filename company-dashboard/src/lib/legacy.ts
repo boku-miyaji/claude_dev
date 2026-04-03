@@ -1539,7 +1539,7 @@ async function renderDashboard(root) {
       el('div', {style: 'font-size:20px;font-weight:700', textContent: greeting}),
       el('div', {style: 'font-size:13px;color:var(--text3);margin-top:2px', textContent: dayLabel})
     ]),
-    el('button', {className:'btn btn-g btn-sm', style:'font-size:11px', textContent:'\u21BB', onClick: function() { localStorage.removeItem('hd-briefing'); renderPage('home'); }})
+    el('button', {className:'btn btn-g btn-sm', style:'font-size:11px', textContent:'\u21BB', onClick: function() { localStorage.removeItem('hd-oneliner'); renderPage('home'); }})
   ]));
 
   var briefingArea = el('div');
@@ -1684,17 +1684,10 @@ async function renderDashboard(root) {
   renderBriefingFallback(briefingArea, getChatApiKey(), tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
 }
 
-function renderBriefing(container, md, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths) {
+function renderBriefing(container, oneliner, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths) {
   while (container.firstChild) container.removeChild(container.firstChild);
-  var card = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px'});
-  card.appendChild(el('div', {style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px'}, [
-    el('div', {style:'font-size:13px;font-weight:600;color:var(--text2)', textContent:'Daily Briefing'}),
-    el('div', {style:'font-size:10px;color:var(--text3)', textContent: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'})+' 生成'})
-  ]));
-  var mdDiv = el('div', {style:'font-size:14px;color:var(--text);line-height:1.8;white-space:pre-wrap'});
-  mdDiv.textContent = md;
-  card.appendChild(mdDiv);
-  container.appendChild(card);
+  // One-liner displayed inline, not in a card — feels more natural
+  container.appendChild(el('div', {style:'font-size:14px;color:var(--text2);margin-bottom:16px;padding:0 2px;line-height:1.6', textContent: oneliner}));
   renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
 }
 
