@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/stores/auth'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { MobileNav } from '@/components/layout/MobileNav'
 import { LegacyPage } from '@/components/legacy/LegacyPage'
 import { AuthPage } from '@/pages/AuthPage'
 import {
@@ -17,6 +18,10 @@ import { Knowledge } from '@/pages/Knowledge'
 import { Tasks } from '@/pages/Tasks'
 import { Companies } from '@/pages/Companies'
 import { Reports } from '@/pages/Reports'
+import { Today } from '@/pages/Today'
+import { Journal } from '@/pages/Journal'
+import { Dreams } from '@/pages/Dreams'
+import { SelfAnalysis } from '@/pages/SelfAnalysis'
 
 export function App() {
   useAuth()
@@ -44,7 +49,11 @@ export function App() {
       <Sidebar />
       <div className="main">
         <Routes>
-          <Route path="/" element={<LegacyPage renderer={renderDashboard} />} />
+          <Route path="/" element={<Today />} />
+          <Route path="/journal" element={<Journal />} />
+          <Route path="/dreams" element={<Dreams />} />
+          <Route path="/me" element={<SelfAnalysis />} />
+          <Route path="/dashboard-legacy" element={<LegacyPage renderer={renderDashboard} />} />
           <Route path="/calendar" element={<LegacyPage renderer={renderCalendar} />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/companies" element={<Companies />} />
@@ -66,6 +75,7 @@ export function App() {
           <Route path="/portfolio" element={<LegacyPage renderer={renderPortfolio} />} />
         </Routes>
       </div>
+      <MobileNav />
       <div className="toast" id="toast" />
       <div id="modal-root" />
     </div>
