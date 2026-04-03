@@ -1608,12 +1608,13 @@ async function renderDashboard(root) {
 
   // ===== 非同期: LLM一言を生成して挿入（UIをブロックしない） =====
   (async function() {
+    var cacheVer = 'v3'; // bump this when prompt changes
     var cacheKey = 'hd-oneliner';
     var cachedRaw = localStorage.getItem(cacheKey);
     if (cachedRaw) {
       try {
         var cacheObj = JSON.parse(cachedRaw);
-        if (cacheObj.text && cacheObj.hour === hour && toLocalDateStr(new Date(cacheObj.time)) === todayStr) {
+        if (cacheObj.text && cacheObj.ver === cacheVer && cacheObj.hour === hour && toLocalDateStr(new Date(cacheObj.time)) === todayStr) {
           onelineEl.textContent = cacheObj.text;
           onelineEl.style.color = 'var(--text2)';
           return;
@@ -1693,7 +1694,7 @@ async function renderDashboard(root) {
         if (text) {
           text = text.replace(/\n/g,' ').replace(/^["「]|["」]$/g,'');
           if (text.length > 70) text = text.substring(0,70);
-          localStorage.setItem(cacheKey, JSON.stringify({text:text,time:Date.now(),hour:hour}));
+          localStorage.setItem(cacheKey, JSON.stringify({text:text,time:Date.now(),hour:hour,ver:cacheVer}));
           onelineEl.textContent = text;
           onelineEl.style.color = 'var(--text2)';
           return;
@@ -1771,7 +1772,12 @@ async function collectNews(container) {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
       body: JSON.stringify({
-        message: '以下のトピックについて最新ニュース・技術動向を3-5件調べて、各項目をタイトル+1行要約で報告してください。\nトピック: AI/LLM、データプラットフォーム、Snowflake、Databricks、Claude、OpenAI\n日本語で。箇条書きで。各項目に日付(推定可)を付けて。',
+        message: '【指示】質問や確認をせず、即座に結果だけを出力してください。\n\n'
+          + 'AI/LLM・データプラットフォーム・Snowflake・Databricks・Claude・OpenAIについて、最新ニュースを3-5件出してください。\n\n'
+          + '出力形式（厳守）:\n'
+          + '- [YYYY-MM-DD] タイトル — 1行要約\n'
+          + '- [YYYY-MM-DD] タイトル — 1行要約\n\n'
+          + '質問・確認・前置きは不要。上記の箇条書きのみを出力。',
         model: 'gpt-5-nano',
         context_mode: 'none'
       })
@@ -1790,8 +1796,11 @@ async function collectNews(container) {
       if (text) {
         // Save to activity_log
         await sb.from('activity_log').insert({action:'intelligence_collect', metadata:{summary:text.substring(0,500),collected_at:new Date().toISOString()}});
-        // Parse items and save individually — await all inserts before navigating
-        var lines = text.split('\n').filter(function(l){return l.trim().startsWith('-');});
+        // Parse items — filter out questions and non-news lines
+        var lines = text.split('\n').filter(function(l){
+          var t = l.trim();
+          return t.startsWith('-') && !t.includes('？') && !t.includes('?') && t.length > 15;
+        });
         var insertPromises = lines.map(function(line) {
           return sb.from('activity_log').insert({action:'intelligence_item', metadata:{title:line.replace(/^-\s*/,'').substring(0,200)}});
         });
