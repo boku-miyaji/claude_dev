@@ -144,7 +144,6 @@ export function Tasks() {
           </div>
           <input className="input" placeholder="何をする？" value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') addTask() }}
             style={{ marginBottom: 8, width: '100%', boxSizing: 'border-box' }}
           />
           <textarea className="input" placeholder="詳細（任意）" value={newDesc}
