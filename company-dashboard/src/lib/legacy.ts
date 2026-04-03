@@ -54,20 +54,9 @@ var currentPage = 'home';
 // ============================================================
 // Init
 // ============================================================
-var appReady = false;
+var appReady = true; // React manages auth — legacy init disabled
 function init() {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  sb.auth.getSession().then(function(res) {
-    if (res.data.session) {
-      showApp(res.data.session.user);
-    } else {
-      showAuth();
-    }
-  });
-  sb.auth.onAuthStateChange(function(event, session) {
-    if (event === 'SIGNED_IN' && session && !appReady) showApp(session.user);
-    else if (event === 'SIGNED_OUT') { appReady = false; showAuth(); }
-  });
+  // Auth is managed by React useAuth hook — skip legacy init
 }
 
 function showConfigPrompt() {
@@ -1639,12 +1628,12 @@ async function renderDashboard(root) {
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'Authorization':'Bearer '+accessToken
+        'Authorization':'Bearer '+accessToken,
+        'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({
-        messages:[{role:'system',content:sysPrompt},{role:'user',content:contextStr}],
-        model:'gpt-5-nano',
-        stream: false
+        message: sysPrompt + '\n\n---\n\n' + contextStr,
+        model: 'gpt-5-nano'
       })
     });
     if (res.ok) {
