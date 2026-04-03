@@ -1645,6 +1645,7 @@ async function renderDashboard(root) {
         if (line.startsWith('data: ')) {
           try {
             var evt = JSON.parse(line.slice(6));
+            if (evt.type === 'delta' && evt.content) text += evt.content;
             if (evt.type === 'text' && evt.content) text += evt.content;
             if (evt.type === 'result' && evt.content) text = evt.content;
           } catch(x) {}
