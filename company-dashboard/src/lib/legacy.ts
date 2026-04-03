@@ -1542,31 +1542,17 @@ async function renderDashboard(root) {
     el('button', {className:'btn btn-g btn-sm', style:'font-size:11px', textContent:'\u21BB', onClick: function() { localStorage.removeItem('hd-oneliner'); renderPage('home'); }})
   ]));
 
-  var briefingArea = el('div');
-  root.appendChild(briefingArea);
+  // ===== LLM一言のプレースホルダー（後から挿入） =====
+  var onelineEl = el('div', {style:'font-size:14px;color:var(--text3);margin-bottom:16px;padding:0 2px;line-height:1.6;min-height:20px;transition:color .3s', textContent:'...'});
+  root.appendChild(onelineEl);
 
-  // Loading
-  if (!document.getElementById('briefing-anim')) {
-    var sty = document.createElement('style'); sty.id = 'briefing-anim';
-    sty.textContent = '@keyframes slideRight{0%{transform:translateX(0)}100%{transform:translateX(150%)}}';
-    document.head.appendChild(sty);
-  }
-  briefingArea.appendChild(el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;color:var(--text3);font-size:13px'}, [
-    el('div', {textContent: 'ブリーフィングを準備中...', style: 'margin-bottom:8px'}),
-    el('div', {style: 'width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto;overflow:hidden'}, [
-      el('div', {style: 'width:40%;height:100%;background:var(--accent);border-radius:2px;animation:slideRight 1s ease-in-out infinite alternate'})
-    ])
-  ]));
-
-  // Fetch all data
+  // ===== データ取得（並列、awaitで待つがUIは既にヘッダー表示済み） =====
   var startOfYear = year+'-01-01', endOfYear = year+'-12-31';
   var results = await Promise.allSettled([
     sb.from('tasks').select('id,title,priority,status,company_id,due_date').in('status',['open','in_progress']).order('priority,created_at'),
     sb.from('invoices').select('amount,invoice_date,client_name,status').gte('invoice_date',startOfYear).lte('invoice_date',endOfYear),
     sb.from('expenses').select('amount').gte('expense_date',startOfYear).lte('expense_date',endOfYear),
-    sb.from('ceo_insights').select('category,insight,created_at').order('created_at',{ascending:false}).limit(5),
-    sb.from('diary_entries').select('entry_date,body,wbi').order('entry_date',{ascending:false}).limit(3),
-    sb.from('comments').select('body,company_id,created_at').order('created_at',{ascending:false}).limit(5)
+    sb.from('activity_log').select('details,created_at').eq('action','daily_briefing').order('created_at',{ascending:false}).limit(1)
   ]);
 
   // Calendar
@@ -1582,21 +1568,22 @@ async function renderDashboard(root) {
   var tasks = (results[0].status==='fulfilled' && results[0].value.data) || [];
   var invoices = (results[1].status==='fulfilled' && results[1].value.data) || [];
   var expenses = (results[2].status==='fulfilled' && results[2].value.data) || [];
-  var insights = (results[3].status==='fulfilled' && results[3].value.data) || [];
-  var diaries = (results[4].status==='fulfilled' && results[4].value.data) || [];
-  var comments = ((results[5].status==='fulfilled' && results[5].value.data) || []).filter(function(c){return c.body&&c.body.length>2;});
-
-  // Compute finance
+  var highTasks = tasks.filter(function(t){return t.priority==='high';});
+  var unpaidInv = invoices.filter(function(i){return i.status!=='paid';});
   var yearRev = invoices.reduce(function(s,i){return s+i.amount;},0);
   var yearExp = expenses.reduce(function(s,e){return s+e.amount;},0);
   var invMonthSet = {}; invoices.forEach(function(i){invMonthSet[i.invoice_date.substring(0,7)]=true;});
   var dataMonths = Math.max(Object.keys(invMonthSet).length,1);
-  var projRev = Math.round(yearRev/dataMonths*12);
-  var taxEst = calcTax(projRev, Math.round(yearExp/dataMonths*12));
-  var highTasks = tasks.filter(function(t){return t.priority==='high';});
-  var unpaidInv = invoices.filter(function(i){return i.status!=='paid';});
+  var taxEst = calcTax(Math.round(yearRev/dataMonths*12), Math.round(yearExp/dataMonths*12));
 
-  // ===== 予定セクション（機械的に表示、ブリーフィングの前） =====
+  // Morning briefing from DB
+  var morningBriefing = '';
+  var bData = (results[3].status==='fulfilled' && results[3].value.data) || [];
+  if (bData[0] && toLocalDateStr(new Date(bData[0].created_at)) === todayStr) {
+    morningBriefing = (bData[0].details && bData[0].details.text) || '';
+  }
+
+  // ===== 即座に描画: カレンダー → KPI → タスク =====
   if (calEvents.length > 0) {
     var schedCard = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px'});
     schedCard.appendChild(el('div', {style:'font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px', textContent:'TODAY — '+calEvents.length+'件'}));
@@ -1611,89 +1598,67 @@ async function renderDashboard(root) {
     root.appendChild(schedCard);
   }
 
-  // ===== Step 1: Load pre-generated morning briefing from DB (instant) =====
-  var morningBriefing = '';
-  try {
-    var bRes = await sb.from('activity_log').select('details,created_at').eq('action','daily_briefing').order('created_at',{ascending:false}).limit(1);
-    if (bRes.data && bRes.data[0]) {
-      var bd = bRes.data[0];
-      var bDate = new Date(bd.created_at);
-      // Show if today's briefing (generated by 7am cron)
-      if (toLocalDateStr(bDate) === toLocalDateStr(now)) {
-        morningBriefing = (bd.details && bd.details.text) || '';
-      }
-    }
-  } catch(x) {}
+  // KPI + Tasks (immediate)
+  renderQuickCards(root, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
 
-  // ===== Step 2: Build quick context for one-liner =====
-  var futureEvents = calEvents.filter(function(e){return new Date(e.end_time)>now;});
-  var nextEvent = futureEvents[0];
-  var quickCtx = dayLabel + ' ' + String(hour).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  if (nextEvent) quickCtx += '\n次の予定: '+new Date(nextEvent.start_time).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'})+' '+nextEvent.summary;
-  else if (calEvents.length===0) quickCtx += '\n今日の予定なし';
-  else quickCtx += '\n残りの予定なし（全'+calEvents.length+'件完了）';
-  if (morningBriefing) quickCtx += '\n朝のブリーフィング: '+morningBriefing;
-  if (highTasks.length>0) quickCtx += '\n高優先タスク: '+highTasks.slice(0,3).map(function(t){return t.title;}).join('、');
-
-  // ===== Step 3: Check cache (same hour = skip regeneration) =====
-  var cacheKey = 'hd-oneliner';
-  var cachedRaw = localStorage.getItem(cacheKey);
-  if (cachedRaw) {
-    try {
-      var cacheObj = JSON.parse(cachedRaw);
-      if (cacheObj.text && cacheObj.hour === hour && toLocalDateStr(new Date(cacheObj.time)) === toLocalDateStr(now)) {
-        renderBriefing(briefingArea, cacheObj.text, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
-        return;
-      }
-    } catch(x) {}
-  }
-
-  // ===== Step 4: Generate one-liner with gpt-nano (fast, ~1sec) =====
-  try {
-    var session = await sb.auth.getSession();
-    var accessToken = session.data.session && session.data.session.access_token || '';
-    var res = await fetch(SUPABASE_URL + '/functions/v1/ai-agent', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken,'apikey':SUPABASE_ANON_KEY},
-      body: JSON.stringify({
-        message: '秘書として社長に一言。1文だけ。40字以内。今の状況を踏まえた気の利いた一言を。親しみやすく。\n\n'+quickCtx,
-        model: 'gpt-5-nano',
-        context_mode: 'none'
-      })
-    });
-    if (res.ok) {
-      var bodyText = await res.text();
-      var text = '';
-      bodyText.split('\n').forEach(function(line) {
-        if (line.startsWith('data: ')) {
-          try { var evt = JSON.parse(line.slice(6)); if (evt.type==='delta'&&evt.content) text+=evt.content; } catch(x) {}
+  // ===== 非同期: LLM一言を生成して挿入（UIをブロックしない） =====
+  (async function() {
+    var cacheKey = 'hd-oneliner';
+    var cachedRaw = localStorage.getItem(cacheKey);
+    if (cachedRaw) {
+      try {
+        var cacheObj = JSON.parse(cachedRaw);
+        if (cacheObj.text && cacheObj.hour === hour && toLocalDateStr(new Date(cacheObj.time)) === todayStr) {
+          onelineEl.textContent = cacheObj.text;
+          onelineEl.style.color = 'var(--text2)';
+          return;
         }
-      });
-      if (text) {
-        // Clean up: take first sentence only
-        text = text.replace(/\n/g,' ').split(/[。！]/)[0];
-        if (text.length > 60) text = text.substring(0,60);
-        localStorage.setItem(cacheKey, JSON.stringify({text:text,time:Date.now(),hour:hour}));
-        renderBriefing(briefingArea, text, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
-        return;
-      }
+      } catch(x) {}
     }
-  } catch(e) { console.error('Oneliner error:', e); }
 
-  // Fallback
-  renderBriefingFallback(briefingArea, getChatApiKey(), tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
-}
+    // Build quick context
+    var futureEvents = calEvents.filter(function(e){return new Date(e.end_time)>now;});
+    var nextEvent = futureEvents[0];
+    var quickCtx = dayLabel + ' ' + String(hour).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    if (nextEvent) quickCtx += '\n次の予定: '+new Date(nextEvent.start_time).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'})+' '+nextEvent.summary;
+    else if (calEvents.length===0) quickCtx += '\n今日の予定なし';
+    else quickCtx += '\n残りの予定なし（全'+calEvents.length+'件完了）';
+    if (morningBriefing) quickCtx += '\n朝のブリーフィング: '+morningBriefing;
+    if (highTasks.length>0) quickCtx += '\n高優先タスク: '+highTasks.slice(0,3).map(function(t){return t.title;}).join('、');
 
-function renderBriefing(container, oneliner, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths) {
-  while (container.firstChild) container.removeChild(container.firstChild);
-  // One-liner displayed inline, not in a card — feels more natural
-  container.appendChild(el('div', {style:'font-size:14px;color:var(--text2);margin-bottom:16px;padding:0 2px;line-height:1.6', textContent: oneliner}));
-  renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
-}
-
-function renderBriefingFallback(container, apiKey, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths) {
-  while (container.firstChild) container.removeChild(container.firstChild);
-  renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
+    try {
+      var session = await sb.auth.getSession();
+      var accessToken = session.data.session && session.data.session.access_token || '';
+      var res = await fetch(SUPABASE_URL + '/functions/v1/ai-agent', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken,'apikey':SUPABASE_ANON_KEY},
+        body: JSON.stringify({
+          message: '秘書として社長に一言。1文だけ。40字以内。今の状況を踏まえた気の利いた一言を。親しみやすく。\n\n'+quickCtx,
+          model: 'gpt-5-nano',
+          context_mode: 'none'
+        })
+      });
+      if (res.ok) {
+        var bodyText = await res.text();
+        var text = '';
+        bodyText.split('\n').forEach(function(line) {
+          if (line.startsWith('data: ')) {
+            try { var evt = JSON.parse(line.slice(6)); if (evt.type==='delta'&&evt.content) text+=evt.content; } catch(x) {}
+          }
+        });
+        if (text) {
+          text = text.replace(/\n/g,' ').split(/[。！]/)[0];
+          if (text.length > 60) text = text.substring(0,60);
+          localStorage.setItem(cacheKey, JSON.stringify({text:text,time:Date.now(),hour:hour}));
+          onelineEl.textContent = text;
+          onelineEl.style.color = 'var(--text2)';
+          return;
+        }
+      }
+    } catch(e) { console.error('Oneliner error:', e); }
+    // Fallback: hide placeholder
+    onelineEl.style.display = 'none';
+  })();
 }
 
 function renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths) {
