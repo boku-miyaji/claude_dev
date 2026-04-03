@@ -174,7 +174,8 @@
       "Bash(register \"rikyu\" \"クライアント要件概要\" \"/workspace/project-rikyu-sales-proposals-poc/original_document_summary/drive/00_overview.md\" \"md\" '[\"research\",\"requirements\"]' \"research\")",
       "Bash(register \"rikyu\" \"営業生産性分析\" \"/workspace/project-rikyu-sales-proposals-poc/original_document_summary/drive/04_sales_productivity_analysis.md\" \"md\" '[\"research\",\"analysis\"]' \"research\")",
       "Bash(register \"rikyu\" \"DXベンダー調査\" \"/workspace/project-rikyu-sales-proposals-poc/original_document_summary/drive/03_dx_vendors.md\" \"md\" '[\"research\",\"vendor\"]' \"research\")",
-      "Bash(register \"rikyu\" \"デモ動画ストーリーライン v2\" \"/workspace/project-rikyu-sales-proposals-poc/.company-rikyu/secretary/archive/demo-video-storyline-v2.md\" \"md\" '[\"proposal\",\"demo\"]' \"proposal\")"
+      "Bash(register \"rikyu\" \"デモ動画ストーリーライン v2\" \"/workspace/project-rikyu-sales-proposals-poc/.company-rikyu/secretary/archive/demo-video-storyline-v2.md\" \"md\" '[\"proposal\",\"demo\"]' \"proposal\")",
+      "Read(//home/node/**)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
