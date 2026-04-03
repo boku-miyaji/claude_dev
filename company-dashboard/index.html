@@ -1741,7 +1741,9 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
             start: { dateTime: newStart },
             end: { dateTime: newEnd }
           });
-          if (onRefresh) onRefresh();
+          // Optimistic: keep DOM as-is, just update in-memory data
+          ev.start_time = newStart;
+          ev.end_time = newEnd;
         } catch(err) {
           // Revert on failure
           ds.evEl.style.top = ds.origTop + 'px';
