@@ -1539,7 +1539,7 @@ async function renderDashboard(root) {
       el('div', {style: 'font-size:20px;font-weight:700', textContent: greeting}),
       el('div', {style: 'font-size:13px;color:var(--text3);margin-top:2px', textContent: dayLabel})
     ]),
-    el('button', {className:'btn btn-g btn-sm', style:'font-size:11px', textContent:'\u21BB', onClick: function() { sessionStorage.removeItem('hd-briefing-'+todayStr+'-'+hour); renderPage('home'); }})
+    el('button', {className:'btn btn-g btn-sm', style:'font-size:11px', textContent:'\u21BB', onClick: function() { localStorage.removeItem('hd-briefing'); renderPage('home'); }})
   ]));
 
   var briefingArea = el('div');
@@ -1613,10 +1613,17 @@ async function renderDashboard(root) {
 
   // Try AI briefing
   var apiKey = getChatApiKey();
-  var cacheKey = 'hd-briefing-'+todayStr+'-'+hour;
-  var cached = sessionStorage.getItem(cacheKey);
-
-  if (cached) { renderBriefing(briefingArea, cached, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths); return; }
+  var cacheKey = 'hd-briefing';
+  var cachedRaw = localStorage.getItem(cacheKey);
+  if (cachedRaw) {
+    try {
+      var cacheObj = JSON.parse(cachedRaw);
+      if (cacheObj.text && (Date.now() - cacheObj.time) < 3600000) {
+        renderBriefing(briefingArea, cacheObj.text, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
+        return;
+      }
+    } catch(x) {}
+  }
 
   // AI briefing via Edge Function (server-side API key, no client-side key needed)
   try {
@@ -1659,7 +1666,7 @@ async function renderDashboard(root) {
         // Try plain JSON response
         try { var j = JSON.parse(bodyText); text = j.content || j.text || ''; } catch(x) {}
       }
-      if (text) { sessionStorage.setItem(cacheKey, text); renderBriefing(briefingArea, text, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths); return; }
+      if (text) { localStorage.setItem(cacheKey, JSON.stringify({text:text,time:Date.now()})); renderBriefing(briefingArea, text, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths); return; }
     } else {
       var errBody = ''; try { errBody = await res.text(); } catch(x){}
       console.error('Briefing API error:', res.status, errBody);
