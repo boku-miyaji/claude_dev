@@ -161,7 +161,9 @@
       "Read(//workspace/{gsub\\(/ /**)",
       "Read(//^\\\\|[[:space:]]+[a-z]/ && !/ID/ {gsub\\(/[[:space:]]/**)",
       "Bash(bash /workspace/.claude/hooks/freshness-check.sh)",
-      "Bash(/tmp/extract_render_functions.sh)"
+      "Bash(/tmp/extract_render_functions.sh)",
+      "Bash(mkdir -p public)",
+      "Bash(cp index.legacy.html public/index.legacy.html)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
