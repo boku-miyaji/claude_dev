@@ -794,6 +794,15 @@ async function agentLoop(
 
   await sb.from("messages").insert({ conversation_id: conversationId, role: "user", content: userMessage, step: 0, user_id: userId });
 
+  // Record to prompt_log for unified analytics (source: ai_chat)
+  await sb.from("prompt_log").insert({
+    prompt: userMessage,
+    context: `ai_chat:${conversationId}`,
+    company_id: companyId || null,
+    tags: ["ai_chat"],
+    source: "ai_chat",
+  });
+
   // Model selection + reasoning effort
   let selectedModel = model;
   let routingReason = "manual";
