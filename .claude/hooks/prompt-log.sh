@@ -31,6 +31,18 @@ esac
 CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 CONTEXT=$(basename "$CWD" 2>/dev/null || echo "unknown")
 
+# --- Session ID detection ---
+# Find the most recent session file and extract sessionId
+SESSION_ID=""
+CLAUDE_CONFIG="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+SESSIONS_DIR="$CLAUDE_CONFIG/sessions"
+if [ -d "$SESSIONS_DIR" ]; then
+  LATEST_SESSION_FILE=$(ls -t "$SESSIONS_DIR"/*.json 2>/dev/null | head -1)
+  if [ -n "$LATEST_SESSION_FILE" ]; then
+    SESSION_ID=$(jq -r '.sessionId // empty' "$LATEST_SESSION_FILE" 2>/dev/null)
+  fi
+fi
+
 # Server identification
 SERVER_HOST=$(hostname -s 2>/dev/null || echo "unknown")
 
@@ -117,7 +129,7 @@ if [ -f "$TOOLS_FILE" ] && [ -s "$TOOLS_FILE" ]; then
   rm -f "$TOOLS_FILE"
 fi
 
-# Build JSON payload (with server_host, cwd, company_id, tools_used)
+# Build JSON payload (with server_host, cwd, company_id, session_id, tools_used)
 PAYLOAD=$(jq -n \
   --arg prompt "$PROMPT" \
   --arg context "$CONTEXT" \
@@ -125,13 +137,39 @@ PAYLOAD=$(jq -n \
   --arg server_host "$SERVER_HOST" \
   --arg cwd "$CWD" \
   --arg company_id "$COMPANY_ID" \
+  --arg session_id "$SESSION_ID" \
   --argjson tools_used "$TOOLS_USED" \
   --argjson tool_count "$TOOL_COUNT" \
   '{prompt: $prompt, context: $context, tags: $tags, server_host: $server_host, cwd: $cwd}
    | if $company_id != "" then . + {company_id: $company_id} else . end
+   | if $session_id != "" then . + {session_id: $session_id} else . end
    | if $tool_count > 0 then . + {tools_used: $tools_used, tool_count: $tool_count} else . end')
 
-# POST to Supabase
+# Upsert prompt_sessions (if session_id available)
+if [ -n "$SESSION_ID" ]; then
+  SESSION_PAYLOAD=$(jq -n \
+    --arg id "$SESSION_ID" \
+    --arg company_id "$COMPANY_ID" \
+    --argjson tags "$TAGS" \
+    --arg server_host "$SERVER_HOST" \
+    --arg cwd "$CWD" \
+    '{id: $id, ended_at: (now | todate), tags: $tags, server_host: $server_host, cwd: $cwd, prompt_count: 1}
+     | if $company_id != "" then . + {company_id: $company_id} else . end')
+
+  curl -4 -s -o /dev/null -w "" \
+    "${SUPABASE_URL}/rest/v1/prompt_sessions" \
+    -H "apikey: ${SUPABASE_ANON_KEY}" \
+    -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+    -H "Content-Type: application/json" \
+    -H "Prefer: return=minimal,resolution=merge-duplicates" \
+    -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
+    -d "$SESSION_PAYLOAD" \
+    --connect-timeout 10 \
+    --max-time 15 \
+    2>/dev/null || true
+fi
+
+# POST to Supabase prompt_log
 curl -4 -s -o /dev/null -w "" \
   "${SUPABASE_URL}/rest/v1/prompt_log" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
