@@ -11,6 +11,7 @@
 | `pj:foundry` | Foundry移行会社 |
 | `pj:rikyu` | りきゅう |
 | `pj:circuit` | 回路設計支援システム会社 |
+| `pj:instagram` | Instagram運用PJ |
 | `personal` | 個人のこと |
 <!-- GENERATED:SCOPE_TAGS:END -->
 
@@ -22,6 +23,7 @@
 | `dept:ai-dev` | AI開発部署 |
 | `dept:intelligence` | 情報収集部 |
 | `dept:materials` | 資料制作部署 |
+| `dept:ops` | 運営改善部 |
 | `dept:pm` | PM |
 | `dept:research` | リサーチ部署 |
 | `dept:security` | セキュリティ部 |
