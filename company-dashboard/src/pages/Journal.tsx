@@ -4,7 +4,7 @@ import { Card, PageHeader } from '@/components/ui'
 
 interface DiaryEntry {
   id: string
-  content: string
+  body: string
   entry_type: string | null
   mood_score: number | null
   wbi: number | null
@@ -372,7 +372,7 @@ export function Journal() {
             return (
               <Card key={e.id} style={{ padding: 14 }}>
                 <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6, marginBottom: 6 }}>
-                  {e.content.length > 200 ? `${e.content.substring(0, 200)}...` : e.content}
+                  {e.body.length > 200 ? `${e.body.substring(0, 200)}...` : e.body}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>

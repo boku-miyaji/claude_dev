@@ -1,4 +1,4 @@
-const CACHE_NAME = 'self-focus-v1'
+const CACHE_NAME = 'self-focus-v2'
 const PRECACHE_URLS = ['/', '/index.html']
 
 self.addEventListener('install', (event) => {
@@ -19,10 +19,27 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
-  // Skip API / supabase requests
+
   const url = new URL(event.request.url)
+
+  // Skip external requests (API, CDN, Supabase)
   if (url.origin !== self.location.origin) return
 
+  // HTML / navigation requests -> Network First
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          return response
+        })
+        .catch(() => caches.match(event.request).then((r) => r || caches.match('/')))
+    )
+    return
+  }
+
+  // Static assets (JS, CSS, images) -> Stale-While-Revalidate
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request).then((response) => {

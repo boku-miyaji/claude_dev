@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { calculateStreak } from '@/lib/streak'
 import { Card } from '@/components/ui'
 import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis'
 import { useMorningBriefing } from '@/hooks/useMorningBriefing'
@@ -30,8 +31,9 @@ function getGreeting(): string {
 
 interface DiaryEntry {
   id: string
-  content: string
-  type: string
+  body: string
+  entry_type: string
+  entry_date: string | null
   created_at: string
 }
 
@@ -61,8 +63,6 @@ export function Today() {
   const [wbi, setWbi] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [emotionBadges, setEmotionBadges] = useState<Map<string, EmotionBadge[]>>(new Map())
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const { analyze, analyzing, error: emotionError } = useEmotionAnalysis()
   const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing()
   const { detect } = useDreamDetection()
@@ -95,9 +95,10 @@ export function Today() {
         .select('id', { count: 'exact', head: true })
         .in('status', ['active', 'in_progress']),
       supabase
-        .from('wbi_scores')
+        .from('diary_entries')
         .select('wbi')
-        .order('scored_at', { ascending: false })
+        .not('wbi', 'is', null)
+        .order('created_at', { ascending: false })
         .limit(1),
     ])
 
@@ -134,37 +135,9 @@ export function Today() {
       }
     }
 
-    // Calculate streak
-    const { data: streakData } = await supabase
-      .from('diary_entries')
-      .select('created_at')
-      .order('created_at', { ascending: false })
-      .limit(90)
-    if (streakData && streakData.length > 0) {
-      const dates = new Set(
-        streakData.map((e: { created_at: string }) => e.created_at.substring(0, 10)),
-      )
-      let s = 0
-      const d = new Date()
-      if (dates.has(todayStr)) s = 1
-      else {
-        d.setDate(d.getDate() - 1)
-      }
-      for (let i = 0; i < 90; i++) {
-        if (s === 0 && i === 0) {
-          // already adjusted
-        }
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-        if (dates.has(key)) {
-          if (s === 0) s = 1
-          else s++
-          d.setDate(d.getDate() - 1)
-        } else {
-          break
-        }
-      }
-      setStreak(s)
-    }
+    // Calculate streak (shared utility)
+    const currentStreak = await calculateStreak()
+    setStreak(currentStreak)
 
     setLoading(false)
   }, [todayStr])
@@ -177,7 +150,7 @@ export function Today() {
     setSaving(true)
     const { data: inserted } = await supabase
       .from('diary_entries')
-      .insert({ content: content.trim(), type: 'fragment' })
+      .insert({ body: content.trim(), entry_type: 'fragment', entry_date: todayStr })
       .select()
       .single()
     setSaving(false)
@@ -212,20 +185,14 @@ export function Today() {
         }
       })
     }
-  }, [load, analyze, detect])
+  }, [load, analyze, detect, todayStr])
 
-  /** Debounced auto-save */
+  /** Text change handler (manual save only) */
   const handleTextChange = useCallback(
     (val: string) => {
       setText(val)
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      if (val.trim().length > 10) {
-        debounceRef.current = setTimeout(() => {
-          saveEntry(val)
-        }, 1500)
-      }
     },
-    [saveEntry],
+    [],
   )
 
   const greeting = getGreeting()
@@ -258,7 +225,7 @@ export function Today() {
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-            {saving ? '保存中...' : saved ? '保存しました' : analyzing ? '感情分析中...' : '10文字以上で自動保存'}
+            {saving ? '保存中...' : saved ? '保存しました' : analyzing ? '感情分析中...' : ''}
           </span>
           <button
             className="btn btn-p btn-sm"
@@ -322,7 +289,7 @@ export function Today() {
               const badges = emotionBadges.get(f.id) || []
               return (
                 <Card key={f.id} style={{ padding: 14 }}>
-                  <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6 }}>{f.content}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6 }}>{f.body}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
                       {new Date(f.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}

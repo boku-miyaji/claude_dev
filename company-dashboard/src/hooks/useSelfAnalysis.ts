@@ -88,24 +88,24 @@ async function collectData(type: AnalysisType): Promise<{ text: string; count: n
     case 'mbti': {
       const { data } = await supabase
         .from('diary_entries')
-        .select('content, created_at')
+        .select('body, created_at')
         .order('created_at', { ascending: false })
         .limit(50)
       const entries = data ?? []
       const text = entries
-        .map((e: { content: string; created_at: string }) => `[${e.created_at.substring(0, 10)}] ${e.content}`)
+        .map((e: { body: string; created_at: string }) => `[${e.created_at.substring(0, 10)}] ${e.body}`)
         .join('\n\n')
       return { text, count: entries.length }
     }
     case 'big5': {
       const { data } = await supabase
         .from('diary_entries')
-        .select('content, created_at')
+        .select('body, created_at')
         .order('created_at', { ascending: false })
         .limit(60)
       const entries = data ?? []
       const text = entries
-        .map((e: { content: string; created_at: string }) => `[${e.created_at.substring(0, 10)}] ${e.content}`)
+        .map((e: { body: string; created_at: string }) => `[${e.created_at.substring(0, 10)}] ${e.body}`)
         .join('\n\n')
       return { text, count: entries.length }
     }
@@ -118,7 +118,7 @@ async function collectData(type: AnalysisType): Promise<{ text: string; count: n
           .limit(100),
         supabase
           .from('diary_entries')
-          .select('content, created_at')
+          .select('body, created_at')
           .order('created_at', { ascending: false })
           .limit(30),
       ])
@@ -128,7 +128,7 @@ async function collectData(type: AnalysisType): Promise<{ text: string; count: n
         .map((t: { title: string; status: string; priority: string }) => `- [${t.status}][${t.priority}] ${t.title}`)
         .join('\n')
       const diaryText = diaries
-        .map((e: { content: string; created_at: string }) => `[${e.created_at.substring(0, 10)}] ${e.content}`)
+        .map((e: { body: string; created_at: string }) => `[${e.created_at.substring(0, 10)}] ${e.body}`)
         .join('\n\n')
       return { text: `## タスク実績\n${taskText}\n\n## 日記\n${diaryText}`, count: tasks.length }
     }
@@ -136,7 +136,7 @@ async function collectData(type: AnalysisType): Promise<{ text: string; count: n
       const [diaryRes, emotionRes] = await Promise.all([
         supabase
           .from('diary_entries')
-          .select('id, content, created_at')
+          .select('id, body, created_at')
           .order('created_at', { ascending: false })
           .limit(60),
         supabase
@@ -151,12 +151,12 @@ async function collectData(type: AnalysisType): Promise<{ text: string; count: n
       for (const e of emotions) {
         emotionMap.set((e as Record<string, string>).diary_entry_id, e as Record<string, unknown>)
       }
-      const lines = diaries.map((d: { id: string; content: string; created_at: string }) => {
+      const lines = diaries.map((d: { id: string; body: string; created_at: string }) => {
         const emo = emotionMap.get(d.id)
         const emoStr = emo
           ? ` | joy=${emo.joy} trust=${emo.trust} fear=${emo.fear} sadness=${emo.sadness} anger=${emo.anger} anticipation=${emo.anticipation} valence=${emo.valence}`
           : ''
-        return `[${d.created_at.substring(0, 10)}] ${d.content}${emoStr}`
+        return `[${d.created_at.substring(0, 10)}] ${d.body}${emoStr}`
       })
       return { text: lines.join('\n\n'), count: diaries.length }
     }
@@ -164,7 +164,7 @@ async function collectData(type: AnalysisType): Promise<{ text: string; count: n
       const [diaryRes, dreamsRes] = await Promise.all([
         supabase
           .from('diary_entries')
-          .select('content, created_at')
+          .select('body, created_at')
           .order('created_at', { ascending: false })
           .limit(80),
         supabase
@@ -175,7 +175,7 @@ async function collectData(type: AnalysisType): Promise<{ text: string; count: n
       const diaries = diaryRes.data ?? []
       const dreams = dreamsRes.data ?? []
       const diaryText = diaries
-        .map((e: { content: string; created_at: string }) => `[${e.created_at.substring(0, 10)}] ${e.content}`)
+        .map((e: { body: string; created_at: string }) => `[${e.created_at.substring(0, 10)}] ${e.body}`)
         .join('\n\n')
       const dreamText = dreams
         .map((d: { title: string; category: string; status: string }) => `- [${d.status}][${d.category}] ${d.title}`)
@@ -191,6 +191,9 @@ interface UseSelfAnalysisReturn {
   runningType: AnalysisType | null
   error: string | null
 }
+
+// NOTE: API key is sent from client for simplicity in personal use.
+// For production/multi-user, move to Supabase Edge Function.
 
 /**
  * Hook to execute self-analysis using OpenAI API.

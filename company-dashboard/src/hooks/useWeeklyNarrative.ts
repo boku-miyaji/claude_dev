@@ -57,6 +57,9 @@ interface UseWeeklyNarrativeReturn {
   generate: (weekStart: string, weekEnd: string) => Promise<WeeklyNarrativeRecord | null>
 }
 
+// NOTE: API key is sent from client for simplicity in personal use.
+// For production/multi-user, move to Supabase Edge Function.
+
 /**
  * Hook for weekly narrative reports.
  * Lists past 6 weeks and their narratives; generates new ones with OpenAI.
@@ -139,7 +142,7 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
       const [diaryRes, emotionRes, taskRes, goalRes] = await Promise.all([
         supabase
           .from('diary_entries')
-          .select('content, created_at')
+          .select('body, created_at')
           .gte('created_at', startTs)
           .lte('created_at', endTs)
           .order('created_at'),
@@ -197,7 +200,7 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
 
       // Build data text for AI
       const diaryText = diaries
-        .map((d: { content: string; created_at: string }) => `[${d.created_at.substring(0, 10)}] ${d.content.substring(0, 200)}`)
+        .map((d: { body: string; created_at: string }) => `[${d.created_at.substring(0, 10)}] ${d.body.substring(0, 200)}`)
         .join('\n')
       const taskText = completedTasks
         .map((t: { title: string }) => `- ${t.title}`)

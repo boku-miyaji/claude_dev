@@ -1,11 +1,15 @@
 import { useCallback, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { calculateStreak } from '@/lib/streak'
 import { useBriefingStore } from '@/stores/briefing'
 import { buildPartnerSystemPrompt, getTimeOfDay } from '@/lib/aiPartner'
 import type { PartnerContext, EmotionSummary } from '@/lib/aiPartner'
 
 /** Plutchik keys for finding dominant emotion */
 const PLUTCHIK_KEYS = ['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation'] as const
+
+// NOTE: API key is sent from client for simplicity in personal use.
+// For production/multi-user, move to Supabase Edge Function.
 
 /**
  * Hook to generate a morning briefing message from the AI Partner.
@@ -26,10 +30,10 @@ export function useMorningBriefing() {
 
     try {
       // Collect context data in parallel
-      const [diaryRes, emotionRes, tasksRes, dreamsRes, streakRes] = await Promise.all([
+      const [diaryRes, emotionRes, tasksRes, dreamsRes, streakResult] = await Promise.all([
         supabase
           .from('diary_entries')
-          .select('content, created_at')
+          .select('body, created_at')
           .order('created_at', { ascending: false })
           .limit(3),
         supabase
@@ -48,34 +52,10 @@ export function useMorningBriefing() {
           .select('title, status')
           .in('status', ['active', 'in_progress'])
           .limit(5),
-        supabase
-          .from('diary_entries')
-          .select('created_at')
-          .order('created_at', { ascending: false })
-          .limit(30),
+        calculateStreak(),
       ])
 
-      // Calculate streak
-      let streak = 0
-      if (streakRes.data && streakRes.data.length > 0) {
-        const dates = new Set(
-          streakRes.data.map((e: { created_at: string }) => e.created_at.substring(0, 10)),
-        )
-        const d = new Date()
-        const todayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-        if (dates.has(todayKey)) streak = 1
-        else d.setDate(d.getDate() - 1)
-        for (let i = 0; i < 30; i++) {
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-          if (dates.has(key)) {
-            if (streak === 0) streak = 1
-            else streak++
-            d.setDate(d.getDate() - 1)
-          } else {
-            break
-          }
-        }
-      }
+      const streak = streakResult
 
       // Build emotion summary
       let recentEmotions: EmotionSummary | undefined
@@ -112,8 +92,8 @@ export function useMorningBriefing() {
 
       // Build recent diary text
       const recentDiary = diaryRes.data
-        ?.map((e: { content: string; created_at: string }) =>
-          `[${e.created_at.substring(0, 10)}] ${e.content.substring(0, 150)}`,
+        ?.map((e: { body: string; created_at: string }) =>
+          `[${e.created_at.substring(0, 10)}] ${e.body.substring(0, 150)}`,
         )
         .join('\n')
 

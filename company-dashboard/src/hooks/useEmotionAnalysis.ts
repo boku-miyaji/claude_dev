@@ -33,6 +33,9 @@ interface UseEmotionAnalysisReturn {
  * Hook to trigger AI emotion analysis for a diary entry.
  * Calls OpenAI API with the user's API key from user_settings,
  * then stores results in emotion_analysis table and updates diary_entries.wbi.
+ *
+ * NOTE: API key is sent from client for simplicity in personal use.
+ * For production/multi-user, move to Supabase Edge Function.
  */
 export function useEmotionAnalysis(): UseEmotionAnalysisReturn {
   const [analyzing, setAnalyzing] = useState(false)

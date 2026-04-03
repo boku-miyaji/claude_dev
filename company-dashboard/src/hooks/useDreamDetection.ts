@@ -13,6 +13,9 @@ interface UseDreamDetectionReturn {
   detecting: boolean
 }
 
+// NOTE: API key is sent from client for simplicity in personal use.
+// For production/multi-user, move to Supabase Edge Function.
+
 /**
  * Hook to detect dream progress from diary entries.
  * Compares diary content against active/in_progress dreams using AI.
