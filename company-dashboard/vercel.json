@@ -1,7 +1,11 @@
 {
-  "buildCommand": null,
-  "outputDirectory": ".",
-  "cleanUrls": true,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/legacy", "destination": "/index.legacy.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
