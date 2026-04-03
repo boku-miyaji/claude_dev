@@ -1608,7 +1608,21 @@ async function renderDashboard(root) {
 
   // ===== 非同期: LLM一言を生成して挿入（UIをブロックしない） =====
   (async function() {
-    var cacheVer = 'v3'; // bump this when prompt changes
+    // 深夜・早朝は無条件で休息メッセージ（LLMに任せない）
+    if (hour >= 23 || hour < 5) {
+      var lateMessages = [
+        'もう遅いですよ。今日はここまでにして、ゆっくり休んでくださいね',
+        '今日も一日お疲れさまでした。あったかくして寝てください',
+        'こんな時間まで頑張ってたんですね。もう十分です、おやすみなさい',
+        '画面から離れて、深呼吸して、布団に入りましょう',
+        '明日の自分に任せて大丈夫。今は休むのが一番の仕事です',
+      ];
+      onelineEl.textContent = lateMessages[Math.floor(Math.random() * lateMessages.length)];
+      onelineEl.style.color = 'var(--text2)';
+      return;
+    }
+
+    var cacheVer = 'v4'; // bump this when prompt changes
     var cacheKey = 'hd-oneliner';
     var cachedRaw = localStorage.getItem(cacheKey);
     if (cachedRaw) {
@@ -1672,12 +1686,12 @@ async function renderDashboard(root) {
           message: 'あなたは社長のことをよく知っている秘書。日記も読んでいるし、働き方の癖も把握している。\n'
             + '今の状況を全部踏まえて、社長にだけ通じる一言を書いて。1文、50字以内。\n\n'
             + '【大事なこと】\n'
-            + '- 社長の今の状況・気持ちを理解した上で書く\n'
-            + '- タスクや予定に触れてもいいが、「〜を優先進行」のような報告文にしない\n'
-            + '- 「〜件完了」のような実績報告にもしない\n'
+            + '- 社長の今の状況・気持ちを本当に理解した上で書く\n'
+            + '- タスクや予定に触れてもいいが、「〜を優先進行」「〜件完了」のような報告にしない\n'
             + '- 社長個人に向けた言葉にする。誰にでも言えることは書かない\n'
             + '- 日記の内容を知っているなら、その気持ちを踏まえる\n'
-            + '- 体調や時間帯を気にかけてもいい\n\n'
+            + '- 夜(20時以降)は「頑張れ」ではなく労いや休息を促す言葉にする。社長の体が大事\n'
+            + '- 「無理せず頑張って」のような矛盾した言葉は使わない\n\n'
             + quickCtx,
           model: 'gpt-5-nano',
           context_mode: 'none'
