@@ -22,6 +22,7 @@ import { Today } from '@/pages/Today'
 import { Journal } from '@/pages/Journal'
 import { Dreams } from '@/pages/Dreams'
 import { SelfAnalysis } from '@/pages/SelfAnalysis'
+import { Goals } from '@/pages/Goals'
 
 export function App() {
   useAuth()
@@ -52,6 +53,7 @@ export function App() {
           <Route path="/" element={<Today />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/dreams" element={<Dreams />} />
+          <Route path="/goals" element={<Goals />} />
           <Route path="/me" element={<SelfAnalysis />} />
           <Route path="/dashboard-legacy" element={<LegacyPage renderer={renderDashboard} />} />
           <Route path="/calendar" element={<LegacyPage renderer={renderCalendar} />} />

@@ -20,6 +20,7 @@ const NAV: NavEntry[] = [
   { type: 'item', page: 'chat', icon: '💬', label: 'AI Chat' },
   // Self
   { type: 'label', label: 'Self' },
+  { type: 'item', page: 'goals', icon: '🎯', label: 'Goals' },
   { type: 'item', page: 'me', icon: '🧠', label: 'Me' },
   { type: 'item', page: 'career', icon: '☆', label: 'Career' },
   // Work (collapsible)

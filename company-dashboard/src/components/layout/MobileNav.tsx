@@ -18,6 +18,7 @@ const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
   {
     label: 'Self',
     items: [
+      { page: 'goals', icon: '🎯', label: 'Goals' },
       { page: 'me', icon: '🧠', label: 'Me' },
       { page: 'career', icon: '☆', label: 'Career' },
     ],

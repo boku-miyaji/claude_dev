@@ -2,6 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Card } from '@/components/ui'
+import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis'
+import { useMorningBriefing } from '@/hooks/useMorningBriefing'
+
+/** Plutchik emotion labels for badge display */
+const PLUTCHIK_LABELS: Record<string, { label: string; color: string }> = {
+  joy: { label: 'Joy', color: '#FFD700' },
+  trust: { label: 'Trust', color: '#98FB98' },
+  fear: { label: 'Fear', color: '#228B22' },
+  surprise: { label: 'Surprise', color: '#00CED1' },
+  sadness: { label: 'Sadness', color: '#4169E1' },
+  disgust: { label: 'Disgust', color: '#9370DB' },
+  anger: { label: 'Anger', color: '#FF4500' },
+  anticipation: { label: 'Anticipation', color: '#FFA500' },
+}
 
 /** Time-based greeting with calm tone */
 function getGreeting(): string {
@@ -10,27 +24,6 @@ function getGreeting(): string {
   if (h < 11) return 'おはようございます'
   if (h < 17) return 'こんにちは'
   return 'おつかれさまです'
-}
-
-/** Calm AI encouragement templates */
-const AI_MESSAGES = [
-  '今日という日は、あなただけのものです。ゆっくり味わってください。',
-  '小さな一歩も、立派な前進です。',
-  '自分を大切にすることが、一番の土台になります。',
-  '完璧でなくていい。今日できたことを認めてあげてください。',
-  '呼吸を深くして、今この瞬間に目を向けてみてください。',
-  'あなたのペースで大丈夫。焦らなくていいですよ。',
-  '日々の積み重ねが、やがて大きな変化になります。',
-  '疲れたら休むのも、前に進む方法のひとつです。',
-  '今日も書いてくれてありがとう。あなたの言葉を大切にします。',
-  '一日の終わりに振り返ること、それだけで素晴らしいことです。',
-]
-
-function getAiMessage(): string {
-  const day = new Date().getDay()
-  const hour = new Date().getHours()
-  const idx = (day * 3 + Math.floor(hour / 8)) % AI_MESSAGES.length
-  return AI_MESSAGES[idx]
 }
 
 interface DiaryEntry {
@@ -47,6 +40,13 @@ interface Task {
   priority: string
 }
 
+interface EmotionBadge {
+  key: string
+  label: string
+  color: string
+  value: number
+}
+
 export function Today() {
   const navigate = useNavigate()
   const [text, setText] = useState('')
@@ -58,7 +58,11 @@ export function Today() {
   const [streak, setStreak] = useState(0)
   const [wbi, setWbi] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
+  const [emotionBadges, setEmotionBadges] = useState<Map<string, EmotionBadge[]>>(new Map())
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const { analyze, analyzing, error: emotionError } = useEmotionAnalysis()
+  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing()
 
   const todayStr = useMemo(() => {
     const d = new Date()
@@ -94,10 +98,38 @@ export function Today() {
         .limit(1),
     ])
 
-    setFragments((diaryRes.data as DiaryEntry[]) || [])
+    const diaryData = (diaryRes.data as DiaryEntry[]) || []
+    setFragments(diaryData)
     setTasks((tasksRes.data as Task[]) || [])
     setDreamsCount(dreamsRes.count ?? 0)
     if (wbiRes.data?.[0]) setWbi(wbiRes.data[0].wbi)
+
+    // Load emotion data for today's entries
+    if (diaryData.length > 0) {
+      const entryIds = diaryData.map((e) => e.id)
+      const { data: emotionData } = await supabase
+        .from('emotion_analysis')
+        .select('diary_entry_id, joy, trust, fear, surprise, sadness, disgust, anger, anticipation')
+        .in('diary_entry_id', entryIds)
+
+      if (emotionData) {
+        const badgeMap = new Map<string, EmotionBadge[]>()
+        for (const ea of emotionData) {
+          const scores = Object.entries(PLUTCHIK_LABELS).map(([key, info]) => ({
+            key,
+            label: info.label,
+            color: info.color,
+            value: (ea as Record<string, number>)[key] ?? 0,
+          }))
+          scores.sort((a, b) => b.value - a.value)
+          badgeMap.set(
+            (ea as Record<string, string>).diary_entry_id,
+            scores.filter((s) => s.value > 20).slice(0, 2),
+          )
+        }
+        setEmotionBadges(badgeMap)
+      }
+    }
 
     // Calculate streak
     const { data: streakData } = await supabase
@@ -111,13 +143,10 @@ export function Today() {
       )
       let s = 0
       const d = new Date()
-      // Check if today has entries
       if (dates.has(todayStr)) s = 1
       else {
-        // If no entry today, start from yesterday
         d.setDate(d.getDate() - 1)
       }
-      // Count consecutive days backward
       for (let i = 0; i < 90; i++) {
         if (s === 0 && i === 0) {
           // already adjusted
@@ -139,20 +168,41 @@ export function Today() {
 
   useEffect(() => { load() }, [load])
 
-  /** Save diary entry via upsert */
+  /** Save diary entry and trigger emotion analysis */
   const saveEntry = useCallback(async (content: string) => {
     if (!content.trim()) return
     setSaving(true)
-    await supabase.from('diary_entries').insert({
-      content: content.trim(),
-      type: 'fragment',
-    })
+    const { data: inserted } = await supabase
+      .from('diary_entries')
+      .insert({ content: content.trim(), type: 'fragment' })
+      .select()
+      .single()
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
     setText('')
     load()
-  }, [load])
+
+    // Trigger emotion analysis in background
+    if (inserted?.id) {
+      const result = await analyze(inserted.id, content.trim())
+      if (result) {
+        // Update badges for this entry
+        const scores = Object.entries(PLUTCHIK_LABELS).map(([key, info]) => ({
+          key,
+          label: info.label,
+          color: info.color,
+          value: result.plutchik[key] ?? 0,
+        }))
+        scores.sort((a, b) => b.value - a.value)
+        setEmotionBadges((prev) => {
+          const next = new Map(prev)
+          next.set(inserted.id, scores.filter((s) => s.value > 20).slice(0, 2))
+          return next
+        })
+      }
+    }
+  }, [load, analyze])
 
   /** Debounced auto-save */
   const handleTextChange = useCallback(
@@ -169,7 +219,6 @@ export function Today() {
   )
 
   const greeting = getGreeting()
-  const aiMessage = getAiMessage()
 
   if (loading) {
     return (
@@ -199,16 +248,21 @@ export function Today() {
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-            {saving ? '保存中...' : saved ? '保存しました' : '10文字以上で自動保存'}
+            {saving ? '保存中...' : saved ? '保存しました' : analyzing ? '感情分析中...' : '10文字以上で自動保存'}
           </span>
           <button
             className="btn btn-p btn-sm"
             onClick={() => saveEntry(text)}
-            disabled={!text.trim()}
+            disabled={!text.trim() || saving || analyzing}
           >
-            記録する
+            {analyzing ? '分析中...' : '記録する'}
           </button>
         </div>
+        {emotionError && (
+          <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4 }}>
+            {emotionError}
+          </div>
+        )}
       </Card>
 
       {/* Stats row */}
@@ -225,14 +279,28 @@ export function Today() {
         )}
       </div>
 
-      {/* AI message */}
+      {/* AI Morning Briefing */}
       <Card style={{ marginBottom: 24, background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
         <div style={{ fontSize: 11, color: 'var(--accent2)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em' }}>
           AI の一言
         </div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, fontStyle: 'italic' }}>
-          {aiMessage}
-        </div>
+        {briefingLoading ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              border: '2px solid var(--accent2)',
+              borderTopColor: 'transparent',
+              animation: 'spin 1s linear infinite',
+            }} />
+            <span style={{ fontSize: 12, color: 'var(--text3)' }}>考え中...</span>
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, fontStyle: 'italic' }}>
+            {briefingMessage || '今日も穏やかに過ごせますように。'}
+          </div>
+        )}
       </Card>
 
       {/* Today's fragments */}
@@ -240,14 +308,35 @@ export function Today() {
         <div className="section">
           <div className="section-title">今日の断片</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {fragments.map((f) => (
-              <Card key={f.id} style={{ padding: 14 }}>
-                <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6 }}>{f.content}</div>
-                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 6, fontFamily: 'var(--mono)' }}>
-                  {new Date(f.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </Card>
-            ))}
+            {fragments.map((f) => {
+              const badges = emotionBadges.get(f.id) || []
+              return (
+                <Card key={f.id} style={{ padding: 14 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6 }}>{f.content}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+                      {new Date(f.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {badges.map((b) => (
+                      <span
+                        key={b.key}
+                        style={{
+                          fontSize: 9,
+                          padding: '2px 6px',
+                          borderRadius: 10,
+                          background: b.color,
+                          color: '#fff',
+                          fontWeight: 600,
+                          opacity: 0.85,
+                        }}
+                      >
+                        {b.label} {b.value}
+                      </span>
+                    ))}
+                  </div>
+                </Card>
+              )
+            })}
           </div>
         </div>
       )}

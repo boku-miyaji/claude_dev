@@ -5,10 +5,38 @@ import { Card, PageHeader } from '@/components/ui'
 interface DiaryEntry {
   id: string
   content: string
-  type: string
-  emotion_scores: Record<string, number> | null
-  perma_scores: Record<string, number> | null
+  entry_type: string | null
+  mood_score: number | null
+  wbi: number | null
+  entry_date: string | null
   created_at: string
+}
+
+interface EmotionAnalysis {
+  id: string
+  diary_entry_id: string
+  joy: number
+  trust: number
+  fear: number
+  surprise: number
+  sadness: number
+  disgust: number
+  anger: number
+  anticipation: number
+  valence: number
+  arousal: number
+  perma_p: number
+  perma_e: number
+  perma_r: number
+  perma_m: number
+  perma_a: number
+  perma_v: number
+  wbi_score: number
+  created_at: string
+}
+
+interface EntryWithEmotion extends DiaryEntry {
+  emotion?: EmotionAnalysis
 }
 
 /** Plutchik 8 emotions with standard colors */
@@ -21,24 +49,44 @@ const PLUTCHIK = [
   { key: 'disgust', label: 'Disgust', color: '#9370DB' },
   { key: 'anger', label: 'Anger', color: '#FF4500' },
   { key: 'anticipation', label: 'Anticipation', color: '#FFA500' },
-]
+] as const
 
 const PERMA_V = [
-  { key: 'P', label: 'Positive Emotion', color: 'var(--accent)' },
-  { key: 'E', label: 'Engagement', color: 'var(--blue)' },
-  { key: 'R', label: 'Relationships', color: 'var(--green)' },
-  { key: 'M', label: 'Meaning', color: 'var(--amber)' },
-  { key: 'A', label: 'Accomplishment', color: 'var(--red)' },
-  { key: 'V', label: 'Vitality', color: '#00CED1' },
-]
+  { key: 'perma_p', label: 'Positive Emotion', short: 'P', color: 'var(--accent)' },
+  { key: 'perma_e', label: 'Engagement', short: 'E', color: 'var(--blue)' },
+  { key: 'perma_r', label: 'Relationships', short: 'R', color: 'var(--green)' },
+  { key: 'perma_m', label: 'Meaning', short: 'M', color: 'var(--amber)' },
+  { key: 'perma_a', label: 'Accomplishment', short: 'A', color: 'var(--red)' },
+  { key: 'perma_v', label: 'Vitality', short: 'V', color: '#00CED1' },
+] as const
+
+/** Find dominant emotion from an EmotionAnalysis record */
+function getDominantEmotion(e: EmotionAnalysis): { key: string; color: string } | null {
+  let maxKey = ''
+  let maxVal = 0
+  for (const p of PLUTCHIK) {
+    const val = e[p.key as keyof EmotionAnalysis] as number
+    if (val > maxVal) {
+      maxVal = val
+      maxKey = p.key
+    }
+  }
+  if (!maxKey) return null
+  const match = PLUTCHIK.find((p) => p.key === maxKey)
+  return match ? { key: match.key, color: match.color } : null
+}
 
 /** Generate calendar grid for last 30 days */
-function buildCalendarDays(entries: DiaryEntry[]): { date: string; hasEntry: boolean; emotionColor: string | null }[] {
-  const dateMap = new Map<string, DiaryEntry[]>()
+function buildCalendarDays(
+  entries: DiaryEntry[],
+  emotionMap: Map<string, EmotionAnalysis>,
+): { date: string; hasEntry: boolean; emotionColor: string | null }[] {
+  // Map entries by date
+  const dateEntryMap = new Map<string, string[]>()
   for (const e of entries) {
     const d = e.created_at.substring(0, 10)
-    if (!dateMap.has(d)) dateMap.set(d, [])
-    dateMap.get(d)!.push(e)
+    if (!dateEntryMap.has(d)) dateEntryMap.set(d, [])
+    dateEntryMap.get(d)!.push(e.id)
   }
 
   const days: { date: string; hasEntry: boolean; emotionColor: string | null }[] = []
@@ -47,102 +95,147 @@ function buildCalendarDays(entries: DiaryEntry[]): { date: string; hasEntry: boo
     const d = new Date(today)
     d.setDate(d.getDate() - i)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const dayEntries = dateMap.get(key) || []
+    const entryIds = dateEntryMap.get(key) || []
     let emotionColor: string | null = null
-    if (dayEntries.length > 0) {
-      // Find dominant emotion from emotion_scores
-      for (const entry of dayEntries) {
-        if (entry.emotion_scores) {
-          let maxKey = ''
-          let maxVal = 0
-          for (const [k, v] of Object.entries(entry.emotion_scores)) {
-            if (typeof v === 'number' && v > maxVal) { maxVal = v; maxKey = k }
+
+    if (entryIds.length > 0) {
+      // Find emotion from any entry that day
+      for (const eid of entryIds) {
+        const ea = emotionMap.get(eid)
+        if (ea) {
+          const dominant = getDominantEmotion(ea)
+          if (dominant) {
+            emotionColor = dominant.color
+            break
           }
-          const match = PLUTCHIK.find((p) => p.key === maxKey)
-          if (match) emotionColor = match.color
         }
       }
-      if (!emotionColor) emotionColor = 'var(--accent2)' // has entry but no emotion data
+      if (!emotionColor) emotionColor = 'var(--accent2)'
     }
-    days.push({ date: key, hasEntry: dayEntries.length > 0, emotionColor })
+    days.push({ date: key, hasEntry: entryIds.length > 0, emotionColor })
   }
   return days
 }
 
-/** Aggregate Plutchik scores from entries */
-function aggregatePlutchik(entries: DiaryEntry[]): Record<string, number> {
+/** Aggregate Plutchik from emotion_analysis records */
+function aggregatePlutchik(analyses: EmotionAnalysis[]): Record<string, number> {
+  if (analyses.length === 0) return {}
   const totals: Record<string, number> = {}
-  let count = 0
-  for (const e of entries) {
-    if (e.emotion_scores) {
-      count++
-      for (const [k, v] of Object.entries(e.emotion_scores)) {
-        if (typeof v === 'number') {
-          totals[k] = (totals[k] || 0) + v
-        }
-      }
+  for (const e of analyses) {
+    for (const p of PLUTCHIK) {
+      const val = e[p.key as keyof EmotionAnalysis] as number
+      totals[p.key] = (totals[p.key] ?? 0) + val
     }
   }
-  if (count === 0) return {}
   for (const k of Object.keys(totals)) {
-    totals[k] = totals[k] / count
+    totals[k] = totals[k] / analyses.length
   }
   return totals
 }
 
-/** Aggregate PERMA+V scores */
-function aggregatePerma(entries: DiaryEntry[]): Record<string, number> {
+/** Aggregate PERMA+V from emotion_analysis records */
+function aggregatePerma(analyses: EmotionAnalysis[]): Record<string, number> {
+  if (analyses.length === 0) return {}
   const totals: Record<string, number> = {}
-  let count = 0
-  for (const e of entries) {
-    if (e.perma_scores) {
-      count++
-      for (const [k, v] of Object.entries(e.perma_scores)) {
-        if (typeof v === 'number') {
-          totals[k] = (totals[k] || 0) + v
-        }
-      }
+  for (const e of analyses) {
+    for (const p of PERMA_V) {
+      const val = e[p.key as keyof EmotionAnalysis] as number
+      totals[p.key] = (totals[p.key] ?? 0) + val
     }
   }
-  if (count === 0) return {}
   for (const k of Object.keys(totals)) {
-    totals[k] = totals[k] / count
+    totals[k] = totals[k] / analyses.length
   }
   return totals
+}
+
+/** Get top 2 emotion badges for an entry */
+function getEmotionBadges(ea: EmotionAnalysis | undefined): { key: string; label: string; color: string; value: number }[] {
+  if (!ea) return []
+  const scored = PLUTCHIK.map((p) => ({
+    key: p.key,
+    label: p.label,
+    color: p.color,
+    value: ea[p.key as keyof EmotionAnalysis] as number,
+  }))
+  scored.sort((a, b) => b.value - a.value)
+  return scored.filter((s) => s.value > 20).slice(0, 2)
 }
 
 export function Journal() {
-  const [entries, setEntries] = useState<DiaryEntry[]>([])
+  const [entries, setEntries] = useState<EntryWithEmotion[]>([])
+  const [emotions, setEmotions] = useState<EmotionAnalysis[]>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     setLoading(true)
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const { data } = await supabase
-      .from('diary_entries')
-      .select('*')
-      .gte('created_at', thirtyDaysAgo.toISOString())
-      .order('created_at', { ascending: false })
-    setEntries((data as DiaryEntry[]) || [])
+
+    const [diaryRes, emotionRes] = await Promise.all([
+      supabase
+        .from('diary_entries')
+        .select('*')
+        .gte('created_at', thirtyDaysAgo.toISOString())
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('emotion_analysis')
+        .select('*')
+        .gte('created_at', thirtyDaysAgo.toISOString())
+        .order('created_at', { ascending: false }),
+    ])
+
+    const diaryData = (diaryRes.data as DiaryEntry[]) || []
+    const emotionData = (emotionRes.data as EmotionAnalysis[]) || []
+    setEmotions(emotionData)
+
+    // Build emotion map by diary_entry_id
+    const emotionMap = new Map<string, EmotionAnalysis>()
+    for (const ea of emotionData) {
+      // Keep the latest emotion analysis per entry
+      if (!emotionMap.has(ea.diary_entry_id)) {
+        emotionMap.set(ea.diary_entry_id, ea)
+      }
+    }
+
+    // Attach emotions to entries
+    const enriched: EntryWithEmotion[] = diaryData.map((e) => ({
+      ...e,
+      emotion: emotionMap.get(e.id),
+    }))
+    setEntries(enriched)
     setLoading(false)
   }, [])
 
   useEffect(() => { load() }, [load])
 
-  const calendarDays = useMemo(() => buildCalendarDays(entries), [entries])
-  const plutchikScores = useMemo(() => aggregatePlutchik(entries), [entries])
-  const permaScores = useMemo(() => aggregatePerma(entries), [entries])
-  const hasEmotionData = Object.keys(plutchikScores).length > 0
-  const hasPermaData = Object.keys(permaScores).length > 0
+  // Build emotion map for calendar
+  const emotionMap = useMemo(() => {
+    const map = new Map<string, EmotionAnalysis>()
+    for (const ea of emotions) {
+      if (!map.has(ea.diary_entry_id)) {
+        map.set(ea.diary_entry_id, ea)
+      }
+    }
+    return map
+  }, [emotions])
 
-  // Week entries for Plutchik
-  const weekEntries = useMemo(() => {
+  const calendarDays = useMemo(
+    () => buildCalendarDays(entries, emotionMap),
+    [entries, emotionMap],
+  )
+
+  // Week entries for Plutchik and PERMA
+  const weekAnalyses = useMemo(() => {
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
-    return entries.filter((e) => new Date(e.created_at) >= weekAgo)
-  }, [entries])
-  const weekPlutchik = useMemo(() => aggregatePlutchik(weekEntries), [weekEntries])
+    return emotions.filter((e) => new Date(e.created_at) >= weekAgo)
+  }, [emotions])
+
+  const weekPlutchik = useMemo(() => aggregatePlutchik(weekAnalyses), [weekAnalyses])
+  const weekPerma = useMemo(() => aggregatePerma(weekAnalyses), [weekAnalyses])
+  const hasWeekPlutchik = Object.keys(weekPlutchik).length > 0
+  const hasWeekPerma = Object.keys(weekPerma).length > 0
 
   if (loading) {
     return (
@@ -187,7 +280,6 @@ export function Journal() {
             {['月', '火', '水', '木', '金', '土', '日'].map((d) => (
               <div key={d} style={{ fontSize: 9, color: 'var(--text3)', textAlign: 'center', fontWeight: 600 }}>{d}</div>
             ))}
-            {/* Offset for alignment: first day of the 30-day range */}
             {calendarDays.map((day) => (
               <div
                 key={day.date}
@@ -211,16 +303,15 @@ export function Journal() {
       <div className="section">
         <div className="section-title">今週の感情</div>
         <Card>
-          {!hasEmotionData && Object.keys(weekPlutchik).length === 0 ? (
+          {!hasWeekPlutchik ? (
             <div style={{ fontSize: 12, color: 'var(--text3)', padding: 16, textAlign: 'center' }}>
               感情分析データがまだありません。日記を書き続けると分析が始まります。
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {PLUTCHIK.map((p) => {
-                const val = weekPlutchik[p.key] ?? plutchikScores[p.key] ?? 0
-                const maxVal = 10
-                const pct = Math.min((val / maxVal) * 100, 100)
+                const val = weekPlutchik[p.key] ?? 0
+                const pct = Math.min((val / 100) * 100, 100)
                 return (
                   <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 11, width: 80, color: 'var(--text2)', fontWeight: 500 }}>{p.label}</span>
@@ -228,7 +319,7 @@ export function Journal() {
                       <div style={{ height: '100%', width: `${pct}%`, background: p.color, borderRadius: 4, transition: 'width .4s ease' }} />
                     </div>
                     <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)', width: 30, textAlign: 'right' }}>
-                      {val > 0 ? val.toFixed(1) : '-'}
+                      {val > 0 ? Math.round(val).toString() : '-'}
                     </span>
                   </div>
                 )
@@ -240,22 +331,22 @@ export function Journal() {
 
       {/* PERMA+V */}
       <div className="section">
-        <div className="section-title">PERMA+V</div>
+        <div className="section-title">PERMA+V (今週)</div>
         <Card>
-          {!hasPermaData ? (
+          {!hasWeekPerma ? (
             <div style={{ fontSize: 12, color: 'var(--text3)', padding: 16, textAlign: 'center' }}>
               PERMA+V データがまだありません。
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {PERMA_V.map((p) => {
-                const val = permaScores[p.key] ?? 0
+                const val = weekPerma[p.key] ?? 0
                 const pct = Math.min((val / 10) * 100, 100)
                 return (
                   <div key={p.key}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
                       <span style={{ fontSize: 11, color: 'var(--text2)', fontWeight: 500 }}>
-                        <strong style={{ color: p.color }}>{p.key}</strong> {p.label}
+                        <strong style={{ color: p.color }}>{p.short}</strong> {p.label}
                       </span>
                       <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
                         {val > 0 ? val.toFixed(1) : '-'}/10
@@ -276,18 +367,48 @@ export function Journal() {
       <div className="section">
         <div className="section-title">最近のエントリー</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {entries.slice(0, 20).map((e) => (
-            <Card key={e.id} style={{ padding: 14 }}>
-              <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6, marginBottom: 6 }}>
-                {e.content.length > 200 ? `${e.content.substring(0, 200)}...` : e.content}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)', display: 'flex', gap: 8 }}>
-                <span>{new Date(e.created_at).toLocaleDateString('ja-JP')}</span>
-                <span>{new Date(e.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</span>
-                {e.type && <span style={{ color: 'var(--accent2)' }}>{e.type}</span>}
-              </div>
-            </Card>
-          ))}
+          {entries.slice(0, 20).map((e) => {
+            const badges = getEmotionBadges(e.emotion)
+            return (
+              <Card key={e.id} style={{ padding: 14 }}>
+                <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6, marginBottom: 6 }}>
+                  {e.content.length > 200 ? `${e.content.substring(0, 200)}...` : e.content}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+                    {new Date(e.created_at).toLocaleDateString('ja-JP')}
+                  </span>
+                  <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+                    {new Date(e.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  {e.entry_type && (
+                    <span style={{ fontSize: 10, color: 'var(--accent2)' }}>{e.entry_type}</span>
+                  )}
+                  {badges.map((b) => (
+                    <span
+                      key={b.key}
+                      style={{
+                        fontSize: 9,
+                        padding: '2px 6px',
+                        borderRadius: 10,
+                        background: b.color,
+                        color: '#fff',
+                        fontWeight: 600,
+                        opacity: 0.85,
+                      }}
+                    >
+                      {b.label} {b.value}
+                    </span>
+                  ))}
+                  {e.emotion && (
+                    <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+                      WBI {e.emotion.wbi_score.toFixed(1)}
+                    </span>
+                  )}
+                </div>
+              </Card>
+            )
+          })}
         </div>
       </div>
     </div>
