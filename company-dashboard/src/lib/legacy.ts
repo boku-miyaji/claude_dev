@@ -1596,19 +1596,41 @@ async function renderDashboard(root) {
   var highTasks = tasks.filter(function(t){return t.priority==='high';});
   var unpaidInv = invoices.filter(function(i){return i.status!=='paid';});
 
-  // Build context for AI — 変化がある情報のみ。カレンダー・財務は除外（UIに既にある）
+  // ===== 予定セクション（機械的に表示、ブリーフィングの前） =====
+  if (calEvents.length > 0) {
+    var schedCard = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px'});
+    schedCard.appendChild(el('div', {style:'font-size:11px;color:var(--text3);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px', textContent:'TODAY — '+calEvents.length+'件'}));
+    calEvents.forEach(function(e) {
+      var es = new Date(e.start_time), isPast = new Date(e.end_time)<now, isCur = es<=now&&new Date(e.end_time)>now;
+      var ts = e.all_day?'終日':es.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'});
+      schedCard.appendChild(el('div', {style:'display:flex;align-items:center;gap:10px;padding:4px 0;font-size:13px;'+(isPast?'opacity:.35;text-decoration:line-through;':'')+(isCur?'font-weight:600;color:var(--accent);':'')}, [
+        el('span', {textContent:ts, style:'font-family:var(--mono);min-width:40px;color:'+(isCur?'var(--accent)':'var(--text3)')+';font-size:12px'}),
+        el('span', {textContent:e.summary})
+      ]));
+    });
+    root.appendChild(schedCard);
+  }
+
+  // ===== Build context for AI — パーソナライズ重視 =====
   var ctx = [];
+  ctx.push('## 社長プロフィール\nAI開発・受託コンサル・フリーランス。複数PJ横断管理。深夜に集中力が高い傾向。');
   ctx.push('## 日時\n'+dayLabel+' '+String(hour).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'));
-  // High priority tasks only
-  if (highTasks.length>0) ctx.push('## 高優先タスク ('+highTasks.length+'件)\n'+highTasks.slice(0,5).map(function(t){return '- '+t.title+(t.company_id?' ('+t.company_id+')':'')+(t.due_date?' 期限:'+t.due_date:'');}).join('\n'));
+  // Today's schedule summary (for AI reasoning, not for display)
+  if (calEvents.length>0) {
+    var futureEvents = calEvents.filter(function(e){return new Date(e.end_time)>now;});
+    var nextEvent = futureEvents[0];
+    ctx.push('## 今日の残り予定 ('+futureEvents.length+'件)\n'+(nextEvent?'次: '+new Date(nextEvent.start_time).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'})+' '+nextEvent.summary:'なし'));
+  }
+  // Open high priority tasks (status確認済み — open/in_progressのみ)
+  if (highTasks.length>0) ctx.push('## 高優先タスク ('+highTasks.length+'件、未完了のみ)\n'+highTasks.slice(0,5).map(function(t){return '- ['+t.status+'] '+t.title+(t.company_id?' ('+t.company_id+')':'')+(t.due_date?' 期限:'+t.due_date:'');}).join('\n'));
   // Yesterday's diary for reflection
-  if (diaries.length>0) ctx.push('## 昨日の日記\n'+diaries[0].entry_date+': '+(diaries[0].body||'').substring(0,200));
-  // Recent comments (new inputs)
-  if (comments.length>0) ctx.push('## 最近の指示メモ\n'+comments.slice(0,3).map(function(c){return '- ['+(c.company_id||'hd')+'] '+(c.body||'').substring(0,80);}).join('\n'));
-  // CEO insights (behavioral patterns)
-  if (insights.length>0) ctx.push('## 行動パターン分析\n'+insights.slice(0,2).map(function(i){return '- '+i.insight;}).join('\n'));
-  // Unpaid invoices (action needed)
-  if (unpaidInv.length>0) ctx.push('## 要アクション: 未入金 '+unpaidInv.length+'件 '+fmtYen(unpaidInv.reduce(function(s,i){return s+i.amount;},0)));
+  if (diaries.length>0) ctx.push('## 昨日の日記\n'+diaries[0].entry_date+': '+(diaries[0].body||'').substring(0,200)+(diaries[0].wbi?' (WBI:'+diaries[0].wbi+'/10)':''));
+  // CEO insights — personality, work rhythm, preferences
+  if (insights.length>0) ctx.push('## 社長の特性（CEO分析より）\n'+insights.slice(0,3).map(function(i){return '- ['+i.category+'] '+i.insight;}).join('\n'));
+  // Recent comments/memos
+  if (comments.length>0) ctx.push('## 最近のメモ\n'+comments.slice(0,2).map(function(c){return '- '+(c.body||'').substring(0,80);}).join('\n'));
+  // Unpaid invoices
+  if (unpaidInv.length>0) ctx.push('## 未入金: '+unpaidInv.length+'件 '+fmtYen(unpaidInv.reduce(function(s,i){return s+i.amount;},0)));
   var contextStr = ctx.join('\n\n');
 
   // Try AI briefing
@@ -1627,12 +1649,16 @@ async function renderDashboard(root) {
 
   // AI briefing via Edge Function (server-side API key, no client-side key needed)
   try {
-    var sysPrompt = '宮路HDの秘書AI。社長への朝のひとこと。\n'+
-      'ルール:\n- 日本語、簡潔、親しみやすい口調\n- 150字以内。3-5行。\n'+
-      '- 今日やるべきことのリマインド、昨日の振り返り、注意点だけ\n'+
-      '- カレンダーの予定・財務サマリーは書かない（UIに既にある）\n'+
-      '- 変化がない情報は省略。アクションが必要なことだけ\n'+
-      '- Markdown不要。プレーンテキストで';
+    var sysPrompt = '宮路HDの秘書AI。社長に寄り添うパーソナルアシスタント。\n'+
+      'ルール:\n'+
+      '- 日本語、親しみやすい秘書の口調（「〜ですね」「〜しましょう」）\n'+
+      '- 200字以内。3-5行。\n'+
+      '- 社長の特性（CEO分析）を踏まえて、その人に合ったアドバイスをする\n'+
+      '- 昨日の日記があれば、気持ちに触れてから今日の話に繋げる\n'+
+      '- 次の予定までの空き時間で何をすべきか具体的に提案する\n'+
+      '- 予定の羅列・財務の数字は書かない（UIにある）\n'+
+      '- 情報の並べ替えではなく、判断・提案・気遣いを\n'+
+      '- プレーンテキスト。Markdown不要';
     var session = await sb.auth.getSession();
     var accessToken = session.data.session && session.data.session.access_token || '';
     var res = await fetch(SUPABASE_URL + '/functions/v1/ai-agent', {
@@ -1705,22 +1731,7 @@ function renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst,
   var now = new Date();
   var cs = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;cursor:pointer';
 
-  // Today's schedule
-  if (calEvents.length>0) {
-    var cc = el('div', {style:cs+';margin-bottom:12px', onClick:function(){navigate('calendar');}});
-    cc.appendChild(el('div', {style:'font-size:11px;color:var(--text3);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px', textContent:'Today — '+calEvents.length+'件'}));
-    calEvents.slice(0,6).forEach(function(e) {
-      var es = new Date(e.start_time), isPast = new Date(e.end_time)<now, isCur = es<=now&&new Date(e.end_time)>now;
-      var ts = e.all_day?'終日':es.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'});
-      cc.appendChild(el('div', {style:'display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px;'+(isPast?'opacity:.4;':'')+(isCur?'font-weight:600;color:var(--accent);':'')}, [
-        el('span', {textContent:ts, style:'font-family:var(--mono);min-width:36px;color:var(--text3);font-size:11px'}),
-        el('span', {textContent:e.summary})
-      ]));
-    });
-    container.appendChild(cc);
-  }
-
-  // KPI row
+  // KPI row (calendar is shown above briefing, no duplication)
   var row = el('div', {style:'display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-bottom:12px'});
   var highTasks = tasks.filter(function(t){return t.priority==='high';});
   [{v:tasks.length, l:'Open Tasks'+(highTasks.length?' (!'+highTasks.length+')':''), c:highTasks.length>0?'#ef4444':'var(--text)', p:'tasks'},
