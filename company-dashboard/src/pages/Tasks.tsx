@@ -35,6 +35,7 @@ export function Tasks() {
   const [newType, setNewType] = useState('todo')
   const [newCompany, setNewCompany] = useState('')
   const [newPriority, setNewPriority] = useState('normal')
+  const [newDueDate, setNewDueDate] = useState('')
 
   // Edit state
   const [editing, setEditing] = useState<Task | null>(null)
@@ -67,10 +68,12 @@ export function Tasks() {
       title: newTitle.trim(),
       description: newDesc.trim() || null,
       priority: newPriority,
+      due_date: newDueDate || null,
     }).select('*, companies(name)')
     if (data?.[0]) setTasks((prev) => [data[0] as Task, ...prev])
     setNewTitle('')
     setNewDesc('')
+    setNewDueDate('')
     toast(`"${newTitle.trim()}" を追加しました`)
   }
 
@@ -137,6 +140,7 @@ export function Tasks() {
               <option value="high">high</option>
               <option value="low">low</option>
             </select>
+            <input className="input" type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} placeholder="期限" title="期限" />
           </div>
           <input className="input" placeholder="何をする？" value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}

@@ -145,6 +145,7 @@ const TOOLS: ToolDef[] = [
         company_id: { type: "string" },
         priority: { type: "string", enum: ["high", "normal", "low"], default: "normal" },
         description: { type: "string" },
+        due_date: { type: "string", description: "Due date in YYYY-MM-DD format" },
       },
       required: ["title"],
     },
@@ -272,6 +273,7 @@ async function executeTool(name: string, input: Record<string, unknown>, userJwt
       const { data, error } = await sb.from("tasks").insert({
         title: input.title, company_id: input.company_id || null,
         priority: input.priority || "normal", description: input.description || null, status: "open",
+        due_date: input.due_date || null,
       }).select("id,title").single();
       if (error) return `Error: ${error.message}`;
       return `Created task: ${data.title} (id: ${data.id})`;

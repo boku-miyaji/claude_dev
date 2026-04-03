@@ -49,7 +49,7 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/tasks" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=representation" \
   -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
-  -d '{"title":"[prefix] タイトル","description":"tags: ...","priority":"normal","status":"open","company_id":"hd"}'
+  -d '{"title":"[prefix] タイトル","description":"tags: ...","priority":"normal","status":"open","company_id":"hd","due_date":"YYYY-MM-DD or null"}'
 ```
 
 ### タスク完了
