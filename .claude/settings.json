@@ -164,7 +164,9 @@
       "Bash(/tmp/extract_render_functions.sh)",
       "Bash(mkdir -p public)",
       "Bash(cp index.legacy.html public/index.legacy.html)",
-      "Bash(vercel --version)"
+      "Bash(vercel --version)",
+      "Bash(sed -i \"s/\\\\.insert\\({action:'intelligence_collect', details:{/\\\\.insert\\({action:'intelligence_collect', metadata:{/g\" legacy.ts)",
+      "Bash(sed -i \"s/\\\\.insert\\({action:'intelligence_item', details:{/\\\\.insert\\({action:'intelligence_item', metadata:{/g\" legacy.ts)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
