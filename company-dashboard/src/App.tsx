@@ -8,9 +8,12 @@ import {
   renderDashboard, renderCalendar, renderTasks, renderCompanies,
   renderOrgChart, renderFinance, renderInsights, renderPrompts,
   renderIntelligence, renderDiary, renderArtifacts, renderChat,
-  renderApiCosts, renderGrowth, renderHowItWorks, renderSlashCommands,
-  renderSettings, renderCareer, renderKnowledge, renderPortfolio,
+  renderApiCosts, renderGrowth,
+  renderSettings, renderCareer, renderPortfolio,
 } from '@/lib/legacy'
+import { HowItWorks } from '@/pages/HowItWorks'
+import { SlashCommands } from '@/pages/SlashCommands'
+import { Knowledge } from '@/pages/Knowledge'
 
 export function App() {
   useAuth()
@@ -52,11 +55,11 @@ export function App() {
           <Route path="/chat/*" element={<LegacyPage renderer={renderChat} />} />
           <Route path="/api-costs" element={<LegacyPage renderer={renderApiCosts} />} />
           <Route path="/growth" element={<LegacyPage renderer={renderGrowth} />} />
-          <Route path="/how-it-works" element={<LegacyPage renderer={renderHowItWorks} />} />
-          <Route path="/commands" element={<LegacyPage renderer={renderSlashCommands} />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/commands" element={<SlashCommands />} />
           <Route path="/settings" element={<LegacyPage renderer={renderSettings} />} />
           <Route path="/career" element={<LegacyPage renderer={renderCareer} />} />
-          <Route path="/knowledge" element={<LegacyPage renderer={renderKnowledge} />} />
+          <Route path="/knowledge" element={<Knowledge />} />
           <Route path="/portfolio" element={<LegacyPage renderer={renderPortfolio} />} />
         </Routes>
       </div>
