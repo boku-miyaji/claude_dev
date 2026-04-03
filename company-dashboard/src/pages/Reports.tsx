@@ -10,6 +10,8 @@ interface Report {
   file_type: string
   content: string | null
   tags: string[]
+  status: string
+  company_id: string | null
   created_at: string
   updated_at: string
 }
@@ -87,16 +89,23 @@ function SafeMarkdown({ content }: { content: string }) {
   return <div ref={ref} className="md-body" style={{ fontSize: 13, lineHeight: 1.8, color: 'var(--text2)' }} />
 }
 
+function logFeedback(artifactId: number, feedback: string, filePath: string, tags: string[]) {
+  supabase.from('activity_log').insert({
+    action: 'artifact_feedback',
+    metadata: { artifact_id: artifactId, feedback, file_path: filePath, tags },
+  })
+}
+
 function ResearchReports() {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<number | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     supabase
       .from('artifacts')
       .select('*')
-      .eq('status', 'active')
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         setReports((data as Report[]) || [])
@@ -104,34 +113,123 @@ function ResearchReports() {
       })
   }, [])
 
+  useEffect(() => { load() }, [load])
+
+  // Log view when expanded
+  useEffect(() => {
+    if (expanded !== null) {
+      const r = reports.find((x) => x.id === expanded)
+      if (r) logFeedback(r.id, 'viewed', r.file_path, r.tags)
+    }
+  }, [expanded, reports])
+
+  async function archiveReport(e: React.MouseEvent, r: Report) {
+    e.stopPropagation()
+    await supabase.from('artifacts').update({ status: 'archived' }).eq('id', r.id)
+    logFeedback(r.id, 'archived', r.file_path, r.tags)
+    setReports((prev) => prev.map((x) => x.id === r.id ? { ...x, status: 'archived' } : x))
+  }
+
+  async function restoreReport(e: React.MouseEvent, r: Report) {
+    e.stopPropagation()
+    await supabase.from('artifacts').update({ status: 'active' }).eq('id', r.id)
+    setReports((prev) => prev.map((x) => x.id === r.id ? { ...x, status: 'active' } : x))
+  }
+
   if (loading) return <SkeletonRows count={4} />
-  if (reports.length === 0) return <EmptyState icon="📄" message="レポートはまだありません" />
+
+  const active = reports.filter((r) => r.status === 'active')
+  const archived = reports.filter((r) => r.status === 'archived')
+
+  if (active.length === 0 && !showArchived) return <EmptyState icon="📄" message="レポートはまだありません" />
 
   return (
     <div>
-      {reports.map((r) => (
-        <div key={r.id} className="card" style={{ marginBottom: 12, cursor: 'pointer' }} onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{r.title}</div>
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                {r.tags.map((t) => (
-                  <span key={t} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--surface2)', color: 'var(--text3)' }}>{t}</span>
-                ))}
-              </div>
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', whiteSpace: 'nowrap' }}>
-              {new Date(r.created_at).toLocaleDateString('ja-JP')}
-            </div>
-          </div>
+      {/* Company filter chips */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: 11, color: 'var(--text3)' }}>{active.length}件</span>
+        {archived.length > 0 && (
+          <button
+            className="btn btn-g btn-sm"
+            style={{ fontSize: 10, padding: '2px 8px', marginLeft: 'auto' }}
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            {showArchived ? 'アーカイブを隠す' : `アーカイブ (${archived.length})`}
+          </button>
+        )}
+      </div>
 
-          {expanded === r.id && r.content && (
-            <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-              <SafeMarkdown content={r.content} />
-            </div>
+      {active.map((r) => (
+        <ReportCard key={r.id} r={r} expanded={expanded === r.id}
+          onToggle={() => setExpanded(expanded === r.id ? null : r.id)}
+          onArchive={(e) => archiveReport(e, r)}
+        />
+      ))}
+
+      {showArchived && archived.length > 0 && (
+        <>
+          <div className="section-title" style={{ marginTop: 20 }}>Archived ({archived.length})</div>
+          {archived.map((r) => (
+            <ReportCard key={r.id} r={r} expanded={expanded === r.id}
+              onToggle={() => setExpanded(expanded === r.id ? null : r.id)}
+              onRestore={(e) => restoreReport(e, r)}
+              isArchived
+            />
+          ))}
+        </>
+      )}
+    </div>
+  )
+}
+
+function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }: {
+  r: Report; expanded: boolean; onToggle: () => void
+  onArchive?: (e: React.MouseEvent) => void
+  onRestore?: (e: React.MouseEvent) => void
+  isArchived?: boolean
+}) {
+  return (
+    <div className="card" style={{ marginBottom: 12, cursor: 'pointer', opacity: isArchived ? 0.6 : 1 }} onClick={onToggle}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
+            {r.title}
+            {r.company_id && (
+              <span style={{ fontSize: 10, marginLeft: 8, padding: '1px 6px', borderRadius: 4, background: 'var(--accent-bg)', color: 'var(--accent)' }}>
+                {r.company_id}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {r.tags.map((t) => (
+              <span key={t} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--surface2)', color: 'var(--text3)' }}>{t}</span>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+            {new Date(r.created_at).toLocaleDateString('ja-JP')}
+          </span>
+          {onArchive && (
+            <button onClick={onArchive} title="アーカイブ"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text3)', padding: '2px 4px' }}>
+              ×
+            </button>
+          )}
+          {onRestore && (
+            <button onClick={onRestore} title="復元"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--accent)', padding: '2px 4px' }}>
+              ↩
+            </button>
           )}
         </div>
-      ))}
+      </div>
+
+      {expanded && r.content && (
+        <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+          <SafeMarkdown content={r.content} />
+        </div>
+      )}
     </div>
   )
 }
