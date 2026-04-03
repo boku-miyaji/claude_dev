@@ -1745,6 +1745,95 @@ function renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst,
     ]));
   });
   container.appendChild(row);
+
+  // ===== High priority tasks (compact list) =====
+  if (highTasks.length > 0) {
+    var taskCard = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:12px;cursor:pointer', onClick: function(){navigate('tasks');}});
+    taskCard.appendChild(el('div', {style:'font-size:11px;color:var(--text3);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px', textContent:'HIGH PRIORITY — '+highTasks.length+'件'}));
+    highTasks.slice(0, 5).forEach(function(t) {
+      taskCard.appendChild(el('div', {style:'display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12px'}, [
+        el('span', {textContent:'!', style:'color:#ef4444;font-weight:700;font-size:10px;min-width:12px'}),
+        el('span', {textContent:t.title, style:'flex:1'}),
+        t.company_id ? el('span', {style:'font-size:10px;color:var(--text3);font-family:var(--mono)', textContent:t.company_id}) : null
+      ].filter(Boolean)));
+    });
+    container.appendChild(taskCard);
+  }
+
+  // ===== Latest news (from intelligence reports) =====
+  (async function() {
+    var newsRes = await sb.from('activity_log').select('action,details,created_at').eq('action','intelligence_collect').order('created_at',{ascending:false}).limit(1);
+    var latestReport = newsRes.data && newsRes.data[0];
+    var newsCard = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:12px'});
+    newsCard.appendChild(el('div', {style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'}, [
+      el('div', {style:'font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px', textContent:'NEWS'}),
+      el('div', {style:'display:flex;gap:6px;align-items:center'}, [
+        latestReport ? el('span', {style:'font-size:10px;color:var(--text3)', textContent:'最終: '+new Date(latestReport.created_at).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'})}) : null,
+        el('button', {className:'btn btn-g btn-sm', style:'font-size:10px;padding:2px 8px', textContent:'収集', onClick: function(ev) {
+          ev.stopPropagation();
+          collectNews(newsCard);
+        }})
+      ].filter(Boolean))
+    ]));
+
+    // Show latest intelligence items
+    var reportsRes = await sb.from('activity_log').select('details,created_at').eq('action','intelligence_item').order('created_at',{ascending:false}).limit(5);
+    var items = reportsRes.data || [];
+    if (items.length === 0) {
+      newsCard.appendChild(el('div', {style:'font-size:12px;color:var(--text3);padding:4px 0', textContent:'ニュースはまだありません。「収集」ボタンで取得できます。'}));
+    } else {
+      items.forEach(function(item) {
+        var d = item.details || {};
+        newsCard.appendChild(el('div', {style:'padding:4px 0;border-bottom:1px solid var(--border);font-size:12px'}, [
+          el('div', {textContent: d.title || d.summary || JSON.stringify(d).substring(0,80), style:'color:var(--text)'}),
+          el('div', {textContent: new Date(item.created_at).toLocaleDateString('ja-JP'), style:'font-size:10px;color:var(--text3);margin-top:2px'})
+        ]));
+      });
+    }
+    container.appendChild(newsCard);
+  })();
+}
+
+// News collection via Edge Function (GPT)
+async function collectNews(container) {
+  var btn = container.querySelector('.btn');
+  if (btn) { btn.textContent = '収集中...'; btn.disabled = true; }
+  try {
+    var session = await sb.auth.getSession();
+    var token = session.data.session && session.data.session.access_token || '';
+    var res = await fetch(SUPABASE_URL + '/functions/v1/ai-agent', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
+      body: JSON.stringify({
+        message: '以下のトピックについて最新ニュース・技術動向を3-5件調べて、各項目をタイトル+1行要約で報告してください。\nトピック: AI/LLM、データプラットフォーム、Snowflake、Databricks、Claude、OpenAI\n日本語で。箇条書きで。各項目に日付(推定可)を付けて。',
+        model: 'gpt-5-nano',
+        context_mode: 'none'
+      })
+    });
+    if (res.ok) {
+      var bodyText = await res.text();
+      var text = '';
+      bodyText.split('\n').forEach(function(line) {
+        if (line.startsWith('data: ')) {
+          try {
+            var evt = JSON.parse(line.slice(6));
+            if (evt.type === 'delta' && evt.content) text += evt.content;
+          } catch(x) {}
+        }
+      });
+      if (text) {
+        // Save to activity_log
+        await sb.from('activity_log').insert({action:'intelligence_collect', details:{summary:text.substring(0,500),collected_at:new Date().toISOString()}});
+        // Parse items and save individually
+        text.split('\n').filter(function(l){return l.trim().startsWith('-');}).forEach(async function(line) {
+          await sb.from('activity_log').insert({action:'intelligence_item', details:{title:line.replace(/^-\s*/,'').substring(0,200)}});
+        });
+        toast('ニュース '+text.split('\n').filter(function(l){return l.trim().startsWith('-');}).length+' 件を収集しました');
+        navigate('home'); // refresh
+      }
+    }
+  } catch(e) { console.error('News collect error:', e); toast('ニュース収集エラー: '+e.message); }
+  if (btn) { btn.textContent = '収集'; btn.disabled = false; }
 }
 
 // ============================================================
