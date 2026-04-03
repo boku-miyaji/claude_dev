@@ -163,7 +163,8 @@
       "Bash(bash /workspace/.claude/hooks/freshness-check.sh)",
       "Bash(/tmp/extract_render_functions.sh)",
       "Bash(mkdir -p public)",
-      "Bash(cp index.legacy.html public/index.legacy.html)"
+      "Bash(cp index.legacy.html public/index.legacy.html)",
+      "Bash(vercel --version)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
