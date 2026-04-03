@@ -1775,7 +1775,7 @@ async function renderInbox(root) {
   var cos = cosRes.data || [];
 
   var typeSelect = el('select', {className: 'input'});
-  ['todo', 'task', 'request'].forEach(function(t) {
+  ['task', 'request'].forEach(function(t) {
     typeSelect.appendChild(el('option', {value: t, textContent: t.charAt(0).toUpperCase() + t.slice(1)}));
   });
 
@@ -1862,7 +1862,7 @@ async function renderTasks(root) {
   var addFormContainer = el('div', {style: 'margin-bottom:20px'});
 
   var typeSelect = el('select', {className: 'input'});
-  ['todo', 'task', 'request'].forEach(function(t) { typeSelect.appendChild(el('option', {value: t, textContent: t.charAt(0).toUpperCase() + t.slice(1)})); });
+  ['task', 'request'].forEach(function(t) { typeSelect.appendChild(el('option', {value: t, textContent: t.charAt(0).toUpperCase() + t.slice(1)})); });
   var coSelect = el('select', {className: 'input'});
   coSelect.appendChild(el('option', {value: '', textContent: 'HD（全社）'}));
   cos.forEach(function(c) { coSelect.appendChild(el('option', {value: c.id, textContent: c.name})); });

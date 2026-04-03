@@ -32,7 +32,7 @@ export function Tasks() {
   // Form state
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
-  const [newType, setNewType] = useState('todo')
+  const [newType, setNewType] = useState('task')
   const [newCompany, setNewCompany] = useState('')
   const [newPriority, setNewPriority] = useState('normal')
   const [newDueDate, setNewDueDate] = useState('')
@@ -127,7 +127,6 @@ export function Tasks() {
         <div className="card" style={{ marginBottom: 20 }}>
           <div className="form-row" style={{ marginBottom: 8 }}>
             <select className="input" value={newType} onChange={(e) => setNewType(e.target.value)}>
-              <option value="todo">Todo</option>
               <option value="task">Task</option>
               <option value="request">Request</option>
             </select>
