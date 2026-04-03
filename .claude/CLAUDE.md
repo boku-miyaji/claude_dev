@@ -17,3 +17,4 @@
 | `commit-rules.md` | コミット規約、リポジトリ判定、PRチェックリスト |
 | `coding-style.md` | コーディング規約、新機能ワークフロー |
 | `knowledge-accumulation.md` | ナレッジ蓄積・昇格ルール |
+| `skill-management.md` | スキル追加・同期・整合性チェックのルール |
