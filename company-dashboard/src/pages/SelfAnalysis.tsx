@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Card, PageHeader } from '@/components/ui'
 import { useSelfAnalysis, type AnalysisType, type AnalysisRecord } from '@/hooks/useSelfAnalysis'
+import { useDataStore } from '@/stores/data'
 
 interface AnalysisCard {
   id: AnalysisType
@@ -270,21 +271,30 @@ function AnalysisResultView({ type, result }: { type: AnalysisType; result: Reco
 }
 
 export function SelfAnalysis() {
-  const [diaryCount, setDiaryCount] = useState(0)
-  const [taskCount, setTaskCount] = useState(0)
-  const [dreamCount, setDreamCount] = useState(0)
+  const { diaryEntries, tasks, dreams, fetchDiary, fetchTasks, fetchDreams } = useDataStore()
   const [hasEmotionData, setHasEmotionData] = useState(false)
   const [loading, setLoading] = useState(true)
   const [pastResults, setPastResults] = useState<AnalysisRecord[]>([])
 
   const { runAnalysis, running, runningType, error: analysisError } = useSelfAnalysis()
 
+  // Use counts from central store
+  const diaryCount = diaryEntries.length
+  const taskCount = tasks.length
+  const dreamCount = dreams.length
+
   const load = useCallback(async () => {
     setLoading(true)
-    const [diaryRes, taskRes, dreamRes, emotionRes, resultsRes] = await Promise.all([
-      supabase.from('diary_entries').select('id', { count: 'exact', head: true }),
-      supabase.from('tasks').select('id', { count: 'exact', head: true }),
-      supabase.from('dreams').select('id', { count: 'exact', head: true }),
+
+    // Fetch data through store (cached)
+    await Promise.all([
+      fetchDiary({ days: 365 }),
+      fetchTasks(),
+      fetchDreams(),
+    ])
+
+    // These two still need direct queries (not in central store)
+    const [emotionRes, resultsRes] = await Promise.all([
       supabase
         .from('diary_entries')
         .select('id')
@@ -295,13 +305,10 @@ export function SelfAnalysis() {
         .select('*')
         .order('created_at', { ascending: false }),
     ])
-    setDiaryCount(diaryRes.count ?? 0)
-    setTaskCount(taskRes.count ?? 0)
-    setDreamCount(dreamRes.count ?? 0)
     setHasEmotionData((emotionRes.data?.length ?? 0) > 0)
     setPastResults((resultsRes.data as AnalysisRecord[]) ?? [])
     setLoading(false)
-  }, [])
+  }, [fetchDiary, fetchTasks, fetchDreams])
 
   useEffect(() => { load() }, [load])
 

@@ -1,43 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useMemo } from 'react'
 import { Card, PageHeader } from '@/components/ui'
-
-interface DiaryEntry {
-  id: string
-  body: string
-  entry_type: string | null
-  mood_score: number | null
-  wbi: number | null
-  entry_date: string | null
-  created_at: string
-}
-
-interface EmotionAnalysis {
-  id: string
-  diary_entry_id: string
-  joy: number
-  trust: number
-  fear: number
-  surprise: number
-  sadness: number
-  disgust: number
-  anger: number
-  anticipation: number
-  valence: number
-  arousal: number
-  perma_p: number
-  perma_e: number
-  perma_r: number
-  perma_m: number
-  perma_a: number
-  perma_v: number
-  wbi_score: number
-  created_at: string
-}
-
-interface EntryWithEmotion extends DiaryEntry {
-  emotion?: EmotionAnalysis
-}
+import { useDataStore } from '@/stores/data'
+import type { EmotionAnalysis } from '@/types/diary'
 
 /** Plutchik 8 emotions with standard colors */
 const PLUTCHIK = [
@@ -78,10 +42,9 @@ function getDominantEmotion(e: EmotionAnalysis): { key: string; color: string } 
 
 /** Generate calendar grid for last 30 days */
 function buildCalendarDays(
-  entries: DiaryEntry[],
+  entries: { id: string; created_at: string }[],
   emotionMap: Map<string, EmotionAnalysis>,
 ): { date: string; hasEntry: boolean; emotionColor: string | null }[] {
-  // Map entries by date
   const dateEntryMap = new Map<string, string[]>()
   for (const e of entries) {
     const d = e.created_at.substring(0, 10)
@@ -99,7 +62,6 @@ function buildCalendarDays(
     let emotionColor: string | null = null
 
     if (entryIds.length > 0) {
-      // Find emotion from any entry that day
       for (const eid of entryIds) {
         const ea = emotionMap.get(eid)
         if (ea) {
@@ -163,81 +125,56 @@ function getEmotionBadges(ea: EmotionAnalysis | undefined): { key: string; label
 }
 
 export function Journal() {
-  const [entries, setEntries] = useState<EntryWithEmotion[]>([])
-  const [emotions, setEmotions] = useState<EmotionAnalysis[]>([])
-  const [loading, setLoading] = useState(true)
+  const {
+    diaryEntries, emotionAnalyses,
+    fetchDiary, fetchEmotions,
+    loading,
+  } = useDataStore()
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  useEffect(() => {
+    fetchDiary({ days: 30 })
+    fetchEmotions({ days: 30 })
+  }, [fetchDiary, fetchEmotions])
 
-    const [diaryRes, emotionRes] = await Promise.all([
-      supabase
-        .from('diary_entries')
-        .select('*')
-        .gte('created_at', thirtyDaysAgo.toISOString())
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('emotion_analysis')
-        .select('*')
-        .gte('created_at', thirtyDaysAgo.toISOString())
-        .order('created_at', { ascending: false }),
-    ])
-
-    const diaryData = (diaryRes.data as DiaryEntry[]) || []
-    const emotionData = (emotionRes.data as EmotionAnalysis[]) || []
-    setEmotions(emotionData)
-
-    // Build emotion map by diary_entry_id
-    const emotionMap = new Map<string, EmotionAnalysis>()
-    for (const ea of emotionData) {
-      // Keep the latest emotion analysis per entry
-      if (!emotionMap.has(ea.diary_entry_id)) {
-        emotionMap.set(ea.diary_entry_id, ea)
-      }
-    }
-
-    // Attach emotions to entries
-    const enriched: EntryWithEmotion[] = diaryData.map((e) => ({
-      ...e,
-      emotion: emotionMap.get(e.id),
-    }))
-    setEntries(enriched)
-    setLoading(false)
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
-  // Build emotion map for calendar
+  // Build emotion map by diary_entry_id
   const emotionMap = useMemo(() => {
     const map = new Map<string, EmotionAnalysis>()
-    for (const ea of emotions) {
+    for (const ea of emotionAnalyses) {
       if (!map.has(ea.diary_entry_id)) {
         map.set(ea.diary_entry_id, ea)
       }
     }
     return map
-  }, [emotions])
+  }, [emotionAnalyses])
+
+  // Attach emotions to entries
+  const entries = useMemo(() => {
+    return diaryEntries.map((e) => ({
+      ...e,
+      emotion: emotionMap.get(e.id),
+    }))
+  }, [diaryEntries, emotionMap])
 
   const calendarDays = useMemo(
-    () => buildCalendarDays(entries, emotionMap),
-    [entries, emotionMap],
+    () => buildCalendarDays(diaryEntries, emotionMap),
+    [diaryEntries, emotionMap],
   )
 
   // Week entries for Plutchik and PERMA
   const weekAnalyses = useMemo(() => {
     const weekAgo = new Date()
     weekAgo.setDate(weekAgo.getDate() - 7)
-    return emotions.filter((e) => new Date(e.created_at) >= weekAgo)
-  }, [emotions])
+    return emotionAnalyses.filter((e) => new Date(e.created_at) >= weekAgo)
+  }, [emotionAnalyses])
 
   const weekPlutchik = useMemo(() => aggregatePlutchik(weekAnalyses), [weekAnalyses])
   const weekPerma = useMemo(() => aggregatePerma(weekAnalyses), [weekAnalyses])
   const hasWeekPlutchik = Object.keys(weekPlutchik).length > 0
   const hasWeekPerma = Object.keys(weekPerma).length > 0
 
-  if (loading) {
+  const isLoading = loading.diary || loading.emotions
+
+  if (isLoading && diaryEntries.length === 0) {
     return (
       <div className="page">
         <PageHeader title="Journal" />

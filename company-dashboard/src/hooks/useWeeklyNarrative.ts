@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useDataStore } from '@/stores/data'
 
 export interface WeeklyNarrativeRecord {
   id: number
@@ -123,13 +124,10 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
     setError(null)
 
     try {
-      // Get API key
-      const { data: settings } = await supabase
-        .from('user_settings')
-        .select('openai_api_key')
-        .single()
+      // Get API key from central store
+      const apiKey = await useDataStore.getState().fetchApiKey()
 
-      if (!settings?.openai_api_key) {
+      if (!apiKey) {
         setError('OpenAI API keyが設定されていません。')
         setGenerating(false)
         return null
@@ -138,8 +136,8 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
       const startTs = `${weekStart}T00:00:00`
       const endTs = `${weekEnd}T23:59:59`
 
-      // Collect week data in parallel
-      const [diaryRes, emotionRes, taskRes, goalRes] = await Promise.all([
+      // Collect week data in parallel (including habits)
+      const [diaryRes, emotionRes, taskRes, goalRes, habitsRes, habitLogsRes] = await Promise.all([
         supabase
           .from('diary_entries')
           .select('body, created_at')
@@ -161,12 +159,23 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
           .select('title, progress, status')
           .order('created_at', { ascending: false })
           .limit(10),
+        supabase
+          .from('habits')
+          .select('id, title, icon')
+          .eq('active', true),
+        supabase
+          .from('habit_logs')
+          .select('habit_id, completed_at')
+          .gte('completed_at', startTs)
+          .lte('completed_at', endTs),
       ])
 
       const diaries = diaryRes.data ?? []
       const emotions = emotionRes.data ?? []
       const completedTasks = taskRes.data ?? []
       const goals = goalRes.data ?? []
+      const activeHabits = habitsRes.data ?? []
+      const weekHabitLogs = habitLogsRes.data ?? []
 
       // Calculate stats
       let avgWbi = 0
@@ -209,6 +218,24 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
         .map((g: { title: string; progress: number; status: string }) => `- ${g.title} (${g.progress}%, ${g.status})`)
         .join('\n')
 
+      // Calculate habit achievement rate
+      let habitRate = 0
+      if (activeHabits.length > 0) {
+        const uniqueDays = new Set(
+          (weekHabitLogs as { completed_at: string }[]).map((l) => l.completed_at.substring(0, 10)),
+        ).size
+        const totalPossible = activeHabits.length * 7
+        const totalCompleted = weekHabitLogs.length
+        habitRate = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0
+        void uniqueDays // used for calculation context
+      }
+      const habitText = activeHabits.length > 0
+        ? activeHabits.map((h: { icon: string; title: string; id: number }) => {
+            const count = weekHabitLogs.filter((l: { habit_id: number }) => l.habit_id === h.id).length
+            return `- ${h.icon} ${h.title}: ${count}/7日`
+          }).join('\n')
+        : '(なし)'
+
       const userData = [
         `## 期間: ${weekStart} - ${weekEnd}`,
         `## 日記 (${diaries.length}件)`,
@@ -217,6 +244,8 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
         taskText || '(なし)',
         `## ゴール進捗`,
         goalText || '(なし)',
+        `## 習慣 (達成率: ${habitRate}%)`,
+        habitText,
         `## 感情データ`,
         `WBI平均: ${stats.avg_wbi}`,
         `優勢感情: ${dominantEmotion}`,
@@ -234,7 +263,7 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settings.openai_api_key}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',

@@ -1,35 +1,38 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, PageHeader, Modal, EmptyState } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
 import { DREAM_CATEGORIES, DREAM_STATUSES } from '@/types/dreams'
-import type { Dream, DreamCategory, DreamStatus } from '@/types/dreams'
+import type { DreamCategory, DreamStatus } from '@/types/dreams'
+import { useDataStore } from '@/stores/data'
 
 const CATEGORY_MAP = new Map(DREAM_CATEGORIES.map((c) => [c.value, c]))
 
 export function Dreams() {
-  const [dreams, setDreams] = useState<Dream[]>([])
-  const [loading, setLoading] = useState(true)
+  const {
+    dreams, goals,
+    fetchDreams, fetchGoals,
+    addDream, updateDream, deleteDream,
+    loading,
+  } = useDataStore()
+
   const [filter, setFilter] = useState<DreamStatus | ''>('')
   const [showAdd, setShowAdd] = useState(false)
-  const [detail, setDetail] = useState<Dream | null>(null)
+  const [detailId, setDetailId] = useState<string | null>(null)
 
   // Add form state
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [newCategory, setNewCategory] = useState<DreamCategory>('other')
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const { data } = await supabase
-      .from('dreams')
-      .select('*')
-      .order('created_at', { ascending: false })
-    setDreams((data as Dream[]) || [])
-    setLoading(false)
-  }, [])
+  useEffect(() => {
+    fetchDreams()
+    fetchGoals()
+  }, [fetchDreams, fetchGoals])
 
-  useEffect(() => { load() }, [load])
+  const detail = useMemo(() => {
+    if (!detailId) return null
+    return dreams.find((d) => d.id === detailId) ?? null
+  }, [detailId, dreams])
 
   const filtered = useMemo(() => {
     if (!filter) return dreams
@@ -37,7 +40,7 @@ export function Dreams() {
   }, [dreams, filter])
 
   const grouped = useMemo(() => {
-    const map = new Map<DreamCategory, Dream[]>()
+    const map = new Map<DreamCategory, typeof dreams>()
     for (const cat of DREAM_CATEGORIES) {
       map.set(cat.value, [])
     }
@@ -55,47 +58,47 @@ export function Dreams() {
     return { achieved, inProgress, total: dreams.length }
   }, [dreams])
 
-  async function addDream() {
+  // Goals linked to the detail dream
+  const linkedGoals = useMemo(() => {
+    if (!detail) return []
+    return goals.filter((g) => g.dream_id === detail.id)
+  }, [detail, goals])
+
+  async function handleAddDream() {
     if (!newTitle.trim()) return
-    const { data, error } = await supabase
-      .from('dreams')
-      .insert({ title: newTitle.trim(), description: newDesc.trim() || null, category: newCategory })
-      .select()
-      .single()
-    if (error) { toast(error.message); return }
-    if (data) setDreams((prev) => [data as Dream, ...prev])
-    setNewTitle('')
-    setNewDesc('')
-    setNewCategory('other')
-    setShowAdd(false)
-    toast('夢を追加しました')
+    const result = await addDream({
+      title: newTitle.trim(),
+      description: newDesc.trim() || null,
+      category: newCategory,
+    })
+    if (result) {
+      setNewTitle('')
+      setNewDesc('')
+      setNewCategory('other')
+      setShowAdd(false)
+      toast('夢を追加しました')
+    }
   }
 
-  async function updateStatus(dream: Dream, status: DreamStatus) {
-    const updates: Partial<Dream> = {
+  async function handleUpdateStatus(dreamId: string, title: string, status: DreamStatus) {
+    await updateDream(dreamId, {
       status,
       achieved_at: status === 'achieved' ? new Date().toISOString() : null,
-    }
-    const { error } = await supabase
-      .from('dreams')
-      .update(updates)
-      .eq('id', dream.id)
-    if (error) { toast(error.message); return }
-    setDreams((prev) => prev.map((d) => d.id === dream.id ? { ...d, ...updates } : d))
-    setDetail(null)
+    })
+    setDetailId(null)
     const label = DREAM_STATUSES.find((s) => s.value === status)?.label || status
-    toast(`「${dream.title}」を${label}に変更しました`)
+    toast(`「${title}」を${label}に変更しました`)
   }
 
-  async function deleteDream(dream: Dream) {
-    const { error } = await supabase.from('dreams').delete().eq('id', dream.id)
-    if (error) { toast(error.message); return }
-    setDreams((prev) => prev.filter((d) => d.id !== dream.id))
-    setDetail(null)
-    toast(`「${dream.title}」を削除しました`)
+  async function handleDeleteDream(dreamId: string, title: string) {
+    await deleteDream(dreamId)
+    setDetailId(null)
+    toast(`「${title}」を削除しました`)
   }
 
-  if (loading) {
+  const isLoading = loading.dreams
+
+  if (isLoading && dreams.length === 0) {
     return (
       <div className="page">
         <PageHeader title="100の夢リスト" />
@@ -165,7 +168,7 @@ export function Dreams() {
                         cursor: 'pointer',
                         fontSize: 13,
                       }}
-                      onClick={() => setDetail(d)}
+                      onClick={() => setDetailId(d.id)}
                     >
                       <span style={{ fontSize: 14 }}>
                         {d.status === 'achieved' ? '✅' : d.status === 'in_progress' ? '🔄' : d.status === 'paused' ? '⏸' : '☐'}
@@ -220,7 +223,7 @@ export function Dreams() {
             ))}
           </select>
         </div>
-        <button className="btn btn-p" style={{ width: '100%' }} onClick={addDream} disabled={!newTitle.trim()}>
+        <button className="btn btn-p" style={{ width: '100%' }} onClick={handleAddDream} disabled={!newTitle.trim()}>
           追加する
         </button>
       </Modal>
@@ -228,23 +231,25 @@ export function Dreams() {
       {/* Detail modal */}
       <Modal
         open={!!detail}
-        onClose={() => setDetail(null)}
+        onClose={() => setDetailId(null)}
         title={detail?.title || ''}
         footer={
-          <div style={{ display: 'flex', gap: 8, width: '100%', justifyContent: 'space-between' }}>
-            <button className="btn btn-d btn-sm" onClick={() => detail && deleteDream(detail)}>削除</button>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {DREAM_STATUSES.filter((s) => s.value !== detail?.status).map((s) => (
-                <button
-                  key={s.value}
-                  className={`btn btn-sm ${s.value === 'achieved' ? 'btn-p' : 'btn-g'}`}
-                  onClick={() => detail && updateStatus(detail, s.value)}
-                >
-                  {s.label}
-                </button>
-              ))}
+          detail ? (
+            <div style={{ display: 'flex', gap: 8, width: '100%', justifyContent: 'space-between' }}>
+              <button className="btn btn-d btn-sm" onClick={() => handleDeleteDream(detail.id, detail.title)}>削除</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {DREAM_STATUSES.filter((s) => s.value !== detail.status).map((s) => (
+                  <button
+                    key={s.value}
+                    className={`btn btn-sm ${s.value === 'achieved' ? 'btn-p' : 'btn-g'}`}
+                    onClick={() => handleUpdateStatus(detail.id, detail.title, s.value)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : undefined
         }
       >
         {detail && (
@@ -262,6 +267,38 @@ export function Dreams() {
                 {detail.description}
               </p>
             )}
+
+            {/* Linked Goals section */}
+            {linkedGoals.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 8 }}>
+                  紐づく目標 ({linkedGoals.length}件)
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {linkedGoals.map((g) => (
+                    <div key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, color: g.status === 'achieved' ? 'var(--green)' : 'var(--text2)', fontWeight: 500, flex: 1 }}>
+                        {g.status === 'achieved' ? '✅' : '○'} {g.title}
+                      </span>
+                      <div style={{ width: 50 }}>
+                        <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${g.progress}%`,
+                            background: g.progress >= 100 ? 'var(--green)' : 'var(--accent)',
+                            borderRadius: 2,
+                          }} />
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)', width: 28, textAlign: 'right' }}>
+                        {g.progress}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
               作成: {new Date(detail.created_at).toLocaleDateString('ja-JP')}
               {detail.achieved_at && (

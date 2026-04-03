@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useDataStore } from '@/stores/data'
 
 export interface DreamDetection {
   dream_id: number
@@ -40,13 +41,10 @@ export function useDreamDetection(): UseDreamDetectionReturn {
         return []
       }
 
-      // Get API key
-      const { data: settings } = await supabase
-        .from('user_settings')
-        .select('openai_api_key')
-        .single()
+      // Get API key from central store
+      const apiKey = await useDataStore.getState().fetchApiKey()
 
-      if (!settings?.openai_api_key) {
+      if (!apiKey) {
         setDetecting(false)
         return []
       }
@@ -67,7 +65,7 @@ JSON以外は返さないでください。`
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settings.openai_api_key}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',

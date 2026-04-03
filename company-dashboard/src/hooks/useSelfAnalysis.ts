@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useDataStore } from '@/stores/data'
 
 export type AnalysisType = 'mbti' | 'big5' | 'strengths' | 'emotion_triggers' | 'values'
 
@@ -210,13 +211,10 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
     setError(null)
 
     try {
-      // Get API key
-      const { data: settings, error: settingsErr } = await supabase
-        .from('user_settings')
-        .select('openai_api_key')
-        .single()
+      // Get API key from central store
+      const apiKey = await useDataStore.getState().fetchApiKey()
 
-      if (settingsErr || !settings?.openai_api_key) {
+      if (!apiKey) {
         setError('OpenAI API keyが設定されていません。Settings画面で設定してください。')
         setRunning(false)
         setRunningType(null)
@@ -238,7 +236,7 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settings.openai_api_key}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { Card, PageHeader, Modal, toast } from '@/components/ui'
-import { HABIT_CATEGORIES, HABIT_ICONS, type Habit, type HabitLog, type HabitCategory, type HabitFrequency } from '@/types/habits'
+import { HABIT_CATEGORIES, HABIT_ICONS, type HabitCategory, type HabitFrequency } from '@/types/habits'
+import { useDataStore } from '@/stores/data'
 
 function formatDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -18,11 +18,15 @@ function getDaysInRange(start: Date, count: number): string[] {
 }
 
 export function Habits() {
-  const [habits, setHabits] = useState<Habit[]>([])
-  const [logs, setLogs] = useState<HabitLog[]>([])
-  const [loading, setLoading] = useState(true)
+  const {
+    habits, habitLogs,
+    fetchHabits, fetchHabitLogs,
+    addHabit, updateHabit, deleteHabit, toggleHabitLog,
+    loading,
+  } = useDataStore()
+
   const [showAdd, setShowAdd] = useState(false)
-  const [editHabit, setEditHabit] = useState<Habit | null>(null)
+  const [editHabitId, setEditHabitId] = useState<number | null>(null)
 
   // Add/edit form state
   const [formTitle, setFormTitle] = useState('')
@@ -34,91 +38,63 @@ export function Habits() {
 
   const todayStr = useMemo(() => formatDate(new Date()), [])
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  useEffect(() => {
+    fetchHabits()
+    fetchHabitLogs()
+  }, [fetchHabits, fetchHabitLogs])
 
-    const [habitsRes, logsRes] = await Promise.all([
-      supabase
-        .from('habits')
-        .select('*')
-        .eq('active', true)
-        .order('created_at'),
-      supabase
-        .from('habit_logs')
-        .select('*')
-        .gte('completed_at', `${formatDate(thirtyDaysAgo)}T00:00:00`)
-        .order('completed_at', { ascending: false }),
-    ])
-
-    setHabits((habitsRes.data as Habit[]) ?? [])
-    setLogs((logsRes.data as HabitLog[]) ?? [])
-    setLoading(false)
-  }, [])
-
-  useEffect(() => { load() }, [load])
+  const editHabit = useMemo(() => {
+    if (editHabitId === null) return null
+    return habits.find((h) => h.id === editHabitId) ?? null
+  }, [editHabitId, habits])
 
   /** Get today's completion count for a habit */
   const getTodayCount = useCallback((habitId: number): number => {
-    return logs.filter(
+    return habitLogs.filter(
       (l) => l.habit_id === habitId && l.completed_at.substring(0, 10) === todayStr,
     ).length
-  }, [logs, todayStr])
+  }, [habitLogs, todayStr])
 
   /** Toggle today's habit completion */
-  const toggleHabit = useCallback(async (habit: Habit) => {
+  const handleToggle = useCallback(async (habitId: number) => {
+    const habit = habits.find((h) => h.id === habitId)
+    if (!habit) return
+    await toggleHabitLog(habit, todayStr)
     const todayCount = getTodayCount(habit.id)
-    if (todayCount >= habit.target_count) {
-      // Uncomplete: remove last log for today
-      const todayLog = logs.find(
-        (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr,
-      )
-      if (todayLog) {
-        await supabase.from('habit_logs').delete().eq('id', todayLog.id)
-        setLogs((prev) => prev.filter((l) => l.id !== todayLog.id))
-        toast('取り消しました')
-      }
+    const completed = todayCount >= habit.target_count
+    if (!completed) {
+      toast(`${habit.icon} ${habit.title} 完了！`)
     } else {
-      // Complete: add log
-      const { data } = await supabase
-        .from('habit_logs')
-        .insert({ habit_id: habit.id })
-        .select()
-        .single()
-      if (data) {
-        setLogs((prev) => [data as HabitLog, ...prev])
-        toast(`${habit.icon} ${habit.title} 完了！`)
-      }
+      toast('取り消しました')
     }
-  }, [getTodayCount, logs, todayStr])
+  }, [habits, toggleHabitLog, todayStr, getTodayCount])
 
   /** Week achievement rate for a habit */
   const getWeekRate = useCallback((habitId: number): number => {
     const days = getDaysInRange(new Date(), 7)
     let completed = 0
     for (const day of days) {
-      const count = logs.filter(
+      const count = habitLogs.filter(
         (l) => l.habit_id === habitId && l.completed_at.substring(0, 10) === day,
       ).length
       if (count > 0) completed++
     }
     return Math.round((completed / 7) * 100)
-  }, [logs])
+  }, [habitLogs])
 
-  /** 30-day calendar data: date -> completion ratio (0-1) */
+  /** 30-day calendar data */
   const calendarData = useMemo(() => {
     const days = getDaysInRange(new Date(), 30)
     const map = new Map<string, number>()
     const totalHabits = habits.length || 1
     for (const day of days) {
       const completedHabits = new Set(
-        logs.filter((l) => l.completed_at.substring(0, 10) === day).map((l) => l.habit_id),
+        habitLogs.filter((l) => l.completed_at.substring(0, 10) === day).map((l) => l.habit_id),
       ).size
       map.set(day, completedHabits / totalHabits)
     }
     return { days, map }
-  }, [habits, logs])
+  }, [habits, habitLogs])
 
   /** Open add modal */
   const openAdd = useCallback(() => {
@@ -127,20 +103,22 @@ export function Habits() {
     setFormFrequency('daily')
     setFormIcon('✅')
     setFormTarget(1)
-    setEditHabit(null)
+    setEditHabitId(null)
     setShowAdd(true)
   }, [])
 
   /** Open edit modal */
-  const openEdit = useCallback((habit: Habit) => {
+  const openEdit = useCallback((habitId: number) => {
+    const habit = habits.find((h) => h.id === habitId)
+    if (!habit) return
     setFormTitle(habit.title)
     setFormCategory(habit.category)
     setFormFrequency(habit.frequency)
     setFormIcon(habit.icon)
     setFormTarget(habit.target_count)
-    setEditHabit(habit)
+    setEditHabitId(habitId)
     setShowAdd(true)
-  }, [])
+  }, [habits])
 
   /** Save habit (create or update) */
   const saveHabit = useCallback(async () => {
@@ -148,52 +126,40 @@ export function Habits() {
     setSaving(true)
 
     if (editHabit) {
-      const { error } = await supabase
-        .from('habits')
-        .update({
-          title: formTitle.trim(),
-          category: formCategory,
-          frequency: formFrequency,
-          icon: formIcon,
-          target_count: formTarget,
-        })
-        .eq('id', editHabit.id)
-
-      if (!error) {
-        toast('更新しました')
-        setShowAdd(false)
-        load()
-      }
+      await updateHabit(editHabit.id, {
+        title: formTitle.trim(),
+        category: formCategory,
+        frequency: formFrequency,
+        icon: formIcon,
+        target_count: formTarget,
+      })
+      toast('更新しました')
+      setShowAdd(false)
     } else {
-      const { error } = await supabase
-        .from('habits')
-        .insert({
-          title: formTitle.trim(),
-          category: formCategory,
-          frequency: formFrequency,
-          icon: formIcon,
-          target_count: formTarget,
-        })
-
-      if (!error) {
-        toast('習慣を追加しました')
-        setShowAdd(false)
-        load()
-      }
+      await addHabit({
+        title: formTitle.trim(),
+        category: formCategory,
+        frequency: formFrequency,
+        icon: formIcon,
+        target_count: formTarget,
+      })
+      toast('習慣を追加しました')
+      setShowAdd(false)
     }
     setSaving(false)
-  }, [formTitle, formCategory, formFrequency, formIcon, formTarget, editHabit, load])
+  }, [formTitle, formCategory, formFrequency, formIcon, formTarget, editHabit, updateHabit, addHabit])
 
-  /** Delete habit (soft: set active=false) */
-  const deleteHabit = useCallback(async () => {
+  /** Delete habit (soft) */
+  const handleDeleteHabit = useCallback(async () => {
     if (!editHabit) return
-    await supabase.from('habits').update({ active: false }).eq('id', editHabit.id)
+    await deleteHabit(editHabit.id)
     toast('削除しました')
     setShowAdd(false)
-    load()
-  }, [editHabit, load])
+  }, [editHabit, deleteHabit])
 
-  if (loading) {
+  const isLoading = loading.habits || loading.habitLogs
+
+  if (isLoading && habits.length === 0) {
     return (
       <div className="page">
         <PageHeader title="Habits" />
@@ -235,7 +201,7 @@ export function Habits() {
                 <Card key={habit.id} style={{ cursor: 'pointer' }}>
                   <div
                     style={{ display: 'flex', alignItems: 'center', gap: 12 }}
-                    onClick={() => toggleHabit(habit)}
+                    onClick={() => handleToggle(habit.id)}
                   >
                     <div
                       style={{
@@ -266,7 +232,7 @@ export function Habits() {
                     <button
                       className="btn btn-g btn-sm"
                       style={{ fontSize: 10, padding: '2px 8px' }}
-                      onClick={(e) => { e.stopPropagation(); openEdit(habit) }}
+                      onClick={(e) => { e.stopPropagation(); openEdit(habit.id) }}
                     >
                       ...
                     </button>
@@ -364,7 +330,7 @@ export function Habits() {
         footer={
           <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', width: '100%' }}>
             {editHabit && (
-              <button className="btn btn-d btn-sm" onClick={deleteHabit}>削除</button>
+              <button className="btn btn-d btn-sm" onClick={handleDeleteHabit}>削除</button>
             )}
             <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
               <button className="btn btn-g btn-sm" onClick={() => setShowAdd(false)}>キャンセル</button>

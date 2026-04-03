@@ -2,6 +2,7 @@ import { useCallback, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { calculateStreak } from '@/lib/streak'
 import { useBriefingStore } from '@/stores/briefing'
+import { useDataStore } from '@/stores/data'
 import { buildPartnerSystemPrompt, getTimeOfDay } from '@/lib/aiPartner'
 import type { PartnerContext, EmotionSummary } from '@/lib/aiPartner'
 
@@ -106,13 +107,10 @@ export function useMorningBriefing() {
         timeOfDay: getTimeOfDay(),
       }
 
-      // Get API key
-      const { data: settings } = await supabase
-        .from('user_settings')
-        .select('openai_api_key')
-        .single()
+      // Get API key from central store
+      const apiKey = await useDataStore.getState().fetchApiKey()
 
-      if (!settings?.openai_api_key) {
+      if (!apiKey) {
         // Fallback to static message
         const fallbacks = [
           '今日も一日、あなたのペースで大丈夫ですよ。',
@@ -134,7 +132,7 @@ export function useMorningBriefing() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settings.openai_api_key}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',

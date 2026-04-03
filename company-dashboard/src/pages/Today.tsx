@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
 import { calculateStreak } from '@/lib/streak'
 import { Card } from '@/components/ui'
 import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis'
 import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { useDreamDetection } from '@/hooks/useDreamDetection'
 import { toast } from '@/components/ui'
+import { useDataStore } from '@/stores/data'
+import type { DiaryEntry } from '@/types/diary'
 
 /** Plutchik emotion labels for badge display */
 const PLUTCHIK_LABELS: Record<string, { label: string; color: string }> = {
@@ -29,21 +30,6 @@ function getGreeting(): string {
   return 'おつかれさまです'
 }
 
-interface DiaryEntry {
-  id: string
-  body: string
-  entry_type: string
-  entry_date: string | null
-  created_at: string
-}
-
-interface Task {
-  id: string
-  title: string
-  status: string
-  priority: string
-}
-
 interface EmotionBadge {
   key: string
   label: string
@@ -56,114 +42,106 @@ export function Today() {
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [fragments, setFragments] = useState<DiaryEntry[]>([])
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [dreamsCount, setDreamsCount] = useState(0)
   const [streak, setStreak] = useState(0)
-  const [wbi, setWbi] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
   const [emotionBadges, setEmotionBadges] = useState<Map<string, EmotionBadge[]>>(new Map())
   const { analyze, analyzing, error: emotionError } = useEmotionAnalysis()
   const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing()
   const { detect } = useDreamDetection()
+
+  // Central store
+  const {
+    diaryEntries, tasks, dreams, habits, habitLogs,
+    fetchDiary, fetchTasks, fetchDreams, fetchHabits, fetchHabitLogs, fetchEmotions,
+    addDiaryEntry, toggleHabitLog,
+    loading,
+  } = useDataStore()
 
   const todayStr = useMemo(() => {
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }, [])
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const startOfDay = `${todayStr}T00:00:00`
-    const endOfDay = `${todayStr}T23:59:59`
+  // Fetch all data on mount
+  useEffect(() => {
+    fetchDiary({ days: 1 })
+    fetchEmotions({ days: 1 })
+    fetchTasks()
+    fetchDreams()
+    fetchHabits()
+    fetchHabitLogs()
+    calculateStreak().then(setStreak)
+  }, [fetchDiary, fetchEmotions, fetchTasks, fetchDreams, fetchHabits, fetchHabitLogs])
 
-    const [diaryRes, tasksRes, dreamsRes, wbiRes] = await Promise.all([
-      supabase
-        .from('diary_entries')
-        .select('*')
-        .gte('created_at', startOfDay)
-        .lte('created_at', endOfDay)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('tasks')
-        .select('id, title, status, priority')
-        .eq('status', 'open')
-        .order('created_at', { ascending: false })
-        .limit(5),
-      supabase
-        .from('dreams')
-        .select('id', { count: 'exact', head: true })
-        .in('status', ['active', 'in_progress']),
-      supabase
-        .from('diary_entries')
-        .select('wbi')
-        .not('wbi', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(1),
-    ])
+  // Today's fragments
+  const fragments = useMemo(() => {
+    return diaryEntries.filter((e) => e.created_at.substring(0, 10) === todayStr)
+  }, [diaryEntries, todayStr])
 
-    const diaryData = (diaryRes.data as DiaryEntry[]) || []
-    setFragments(diaryData)
-    setTasks((tasksRes.data as Task[]) || [])
-    setDreamsCount(dreamsRes.count ?? 0)
-    if (wbiRes.data?.[0]) setWbi(wbiRes.data[0].wbi)
+  // Open tasks (top 5)
+  const openTasks = useMemo(() => {
+    return tasks.filter((t) => t.status === 'open').slice(0, 5)
+  }, [tasks])
 
-    // Load emotion data for today's entries
-    if (diaryData.length > 0) {
-      const entryIds = diaryData.map((e) => e.id)
-      const { data: emotionData } = await supabase
-        .from('emotion_analysis')
-        .select('diary_entry_id, joy, trust, fear, surprise, sadness, disgust, anger, anticipation')
-        .in('diary_entry_id', entryIds)
+  // Active dreams count
+  const dreamsCount = useMemo(() => {
+    return dreams.filter((d) => d.status === 'active' || d.status === 'in_progress').length
+  }, [dreams])
 
-      if (emotionData) {
-        const badgeMap = new Map<string, EmotionBadge[]>()
-        for (const ea of emotionData) {
-          const scores = Object.entries(PLUTCHIK_LABELS).map(([key, info]) => ({
-            key,
-            label: info.label,
-            color: info.color,
-            value: (ea as Record<string, number>)[key] ?? 0,
-          }))
-          scores.sort((a, b) => b.value - a.value)
-          badgeMap.set(
-            (ea as Record<string, string>).diary_entry_id,
-            scores.filter((s) => s.value > 20).slice(0, 2),
-          )
-        }
-        setEmotionBadges(badgeMap)
-      }
+  // Latest WBI
+  const wbi = useMemo(() => {
+    const entry = diaryEntries.find((e) => e.wbi != null)
+    return entry?.wbi ?? null
+  }, [diaryEntries])
+
+  // Build emotion badges from store emotion data
+  const emotionAnalyses = useDataStore((s) => s.emotionAnalyses)
+  useEffect(() => {
+    if (fragments.length === 0) return
+    const entryIds = new Set(fragments.map((e) => e.id))
+    const badgeMap = new Map<string, EmotionBadge[]>()
+    for (const ea of emotionAnalyses) {
+      if (!entryIds.has(ea.diary_entry_id)) continue
+      const scores = Object.entries(PLUTCHIK_LABELS).map(([key, info]) => ({
+        key,
+        label: info.label,
+        color: info.color,
+        value: (ea as unknown as Record<string, number>)[key] ?? 0,
+      }))
+      scores.sort((a, b) => b.value - a.value)
+      badgeMap.set(ea.diary_entry_id, scores.filter((s) => s.value > 20).slice(0, 2))
     }
+    setEmotionBadges(badgeMap)
+  }, [fragments, emotionAnalyses])
 
-    // Calculate streak (shared utility)
-    const currentStreak = await calculateStreak()
-    setStreak(currentStreak)
-
-    setLoading(false)
-  }, [todayStr])
-
-  useEffect(() => { load() }, [load])
+  // Today's habits
+  const todayHabits = useMemo(() => {
+    return habits.map((habit) => {
+      const todayCount = habitLogs.filter(
+        (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr,
+      ).length
+      const completed = todayCount >= habit.target_count
+      return { ...habit, todayCount, completed }
+    })
+  }, [habits, habitLogs, todayStr])
 
   /** Save diary entry and trigger emotion analysis */
   const saveEntry = useCallback(async (content: string) => {
     if (!content.trim()) return
     setSaving(true)
-    const { data: inserted } = await supabase
-      .from('diary_entries')
-      .insert({ body: content.trim(), entry_type: 'fragment', entry_date: todayStr })
-      .select()
-      .single()
+    const inserted = await addDiaryEntry({
+      body: content.trim(),
+      entry_type: 'fragment',
+      entry_date: todayStr,
+    })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
     setText('')
-    load()
 
     // Trigger emotion analysis in background
     if (inserted?.id) {
       const result = await analyze(inserted.id, content.trim())
       if (result) {
-        // Update badges for this entry
         const scores = Object.entries(PLUTCHIK_LABELS).map(([key, info]) => ({
           key,
           label: info.label,
@@ -185,19 +163,12 @@ export function Today() {
         }
       })
     }
-  }, [load, analyze, detect, todayStr])
-
-  /** Text change handler (manual save only) */
-  const handleTextChange = useCallback(
-    (val: string) => {
-      setText(val)
-    },
-    [],
-  )
+  }, [addDiaryEntry, analyze, detect, todayStr])
 
   const greeting = getGreeting()
+  const isLoading = loading.diary || loading.tasks || loading.dreams
 
-  if (loading) {
+  if (isLoading && fragments.length === 0) {
     return (
       <div className="page">
         <div className="page-title">{greeting}</div>
@@ -220,7 +191,7 @@ export function Today() {
           className="input"
           placeholder="思ったこと、感じたことを自由に..."
           value={text}
-          onChange={(e) => handleTextChange(e.target.value)}
+          onChange={(e) => setText(e.target.value)}
           style={{ minHeight: 80, width: '100%', boxSizing: 'border-box', marginBottom: 8 }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -285,7 +256,7 @@ export function Today() {
         <div className="section">
           <div className="section-title">今日の断片</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {fragments.map((f) => {
+            {fragments.map((f: DiaryEntry) => {
               const badges = emotionBadges.get(f.id) || []
               return (
                 <Card key={f.id} style={{ padding: 14 }}>
@@ -319,7 +290,7 @@ export function Today() {
       )}
 
       {/* Tasks */}
-      {tasks.length > 0 && (
+      {openTasks.length > 0 && (
         <div className="section">
           <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>タスク</span>
@@ -332,10 +303,66 @@ export function Today() {
             </button>
           </div>
           <Card>
-            {tasks.map((t) => (
+            {openTasks.map((t) => (
               <div key={t.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.priority === 'high' ? 'var(--red)' : t.priority === 'low' ? 'var(--text3)' : 'var(--blue)', flexShrink: 0 }} />
                 {t.title}
+              </div>
+            ))}
+          </Card>
+        </div>
+      )}
+
+      {/* Today's Habits */}
+      {todayHabits.length > 0 && (
+        <div className="section">
+          <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>今日の習慣</span>
+            <button
+              className="btn btn-g btn-sm"
+              style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }}
+              onClick={() => navigate('/habits')}
+            >
+              Habits
+            </button>
+          </div>
+          <Card>
+            {todayHabits.map((h) => (
+              <div
+                key={h.id}
+                style={{
+                  padding: '10px 0',
+                  borderBottom: '1px solid var(--border)',
+                  fontSize: 13,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  cursor: 'pointer',
+                }}
+                onClick={() => toggleHabitLog(h, todayStr)}
+              >
+                <span style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 4,
+                  border: `2px solid ${h.completed ? 'var(--green)' : 'var(--border)'}`,
+                  background: h.completed ? 'var(--green)' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 11,
+                  color: '#fff',
+                  flexShrink: 0,
+                }}>
+                  {h.completed ? '✓' : ''}
+                </span>
+                <span style={{
+                  color: h.completed ? 'var(--text3)' : 'var(--text)',
+                  textDecoration: h.completed ? 'line-through' : 'none',
+                  fontWeight: 500,
+                }}>
+                  {h.icon} {h.title}
+                </span>
               </div>
             ))}
           </Card>

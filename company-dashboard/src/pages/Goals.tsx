@@ -1,21 +1,24 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, PageHeader, Modal, EmptyState } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
 import { GOAL_LEVELS, GOAL_STATUSES } from '@/types/goals'
 import type { Goal, GoalLevel, GoalStatus } from '@/types/goals'
-import type { Dream } from '@/types/dreams'
+import { useDataStore } from '@/stores/data'
 
 const LEVEL_MAP = new Map(GOAL_LEVELS.map((l) => [l.value, l]))
 const STATUS_MAP = new Map(GOAL_STATUSES.map((s) => [s.value, s]))
 
 export function Goals() {
-  const [goals, setGoals] = useState<Goal[]>([])
-  const [dreams, setDreams] = useState<Dream[]>([])
-  const [loading, setLoading] = useState(true)
+  const {
+    goals, dreams,
+    fetchGoals, fetchDreams,
+    addGoal, updateGoal, deleteGoal, updateDream,
+    loading,
+  } = useDataStore()
+
   const [activeLevel, setActiveLevel] = useState<GoalLevel | ''>('')
   const [showAdd, setShowAdd] = useState(false)
-  const [detail, setDetail] = useState<Goal | null>(null)
+  const [detailId, setDetailId] = useState<string | null>(null)
   const [editMode, setEditMode] = useState(false)
 
   // Add form state
@@ -33,25 +36,20 @@ export function Goals() {
   const [editStatus, setEditStatus] = useState<GoalStatus>('active')
   const [editTargetDate, setEditTargetDate] = useState('')
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const [goalsRes, dreamsRes] = await Promise.all([
-      supabase
-        .from('goals')
-        .select('*')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('dreams')
-        .select('*')
-        .in('status', ['active', 'in_progress'])
-        .order('created_at', { ascending: false }),
-    ])
-    setGoals((goalsRes.data as Goal[]) || [])
-    setDreams((dreamsRes.data as Dream[]) || [])
-    setLoading(false)
-  }, [])
+  useEffect(() => {
+    fetchGoals()
+    fetchDreams()
+  }, [fetchGoals, fetchDreams])
 
-  useEffect(() => { load() }, [load])
+  const detail = useMemo(() => {
+    if (!detailId) return null
+    return goals.find((g) => g.id === detailId) ?? null
+  }, [detailId, goals])
+
+  // Active/in_progress dreams for linking
+  const activeDreams = useMemo(() => {
+    return dreams.filter((d) => d.status === 'active' || d.status === 'in_progress')
+  }, [dreams])
 
   // Filtered goals by level
   const filtered = useMemo(() => {
@@ -81,7 +79,7 @@ export function Goals() {
 
   // Dream map
   const dreamMap = useMemo(() => {
-    const map = new Map<string, Dream>()
+    const map = new Map<string, typeof dreams[0]>()
     for (const d of dreams) map.set(d.id, d)
     return map
   }, [dreams])
@@ -119,30 +117,25 @@ export function Goals() {
     setNewTargetDate('')
   }
 
-  async function addGoal() {
+  async function handleAddGoal() {
     if (!newTitle.trim()) return
-    const insertData: Record<string, unknown> = {
+    const result = await addGoal({
       title: newTitle.trim(),
       description: newDesc.trim() || null,
       level: newLevel,
       parent_id: newParentId ? Number(newParentId) : null,
       dream_id: newDreamId || null,
       target_date: newTargetDate || null,
+    })
+    if (result) {
+      resetAddForm()
+      setShowAdd(false)
+      toast('目標を追加しました')
     }
-    const { data, error } = await supabase
-      .from('goals')
-      .insert(insertData)
-      .select()
-      .single()
-    if (error) { toast(error.message); return }
-    if (data) setGoals((prev) => [data as Goal, ...prev])
-    resetAddForm()
-    setShowAdd(false)
-    toast('目標を追加しました')
   }
 
   function openDetail(goal: Goal) {
-    setDetail(goal)
+    setDetailId(goal.id)
     setEditMode(false)
     setEditTitle(goal.title)
     setEditDesc(goal.description || '')
@@ -153,7 +146,7 @@ export function Goals() {
 
   async function saveEdit() {
     if (!detail) return
-    const updates: Record<string, unknown> = {
+    const updates = {
       title: editTitle.trim(),
       description: editDesc.trim() || null,
       progress: editProgress,
@@ -162,36 +155,82 @@ export function Goals() {
       achieved_at: editStatus === 'achieved' ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     }
-    const { error } = await supabase
-      .from('goals')
-      .update(updates)
-      .eq('id', detail.id)
-    if (error) { toast(error.message); return }
-    setGoals((prev) => prev.map((g) => g.id === detail.id ? { ...g, ...updates } as Goal : g))
-    setDetail(null)
+    await updateGoal(detail.id, updates)
+
+    // Auto-update linked dream status
+    if (editStatus === 'achieved' && detail.dream_id) {
+      await syncDreamStatus(detail.dream_id)
+    }
+
+    setDetailId(null)
     toast('目標を更新しました')
   }
 
-  async function updateProgress(goal: Goal, progress: number) {
-    const updates: Partial<Goal> = { progress, updated_at: new Date().toISOString() }
+  /**
+   * Sync dream status based on linked goals.
+   * If all goals for the dream are achieved, set dream to 'achieved'.
+   * Otherwise set to 'in_progress'.
+   */
+  async function syncDreamStatus(dreamId: string) {
+    const linkedGoals = goals.filter((g) => g.dream_id === dreamId)
+    if (linkedGoals.length === 0) return
+
+    const allAchieved = linkedGoals.every((g) =>
+      g.id === detail?.id ? true : g.status === 'achieved',
+    )
+
+    if (allAchieved) {
+      await updateDream(dreamId, {
+        status: 'achieved',
+        achieved_at: new Date().toISOString(),
+      })
+      const dream = dreamMap.get(dreamId)
+      if (dream) toast(`夢「${dream.title}」が達成されました！`)
+    } else {
+      const dream = dreamMap.get(dreamId)
+      if (dream && dream.status === 'active') {
+        await updateDream(dreamId, { status: 'in_progress' })
+      }
+    }
+  }
+
+  async function handleUpdateProgress(goal: Goal, progress: number) {
+    const updates: Record<string, unknown> = { progress, updated_at: new Date().toISOString() }
     if (progress >= 100) {
       updates.status = 'achieved'
       updates.achieved_at = new Date().toISOString()
     }
-    const { error } = await supabase
-      .from('goals')
-      .update(updates)
-      .eq('id', goal.id)
-    if (error) { toast(error.message); return }
-    setGoals((prev) => prev.map((g) => g.id === goal.id ? { ...g, ...updates } : g))
+    await updateGoal(goal.id, updates)
+
+    // Auto-update linked dream status
+    if (progress >= 100 && goal.dream_id) {
+      await syncDreamStatus(goal.dream_id)
+    }
   }
 
-  async function deleteGoal(goal: Goal) {
-    const { error } = await supabase.from('goals').delete().eq('id', goal.id)
-    if (error) { toast(error.message); return }
-    setGoals((prev) => prev.filter((g) => g.id !== goal.id))
-    setDetail(null)
+  async function handleDeleteGoal(goal: Goal) {
+    await deleteGoal(goal.id)
+    setDetailId(null)
     toast(`「${goal.title}」を削除しました`)
+  }
+
+  async function handleStatusChange(goal: Goal, newStatus: GoalStatus) {
+    const updates: Record<string, unknown> = {
+      status: newStatus,
+      achieved_at: newStatus === 'achieved' ? new Date().toISOString() : null,
+      progress: newStatus === 'achieved' ? 100 : goal.progress,
+      updated_at: new Date().toISOString(),
+    }
+    await updateGoal(goal.id, updates)
+
+    // Auto-update linked dream status
+    if (newStatus === 'achieved' && goal.dream_id) {
+      await syncDreamStatus(goal.dream_id)
+    }
+
+    setDetailId(null)
+    const label = GOAL_STATUSES.find((s) => s.value === newStatus)?.label || newStatus
+    toast(`「${goal.title}」を${label}に変更しました`)
   }
 
   /** Render a goal item with optional children */
@@ -254,13 +293,15 @@ export function Goals() {
         </div>
         {/* Render children */}
         {children
-          .filter((c) => !activeLevel || c.level === activeLevel || true) // show children regardless of filter
+          .filter(() => true) // show children regardless of filter
           .map((child) => renderGoalItem(child, indent + 1))}
       </div>
     )
   }
 
-  if (loading) {
+  const isLoading = loading.goals
+
+  if (isLoading && goals.length === 0) {
     return (
       <div className="page">
         <PageHeader title="Goals" />
@@ -323,7 +364,6 @@ export function Goals() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {GOAL_LEVELS.map((level) => {
             const items = groupedByLevel.get(level.value) || []
-            // Only show top-level goals (no parent) to avoid duplication
             const topLevel = items.filter((g) => !g.parent_id)
             if (topLevel.length === 0 && activeLevel) return null
             if (topLevel.length === 0) return null
@@ -397,7 +437,7 @@ export function Goals() {
             onChange={(e) => setNewDreamId(e.target.value)}
           >
             <option value="">なし</option>
-            {dreams.map((d) => (
+            {activeDreams.map((d) => (
               <option key={d.id} value={d.id}>{d.title}</option>
             ))}
           </select>
@@ -414,7 +454,7 @@ export function Goals() {
         <button
           className="btn btn-p"
           style={{ width: '100%' }}
-          onClick={addGoal}
+          onClick={handleAddGoal}
           disabled={!newTitle.trim()}
         >
           追加する
@@ -424,12 +464,12 @@ export function Goals() {
       {/* Detail/Edit Modal */}
       <Modal
         open={!!detail}
-        onClose={() => { setDetail(null); setEditMode(false) }}
+        onClose={() => { setDetailId(null); setEditMode(false) }}
         title={editMode ? '目標を編集' : detail?.title || ''}
         footer={
           detail ? (
             <div style={{ display: 'flex', gap: 8, width: '100%', justifyContent: 'space-between' }}>
-              <button className="btn btn-d btn-sm" onClick={() => deleteGoal(detail)}>削除</button>
+              <button className="btn btn-d btn-sm" onClick={() => handleDeleteGoal(detail)}>削除</button>
               <div style={{ display: 'flex', gap: 8 }}>
                 {editMode ? (
                   <button className="btn btn-p btn-sm" onClick={saveEdit}>保存</button>
@@ -470,8 +510,7 @@ export function Goals() {
                 value={detail.progress}
                 onChange={(e) => {
                   const val = Number(e.target.value)
-                  setDetail({ ...detail, progress: val })
-                  updateProgress(detail, val)
+                  handleUpdateProgress(detail, val)
                 }}
                 style={{ width: '100%' }}
               />
@@ -494,22 +533,7 @@ export function Goals() {
                 <button
                   key={s.value}
                   className={`btn btn-sm ${s.value === 'achieved' ? 'btn-p' : 'btn-g'}`}
-                  onClick={async () => {
-                    const updates: Record<string, unknown> = {
-                      status: s.value,
-                      achieved_at: s.value === 'achieved' ? new Date().toISOString() : null,
-                      progress: s.value === 'achieved' ? 100 : detail.progress,
-                      updated_at: new Date().toISOString(),
-                    }
-                    const { error } = await supabase
-                      .from('goals')
-                      .update(updates)
-                      .eq('id', detail.id)
-                    if (error) { toast(error.message); return }
-                    setGoals((prev) => prev.map((g) => g.id === detail.id ? { ...g, ...updates } as Goal : g))
-                    setDetail(null)
-                    toast(`「${detail.title}」を${s.label}に変更しました`)
-                  }}
+                  onClick={() => handleStatusChange(detail, s.value)}
                 >
                   {s.label}
                 </button>

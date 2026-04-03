@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useDataStore } from '@/stores/data'
 
 const EMOTION_ANALYSIS_PROMPT = `あなたは感情分析の専門家です。日記のテキストを分析し、以下のJSON形式で返してください:
 {
@@ -47,13 +48,10 @@ export function useEmotionAnalysis(): UseEmotionAnalysisReturn {
     setError(null)
 
     try {
-      // Get API key from user_settings
-      const { data: settings, error: settingsErr } = await supabase
-        .from('user_settings')
-        .select('openai_api_key')
-        .single()
+      // Get API key from central store
+      const apiKey = await useDataStore.getState().fetchApiKey()
 
-      if (settingsErr || !settings?.openai_api_key) {
+      if (!apiKey) {
         setError('OpenAI API keyが設定されていません。Settings画面で設定してください。')
         setAnalyzing(false)
         return null
@@ -64,7 +62,7 @@ export function useEmotionAnalysis(): UseEmotionAnalysisReturn {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${settings.openai_api_key}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
