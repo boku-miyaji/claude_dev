@@ -16,7 +16,8 @@ export function App() {
   useAuth()
   const { loading, appReady, user } = useAuthStore()
 
-  if (loading) {
+  // loading中 or ユーザーはいるがappReady待ち → ローディング表示（AuthPageを見せない）
+  if (loading || (user && !appReady)) {
     return (
       <div className="auth-page">
         <div className="auth-box">
@@ -28,7 +29,7 @@ export function App() {
     )
   }
 
-  if (!user || !appReady) {
+  if (!user) {
     return <AuthPage />
   }
 
