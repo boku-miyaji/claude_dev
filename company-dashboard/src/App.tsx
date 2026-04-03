@@ -5,7 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { LegacyPage } from '@/components/legacy/LegacyPage'
 import { AuthPage } from '@/pages/AuthPage'
 import {
-  renderDashboard, renderCalendar, renderTasks, renderCompanies,
+  renderDashboard, renderCalendar,
   renderOrgChart, renderFinance, renderInsights, renderPrompts,
   renderIntelligence, renderDiary, renderArtifacts, renderChat,
   renderApiCosts, renderGrowth,
@@ -14,6 +14,8 @@ import {
 import { HowItWorks } from '@/pages/HowItWorks'
 import { SlashCommands } from '@/pages/SlashCommands'
 import { Knowledge } from '@/pages/Knowledge'
+import { Tasks } from '@/pages/Tasks'
+import { Companies } from '@/pages/Companies'
 
 export function App() {
   useAuth()
@@ -43,8 +45,8 @@ export function App() {
         <Routes>
           <Route path="/" element={<LegacyPage renderer={renderDashboard} />} />
           <Route path="/calendar" element={<LegacyPage renderer={renderCalendar} />} />
-          <Route path="/tasks" element={<LegacyPage renderer={renderTasks} />} />
-          <Route path="/companies" element={<LegacyPage renderer={renderCompanies} />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/companies" element={<Companies />} />
           <Route path="/orgchart" element={<LegacyPage renderer={renderOrgChart} />} />
           <Route path="/finance" element={<LegacyPage renderer={renderFinance} />} />
           <Route path="/insights" element={<LegacyPage renderer={renderInsights} />} />
