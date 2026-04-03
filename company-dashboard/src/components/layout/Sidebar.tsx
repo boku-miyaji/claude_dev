@@ -21,7 +21,7 @@ const NAV: NavEntry[] = [
   { type: 'label', label: 'Analytics' },
   { type: 'item', page: 'insights', icon: '◇', label: 'Insights' },
   { type: 'item', page: 'prompts', icon: '▷', label: 'Prompts' },
-  { type: 'item', page: 'intelligence', icon: '◎', label: 'News' },
+  { type: 'item', page: 'intelligence', icon: '📄', label: 'Reports' },
   { type: 'item', page: 'api-costs', icon: '$', label: 'API Costs' },
   { type: 'item', page: 'growth', icon: '↗', label: 'Growth' },
   { type: 'label', label: 'Personal' },

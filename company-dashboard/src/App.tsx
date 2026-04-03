@@ -7,7 +7,7 @@ import { AuthPage } from '@/pages/AuthPage'
 import {
   renderDashboard, renderCalendar,
   renderOrgChart, renderFinance, renderInsights, renderPrompts,
-  renderIntelligence, renderDiary, renderArtifacts, renderChat,
+  renderDiary, renderArtifacts, renderChat,
   renderApiCosts, renderGrowth,
   renderSettings, renderCareer, renderPortfolio,
 } from '@/lib/legacy'
@@ -16,6 +16,7 @@ import { SlashCommands } from '@/pages/SlashCommands'
 import { Knowledge } from '@/pages/Knowledge'
 import { Tasks } from '@/pages/Tasks'
 import { Companies } from '@/pages/Companies'
+import { Reports } from '@/pages/Reports'
 
 export function App() {
   useAuth()
@@ -51,7 +52,7 @@ export function App() {
           <Route path="/finance" element={<LegacyPage renderer={renderFinance} />} />
           <Route path="/insights" element={<LegacyPage renderer={renderInsights} />} />
           <Route path="/prompts" element={<LegacyPage renderer={renderPrompts} />} />
-          <Route path="/intelligence" element={<LegacyPage renderer={renderIntelligence} />} />
+          <Route path="/intelligence" element={<Reports />} />
           <Route path="/diary" element={<LegacyPage renderer={renderDiary} />} />
           <Route path="/artifacts/*" element={<LegacyPage renderer={renderArtifacts} />} />
           <Route path="/chat/*" element={<LegacyPage renderer={renderChat} />} />
