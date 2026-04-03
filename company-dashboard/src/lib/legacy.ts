@@ -1552,7 +1552,7 @@ async function renderDashboard(root) {
     sb.from('tasks').select('id,title,priority,status,company_id,due_date').in('status',['open','in_progress']).order('priority,created_at'),
     sb.from('invoices').select('amount,invoice_date,client_name,status').gte('invoice_date',startOfYear).lte('invoice_date',endOfYear),
     sb.from('expenses').select('amount').gte('expense_date',startOfYear).lte('expense_date',endOfYear),
-    sb.from('activity_log').select('details,created_at').eq('action','daily_briefing').order('created_at',{ascending:false}).limit(1)
+    sb.from('activity_log').select('metadata,created_at').eq('action','daily_briefing').order('created_at',{ascending:false}).limit(1)
   ]);
 
   // Calendar
@@ -1580,7 +1580,7 @@ async function renderDashboard(root) {
   var morningBriefing = '';
   var bData = (results[3].status==='fulfilled' && results[3].value.data) || [];
   if (bData[0] && toLocalDateStr(new Date(bData[0].created_at)) === todayStr) {
-    morningBriefing = (bData[0].details && bData[0].details.text) || '';
+    morningBriefing = (bData[0].metadata && bData[0].metadata.text) || '';
   }
 
   // ===== 即座に描画: カレンダー → KPI → タスク =====
@@ -1671,20 +1671,8 @@ function renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst,
   var now = new Date();
   var cs = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;cursor:pointer';
 
-  // KPI row (calendar is shown above briefing, no duplication)
-  var row = el('div', {style:'display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-bottom:12px'});
+  // Task summary only (finance removed — not useful on Home)
   var highTasks = tasks.filter(function(t){return t.priority==='high';});
-  [{v:tasks.length, l:'Open Tasks'+(highTasks.length?' (!'+highTasks.length+')':''), c:highTasks.length>0?'#ef4444':'var(--text)', p:'tasks'},
-   {v:fmtYen(yearRev), l:'年間売上 ('+dataMonths+'M)', c:'var(--accent)', p:'finance'},
-   {v:fmtYen(yearRev-yearExp), l:'粗利', c:(yearRev-yearExp)>=0?'#22c55e':'#ef4444', p:'finance'},
-   {v:fmtYen(Math.ceil(taxEst.totalTax/12)), l:'月次積立', c:'#f59e0b', p:'finance'}
-  ].forEach(function(d) {
-    row.appendChild(el('div', {style:cs, onClick:function(){navigate(d.p);}}, [
-      el('div', {textContent:String(d.v), style:'font-size:18px;font-weight:700;color:'+d.c}),
-      el('div', {textContent:d.l, style:'font-size:10px;color:var(--text3);margin-top:2px'})
-    ]));
-  });
-  container.appendChild(row);
 
   // ===== High priority tasks (compact list) =====
   if (highTasks.length > 0) {
@@ -1702,7 +1690,7 @@ function renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst,
 
   // ===== Latest news (from intelligence reports) =====
   (async function() {
-    var newsRes = await sb.from('activity_log').select('action,details,created_at').eq('action','intelligence_collect').order('created_at',{ascending:false}).limit(1);
+    var newsRes = await sb.from('activity_log').select('action,metadata,created_at').eq('action','intelligence_collect').order('created_at',{ascending:false}).limit(1);
     var latestReport = newsRes.data && newsRes.data[0];
     var newsCard = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:12px'});
     newsCard.appendChild(el('div', {style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px'}, [
@@ -1717,13 +1705,13 @@ function renderQuickCards(container, tasks, calEvents, yearRev, yearExp, taxEst,
     ]));
 
     // Show latest intelligence items
-    var reportsRes = await sb.from('activity_log').select('details,created_at').eq('action','intelligence_item').order('created_at',{ascending:false}).limit(5);
+    var reportsRes = await sb.from('activity_log').select('metadata,created_at').eq('action','intelligence_item').order('created_at',{ascending:false}).limit(5);
     var items = reportsRes.data || [];
     if (items.length === 0) {
       newsCard.appendChild(el('div', {style:'font-size:12px;color:var(--text3);padding:4px 0', textContent:'ニュースはまだありません。「収集」ボタンで取得できます。'}));
     } else {
       items.forEach(function(item) {
-        var d = item.details || {};
+        var d = item.metadata || {};
         newsCard.appendChild(el('div', {style:'padding:4px 0;border-bottom:1px solid var(--border);font-size:12px'}, [
           el('div', {textContent: d.title || d.summary || JSON.stringify(d).substring(0,80), style:'color:var(--text)'}),
           el('div', {textContent: new Date(item.created_at).toLocaleDateString('ja-JP'), style:'font-size:10px;color:var(--text3);margin-top:2px'})
@@ -1763,10 +1751,10 @@ async function collectNews(container) {
       });
       if (text) {
         // Save to activity_log
-        await sb.from('activity_log').insert({action:'intelligence_collect', details:{summary:text.substring(0,500),collected_at:new Date().toISOString()}});
+        await sb.from('activity_log').insert({action:'intelligence_collect', metadata:{summary:text.substring(0,500),collected_at:new Date().toISOString()}});
         // Parse items and save individually
         text.split('\n').filter(function(l){return l.trim().startsWith('-');}).forEach(async function(line) {
-          await sb.from('activity_log').insert({action:'intelligence_item', details:{title:line.replace(/^-\s*/,'').substring(0,200)}});
+          await sb.from('activity_log').insert({action:'intelligence_item', metadata:{title:line.replace(/^-\s*/,'').substring(0,200)}});
         });
         toast('ニュース '+text.split('\n').filter(function(l){return l.trim().startsWith('-');}).length+' 件を収集しました');
         navigate('home'); // refresh

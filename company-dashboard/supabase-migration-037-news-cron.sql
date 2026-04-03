@@ -16,7 +16,7 @@ select cron.schedule(
   'daily-briefing-morning',
   '0 22 * * *',  -- 22:00 UTC = 07:00 JST
   $$
-  INSERT INTO activity_log (action, details)
+  INSERT INTO activity_log (action, metadata)
   SELECT 'daily_briefing', jsonb_build_object(
     'text', (
       SELECT string_agg(line, E'\n') FROM (
