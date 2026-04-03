@@ -1790,14 +1790,19 @@ async function collectNews(container) {
       if (text) {
         // Save to activity_log
         await sb.from('activity_log').insert({action:'intelligence_collect', metadata:{summary:text.substring(0,500),collected_at:new Date().toISOString()}});
-        // Parse items and save individually
-        text.split('\n').filter(function(l){return l.trim().startsWith('-');}).forEach(async function(line) {
-          await sb.from('activity_log').insert({action:'intelligence_item', metadata:{title:line.replace(/^-\s*/,'').substring(0,200)}});
+        // Parse items and save individually — await all inserts before navigating
+        var lines = text.split('\n').filter(function(l){return l.trim().startsWith('-');});
+        var insertPromises = lines.map(function(line) {
+          return sb.from('activity_log').insert({action:'intelligence_item', metadata:{title:line.replace(/^-\s*/,'').substring(0,200)}});
         });
-        toast('ニュース '+text.split('\n').filter(function(l){return l.trim().startsWith('-');}).length+' 件を収集しました');
-        navigate('home'); // refresh
+        await Promise.all(insertPromises);
+        toast('ニュース '+lines.length+' 件を収集しました');
+        navigate('home'); // refresh after all inserts complete
+        return;
       }
     }
+    // If no text or not ok
+    toast('ニュースを取得できませんでした');
   } catch(e) { console.error('News collect error:', e); toast('ニュース収集エラー: '+e.message); }
   if (btn) { btn.textContent = '収集'; btn.disabled = false; }
 }
