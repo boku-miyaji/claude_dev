@@ -169,7 +169,12 @@
       "Bash(sed -i \"s/\\\\.insert\\({action:'intelligence_item', details:{/\\\\.insert\\({action:'intelligence_item', metadata:{/g\" legacy.ts)",
       "Read(//home/node/.claude/plugins/**)",
       "Bash(cp /home/node/.claude/plugins/marketplaces/ai-company/skills/company/SKILL.md /home/node/.claude/plugins/cache/ai-company/company/1.0.0/skills/company/SKILL.md)",
-      "Bash(cp /home/node/.claude/plugins/marketplaces/ai-company/skills/company/SKILL.md /home/node/.claude/plugins/marketplaces/ai-company/plugins/company/skills/company/SKILL.md)"
+      "Bash(cp /home/node/.claude/plugins/marketplaces/ai-company/skills/company/SKILL.md /home/node/.claude/plugins/marketplaces/ai-company/plugins/company/skills/company/SKILL.md)",
+      "Bash(register \"rikyu\" \"Magentic Workflow アーキテクチャ \\(18エージェント\\)\" \"/workspace/project-rikyu-sales-proposals-poc/docs/algorithm/0_magentic_workflow.md\" \"md\" '[\"design\",\"algorithm\",\"architecture\"]' \"design\")",
+      "Bash(register \"rikyu\" \"クライアント要件概要\" \"/workspace/project-rikyu-sales-proposals-poc/original_document_summary/drive/00_overview.md\" \"md\" '[\"research\",\"requirements\"]' \"research\")",
+      "Bash(register \"rikyu\" \"営業生産性分析\" \"/workspace/project-rikyu-sales-proposals-poc/original_document_summary/drive/04_sales_productivity_analysis.md\" \"md\" '[\"research\",\"analysis\"]' \"research\")",
+      "Bash(register \"rikyu\" \"DXベンダー調査\" \"/workspace/project-rikyu-sales-proposals-poc/original_document_summary/drive/03_dx_vendors.md\" \"md\" '[\"research\",\"vendor\"]' \"research\")",
+      "Bash(register \"rikyu\" \"デモ動画ストーリーライン v2\" \"/workspace/project-rikyu-sales-proposals-poc/.company-rikyu/secretary/archive/demo-video-storyline-v2.md\" \"md\" '[\"proposal\",\"demo\"]' \"proposal\")"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
