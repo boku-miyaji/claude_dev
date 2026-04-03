@@ -1616,13 +1616,19 @@ async function renderDashboard(root) {
       } catch(x) {}
     }
 
-    // Build quick context
-    var futureEvents = calEvents.filter(function(e){return new Date(e.end_time)>now;});
-    var nextEvent = futureEvents[0];
+    // Build quick context — 全予定をLLMに渡す
     var quickCtx = dayLabel + ' ' + String(hour).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-    if (nextEvent) quickCtx += '\n次の予定: '+new Date(nextEvent.start_time).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'})+' '+nextEvent.summary;
-    else if (calEvents.length===0) quickCtx += '\n今日の予定なし';
-    else quickCtx += '\n残りの予定なし（全'+calEvents.length+'件完了）';
+    if (calEvents.length > 0) {
+      quickCtx += '\n今日の予定 ('+calEvents.length+'件):';
+      calEvents.forEach(function(e) {
+        var es = new Date(e.start_time);
+        var isPast = new Date(e.end_time) < now;
+        var ts = e.all_day?'終日':es.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Tokyo'});
+        quickCtx += '\n- '+ts+' '+e.summary+(isPast?' (完了)':'');
+      });
+    } else {
+      quickCtx += '\n今日の予定なし';
+    }
     if (morningBriefing) quickCtx += '\n朝のブリーフィング: '+morningBriefing;
     if (highTasks.length>0) quickCtx += '\n高優先タスク: '+highTasks.slice(0,3).map(function(t){return t.title;}).join('、');
 
@@ -1633,7 +1639,7 @@ async function renderDashboard(root) {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken,'apikey':SUPABASE_ANON_KEY},
         body: JSON.stringify({
-          message: '秘書として社長に一言。1文だけ。40字以内。今の状況を踏まえた気の利いた一言を。親しみやすく。\n\n'+quickCtx,
+          message: '秘書として社長に一言。1文だけ。40字以内。予定・タスクの内容を踏まえて具体的に。「予定なし」と言わないで、実際のデータを見て。\n\n'+quickCtx,
           model: 'gpt-5-nano',
           context_mode: 'none'
         })
