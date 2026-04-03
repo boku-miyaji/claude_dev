@@ -187,7 +187,8 @@
       "/workspace/.company-polaris/secretary",
       "/tmp",
       "/home/node/.claude/plugins/marketplaces/ai-company/skills/company",
-      "/home/node/.claude/plugins/marketplaces/ai-company/skills"
+      "/home/node/.claude/plugins/marketplaces/ai-company/skills",
+      "/home/node/.claude/plugins/marketplaces/ai-company/plugins/company/.claude-plugin"
     ]
   },
   "hooks": {
