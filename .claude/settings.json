@@ -166,7 +166,10 @@
       "Bash(cp index.legacy.html public/index.legacy.html)",
       "Bash(vercel --version)",
       "Bash(sed -i \"s/\\\\.insert\\({action:'intelligence_collect', details:{/\\\\.insert\\({action:'intelligence_collect', metadata:{/g\" legacy.ts)",
-      "Bash(sed -i \"s/\\\\.insert\\({action:'intelligence_item', details:{/\\\\.insert\\({action:'intelligence_item', metadata:{/g\" legacy.ts)"
+      "Bash(sed -i \"s/\\\\.insert\\({action:'intelligence_item', details:{/\\\\.insert\\({action:'intelligence_item', metadata:{/g\" legacy.ts)",
+      "Read(//home/node/.claude/plugins/**)",
+      "Bash(cp /home/node/.claude/plugins/marketplaces/ai-company/skills/company/SKILL.md /home/node/.claude/plugins/cache/ai-company/company/1.0.0/skills/company/SKILL.md)",
+      "Bash(cp /home/node/.claude/plugins/marketplaces/ai-company/skills/company/SKILL.md /home/node/.claude/plugins/marketplaces/ai-company/plugins/company/skills/company/SKILL.md)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
@@ -176,7 +179,8 @@
       "/workspace/.company/departments/security",
       "/workspace/.claude/hooks",
       "/workspace/.company-polaris/secretary",
-      "/tmp"
+      "/tmp",
+      "/home/node/.claude/plugins/marketplaces/ai-company/skills/company"
     ]
   },
   "hooks": {

@@ -2897,19 +2897,30 @@ async function renderKnowledge(root) {
 
 async function renderPrompts(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'Prompt History'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: '社長の入力プロンプト履歴（会社別）'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: '社長の入力プロンプト履歴（セッション別・会社別）'}));
 
-  // Filters
+  // Filters + View toggle
   var companies = (await sb.from('companies').select('id,name').eq('status', 'active')).data || [];
   var filterCompany = el('select', {className: 'input'}, [
     el('option', {value: '', textContent: 'All Companies'}),
   ].concat(companies.map(function(c) { return el('option', {value: c.id, textContent: c.name}); })));
-  var filterBar = el('div', {className: 'filter-bar'}, [filterCompany]);
+
+  var viewMode = 'session'; // 'session' or 'flat'
+  var btnSession = el('button', {className: 'btn', textContent: 'Session', style: 'font-size:11px;padding:4px 12px'});
+  var btnFlat = el('button', {className: 'btn', textContent: 'Flat', style: 'font-size:11px;padding:4px 12px;opacity:0.5'});
+  btnSession.onclick = function() { viewMode = 'session'; btnSession.style.opacity = '1'; btnFlat.style.opacity = '0.5'; currentPage = 0; loadData(); };
+  btnFlat.onclick = function() { viewMode = 'flat'; btnFlat.style.opacity = '1'; btnSession.style.opacity = '0.5'; currentPage = 0; loadData(); };
+  var viewToggle = el('div', {style: 'display:flex;gap:4px;align-items:center'}, [
+    el('span', {style: 'font-size:11px;color:var(--text3);margin-right:4px', textContent: 'View:'}),
+    btnSession, btnFlat
+  ]);
+
+  var filterBar = el('div', {className: 'filter-bar', style: 'display:flex;gap:12px;align-items:center'}, [filterCompany, viewToggle]);
   root.appendChild(filterBar);
 
-  var PAGE_SIZE = 50;
+  var PAGE_SIZE = 20;
   var currentPage = 0;
-  var totalPromptCount = 0;
+  var totalCount = 0;
 
   var listContainer = el('div', {});
   root.appendChild(listContainer);
@@ -2919,30 +2930,155 @@ async function renderPrompts(root) {
   var pagInfo = el('span', {style: 'font-size:12px;color:var(--text3)'});
   var btnPrev = el('button', {className: 'btn', textContent: '← 前', style: 'font-size:12px;padding:6px 14px'});
   var btnNext = el('button', {className: 'btn', textContent: '次 →', style: 'font-size:12px;padding:6px 14px'});
-  btnPrev.onclick = function() { if (currentPage > 0) { currentPage--; loadPrompts(); } };
-  btnNext.onclick = function() { currentPage++; loadPrompts(); };
+  btnPrev.onclick = function() { if (currentPage > 0) { currentPage--; loadData(); } };
+  btnNext.onclick = function() { currentPage++; loadData(); };
   pagBar.appendChild(btnPrev);
   pagBar.appendChild(pagInfo);
   pagBar.appendChild(btnNext);
   root.appendChild(pagBar);
 
-  async function loadPrompts() {
-    // Get total count
-    var countRes = await sb.from('prompt_log').select('id', {count: 'exact', head: true});
-    totalPromptCount = countRes.count || 0;
+  // Render a single prompt row
+  function renderPromptRow(p) {
+    var time = new Date(p.created_at).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+    var coName = p.companies ? p.companies.name : (p.context || 'HD');
+    var tags = (p.tags || []).map(function(t) { return el('span', {className: 'tag tag-co', style: 'margin-right:4px', textContent: t}); });
+    return el('div', {style: 'padding:10px 0;border-bottom:1px solid var(--border)'}, [
+      el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:6px'}, [
+        el('span', {style: 'font-size:11px;font-family:var(--mono);color:var(--text3)', textContent: time}),
+        el('span', {className: 'tag tag-normal', textContent: coName})
+      ].concat(tags)),
+      el('div', {style: 'font-size:13px;color:var(--text);white-space:pre-wrap;word-break:break-word;max-height:120px;overflow:hidden', textContent: p.prompt})
+    ]);
+  }
+
+  // ---- Session View ----
+  async function loadSessionView() {
+    var compVal = filterCompany.value;
+
+    // Fetch sessions with pagination
+    var countQuery = sb.from('prompt_sessions').select('id', {count: 'exact', head: true});
+    if (compVal) countQuery = countQuery.eq('company_id', compVal);
+    var countRes = await countQuery;
+    totalCount = countRes.count || 0;
 
     var offset = currentPage * PAGE_SIZE;
-    var query = sb.from('prompt_log').select('*,companies(name)').order('created_at', {ascending: false}).range(offset, offset + PAGE_SIZE - 1);
+    var sessQuery = sb.from('prompt_sessions').select('*,companies(name)').order('started_at', {ascending: false}).range(offset, offset + PAGE_SIZE - 1);
+    if (compVal) sessQuery = sessQuery.eq('company_id', compVal);
+    var sessRes = await sessQuery;
+    var sessions = sessRes.data || [];
+
+    // Update pagination
+    var totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+    pagInfo.textContent = (currentPage + 1) + ' / ' + totalPages + ' (' + totalCount + ' sessions)';
+    btnPrev.disabled = currentPage <= 0;
+    btnNext.disabled = offset + PAGE_SIZE >= totalCount;
+    btnPrev.style.opacity = btnPrev.disabled ? '0.3' : '1';
+    btnNext.style.opacity = btnNext.disabled ? '0.3' : '1';
+
+    while (listContainer.firstChild) listContainer.removeChild(listContainer.firstChild);
+
+    if (sessions.length === 0) {
+      // Fallback: show flat view if no sessions exist yet
+      listContainer.appendChild(el('div', {className: 'card', style: 'padding:16px'}, [
+        el('div', {style: 'font-size:13px;color:var(--text2);margin-bottom:8px', textContent: 'セッションデータがまだありません。新しいプロンプトからセッション単位で記録されます。'}),
+        el('div', {style: 'font-size:12px;color:var(--text3)', textContent: 'Flat ビューで従来の表示を確認できます。'})
+      ]));
+      return;
+    }
+
+    // Stats
+    var totalPrompts = sessions.reduce(function(s, sess) { return s + (sess.prompt_count || 0); }, 0);
+    var knowledgeExtracted = sessions.filter(function(s) { return s.knowledge_extracted; }).length;
+    listContainer.appendChild(el('div', {className: 'g3', style: 'margin-bottom:20px'}, [
+      el('div', {className: 'card kpi'}, [
+        el('div', {className: 'kpi-val', textContent: totalCount}),
+        el('div', {className: 'kpi-lbl', textContent: 'Total Sessions'})
+      ]),
+      el('div', {className: 'card kpi'}, [
+        el('div', {className: 'kpi-val', textContent: totalPrompts}),
+        el('div', {className: 'kpi-lbl', textContent: 'Prompts (this page)'})
+      ]),
+      el('div', {className: 'card kpi'}, [
+        el('div', {className: 'kpi-val', textContent: knowledgeExtracted + '/' + sessions.length}),
+        el('div', {className: 'kpi-lbl', textContent: 'Knowledge Extracted'})
+      ])
+    ]));
+
+    // Group sessions by date
+    var groupedByDate = {};
+    sessions.forEach(function(sess) {
+      var d = new Date(sess.started_at).toLocaleDateString('ja-JP');
+      if (!groupedByDate[d]) groupedByDate[d] = [];
+      groupedByDate[d].push(sess);
+    });
+
+    Object.keys(groupedByDate).forEach(function(date) {
+      var daySessions = groupedByDate[date];
+      listContainer.appendChild(el('div', {className: 'section-title', style: 'margin-top:20px', textContent: date + ' (' + daySessions.length + ' sessions)'}));
+
+      daySessions.forEach(function(sess) {
+        var startTime = new Date(sess.started_at).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+        var endTime = sess.ended_at ? new Date(sess.ended_at).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'}) : '...';
+        var coName = sess.companies ? sess.companies.name : 'HD';
+        var sessTags = (sess.tags || []).slice(0, 6);
+        var knBadge = sess.knowledge_extracted
+          ? el('span', {style: 'font-size:10px;color:var(--green);margin-left:auto', textContent: '📚 extracted'})
+          : el('span', {style: 'font-size:10px;color:var(--text3);margin-left:auto', textContent: '○ pending'});
+
+        // Session header (clickable to expand)
+        var promptsContainer = el('div', {style: 'display:none;padding:8px 0 4px 0'});
+        var expanded = false;
+
+        var headerRow = el('div', {style: 'display:flex;align-items:center;gap:8px;cursor:pointer;padding:12px 14px'}, [
+          el('span', {style: 'font-size:11px;font-family:var(--mono);color:var(--text3)', textContent: startTime + ' → ' + endTime}),
+          el('span', {className: 'tag tag-normal', textContent: coName}),
+          el('span', {style: 'font-size:12px;color:var(--text2)', textContent: (sess.prompt_count || 0) + ' prompts'}),
+        ].concat(
+          sessTags.map(function(t) { return el('span', {className: 'tag tag-co', style: 'font-size:10px', textContent: t}); }),
+          [knBadge]
+        ));
+
+        headerRow.onclick = function() {
+          expanded = !expanded;
+          if (expanded && !promptsContainer.hasChildNodes()) {
+            // Lazy load prompts for this session
+            sb.from('prompt_log').select('*,companies(name)').eq('session_id', sess.id).order('created_at', {ascending: true}).then(function(res) {
+              var prompts = res.data || [];
+              if (prompts.length === 0) {
+                promptsContainer.appendChild(el('div', {style: 'padding:8px 14px;font-size:12px;color:var(--text3)', textContent: 'No prompts found'}));
+              } else {
+                prompts.forEach(function(p) {
+                  promptsContainer.appendChild(renderPromptRow(p));
+                });
+              }
+            });
+          }
+          promptsContainer.style.display = expanded ? 'block' : 'none';
+          headerRow.style.background = expanded ? 'var(--bg2)' : '';
+        };
+
+        var sessCard = el('div', {className: 'card', style: 'margin-bottom:8px;overflow:hidden'}, [headerRow, promptsContainer]);
+        listContainer.appendChild(sessCard);
+      });
+    });
+  }
+
+  // ---- Flat View (original) ----
+  async function loadFlatView() {
     var compVal = filterCompany.value;
+    var countRes = await sb.from('prompt_log').select('id', {count: 'exact', head: true});
+    totalCount = countRes.count || 0;
+
+    var offset = currentPage * PAGE_SIZE * 2; // larger page for flat
+    var query = sb.from('prompt_log').select('*,companies(name)').order('created_at', {ascending: false}).range(offset, offset + PAGE_SIZE * 2 - 1);
     if (compVal) query = query.eq('company_id', compVal);
     var res = await query;
     var prompts = res.data || [];
 
-    // Update pagination
-    var totalPages = Math.ceil(totalPromptCount / PAGE_SIZE);
-    pagInfo.textContent = (currentPage + 1) + ' / ' + totalPages + ' (' + totalPromptCount + '件)';
+    var totalPages = Math.max(1, Math.ceil(totalCount / (PAGE_SIZE * 2)));
+    pagInfo.textContent = (currentPage + 1) + ' / ' + totalPages + ' (' + totalCount + '件)';
     btnPrev.disabled = currentPage <= 0;
-    btnNext.disabled = offset + PAGE_SIZE >= totalPromptCount;
+    btnNext.disabled = offset + PAGE_SIZE * 2 >= totalCount;
     btnPrev.style.opacity = btnPrev.disabled ? '0.3' : '1';
     btnNext.style.opacity = btnNext.disabled ? '0.3' : '1';
 
@@ -2963,28 +3099,10 @@ async function renderPrompts(root) {
       grouped[d].push(p);
     });
 
-    Object.keys(grouped).forEach(function(date) {
-      listContainer.appendChild(el('div', {className: 'section-title', style: 'margin-top:20px', textContent: date + ' (' + grouped[date].length + ')'}));
-      var card = el('div', {className: 'card'});
-      grouped[date].forEach(function(p) {
-        var time = new Date(p.created_at).toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
-        var coName = p.companies ? p.companies.name : (p.context || 'HD');
-        var tags = (p.tags || []).map(function(t) { return el('span', {className: 'tag tag-co', style: 'margin-right:4px', textContent: t}); });
-        card.appendChild(el('div', {style: 'padding:10px 0;border-bottom:1px solid var(--border)'}, [
-          el('div', {style: 'display:flex;align-items:center;gap:8px;margin-bottom:6px'}, [
-            el('span', {style: 'font-size:11px;font-family:var(--mono);color:var(--text3)', textContent: time}),
-            el('span', {className: 'tag tag-normal', textContent: coName})
-          ].concat(tags)),
-          el('div', {style: 'font-size:13px;color:var(--text);white-space:pre-wrap;word-break:break-word;max-height:120px;overflow:hidden', textContent: p.prompt})
-        ]));
-      });
-      listContainer.appendChild(card);
-    });
-
     // Stats
-    listContainer.insertBefore(el('div', {className: 'g3', style: 'margin-bottom:20px'}, [
+    listContainer.appendChild(el('div', {className: 'g3', style: 'margin-bottom:20px'}, [
       el('div', {className: 'card kpi'}, [
-        el('div', {className: 'kpi-val', textContent: totalPromptCount}),
+        el('div', {className: 'kpi-val', textContent: totalCount}),
         el('div', {className: 'kpi-lbl', textContent: 'Total Prompts'})
       ]),
       el('div', {className: 'card kpi'}, [
@@ -2995,11 +3113,30 @@ async function renderPrompts(root) {
         el('div', {className: 'kpi-val', textContent: companies.length}),
         el('div', {className: 'kpi-lbl', textContent: 'Companies'})
       ])
-    ]), listContainer.firstChild);
+    ]));
+
+    Object.keys(grouped).forEach(function(date) {
+      listContainer.appendChild(el('div', {className: 'section-title', style: 'margin-top:20px', textContent: date + ' (' + grouped[date].length + ')'}));
+      var card = el('div', {className: 'card'});
+      grouped[date].forEach(function(p) { card.appendChild(renderPromptRow(p)); });
+      listContainer.appendChild(card);
+    });
   }
 
-  filterCompany.addEventListener('change', loadPrompts);
-  await loadPrompts();
+  async function loadData() {
+    while (listContainer.firstChild) listContainer.removeChild(listContainer.firstChild);
+    listContainer.appendChild(el('div', {className: 'card', style: 'padding:20px;text-align:center'}, [
+      el('div', {style: 'font-size:12px;color:var(--text3)', textContent: 'Loading...'})
+    ]));
+    if (viewMode === 'session') {
+      await loadSessionView();
+    } else {
+      await loadFlatView();
+    }
+  }
+
+  filterCompany.addEventListener('change', function() { currentPage = 0; loadData(); });
+  await loadData();
 }
 
 // ============================================================
