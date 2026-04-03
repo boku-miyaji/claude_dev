@@ -25,6 +25,7 @@
 └── departments/                       ← 共通部署群
     ├── ai-dev/CLAUDE.md             ← AI開発部署
     ├── intelligence/CLAUDE.md             ← 情報収集部
+    ├── marketing/CLAUDE.md             ← マーケティング部
     ├── materials/CLAUDE.md             ← 資料制作部署
     ├── ops/CLAUDE.md             ← 運営改善部
     ├── pm/CLAUDE.md             ← PM
@@ -153,6 +154,7 @@ PJ会社一覧は `registry.md` を参照。
 |-------|---------|-----------|
 | AI開発部署 | `.claude/agents/dept-ai-dev.md` | ai-dev |
 | 情報収集部 | `.claude/agents/dept-intelligence.md` | キーワード検索・X監視・Web巡回で最新情報を収集し、CEO向けブリーフィングレポートを生成するエージェント。 |
+| マーケティング部 | — | marketing |
 | 資料制作部署 | `.claude/agents/dept-materials.md` | materials |
 | 運営改善部 | — | ops |
 | PM | `.claude/agents/dept-pm.md` | pm |

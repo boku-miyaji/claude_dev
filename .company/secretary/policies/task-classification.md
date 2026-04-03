@@ -22,6 +22,7 @@
 |------|------|
 | `dept:ai-dev` | AI開発部署 |
 | `dept:intelligence` | 情報収集部 |
+| `dept:marketing` | マーケティング部 |
 | `dept:materials` | 資料制作部署 |
 | `dept:ops` | 運営改善部 |
 | `dept:pm` | PM |
