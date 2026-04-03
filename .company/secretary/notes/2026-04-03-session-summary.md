@@ -1357,3 +1357,23 @@
 - /workspace/.company/secretary/notes/2026-04-03-session-summary.md
 - /workspace/.company/CLAUDE.md
 
+
+---
+## Session 2026-04-03T21:12:03
+
+### 変更ファイル
+- /workspace/.company/references/pipeline-map.md
+- /workspace/.company/references/supabase-queries.md
+- /workspace/.company/registry.md
+- /workspace/.company/departments/marketing/product-analysis/feature-classification-2026q1.md
+- /workspace/.company/departments/marketing/CLAUDE.md
+- /workspace/.company/departments/sys-dev/CLAUDE.md
+- /workspace/.company/departments/materials/CLAUDE.md
+- /workspace/.company/departments/ops/CLAUDE.md
+- /workspace/.company/departments/pm/CLAUDE.md
+- /workspace/.company/departments/research/market/ai-work-management-competitive-landscape-2026q1.md
+- /workspace/.company/secretary/policies/artifact-definition.md
+- /workspace/.company/secretary/policies/task-classification.md
+- /workspace/.company/secretary/notes/2026-04-03-session-summary.md
+- /workspace/.company/CLAUDE.md
+
