@@ -1217,3 +1217,17 @@
 - /workspace/.company/secretary/notes/2026-04-03-session-summary.md
 - /workspace/.company/CLAUDE.md
 
+
+---
+## Session 2026-04-03T20:33:17
+
+### 変更ファイル
+- /workspace/.company/references/supabase-queries.md
+- /workspace/.company/registry.md
+- /workspace/.company/departments/marketing/CLAUDE.md
+- /workspace/.company/departments/ops/CLAUDE.md
+- /workspace/.company/secretary/policies/artifact-definition.md
+- /workspace/.company/secretary/policies/task-classification.md
+- /workspace/.company/secretary/notes/2026-04-03-session-summary.md
+- /workspace/.company/CLAUDE.md
+
