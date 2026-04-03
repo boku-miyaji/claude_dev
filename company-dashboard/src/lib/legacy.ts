@@ -1627,34 +1627,57 @@ async function renderDashboard(root) {
 
   if (cached) { renderBriefing(briefingArea, cached, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths); return; }
 
-  if (apiKey) {
-    try {
-      var sysPrompt = 'あなたは宮路HDの秘書AIです。社長への日次ブリーフィングを生成します。\n'+
-        'ルール:\n- 日本語、簡潔、秘書の口調\n- 最初に「今日のポイント」を3行以内で\n'+
-        '- セクション: 予定→注意事項→財務→気づき\n- 問題なければ安心させる。問題あれば具体的に何をすべきか\n'+
-        '- 300-500字目安。Markdown形式\n- データない項目は省略\n- 時間帯考慮（朝=予定中心、夕方=振り返り）';
-      var res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-        body: JSON.stringify({model:'gpt-5-nano', messages:[{role:'system',content:sysPrompt},{role:'user',content:contextStr}], max_tokens:800})
+  // AI briefing via Edge Function (server-side API key, no client-side key needed)
+  try {
+    var sysPrompt = 'あなたは宮路HDの秘書AIです。社長への日次ブリーフィングを生成します。\n'+
+      'ルール:\n- 日本語、簡潔、秘書の口調\n- 最初に「今日のポイント」を3行以内で\n'+
+      '- セクション: 予定→注意事項→財務→気づき\n- 問題なければ安心させる。問題あれば具体的に何をすべきか\n'+
+      '- 300-500字目安。Markdown形式\n- データない項目は省略\n- 時間帯考慮（朝=予定中心、夕方=振り返り）';
+    var session = await sb.auth.getSession();
+    var accessToken = session.data.session && session.data.session.access_token || '';
+    var res = await fetch(SUPABASE_URL + '/functions/v1/ai-agent', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+accessToken
+      },
+      body: JSON.stringify({
+        messages:[{role:'system',content:sysPrompt},{role:'user',content:contextStr}],
+        model:'gpt-5-nano',
+        stream: false
+      })
+    });
+    if (res.ok) {
+      // Edge Function may return SSE or JSON — try to read full text
+      var bodyText = await res.text();
+      var text = '';
+      // Parse SSE events to extract assistant content
+      bodyText.split('\n').forEach(function(line) {
+        if (line.startsWith('data: ')) {
+          try {
+            var evt = JSON.parse(line.slice(6));
+            if (evt.type === 'text' && evt.content) text += evt.content;
+            if (evt.type === 'result' && evt.content) text = evt.content;
+          } catch(x) {}
+        }
       });
-      if (res.ok) {
-        var data = await res.json();
-        var text = data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||'';
-        if (text) { sessionStorage.setItem(cacheKey, text); renderBriefing(briefingArea, text, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths); return; }
-      } else {
-        var errBody = ''; try { errBody = await res.text(); } catch(x){}
-        console.error('Briefing API error:', res.status, errBody);
-        // Show error for debugging then fall through to fallback
-        briefingArea.appendChild(el('div', {style:'font-size:11px;color:#ef4444;margin-bottom:8px;padding:8px 12px;background:var(--surface2);border-radius:6px',
-          textContent:'Briefing API error: '+res.status+' — '+(errBody||'').substring(0,200)}));
+      if (!text && bodyText) {
+        // Try plain JSON response
+        try { var j = JSON.parse(bodyText); text = j.content || j.text || ''; } catch(x) {}
       }
-    } catch(e) { console.error('Briefing error:', e);
+      if (text) { sessionStorage.setItem(cacheKey, text); renderBriefing(briefingArea, text, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths); return; }
+    } else {
+      var errBody = ''; try { errBody = await res.text(); } catch(x){}
+      console.error('Briefing API error:', res.status, errBody);
       briefingArea.appendChild(el('div', {style:'font-size:11px;color:#ef4444;margin-bottom:8px;padding:8px 12px;background:var(--surface2);border-radius:6px',
-        textContent:'Briefing error: '+e.message}));
+        textContent:'Briefing API error: '+res.status+' — '+(errBody||'').substring(0,200)}));
     }
+  } catch(e) { console.error('Briefing error:', e);
+    briefingArea.appendChild(el('div', {style:'font-size:11px;color:#ef4444;margin-bottom:8px;padding:8px 12px;background:var(--surface2);border-radius:6px',
+      textContent:'Briefing error: '+e.message}));
   }
 
-  // Fallback
+  // Fallback (no AI available)
   renderBriefingFallback(briefingArea, apiKey, tasks, calEvents, yearRev, yearExp, taxEst, dataMonths);
 }
 
