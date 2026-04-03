@@ -1532,21 +1532,17 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
     return dayEl;
   }
 
-  if (viewMode === 'day') {
-    // Single day - detailed view
-    var grid = el('div', {style: 'display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:16px'});
-    grid.appendChild(renderDayCell(viewDate, false));
-    root.appendChild(grid);
-
-  } else if (viewMode === 'week') {
-    // Google Calendar style time-grid (today + 7 days)
+  if (viewMode === 'day' || viewMode === 'week') {
+    // Google Calendar style time-grid
     var HOUR_H = 60, START_H = 8, END_H = 21;
-    var weekStart = new Date(viewDate);
+    var DAYS_COUNT = viewMode === 'day' ? 1 : 7;
+    var gridCols = '56px repeat(' + DAYS_COUNT + ',1fr)';
     var days = [];
-    for (var d = 0; d < 7; d++) { var dd = new Date(weekStart); dd.setDate(dd.getDate() + d); days.push(dd); }
+    for (var d = 0; d < DAYS_COUNT; d++) { var dd = new Date(viewDate); dd.setDate(dd.getDate() + d); days.push(dd); }
 
     // Day headers
     var hdrRow = el('div', {className: 'cal-tg-hdr'});
+    hdrRow.style.gridTemplateColumns = gridCols;
     hdrRow.appendChild(el('div', {className: 'cal-tg-corner'}));
     days.forEach(function(dt) {
       var isT = toLocalDateStr(dt) === todayStr;
@@ -1560,11 +1556,12 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
     // Time grid body
     var body = el('div', {className: 'cal-tg-body'});
     body.style.position = 'relative';
+    body.style.gridTemplateColumns = gridCols;
 
     for (var h = START_H; h <= END_H; h++) {
       var lbl = el('div', {className: 'cal-tg-time', textContent: h === START_H ? '' : (h < 10 ? '0' : '') + h + ':00'});
       body.appendChild(lbl);
-      for (var di = 0; di < 7; di++) {
+      for (var di = 0; di < DAYS_COUNT; di++) {
         var cell = el('div', {className: 'cal-tg-cell'});
         cell.style.position = 'relative';
         cell.setAttribute('data-day', String(di));
@@ -1575,7 +1572,7 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
 
     // Collect cells by day index
     var dayCells = [];
-    for (var di = 0; di < 7; di++) dayCells.push([]);
+    for (var di = 0; di < DAYS_COUNT; di++) dayCells.push([]);
     body.querySelectorAll('.cal-tg-cell').forEach(function(c) {
       dayCells[parseInt(c.getAttribute('data-day'), 10)].push(c);
     });
