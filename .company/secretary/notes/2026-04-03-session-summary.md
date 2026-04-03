@@ -1550,3 +1550,29 @@
 - /workspace/.company/departments/research/tech/diary-to-dashboard-migration-analysis.md
 - /workspace/.company/departments/research/tech/mcp-tool-poisoning-2026.md
 
+
+---
+## Session 2026-04-03T22:00:51
+
+### 変更ファイル
+- /workspace/.company/references/pipeline-map.md
+- /workspace/.company/references/handoff-detection.md
+- /workspace/.company/references/supabase-queries.md
+- /workspace/.company/hr/evaluations/2026-03-21-initial.md
+- /workspace/.company/registry.md
+- /workspace/.company/departments/marketing/product-analysis/feature-classification-2026q1.md
+- /workspace/.company/departments/marketing/CLAUDE.md
+- /workspace/.company/departments/sys-dev/CLAUDE.md
+- /workspace/.company/departments/materials/CLAUDE.md
+- /workspace/.company/departments/ops/CLAUDE.md
+- /workspace/.company/departments/intelligence/reports/2026-04-01-1600.md
+- /workspace/.company/departments/pm/CLAUDE.md
+- /workspace/.company/departments/research/market/ai-work-management-competitive-landscape-2026q1.md
+- /workspace/.company/departments/research/tech/data-platform-landscape-2025-2026.md
+- /workspace/.company/departments/research/tech/data-platform-landscape-2025h2-2026q1.md
+- /workspace/.company/departments/research/tech/databricks-latest-2025h2-2026q1.md
+- /workspace/.company/departments/research/tech/data-platform-governance-landscape-2025-2026.md
+- /workspace/.company/departments/research/tech/snowflake-latest-2025h2-2026q1.md
+- /workspace/.company/departments/research/tech/diary-to-dashboard-migration-analysis.md
+- /workspace/.company/departments/research/tech/mcp-tool-poisoning-2026.md
+
