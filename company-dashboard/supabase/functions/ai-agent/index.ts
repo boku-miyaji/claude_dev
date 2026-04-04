@@ -1006,7 +1006,8 @@ Deno.serve(async (req) => {
     const openaiBody: Record<string, unknown> = {
       model,
       messages,
-      max_completion_tokens: body.max_tokens ?? 1000,
+      max_completion_tokens: body.max_tokens ?? 2000,
+      reasoning_effort: "minimal",
     };
     // gpt-5-nano only supports default temperature (1), so only set for other models
     if (body.temperature != null && !model.includes("nano")) {
