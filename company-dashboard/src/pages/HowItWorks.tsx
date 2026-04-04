@@ -533,20 +533,96 @@ function TabAiFeatures() {
         <P>安全設計: web_search 使用後は write系ツール(tasks_create)をブロック。間接プロンプトインジェクション対策。</P>
       </Section>
 
-      <Section title="データ構造">
-        <Tbl headers={['テーブル', 'カラム（主要）', '用途']} rows={[
-          ['diary_entries', 'id, body, entry_type, entry_date, wbi, emotions, created_at', '日記エントリー。wbiは感情分析後に更新'],
-          ['emotion_analysis', 'diary_entry_id, joy/trust/fear/surprise/sadness/disgust/anger/anticipation (0-100), valence/arousal (-1~1), perma_p~v (0-10), wbi_score', '感情分析結果。1日記 : 1分析'],
-          ['self_analysis', 'analysis_type, result (JSON), summary, data_count, model_used', '自己分析結果。MBTI/Big5/強み/感情トリガー/価値観'],
-          ['weekly_narratives', 'week_start, week_end, narrative, stats (JSON)', '週次振り返りナラティブ'],
-          ['conversations', 'id, title, model, context_mode, company_id', 'AIチャットの会話'],
-          ['messages', 'conversation_id, role, content, model, tool_calls, tool_call_id', 'AIチャットのメッセージ'],
-          ['cost_tracking', 'model, prompt_tokens, completion_tokens, reasoning_tokens, total_cost', 'API コスト追跡'],
-          ['news_items', 'title, summary, url, source, topic, published_date', 'ニュース収集結果'],
-          ['dreams', 'title, description, category, status, priority', '100の夢リスト'],
-          ['goals', 'title, level (life/yearly/quarterly/monthly/weekly), parent_id, dream_id, progress', '階層型目標'],
-          ['knowledge_base', 'category, rule, reason, scope, confidence, auto_apply, status', '蓄積されたルール・ナレッジ'],
-          ['ceo_insights', 'category, insight, evidence, confidence', 'CEO行動分析結果'],
+      <Section title="ナレッジ体系 — データ・ナレッジ・暗黙知">
+        <P>rikyuプロジェクトのナレッジ分類モデルを宮路HDに適用。全ての知識を「形式化度」と「機能（How/What）」の2軸で整理。</P>
+
+        <div className="card" style={{ padding: 14, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)', marginBottom: 16 }}>
+{`┌─────────────────────────────────────────────────────────────────┐
+│                      スキル（How）                              │
+│           判断・進め方の「型」。プロンプト/ルールに組み込む        │
+│                                                                 │
+│   認識           評価           判断           実行              │
+│   どう見るか     どう測るか     どうするか     どうやるか          │
+│                                                                 │
+│   時間帯適応UI    感情分析       ナレッジ昇格    パイプライン      │
+│   行動文脈推定    Plutchik/WBI  判断ルール      自動実行          │
+│                                                                 │
+├──── 参照 → ──────────────────────────────────────────────────────┤
+│                                                                 │
+│                   ナレッジベース（What）                          │
+│            蓄積・検索する知識資産。使うほど賢くなる                 │
+│                                                                 │
+│   マスタ ─── 抽象化された参照知識（design-philosophy, rules/）   │
+│       ↑ パターン抽出・昇格                                       │
+│   事例 ──── 個別経験の蓄積（growth_events, diary+emotion）       │
+│       ↑ 構造化・蓄積                                             │
+│   コンテキスト ── 現在の事実（tasks, calendar, prompt_log）      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘`}
+        </div>
+
+        <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>形式化度の3段階</div>
+        <Tbl headers={['レベル', '名称', '状態', '宮路HDでの例', '蓄積場所']} rows={[
+          ['C1 形式知', 'コードとして計算可能', 'ルール化・自動実行される', 'CLAUDE.md, rules/, Hooks, Edge Function', 'Git + 全セッション自動適用'],
+          ['C2 言語知', '言語化済みだが未構造化', '記録されているが手動適用', 'knowledge_base, memory/, design-philosophy.md', 'Supabase + ファイル'],
+          ['C3 暗黙知', '言語化困難、経験的', '社長の頭の中にしかない', '下記 TK-001〜008 参照', '日記・行動ログから間接抽出'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>暗黙知（TK）の一覧 — 形式化の状態</div>
+        <P>社長の頭の中にある知識のうち、システムがまだ完全には捕捉できていないもの。日記・行動ログから間接的に抽出を試みている。</P>
+        <Tbl headers={['ID', '暗黙知', '現在の捕捉方法', '形式化状態']} rows={[
+          ['TK-001', '「今日は調子がいい/悪い」の身体感覚', 'diary + emotion_analysis → WBI推移', '部分捕捉。気分ログ(Level 0)で改善予定'],
+          ['TK-002', '「このPJは今が勝負時」の事業判断', 'prompt_log の頻度・集中度から推定', '間接推定。CEOインサイトで検出'],
+          ['TK-003', '「この人との関係性」の対人感覚', 'diary の人名・感情パターンから抽出', '間接推定。emotion_triggers分析'],
+          ['TK-004', '「朝型/夜型」「集中できる時間帯」', 'prompt_log timestamps → 生活リズム分析', '定量化済み。AI Partner コメントに反映'],
+          ['TK-005', '「この技術は将来有望」の技術直感', 'diary + prompt_log の技術キーワード', '未捕捉。トピック分析で改善可能'],
+          ['TK-006', '「このやり方は自分に合う」の作業スタイル', 'knowledge_base feedback カテゴリ', '部分捕捉。2回同じフィードバック→ルール化'],
+          ['TK-007', '設計判断の美意識・好み', 'design-philosophy.md への蓄積', '言語知(C2)まで昇格済み。形式知化は困難'],
+          ['TK-008', '「いつかやりたい」の漠然とした願望', 'dreams テーブル + diary からの夢検出', '部分捕捉。書き出す→検出→意識化のループ'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>ナレッジの成長パス</div>
+        <div className="card" style={{ padding: 14, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)' }}>
+{`暗黙知(TK)                    言語知(C2)                     形式知(C1)
+社長の頭の中            →     記録・言語化              →     コード・ルール化
+
+日記を書く              →  diary_entries              →  emotion_analysis (自動)
+「調子悪い」と感じる     →  WBI 4.2 と数値化           →  AI Partner が体調に言及
+
+修正指示を出す          →  memory/ に feedback記録    →  knowledge_base (confidence↑)
+「pytest使って」         →  KB: "テストはpytest"        →  CLAUDE.md に昇格 (自動適用)
+
+失敗する               →  growth_events に記録       →  design-philosophy.md に教訓
+「RLS忘れた」           →  パターン検出               →  rules/ にチェックリスト化
+
+夢を思いつく            →  dreams テーブル             →  goal分解 → weekly task化
+「本を出版したい」       →  夢進捗検出が日記を照合      →  「この経験が夢に近づいている」`}
+        </div>
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>データ・ナレッジ・暗黙知の定義</div>
+        <Tbl headers={['区分', '定義', '特徴', '宮路HDでの例']} rows={[
+          ['データ', '事実の記録。解釈を含まない生のログ', '量が多い、自動蓄積、そのままでは意味がない', 'prompt_log, habit_logs, activity_log, calendar events'],
+          ['ナレッジ', 'データから抽出された意味のある知見。再利用可能', '構造化されている、文脈依存、陳腐化する', 'knowledge_base, ceo_insights, emotion_analysis, design-philosophy.md'],
+          ['暗黙知', '言語化困難な経験的知識。身体感覚・直感・美意識', '個人に属する、伝達困難、最も価値が高い', '事業判断の勘、対人感覚、作業スタイルの好み、設計の美意識'],
+        ]} />
+        <P>重要: 暗黙知は「別の層」ではなく、同じナレッジの未形式化部分。日記を書くことで暗黙知が言語知に、感情分析で形式知に、少しずつ形式化が進む。</P>
+      </Section>
+
+      <Section title="データ構造（テーブル一覧）">
+        <Tbl headers={['テーブル', 'カラム（主要）', '知識区分']} rows={[
+          ['diary_entries', 'body, entry_type, entry_date, wbi', 'データ → ナレッジ（分析後）'],
+          ['emotion_analysis', 'plutchik 8感情, russell, perma_v, wbi_score', 'ナレッジ（データから自動生成）'],
+          ['self_analysis', 'analysis_type, result(JSON), summary', 'ナレッジ（蓄積データから生成）'],
+          ['weekly_narratives', 'narrative, stats(JSON)', 'ナレッジ（週次集約）'],
+          ['knowledge_base', 'category, rule, reason, confidence', 'ナレッジ → 形式知（昇格時）'],
+          ['ceo_insights', 'category, insight, evidence', 'ナレッジ（暗黙知の間接抽出）'],
+          ['growth_events', 'what_happened, root_cause, countermeasure', 'ナレッジ（事例パターン）'],
+          ['prompt_log', 'prompt, context, tags, created_at', 'データ（生ログ）'],
+          ['tasks', 'title, status, priority, completed_at', 'データ（行動記録）'],
+          ['dreams', 'title, category, status, priority', 'ナレッジ（暗黙知の言語化）'],
+          ['goals', 'title, level, progress, dream_id', 'ナレッジ（夢の形式化）'],
+          ['conversations / messages', 'role, content, tool_calls', 'データ（対話ログ）'],
+          ['cost_tracking', 'model, tokens, total_cost', 'データ（運用メトリクス）'],
         ]} />
       </Section>
     </>
