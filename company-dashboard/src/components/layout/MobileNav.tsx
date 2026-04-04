@@ -28,7 +28,7 @@ const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
     label: 'Work',
     items: [
       { page: 'tasks', icon: '☐', label: 'Tasks' },
-      { page: 'companies', icon: '◫', label: 'Companies' },
+      { page: 'companies', icon: '◫', label: 'Organization' },
       { page: 'finance', icon: '¥', label: 'Finance' },
       { page: 'calendar', icon: '📅', label: 'Calendar' },
     ],

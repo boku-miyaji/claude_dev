@@ -25,7 +25,7 @@ const NAV: NavEntry[] = [
   // Work (collapsible)
   { type: 'collapsible-start', label: 'Work', groupKey: 'work' },
   { type: 'item', page: 'tasks', icon: '☐', label: 'Tasks' },
-  { type: 'item', page: 'companies', icon: '◫', label: 'Companies' },
+  { type: 'item', page: 'companies', icon: '◫', label: 'Organization' },
   { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
   { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
   // Intelligence (collapsible)
