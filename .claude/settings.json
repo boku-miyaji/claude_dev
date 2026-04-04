@@ -198,7 +198,8 @@
       "/home/node/.claude/plugins/marketplaces/ai-company/skills",
       "/home/node/.claude/plugins/marketplaces/ai-company/plugins/company/.claude-plugin",
       "/home/node/.claude/plugins/cache/ai-company/company/unknown",
-      "/home/node/.claude/plugins"
+      "/home/node/.claude/plugins",
+      "/workspace/.claude/commands"
     ]
   },
   "hooks": {
