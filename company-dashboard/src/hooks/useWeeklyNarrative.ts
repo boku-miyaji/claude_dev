@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useDataStore } from '@/stores/data'
+import { aiCompletion } from '@/lib/edgeAi'
 
 export interface WeeklyNarrativeRecord {
   id: number
@@ -58,12 +58,9 @@ interface UseWeeklyNarrativeReturn {
   generate: (weekStart: string, weekEnd: string) => Promise<WeeklyNarrativeRecord | null>
 }
 
-// NOTE: API key is sent from client for simplicity in personal use.
-// For production/multi-user, move to Supabase Edge Function.
-
 /**
  * Hook for weekly narrative reports.
- * Lists past 6 weeks and their narratives; generates new ones with OpenAI.
+ * Lists past 6 weeks and their narratives; generates new ones via Edge Function.
  */
 export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
   const [weeks, setWeeks] = useState<WeekInfo[]>([])
@@ -124,15 +121,6 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
     setError(null)
 
     try {
-      // Get API key from central store
-      const apiKey = await useDataStore.getState().fetchApiKey()
-
-      if (!apiKey) {
-        setError('OpenAI API keyが設定されていません。')
-        setGenerating(false)
-        return null
-      }
-
       const startTs = `${weekStart}T00:00:00`
       const endTs = `${weekEnd}T23:59:59`
 
@@ -259,30 +247,12 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
 - 「〜でした」「〜ですね」の丁寧な口調
 テキストのみ返してください。JSONではなく純粋なテキストです。`
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userData },
-          ],
-          max_tokens: 600,
-          temperature: 0.7,
-        }),
+      const { content: narrative } = await aiCompletion(userData, {
+        systemPrompt,
+        temperature: 0.7,
+        maxTokens: 600,
       })
-
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`)
-      }
-
-      const data = await response.json()
-      const narrative = data.choices?.[0]?.message?.content?.trim()
-      if (!narrative) throw new Error('Empty response from OpenAI')
+      if (!narrative) throw new Error('Empty response from AI')
 
       // Save to DB
       const { data: inserted, error: insertErr } = await supabase

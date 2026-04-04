@@ -1,23 +1,20 @@
 import { useCallback, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { aiCompletion } from '@/lib/edgeAi'
 import { calculateStreak } from '@/lib/streak'
 import { useBriefingStore } from '@/stores/briefing'
-import { useDataStore } from '@/stores/data'
 import { buildPartnerSystemPrompt, getTimeOfDay } from '@/lib/aiPartner'
 import type { PartnerContext, EmotionSummary } from '@/lib/aiPartner'
 
 /** Plutchik keys for finding dominant emotion */
 const PLUTCHIK_KEYS = ['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation'] as const
 
-// NOTE: API key is sent from client for simplicity in personal use.
-// For production/multi-user, move to Supabase Edge Function.
-
 /**
  * Hook to generate a morning briefing message from the AI Partner.
  * - Collects recent diary, emotions, tasks, dreams
- * - Calls OpenAI API once per day
+ * - Calls ai-agent Edge Function in completion mode (once per day)
  * - Caches in Zustand store
- * - Falls back to static templates if no API key
+ * - Falls back to static templates on error
  */
 export function useMorningBriefing() {
   const { message, loading, lastFetched, setMessage, setLoading, setLastFetched } = useBriefingStore()
@@ -107,50 +104,14 @@ export function useMorningBriefing() {
         timeOfDay: getTimeOfDay(),
       }
 
-      // Get API key from central store
-      const apiKey = await useDataStore.getState().fetchApiKey()
-
-      if (!apiKey) {
-        // Fallback to static message
-        const fallbacks = [
-          '今日も一日、あなたのペースで大丈夫ですよ。',
-          '小さな一歩の積み重ねが、大きな変化を生みます。',
-          '今この瞬間を大切に過ごしてくださいね。',
-        ]
-        const idx = new Date().getDate() % fallbacks.length
-        setMessage(fallbacks[idx])
-        setLastFetched(today)
-        setLoading(false)
-        return
-      }
-
-      // Call OpenAI API
       const systemPrompt = buildPartnerSystemPrompt(context)
       const userMessage = '今日のブリーフィングを2-3文で簡潔に伝えてください。ユーザーの状況を踏まえ、温かく穏やかなトーンでお願いします。長すぎず、心に残る内容を。'
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userMessage },
-          ],
-          max_tokens: 200,
-          temperature: 0.8,
-        }),
+      const { content: briefingMessage } = await aiCompletion(userMessage, {
+        systemPrompt,
+        temperature: 0.8,
+        maxTokens: 200,
       })
-
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`)
-      }
-
-      const data = await response.json()
-      const briefingMessage = data.choices?.[0]?.message?.content?.trim()
 
       if (briefingMessage) {
         setMessage(briefingMessage)

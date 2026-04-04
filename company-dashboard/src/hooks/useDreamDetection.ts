@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useDataStore } from '@/stores/data'
+import { aiCompletion } from '@/lib/edgeAi'
 
 export interface DreamDetection {
   dream_id: number
@@ -13,9 +13,6 @@ interface UseDreamDetectionReturn {
   detect: (diaryContent: string) => Promise<DreamDetection[]>
   detecting: boolean
 }
-
-// NOTE: API key is sent from client for simplicity in personal use.
-// For production/multi-user, move to Supabase Edge Function.
 
 /**
  * Hook to detect dream progress from diary entries.
@@ -41,14 +38,6 @@ export function useDreamDetection(): UseDreamDetectionReturn {
         return []
       }
 
-      // Get API key from central store
-      const apiKey = await useDataStore.getState().fetchApiKey()
-
-      if (!apiKey) {
-        setDetecting(false)
-        return []
-      }
-
       const dreamList = dreams
         .map((d: { id: number; title: string; description: string | null }) =>
           `- ID:${d.id} "${d.title}"${d.description ? ` (${d.description})` : ''}`)
@@ -61,31 +50,13 @@ JSON以外は返さないでください。`
 
       const userMessage = `## 日記\n${diaryContent}\n\n## 夢リスト\n${dreamList}`
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userMessage },
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.3,
-          max_tokens: 500,
-        }),
+      const { content: resultText } = await aiCompletion(userMessage, {
+        systemPrompt,
+        jsonMode: true,
+        temperature: 0.3,
+        maxTokens: 500,
       })
 
-      if (!response.ok) {
-        setDetecting(false)
-        return []
-      }
-
-      const data = await response.json()
-      const resultText = data.choices?.[0]?.message?.content
       if (!resultText) {
         setDetecting(false)
         return []

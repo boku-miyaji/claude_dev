@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useDataStore } from '@/stores/data'
+import { aiCompletion } from '@/lib/edgeAi'
 
 export type AnalysisType = 'mbti' | 'big5' | 'strengths' | 'emotion_triggers' | 'values'
 
@@ -211,16 +211,6 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
     setError(null)
 
     try {
-      // Get API key from central store
-      const apiKey = await useDataStore.getState().fetchApiKey()
-
-      if (!apiKey) {
-        setError('OpenAI API keyが設定されていません。Settings画面で設定してください。')
-        setRunning(false)
-        setRunningType(null)
-        return null
-      }
-
       // Collect data
       const { text: userData, count } = await collectData(type)
 
@@ -231,33 +221,14 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
         return null
       }
 
-      // Call OpenAI
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: PROMPTS[type] },
-            { role: 'user', content: userData },
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.4,
-          max_tokens: 1500,
-        }),
+      // Call AI via Edge Function
+      const { content: resultText } = await aiCompletion(userData, {
+        systemPrompt: PROMPTS[type],
+        jsonMode: true,
+        temperature: 0.4,
+        maxTokens: 1500,
       })
-
-      if (!response.ok) {
-        const errBody = await response.text()
-        throw new Error(`OpenAI API error: ${response.status} ${errBody.substring(0, 200)}`)
-      }
-
-      const data = await response.json()
-      const resultText = data.choices?.[0]?.message?.content
-      if (!resultText) throw new Error('Empty response from OpenAI')
+      if (!resultText) throw new Error('Empty response from AI')
 
       const result = JSON.parse(resultText)
       const summary = result.summary || result.description || null
@@ -270,7 +241,7 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
           result,
           summary,
           data_count: count,
-          model_used: 'gpt-4o-mini',
+          model_used: 'gpt-5-nano',
         })
         .select()
         .single()

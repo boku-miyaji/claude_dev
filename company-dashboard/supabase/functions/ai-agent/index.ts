@@ -960,7 +960,7 @@ Deno.serve(async (req) => {
 
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
-  let body: { conversation_id?: string; message: string; model?: string; context_mode?: string; company_id?: string; reasoning_effort?: string; images?: { data_url: string; name: string; type: string }[]; precision_mode?: boolean };
+  let body: { conversation_id?: string; message: string; model?: string; context_mode?: string; company_id?: string; reasoning_effort?: string; images?: { data_url: string; name: string; type: string }[]; precision_mode?: boolean; mode?: string; system_prompt?: string; temperature?: number; max_tokens?: number; response_format?: { type: string } };
   try { body = await req.json(); } catch { return new Response("Invalid JSON", { status: 400 }); }
   if (!body.message) return new Response("message is required", { status: 400 });
 
@@ -975,6 +975,61 @@ Deno.serve(async (req) => {
       const payload = JSON.parse(atob(userJwt.split(".")[1]));
       userId = payload.sub || null;
     } catch { /* invalid JWT — will fail auth downstream */ }
+  }
+
+  // ============================================================
+  // Completion mode: simple prompt → JSON response (no conversation, no agent loop)
+  // Used by emotion analysis, dream detection, self-analysis, etc.
+  // ============================================================
+  if (body.mode === "completion") {
+    if (!OPENAI_API_KEY) {
+      return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    const model = body.model || "gpt-5-nano";
+    const messages: { role: string; content: string }[] = [];
+    if (body.system_prompt) {
+      messages.push({ role: "system", content: body.system_prompt });
+    }
+    messages.push({ role: "user", content: body.message });
+
+    const openaiBody: Record<string, unknown> = {
+      model,
+      messages,
+      temperature: body.temperature ?? 0.3,
+      max_tokens: body.max_tokens ?? 1000,
+    };
+    if (body.response_format) {
+      openaiBody.response_format = body.response_format;
+    }
+
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify(openaiBody),
+    });
+
+    if (!openaiRes.ok) {
+      const errText = await openaiRes.text();
+      return new Response(JSON.stringify({ error: `OpenAI API error: ${openaiRes.status}`, detail: errText.substring(0, 500) }), {
+        status: openaiRes.status,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    const openaiData = await openaiRes.json();
+    const content = openaiData.choices?.[0]?.message?.content ?? "";
+    const usage = openaiData.usage;
+
+    return new Response(JSON.stringify({ content, model, usage }), {
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
   }
 
   const sb = getServiceSupabase();

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useDataStore } from '@/stores/data'
+import { aiCompletion } from '@/lib/edgeAi'
 
 const EMOTION_ANALYSIS_PROMPT = `あなたは感情分析の専門家です。日記のテキストを分析し、以下のJSON形式で返してください:
 {
@@ -32,11 +32,8 @@ interface UseEmotionAnalysisReturn {
 
 /**
  * Hook to trigger AI emotion analysis for a diary entry.
- * Calls OpenAI API with the user's API key from user_settings,
+ * Calls ai-agent Edge Function in completion mode,
  * then stores results in emotion_analysis table and updates diary_entries.wbi.
- *
- * NOTE: API key is sent from client for simplicity in personal use.
- * For production/multi-user, move to Supabase Edge Function.
  */
 export function useEmotionAnalysis(): UseEmotionAnalysisReturn {
   const [analyzing, setAnalyzing] = useState(false)
@@ -48,41 +45,13 @@ export function useEmotionAnalysis(): UseEmotionAnalysisReturn {
     setError(null)
 
     try {
-      // Get API key from central store
-      const apiKey = await useDataStore.getState().fetchApiKey()
-
-      if (!apiKey) {
-        setError('OpenAI API keyが設定されていません。Settings画面で設定してください。')
-        setAnalyzing(false)
-        return null
-      }
-
-      // Call OpenAI API
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: EMOTION_ANALYSIS_PROMPT },
-            { role: 'user', content },
-          ],
-          response_format: { type: 'json_object' },
-          temperature: 0.3,
-        }),
+      const { content: resultText } = await aiCompletion(content, {
+        systemPrompt: EMOTION_ANALYSIS_PROMPT,
+        jsonMode: true,
+        temperature: 0.3,
       })
 
-      if (!response.ok) {
-        const errBody = await response.text()
-        throw new Error(`OpenAI API error: ${response.status} ${errBody.substring(0, 200)}`)
-      }
-
-      const data = await response.json()
-      const resultText = data.choices?.[0]?.message?.content
-      if (!resultText) throw new Error('Empty response from OpenAI')
+      if (!resultText) throw new Error('Empty response from AI')
 
       const result: EmotionResult = JSON.parse(resultText)
 
@@ -106,7 +75,7 @@ export function useEmotionAnalysis(): UseEmotionAnalysisReturn {
         perma_a: result.perma_v.a ?? 0,
         perma_v: result.perma_v.v ?? 0,
         wbi_score: result.wbi ?? 0,
-        model_used: 'gpt-4o-mini',
+        model_used: 'gpt-5-nano',
       })
 
       // Update diary_entries.wbi
