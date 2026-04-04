@@ -434,13 +434,12 @@ export function Today() {
      ════════════════════════════════════════════ */
 
   if (timeMode === 'morning') {
-    // Morning: Plan the day. Actions first, then context.
     return (
       <div className="page">
         {Greeting}
-        {ActionsSection}
-        {Schedule}
         {Briefing}
+        {Schedule}
+        {ActionsSection}
         {Diary}
         {StatusBar}
         {Fragments}
@@ -449,27 +448,26 @@ export function Today() {
   }
 
   if (timeMode === 'afternoon') {
-    // Afternoon: Execute. Remaining actions + quick diary + context.
     return (
       <div className="page">
         {Greeting}
-        {ActionsSection}
+        {Briefing}
         {Diary}
         {Schedule}
+        {ActionsSection}
         {Backlog}
-        {Briefing}
         {Fragments}
       </div>
     )
   }
 
-  // Evening: Reflect. Summary → remaining → diary → tomorrow.
+  // Evening
   return (
     <div className="page">
       {Greeting}
+      {Briefing}
       {ActionsSection}
       {Diary}
-      {Briefing}
       {Backlog}
       {Tomorrow}
       {StatusBar}
