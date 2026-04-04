@@ -400,17 +400,50 @@ export function Today() {
     </div>
   ) : null
 
+  const habitsRemaining = todayHabits.length - habitsCompleted
+  const habitsAllDone = todayHabits.length > 0 && habitsRemaining === 0
+  const habitsProgress = todayHabits.length > 0 ? habitsCompleted / todayHabits.length : 0
+
+  const habitsLabel = timeMode === 'morning'
+    ? '今日のルーティン'
+    : timeMode === 'afternoon'
+      ? habitsRemaining > 0 ? `ルーティン — あと${habitsRemaining}件` : 'ルーティン — All done!'
+      : habitsAllDone ? 'ルーティン — 完了' : `ルーティン — ${habitsRemaining}件やり残し`
+
   const HabitsSection = todayHabits.length > 0 ? (
     <div className="section">
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span>今日の習慣</span>
-        <span style={{ fontSize: 11, color: 'var(--text3)' }}>{habitsCompleted}/{todayHabits.length} 完了</span>
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>{habitsLabel}</span>
+        <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }} onClick={() => navigate('/habits')}>詳細</button>
       </div>
       <Card>
-        {todayHabits.map((h) => (
+        {/* Progress bar */}
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: habitsAllDone ? 'var(--green)' : 'var(--text2)' }}>
+              {habitsCompleted}/{todayHabits.length}
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+              {Math.round(habitsProgress * 100)}%
+            </span>
+          </div>
+          <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 2, transition: 'width .3s ease',
+              width: `${habitsProgress * 100}%`,
+              background: habitsAllDone ? 'var(--green)' : 'var(--accent)',
+            }} />
+          </div>
+        </div>
+        {/* Habit items: uncompleted first in afternoon/evening */}
+        {(timeMode === 'morning' ? todayHabits : [...todayHabits].sort((a, b) => Number(a.completed) - Number(b.completed))).map((h) => (
           <div
             key={h.id}
-            style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+            style={{
+              padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13,
+              display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+              transition: 'opacity .2s',
+            }}
             onClick={() => toggleHabitLog(h, todayStr)}
           >
             <span style={{
@@ -418,17 +451,22 @@ export function Today() {
               border: `2px solid ${h.completed ? 'var(--green)' : 'var(--border)'}`,
               background: h.completed ? 'var(--green)' : 'transparent',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, color: '#fff', flexShrink: 0,
+              fontSize: 11, color: '#fff', flexShrink: 0, transition: 'all .2s',
             }}>
               {h.completed ? '✓' : ''}
             </span>
             <span style={{
               color: h.completed ? 'var(--text3)' : 'var(--text)',
               textDecoration: h.completed ? 'line-through' : 'none',
-              fontWeight: 500,
+              fontWeight: 500, flex: 1,
             }}>
               {h.icon} {h.title}
             </span>
+            {h.target_count > 1 && (
+              <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: h.completed ? 'var(--green)' : 'var(--text3)' }}>
+                {h.todayCount}/{h.target_count}
+              </span>
+            )}
           </div>
         ))}
       </Card>
@@ -494,13 +532,14 @@ export function Today() {
   // ========== Time-adaptive layout ==========
 
   if (timeMode === 'morning') {
+    // Morning: greeting → habits (top priority) → schedule → briefing → tasks → diary
     return (
       <div className="page">
         {GreetingSection}
+        {HabitsSection}
         {ScheduleSection}
         {BriefingSection}
         {FocusTasksSection}
-        {HabitsSection}
         {DiaryInput}
         {StreakSection}
         {DreamsSection}
@@ -510,24 +549,26 @@ export function Today() {
   }
 
   if (timeMode === 'afternoon') {
+    // Afternoon: greeting → habits (urgency) → diary → schedule → tasks → briefing
     return (
       <div className="page">
         {GreetingSection}
+        {HabitsSection}
         {DiaryInput}
         {ScheduleSection}
         {RemainingTasksSection}
-        {HabitsSection}
         {BriefingSection}
         {FragmentsSection}
       </div>
     )
   }
 
-  // evening
+  // Evening: greeting → summary → habits (review) → diary → completed → tomorrow
   return (
     <div className="page">
       {GreetingSection}
       {SummarySection}
+      {HabitsSection}
       {ScheduleSection}
       {DiaryInput}
       {BriefingSection}
