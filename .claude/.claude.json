@@ -699,5 +699,9 @@
     "organizationName": "yumzzz.my6223@gmail.com's Organization"
   },
   "overageCreditUpsellSeenCount": 2,
-  "voiceNoticeSeenCount": 1
+  "voiceNoticeSeenCount": 1,
+  "metricsStatusCache": {
+    "enabled": true,
+    "timestamp": 1775306414796
+  }
 }
