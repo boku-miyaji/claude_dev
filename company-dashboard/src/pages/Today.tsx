@@ -548,19 +548,24 @@ export function Today() {
   /* ── [2] Schedule ── */
 
   const scheduleEvents = timeMode === 'afternoon' ? todayEvents.filter((e) => !e.isPast) : todayEvents
-  const Schedule = scheduleEvents.length > 0 ? (
+  const Schedule = (
     <div className="section">
-      <div className="section-title">{timeMode === 'afternoon' ? 'この後の予定' : '今日のスケジュール'}</div>
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>{timeMode === 'afternoon' ? 'この後の予定' : '今日のスケジュール'}</span>
+        <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/calendar')}>カレンダー</button>
+      </div>
       <Card>
-        {scheduleEvents.map((e) => (
+        {scheduleEvents.length > 0 ? scheduleEvents.map((e) => (
           <div key={e.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', gap: 10, opacity: e.isPast ? 0.5 : 1 }}>
             <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text2)', minWidth: 42 }}>{formatEventTime(e.start)}</span>
             <span style={{ color: 'var(--text)', textDecoration: e.isPast ? 'line-through' : 'none' }}>{e.summary}</span>
           </div>
-        ))}
+        )) : (
+          <div style={{ padding: '6px 0', fontSize: 12, color: 'var(--text3)' }}>予定なし</div>
+        )}
       </Card>
     </div>
-  ) : null
+  )
 
   const Tomorrow = tomorrowEvents.length > 0 ? (
     <div className="section">
