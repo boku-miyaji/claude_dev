@@ -166,6 +166,94 @@ function StrengthsResult({ result }: { result: Record<string, unknown> }) {
   )
 }
 
+/** Render StrengthsFinder result */
+function StrengthsFinderResult({ result }: { result: Record<string, unknown> }) {
+  const strengths = (result.top_strengths as { name: string; score: number; domain: string; evidence: string }[]) ?? []
+  const domainSummary = result.domain_summary as Record<string, { score: number; label: string }> | undefined
+  const workFit = (result.work_fit as string[]) ?? []
+  const growthAreas = (result.growth_areas as string[]) ?? []
+  const domainColors: Record<string, string> = {
+    strategic_thinking: 'var(--accent)',
+    relationship_building: 'var(--green)',
+    influencing: 'var(--amber)',
+    executing: 'var(--red)',
+  }
+  return (
+    <div>
+      {/* Top 5 strengths with bar chart */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+        {strengths.map((s, i) => (
+          <div key={i}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 2 }}>
+              <span style={{ fontWeight: 600, color: 'var(--text)' }}>
+                {i + 1}. {s.name}
+              </span>
+              <span style={{ fontFamily: 'var(--mono)', color: 'var(--accent2)', fontWeight: 600 }}>{s.score}</span>
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 4 }}>{s.domain}</div>
+            <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
+              <div style={{ height: '100%', width: `${s.score}%`, background: 'var(--accent)', borderRadius: 2 }} />
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', fontStyle: 'italic' }}>{s.evidence}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Domain summary - 4 domains */}
+      {domainSummary && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 8 }}>4つの領域</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Object.entries(domainSummary).map(([key, val]) => (
+              <div key={key}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                  <span style={{ color: 'var(--text2)' }}>{val.label}</span>
+                  <span style={{ fontFamily: 'var(--mono)', color: 'var(--text2)', fontWeight: 600 }}>{val.score}</span>
+                </div>
+                <div style={{ height: 5, background: 'var(--surface2)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${val.score}%`, background: domainColors[key] ?? 'var(--accent)', borderRadius: 3, transition: 'width .4s' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Work fit tags */}
+      {workFit.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 6 }}>適合する仕事</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {workFit.map((w, i) => (
+              <span key={i} style={{ fontSize: 11, padding: '3px 10px', background: 'var(--accent-bg)', color: 'var(--accent2)', borderRadius: 12, fontWeight: 500 }}>
+                {w}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Growth areas */}
+      {growthAreas.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 6 }}>成長領域</div>
+          {growthAreas.map((g, i) => (
+            <div key={i} style={{ fontSize: 12, color: 'var(--text2)', padding: '6px 10px', background: 'var(--surface2)', borderRadius: 6, marginBottom: 4 }}>
+              {g}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {Boolean(result.summary) && (
+        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>
+          {String(result.summary)}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /** Render Emotion Triggers result */
 function EmotionTriggersResult({ result }: { result: Record<string, unknown> }) {
   const positive = (result.positive_triggers as { trigger: string; emotion: string; frequency: number }[]) ?? []
@@ -265,6 +353,7 @@ function AnalysisResultView({ type, result }: { type: AnalysisType; result: Reco
     case 'mbti': return <MbtiResult result={result} />
     case 'big5': return <Big5Result result={result} />
     case 'strengths': return <StrengthsResult result={result} />
+    case 'strengths_finder': return <StrengthsFinderResult result={result} />
     case 'emotion_triggers': return <EmotionTriggersResult result={result} />
     case 'values': return <ValuesResult result={result} />
   }
@@ -349,6 +438,16 @@ export function SelfAnalysis() {
       requiredCount: 50,
       currentCount: taskCount,
       unlocked: taskCount >= 50,
+    },
+    {
+      id: 'strengths_finder',
+      title: 'ストレングスファインダー',
+      description: 'CliftonStrengthsの34資質からTop5を推定し、4つの領域バランスを可視化します。',
+      icon: '🏆',
+      requiredTable: 'diary_entries',
+      requiredCount: 20,
+      currentCount: diaryCount,
+      unlocked: diaryCount >= 20,
     },
     {
       id: 'emotion_triggers',
