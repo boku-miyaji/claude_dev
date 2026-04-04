@@ -13,7 +13,8 @@ import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/tim
 import type { TimeMode } from '@/lib/timeMode'
 import type { DiaryEntry } from '@/types/diary'
 
-/** Plutchik emotion labels for badge display */
+/* ── Constants ── */
+
 const PLUTCHIK_LABELS: Record<string, { label: string; color: string }> = {
   joy: { label: 'Joy', color: '#FFD700' },
   trust: { label: 'Trust', color: '#98FB98' },
@@ -25,17 +26,14 @@ const PLUTCHIK_LABELS: Record<string, { label: string; color: string }> = {
   anticipation: { label: 'Anticipation', color: '#FFA500' },
 }
 
-interface EmotionBadge {
-  key: string
-  label: string
-  color: string
-  value: number
-}
+interface EmotionBadge { key: string; label: string; color: string; value: number }
 
 function formatEventTime(iso: string): string {
   if (!iso.includes('T')) return '終日'
   return new Date(iso).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo' })
 }
+
+/* ── Page ── */
 
 export function Today() {
   const navigate = useNavigate()
@@ -51,7 +49,6 @@ export function Today() {
 
   const timeMode: TimeMode = useMemo(() => getTimeMode(), [])
 
-  // Build schedule text for AI context
   const todayEventsText = useMemo(() => {
     if (todayEvents.length === 0) return undefined
     return todayEvents.map((e) => `${formatEventTime(e.start)} ${e.summary}${e.isPast ? ' (完了)' : ''}`).join('\n')
@@ -62,13 +59,8 @@ export function Today() {
     return tomorrowEvents.map((e) => `${formatEventTime(e.start)} ${e.summary}`).join('\n')
   }, [tomorrowEvents])
 
-  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing(
-    timeMode,
-    todayEventsText,
-    tomorrowEventsText,
-  )
+  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing(timeMode, todayEventsText, tomorrowEventsText)
 
-  // Central store
   const {
     diaryEntries, tasks, dreams, habits, habitLogs,
     fetchDiary, fetchTasks, fetchDreams, fetchHabits, fetchHabitLogs, fetchEmotions,
@@ -81,7 +73,6 @@ export function Today() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }, [])
 
-  // Fetch all data on mount
   useEffect(() => {
     fetchDiary({ days: 1 })
     fetchEmotions({ days: 1 })
@@ -92,38 +83,46 @@ export function Today() {
     calculateStreak().then(setStreak)
   }, [fetchDiary, fetchEmotions, fetchTasks, fetchDreams, fetchHabits, fetchHabitLogs])
 
-  // Today's fragments
-  const fragments = useMemo(() => {
-    return diaryEntries.filter((e) => e.created_at.substring(0, 10) === todayStr)
-  }, [diaryEntries, todayStr])
+  /* ── Computed data ── */
 
-  // Tasks
-  const openTasks = useMemo(() => tasks.filter((t) => t.status === 'open').slice(0, 5), [tasks])
-  const completedToday = useMemo(() => {
-    return tasks.filter((t) => t.status === 'done' && t.completed_at?.substring(0, 10) === todayStr)
-  }, [tasks, todayStr])
-  const dueTodayTasks = useMemo(() => {
-    return openTasks.filter((t) => t.due_date === todayStr)
-  }, [openTasks, todayStr])
-  const focusTasks = useMemo(() => {
-    // Due today + high priority, max 3
-    const high = openTasks.filter((t) => t.priority === 'high')
-    const combined = [...dueTodayTasks, ...high.filter((t) => !dueTodayTasks.includes(t))]
-    return combined.slice(0, 3)
-  }, [openTasks, dueTodayTasks])
+  const fragments = useMemo(() => diaryEntries.filter((e) => e.created_at.substring(0, 10) === todayStr), [diaryEntries, todayStr])
 
-  // Dreams count
-  const dreamsCount = useMemo(() => {
-    return dreams.filter((d) => d.status === 'active' || d.status === 'in_progress').length
-  }, [dreams])
+  // Tasks: today's actionable items
+  const allOpenTasks = useMemo(() => tasks.filter((t) => t.status === 'open'), [tasks])
+  const completedToday = useMemo(() => tasks.filter((t) => t.status === 'done' && t.completed_at?.substring(0, 10) === todayStr), [tasks, todayStr])
+  const todayTasks = useMemo(() => {
+    // Due today, high priority, or in_progress — these are "today's tasks"
+    const dueToday = allOpenTasks.filter((t) => t.due_date === todayStr)
+    const high = allOpenTasks.filter((t) => t.priority === 'high' && t.due_date !== todayStr)
+    const inProgress = tasks.filter((t) => t.status === 'in_progress' && t.due_date !== todayStr && t.priority !== 'high')
+    return [...dueToday, ...high, ...inProgress]
+  }, [allOpenTasks, tasks, todayStr])
+  const otherOpenTasks = useMemo(() => allOpenTasks.filter((t) => !todayTasks.includes(t)), [allOpenTasks, todayTasks])
 
-  // Latest WBI
-  const wbi = useMemo(() => {
-    const entry = diaryEntries.find((e) => e.wbi != null)
-    return entry?.wbi ?? null
-  }, [diaryEntries])
+  // Habits
+  const todayHabits = useMemo(() => {
+    return habits.map((habit) => {
+      const todayCount = habitLogs.filter((l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr).length
+      return { ...habit, todayCount, completed: todayCount >= habit.target_count }
+    })
+  }, [habits, habitLogs, todayStr])
+  const habitsCompleted = todayHabits.filter((h) => h.completed).length
 
-  // Build emotion badges from store emotion data
+  // Combined progress
+  const totalActions = todayTasks.length + todayHabits.length
+  const doneActions = completedToday.length + habitsCompleted
+  const actionProgress = totalActions > 0 ? doneActions / (todayTasks.length + todayHabits.length + completedToday.length) : 0
+  // For display: done / (active + done)
+  const totalWithCompleted = todayTasks.length + todayHabits.length + completedToday.length
+  const allDone = totalActions > 0 && todayTasks.length === 0 && habitsCompleted === todayHabits.length
+
+  // Dreams
+  const dreamsCount = useMemo(() => dreams.filter((d) => d.status === 'active' || d.status === 'in_progress').length, [dreams])
+
+  // WBI
+  const wbi = useMemo(() => { const e = diaryEntries.find((e) => e.wbi != null); return e?.wbi ?? null }, [diaryEntries])
+
+  // Emotion badges
   const emotionAnalyses = useDataStore((s) => s.emotionAnalyses)
   useEffect(() => {
     if (fragments.length === 0) return
@@ -132,9 +131,7 @@ export function Today() {
     for (const ea of emotionAnalyses) {
       if (!entryIds.has(ea.diary_entry_id)) continue
       const scores = Object.entries(PLUTCHIK_LABELS).map(([key, info]) => ({
-        key,
-        label: info.label,
-        color: info.color,
+        key, label: info.label, color: info.color,
         value: (ea as unknown as Record<string, number>)[key] ?? 0,
       }))
       scores.sort((a, b) => b.value - a.value)
@@ -143,64 +140,32 @@ export function Today() {
     setEmotionBadges(badgeMap)
   }, [fragments, emotionAnalyses])
 
-  // Today's habits
-  const todayHabits = useMemo(() => {
-    return habits.map((habit) => {
-      const todayCount = habitLogs.filter(
-        (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr,
-      ).length
-      const completed = todayCount >= habit.target_count
-      return { ...habit, todayCount, completed }
-    })
-  }, [habits, habitLogs, todayStr])
+  /* ── Save diary ── */
 
-  const habitsCompleted = todayHabits.filter((h) => h.completed).length
-
-  /** Save diary entry and trigger emotion analysis */
   const saveEntry = useCallback(async (content: string) => {
     if (!content.trim()) return
     setSaving(true)
-    const inserted = await addDiaryEntry({
-      body: content.trim(),
-      entry_type: 'fragment',
-      entry_date: todayStr,
-    })
+    const inserted = await addDiaryEntry({ body: content.trim(), entry_type: 'fragment', entry_date: todayStr })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
     setText('')
-
-    // Trigger emotion analysis in background
     if (inserted?.id) {
       const result = await analyze(inserted.id, content.trim())
       if (result) {
         const scores = Object.entries(PLUTCHIK_LABELS).map(([key, info]) => ({
-          key,
-          label: info.label,
-          color: info.color,
-          value: result.plutchik[key] ?? 0,
+          key, label: info.label, color: info.color, value: result.plutchik[key] ?? 0,
         }))
         scores.sort((a, b) => b.value - a.value)
-        setEmotionBadges((prev) => {
-          const next = new Map(prev)
-          next.set(inserted.id, scores.filter((s) => s.value > 20).slice(0, 2))
-          return next
-        })
+        setEmotionBadges((prev) => { const next = new Map(prev); next.set(inserted.id, scores.filter((s) => s.value > 20).slice(0, 2)); return next })
       }
-
-      // Dream detection in background
-      detect(content.trim()).then((detections) => {
-        for (const d of detections) {
-          toast(`夢『${d.dream_title}』に近づいているかもしれません！`)
-        }
-      })
+      detect(content.trim()).then((detections) => { for (const d of detections) toast(`夢『${d.dream_title}』に近づいているかもしれません！`) })
     }
   }, [addDiaryEntry, analyze, detect, todayStr])
 
   const diaryPrompt = useMemo(() => getDiaryPrompt(timeMode, recentEventName ?? undefined), [timeMode, recentEventName])
 
   const isLoading = loading.diary || loading.tasks || loading.dreams
-
   if (isLoading && fragments.length === 0) {
     return (
       <div className="page">
@@ -210,270 +175,196 @@ export function Today() {
     )
   }
 
-  // ========== Shared UI sections ==========
+  /* ════════════════════════════════════════════
+     SECTION BUILDERS
+     ════════════════════════════════════════════ */
 
-  const GreetingSection = (
+  /* ── [0] Greeting ── */
+
+  const Greeting = (
     <div style={{ marginBottom: 20 }}>
       <div className="page-title" style={{ marginBottom: 4 }}>{getGreeting(timeMode)}</div>
       <div style={{ fontSize: 13, color: 'var(--text2)' }}>
         {formatToday()}
-        {weather && (
-          <span style={{ marginLeft: 8 }}>
-            {weather.today.icon} {weather.today.tempMax}℃ / {weather.today.tempMin}℃
-          </span>
-        )}
+        {weather && <span style={{ marginLeft: 8 }}>{weather.today.icon} {weather.today.tempMax}℃ / {weather.today.tempMin}℃</span>}
       </div>
-      {weather && (
-        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
-          明日: {weather.tomorrow.icon} {weather.tomorrow.tempMax}℃ / {weather.tomorrow.tempMin}℃
-        </div>
-      )}
+      {weather && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>明日: {weather.tomorrow.icon} {weather.tomorrow.tempMax}℃ / {weather.tomorrow.tempMin}℃</div>}
     </div>
   )
 
-  const ScheduleSection = todayEvents.length > 0 ? (
+  /* ── [1] Today's Actions — unified tasks + habits ── */
+
+  const hasActions = todayTasks.length > 0 || todayHabits.length > 0 || completedToday.length > 0
+
+  const ActionsSection = hasActions ? (
     <div className="section">
-      <div className="section-title">
-        {timeMode === 'afternoon' ? 'この後の予定' : '今日のスケジュール'}
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>
+          {timeMode === 'morning' ? '今日やること' : timeMode === 'afternoon' ? (allDone ? '今日やること — All done!' : `今日やること — あと${todayTasks.length + todayHabits.length - habitsCompleted}件`) : (allDone ? '今日の達成' : `今日の達成 — ${todayTasks.length + todayHabits.length - habitsCompleted}件やり残し`)}
+        </span>
+        <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+          {doneActions}/{totalWithCompleted}
+        </span>
       </div>
+
+      {/* Combined progress bar */}
+      <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden', marginBottom: 14 }}>
+        <div style={{
+          height: '100%', borderRadius: 2, transition: 'width .3s ease',
+          width: `${Math.round(actionProgress * 100)}%`,
+          background: allDone ? 'var(--green)' : 'var(--accent)',
+        }} />
+      </div>
+
+      {/* Tasks */}
+      {(todayTasks.length > 0 || completedToday.length > 0) && (
+        <Card style={{ marginBottom: todayHabits.length > 0 ? 10 : 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)' }}>Tasks</span>
+            <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/tasks')}>
+              {allOpenTasks.length > todayTasks.length ? `他${allOpenTasks.length - todayTasks.length}件` : '一覧'}
+            </button>
+          </div>
+          {todayTasks.map((t) => (
+            <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                background: t.priority === 'high' ? 'var(--red)' : t.status === 'in_progress' ? 'var(--blue)' : 'var(--text3)',
+              }} />
+              <span style={{ flex: 1, fontWeight: 500 }}>{t.title}</span>
+              {t.due_date === todayStr && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600, padding: '1px 5px', background: 'var(--red-bg)', borderRadius: 3, border: '1px solid var(--red-border)' }}>今日</span>}
+              {t.priority === 'high' && t.due_date !== todayStr && <span style={{ fontSize: 9, color: 'var(--amber)', fontWeight: 600, padding: '1px 5px', background: 'var(--amber-bg)', borderRadius: 3, border: '1px solid var(--amber-border)' }}>高</span>}
+            </div>
+          ))}
+          {/* Completed today (collapsed in morning, shown in afternoon/evening) */}
+          {completedToday.length > 0 && timeMode !== 'morning' && completedToday.map((t) => (
+            <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, opacity: 0.5 }}>
+              <span style={{ color: 'var(--green)', fontSize: 12, width: 6, textAlign: 'center' }}>✓</span>
+              <span style={{ textDecoration: 'line-through' }}>{t.title}</span>
+            </div>
+          ))}
+          {completedToday.length > 0 && timeMode === 'morning' && (
+            <div style={{ padding: '6px 0', fontSize: 11, color: 'var(--green)' }}>✓ {completedToday.length}件完了済み</div>
+          )}
+        </Card>
+      )}
+
+      {/* Habits */}
+      {todayHabits.length > 0 && (
+        <Card>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)' }}>Habits</span>
+            <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/habits')}>詳細</button>
+          </div>
+          {(timeMode === 'morning' ? todayHabits : [...todayHabits].sort((a, b) => Number(a.completed) - Number(b.completed))).map((h) => (
+            <div
+              key={h.id}
+              style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+              onClick={() => toggleHabitLog(h, todayStr)}
+            >
+              <span style={{
+                width: 18, height: 18, borderRadius: 4,
+                border: `2px solid ${h.completed ? 'var(--green)' : 'var(--border)'}`,
+                background: h.completed ? 'var(--green)' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, color: '#fff', flexShrink: 0, transition: 'all .2s',
+              }}>
+                {h.completed ? '✓' : ''}
+              </span>
+              <span style={{ color: h.completed ? 'var(--text3)' : 'var(--text)', textDecoration: h.completed ? 'line-through' : 'none', fontWeight: 500, flex: 1 }}>
+                {h.icon} {h.title}
+              </span>
+              {h.target_count > 1 && (
+                <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: h.completed ? 'var(--green)' : 'var(--text3)' }}>
+                  {h.todayCount}/{h.target_count}
+                </span>
+              )}
+            </div>
+          ))}
+        </Card>
+      )}
+    </div>
+  ) : null
+
+  /* ── [2] Schedule ── */
+
+  const scheduleEvents = timeMode === 'afternoon' ? todayEvents.filter((e) => !e.isPast) : todayEvents
+  const Schedule = scheduleEvents.length > 0 ? (
+    <div className="section">
+      <div className="section-title">{timeMode === 'afternoon' ? 'この後の予定' : '今日のスケジュール'}</div>
       <Card>
-        {(timeMode === 'afternoon' ? todayEvents.filter((e) => !e.isPast) : todayEvents).map((e) => (
-          <div
-            key={e.id}
-            style={{
-              padding: '8px 0',
-              borderBottom: '1px solid var(--border)',
-              fontSize: 13,
-              display: 'flex',
-              gap: 10,
-              opacity: e.isPast ? 0.5 : 1,
-            }}
-          >
-            <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text2)', minWidth: 42 }}>
-              {formatEventTime(e.start)}
-            </span>
-            <span style={{ color: 'var(--text)', textDecoration: e.isPast ? 'line-through' : 'none' }}>
-              {e.summary}
-            </span>
+        {scheduleEvents.map((e) => (
+          <div key={e.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', gap: 10, opacity: e.isPast ? 0.5 : 1 }}>
+            <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text2)', minWidth: 42 }}>{formatEventTime(e.start)}</span>
+            <span style={{ color: 'var(--text)', textDecoration: e.isPast ? 'line-through' : 'none' }}>{e.summary}</span>
           </div>
         ))}
       </Card>
     </div>
   ) : null
 
-  const TomorrowSection = tomorrowEvents.length > 0 ? (
+  const Tomorrow = tomorrowEvents.length > 0 ? (
     <div className="section">
       <div className="section-title">明日の予定</div>
       <Card>
         {tomorrowEvents.slice(0, 3).map((e) => (
-          <div key={e.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', gap: 10 }}>
-            <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text2)', minWidth: 42 }}>
-              {formatEventTime(e.start)}
-            </span>
-            <span style={{ color: 'var(--text)' }}>{e.summary}</span>
+          <div key={e.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', gap: 10 }}>
+            <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text2)', minWidth: 42 }}>{formatEventTime(e.start)}</span>
+            <span>{e.summary}</span>
           </div>
         ))}
-        {tomorrowEvents.length > 3 && (
-          <div style={{ padding: '6px 0', fontSize: 11, color: 'var(--text3)' }}>他 {tomorrowEvents.length - 3}件</div>
-        )}
+        {tomorrowEvents.length > 3 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {tomorrowEvents.length - 3}件</div>}
       </Card>
     </div>
-  ) : (
-    timeMode === 'evening' ? (
-      <div className="section">
-        <div className="section-title">明日の予定</div>
-        <Card><div style={{ fontSize: 13, color: 'var(--text3)', padding: 4 }}>明日はフリーです</div></Card>
-      </div>
-    ) : null
-  )
+  ) : timeMode === 'evening' ? (
+    <div className="section">
+      <div className="section-title">明日の予定</div>
+      <Card><div style={{ fontSize: 13, color: 'var(--text3)', padding: 4 }}>明日はフリーです</div></Card>
+    </div>
+  ) : null
 
-  const BriefingSection = (
+  /* ── [3] AI Briefing ── */
+
+  const Briefing = (
     <Card style={{ marginBottom: 16, background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
-      <div style={{ fontSize: 11, color: 'var(--accent2)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em' }}>
-        AI Partner
-      </div>
+      <div style={{ fontSize: 11, color: 'var(--accent2)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em' }}>AI Partner</div>
       {briefingLoading ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            width: 12, height: 12, borderRadius: '50%',
-            border: '2px solid var(--accent2)', borderTopColor: 'transparent',
-            animation: 'spin 1s linear infinite',
-          }} />
+          <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent2)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
           <span style={{ fontSize: 12, color: 'var(--text3)' }}>考え中...</span>
         </div>
       ) : (
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>
-          {briefingMessage || '今日も穏やかに過ごせますように。'}
-        </div>
+        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>{briefingMessage || '今日も穏やかに過ごせますように。'}</div>
       )}
     </Card>
   )
 
-  const DiaryInput = (
+  /* ── [4] Diary ── */
+
+  const Diary = (
     <Card style={{ marginBottom: 16 }}>
       <textarea
         className="input"
         placeholder={diaryPrompt}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        style={{
-          minHeight: timeMode === 'evening' ? 100 : 44,
-          width: '100%',
-          boxSizing: 'border-box',
-          marginBottom: 8,
-        }}
+        style={{ minHeight: timeMode === 'evening' ? 100 : 44, width: '100%', boxSizing: 'border-box', marginBottom: 8 }}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 11, color: 'var(--text3)' }}>
           {saving ? '保存中...' : saved ? '保存しました' : analyzing ? '感情分析中...' : ''}
         </span>
-        <button
-          className="btn btn-p btn-sm"
-          onClick={() => saveEntry(text)}
-          disabled={!text.trim() || saving || analyzing}
-        >
+        <button className="btn btn-p btn-sm" onClick={() => saveEntry(text)} disabled={!text.trim() || saving || analyzing}>
           {analyzing ? '分析中...' : '記録する'}
         </button>
       </div>
-      {emotionError && (
-        <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4 }}>{emotionError}</div>
-      )}
+      {emotionError && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4 }}>{emotionError}</div>}
     </Card>
   )
 
-  const FocusTasksSection = focusTasks.length > 0 ? (
-    <div className="section">
-      <div className="section-title">今日のフォーカス</div>
-      <Card>
-        {focusTasks.map((t) => (
-          <div key={t.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.priority === 'high' ? 'var(--red)' : 'var(--blue)', flexShrink: 0 }} />
-            {t.title}
-            {t.due_date === todayStr && <span style={{ fontSize: 10, color: 'var(--red)', marginLeft: 'auto' }}>期限今日</span>}
-          </div>
-        ))}
-      </Card>
-    </div>
-  ) : null
+  /* ── [5] Fragments ── */
 
-  const RemainingTasksSection = openTasks.length > 0 ? (
-    <div className="section">
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <span>残りのタスク</span>
-        <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }} onClick={() => navigate('/tasks')}>すべて見る</button>
-      </div>
-      <Card>
-        {openTasks.map((t) => (
-          <div key={t.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.priority === 'high' ? 'var(--red)' : t.priority === 'low' ? 'var(--text3)' : 'var(--blue)', flexShrink: 0 }} />
-            {t.title}
-          </div>
-        ))}
-      </Card>
-    </div>
-  ) : null
-
-  const CompletedTasksSection = completedToday.length > 0 ? (
-    <div className="section">
-      <div className="section-title">完了したタスク</div>
-      <Card>
-        {completedToday.map((t) => (
-          <div key={t.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: 'var(--green)' }}>✓</span>
-            <span style={{ textDecoration: 'line-through' }}>{t.title}</span>
-          </div>
-        ))}
-      </Card>
-    </div>
-  ) : null
-
-  const CarryoverSection = openTasks.length > 0 && timeMode === 'evening' ? (
-    <div className="section">
-      <div className="section-title">明日に持ち越す?</div>
-      <Card>
-        {openTasks.slice(0, 3).map((t) => (
-          <div key={t.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ color: 'var(--text3)' }}>○</span> {t.title}
-          </div>
-        ))}
-      </Card>
-    </div>
-  ) : null
-
-  const habitsRemaining = todayHabits.length - habitsCompleted
-  const habitsAllDone = todayHabits.length > 0 && habitsRemaining === 0
-  const habitsProgress = todayHabits.length > 0 ? habitsCompleted / todayHabits.length : 0
-
-  const habitsLabel = timeMode === 'morning'
-    ? '今日のルーティン'
-    : timeMode === 'afternoon'
-      ? habitsRemaining > 0 ? `ルーティン — あと${habitsRemaining}件` : 'ルーティン — All done!'
-      : habitsAllDone ? 'ルーティン — 完了' : `ルーティン — ${habitsRemaining}件やり残し`
-
-  const HabitsSection = todayHabits.length > 0 ? (
-    <div className="section">
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{habitsLabel}</span>
-        <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }} onClick={() => navigate('/habits')}>詳細</button>
-      </div>
-      <Card>
-        {/* Progress bar */}
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: habitsAllDone ? 'var(--green)' : 'var(--text2)' }}>
-              {habitsCompleted}/{todayHabits.length}
-            </span>
-            <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
-              {Math.round(habitsProgress * 100)}%
-            </span>
-          </div>
-          <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', borderRadius: 2, transition: 'width .3s ease',
-              width: `${habitsProgress * 100}%`,
-              background: habitsAllDone ? 'var(--green)' : 'var(--accent)',
-            }} />
-          </div>
-        </div>
-        {/* Habit items: uncompleted first in afternoon/evening */}
-        {(timeMode === 'morning' ? todayHabits : [...todayHabits].sort((a, b) => Number(a.completed) - Number(b.completed))).map((h) => (
-          <div
-            key={h.id}
-            style={{
-              padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13,
-              display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
-              transition: 'opacity .2s',
-            }}
-            onClick={() => toggleHabitLog(h, todayStr)}
-          >
-            <span style={{
-              width: 20, height: 20, borderRadius: 4,
-              border: `2px solid ${h.completed ? 'var(--green)' : 'var(--border)'}`,
-              background: h.completed ? 'var(--green)' : 'transparent',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, color: '#fff', flexShrink: 0, transition: 'all .2s',
-            }}>
-              {h.completed ? '✓' : ''}
-            </span>
-            <span style={{
-              color: h.completed ? 'var(--text3)' : 'var(--text)',
-              textDecoration: h.completed ? 'line-through' : 'none',
-              fontWeight: 500, flex: 1,
-            }}>
-              {h.icon} {h.title}
-            </span>
-            {h.target_count > 1 && (
-              <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: h.completed ? 'var(--green)' : 'var(--text3)' }}>
-                {h.todayCount}/{h.target_count}
-              </span>
-            )}
-          </div>
-        ))}
-      </Card>
-    </div>
-  ) : null
-
-  const FragmentsSection = fragments.length > 0 ? (
+  const Fragments = fragments.length > 0 ? (
     <div className="section">
       <div className="section-title">今日の断片</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -499,84 +390,90 @@ export function Today() {
     </div>
   ) : null
 
-  const SummarySection = (
-    <Card style={{ marginBottom: 16 }}>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: 'var(--text2)' }}>
-        <span>タスク <strong style={{ color: 'var(--green)' }}>{completedToday.length}</strong>/{completedToday.length + openTasks.length} 完了</span>
-        <span>習慣 <strong style={{ color: 'var(--green)' }}>{habitsCompleted}</strong>/{todayHabits.length} 完了</span>
-        {fragments.length > 0 && <span>断片 <strong>{fragments.length}</strong>件</span>}
-        {streak > 0 && <span style={{ color: '#ff6b35' }}>{streak}日連続</span>}
-        {wbi !== null && <span>WBI <strong style={{ fontFamily: 'var(--mono)' }}>{wbi.toFixed(1)}</strong></span>}
-      </div>
-    </Card>
-  )
+  /* ── [6] Status bar (streak, dreams, WBI) ── */
 
-  const DreamsSection = dreamsCount > 0 ? (
+  const StatusBar = (streak > 0 || dreamsCount > 0 || wbi !== null) ? (
+    <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+      {streak > 0 && <span><span style={{ color: '#ff6b35', fontWeight: 600 }}>{streak}</span>日連続記録</span>}
+      {wbi !== null && <span>WBI <span style={{ fontWeight: 600, fontFamily: 'var(--mono)' }}>{wbi.toFixed(1)}</span></span>}
+      {dreamsCount > 0 && (
+        <span style={{ cursor: 'pointer' }} onClick={() => navigate('/dreams')}>
+          <span style={{ color: 'var(--accent2)', fontWeight: 600 }}>{dreamsCount}</span> 個の夢が進行中
+        </span>
+      )}
+    </div>
+  ) : null
+
+  /* ── [7] Backlog (other open tasks, shown only if relevant) ── */
+
+  const Backlog = otherOpenTasks.length > 0 && timeMode !== 'morning' ? (
     <div className="section">
-      <div className="section-title">夢への一歩</div>
-      <Card style={{ cursor: 'pointer' }} onClick={() => navigate('/dreams')}>
-        <div style={{ fontSize: 13, color: 'var(--text2)' }}>
-          <span style={{ fontWeight: 600, color: 'var(--accent2)', fontFamily: 'var(--mono)' }}>{dreamsCount}</span> 個の夢が進行中
-        </div>
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>バックログ</span>
+        <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }} onClick={() => navigate('/tasks')}>すべて見る</button>
+      </div>
+      <Card>
+        {otherOpenTasks.slice(0, 3).map((t) => (
+          <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text2)' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text3)', flexShrink: 0 }} />
+            {t.title}
+          </div>
+        ))}
+        {otherOpenTasks.length > 3 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {otherOpenTasks.length - 3}件</div>}
       </Card>
     </div>
   ) : null
 
-  const StreakSection = streak > 0 ? (
-    <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span style={{ color: '#ff6b35', fontWeight: 600 }}>{streak}</span>日連続記録
-      {wbi !== null && <span style={{ marginLeft: 12 }}>WBI <span style={{ fontWeight: 600, fontFamily: 'var(--mono)' }}>{wbi.toFixed(1)}</span></span>}
-    </div>
-  ) : null
+  /* ════════════════════════════════════════════
+     TIME-ADAPTIVE LAYOUT
 
-  // ========== Time-adaptive layout ==========
+     All modes share the same structure:
+       Greeting → Actions → Schedule → Context → Reflect
+
+     The difference is emphasis and detail level.
+     ════════════════════════════════════════════ */
 
   if (timeMode === 'morning') {
-    // Morning: greeting → habits (top priority) → schedule → briefing → tasks → diary
+    // Morning: Plan the day. Actions first, then context.
     return (
       <div className="page">
-        {GreetingSection}
-        {HabitsSection}
-        {ScheduleSection}
-        {BriefingSection}
-        {FocusTasksSection}
-        {DiaryInput}
-        {StreakSection}
-        {DreamsSection}
-        {FragmentsSection}
+        {Greeting}
+        {ActionsSection}
+        {Schedule}
+        {Briefing}
+        {Diary}
+        {StatusBar}
+        {Fragments}
       </div>
     )
   }
 
   if (timeMode === 'afternoon') {
-    // Afternoon: greeting → habits (urgency) → diary → schedule → tasks → briefing
+    // Afternoon: Execute. Remaining actions + quick diary + context.
     return (
       <div className="page">
-        {GreetingSection}
-        {HabitsSection}
-        {DiaryInput}
-        {ScheduleSection}
-        {RemainingTasksSection}
-        {BriefingSection}
-        {FragmentsSection}
+        {Greeting}
+        {ActionsSection}
+        {Diary}
+        {Schedule}
+        {Backlog}
+        {Briefing}
+        {Fragments}
       </div>
     )
   }
 
-  // Evening: greeting → summary → habits (review) → diary → completed → tomorrow
+  // Evening: Reflect. Summary → remaining → diary → tomorrow.
   return (
     <div className="page">
-      {GreetingSection}
-      {SummarySection}
-      {HabitsSection}
-      {ScheduleSection}
-      {DiaryInput}
-      {BriefingSection}
-      {CompletedTasksSection}
-      {CarryoverSection}
-      {TomorrowSection}
-      {DreamsSection}
-      {FragmentsSection}
+      {Greeting}
+      {ActionsSection}
+      {Diary}
+      {Briefing}
+      {Backlog}
+      {Tomorrow}
+      {StatusBar}
+      {Fragments}
     </div>
   )
 }
