@@ -34,6 +34,62 @@ function formatEventTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo' })
 }
 
+/* ── Helpers ── */
+
+function formatDueDate(dueDate: string | null, todayStr: string): { label: string; color: string; bg: string; border: string } | null {
+  if (!dueDate) return null
+  if (dueDate < todayStr) {
+    const days = Math.floor((new Date(todayStr).getTime() - new Date(dueDate).getTime()) / 86400000)
+    return { label: `${days}日超過`, color: 'var(--red)', bg: 'var(--red-bg)', border: 'var(--red-border)' }
+  }
+  if (dueDate === todayStr) return { label: '今日', color: 'var(--red)', bg: 'var(--red-bg)', border: 'var(--red-border)' }
+  const tomorrow = new Date(todayStr)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+  if (dueDate === tomorrowStr) return { label: '明日', color: 'var(--amber)', bg: 'var(--amber-bg)', border: 'var(--amber-border)' }
+  // Show MM/DD
+  const [, m, d] = dueDate.split('-')
+  return { label: `${parseInt(m)}/${parseInt(d)}`, color: 'var(--text3)', bg: 'var(--surface2)', border: 'var(--border)' }
+}
+
+function TaskRow({ task: t, todayStr, done, onToggle }: {
+  task: { id: string; title: string; due_date: string | null; priority: string; status: string }
+  todayStr: string
+  done: boolean
+  onToggle: () => void
+}) {
+  const due = formatDueDate(t.due_date, todayStr)
+  return (
+    <div style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, opacity: done ? 0.55 : 1 }}>
+      <span
+        onClick={onToggle}
+        style={{
+          width: 18, height: 18, borderRadius: 4, flexShrink: 0, cursor: 'pointer',
+          border: `2px solid ${done ? 'var(--green)' : 'var(--border)'}`,
+          background: done ? 'var(--green)' : 'transparent',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 10, color: '#fff', transition: 'all .15s',
+        }}
+        onMouseEnter={(e) => { if (!done) { e.currentTarget.style.borderColor = 'var(--green)'; e.currentTarget.style.background = 'var(--green-bg)' } }}
+        onMouseLeave={(e) => { if (!done) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent' } }}
+      >
+        {done ? '✓' : ''}
+      </span>
+      <span style={{ flex: 1, fontWeight: 500, textDecoration: done ? 'line-through' : 'none', color: done ? 'var(--text3)' : 'var(--text)' }}>
+        {t.title}
+      </span>
+      {due && (
+        <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3, color: due.color, background: due.bg, border: `1px solid ${due.border}`, fontFamily: 'var(--mono)' }}>
+          {due.label}
+        </span>
+      )}
+      {t.priority === 'high' && (
+        <span style={{ fontSize: 9, color: 'var(--amber)', fontWeight: 600, padding: '1px 5px', background: 'var(--amber-bg)', borderRadius: 3, border: '1px solid var(--amber-border)' }}>高</span>
+      )}
+    </div>
+  )
+}
+
 /* ── Page ── */
 
 export function Today() {
@@ -291,35 +347,12 @@ export function Today() {
           </div>
         )}
         {todayTasks.map((t) => (
-          <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* Clickable checkbox to complete */}
-            <span
-              onClick={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }}
-              style={{
-                width: 18, height: 18, borderRadius: 4, flexShrink: 0, cursor: 'pointer',
-                border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all .15s',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--green)'; e.currentTarget.style.background = 'var(--green-bg)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent' }}
-            />
-            <span style={{ flex: 1, fontWeight: 500 }}>{t.title}</span>
-            {t.due_date && t.due_date < todayStr && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600, padding: '1px 5px', background: 'var(--red-bg)', borderRadius: 3, border: '1px solid var(--red-border)' }}>期限切れ</span>}
-            {t.due_date === todayStr && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600, padding: '1px 5px', background: 'var(--red-bg)', borderRadius: 3, border: '1px solid var(--red-border)' }}>今日</span>}
-            {t.due_date && t.due_date > todayStr && <span style={{ fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{t.due_date.slice(5)}</span>}
-            {t.priority === 'high' && <span style={{ fontSize: 9, color: 'var(--amber)', fontWeight: 600, padding: '1px 5px', background: 'var(--amber-bg)', borderRadius: 3, border: '1px solid var(--amber-border)' }}>高</span>}
-          </div>
+          <TaskRow key={t.id} task={t} todayStr={todayStr} done={false} onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }} />
         ))}
-        {/* Completed today */}
-        {completedToday.length > 0 && timeMode !== 'morning' && completedToday.map((t) => (
-          <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, opacity: 0.5 }}>
-            <span style={{ color: 'var(--green)', fontSize: 12, width: 18, textAlign: 'center' }}>✓</span>
-            <span style={{ textDecoration: 'line-through' }}>{t.title}</span>
-          </div>
+        {/* Completed today — strikethrough, click to undo */}
+        {completedToday.map((t) => (
+          <TaskRow key={t.id} task={t} todayStr={todayStr} done onToggle={() => { updateTask(t.id, { status: 'open', completed_at: null }); toast('戻しました') }} />
         ))}
-        {completedToday.length > 0 && timeMode === 'morning' && (
-          <div style={{ padding: '6px 0', fontSize: 11, color: 'var(--green)' }}>✓ {completedToday.length}件完了済み</div>
-        )}
         {todayTasks.length === 0 && completedToday.length === 0 && !showAddTask && (
           <div style={{ padding: '6px 0', fontSize: 12, color: 'var(--text3)' }}>タスクなし — + で追加</div>
         )}
