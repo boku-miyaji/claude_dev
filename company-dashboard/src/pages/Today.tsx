@@ -96,16 +96,36 @@ export function Today() {
   const fragments = useMemo(() => diaryEntries.filter((e) => e.created_at.substring(0, 10) === todayStr), [diaryEntries, todayStr])
 
   // Tasks: today's actionable items
-  const allOpenTasks = useMemo(() => tasks.filter((t) => t.status === 'open'), [tasks])
+  const allOpenTasks = useMemo(() => tasks.filter((t) => t.status === 'open' || t.status === 'in_progress'), [tasks])
   const completedToday = useMemo(() => tasks.filter((t) => t.status === 'done' && t.completed_at?.substring(0, 10) === todayStr), [tasks, todayStr])
+
+  const priorityWeight = { high: 0, normal: 1, low: 2 } as const
+
   const todayTasks = useMemo(() => {
-    // Due today, high priority, or in_progress — these are "today's tasks"
-    const dueToday = allOpenTasks.filter((t) => t.due_date === todayStr)
-    const high = allOpenTasks.filter((t) => t.priority === 'high' && t.due_date !== todayStr)
-    const inProgress = tasks.filter((t) => t.status === 'in_progress' && t.due_date !== todayStr && t.priority !== 'high')
-    return [...dueToday, ...high, ...inProgress]
-  }, [allOpenTasks, tasks, todayStr])
-  const otherOpenTasks = useMemo(() => allOpenTasks.filter((t) => !todayTasks.includes(t)), [allOpenTasks, todayTasks])
+    // Overdue, due today, high priority, or in_progress
+    const relevant = allOpenTasks.filter((t) =>
+      (t.due_date && t.due_date <= todayStr) || t.priority === 'high' || t.status === 'in_progress',
+    )
+    // Sort: overdue first → due today → due later/none. Within same date group, by priority.
+    return [...relevant].sort((a, b) => {
+      const aDate = a.due_date || '9999-99-99'
+      const bDate = b.due_date || '9999-99-99'
+      if (aDate !== bDate) return aDate < bDate ? -1 : 1
+      return (priorityWeight[a.priority] ?? 1) - (priorityWeight[b.priority] ?? 1)
+    })
+  }, [allOpenTasks, todayStr])
+
+  const otherOpenTasks = useMemo(() => {
+    const todayIds = new Set(todayTasks.map((t) => t.id))
+    const others = allOpenTasks.filter((t) => !todayIds.has(t.id))
+    // Sort by due_date (soonest first), then priority
+    return [...others].sort((a, b) => {
+      const aDate = a.due_date || '9999-99-99'
+      const bDate = b.due_date || '9999-99-99'
+      if (aDate !== bDate) return aDate < bDate ? -1 : 1
+      return (priorityWeight[a.priority] ?? 1) - (priorityWeight[b.priority] ?? 1)
+    })
+  }, [allOpenTasks, todayTasks])
 
   // Habits
   const todayHabits = useMemo(() => {
@@ -284,8 +304,10 @@ export function Today() {
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent' }}
             />
             <span style={{ flex: 1, fontWeight: 500 }}>{t.title}</span>
+            {t.due_date && t.due_date < todayStr && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600, padding: '1px 5px', background: 'var(--red-bg)', borderRadius: 3, border: '1px solid var(--red-border)' }}>期限切れ</span>}
             {t.due_date === todayStr && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600, padding: '1px 5px', background: 'var(--red-bg)', borderRadius: 3, border: '1px solid var(--red-border)' }}>今日</span>}
-            {t.priority === 'high' && t.due_date !== todayStr && <span style={{ fontSize: 9, color: 'var(--amber)', fontWeight: 600, padding: '1px 5px', background: 'var(--amber-bg)', borderRadius: 3, border: '1px solid var(--amber-border)' }}>高</span>}
+            {t.due_date && t.due_date > todayStr && <span style={{ fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{t.due_date.slice(5)}</span>}
+            {t.priority === 'high' && <span style={{ fontSize: 9, color: 'var(--amber)', fontWeight: 600, padding: '1px 5px', background: 'var(--amber-bg)', borderRadius: 3, border: '1px solid var(--amber-border)' }}>高</span>}
           </div>
         ))}
         {/* Completed today */}
