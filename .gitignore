@@ -37,28 +37,25 @@
 .claude/knowledge/
 .claude/plans/
 
-# application folder (individual app repos)
-*app*
-!apps/
+# 子プロジェクト (各自のgitで管理、プレフィックスで一括除外)
+aces-*/
+miyaji-*/
+polaris-*/
+probspace-*/
+
+# untracked dirs
+docs/
+invoice/
+sample/
+untracked/
+public/
 
 # others
 .cache
 tasks*
 
-# pj
-project-*
-presales-*
-denso-*
-circuit_diagram/
-
 # cursor server backup - keep local but don't track
 .cursor-server.bak/
-
-# project-rikyu (tracked in separate repo)
-project-review/project-rikyu-sales-proposals-poc/
-
-# circuit diagram output (managed by circuit_diagram/.gitignore)
-# circuit_diagram/output/
 
 # company - org structure (tracked in git for cross-server sharing)
 # .company/ → tracked (HD structure, departments, registry)
