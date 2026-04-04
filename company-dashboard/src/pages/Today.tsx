@@ -14,6 +14,63 @@ import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/tim
 import type { TimeMode } from '@/lib/timeMode'
 import type { DiaryEntry } from '@/types/diary'
 
+/* ── Analysis Questions for Self-Analysis Precision ── */
+
+const ANALYSIS_QUESTIONS: Record<string, string[]> = {
+  mbti: [
+    '今日一番印象に残った会話は？',
+    '最近、一人の時間と人と過ごす時間、どちらが充実していた？',
+    '今日の出来事で、なぜそうなったのか考えた？それとも体験そのものを楽しんだ？',
+    '最近、理想と現実のギャップを感じたことは？',
+    '計画通りに進めるのと、流れに任せるの、今日はどちらだった？',
+  ],
+  big5: [
+    '最近、新しいことに挑戦した？それはどんな気持ちだった？',
+    '今日のタスク、どれくらい計画通りに進めた？',
+    'ストレスを感じた時、どう対処した？',
+    '最近、人に感謝されたことは？',
+    '予想外の出来事があった時、どう感じた？',
+  ],
+  strengths: [
+    '今日、自分の成長を感じた瞬間は？',
+    '今の仕事で一番やりがいを感じることは？',
+    '最近、時間を忘れて没頭したことは？',
+    '人から頼りにされる場面はどんな時？',
+    '最近、難しい問題をどう解決した？',
+  ],
+  values: [
+    '今日、一番大切にしたかったことは？',
+    '最近「これは譲れない」と思ったことは？',
+    '理想の1日はどんな1日？',
+    '最近、感動したり心が動いたことは？',
+    '10年後の自分に伝えたいことは？',
+  ],
+  emotion: [
+    '今日一番うれしかったことは？',
+    '最近モヤモヤしていることはある？',
+    '今の気分を天気に例えると？',
+    '今日、誰かに言いたかったけど言えなかったことは？',
+    'リラックスできた瞬間はあった？',
+  ],
+}
+
+/** Get today's analysis questions based on date rotation */
+function getTodayQuestions(todayStr: string): string[] {
+  const categories = Object.keys(ANALYSIS_QUESTIONS)
+  // Use date string to create a deterministic seed
+  const seed = todayStr.split('-').reduce((acc, n) => acc + parseInt(n, 10), 0)
+  // Pick 2 categories based on date
+  const cat1 = categories[seed % categories.length]
+  const cat2 = categories[(seed + 3) % categories.length]
+  // Pick 1 question from each category
+  const q1 = ANALYSIS_QUESTIONS[cat1][seed % ANALYSIS_QUESTIONS[cat1].length]
+  const q2Arr = ANALYSIS_QUESTIONS[cat2]
+  const q2 = q2Arr[(seed + 2) % q2Arr.length]
+  // Avoid duplicates
+  if (q1 === q2) return [q1]
+  return [q1, q2]
+}
+
 /* ── Constants ── */
 
 const PLUTCHIK_LABELS: Record<string, { label: string; color: string }> = {
