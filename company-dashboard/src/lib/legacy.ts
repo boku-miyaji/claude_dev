@@ -7,10 +7,14 @@
  */
 
 import { supabase } from "./supabase";
+import { marked } from "marked";
 
 // Expose supabase client as global for legacy code
 const w = window as any;
 w.supabase = { createClient: () => supabase };
+
+// Expose marked globally so legacy renderMarkdownSafe* functions can find it
+w.marked = marked;
 
 // Remove IIFE wrapper, expose everything on window
 
