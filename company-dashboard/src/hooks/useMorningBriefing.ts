@@ -3,135 +3,230 @@ import { supabase } from '@/lib/supabase'
 import { aiCompletion } from '@/lib/edgeAi'
 import { calculateStreak } from '@/lib/streak'
 import { useBriefingStore } from '@/stores/briefing'
-import { buildPartnerSystemPrompt, getTimeOfDay } from '@/lib/aiPartner'
-import type { PartnerContext, EmotionSummary } from '@/lib/aiPartner'
+import type { TimeMode } from '@/lib/timeMode'
 
-/** Plutchik keys for finding dominant emotion */
+/** Plutchik keys */
 const PLUTCHIK_KEYS = ['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation'] as const
 
 /**
- * Hook to generate a morning briefing message from the AI Partner.
- * - Collects recent diary, emotions, tasks, dreams
- * - Calls ai-agent Edge Function in completion mode (once per day)
- * - Caches in Zustand store
- * - Falls back to static templates on error
+ * Deep-personalized AI comment for Today screen.
+ * Injects diary emotions, WBI trends, CEO insights, work rhythm,
+ * calendar context, tasks, dreams, and streak data into the prompt.
  */
-export function useMorningBriefing() {
+export function useMorningBriefing(
+  timeMode: TimeMode,
+  todayEventsText?: string,
+  tomorrowEventsText?: string,
+) {
   const { message, loading, lastFetched, setMessage, setLoading, setLastFetched } = useBriefingStore()
 
-  const today = new Date().toISOString().substring(0, 10)
-  const isCached = lastFetched === today && message !== null
+  const cacheKey = `${new Date().toISOString().substring(0, 10)}_${timeMode}`
+  const isCached = lastFetched === cacheKey && message !== null
 
   const generate = useCallback(async () => {
     if (isCached) return
     setLoading(true)
 
     try {
-      // Collect context data in parallel
-      const [diaryRes, emotionRes, tasksRes, dreamsRes, streakResult] = await Promise.all([
+      // Collect all context data in parallel
+      const [diaryRes, emotionRes, tasksRes, dreamsRes, insightsRes, rhythmRes, streakResult] = await Promise.all([
         supabase
           .from('diary_entries')
-          .select('body, created_at')
+          .select('body, wbi, created_at')
           .order('created_at', { ascending: false })
-          .limit(3),
+          .limit(5),
         supabase
           .from('emotion_analysis')
-          .select('joy, trust, fear, surprise, sadness, disgust, anger, anticipation, valence, arousal, wbi_score')
+          .select('joy, trust, fear, surprise, sadness, disgust, anger, anticipation, valence, arousal, wbi_score, created_at')
           .order('created_at', { ascending: false })
-          .limit(5),
+          .limit(10),
         supabase
           .from('tasks')
-          .select('title, due_date')
-          .eq('status', 'open')
+          .select('title, status, due_date, completed_at')
+          .in('status', ['open', 'done'])
           .order('created_at', { ascending: false })
-          .limit(5),
+          .limit(10),
         supabase
           .from('dreams')
           .select('title, status')
           .in('status', ['active', 'in_progress'])
           .limit(5),
+        supabase
+          .from('ceo_insights')
+          .select('insight, category')
+          .in('category', ['preference', 'tendency', 'work_rhythm', 'pattern'])
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('prompt_log')
+          .select('created_at')
+          .order('created_at', { ascending: false })
+          .limit(50),
         calculateStreak(),
       ])
 
-      const streak = streakResult
-
-      // Build emotion summary
-      let recentEmotions: EmotionSummary | undefined
+      // Build emotion context
+      let emotionContext = ''
       if (emotionRes.data && emotionRes.data.length > 0) {
         const avg: Record<string, number> = {}
-        let totalValence = 0
-        let totalArousal = 0
         let totalWbi = 0
         const count = emotionRes.data.length
         for (const e of emotionRes.data) {
           for (const key of PLUTCHIK_KEYS) {
             avg[key] = (avg[key] ?? 0) + ((e as Record<string, number>)[key] ?? 0)
           }
-          totalValence += (e as Record<string, number>).valence ?? 0
-          totalArousal += (e as Record<string, number>).arousal ?? 0
           totalWbi += (e as Record<string, number>).wbi_score ?? 0
         }
-        let dominantEmotion = 'joy'
+        let dominant = 'joy'
         let maxVal = 0
         for (const key of PLUTCHIK_KEYS) {
           avg[key] = avg[key] / count
-          if (avg[key] > maxVal) {
-            maxVal = avg[key]
-            dominantEmotion = key
-          }
+          if (avg[key] > maxVal) { maxVal = avg[key]; dominant = key }
         }
-        recentEmotions = {
-          dominantEmotion,
-          valence: totalValence / count,
-          arousal: totalArousal / count,
-          wbi: totalWbi / count,
+        const avgWbi = totalWbi / count
+        emotionContext = `直近の感情傾向(${count}件): 主要感情=${dominant}(${Math.round(maxVal)}), WBI平均=${avgWbi.toFixed(1)}`
+      }
+
+      // WBI trend (last 7 days)
+      let wbiTrend = ''
+      if (diaryRes.data && diaryRes.data.length >= 2) {
+        const wbis = diaryRes.data.filter((d) => d.wbi != null).map((d) => d.wbi as number)
+        if (wbis.length >= 2) {
+          const recent = wbis[0]
+          const prev = wbis.slice(1).reduce((a, b) => a + b, 0) / (wbis.length - 1)
+          const diff = recent - prev
+          wbiTrend = `WBI推移: 最新${recent.toFixed(1)} / 過去平均${prev.toFixed(1)} (${diff > 0 ? '+' : ''}${diff.toFixed(1)})`
         }
       }
 
-      // Build recent diary text
+      // Recent diary
       const recentDiary = diaryRes.data
-        ?.map((e: { body: string; created_at: string }) =>
-          `[${e.created_at.substring(0, 10)}] ${e.body.substring(0, 150)}`,
-        )
-        .join('\n')
+        ?.slice(0, 3)
+        .map((e) => `[${e.created_at.substring(0, 10)}] ${(e.body ?? '').substring(0, 100)}`)
+        .join('\n') || ''
 
-      const context: PartnerContext = {
-        recentDiary,
-        recentEmotions,
-        dreams: dreamsRes.data as { title: string; status: string }[] | undefined,
-        openTasks: tasksRes.data as { title: string; due_date?: string }[] | undefined,
-        streak,
-        timeOfDay: getTimeOfDay(),
+      // Work rhythm analysis
+      let workRhythm = ''
+      if (rhythmRes.data && rhythmRes.data.length > 0) {
+        const lateNight = rhythmRes.data.filter((p) => {
+          const h = new Date(p.created_at).getHours()
+          return h >= 22 || h < 6
+        }).length
+        const ratio = Math.round((lateNight / rhythmRes.data.length) * 100)
+        if (ratio > 20) {
+          workRhythm = `深夜作業率: ${ratio}%（直近${rhythmRes.data.length}件中${lateNight}件が22時-6時）`
+        }
       }
 
-      const systemPrompt = buildPartnerSystemPrompt(context)
-      const userMessage = '今日のブリーフィングを2-3文で簡潔に伝えてください。ユーザーの状況を踏まえ、温かく穏やかなトーンでお願いします。長すぎず、心に残る内容を。'
+      // CEO insights
+      const insightsText = insightsRes.data
+        ?.map((i) => `[${(i as { category: string }).category}] ${(i as { insight: string }).insight}`)
+        .join('\n') || ''
+
+      // Tasks
+      const todayStr = new Date().toISOString().substring(0, 10)
+      const openTasks = (tasksRes.data || []).filter((t) => t.status === 'open')
+      const completedToday = (tasksRes.data || []).filter(
+        (t) => t.status === 'done' && t.completed_at?.substring(0, 10) === todayStr,
+      )
+      const dueTodayTasks = openTasks.filter((t) => t.due_date === todayStr)
+
+      // Dreams
+      const dreamsText = dreamsRes.data
+        ?.map((d) => `${d.title} (${d.status})`)
+        .join(', ') || ''
+
+      // Build the context block
+      const contextParts: string[] = []
+      if (emotionContext) contextParts.push(emotionContext)
+      if (wbiTrend) contextParts.push(wbiTrend)
+      if (recentDiary) contextParts.push(`直近の日記:\n${recentDiary}`)
+      if (todayEventsText) contextParts.push(`今日の予定:\n${todayEventsText}`)
+      if (tomorrowEventsText) contextParts.push(`明日の予定:\n${tomorrowEventsText}`)
+      if (completedToday.length > 0) {
+        contextParts.push(`今日完了したタスク: ${completedToday.map((t) => t.title).join('、')}`)
+      }
+      if (dueTodayTasks.length > 0) {
+        contextParts.push(`期限が今日のタスク: ${dueTodayTasks.map((t) => t.title).join('、')}`)
+      }
+      if (openTasks.length > 0) {
+        contextParts.push(`未完了タスク(${openTasks.length}件): ${openTasks.slice(0, 3).map((t) => t.title).join('、')}`)
+      }
+      if (workRhythm) contextParts.push(workRhythm)
+      if (insightsText) contextParts.push(`社長の特徴:\n${insightsText}`)
+      if (dreamsText) contextParts.push(`進行中の夢: ${dreamsText}`)
+      if (streakResult > 0) contextParts.push(`連続記録: ${streakResult}日`)
+
+      // Time-mode specific instructions
+      const modeInstructions: Record<TimeMode, string> = {
+        morning: `朝の計画モード。今日のスケジュールを踏まえた穏やかな心構えを1-2文で。
+例: 「今日はMTGが3件ありますね。午前中に集中作業の時間を確保するといいかもしれません」`,
+        afternoon: `昼の実行モード。午前の頑張りへの承認と午後の見通しを1文で軽く。
+例: 「午前中に1件完了できましたね。午後もこのペースで」`,
+        evening: `夜の振り返りモード。今日の行動・感情・生活リズムを踏まえた深い共感と労いを2-3文で。
+明日の予定も踏まえて安心感を。
+例: 「最近、夜遅くまで作業する日が続いていますね。今日はMTG3件の合間にタスクも3件こなしていて、本当によく頑張っています。明日は午前フリーなので少しゆっくり始めてもいいかもしれませんね」`,
+      }
+
+      const systemPrompt = `あなたはユーザーの人生パートナーAI。一番の理解者。
+
+## 口調
+- 丁寧だが堅すぎない（です・ます調）
+- 温かく、感情に寄り添う
+- 褒める時は具体的に
+
+## 絶対にやらないこと
+- 実行できない約束（「私が代わりにやります」等）
+- 業務報告（「3件完了、2件残」の羅列）
+- 汎用的な言葉（「頑張りましょう」「無理せず頑張って」）
+- 他者との比較
+- 罪悪感を与える表現
+
+## 最重要ルール
+必ずこの人固有の文脈に触れること。日記の内容、感情の傾向、生活リズム、予定など、
+データから読み取れる「この人だからこそ」のコメントをする。
+
+## 時間帯指示
+${modeInstructions[timeMode]}
+
+テキストのみ返してください。`
+
+      const userMessage = contextParts.length > 0
+        ? contextParts.join('\n\n')
+        : '（特にデータなし。穏やかな一言を）'
 
       const { content: briefingMessage } = await aiCompletion(userMessage, {
         systemPrompt,
         temperature: 0.8,
-        maxTokens: 200,
+        maxTokens: 300,
       })
 
       if (briefingMessage) {
         setMessage(briefingMessage)
-        setLastFetched(today)
+        setLastFetched(cacheKey)
       } else {
-        setMessage('今日も穏やかに過ごせますように。')
-        setLastFetched(today)
+        setMessage(getFallback(timeMode))
+        setLastFetched(cacheKey)
       }
     } catch (_err) {
-      // On error, use a fallback
-      setMessage('今日も一日、あなたのペースで進んでいきましょう。')
-      setLastFetched(today)
+      setMessage(getFallback(timeMode))
+      setLastFetched(cacheKey)
     } finally {
       setLoading(false)
     }
-  }, [isCached, today, setMessage, setLoading, setLastFetched])
+  }, [isCached, cacheKey, timeMode, todayEventsText, tomorrowEventsText, setMessage, setLoading, setLastFetched])
 
   useEffect(() => {
     generate()
   }, [generate])
 
   return { message, loading }
+}
+
+function getFallback(mode: TimeMode): string {
+  switch (mode) {
+    case 'morning': return '今日も穏やかに始めましょう。'
+    case 'afternoon': return '午後もあなたのペースで。'
+    case 'evening': return '今日も一日、おつかれさまでした。'
+  }
 }
