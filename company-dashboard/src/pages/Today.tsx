@@ -309,6 +309,7 @@ export function Today() {
   }, [addDiaryEntry, analyze, detect, todayStr, invalidateBriefing])
 
   const diaryPrompt = useMemo(() => getDiaryPrompt(timeMode, recentEventName ?? undefined), [timeMode, recentEventName])
+  const todayQuestions = useMemo(() => getTodayQuestions(todayStr), [todayStr])
 
   const isLoading = loading.diary || loading.tasks || loading.dreams
   if (isLoading && fragments.length === 0) {
@@ -562,6 +563,27 @@ export function Today() {
         </button>
       </div>
       {emotionError && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4 }}>{emotionError}</div>}
+      {/* Analysis questions - subtle prompts to improve self-analysis precision */}
+      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {todayQuestions.map((q, i) => (
+          <div
+            key={i}
+            onClick={() => setText((prev) => prev ? `${prev}\n${q} ` : `${q} `)}
+            style={{
+              fontSize: 11,
+              color: 'var(--text3)',
+              cursor: 'pointer',
+              padding: '4px 0',
+              lineHeight: 1.5,
+              transition: 'color .15s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text2)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text3)' }}
+          >
+            {q}
+          </div>
+        ))}
+      </div>
     </Card>
   )
 
