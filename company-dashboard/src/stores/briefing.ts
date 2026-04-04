@@ -7,6 +7,7 @@ interface BriefingStore {
   setMessage: (msg: string) => void
   setLoading: (loading: boolean) => void
   setLastFetched: (date: string) => void
+  invalidate: () => void
 }
 
 export const useBriefingStore = create<BriefingStore>((set) => ({
@@ -17,4 +18,5 @@ export const useBriefingStore = create<BriefingStore>((set) => ({
   setMessage: (msg) => set({ message: msg }),
   setLoading: (loading) => set({ loading }),
   setLastFetched: (date) => set({ lastFetched: date }),
+  invalidate: () => set({ lastFetched: null, message: null }),
 }))

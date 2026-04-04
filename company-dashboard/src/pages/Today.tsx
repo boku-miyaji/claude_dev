@@ -9,6 +9,7 @@ import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodaySchedule } from '@/hooks/useTodaySchedule'
 import { toast } from '@/components/ui'
 import { useDataStore } from '@/stores/data'
+import { useBriefingStore } from '@/stores/briefing'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
 import type { TimeMode } from '@/lib/timeMode'
 import type { DiaryEntry } from '@/types/diary'
@@ -142,6 +143,8 @@ export function Today() {
 
   /* ── Save diary ── */
 
+  const invalidateBriefing = useBriefingStore((s) => s.invalidate)
+
   const saveEntry = useCallback(async (content: string) => {
     if (!content.trim()) return
     setSaving(true)
@@ -160,8 +163,10 @@ export function Today() {
         setEmotionBadges((prev) => { const next = new Map(prev); next.set(inserted.id, scores.filter((s) => s.value > 20).slice(0, 2)); return next })
       }
       detect(content.trim()).then((detections) => { for (const d of detections) toast(`夢『${d.dream_title}』に近づいているかもしれません！`) })
+      // Re-generate AI comment with new diary context
+      invalidateBriefing()
     }
-  }, [addDiaryEntry, analyze, detect, todayStr])
+  }, [addDiaryEntry, analyze, detect, todayStr, invalidateBriefing])
 
   const diaryPrompt = useMemo(() => getDiaryPrompt(timeMode, recentEventName ?? undefined), [timeMode, recentEventName])
 
