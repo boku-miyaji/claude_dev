@@ -184,7 +184,8 @@
       "Bash(cp /home/node/.claude/plugins/cache/ai-company/company/1.0.0/README.md /home/node/.claude/plugins/cache/ai-company/company/unknown/)",
       "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.claude-plugin/marketplace.json)",
       "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.orphaned_at)",
-      "Bash(node_modules/.bin/tsc --noEmit)"
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(SUPABASE_ACCESS_TOKEN=sbp_e569100db8a84241452c54872319ed4579e41c8e npx supabase functions deploy ai-agent --project-ref akycymnahqypmtsfqhtr)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",

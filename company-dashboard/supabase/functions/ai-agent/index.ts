@@ -504,7 +504,7 @@ async function callAnthropic(model: string, messages: Message[], tools: ToolDef[
   }
 
   const reqBody: Record<string, unknown> = {
-    model, max_tokens: 4096, messages: merged, stream: true,
+    model, max_completion_tokens: 4096, messages: merged, stream: true,
     system: systemMsg ? (typeof systemMsg.content === "string" ? systemMsg.content : "") : undefined,
   };
   if (tools.length > 0) reqBody.tools = toolsToAnthropic(tools);
@@ -566,7 +566,7 @@ async function classifyComplexity(message: string): Promise<string> {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-5-nano", temperature: 0, max_tokens: 5,
+        model: "gpt-5-nano", temperature: 0, max_completion_tokens: 5,
         messages: [{ role: "user", content: `Classify complexity as "simple","moderate","complex":\n- simple: translation, factual, casual, short summary\n- moderate: code explanation, analysis, comparison\n- complex: architecture, long reasoning, strategy, multi-step\nMessage: "${message.substring(0, 200)}"\nOne word:` }],
       }),
     });
@@ -934,7 +934,7 @@ async function generateTitle(msg: string): Promise<string> {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-5-nano", max_tokens: 20, temperature: 0.5,
+        model: "gpt-5-nano", max_completion_tokens: 20, temperature: 0.5,
         messages: [{ role: "user", content: `Short title (max 6 words, same language as message):\n"${msg.substring(0, 200)}"\nTitle only:` }],
       }),
     });
@@ -1007,7 +1007,7 @@ Deno.serve(async (req) => {
       model,
       messages,
       temperature: body.temperature ?? 0.3,
-      max_tokens: body.max_tokens ?? 1000,
+      max_completion_tokens: body.max_tokens ?? 1000,
     };
     if (body.response_format) {
       openaiBody.response_format = body.response_format;
