@@ -183,7 +183,8 @@
       "Bash(cp -r /home/node/.claude/plugins/cache/ai-company/company/1.0.0/skills /home/node/.claude/plugins/cache/ai-company/company/unknown/)",
       "Bash(cp /home/node/.claude/plugins/cache/ai-company/company/1.0.0/README.md /home/node/.claude/plugins/cache/ai-company/company/unknown/)",
       "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.claude-plugin/marketplace.json)",
-      "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.orphaned_at)"
+      "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.orphaned_at)",
+      "Bash(node_modules/.bin/tsc --noEmit)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
@@ -200,7 +201,8 @@
       "/home/node/.claude/plugins/cache/ai-company/company/unknown",
       "/home/node/.claude/plugins",
       "/workspace/.claude/commands",
-      "/home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.claude-plugin"
+      "/home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.claude-plugin",
+      "/home/node/.claude"
     ]
   },
   "hooks": {
