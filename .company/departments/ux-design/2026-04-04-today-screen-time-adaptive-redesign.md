@@ -206,7 +206,7 @@ device: mobile (primary), desktop (secondary)
 ┌──────────────────────────────┐
 │                              │
 │  おはようございます            │
-│  4月4日（金）                  │
+│  4月4日（金） 🌤 22℃ / 15℃   │
 │                              │
 │  ── 今日のスケジュール ──      │
 │                              │
@@ -247,7 +247,7 @@ device: mobile (primary), desktop (secondary)
 
 | 順序 | セクション | 表示条件 | 理由 |
 |------|-----------|---------|------|
-| 1 | 挨拶 + 日付 | 常時 | 時間認識のアンカー |
+| 1 | 挨拶 + 日付 + 天気 | 常時 | 時間・天候の認識アンカー。天気は外出判断に直結 |
 | 2 | 今日のスケジュール | カレンダー予定が1件以上 | 朝の最大関心事 |
 | 3 | AIの一言 | 常時 | スケジュールを踏まえたフォーカス提案 |
 | 4 | 今日のフォーカス（タスク） | 期限今日 or 高優先度タスクが存在 | 最大3件に絞る |
@@ -694,7 +694,7 @@ function useDiaryPrompt(timeMode: TimeMode): string {
 | 優先度 | 項目 | 工数 | 依存 |
 |--------|------|------|------|
 | P0 | 時間帯モード切替 + セクション順序変更 | 小 | なし |
-| P0 | 挨拶テキストの日付追加 | 極小 | なし |
+| P0 | 挨拶テキストの日付 + 天気表示 | 小 | Weather API |
 | P0 | 夜モードでのポジティブファーストレイアウト | 小 | P0-1 |
 | P1 | Google Calendar 今日の予定表示 | 中 | Calendar API連携確認 |
 | P1 | 動的プロンプト（時間帯ベース） | 小 | P0-1 |
@@ -712,9 +712,18 @@ function useDiaryPrompt(timeMode: TimeMode): string {
 ### --> システム開発部への依頼
 - [ ] 上記設計に基づくToday.tsxの実装（P0項目から着手）
 - [ ] `useTodaySchedule` フックの新設（Google Calendar API連携）
+- [ ] `useTodayWeather` フックの新設（天気API連携、下記仕様参照）
 - [ ] `getTimeMode()` / `getDiaryPrompt()` ユーティリティの実装
 - [ ] 時間帯別セクション構成のレンダリングロジック
 - [ ] 既存のCalendarページのAPI連携コードを確認し、Today画面用に軽量版を作成
+
+#### 天気API仕様
+- **API**: Open-Meteo API（無料、APIキー不要、CORS対応）
+  - `https://api.open-meteo.com/v1/forecast?latitude=35.6762&longitude=139.6503&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia/Tokyo&forecast_days=1`
+- **表示**: 挨拶行の日付の横に `天気アイコン 最高℃ / 最低℃`
+- **キャッシュ**: localStorage に1時間キャッシュ
+- **フォールバック**: 取得失敗時は天気部分を非表示（エラー表示しない）
+- **位置情報**: 初期値は東京固定。将来的にGeolocation APIで自動取得も可能
 
 ### --> AI開発部への依頼
 - [ ] Morning Briefingの時間帯対応（朝=計画提案、昼=進捗フィードバック、夜=振り返りサマリー）
