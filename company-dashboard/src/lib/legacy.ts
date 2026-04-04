@@ -1669,7 +1669,9 @@ async function renderDashboard(root) {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken,'apikey':SUPABASE_ANON_KEY},
         body: JSON.stringify({
-          message: 'あなたは社長のことをよく知っている秘書。日記も読んでいるし、働き方の癖も把握している。\n'
+          mode: 'completion',
+          message: quickCtx,
+          system_prompt: 'あなたは社長のことをよく知っている秘書。日記も読んでいるし、働き方の癖も把握している。\n'
             + '今の状況を全部踏まえて、社長にだけ通じる一言を書いて。1文、50字以内。\n\n'
             + '【口調】\n'
             + '- 丁寧語で書く（です・ます調）。タメ口は使わない\n'
@@ -1682,20 +1684,15 @@ async function renderDashboard(root) {
             + '【大事なこと】\n'
             + '- 社長の今の状況・気持ちを理解した上で書く\n'
             + '- 社長個人に向けた言葉にする。日記の内容があればその気持ちを踏まえる\n'
-            + '- 夜(20時以降)は労いや休息を促す。社長の体が大事\n\n'
-            + quickCtx,
+            + '- 夜(20時以降)は労いや休息を促す。社長の体が大事',
           model: 'gpt-5-nano',
-          context_mode: 'none'
+          temperature: 0.8,
+          max_tokens: 100
         })
       });
       if (res.ok) {
-        var bodyText = await res.text();
-        var text = '';
-        bodyText.split('\n').forEach(function(line) {
-          if (line.startsWith('data: ')) {
-            try { var evt = JSON.parse(line.slice(6)); if (evt.type==='delta'&&evt.content) text+=evt.content; } catch(x) {}
-          }
-        });
+        var data = await res.json();
+        var text = data.content || '';
         if (text) {
           text = text.replace(/\n/g,' ').replace(/^["「]|["」]$/g,'');
           if (text.length > 70) text = text.substring(0,70);
@@ -1821,8 +1818,9 @@ async function collectNews(container) {
       method: 'POST',
       headers: {'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
       body: JSON.stringify({
-        message: '【指示】質問や確認をせず、即座にJSON配列だけを出力してください。\n\n'
-          + topicPrompt + 'について、最新ニュースを5件出してください。\n\n'
+        mode: 'completion',
+        system_prompt: '質問や確認をせず、即座にJSON配列だけを出力してください。前置き・説明・マークダウン記法は不要。',
+        message: topicPrompt + 'について、最新ニュースを5件出してください。\n\n'
           + '出力形式（厳守・JSON配列のみ）:\n'
           + '[{"title":"タイトル","summary":"1行要約","url":"出典URL","source":"メディア名","topic":"トピック名","date":"YYYY-MM-DD"}]\n\n'
           + '注意:\n'
@@ -1831,17 +1829,12 @@ async function collectNews(container) {
           + '- topicはAI/LLM, Snowflake, Databricks, Claude, OpenAI等\n'
           + '- JSON配列のみ出力。前置き・説明・マークダウン記法は不要',
         model: 'gpt-5-nano',
-        context_mode: 'none'
+        max_tokens: 1500
       })
     });
     if (res.ok) {
-      var bodyText = await res.text();
-      var text = '';
-      bodyText.split('\n').forEach(function(line) {
-        if (line.startsWith('data: ')) {
-          try { var evt = JSON.parse(line.slice(6)); if (evt.type==='delta'&&evt.content) text+=evt.content; } catch(x) {}
-        }
-      });
+      var data = await res.json();
+      var text = data.content || '';
       if (text) {
         // Extract JSON array from response
         var jsonMatch = text.match(/\[[\s\S]*\]/);

@@ -964,6 +964,13 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { return new Response("Invalid JSON", { status: 400 }); }
   if (!body.message) return new Response("message is required", { status: 400 });
 
+  // Health check: return immediately without creating a conversation
+  if (body.message === "ping") {
+    return new Response(JSON.stringify({ status: "ok" }), {
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
+  }
+
   // Extract user JWT for RLS-scoped tool execution
   const authHeader = req.headers.get("Authorization") || "";
   const userJwt = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";

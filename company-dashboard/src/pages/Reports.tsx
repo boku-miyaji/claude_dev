@@ -267,25 +267,18 @@ function NewsFeed() {
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
+            mode: 'completion',
             message: '最新のAI/LLMニュース・技術動向を3-5件。タイトル+1行要約。日本語。箇条書き。日付付き。トピック: AI, LLM, データ基盤, Claude, OpenAI',
             model: 'gpt-5-nano',
-            context_mode: 'none',
+            max_tokens: 1000,
           }),
         },
       )
       if (res.ok) {
-        const bodyText = await res.text()
-        let text = ''
-        bodyText.split('\n').forEach((line) => {
-          if (line.startsWith('data: ')) {
-            try {
-              const evt = JSON.parse(line.slice(6))
-              if (evt.type === 'delta' && evt.content) text += evt.content
-            } catch { /* skip */ }
-          }
-        })
+        const data = await res.json()
+        const text = data.content || ''
         if (text) {
-          const lines = text.split('\n').filter((l) => l.trim().startsWith('-'))
+          const lines = text.split('\n').filter((l: string) => l.trim().startsWith('-'))
           for (const line of lines) {
             await supabase.from('activity_log').insert({
               action: 'intelligence_item',
