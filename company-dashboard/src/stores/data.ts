@@ -45,6 +45,8 @@ interface DataStore {
   addGoal: (goal: Record<string, unknown>) => Promise<Goal | null>
   updateGoal: (id: string, data: Record<string, unknown>) => Promise<void>
   deleteGoal: (id: string) => Promise<void>
+  addTask: (task: { title: string; priority?: string; due_date?: string | null }) => Promise<Task | null>
+  updateTask: (id: string, data: Partial<Task>) => Promise<void>
   addHabit: (habit: Partial<Habit>) => Promise<Habit | null>
   updateHabit: (id: number, data: Partial<Habit>) => Promise<void>
   deleteHabit: (id: number) => Promise<void>
@@ -317,6 +319,30 @@ export const useDataStore = create<DataStore>((set, get) => ({
     const { error } = await supabase.from('goals').delete().eq('id', id)
     if (!error) {
       set((s) => ({ goals: s.goals.filter((g) => g.id !== id) }))
+    }
+  },
+
+  addTask: async (task) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({ title: task.title, priority: task.priority ?? 'normal', due_date: task.due_date ?? null, status: 'open' })
+      .select('*, companies(name)')
+      .single()
+    if (error || !data) return null
+    const newTask = data as Task
+    set((s) => ({ tasks: [newTask, ...s.tasks] }))
+    return newTask
+  },
+
+  updateTask: async (id, updates) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', id)
+    if (!error) {
+      set((s) => ({
+        tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...updates } as Task : t)),
+      }))
     }
   },
 

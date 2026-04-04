@@ -66,8 +66,15 @@ export function Today() {
     diaryEntries, tasks, dreams, habits, habitLogs,
     fetchDiary, fetchTasks, fetchDreams, fetchHabits, fetchHabitLogs, fetchEmotions,
     addDiaryEntry, toggleHabitLog,
+    addTask, updateTask, addHabit,
     loading,
   } = useDataStore()
+
+  // Inline add states
+  const [newTaskTitle, setNewTaskTitle] = useState('')
+  const [showAddTask, setShowAddTask] = useState(false)
+  const [newHabitTitle, setNewHabitTitle] = useState('')
+  const [showAddHabit, setShowAddHabit] = useState(false)
 
   const todayStr = useMemo(() => {
     const d = new Date()
@@ -199,9 +206,7 @@ export function Today() {
 
   /* ── [1] Today's Actions — unified tasks + habits ── */
 
-  const hasActions = todayTasks.length > 0 || todayHabits.length > 0 || completedToday.length > 0
-
-  const ActionsSection = hasActions ? (
+  const ActionsSection = (
     <div className="section">
       <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>
@@ -222,45 +227,124 @@ export function Today() {
       </div>
 
       {/* Tasks */}
-      {(todayTasks.length > 0 || completedToday.length > 0) && (
-        <Card style={{ marginBottom: todayHabits.length > 0 ? 10 : 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)' }}>Tasks</span>
+      <Card style={{ marginBottom: todayHabits.length > 0 ? 10 : 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)' }}>Tasks</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => setShowAddTask((v) => !v)}>+</button>
             <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/tasks')}>
               {allOpenTasks.length > todayTasks.length ? `他${allOpenTasks.length - todayTasks.length}件` : '一覧'}
             </button>
           </div>
-          {todayTasks.map((t) => (
-            <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
-                width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                background: t.priority === 'high' ? 'var(--red)' : t.status === 'in_progress' ? 'var(--blue)' : 'var(--text3)',
-              }} />
-              <span style={{ flex: 1, fontWeight: 500 }}>{t.title}</span>
-              {t.due_date === todayStr && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600, padding: '1px 5px', background: 'var(--red-bg)', borderRadius: 3, border: '1px solid var(--red-border)' }}>今日</span>}
-              {t.priority === 'high' && t.due_date !== todayStr && <span style={{ fontSize: 9, color: 'var(--amber)', fontWeight: 600, padding: '1px 5px', background: 'var(--amber-bg)', borderRadius: 3, border: '1px solid var(--amber-border)' }}>高</span>}
-            </div>
-          ))}
-          {/* Completed today (collapsed in morning, shown in afternoon/evening) */}
-          {completedToday.length > 0 && timeMode !== 'morning' && completedToday.map((t) => (
-            <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, opacity: 0.5 }}>
-              <span style={{ color: 'var(--green)', fontSize: 12, width: 6, textAlign: 'center' }}>✓</span>
-              <span style={{ textDecoration: 'line-through' }}>{t.title}</span>
-            </div>
-          ))}
-          {completedToday.length > 0 && timeMode === 'morning' && (
-            <div style={{ padding: '6px 0', fontSize: 11, color: 'var(--green)' }}>✓ {completedToday.length}件完了済み</div>
-          )}
-        </Card>
-      )}
+        </div>
+        {/* Inline add task */}
+        {showAddTask && (
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <input
+              className="input"
+              placeholder="新しいタスク..."
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newTaskTitle.trim()) {
+                  addTask({ title: newTaskTitle.trim(), due_date: todayStr })
+                  setNewTaskTitle('')
+                  setShowAddTask(false)
+                  toast('タスクを追加しました')
+                }
+              }}
+              autoFocus
+              style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
+            />
+            <button
+              className="btn btn-p btn-sm"
+              disabled={!newTaskTitle.trim()}
+              onClick={() => {
+                if (newTaskTitle.trim()) {
+                  addTask({ title: newTaskTitle.trim(), due_date: todayStr })
+                  setNewTaskTitle('')
+                  setShowAddTask(false)
+                  toast('タスクを追加しました')
+                }
+              }}
+            >追加</button>
+          </div>
+        )}
+        {todayTasks.map((t) => (
+          <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Clickable checkbox to complete */}
+            <span
+              onClick={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }}
+              style={{
+                width: 18, height: 18, borderRadius: 4, flexShrink: 0, cursor: 'pointer',
+                border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all .15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--green)'; e.currentTarget.style.background = 'var(--green-bg)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'transparent' }}
+            />
+            <span style={{ flex: 1, fontWeight: 500 }}>{t.title}</span>
+            {t.due_date === todayStr && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600, padding: '1px 5px', background: 'var(--red-bg)', borderRadius: 3, border: '1px solid var(--red-border)' }}>今日</span>}
+            {t.priority === 'high' && t.due_date !== todayStr && <span style={{ fontSize: 9, color: 'var(--amber)', fontWeight: 600, padding: '1px 5px', background: 'var(--amber-bg)', borderRadius: 3, border: '1px solid var(--amber-border)' }}>高</span>}
+          </div>
+        ))}
+        {/* Completed today */}
+        {completedToday.length > 0 && timeMode !== 'morning' && completedToday.map((t) => (
+          <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, opacity: 0.5 }}>
+            <span style={{ color: 'var(--green)', fontSize: 12, width: 18, textAlign: 'center' }}>✓</span>
+            <span style={{ textDecoration: 'line-through' }}>{t.title}</span>
+          </div>
+        ))}
+        {completedToday.length > 0 && timeMode === 'morning' && (
+          <div style={{ padding: '6px 0', fontSize: 11, color: 'var(--green)' }}>✓ {completedToday.length}件完了済み</div>
+        )}
+        {todayTasks.length === 0 && completedToday.length === 0 && !showAddTask && (
+          <div style={{ padding: '6px 0', fontSize: 12, color: 'var(--text3)' }}>タスクなし — + で追加</div>
+        )}
+      </Card>
 
       {/* Habits */}
-      {todayHabits.length > 0 && (
-        <Card>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)' }}>Habits</span>
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)' }}>Habits</span>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => setShowAddHabit((v) => !v)}>+</button>
             <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/habits')}>詳細</button>
           </div>
+        </div>
+        {/* Inline add habit */}
+        {showAddHabit && (
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            <input
+              className="input"
+              placeholder="新しい習慣..."
+              value={newHabitTitle}
+              onChange={(e) => setNewHabitTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newHabitTitle.trim()) {
+                  addHabit({ title: newHabitTitle.trim() })
+                  setNewHabitTitle('')
+                  setShowAddHabit(false)
+                  toast('習慣を追加しました')
+                }
+              }}
+              autoFocus
+              style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
+            />
+            <button
+              className="btn btn-p btn-sm"
+              disabled={!newHabitTitle.trim()}
+              onClick={() => {
+                if (newHabitTitle.trim()) {
+                  addHabit({ title: newHabitTitle.trim() })
+                  setNewHabitTitle('')
+                  setShowAddHabit(false)
+                  toast('習慣を追加しました')
+                }
+              }}
+            >追加</button>
+          </div>
+        )}
           {(timeMode === 'morning' ? todayHabits : [...todayHabits].sort((a, b) => Number(a.completed) - Number(b.completed))).map((h) => (
             <div
               key={h.id}
@@ -286,10 +370,12 @@ export function Today() {
               )}
             </div>
           ))}
-        </Card>
-      )}
+        {todayHabits.length === 0 && !showAddHabit && (
+          <div style={{ padding: '6px 0', fontSize: 12, color: 'var(--text3)' }}>習慣なし — + で追加</div>
+        )}
+      </Card>
     </div>
-  ) : null
+  )
 
   /* ── [2] Schedule ── */
 
