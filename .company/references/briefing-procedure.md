@@ -49,13 +49,22 @@
   ➖ 削除: old-project/
 ```
 
-## データ鮮度チェック
+## データ鮮度チェック + 自動メンテナンス
 
 **手順:**
 1. `.claude/hooks/freshness-check.sh` を実行し、各データソースの最終更新日を取得
 2. `.company/freshness-policy.yaml` のポリシーと照合し、stale（期限超過）を検出
 3. ブリーフィングに鮮度レポートを含める
 4. `auto_update: true` のstaleデータは、ブリーフィング後に自動更新を実行
+
+**重要: 以下の4項目は「警告」ではなく「自動修復」する。人間は何もしなくていい。**
+
+| 項目 | 検出 | 自動修復 |
+|------|------|---------|
+| growth_events | 最終記録7日超 + fix/refactor 3件以上 | git log分析 → パターン検出 → Supabase INSERT |
+| knowledge昇格 | confidence ≥ 3 の未昇格ルール | rules/に追記 → status='promoted'に更新 |
+| CLAUDE.mdサイズ | 200行超 | 手順的記述をrules/に分離 → CLAUDE.md縮小 |
+| design-philosophy / HowItWorks | 14日未更新 + AI機能変更あり | git diff分析 → 該当セクション自動追記 |
 
 **表示形式:**
 ```

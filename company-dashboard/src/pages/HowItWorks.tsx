@@ -190,14 +190,14 @@ function TabOverview() {
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
         ]} />
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--yellow)' }}>手動更新が必要（陳腐化リスクあり）</div>
-        <Tbl headers={['データ', '更新タイミング', '陳腐化リスク', '対策']} rows={[
-          ['HowItWorks AI Features', 'AI機能追加・変更時', '新機能が未記載になる', 'memoryルール: 機能変更時に更新必須'],
-          ['design-philosophy.md', '設計判断時', '新しい教訓が反映されない', 'memoryルール: 設計判断時に追記必須'],
-          ['growth_events', '失敗・改善発生時', '最近の成長が未記録', '/company起動時にリマインド検討'],
-          ['knowledge_base → CLAUDE.md昇格', 'confidence ≥ 3 到達時', '昇格候補が放置される', '月次で棚卸し。ブリーフィングでリマインド'],
-          ['CLAUDE.md サイズ', '常時', '200行超でコンテキスト圧迫', '週次でサイズチェック'],
-          ['docs/knowledge/', '新知見発見時', '古い情報のまま', '体系知識は調査のたびに追記'],
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--green)' }}>自動メンテナンス（/company 起動時に検出→修復）</div>
+        <P>freshness-policy.yaml で定義。stale検出→人間の操作なしでClaude Codeが自動修復。</P>
+        <Tbl headers={['データ', '検出条件', '自動修復アクション']} rows={[
+          ['growth_events', '最終記録7日超 + fix/refactor 3件以上', 'git log分析 → パターン検出 → Supabase INSERT'],
+          ['knowledge昇格', 'confidence ≥ 3 の未昇格ルール', 'rules/に追記 → status=promoted に更新'],
+          ['CLAUDE.md サイズ', '200行超', '手順的記述をrules/に分離 → CLAUDE.md縮小'],
+          ['design-philosophy / HowItWorks', '14日未更新 + AI機能変更あり', 'git diff分析 → 該当セクション自動追記'],
+          ['docs/knowledge/', '14日未更新', '新しいドキュメントがあれば追記'],
         ]} />
       </Section>
 
@@ -228,7 +228,13 @@ function TabOverview() {
 AI機能を追加・変更
   ├→ Edge Function 修正 → supabase functions deploy
   ├→ HowItWorks AI Features タブ更新（手動・必須）
-  └→ design-philosophy.md に教訓追記（手動・必須）`}
+  └→ design-philosophy.md に教訓追記（手動・必須）
+
+/company 起動時の自動メンテナンス（freshness-policy.yaml）
+  ├→ growth_events: git log分析 → 新しい失敗パターン検出 → 自動INSERT
+  ├→ knowledge昇格: confidence≥3 → rules/に自動追記 → status=promoted
+  ├→ CLAUDE.md: 200行超 → 手順をrules/に分離 → 自動スリム化
+  └→ design-philosophy / HowItWorks: 14日超 + 変更あり → 自動追記`}
         </div>
       </Section>
     </>

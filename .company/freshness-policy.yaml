@@ -188,6 +188,82 @@ data_sources:
 
 # ── 実行ルール ──
 
+  # ── 優先度9: Growth Chronicle（失敗→改善の自動記録） ──
+
+  growth_events:
+    priority: 9
+    max_age_days: 7
+    auto_update: true
+    blocking: false
+    check_method: combined
+    check_query: >
+      SELECT event_date FROM growth_events
+      ORDER BY event_date DESC LIMIT 1
+    stale_condition: "最終記録から7日超過 AND 直近のgit logにfix/refactorコミットが3件以上"
+    update_action: |
+      1. git log --oneline --since="{last_growth_date}" | grep -v "auto-save" で直近コミットを取得
+      2. fix/refactor/revert が3件以上あれば、パターン分析（連続fix、同じキーワードの繰り返し等）
+      3. 検出したパターンを growth_events テーブルに INSERT（event_type, category, severity, phase, title, what_happened, root_cause, countermeasure, result, related_commits, tags）
+      4. 件数と内容をブリーフィングで報告
+
+  # ── 優先度10: ナレッジ昇格チェック ──
+
+  knowledge_promotion:
+    priority: 10
+    max_age_days: 7
+    auto_update: true
+    blocking: false
+    check_method: supabase_query
+    check_query: >
+      SELECT id, category, rule, confidence FROM knowledge_base
+      WHERE status = 'active' AND confidence >= 3
+      AND id NOT IN (SELECT id FROM knowledge_base WHERE status = 'promoted')
+    stale_condition: "confidence ≥ 3 かつ未昇格のルールが存在"
+    update_action: |
+      1. 昇格候補を取得（confidence ≥ 3, status = 'active'）
+      2. 該当ルールを .claude/rules/ の適切なファイルに追記
+      3. knowledge_base の status を 'promoted'、promoted_to を 'rules/{file}' に更新
+      4. ブリーフィングで「ルール昇格しました: {rule}」と報告
+
+  # ── 優先度11: CLAUDE.md サイズ管理 ──
+
+  claude_md_size:
+    priority: 11
+    max_age_days: 0
+    auto_update: true
+    blocking: false
+    check_method: script
+    check_script: "wc -l .claude/CLAUDE.md | awk '{print $1}'"
+    stale_condition: "CLAUDE.md が 200行を超過"
+    update_action: |
+      1. CLAUDE.md の行数を確認
+      2. 200行超過の場合、手順的な記述を .claude/rules/ に分離
+      3. CLAUDE.md から分離した部分を削除し、rules/ への参照に置き換え
+      4. ブリーフィングで「CLAUDE.md を {before}行 → {after}行 にスリム化しました」と報告
+
+  # ── 優先度12: design-philosophy + HowItWorks 同期チェック ──
+
+  design_docs_sync:
+    priority: 12
+    max_age_days: 14
+    auto_update: true
+    blocking: false
+    check_method: combined
+    check_query: >
+      SELECT count(*) FROM growth_events
+      WHERE event_date > (
+        SELECT COALESCE(
+          (SELECT substring(unnest(regexp_matches(
+            pg_read_file('/dev/null'), '.*'))  -- placeholder: use file mtime
+          FROM generate_series(1,1)), '2000-01-01')
+      )
+    stale_condition: "design-philosophy.md の最終更新から14日超過 AND 直近にAI機能変更・設計判断あり"
+    update_action: |
+      1. git log --since="{last_update}" で直近の変更を確認
+      2. AI機能変更（hooks/, edgeAi.ts, ai-agent/）があれば HowItWorks AI Features の内容を更新
+      3. 設計判断（refactor, architecture変更）があれば design-philosophy.md に追記
+      4. 更新履歴テーブルに日付と変更内容を追記
+
 execution_rules:
   # ブリーフィング表示順: priority 昇順
   # auto_update=true のものは確認なしで実行
