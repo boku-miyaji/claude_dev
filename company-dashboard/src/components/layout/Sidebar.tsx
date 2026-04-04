@@ -11,35 +11,28 @@ interface NavEntry {
 }
 
 const NAV: NavEntry[] = [
-  // Main (always visible)
+  // Core (always visible — daily use)
   { type: 'item', page: '', icon: '◉', label: 'Today' },
   { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
-  { type: 'item', page: 'dreams', icon: '🌟', label: 'Dreams' },
-  { type: 'item', page: 'chat', icon: '💬', label: 'AI Chat' },
-  // Self
-  { type: 'label', label: 'Self' },
-  { type: 'item', page: 'goals', icon: '🎯', label: 'Goals' },
-  { type: 'item', page: 'habits', icon: '🌱', label: 'Habits' },
-  { type: 'item', page: 'me', icon: '🧠', label: 'Me' },
-  { type: 'item', page: 'career', icon: '☆', label: 'Career' },
-  // Work (collapsible)
-  { type: 'collapsible-start', label: 'Work', groupKey: 'work' },
+  { type: 'item', page: 'dreams', icon: '🌟', label: 'Dreams & Goals' },
   { type: 'item', page: 'tasks', icon: '☐', label: 'Tasks' },
-  { type: 'item', page: 'companies', icon: '◫', label: 'Organization' },
-  { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
-  { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
-  // Intelligence (collapsible)
-  { type: 'collapsible-start', label: 'Intelligence', groupKey: 'intel' },
-  { type: 'item', page: 'weekly', icon: '📖', label: 'Weekly' },
-  { type: 'item', page: 'insights', icon: '◇', label: 'Insights' },
+  { type: 'item', page: 'chat', icon: '💬', label: 'AI Chat' },
+  // Analytics (weekly/monthly)
+  { type: 'label', label: 'Analytics' },
+  { type: 'item', page: 'insights', icon: '📊', label: 'Insights' },
   { type: 'item', page: 'intelligence', icon: '📄', label: 'Reports' },
-  { type: 'item', page: 'growth', icon: '↗', label: 'Growth' },
-  // Workspace (collapsible)
-  { type: 'collapsible-start', label: 'Workspace', groupKey: 'workspace' },
+  { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
+  // More (collapsible — infrequent)
+  { type: 'collapsible-start', label: 'More', groupKey: 'more' },
+  { type: 'item', page: 'habits', icon: '🌱', label: 'Habits' },
+  { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
+  { type: 'item', page: 'companies', icon: '◫', label: 'Organization' },
   { type: 'item', page: 'knowledge', icon: '◈', label: 'Knowledge' },
   { type: 'item', page: 'artifacts', icon: '📄', label: 'Artifacts' },
   { type: 'item', page: 'prompts', icon: '▷', label: 'Prompts' },
   { type: 'item', page: 'commands', icon: '⌘', label: 'Commands' },
+  { type: 'item', page: 'growth', icon: '↗', label: 'Growth' },
+  { type: 'item', page: 'how-it-works', icon: '?', label: 'How it Works' },
 ]
 
 /** Group NAV entries into sections for collapsible rendering */
@@ -79,7 +72,7 @@ export function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ more: true })
 
   const currentPage = location.pathname.replace('/', '') || ''
 
@@ -157,12 +150,6 @@ export function Sidebar() {
         onClick={() => navigate('/settings')}
       >
         <span className="nav-icon">⚙</span> Settings
-      </button>
-      <button
-        className={`nav-item${currentPage === 'how-it-works' ? ' active' : ''}`}
-        onClick={() => navigate('/how-it-works')}
-      >
-        <span className="nav-icon">?</span> How it Works
       </button>
 
       <div className="nav-user">

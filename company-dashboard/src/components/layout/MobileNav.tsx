@@ -10,45 +10,36 @@ interface MobileNavItem {
 const MAIN_TABS: MobileNavItem[] = [
   { page: '', icon: '◉', label: 'Today' },
   { page: 'journal', icon: '📔', label: 'Journal' },
-  { page: 'dreams', icon: '🌟', label: 'Dreams' },
+  { page: 'tasks', icon: '☐', label: 'Tasks' },
   { page: 'chat', icon: '💬', label: 'AI' },
 ]
 
 const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
   {
-    label: 'Self',
+    label: 'Core',
     items: [
-      { page: 'goals', icon: '🎯', label: 'Goals' },
+      { page: 'dreams', icon: '🌟', label: 'Dreams' },
       { page: 'habits', icon: '🌱', label: 'Habits' },
-      { page: 'me', icon: '🧠', label: 'Me' },
-      { page: 'career', icon: '☆', label: 'Career' },
+      { page: 'insights', icon: '📊', label: 'Insights' },
+      { page: 'intelligence', icon: '📄', label: 'Reports' },
     ],
   },
   {
     label: 'Work',
     items: [
-      { page: 'tasks', icon: '☐', label: 'Tasks' },
-      { page: 'companies', icon: '◫', label: 'Organization' },
       { page: 'finance', icon: '¥', label: 'Finance' },
       { page: 'calendar', icon: '📅', label: 'Calendar' },
-    ],
-  },
-  {
-    label: 'Intelligence',
-    items: [
-      { page: 'weekly', icon: '📖', label: 'Weekly' },
-      { page: 'insights', icon: '◇', label: 'Insights' },
-      { page: 'intelligence', icon: '📄', label: 'Reports' },
-      { page: 'growth', icon: '↗', label: 'Growth' },
-    ],
-  },
-  {
-    label: 'Workspace',
-    items: [
+      { page: 'companies', icon: '◫', label: 'Org' },
       { page: 'knowledge', icon: '◈', label: 'Knowledge' },
+    ],
+  },
+  {
+    label: 'More',
+    items: [
       { page: 'artifacts', icon: '📄', label: 'Artifacts' },
-      { page: 'prompts', icon: '▷', label: 'Prompts' },
-      { page: 'commands', icon: '⌘', label: 'Commands' },
+      { page: 'growth', icon: '↗', label: 'Growth' },
+      { page: 'settings', icon: '⚙', label: 'Settings' },
+      { page: 'how-it-works', icon: '?', label: 'Guide' },
     ],
   },
 ]
