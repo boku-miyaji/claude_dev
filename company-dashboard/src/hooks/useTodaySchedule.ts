@@ -15,19 +15,14 @@ interface TodaySchedule {
   todayEvents: ScheduleEvent[]
   tomorrowEvents: ScheduleEvent[]
   loading: boolean
-  recentEventName: string | null  // most recently ended event
+  recentEventName: string | null
 }
 
 const TOKEN_KEY = 'gcal_token'
 
-function toJST(date: Date): string {
-  return date.toLocaleString('sv-SE', { timeZone: 'Asia/Tokyo' }).replace(' ', 'T')
-}
-
 /**
- * Lightweight hook to fetch today's and tomorrow's Google Calendar events
- * for the Today screen. Reuses the existing OAuth token from localStorage.
- * Caches for 15 minutes.
+ * Lightweight hook to fetch today's and tomorrow's Google Calendar events.
+ * Uses the same API pattern as useGoogleCalendar (URLSearchParams + timeZone).
  */
 export function useTodaySchedule(): TodaySchedule {
   const [todayEvents, setTodayEvents] = useState<ScheduleEvent[]>([])
@@ -45,23 +40,27 @@ export function useTodaySchedule(): TodaySchedule {
     const now = new Date()
     const todayStart = new Date(now)
     todayStart.setHours(0, 0, 0, 0)
-    const tomorrowStart = new Date(todayStart)
-    tomorrowStart.setDate(tomorrowStart.getDate() + 1)
-    const tomorrowEnd = new Date(tomorrowStart)
-    tomorrowEnd.setDate(tomorrowEnd.getDate() + 1)
-
-    const timeMin = toJST(todayStart)
-    const timeMax = toJST(tomorrowEnd)
+    const tomorrowEnd = new Date(todayStart)
+    tomorrowEnd.setDate(tomorrowEnd.getDate() + 2)
 
     async function fetchEvents() {
       const allEvents: ScheduleEvent[] = []
 
+      const params = new URLSearchParams({
+        timeMin: todayStart.toISOString(),
+        timeMax: tomorrowEnd.toISOString(),
+        timeZone: 'Asia/Tokyo',
+        singleEvents: 'true',
+        maxResults: '20',
+        orderBy: 'startTime',
+      })
+
       for (const cal of GCAL_CALENDARS) {
         try {
-          const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?timeMin=${timeMin}:00%2B09:00&timeMax=${timeMax}:00%2B09:00&singleEvents=true&orderBy=startTime&maxResults=20`
-          const res = await fetch(url, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
+          const res = await fetch(
+            `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?${params}`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          )
           if (!res.ok) continue
           const data = await res.json()
           for (const item of data.items || []) {
@@ -88,18 +87,18 @@ export function useTodaySchedule(): TodaySchedule {
         seen.add(e.id)
         return true
       })
-
-      // Sort by start time
       unique.sort((a, b) => a.start.localeCompare(b.start))
 
       // Split into today and tomorrow
       const todayStr = now.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
-      const tomorrowStr = tomorrowStart.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
+      const tomorrowDate = new Date(todayStart)
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1)
+      const tomorrowStr = tomorrowDate.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' })
 
       const today = unique.filter((e) => e.start.startsWith(todayStr))
       const tomorrow = unique.filter((e) => e.start.startsWith(tomorrowStr))
 
-      // Find most recently ended event (for context-aware diary prompt)
+      // Most recently ended event (for diary prompt context)
       const pastEvents = today.filter((e) => e.isPast)
       const recent = pastEvents.length > 0 ? pastEvents[pastEvents.length - 1].summary : null
 
