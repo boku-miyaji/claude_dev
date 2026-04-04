@@ -1,6 +1,12 @@
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Card } from '@/components/ui'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+
+// ========== Shared UI primitives ==========
+
+function P({ children }: { children: React.ReactNode }) {
+  return <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 8 }}>{children}</div>
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -9,10 +15,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       {children}
     </div>
   )
-}
-
-function P({ children }: { children: string }) {
-  return <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 8 }}>{children}</div>
 }
 
 function MiniCard({ title, body }: { title: string; body: string }) {
@@ -86,112 +88,90 @@ function StatusDot({ ok }: { ok: boolean }) {
   return <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: ok ? 'var(--green)' : 'var(--red)', marginRight: 6 }} />
 }
 
-function OpsHealth() {
+// ========== Tab: Overview ==========
+
+function TabOverview() {
   const [stats, setStats] = useState<{
-    knowledgeCount: number
-    sessionCount: number
-    sessionsExtracted: number
-    pendingMigrations: number
-    skillCount: number
+    knowledgeCount: number; sessionCount: number; sessionsExtracted: number;
+    memoryCount: number; growthCount: number; diaryCount: number;
   } | null>(null)
 
   useEffect(() => {
     async function load() {
-      const [kbRes, sessRes, sessExtRes] = await Promise.all([
+      const [kbRes, sessRes, sessExtRes, growthRes, diaryRes] = await Promise.all([
         supabase.from('knowledge_base').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('prompt_sessions').select('id', { count: 'exact', head: true }),
         supabase.from('prompt_sessions').select('id', { count: 'exact', head: true }).eq('knowledge_extracted', true),
+        supabase.from('growth_events').select('id', { count: 'exact', head: true }),
+        supabase.from('diary_entries').select('id', { count: 'exact', head: true }),
       ])
       setStats({
         knowledgeCount: kbRes.count || 0,
         sessionCount: sessRes.count || 0,
         sessionsExtracted: sessExtRes.count || 0,
-        pendingMigrations: 0,
-        skillCount: 10,
+        memoryCount: 0,
+        growthCount: growthRes.count || 0,
+        diaryCount: diaryRes.count || 0,
       })
     }
     load()
   }, [])
 
-  if (!stats) return <div style={{ fontSize: 12, color: 'var(--text3)' }}>Loading...</div>
-
-  const extractionRate = stats.sessionCount > 0
-    ? Math.round((stats.sessionsExtracted / stats.sessionCount) * 100)
-    : 0
-
   return (
-    <div className="g2" style={{ marginBottom: 12 }}>
-      <div className="card" style={{ padding: 14 }}>
-        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>Ops Health</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
-          <div><StatusDot ok={stats.knowledgeCount > 0} /> Active Knowledge: {stats.knowledgeCount} rules</div>
-          <div><StatusDot ok={stats.sessionCount > 0} /> Sessions Tracked: {stats.sessionCount}</div>
-          <div><StatusDot ok={extractionRate >= 50} /> Knowledge Extraction: {extractionRate}% ({stats.sessionsExtracted}/{stats.sessionCount})</div>
-          <div><StatusDot ok={true} /> Registered Skills: {stats.skillCount}</div>
-        </div>
-      </div>
-      <div className="card" style={{ padding: 14 }}>
-        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>Automation Scripts</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text2)' }}>
-          <div><code style={{ fontSize: 11, color: 'var(--accent)' }}>/migrate</code> — DB migration</div>
-          <div><code style={{ fontSize: 11, color: 'var(--accent)' }}>/deploy</code> — Edge Function deploy</div>
-          <div><code style={{ fontSize: 11, color: 'var(--accent)' }}>sync-skills.sh</code> — Skill sync</div>
-          <div><code style={{ fontSize: 11, color: 'var(--accent)' }}>sync-registry.sh</code> — Registry sync</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export function HowItWorks() {
-  return (
-    <div className="page">
-      <PageHeader title="How it Works" description="なぜこの仮想カンパニーは回り続けるのか" />
-
-      {/* === なぜ回っているか — 根幹原理 === */}
+    <>
       <Section title="なぜ回っているか — 3つの原理">
-        <P>このシステムが「作って終わり」にならず継続的に改善され続ける理由は、3つの原理が組み込まれているから。</P>
+        <P>このシステムが「作って終わり」にならず改善され続ける理由。</P>
         <div className="g3" style={{ marginBottom: 16 }}>
-          <Principle
-            title="原理 1: 自動検出"
-            body="手動操作、同じ修正の繰り返し、知識の散在を自動で検出する。問題が見えないと改善は始まらない。Hook・タグ・prompt_logが観察の目。"
-            color="var(--accent)"
-          />
-          <Principle
-            title="原理 2: 知識の昇格"
-            body="一時メモ → ナレッジ → ルール → スキル。情報は使われるたびに格上げされ、より確実に適用される形に進化する。同じ指示を2回しなくていい。"
-            color="var(--green)"
-          />
-          <Principle
-            title="原理 3: 仕組みの仕組み"
-            body="機能を作るだけでは足りない。「誰が・いつ・どう回すか」まで設計する。ops部署がメタ運用を担い、仕組み自体を改善し続ける。"
-            color="var(--yellow)"
-          />
-        </div>
-        <div className="card" style={{ padding: 14, borderLeft: '3px solid var(--accent)', marginBottom: 12 }}>
-          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>この3原理が噛み合うと何が起きるか</div>
-          <P>社長の修正指示 → 自動検出(原理1) → ナレッジ化(原理2) → 次回から暗黙適用 → さらに仕組み自体も改善(原理3) → 修正指示が減る → より高度なタスクに集中できる</P>
+          <Principle title="原理 1: 自動検出" body="手動操作、同じ修正の繰り返し、知識の散在を自動で検出する。問題が見えないと改善は始まらない。" color="var(--accent)" />
+          <Principle title="原理 2: 知識の昇格" body="一時メモ → ナレッジ → ルール → スキル。同じ指示を2回しなくていい。" color="var(--green)" />
+          <Principle title="原理 3: 仕組みの仕組み" body="機能を作るだけでなく「誰が・いつ・どう回すか」まで設計。ops部署がメタ運用。" color="var(--yellow)" />
         </div>
       </Section>
 
       <Section title="5つの自己改善ループ">
-        <P>3原理を実現する5つのフィードバックループ。それぞれが独立して回り、全体として組織が賢くなり続ける。</P>
         <div className="g2" style={{ marginBottom: 12 }}>
-          <MiniCard title="Loop 1: ナレッジ蓄積（即時）" body="修正指示を検出 → knowledge_base記録 → 次回から暗黙適用 → confidence上昇 → CLAUDE.md昇格。同じミスを繰り返さない。" />
-          <MiniCard title="Loop 2: セッション学習（セッション単位）" body="prompt_sessionsでセッション単位にグルーピング → フィードバック含むセッションからナレッジ自動抽出 → 文脈付きで蓄積。" />
-          <MiniCard title="Loop 3: 組織最適化（定期）" body="5軸評価（自律完遂率/一発OK率/連携効率/目標寄与/稼働率）→ 低スコアの部署のCLAUDE.mdルール改善。組織が自動チューニング。" />
-          <MiniCard title="Loop 4: CEO分析（蓄積）" body="prompt_log蓄積 → 行動パターン/時間帯/好み/傾向分析 → 秘書が先回り提案。社長の思考パターンに適応。" />
-          <MiniCard title="Loop 5: 運営改善（メタ）" body="ops部署が「仕組み自体」を監視。手動操作の検出 → スクリプト化。CLAUDE.md肥大化 → スキル分離。仕組みが仕組みを改善する。" />
+          <MiniCard title="1. ナレッジ蓄積" body="修正指示を検出 → knowledge_base記録 → confidence上昇 → CLAUDE.md昇格" />
+          <MiniCard title="2. セッション学習" body="prompt_sessionsでグルーピング → フィードバック含むセッションからナレッジ抽出" />
+          <MiniCard title="3. 組織最適化" body="5軸評価 → 低スコア部署のCLAUDE.mdルール改善。組織が自動チューニング" />
+          <MiniCard title="4. CEO分析" body="prompt_log → 行動パターン/時間帯/傾向分析 → 秘書が先回り提案" />
+          <MiniCard title="5. 日記→自己理解" body="書く → 感情分析 → WBI可視化 → パターン発見 → もっと書きたくなる → データ増 → AI精度↑" />
         </div>
-        <CycleFlow steps={['問題検出', '原因分析', '仕組みの修正', '検証', '運用定着', '次の問題を早期検出']} />
+        <CycleFlow steps={['問題検出', '原因分析', '仕組みの修正', '検証', '運用定着']} />
       </Section>
 
-      {/* === 現在の運営状態 === */}
-      <Section title="現在の運営状態">
-        <OpsHealth />
+      <Section title="システム健全性">
+        {stats ? (
+          <div className="g2">
+            <Card style={{ padding: 14 }}>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>Data Health</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
+                <div><StatusDot ok={stats.knowledgeCount > 0} /> Knowledge Rules: {stats.knowledgeCount}</div>
+                <div><StatusDot ok={stats.sessionCount > 0} /> Sessions Tracked: {stats.sessionCount}</div>
+                <div><StatusDot ok={stats.growthCount > 0} /> Growth Events: {stats.growthCount}</div>
+                <div><StatusDot ok={stats.diaryCount > 0} /> Diary Entries: {stats.diaryCount}</div>
+              </div>
+            </Card>
+            <Card style={{ padding: 14 }}>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>Knowledge Pipeline</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
+                <div>memory/ → knowledge_base → CLAUDE.md</div>
+                <div><StatusDot ok={stats.sessionsExtracted > 0} /> Knowledge Extraction: {stats.sessionsExtracted}/{stats.sessionCount} sessions</div>
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <div style={{ fontSize: 12, color: 'var(--text3)' }}>Loading...</div>
+        )}
       </Section>
+    </>
+  )
+}
 
-      {/* === 既存セクション（構造説明） === */}
+// ========== Tab: Architecture ==========
+
+function TabArchitecture() {
+  return (
+    <>
       <Section title="全体アーキテクチャ">
         <P>1人の社長が複数PJを横断管理する仮想持株会社構造。AIエージェント（Claude）が秘書として各社を運営。</P>
         <Flow steps={['/company', 'HD秘書がPJ判断', 'PJ会社のCLAUDE.md読込', 'HD共通部署で作業', '成果物をPJリポジトリに']} />
@@ -202,145 +182,195 @@ export function HowItWorks() {
       </Section>
 
       <Section title="知識の階層 — SSOT設計">
-        <P>全ての情報には「正の置き場所」が1つだけある。散在させない。</P>
         <Tbl headers={['知識の種類', '置き場所（SSOT）', '読み込みタイミング']} rows={[
           ['恒久ルール', 'CLAUDE.md / .claude/rules/', 'セッション開始時（常時）'],
           ['運用手順', 'スキル SKILL.md', '/コマンド実行時（必要時のみ）'],
           ['学習済みパターン', 'knowledge_base (Supabase)', '/company 起動時'],
           ['セッション横断の記憶', 'memory/ (auto-memory)', 'セッション開始時'],
-          ['PJ会社一覧', 'registry.md', 'sync-registry.sh で派生に伝播'],
-          ['スキル一覧', 'marketplace.json', 'sync-skills.sh で自動生成'],
+          ['設計思想', '.company/design-philosophy.md', '設計判断時に参照・追記'],
+          ['体系知識', 'docs/knowledge/', '学習・調査時に参照・追記'],
         ]} />
-        <P>原則: マスターを1つ編集 → 同期スクリプトが全派生に伝播。手動で派生を個別編集しない。</P>
       </Section>
 
       <Section title="3層データ管理">
-        <P>データはファイル（速度）× Git（履歴）× Supabase（分析・同期）の3層で管理。</P>
         <div className="g3" style={{ marginBottom: 12 }}>
-          <MiniCard title="Layer 1: ファイル" body="CLAUDE.md / メモ / TODO / prep-log。エージェントが即座に読み書き" />
-          <MiniCard title="Layer 2: Git" body="マルチリポジトリ。claude_dev(HD) + 各PJリポジトリ。バージョン管理・履歴保持" />
-          <MiniCard title="Layer 3: Supabase" body="プロンプト履歴 / セッション / ナレッジ / タスク / CEO分析。クラウド永続・モバイルアクセス" />
+          <MiniCard title="Layer 1: ファイル" body="CLAUDE.md / メモ / TODO。エージェントが即座に読み書き" />
+          <MiniCard title="Layer 2: Git" body="マルチリポジトリ。claude_dev(HD) + 各PJリポジトリ" />
+          <MiniCard title="Layer 3: Supabase" body="プロンプト / ナレッジ / タスク / 日記 / 感情分析。クラウド永続" />
         </div>
-        <P>ローカルファイルが常にマスター。Supabaseは分析・同期・モバイルアクセス用。落ちても作業は止まらない。</P>
+        <P>ローカルファイルが常にマスター。Supabaseは分析・同期・モバイルアクセス用。</P>
       </Section>
 
       <Section title="自動化 — Hook + スキル + スクリプト">
-        <P>3種類の自動化が役割分担。Hookは記録、スキルは判断、スクリプトは同期。</P>
         <Tbl headers={['種類', '代表例', '特性']} rows={[
-          ['Hook', 'prompt-log.sh, config-sync.sh', '軽量・非同期・毎回自動実行。失敗しても会話をブロックしない'],
-          ['スキル', '/migrate, /deploy, /company', '必要時に呼び出し。判断を伴う処理。SKILL.mdに知識を閉じ込め'],
-          ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期。手動 or スキル経由で実行'],
+          ['Hook', 'prompt-log.sh, config-sync.sh', '軽量・非同期・毎回自動実行'],
+          ['スキル', '/migrate, /deploy, /company', '必要時に呼び出し。判断を伴う処理'],
+          ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期'],
         ]} />
-        <Tbl headers={['Hook', 'トリガー', '処理']} rows={[
-          ['prompt-log.sh', '毎回の入力', 'プロンプト記録 + セッション追跡 + PJ自動タグ付け'],
-          ['config-sync.sh', 'SessionStart', '設定・MCP・プラグイン・CLAUDE.md → Supabase同期'],
-          ['company-sync.sh', 'SessionStart', '.company/ の会社・部署 → Supabase同期'],
-          ['permission-guard.sh', '権限リクエスト', 'full/safe/strict に基づく自動判定'],
+      </Section>
+    </>
+  )
+}
+
+// ========== Tab: Design Philosophy ==========
+
+function TabDesignPhilosophy() {
+  return (
+    <>
+      <Section title="体験設計">
+        <Principle title="時間帯適応型UI" body="朝=計画（スケジュール先頭）、昼=実行（メモ先頭）、夜=振り返り（達成感先頭）。同じ画面を24時間出さない。" color="var(--accent)" />
+        <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="ブランクページ問題" body="白紙のテキストエリアは書けない。時間帯+カレンダーから文脈プロンプトを動的生成。白紙より3-5倍の入力完了率。" />
+          <MiniCard title="ポジティブファースト" body="夜は完了タスクを先に見せる。未完了は「明日に持ち越す?」と穏やかに。ピーク・エンドの法則。" />
+          <MiniCard title="ファーストビュー3セクション" body="モバイルでスクロールなしに最重要情報だけ。8セクション全表示はスクロール疲れ。" />
+        </div>
+      </Section>
+
+      <Section title="AI設計">
+        <Principle title="ディープパーソナライズ" body="10のデータソース（日記感情・WBI推移・生活リズム・カレンダー・CEO分析等）から「この人だからこそ」のコメント。汎用的な「頑張りましょう」は禁止。" color="var(--green)" />
+        <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="LLM指示の5教訓" body="①出力形式を厳密に ②禁止リスト明記 ③時間帯分岐はコードで ④文字数はプロンプト+max_tokens両方で ⑤reasoningモデルのtoken配分に注意" />
+          <MiniCard title="API呼び出しパターン" body="ブラウザからOpenAI直叩き禁止。必ずEdge Function経由。共通ヘルパーedgeAi.tsを使う。自動処理はcompletion mode。" />
+        </div>
+      </Section>
+
+      <Section title="データ設計">
+        <Tbl headers={['データ', 'キャッシュ', '無効化トリガー']} rows={[
+          ['天気', 'localStorage 1時間', 'TTL切れ'],
+          ['AIコメント', 'Zustand in-memory', '日記投稿 / 時間帯変更 / リロード'],
+          ['タスク/習慣', 'Zustand 5分', 'ミューテーション'],
         ]} />
+        <div className="g2" style={{ marginBottom: 12 }}>
+          <MiniCard title="タイムゾーン" body="全レイヤーでJST統一。Calendar API: timeZone指定、JS: toLocaleString、Supabase: at time zone。部分修正は新バグを生む。" />
+          <MiniCard title="RLSポリシー" body="新テーブル作成時に必ずRLSも同時に。6回忘れて6回fixした教訓。" />
+        </div>
+      </Section>
+
+      <Section title="アーキテクチャ判断">
+        <Principle title="YAGNI原則の徹底" body="マルチテナント→撤回、Anthropic対応→削除、会社セレクター→削除、Polaris子会社→統合。「使うかもしれない」は作らない。" color="var(--red)" />
+        <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="1ファイル→分離パターン" body="最初は1ファイルSPA。8000行超で限界 → React+TS。最初から完璧な構造を作ろうとしない。" />
+          <MiniCard title="エンハンス、代替ではない" body="AI出力をそのまま使わない。壁打ちの素材→腹落ちまで対話→自分の言葉で説明できる状態に。" />
+        </div>
+      </Section>
+
+      <Section title="継続改善のメタ設計">
+        <P>このシステム自体が改善され続けるための仕組み。</P>
+        <Tbl headers={['ループ', '仕組み', 'データの場所']} rows={[
+          ['日記ループ', '書く→分析→可視化→もっと書きたくなる→データ増→AI精度↑', 'diary_entries + emotion_analysis'],
+          ['ナレッジ昇格', '修正指示→memory→2回目でKB→3回目でCLAUDE.md', 'memory/ → knowledge_base → CLAUDE.md'],
+          ['Growth Chronicle', '失敗→記録→パターン→ルール化→再発防止', 'growth_events'],
+          ['人事部サイクル', '部署作業→評価→CLAUDE.md改善→精度↑', '.company/hr/evaluations/'],
+          ['設計思想蓄積', '判断→design-philosophy.md追記→次の判断の土台', '.company/design-philosophy.md'],
+        ]} />
+        <Principle title="知識の3層構造" body="Layer1: docs/knowledge/（体系的学習ノート）→ Layer2: knowledge_base（行動ルール）→ Layer3: CLAUDE.md（全セッション自動適用）。下に行くほど影響範囲が広く、昇格には実績が必要。" color="var(--accent)" />
+      </Section>
+    </>
+  )
+}
+
+// ========== Tab: Operations ==========
+
+function TabOperations() {
+  return (
+    <>
+      <Section title="コマンド体系">
+        <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>常時自動（パイプライン）</div>
+        <Tbl headers={['社長の指示', '判定', 'パイプライン']} rows={[
+          ['「作って」「新機能」', 'A', 'リサーチ ∥ UX → AI開発 ∥ PM → 実装 → QA'],
+          ['「直して」「バグ」', 'B', 'システム開発 → QA'],
+          ['「資料作って」', 'C', 'リサーチ → 資料制作'],
+          ['「調べて」', 'D', 'リサーチ → 統合報告'],
+          ['「セキュリティ監査」', 'E', 'セキュリティ ∥ リサーチ → 修正 → QA'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>/company コマンド</div>
+        <Tbl headers={['コマンド', '機能']} rows={[
+          ['/company', 'HD秘書起動（ブリーフィング + タスク管理）'],
+          ['/company {name}', 'PJ会社の秘書起動'],
+          ['/company:diary', '日記の分析・壁打ち'],
+          ['/company:auto-prep', 'MTG準備の自動化'],
+          ['/company:weekly-digest', '週次CEOレポート'],
+        ]} />
+      </Section>
+
+      <Section title="部署連携">
+        <P>パイプラインA（新機能開発）の流れ:</P>
+        <div className="card" style={{ padding: 14, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)' }}>
+{`Step 1 [並列]: リサーチ ∥ UXデザイン
+Step 2 [並列]: AI開発(設計) ∥ PM(チケット) ← checkpoint
+Step 3 [直列]: システム開発(実装) → QA(テスト)
+完了: 成果物登録 + commit + 報告`}
+        </div>
+        <P>ハンドオフ: 部署の成果物に「→ PM部への依頼」等があると秘書が自動検出して次の部署を起動。</P>
       </Section>
 
       <Section title="ops部署 — 仕組みの仕組み">
-        <P>他の部署が「何をするか」を担うのに対し、opsは「どう回すか」を担う。メタ運用の専門部署。</P>
-        <Tbl headers={['検出トリガー', '何が起きたか', 'opsのアクション']} rows={[
-          ['手動操作の発生', '自動化されるべき作業を手でやった', 'スクリプト or スキル化'],
-          ['同じ修正が2回', 'ルールが足りない', 'ルール追加を提案'],
-          ['marketplace.json不整合', 'スキル追加時にsync漏れ', 'sync-skills.sh の自動実行を提案'],
-          ['CLAUDE.md肥大化', '手順や知識が直書きされた', 'スキル or rules/ に分離'],
-          ['知識の分散', '同じ情報がmemory/KB/rulesに', 'SSOTを決めて統合'],
+        <Tbl headers={['検出トリガー', 'opsのアクション']} rows={[
+          ['手動操作の発生', 'スクリプト or スキル化'],
+          ['同じ修正が2回', 'ルール追加を提案'],
+          ['CLAUDE.md肥大化', 'スキル or rules/ に分離'],
+          ['知識の分散', 'SSOTを決めて統合'],
         ]} />
-        <CycleFlow steps={['問題検出', '原因分析', '仕組みの修正', '検証', '運用定着']} />
       </Section>
 
-      <Section title="保険 — フォールバック">
+      <Section title="フォールバック">
         <Tbl headers={['障害', 'フォールバック']} rows={[
           ['Supabase障害', 'ローカルファイルで代替。マスターは常にファイル'],
-          ['Git push不可', 'ローカルにコミットは残る。次回conflict検出→秘書が報告'],
-          ['エージェント誤判断', 'permission-guard + チェックポイント制 + git revert'],
-          ['スキル未登録', 'sync-skills.sh --check で不整合検出。ops部署が監視'],
+          ['Git push不可', 'ローカルにコミット残る。次回conflict検出'],
+          ['エージェント誤判断', 'permission-guard + checkpoint + git revert'],
         ]} />
       </Section>
+    </>
+  )
+}
 
-      <Section title="コマンド体系 — 何がいつ動くか">
-        <P>3つのレイヤーで動作。常時自動で動くもの、コマンドで呼ぶもの、定期実行されるもの。</P>
+// ========== Main ==========
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>常時自動（rules/ — 指示するだけで動く）</div>
-        <Tbl headers={['社長の指示', '自動判定', '実行されるパイプライン']} rows={[
-          ['「〇〇を作って」「新機能追加」', 'パイプライン A', 'リサーチ ∥ UXデザイン → AI開発 ∥ PM → 実装 → QA'],
-          ['「バグ直して」「エラー修正」', 'パイプライン B', 'システム開発 → QA'],
-          ['「資料作って」「プレゼンまとめて」', 'パイプライン C', 'リサーチ → 資料制作'],
-          ['「調べて」「比較して」', 'パイプライン D', 'リサーチ（並列可） → 統合報告'],
-          ['「セキュリティ監査」', 'パイプライン E', 'セキュリティ ∥ リサーチ → 修正 → QA'],
-        ]} />
-        <P>∥ = 並列実行。依存関係がなければ複数部署を同時に起動する。</P>
+const TABS = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'philosophy', label: 'Design Philosophy' },
+  { key: 'architecture', label: 'Architecture' },
+  { key: 'operations', label: 'Operations' },
+] as const
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>常時自動（ハンドオフ検出）</div>
-        <P>部署の成果物に「→ PM部への依頼」等が書いてあると、秘書が自動検出して次の部署を起動。人間が手動で振り分ける必要なし。</P>
-        <Flow steps={['部署Aが成果物作成', 'ハンドオフ検出', '部署Bを自動起動', '完了→次のハンドオフ...', '全完了→社長に報告']} />
+type TabKey = typeof TABS[number]['key']
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>/company コマンド（明示的に呼ぶ機能）</div>
-        <Tbl headers={['コマンド', '機能', 'いつ使う']} rows={[
-          ['/company', 'HD秘書起動（ブリーフィング + タスク管理）', '朝の確認、全体把握'],
-          ['/company {name}', 'PJ会社の秘書起動', '特定PJの作業時'],
-          ['/company:invoice', '売上・経費・税金管理', '請求書登録、稼働同期'],
-          ['/company:diary', '日記の分析・壁打ち', '振り返り、感情分析'],
-          ['/company:auto-prep', 'MTG準備の自動化', 'MTG前の事前分析'],
-          ['/company:weekly-digest', '週次CEOレポート', '週末の振り返り'],
-          ['/company:register', '成果物をReportsに登録', 'レポート完成時'],
-        ]} />
+export function HowItWorks() {
+  const [tab, setTab] = useState<TabKey>('overview')
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>定期自動（cron）</div>
-        <Tbl headers={['時刻', '処理', '保存先']} rows={[
-          ['毎日 7:00 JST', '朝のブリーフィング生成（タスク+日記+未入金）', 'activity_log'],
-          ['毎日 7:00 / 19:00', 'ニュース自動収集（GPT経由）', 'activity_log'],
-        ]} />
-      </Section>
+  return (
+    <div className="page">
+      <PageHeader title="How it Works" description="なぜこの仮想カンパニーは回り続けるのか" />
 
-      <Section title="部署連携 — パイプラインの実際の流れ">
-        <P>8つの部署がどう連携するか。稼働中の部署と準備中の部署。</P>
+      {/* Tab bar */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            style={{
+              padding: '8px 16px',
+              fontSize: 13,
+              fontWeight: tab === t.key ? 600 : 400,
+              color: tab === t.key ? 'var(--accent)' : 'var(--text3)',
+              background: 'none',
+              border: 'none',
+              borderBottom: tab === t.key ? '2px solid var(--accent)' : '2px solid transparent',
+              cursor: 'pointer',
+              transition: 'all .15s',
+              fontFamily: 'var(--font)',
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-        <div className="g2" style={{ marginBottom: 16 }}>
-          <div className="card" style={{ padding: 14, borderLeft: '3px solid var(--green)' }}>
-            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: 'var(--green)' }}>稼働中（自動で動く）</div>
-            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
-              情報収集部 — cron定期実行<br/>
-              リサーチ部 — 調査依頼で起動<br/>
-              UXデザイン部 — 機能開発時に起動<br/>
-              セキュリティ部 — 監査・スキャン
-            </div>
-          </div>
-          <div className="card" style={{ padding: 14, borderLeft: '3px solid var(--accent)' }}>
-            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, color: 'var(--accent)' }}>トリガー定義済み（依頼で動く）</div>
-            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
-              PM部 — ハンドオフ検出 / 社長指示で起動<br/>
-              資料制作部 — 社長指示 / PMチケットで起動<br/>
-              システム開発部 — 設計完了 / チケットで起動<br/>
-              AI開発部 — 機能開発パイプラインで起動
-            </div>
-          </div>
-        </div>
-
-        <P>パイプラインA（新機能開発）の実際の流れ:</P>
-        <div className="card" style={{ padding: 14, marginBottom: 12, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)' }}>
-{`Step 1 [並列]: リサーチ ∥ UXデザイン  ← 同時起動
-         ↓ 両方完了
-Step 2 [並列]: AI開発(設計) ∥ PM(チケット化) ← checkpoint
-         ↓ 社長レビュー承認
-Step 3 [直列]: システム開発(実装) → QA(テスト)
-         ↓
-完了: 成果物登録 + commit + 報告`}
-        </div>
-      </Section>
-
-      <Section title="設計思想 — エンハンス、代替ではない">
-        <div className="card" style={{ borderLeft: '3px solid var(--accent)', marginBottom: 12 }}>
-          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>このシステムは人の仕事を完全代替するのではなく、エンハンスするもの</div>
-          <P>AI出力をそのまま商談に持ち込むのは難しい。自分で説明できない内容は使えない。</P>
-        </div>
-        <div className="g2">
-          <MiniCard title="正しい使い方" body="AI出力を壁打ちの素材として使う → 腹落ちするまで対話 → 自分の言葉で説明できる状態にする" />
-          <MiniCard title="避けるべき使い方" body="AI出力をそのままコピペ → 内容を理解せず提出 → 思考プロセスをスキップ" />
-        </div>
-      </Section>
+      {tab === 'overview' && <TabOverview />}
+      {tab === 'philosophy' && <TabDesignPhilosophy />}
+      {tab === 'architecture' && <TabArchitecture />}
+      {tab === 'operations' && <TabOperations />}
     </div>
   )
 }
