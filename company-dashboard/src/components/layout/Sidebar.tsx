@@ -20,6 +20,7 @@ const NAV: NavEntry[] = [
   // Analytics (weekly/monthly)
   { type: 'label', label: 'Analytics' },
   { type: 'item', page: 'insights', icon: '📊', label: 'Insights' },
+  { type: 'item', page: 'me', icon: '🧬', label: 'Self-Analysis' },
   { type: 'item', page: 'intelligence', icon: '📄', label: 'Reports' },
   { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
   // More (collapsible — infrequent)
