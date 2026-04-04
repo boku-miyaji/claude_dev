@@ -105,10 +105,10 @@
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
-        "version": "1.0.0",
+        "installPath": "/home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d",
+        "version": "unknown",
         "installedAt": "2026-04-02T00:39:44.000Z",
-        "lastUpdated": "2026-04-02T00:39:44.000Z"
+        "lastUpdated": "2026-04-04T20:43:00.000Z"
       }
     ]
   }

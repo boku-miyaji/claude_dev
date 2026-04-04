@@ -130,21 +130,22 @@ fi
 
 # Sync plugin cache: ensure ai-company plugin is fully installed and up to date
 # This creates the cache from scratch if missing, or updates if stale
-CACHE_BASE="$HOME/.claude/plugins/cache/ai-company/company/1.0.0"
+CACHE_BASE="$HOME/.claude/plugins/cache/ai-company/company/0edaac953b3d"
 SOURCE_BASE="$PROJECT_DIR/plugins/company"
 if [ -d "$SOURCE_BASE/skills" ]; then
   # Create cache base structure if missing
   mkdir -p "$CACHE_BASE/.claude-plugin"
   mkdir -p "$CACHE_BASE/skills"
 
-  # Sync marketplace.json (required for skills-based plugin format)
-  if [ -f "$SOURCE_BASE/.claude-plugin/marketplace.json" ]; then
-    cp -f "$SOURCE_BASE/.claude-plugin/marketplace.json" "$CACHE_BASE/.claude-plugin/marketplace.json"
+  # Sync plugin.json (Claude Code auto-discovers skills/ without marketplace.json)
+  if [ -f "$SOURCE_BASE/.claude-plugin/plugin.json" ]; then
+    cp -f "$SOURCE_BASE/.claude-plugin/plugin.json" "$CACHE_BASE/.claude-plugin/plugin.json"
+  elif [ ! -f "$CACHE_BASE/.claude-plugin/plugin.json" ]; then
+    # Create minimal plugin.json if missing
+    echo '{"name":"company","description":"HD + PJ company virtual organization management","author":{"name":"owner"}}' > "$CACHE_BASE/.claude-plugin/plugin.json"
   fi
-  # Remove legacy plugin.json if marketplace.json exists
-  if [ -f "$CACHE_BASE/.claude-plugin/marketplace.json" ] && [ -f "$CACHE_BASE/.claude-plugin/plugin.json" ]; then
-    rm -f "$CACHE_BASE/.claude-plugin/plugin.json"
-  fi
+  # Remove marketplace.json from cache - Claude Code uses auto-discovery from skills/ dir
+  rm -f "$CACHE_BASE/.claude-plugin/marketplace.json"
 
   # Ensure README exists
   if [ ! -f "$CACHE_BASE/README.md" ]; then
@@ -231,14 +232,14 @@ if [ -d "$SOURCE_BASE/skills" ]; then
     if [ "$CURRENT_SCOPE" != "project" ] || [ "$CURRENT_PROJPATH" != "$PROJECT_DIR" ]; then
       NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
       jq --arg path "$CACHE_BASE" --arg now "$NOW" --arg projpath "$PROJECT_DIR" \
-        '.plugins["company@ai-company"] = [{"scope": "project", "installPath": $path, "version": "1.0.0", "installedAt": $now, "lastUpdated": $now, "projectPath": $projpath}]' \
+        '.plugins["company@ai-company"] = [{"scope": "project", "installPath": $path, "version": "unknown", "installedAt": $now, "lastUpdated": $now, "projectPath": $projpath}]' \
         "$IP_FILE" > "$IP_FILE.tmp" && mv "$IP_FILE.tmp" "$IP_FILE"
     fi
   fi
   if [ "$HAS_PLUGIN" != "true" ]; then
     NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
     jq --arg path "$CACHE_BASE" --arg now "$NOW" --arg projpath "$PROJECT_DIR" \
-      '.plugins["company@ai-company"] = [{"scope": "project", "installPath": $path, "version": "1.0.0", "installedAt": $now, "lastUpdated": $now, "projectPath": $projpath}]' \
+      '.plugins["company@ai-company"] = [{"scope": "project", "installPath": $path, "version": "unknown", "installedAt": $now, "lastUpdated": $now, "projectPath": $projpath}]' \
       "$IP_FILE" > "$IP_FILE.tmp" && mv "$IP_FILE.tmp" "$IP_FILE"
   fi
 fi
