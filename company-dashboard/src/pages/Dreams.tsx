@@ -111,13 +111,20 @@ export function Dreams() {
     <div className="page">
       <PageHeader
         title="100の夢リスト"
-        description={`達成: ${stats.achieved} / 進行中: ${stats.inProgress} / 全: ${stats.total}`}
+        description="いつか叶えたい夢を自由に書き出す場所。具体的な計画は Goals で。"
         actions={
           <button className="btn btn-p btn-sm" onClick={() => setShowAdd(true)}>
             + 新しい夢を追加
           </button>
         }
       />
+
+      {/* Stats */}
+      <div style={{ display: 'flex', gap: 16, marginBottom: 16, fontSize: 12, color: 'var(--text2)' }}>
+        <span>達成: <strong>{stats.achieved}</strong></span>
+        <span>進行中: <strong>{stats.inProgress}</strong></span>
+        <span>全: <strong>{stats.total}</strong></span>
+      </div>
 
       {/* Filters */}
       <div className="filter-bar">

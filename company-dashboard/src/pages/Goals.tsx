@@ -314,7 +314,7 @@ export function Goals() {
     <div className="page">
       <PageHeader
         title="Goals"
-        description="人生の目標から今週のやることまで"
+        description="夢を叶えるための具体的な行動計画。life → yearly → quarterly → monthly → weekly に分解。"
         actions={
           <button className="btn btn-p btn-sm" onClick={() => setShowAdd(true)}>
             + 目標を追加

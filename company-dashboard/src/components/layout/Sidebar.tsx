@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth'
-import { useCompanyStore } from '@/stores/company'
-import { supabase } from '@/lib/supabase'
 
 interface NavEntry {
   type: 'item' | 'label' | 'collapsible-start'
@@ -81,16 +79,9 @@ export function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
-  const { companies, activeCompanyId, setCompanies, setActiveCompany } = useCompanyStore()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
 
   const currentPage = location.pathname.replace('/', '') || ''
-
-  useEffect(() => {
-    supabase.from('companies').select('id,name').eq('status', 'active').order('created_at').then(({ data }) => {
-      if (data) setCompanies(data)
-    })
-  }, [setCompanies])
 
   const sections = buildSections(NAV)
 
@@ -113,21 +104,6 @@ export function Sidebar() {
       <div className="logo">
         <div className="logo-icon">M</div>
         宮路HD
-      </div>
-
-      {/* Company context switcher */}
-      <div style={{ padding: '0 12px', marginBottom: 12 }}>
-        <select
-          className="input"
-          style={{ width: '100%', fontSize: 12, padding: '6px 8px' }}
-          value={activeCompanyId || ''}
-          onChange={(e) => setActiveCompany(e.target.value || null)}
-        >
-          <option value="">全社（HD）</option>
-          {companies.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
       </div>
 
       {sections.map((section, si) => {
