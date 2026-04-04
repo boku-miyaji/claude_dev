@@ -338,7 +338,7 @@ VALUES (
 );
 
 -- #47 スキル管理の運用自動化
-INSERT INTO growth_events (event_date, event_type, category, severity, phase, title, what_happened, root_cause, countermeasure, result, related_commits, tags, status)
+INSERT INTO growth_events (event_date, event_type, category, severity, phase, title, what_happened, countermeasure, result, related_commits, tags, status)
 VALUES (
   '2026-04-03', 'milestone', 'devops', 'medium',
   'Phase 6: Self-Focus Platform',
