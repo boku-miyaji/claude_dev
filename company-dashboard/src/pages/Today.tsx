@@ -109,13 +109,65 @@ function formatDueDate(dueDate: string | null, todayStr: string): { label: strin
   return { label: `${parseInt(m)}/${parseInt(d)}`, color: 'var(--text3)', bg: 'var(--surface2)', border: 'var(--border)' }
 }
 
-function TaskRow({ task: t, todayStr, done, onToggle }: {
+function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
   task: { id: string; title: string; due_date: string | null; priority: string; status: string }
   todayStr: string
   done: boolean
   onToggle: () => void
+  onUpdate: (id: string, data: Record<string, unknown>) => void
 }) {
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState(t.title)
+  const [editDue, setEditDue] = useState(t.due_date || '')
+  const [editPriority, setEditPriority] = useState(t.priority)
   const due = formatDueDate(t.due_date, todayStr)
+
+  const save = () => {
+    const updates: Record<string, unknown> = {}
+    if (editTitle.trim() && editTitle.trim() !== t.title) updates.title = editTitle.trim()
+    if (editDue !== (t.due_date || '')) updates.due_date = editDue || null
+    if (editPriority !== t.priority) updates.priority = editPriority
+    if (Object.keys(updates).length > 0) onUpdate(t.id, updates)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+          <input
+            className="input"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
+            autoFocus
+            style={{ flex: 1, fontSize: 13, padding: '5px 8px' }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input
+            type="date"
+            value={editDue}
+            onChange={(e) => setEditDue(e.target.value)}
+            style={{ fontSize: 11, padding: '3px 6px', border: '1px solid var(--border)', borderRadius: 4, fontFamily: 'var(--mono)', background: 'var(--surface)', color: 'var(--text2)' }}
+          />
+          <select
+            value={editPriority}
+            onChange={(e) => setEditPriority(e.target.value)}
+            style={{ fontSize: 11, padding: '3px 6px', border: '1px solid var(--border)', borderRadius: 4, background: 'var(--surface)', color: 'var(--text2)' }}
+          >
+            <option value="low">低</option>
+            <option value="normal">通常</option>
+            <option value="high">高</option>
+          </select>
+          <div style={{ flex: 1 }} />
+          <button className="btn btn-g btn-sm" style={{ fontSize: 11, padding: '3px 8px' }} onClick={() => setEditing(false)}>Cancel</button>
+          <button className="btn btn-p btn-sm" style={{ fontSize: 11, padding: '3px 8px' }} onClick={save}>Save</button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, opacity: done ? 0.55 : 1 }}>
       <span
@@ -132,7 +184,10 @@ function TaskRow({ task: t, todayStr, done, onToggle }: {
       >
         {done ? '✓' : ''}
       </span>
-      <span style={{ flex: 1, fontWeight: 500, textDecoration: done ? 'line-through' : 'none', color: done ? 'var(--text3)' : 'var(--text)' }}>
+      <span
+        onClick={() => { if (!done) { setEditTitle(t.title); setEditDue(t.due_date || ''); setEditPriority(t.priority); setEditing(true) } }}
+        style={{ flex: 1, fontWeight: 500, textDecoration: done ? 'line-through' : 'none', color: done ? 'var(--text3)' : 'var(--text)', cursor: done ? 'default' : 'pointer' }}
+      >
         {t.title}
       </span>
       {due && (
@@ -405,11 +460,11 @@ export function Today() {
           </div>
         )}
         {todayTasks.map((t) => (
-          <TaskRow key={t.id} task={t} todayStr={todayStr} done={false} onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }} />
+          <TaskRow key={t.id} task={t} todayStr={todayStr} done={false} onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
         ))}
         {/* Completed today — strikethrough, click to undo */}
         {completedToday.map((t) => (
-          <TaskRow key={t.id} task={t} todayStr={todayStr} done onToggle={() => { updateTask(t.id, { status: 'open', completed_at: null }); toast('戻しました') }} />
+          <TaskRow key={t.id} task={t} todayStr={todayStr} done onToggle={() => { updateTask(t.id, { status: 'open', completed_at: null }); toast('戻しました') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
         ))}
         {todayTasks.length === 0 && completedToday.length === 0 && !showAddTask && (
           <div style={{ padding: '6px 0', fontSize: 12, color: 'var(--text3)' }}>タスクなし — + で追加</div>

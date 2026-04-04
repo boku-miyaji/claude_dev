@@ -141,49 +141,6 @@ function Big5Result({ result }: { result: Record<string, unknown> }) {
   )
 }
 
-/** Render Strengths result */
-function StrengthsResult({ result }: { result: Record<string, unknown> }) {
-  const strengths = (result.top_strengths as { name: string; score: number; evidence: string }[]) ?? []
-  const workFit = (result.work_fit as string[]) ?? []
-  return (
-    <div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-        {strengths.map((s, i) => (
-          <div key={i}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-              <span style={{ fontWeight: 600, color: 'var(--text)' }}>
-                {i + 1}. {s.name}
-              </span>
-              <span style={{ fontFamily: 'var(--mono)', color: 'var(--green)', fontWeight: 600 }}>{s.score}</span>
-            </div>
-            <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden', marginBottom: 4 }}>
-              <div style={{ height: '100%', width: `${s.score}%`, background: 'var(--green)', borderRadius: 2 }} />
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text3)', fontStyle: 'italic' }}>{s.evidence}</div>
-          </div>
-        ))}
-      </div>
-      {workFit.length > 0 && (
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 6 }}>適合する仕事</div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {workFit.map((w, i) => (
-              <span key={i} style={{ fontSize: 11, padding: '3px 10px', background: 'var(--accent-bg)', color: 'var(--accent2)', borderRadius: 12, fontWeight: 500 }}>
-                {w}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      {Boolean(result.summary) && (
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, marginTop: 12 }}>
-          {String(result.summary)}
-        </div>
-      )}
-    </div>
-  )
-}
-
 /** Render StrengthsFinder result */
 function StrengthsFinderResult({ result }: { result: Record<string, unknown> }) {
   const strengths = (result.top_strengths as { name: string; score: number; domain: string; evidence: string }[]) ?? []

@@ -180,90 +180,64 @@ async function collectData(
   type: AnalysisType,
   since: string | null,
 ): Promise<{ text: string; count: number }> {
-  // Build date filter: only new entries since last analysis
-  const addDateFilter = (query: ReturnType<typeof supabase.from>) => {
-    if (since) return query.gt('created_at', since)
-    return query
+  // Helper: build diary query with optional date filter
+  function diaryQuery(limit: number, includeId = false) {
+    const cols = includeId ? 'id, body, entry_date, created_at' : 'body, entry_date, created_at'
+    let q = supabase
+      .from('diary_entries')
+      .select(cols)
+    if (since) q = q.gt('created_at', since)
+    return q.order('entry_date', { ascending: false }).limit(limit)
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapDiary = (entries: any[]) =>
+    entries.map((e: { body: string; entry_date: string }) => `[${e.entry_date}] ${e.body}`).join('\n\n')
 
   switch (type) {
     case 'mbti': {
-      let query = supabase
-        .from('diary_entries')
-        .select('body, entry_date, created_at')
-        .order('entry_date', { ascending: false })
-        .limit(80)
-      query = addDateFilter(query) as typeof query
-      const { data } = await query
-      const entries = data ?? []
-      const text = entries
-        .map((e: { body: string; entry_date: string }) => `[${e.entry_date}] ${e.body}`)
-        .join('\n\n')
-      return { text, count: entries.length }
+      const { data } = await diaryQuery(80)
+      const entries = (data ?? []) as unknown as { body: string; entry_date: string }[]
+      return { text: mapDiary(entries), count: entries.length }
     }
     case 'big5': {
-      let query = supabase
-        .from('diary_entries')
-        .select('body, entry_date, created_at')
-        .order('entry_date', { ascending: false })
-        .limit(80)
-      query = addDateFilter(query) as typeof query
-      const { data } = await query
-      const entries = data ?? []
-      const text = entries
-        .map((e: { body: string; entry_date: string }) => `[${e.entry_date}] ${e.body}`)
-        .join('\n\n')
-      return { text, count: entries.length }
+      const { data } = await diaryQuery(80)
+      const entries = (data ?? []) as unknown as { body: string; entry_date: string }[]
+      return { text: mapDiary(entries), count: entries.length }
     }
     case 'strengths_finder': {
-      let diaryQuery = supabase
-        .from('diary_entries')
-        .select('body, entry_date, created_at')
-        .order('entry_date', { ascending: false })
-        .limit(80)
-      diaryQuery = addDateFilter(diaryQuery) as typeof diaryQuery
-
       const [taskRes, diaryRes] = await Promise.all([
         supabase
           .from('tasks')
           .select('title, status, priority, completed_at')
           .order('created_at', { ascending: false })
           .limit(100),
-        diaryQuery,
+        diaryQuery(80),
       ])
       const tasks = taskRes.data ?? []
       const diaries = diaryRes.data ?? []
       const taskText = tasks
         .map((t: { title: string; status: string; priority: string }) => `- [${t.status}][${t.priority}] ${t.title}`)
         .join('\n')
-      const diaryText = diaries
-        .map((e: { body: string; entry_date: string }) => `[${e.entry_date}] ${e.body}`)
-        .join('\n\n')
+      const diaryText = mapDiary(diaries)
       return { text: `## タスク実績\n${taskText}\n\n## 日記\n${diaryText}`, count: diaries.length }
     }
     case 'emotion_triggers': {
-      let diaryQuery = supabase
-        .from('diary_entries')
-        .select('id, body, entry_date, created_at')
-        .order('entry_date', { ascending: false })
-        .limit(60)
-      diaryQuery = addDateFilter(diaryQuery) as typeof diaryQuery
-
       const [diaryRes, emotionRes] = await Promise.all([
-        diaryQuery,
+        diaryQuery(60, true),
         supabase
           .from('emotion_analysis')
           .select('diary_entry_id, joy, trust, fear, surprise, sadness, disgust, anger, anticipation, valence, arousal, wbi_score, created_at')
           .order('created_at', { ascending: false })
           .limit(60),
       ])
-      const diaries = diaryRes.data ?? []
-      const emotions = emotionRes.data ?? []
+      const diaries = (diaryRes.data ?? []) as unknown as { id: string; body: string; entry_date: string }[]
+      const emotions = (emotionRes.data ?? []) as unknown as Record<string, unknown>[]
       const emotionMap = new Map<string, Record<string, unknown>>()
       for (const e of emotions) {
-        emotionMap.set((e as Record<string, string>).diary_entry_id, e as Record<string, unknown>)
+        emotionMap.set(e.diary_entry_id as string, e)
       }
-      const lines = diaries.map((d: { id: string; body: string; entry_date: string }) => {
+      const lines = diaries.map((d) => {
         const emo = emotionMap.get(d.id)
         const emoStr = emo
           ? ` | joy=${emo.joy} trust=${emo.trust} fear=${emo.fear} sadness=${emo.sadness} anger=${emo.anger} anticipation=${emo.anticipation} valence=${emo.valence}`
@@ -273,15 +247,8 @@ async function collectData(
       return { text: lines.join('\n\n'), count: diaries.length }
     }
     case 'values': {
-      let diaryQuery = supabase
-        .from('diary_entries')
-        .select('body, entry_date, created_at')
-        .order('entry_date', { ascending: false })
-        .limit(80)
-      diaryQuery = addDateFilter(diaryQuery) as typeof diaryQuery
-
       const [diaryRes, dreamsRes] = await Promise.all([
-        diaryQuery,
+        diaryQuery(80),
         supabase
           .from('dreams')
           .select('title, description, category, status')
@@ -289,9 +256,7 @@ async function collectData(
       ])
       const diaries = diaryRes.data ?? []
       const dreams = dreamsRes.data ?? []
-      const diaryText = diaries
-        .map((e: { body: string; entry_date: string }) => `[${e.entry_date}] ${e.body}`)
-        .join('\n\n')
+      const diaryText = mapDiary(diaries)
       const dreamText = dreams
         .map((d: { title: string; category: string; status: string }) => `- [${d.status}][${d.category}] ${d.title}`)
         .join('\n')
