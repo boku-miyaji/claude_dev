@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react'
 
-interface Weather {
+interface DayWeather {
   icon: string
   tempMax: number
   tempMin: number
 }
 
-const CACHE_KEY = 'today_weather'
+interface WeatherData {
+  today: DayWeather
+  tomorrow: DayWeather
+}
+
+const CACHE_KEY = 'today_weather_v2'
 const CACHE_TTL = 60 * 60 * 1000 // 1 hour
 
 /** WMO Weather Code → emoji */
@@ -23,12 +28,11 @@ function weatherIcon(code: number): string {
 }
 
 /**
- * Fetch today's weather from Open-Meteo API (free, no API key).
+ * Fetch today's and tomorrow's weather from Open-Meteo API (free, no API key).
  * Caches in localStorage for 1 hour.
- * Falls back silently on error (returns null).
  */
-export function useTodayWeather(): Weather | null {
-  const [weather, setWeather] = useState<Weather | null>(() => {
+export function useTodayWeather(): WeatherData | null {
+  const [weather, setWeather] = useState<WeatherData | null>(() => {
     try {
       const cached = localStorage.getItem(CACHE_KEY)
       if (cached) {
@@ -40,20 +44,26 @@ export function useTodayWeather(): Weather | null {
   })
 
   useEffect(() => {
-    // Skip if cached
     if (weather) return
 
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=35.6762&longitude=139.6503&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia/Tokyo&forecast_days=1'
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=35.6762&longitude=139.6503&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Asia/Tokyo&forecast_days=2'
 
     fetch(url)
       .then((r) => r.json())
       .then((data) => {
         const d = data.daily
-        if (!d) return
-        const w: Weather = {
-          icon: weatherIcon(d.weathercode[0]),
-          tempMax: Math.round(d.temperature_2m_max[0]),
-          tempMin: Math.round(d.temperature_2m_min[0]),
+        if (!d || !d.weathercode || d.weathercode.length < 2) return
+        const w: WeatherData = {
+          today: {
+            icon: weatherIcon(d.weathercode[0]),
+            tempMax: Math.round(d.temperature_2m_max[0]),
+            tempMin: Math.round(d.temperature_2m_min[0]),
+          },
+          tomorrow: {
+            icon: weatherIcon(d.weathercode[1]),
+            tempMax: Math.round(d.temperature_2m_max[1]),
+            tempMin: Math.round(d.temperature_2m_min[1]),
+          },
         }
         setWeather(w)
         localStorage.setItem(CACHE_KEY, JSON.stringify({ data: w, ts: Date.now() }))

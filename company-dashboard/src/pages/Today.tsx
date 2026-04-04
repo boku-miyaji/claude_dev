@@ -219,10 +219,15 @@ export function Today() {
         {formatToday()}
         {weather && (
           <span style={{ marginLeft: 8 }}>
-            {weather.icon} {weather.tempMax}℃ / {weather.tempMin}℃
+            {weather.today.icon} {weather.today.tempMax}℃ / {weather.today.tempMin}℃
           </span>
         )}
       </div>
+      {weather && (
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
+          明日: {weather.tomorrow.icon} {weather.tomorrow.tempMax}℃ / {weather.tomorrow.tempMin}℃
+        </div>
+      )}
     </div>
   )
 
@@ -523,6 +528,7 @@ export function Today() {
     <div className="page">
       {GreetingSection}
       {SummarySection}
+      {ScheduleSection}
       {DiaryInput}
       {BriefingSection}
       {FragmentsSection}
