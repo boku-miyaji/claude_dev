@@ -163,6 +163,74 @@ function TabOverview() {
           <div style={{ fontSize: 12, color: 'var(--text3)' }}>Loading...</div>
         )}
       </Section>
+
+      <Section title="データ鮮度マップ — いつ・何が・なぜ更新されるか">
+        <P>全データの更新タイミングと連鎖関係。ブラックボックス化を防ぐために全フローを可視化。</P>
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--green)' }}>自動更新（人間の操作不要）</div>
+        <Tbl headers={['データ', '更新タイミング', '仕組み', '連鎖先']} rows={[
+          ['prompt_log', '毎回のユーザー入力', 'Hook (UserPromptSubmit)', 'CEO分析の材料、生活リズム分析'],
+          ['設定/MCP/CLAUDE.md同期', 'セッション開始', 'Hook (SessionStart)', 'ダッシュボードSettings反映'],
+          ['git pull (最新コード)', 'セッション開始', 'Hook (SessionStart)', '全ファイルが最新に'],
+          ['git push', 'セッション終了', 'Hook (SessionStop)', '他サーバーに変更が伝播'],
+          ['emotion_analysis', '日記投稿直後', 'useEmotionAnalysis (自動)', 'diary_entries.wbi更新 → Journal可視化 → AI Partner再生成'],
+          ['AI Partnerコメント', '日記投稿後 + 時間帯変更 + リロード', 'useMorningBriefing (invalidate)', '表示のみ（DB保存なし）'],
+          ['夢進捗検出', '日記投稿後', 'useDreamDetection (自動)', 'toast通知のみ'],
+          ['天気', '1時間ごと(TTL)', 'useTodayWeather (localStorage)', 'Today画面表示'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--accent)' }}>ユーザー操作トリガー</div>
+        <Tbl headers={['データ', '更新タイミング', 'トリガー', '連鎖先']} rows={[
+          ['diary_entries', 'Today画面で「記録する」', 'ユーザー入力', '→ emotion_analysis → AI Partner → 夢検出（3つが自動連鎖）'],
+          ['tasks', 'Todayまたはタスクページで操作', 'ユーザー操作', '→ AI Partnerコメントの文脈に反映（次回生成時）'],
+          ['habits / habit_logs', 'Today画面でチェック', 'ユーザータップ', '→ Today画面のサマリーに即反映'],
+          ['weekly_narratives', 'Weeklyページで「生成」ボタン', 'ユーザー操作', 'DB保存。過去の週は再生成可能'],
+          ['self_analysis', 'Self Analysisで分析ボタン', 'ユーザー操作', 'DB保存。日記件数でアンロック'],
+          ['news_items', 'Reportsで「収集」ボタン', 'ユーザー操作', 'activity_logにも記録'],
+          ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--yellow)' }}>手動更新が必要（陳腐化リスクあり）</div>
+        <Tbl headers={['データ', '更新タイミング', '陳腐化リスク', '対策']} rows={[
+          ['HowItWorks AI Features', 'AI機能追加・変更時', '新機能が未記載になる', 'memoryルール: 機能変更時に更新必須'],
+          ['design-philosophy.md', '設計判断時', '新しい教訓が反映されない', 'memoryルール: 設計判断時に追記必須'],
+          ['growth_events', '失敗・改善発生時', '最近の成長が未記録', '/company起動時にリマインド検討'],
+          ['knowledge_base → CLAUDE.md昇格', 'confidence ≥ 3 到達時', '昇格候補が放置される', '月次で棚卸し。ブリーフィングでリマインド'],
+          ['CLAUDE.md サイズ', '常時', '200行超でコンテキスト圧迫', '週次でサイズチェック'],
+          ['docs/knowledge/', '新知見発見時', '古い情報のまま', '体系知識は調査のたびに追記'],
+        ]} />
+      </Section>
+
+      <Section title="更新連鎖マップ（1つの操作が何を動かすか）">
+        <div className="card" style={{ padding: 14, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2.2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)' }}>
+{`日記を書く
+  ├→ diary_entries INSERT
+  ├→ emotion_analysis 自動生成（感情スコア+WBI）
+  │    └→ diary_entries.wbi UPDATE
+  │         └→ Journal ページの感情カレンダー更新
+  ├→ AI Partner コメント再生成（invalidate → fetch）
+  │    └→ 10データソース再収集 → LLM生成
+  └→ 夢進捗検出（diary × dreams照合）
+       └→ 一致あれば toast 通知
+
+セッション開始
+  ├→ git pull（最新コード取得）
+  ├→ config-sync.sh（settings/MCP/CLAUDE.md → Supabase）
+  ├→ company-sync.sh（.company/ → Supabase companies/departments）
+  └→ prompt-log.sh 初期化
+
+/company 起動
+  ├→ knowledge_base 読み込み（active ルール取得）
+  ├→ 未処理コメント確認
+  ├→ カレンダー取得（今日+明日）
+  └→ データ鮮度チェック（freshness-policy.yaml）
+
+AI機能を追加・変更
+  ├→ Edge Function 修正 → supabase functions deploy
+  ├→ HowItWorks AI Features タブ更新（手動・必須）
+  └→ design-philosophy.md に教訓追記（手動・必須）`}
+        </div>
+      </Section>
     </>
   )
 }
