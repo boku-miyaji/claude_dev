@@ -16,6 +16,22 @@ interface AnalysisCard {
   currentCount: number
 }
 
+/** Render changes from previous analysis */
+function ChangesFromPrevious({ result }: { result: Record<string, unknown> }) {
+  const changes = result.changes_from_previous as string | undefined
+  if (!changes) return null
+  return (
+    <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(91,141,239,0.08)', borderRadius: 8, borderLeft: '3px solid var(--accent)' }}>
+      <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+        前回からの変化
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>
+        {changes}
+      </div>
+    </div>
+  )
+}
+
 /** Render MBTI result */
 function MbtiResult({ result }: { result: Record<string, unknown> }) {
   const dims = result.dimensions as Record<string, { score: number; label: string }> | undefined
@@ -72,6 +88,7 @@ function MbtiResult({ result }: { result: Record<string, unknown> }) {
           ))}
         </div>
       )}
+      <ChangesFromPrevious result={result} />
     </div>
   )
 }
@@ -119,6 +136,7 @@ function Big5Result({ result }: { result: Record<string, unknown> }) {
           ))}
         </div>
       )}
+      <ChangesFromPrevious result={result} />
     </div>
   )
 }
@@ -250,6 +268,7 @@ function StrengthsFinderResult({ result }: { result: Record<string, unknown> }) 
           {String(result.summary)}
         </div>
       )}
+      <ChangesFromPrevious result={result} />
     </div>
   )
 }
@@ -308,6 +327,7 @@ function EmotionTriggersResult({ result }: { result: Record<string, unknown> }) 
           {String(result.summary)}
         </div>
       )}
+      <ChangesFromPrevious result={result} />
     </div>
   )
 }
@@ -352,7 +372,6 @@ function AnalysisResultView({ type, result }: { type: AnalysisType; result: Reco
   switch (type) {
     case 'mbti': return <MbtiResult result={result} />
     case 'big5': return <Big5Result result={result} />
-    case 'strengths': return <StrengthsResult result={result} />
     case 'strengths_finder': return <StrengthsFinderResult result={result} />
     case 'emotion_triggers': return <EmotionTriggersResult result={result} />
     case 'values': return <ValuesResult result={result} />

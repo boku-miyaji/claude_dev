@@ -325,10 +325,171 @@ Step 3 [直列]: システム開発(実装) → QA(テスト)
   )
 }
 
+// ========== Tab: AI Features ==========
+
+function AiFeatureCard({ name, trigger, input, model, pipeline, output, storage, hook }: {
+  name: string; trigger: string; input: string; model: string; pipeline: string; output: string; storage: string; hook: string
+}) {
+  return (
+    <div className="card" style={{ padding: 16, marginBottom: 12 }}>
+      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8, color: 'var(--accent)' }}>{name}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '4px 12px', fontSize: 12, lineHeight: 1.6 }}>
+        <span style={{ color: 'var(--text3)', fontWeight: 600 }}>トリガー</span><span style={{ color: 'var(--text2)' }}>{trigger}</span>
+        <span style={{ color: 'var(--text3)', fontWeight: 600 }}>Input</span><span style={{ color: 'var(--text2)' }}>{input}</span>
+        <span style={{ color: 'var(--text3)', fontWeight: 600 }}>モデル</span><span style={{ color: 'var(--text2)' }}>{model}</span>
+        <span style={{ color: 'var(--text3)', fontWeight: 600 }}>パイプライン</span><span style={{ color: 'var(--text2)' }}>{pipeline}</span>
+        <span style={{ color: 'var(--text3)', fontWeight: 600 }}>Output</span><span style={{ color: 'var(--text2)' }}>{output}</span>
+        <span style={{ color: 'var(--text3)', fontWeight: 600 }}>保存先</span><span style={{ color: 'var(--text2)' }}>{storage}</span>
+        <span style={{ color: 'var(--text3)', fontWeight: 600 }}>コード</span><span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text3)' }}>{hook}</span>
+      </div>
+    </div>
+  )
+}
+
+function TabAiFeatures() {
+  return (
+    <>
+      <Section title="共通アーキテクチャ">
+        <P>全AI機能は同じパイプラインを通る。ブラウザからOpenAI APIを直接叩かない。</P>
+        <div className="card" style={{ padding: 14, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)' }}>
+{`ブラウザ (React hook)
+  → aiCompletion() [src/lib/edgeAi.ts]
+    → POST /functions/v1/ai-agent  mode=completion
+      → Edge Function [supabase/functions/ai-agent/index.ts]
+        → OpenAI API (gpt-5-nano, reasoning_effort=low)
+          → JSON response
+            → ブラウザで処理・表示・DB保存`}
+        </div>
+        <Tbl headers={['設定', '値', '理由']} rows={[
+          ['モデル', 'gpt-5-nano', 'コスト最小。reasoning model なので分析系に強い'],
+          ['reasoning_effort', 'low', 'minimal だと出力が空になるケースがあった'],
+          ['max_completion_tokens', '8000', 'reasoning + output の合計。少ないとreasoning に消費されて出力空に'],
+          ['temperature', '(デフォルト1)', 'gpt-5-nano は temperature カスタム非対応'],
+        ]} />
+      </Section>
+
+      <Section title="AI機能一覧（7機能）">
+        <AiFeatureCard
+          name="1. 感情分析"
+          trigger="日記を投稿したとき（自動）"
+          input="日記本文テキスト"
+          model="gpt-5-nano (completion mode)"
+          pipeline="日記テキスト → system: Plutchik 8感情+Russell+PERMA+V の分析指示 → JSON応答 → パース → DB保存"
+          output="Plutchik 8感情(0-100), Russell valence/arousal(-1~1), PERMA+V(0-10), WBI(0-10), summary(1文)"
+          storage="emotion_analysis テーブル + diary_entries.wbi を更新"
+          hook="useEmotionAnalysis.ts"
+        />
+
+        <AiFeatureCard
+          name="2. AI Partner コメント（ディープパーソナライズ）"
+          trigger="Today画面表示時 + 日記投稿後に自動再生成"
+          input="直近日記(5件), 感情分析(10件), WBI推移, カレンダー(今日+明日), タスク(完了+未完了), CEOインサイト, 生活リズム(prompt_log), 連続記録, 夢リスト"
+          model="gpt-5-nano (completion mode)"
+          pipeline="10データソース並列取得 → コンテキスト組み立て → 時間帯別プロンプト(朝/昼/夜) → AI生成 → 表示"
+          output="2-3文、100字以内のパーソナライズコメント"
+          storage="Zustand in-memory（キャッシュキー: 日付_timeMode、日記投稿で無効化）"
+          hook="useMorningBriefing.ts"
+        />
+
+        <AiFeatureCard
+          name="3. 夢進捗検出"
+          trigger="日記投稿後（自動、バックグラウンド）"
+          input="日記テキスト + アクティブな夢リスト(dreams テーブル)"
+          model="gpt-5-nano (completion mode, jsonMode)"
+          pipeline="日記テキスト+夢リスト → system: 夢との照合指示 → JSON応答 → confidence medium以上をフィルタ → toast通知"
+          output='[{dream_id, confidence: "high"|"medium", reason}]'
+          storage="表示のみ（toast通知）。DBには保存しない"
+          hook="useDreamDetection.ts"
+        />
+
+        <AiFeatureCard
+          name="4. 週次ナラティブ"
+          trigger="Weeklyページで「生成」ボタン押下"
+          input="1週間分の日記, 感情分析, 完了タスク, ゴール進捗, 習慣達成率"
+          model="gpt-5-nano (completion mode)"
+          pipeline="週の全データ並列取得 → 統計算出(平均WBI, 優勢感情, 習慣達成率) → AI生成(200-300字ナラティブ) → DB保存"
+          output="200-300字の振り返りナラティブ + stats(diary_count, task_count, avg_wbi, dominant_emotion)"
+          storage="weekly_narratives テーブル"
+          hook="useWeeklyNarrative.ts"
+        />
+
+        <AiFeatureCard
+          name="5. 自己分析（6種類）"
+          trigger="Self Analysisページで分析ボタン押下（日記件数でアンロック）"
+          input="日記(30-80件), タスク実績, 感情分析データ, 夢リスト（分析タイプにより異なる）"
+          model="gpt-5-nano (completion mode, jsonMode)"
+          pipeline="分析タイプ別にデータ収集 → タイプ別プロンプト → JSON応答 → DB保存 → 可視化"
+          output="MBTI推定, Big5スコア, 強み分析, ストレングスファインダーTop5, 感情トリガー, 価値観分析"
+          storage="self_analysis テーブル(analysis_type, result JSON, summary, data_count)"
+          hook="useSelfAnalysis.ts"
+        />
+
+        <AiFeatureCard
+          name="6. AI チャット（エージェントループ）"
+          trigger="AI Chatページでメッセージ送信"
+          input="ユーザーメッセージ + 会話履歴(20件) + パーソナライゼーション(KB,日記,インサイト)"
+          model="gpt-5-nano / gpt-5-mini / gpt-5（自動 or ユーザー選択）"
+          pipeline="SSEストリーミング。while(tool_call)ループ: LLM応答→ツール実行→結果をLLMに返す→繰り返し"
+          output="ストリーミングテキスト + ツール実行結果（タスク検索/作成, ナレッジ検索, Web検索 等）"
+          storage="conversations + messages テーブル。cost_tracking でトークン消費記録"
+          hook="legacy.ts (renderChat) → ai-agent Edge Function (agentLoop)"
+        />
+
+        <AiFeatureCard
+          name="7. ニュース収集"
+          trigger="Reportsページで収集ボタン / HOME画面の一言生成"
+          input="トピックリスト(AI/LLM, Snowflake等) + ユーザー関心度(interest_score)"
+          model="gpt-5-nano (completion mode)"
+          pipeline="関心度高いトピック抽出 → AI にニュース生成依頼 → JSON配列パース → news_items テーブルに保存"
+          output="[{title, summary, url, source, topic, date}] の配列"
+          storage="news_items テーブル + activity_log"
+          hook="legacy.ts (collectNews) / Reports.tsx"
+        />
+      </Section>
+
+      <Section title="AIチャットのツール一覧">
+        <P>エージェントループで使えるツール。LLMが自律的に選択・実行する。</P>
+        <Tbl headers={['ツール', '機能', 'データソース']} rows={[
+          ['tasks_search', 'タスク検索（status, company, keyword）', 'tasks テーブル'],
+          ['tasks_create', 'タスク新規作成', 'tasks テーブル'],
+          ['artifacts_read', '成果物の内容取得', 'artifacts テーブル'],
+          ['artifacts_list', '成果物一覧', 'artifacts テーブル'],
+          ['knowledge_search', 'ナレッジ検索（カテゴリ, scope）', 'knowledge_base テーブル'],
+          ['company_info', 'PJ会社情報・部署構成', 'companies + departments テーブル'],
+          ['prompt_history', '直近のプロンプト履歴検索', 'prompt_log テーブル'],
+          ['insights_read', 'CEOインサイト（行動パターン等）', 'ceo_insights テーブル'],
+          ['activity_search', 'アクティビティログ検索', 'activity_log テーブル'],
+          ['intelligence_read', '最新ニュース/レポート', 'news_items テーブル'],
+          ['web_search', 'Web検索（外部API）', 'Brave Search API'],
+        ]} />
+        <P>安全設計: web_search 使用後は write系ツール(tasks_create)をブロック。間接プロンプトインジェクション対策。</P>
+      </Section>
+
+      <Section title="データ構造">
+        <Tbl headers={['テーブル', 'カラム（主要）', '用途']} rows={[
+          ['diary_entries', 'id, body, entry_type, entry_date, wbi, emotions, created_at', '日記エントリー。wbiは感情分析後に更新'],
+          ['emotion_analysis', 'diary_entry_id, joy/trust/fear/surprise/sadness/disgust/anger/anticipation (0-100), valence/arousal (-1~1), perma_p~v (0-10), wbi_score', '感情分析結果。1日記 : 1分析'],
+          ['self_analysis', 'analysis_type, result (JSON), summary, data_count, model_used', '自己分析結果。MBTI/Big5/強み/感情トリガー/価値観'],
+          ['weekly_narratives', 'week_start, week_end, narrative, stats (JSON)', '週次振り返りナラティブ'],
+          ['conversations', 'id, title, model, context_mode, company_id', 'AIチャットの会話'],
+          ['messages', 'conversation_id, role, content, model, tool_calls, tool_call_id', 'AIチャットのメッセージ'],
+          ['cost_tracking', 'model, prompt_tokens, completion_tokens, reasoning_tokens, total_cost', 'API コスト追跡'],
+          ['news_items', 'title, summary, url, source, topic, published_date', 'ニュース収集結果'],
+          ['dreams', 'title, description, category, status, priority', '100の夢リスト'],
+          ['goals', 'title, level (life/yearly/quarterly/monthly/weekly), parent_id, dream_id, progress', '階層型目標'],
+          ['knowledge_base', 'category, rule, reason, scope, confidence, auto_apply, status', '蓄積されたルール・ナレッジ'],
+          ['ceo_insights', 'category, insight, evidence, confidence', 'CEO行動分析結果'],
+        ]} />
+      </Section>
+    </>
+  )
+}
+
 // ========== Main ==========
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
+  { key: 'ai', label: 'AI Features' },
   { key: 'philosophy', label: 'Design Philosophy' },
   { key: 'architecture', label: 'Architecture' },
   { key: 'operations', label: 'Operations' },
@@ -368,6 +529,7 @@ export function HowItWorks() {
       </div>
 
       {tab === 'overview' && <TabOverview />}
+      {tab === 'ai' && <TabAiFeatures />}
       {tab === 'philosophy' && <TabDesignPhilosophy />}
       {tab === 'architecture' && <TabArchitecture />}
       {tab === 'operations' && <TabOperations />}
