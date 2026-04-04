@@ -128,120 +128,27 @@ if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
     2>/dev/null || true
 fi
 
-# Sync plugin cache: ensure ai-company plugin is fully installed and up to date
-# This creates the cache from scratch if missing, or updates if stale
-CACHE_BASE="$HOME/.claude/plugins/cache/ai-company/company/0edaac953b3d"
+# Sync company skills: plugins/company/skills/ → .claude/skills/
+# Uses .claude/skills/ (project-level skills) instead of plugin cache.
+# Plugin cache is managed by Claude Code itself and prone to orphaning on commit changes.
 SOURCE_BASE="$PROJECT_DIR/plugins/company"
+SKILLS_TARGET="$PROJECT_DIR/.claude/skills"
 if [ -d "$SOURCE_BASE/skills" ]; then
-  # Create cache base structure if missing
-  mkdir -p "$CACHE_BASE/.claude-plugin"
-  mkdir -p "$CACHE_BASE/skills"
-
-  # Sync plugin.json (Claude Code auto-discovers skills/ without marketplace.json)
-  if [ -f "$SOURCE_BASE/.claude-plugin/plugin.json" ]; then
-    cp -f "$SOURCE_BASE/.claude-plugin/plugin.json" "$CACHE_BASE/.claude-plugin/plugin.json"
-  elif [ ! -f "$CACHE_BASE/.claude-plugin/plugin.json" ]; then
-    # Create minimal plugin.json if missing
-    echo '{"name":"company","description":"HD + PJ company virtual organization management","author":{"name":"owner"}}' > "$CACHE_BASE/.claude-plugin/plugin.json"
-  fi
-  # Remove marketplace.json from cache - Claude Code uses auto-discovery from skills/ dir
-  rm -f "$CACHE_BASE/.claude-plugin/marketplace.json"
-
-  # Ensure README exists
-  if [ ! -f "$CACHE_BASE/README.md" ]; then
-    echo "# ai-company plugin" > "$CACHE_BASE/README.md"
-  fi
-
-  # Sync all skills (SKILL.md + references/)
   for skill_dir in "$SOURCE_BASE"/skills/*/; do
     [ -d "$skill_dir" ] || continue
     skill_name=$(basename "$skill_dir")
-    cache_skill_dir="$CACHE_BASE/skills/$skill_name"
-    mkdir -p "$cache_skill_dir"
+    target_dir="$SKILLS_TARGET/$skill_name"
+    mkdir -p "$target_dir"
+    # Only copy if source is newer
     if [ -f "$skill_dir/SKILL.md" ]; then
-      cp -f "$skill_dir/SKILL.md" "$cache_skill_dir/SKILL.md"
+      if [ ! -f "$target_dir/SKILL.md" ] || [ "$skill_dir/SKILL.md" -nt "$target_dir/SKILL.md" ]; then
+        cp -f "$skill_dir/SKILL.md" "$target_dir/SKILL.md"
+      fi
     fi
     if [ -d "$skill_dir/references" ]; then
-      cp -rf "$skill_dir/references" "$cache_skill_dir/"
+      cp -rf "$skill_dir/references" "$target_dir/"
     fi
   done
-
-  # Register in known_marketplaces.json if missing
-  KM_FILE="$HOME/.claude/plugins/known_marketplaces.json"
-  if [ ! -f "$KM_FILE" ]; then
-    echo '{}' > "$KM_FILE"
-  fi
-  HAS_AI_COMPANY=$(jq 'has("ai-company")' "$KM_FILE" 2>/dev/null || echo "false")
-  MP_LOCATION="$HOME/.claude/plugins/marketplaces/ai-company"
-  if [ "$HAS_AI_COMPANY" != "true" ]; then
-    mkdir -p "$MP_LOCATION"
-    jq --arg loc "$MP_LOCATION" \
-      '. + {"ai-company": {"source": {"source": "github", "repo": "boku-miyaji/claude_dev"}, "installLocation": $loc, "lastUpdated": (now | todate)}}' \
-      "$KM_FILE" > "$KM_FILE.tmp" && mv "$KM_FILE.tmp" "$KM_FILE"
-  fi
-
-  # Build marketplace.json for the marketplace directory
-  # Skills at ./skills/X (matching anthropic-agent-skills pattern)
-  mkdir -p "$MP_LOCATION/.claude-plugin"
-  SKILL_PATHS="[]"
-  for skill_dir in "$SOURCE_BASE"/skills/*/; do
-    [ -d "$skill_dir" ] || continue
-    skill_name=$(basename "$skill_dir")
-    SKILL_PATHS=$(echo "$SKILL_PATHS" | jq --arg s "./skills/$skill_name" '. + [$s]')
-  done
-  jq -n \
-    --argjson skills "$SKILL_PATHS" \
-    '{
-      name: "ai-company",
-      owner: { name: "owner" },
-      metadata: { description: "AI開発・システム開発を中心とした仮想組織プラグイン。秘書が窓口、人事部が組織を継続最適化。" },
-      plugins: [{
-        name: "company",
-        source: "./",
-        description: "HD + PJ別会社の仮想組織管理。引数なしでHD秘書、引数ありで各PJ会社の秘書が起動する。",
-        strict: false,
-        skills: $skills
-      }]
-    }' > "$MP_LOCATION/.claude-plugin/marketplace.json"
-
-  # Sync skills to marketplace directory at root level (./skills/X pattern)
-  mkdir -p "$MP_LOCATION/skills"
-  for skill_dir in "$SOURCE_BASE"/skills/*/; do
-    [ -d "$skill_dir" ] || continue
-    skill_name=$(basename "$skill_dir")
-    mp_skill_dir="$MP_LOCATION/skills/$skill_name"
-    mkdir -p "$mp_skill_dir"
-    if [ -f "$skill_dir/SKILL.md" ]; then
-      cp -f "$skill_dir/SKILL.md" "$mp_skill_dir/SKILL.md"
-    fi
-    if [ -d "$skill_dir/references" ]; then
-      cp -rf "$skill_dir/references" "$mp_skill_dir/"
-    fi
-  done
-
-  # Register in installed_plugins.json if missing
-  IP_FILE="$HOME/.claude/plugins/installed_plugins.json"
-  if [ ! -f "$IP_FILE" ]; then
-    echo '{"version": 2, "plugins": {}}' > "$IP_FILE"
-  fi
-  HAS_PLUGIN=$(jq '.plugins | has("company@ai-company")' "$IP_FILE" 2>/dev/null || echo "false")
-  # Fix existing entry if scope is wrong (user → project with projectPath)
-  if [ "$HAS_PLUGIN" = "true" ]; then
-    CURRENT_SCOPE=$(jq -r '.plugins["company@ai-company"][0].scope // ""' "$IP_FILE" 2>/dev/null)
-    CURRENT_PROJPATH=$(jq -r '.plugins["company@ai-company"][0].projectPath // ""' "$IP_FILE" 2>/dev/null)
-    if [ "$CURRENT_SCOPE" != "project" ] || [ "$CURRENT_PROJPATH" != "$PROJECT_DIR" ]; then
-      NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-      jq --arg path "$CACHE_BASE" --arg now "$NOW" --arg projpath "$PROJECT_DIR" \
-        '.plugins["company@ai-company"] = [{"scope": "project", "installPath": $path, "version": "unknown", "installedAt": $now, "lastUpdated": $now, "projectPath": $projpath}]' \
-        "$IP_FILE" > "$IP_FILE.tmp" && mv "$IP_FILE.tmp" "$IP_FILE"
-    fi
-  fi
-  if [ "$HAS_PLUGIN" != "true" ]; then
-    NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-    jq --arg path "$CACHE_BASE" --arg now "$NOW" --arg projpath "$PROJECT_DIR" \
-      '.plugins["company@ai-company"] = [{"scope": "project", "installPath": $path, "version": "unknown", "installedAt": $now, "lastUpdated": $now, "projectPath": $projpath}]' \
-      "$IP_FILE" > "$IP_FILE.tmp" && mv "$IP_FILE.tmp" "$IP_FILE"
-  fi
 fi
 
 # Sync slash commands (diff-based)
