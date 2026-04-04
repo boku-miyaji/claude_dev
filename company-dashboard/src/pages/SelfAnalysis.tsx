@@ -363,6 +363,7 @@ function ValuesResult({ result }: { result: Record<string, unknown> }) {
           {String(result.summary)}
         </div>
       )}
+      <ChangesFromPrevious result={result} />
     </div>
   )
 }
@@ -447,16 +448,6 @@ export function SelfAnalysis() {
       requiredCount: 30,
       currentCount: diaryCount,
       unlocked: diaryCount >= 30,
-    },
-    {
-      id: 'strengths',
-      title: '強み・才能分析',
-      description: 'タスクの実績と日記から、あなたの強みパターンを発見します。',
-      icon: '💎',
-      requiredTable: 'tasks',
-      requiredCount: 50,
-      currentCount: taskCount,
-      unlocked: taskCount >= 50,
     },
     {
       id: 'strengths_finder',
