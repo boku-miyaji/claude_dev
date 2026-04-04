@@ -195,22 +195,24 @@ ${modeInstructions[timeMode]}
         ? contextParts.join('\n\n')
         : '（特にデータなし。穏やかな一言を）'
 
-      const { content: briefingMessage } = await aiCompletion(userMessage, {
+      const result = await aiCompletion(userMessage, {
         systemPrompt,
-        temperature: 0.8,
-        maxTokens: 300,
+        maxTokens: 500,
       })
+      const briefingMessage = result.content?.trim()
+      console.log('[AI Partner] Result:', result)
 
       if (briefingMessage) {
         setMessage(briefingMessage)
         setLastFetched(cacheKey)
       } else {
+        // Don't cache fallback — retry on next render
         setMessage(getFallback(timeMode))
-        setLastFetched(cacheKey)
       }
-    } catch (_err) {
+    } catch (err) {
+      console.error('[AI Partner] Briefing error:', err)
+      // Don't cache error fallback — retry on next render
       setMessage(getFallback(timeMode))
-      setLastFetched(cacheKey)
     } finally {
       setLoading(false)
     }
