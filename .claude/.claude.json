@@ -1,5 +1,5 @@
 {
-  "numStartups": 34,
+  "numStartups": 35,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -614,14 +614,14 @@
   },
   "hasCompletedOnboarding": true,
   "lastOnboardingVersion": "1.0.39",
-  "changelogLastFetched": 1775090381026,
+  "changelogLastFetched": 1775302249729,
   "subscriptionNoticeCount": 0,
   "hasAvailableSubscription": false,
   "hasIdeOnboardingBeenShown": {
     "cursor": true
   },
   "fallbackAvailableWarningThreshold": 0.2,
-  "lastReleaseNotesSeen": "2.1.90",
+  "lastReleaseNotesSeen": "2.1.92",
   "hasUsedBackslashReturn": true,
   "isQualifiedForDataSharing": false,
   "s1mAccessCache": {
@@ -673,7 +673,7 @@
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 11,
-  "opus1mMergeNoticeSeenCount": 4,
+  "opus1mMergeNoticeSeenCount": 5,
   "passesUpsellSeenCount": 3,
   "effortCalloutV2Dismissed": true,
   "groveConfigCache": {
@@ -685,13 +685,13 @@
   "overageCreditGrantCache": {
     "39030fbb-3ef1-463b-827e-00dfd1aafe83": {
       "info": {
-        "available": false,
-        "eligible": false,
+        "available": true,
+        "eligible": true,
         "granted": false,
-        "amount_minor_units": null,
-        "currency": null
+        "amount_minor_units": 20000,
+        "currency": "USD"
       },
-      "timestamp": 1775124763441
+      "timestamp": 1775302250784
     }
   },
   "clientDataCache": {},
