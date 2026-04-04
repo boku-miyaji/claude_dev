@@ -503,8 +503,8 @@ export function Today() {
         {HabitsSection}
         {DiaryInput}
         {StreakSection}
-        {FragmentsSection}
         {DreamsSection}
+        {FragmentsSection}
       </div>
     )
   }
@@ -516,9 +516,9 @@ export function Today() {
         {DiaryInput}
         {ScheduleSection}
         {RemainingTasksSection}
-        {FragmentsSection}
         {HabitsSection}
         {BriefingSection}
+        {FragmentsSection}
       </div>
     )
   }
@@ -531,11 +531,11 @@ export function Today() {
       {ScheduleSection}
       {DiaryInput}
       {BriefingSection}
-      {FragmentsSection}
       {CompletedTasksSection}
       {CarryoverSection}
       {TomorrowSection}
       {DreamsSection}
+      {FragmentsSection}
     </div>
   )
 }
