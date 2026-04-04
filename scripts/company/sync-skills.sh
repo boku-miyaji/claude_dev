@@ -16,7 +16,7 @@ set -uo pipefail
 
 PLUGINS_DIR="${HOME}/.claude/plugins"
 SOURCE="${PLUGINS_DIR}/marketplaces/ai-company"
-SKILLS_DIR="${SOURCE}/skills"
+SKILLS_DIR="${SOURCE}/plugins/company/skills"
 MARKETPLACE_JSON="${SOURCE}/.claude-plugin/marketplace.json"
 
 CHECK_ONLY=false
@@ -34,7 +34,7 @@ fi
 # Collect skill dirs that have SKILL.md
 SKILL_PATHS=()
 for d in "$SKILLS_DIR"/*/; do
-  [[ -f "${d}SKILL.md" ]] && SKILL_PATHS+=("./skills/$(basename "$d")")
+  [[ -f "${d}SKILL.md" ]] && SKILL_PATHS+=("./skills/$(basename "$d")")  # relative to plugin dir, not marketplace root
 done
 
 # Sort
