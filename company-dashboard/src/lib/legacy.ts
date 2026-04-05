@@ -7079,7 +7079,8 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     pendingAttachments.forEach(function(att, idx) {
       var pill = el('div', {className: 'chat-attach-pill'});
       if (att.type.startsWith('image/')) { var t = el('img'); t.src = att.dataUrl; pill.appendChild(t); }
-      pill.appendChild(el('span', {textContent: att.name.length > 18 ? att.name.substring(0,15)+'...' : att.name}));
+      else { var ext = att.name.split('.').pop().toLowerCase(); var ficon = {pdf:'\uD83D\uDCC4',xlsx:'\uD83D\uDCCA',xls:'\uD83D\uDCCA',pptx:'\uD83D\uDCDD',ppt:'\uD83D\uDCDD',docx:'\uD83D\uDCC3',doc:'\uD83D\uDCC3'}[ext]||'\uD83D\uDCC1'; pill.appendChild(el('span',{textContent:ficon,style:'font-size:16px'})); }
+      pill.appendChild(el('span', {textContent: att.name.length > 20 ? att.name.substring(0,17)+'...' : att.name}));
       var rm = el('span', {className: 'remove', textContent: '\u00D7'});
       rm.addEventListener('click', function() { pendingAttachments.splice(idx,1); renderPreviews(); });
       pill.appendChild(rm);
