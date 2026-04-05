@@ -482,6 +482,10 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .cal-tg-ev.cal-past{opacity:.4}
 .cal-tg-ev.dragging{opacity:.7;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:10;cursor:grabbing;pointer-events:none}
 .cal-tg-ev .cal-tg-resize{position:absolute;bottom:0;left:0;right:0;height:6px;cursor:ns-resize;border-radius:0 0 6px 6px}
+.cal-task-suggest{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg);z-index:10;max-height:160px;overflow-y:auto}
+.cal-task-suggest-item{padding:8px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+.cal-task-suggest-item:last-child{border-bottom:none}
+.cal-task-suggest-item:hover{background:var(--surface2)}
 .cal-tg-ev .cal-tg-resize:hover{background:rgba(255,255,255,.2)}
 .cal-tg-ghost{position:absolute;border-radius:6px;opacity:.35;pointer-events:none;z-index:1;border:2px dashed rgba(255,255,255,.5)}
 .cal-tg-ghost.cal-work{background:#1a7f37}.cal-tg-ghost.cal-primary{background:#5b5fc7}.cal-tg-ghost.cal-secondary{background:#b45309}

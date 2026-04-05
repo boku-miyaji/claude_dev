@@ -804,85 +804,134 @@ async function gcalDeleteEvent(calendarId, eventId) {
 
 function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour, defaultAllDay) {
   var isEdit = !!existingEvent;
-  var overlay = el('div', {style: 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center'});
+  // Determine if all-day: explicit flag, or if no hour specified and not editing
+  var isAllDay = isEdit ? existingEvent.all_day : (defaultAllDay === true && defaultHour == null);
+
+  var overlay = el('div', {className: 'modal-overlay'});
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
 
-  var modal = el('div', {style: 'background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.15)'});
+  var modal = el('div', {className: 'modal', style: 'max-width:400px'});
 
-  // Title
-  modal.appendChild(el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px'}, [
-    el('div', {textContent: isEdit ? '予定を編集' : '予定を追加', style: 'font-size:16px;font-weight:600'}),
-    el('button', {textContent: '\u00d7', style: 'background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:0 4px', onClick: function() { overlay.remove(); }})
-  ]));
+  // Header
+  var hdr = el('div', {className: 'modal-header'});
+  hdr.appendChild(el('span', {style: 'font-weight:600;font-size:15px', textContent: isEdit ? '予定を編集' : '予定を追加'}));
+  hdr.appendChild(el('button', {className: 'modal-close', textContent: '\u00d7', onClick: function() { overlay.remove(); }}));
+  modal.appendChild(hdr);
 
-  var inputStyle = 'width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);box-sizing:border-box';
+  var body = el('div', {className: 'modal-body'});
+  var ist = 'width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);box-sizing:border-box';
 
-  // Summary
-  var summaryInput = el('input', {type: 'text', placeholder: '予定のタイトル', value: isEdit ? existingEvent.summary : '', style: inputStyle});
-  modal.appendChild(el('div', {style: 'margin-bottom:12px'}, [
-    el('label', {textContent: 'タイトル', style: 'font-size:12px;color:var(--text3);display:block;margin-bottom:4px'}),
-    summaryInput
-  ]));
+  // Title (Google Calendar style — large, no label)
+  var summaryInput = el('input', {type: 'text', placeholder: 'タイトルを追加', value: isEdit ? existingEvent.summary : '', style: ist + ';font-size:16px;font-weight:500;border:none;border-bottom:2px solid var(--accent);border-radius:0;padding:8px 0'});
+  body.appendChild(el('div', {style: 'margin-bottom:16px'}, [summaryInput]));
 
-  // All day checkbox
-  var allDayCheck = el('input', {type: 'checkbox', checked: isEdit ? existingEvent.all_day : !!defaultAllDay});
-  modal.appendChild(el('div', {style: 'margin-bottom:12px;display:flex;align-items:center;gap:6px'}, [
+  // All day toggle
+  var allDayCheck = el('input', {type: 'checkbox', checked: isAllDay});
+  body.appendChild(el('div', {style: 'margin-bottom:12px;display:flex;align-items:center;gap:8px'}, [
     allDayCheck,
-    el('label', {textContent: '終日', style: 'font-size:12px;color:var(--text2);cursor:pointer', onClick: function() { allDayCheck.checked = !allDayCheck.checked; toggleTimeInputs(); }})
+    el('label', {textContent: '終日', style: 'font-size:13px;color:var(--text2);cursor:pointer;font-weight:500', onClick: function() { allDayCheck.checked = !allDayCheck.checked; toggleTime(); }})
   ]));
 
-  // Date/time inputs
+  // Date/time
   var _now = new Date();
   var defDate = defaultDate || (_now.getFullYear() + '-' + String(_now.getMonth()+1).padStart(2,'0') + '-' + String(_now.getDate()).padStart(2,'0'));
   function toLocalDate(dt) { var d = new Date(dt); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function toLocalTime(dt) { var d = new Date(dt); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
-  var startDateInput = el('input', {type: 'date', value: isEdit ? toLocalDate(existingEvent.start_time) : defDate, style: inputStyle});
-  var defStartTime = defaultHour != null ? (String(defaultHour).padStart(2,'0')+':00') : '10:00';
-  var defEndTime = defaultHour != null ? (String(defaultHour+1).padStart(2,'0')+':00') : '11:00';
-  var startTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.start_time) : defStartTime, style: inputStyle+';width:auto'});
-  var endDateInput = el('input', {type: 'date', value: isEdit ? (existingEvent.all_day ? toLocalDate(existingEvent.start_time) : toLocalDate(existingEvent.end_time)) : defDate, style: inputStyle});
-  var endTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.end_time) : defEndTime, style: inputStyle+';width:auto'});
 
-  var timeRow = el('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px'});
-  var startGroup = el('div', {}, [
-    el('label', {textContent: '開始', style: 'font-size:12px;color:var(--text3);display:block;margin-bottom:4px'}),
-    el('div', {style: 'display:flex;gap:6px'}, [startDateInput, startTimeInput])
-  ]);
-  var endGroup = el('div', {}, [
-    el('label', {textContent: '終了', style: 'font-size:12px;color:var(--text3);display:block;margin-bottom:4px'}),
-    el('div', {style: 'display:flex;gap:6px'}, [endDateInput, endTimeInput])
-  ]);
-  timeRow.appendChild(startGroup);
-  timeRow.appendChild(endGroup);
-  modal.appendChild(timeRow);
+  var defStart = defaultHour != null ? (String(defaultHour).padStart(2,'0')+':00') : '10:00';
+  var defEnd = defaultHour != null ? (String(Math.min(defaultHour+1,23)).padStart(2,'0')+':00') : '11:00';
 
-  function toggleTimeInputs() {
-    startTimeInput.style.display = allDayCheck.checked ? 'none' : '';
-    endTimeInput.style.display = allDayCheck.checked ? 'none' : '';
+  var startDateInput = el('input', {type: 'date', value: isEdit ? toLocalDate(existingEvent.start_time) : defDate, style: ist});
+  var startTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.start_time) : defStart, style: ist});
+  var endDateInput = el('input', {type: 'date', value: isEdit ? (existingEvent.all_day ? toLocalDate(existingEvent.start_time) : toLocalDate(existingEvent.end_time)) : defDate, style: ist});
+  var endTimeInput = el('input', {type: 'time', value: isEdit && !existingEvent.all_day ? toLocalTime(existingEvent.end_time) : defEnd, style: ist});
+
+  var timeArea = el('div', {style: 'margin-bottom:12px'});
+
+  function renderTimeArea() {
+    while (timeArea.firstChild) timeArea.removeChild(timeArea.firstChild);
+    if (allDayCheck.checked) {
+      // All-day: just date pickers side by side
+      var row = el('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px'});
+      row.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: '開始'}), startDateInput]));
+      row.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: '終了'}), endDateInput]));
+      timeArea.appendChild(row);
+    } else {
+      // Time-specific: stacked rows
+      var r1 = el('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px'});
+      r1.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: '開始'}), startDateInput]));
+      r1.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: ''}), startTimeInput]));
+      var r2 = el('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px'});
+      r2.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: '終了'}), endDateInput]));
+      r2.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: ''}), endTimeInput]));
+      timeArea.appendChild(r1);
+      timeArea.appendChild(r2);
+    }
   }
-  allDayCheck.addEventListener('change', toggleTimeInputs);
-  toggleTimeInputs();
+
+  function toggleTime() { renderTimeArea(); }
+  allDayCheck.addEventListener('change', toggleTime);
+  renderTimeArea();
+  body.appendChild(timeArea);
+
+  // Description (optional, with @task linking)
+  var descInput = el('textarea', {placeholder: '説明を追加... @でタスク検索', value: isEdit && existingEvent.description ? existingEvent.description : '', style: ist + ';min-height:50px;resize:vertical'});
+  var taskSuggest = el('div', {className: 'cal-task-suggest', style: 'display:none'});
+
+  descInput.addEventListener('input', function() {
+    var val = descInput.value;
+    var atIdx = val.lastIndexOf('@');
+    if (atIdx === -1 || atIdx < val.lastIndexOf(' ', val.length - 2)) {
+      taskSuggest.style.display = 'none';
+      return;
+    }
+    var query = val.substring(atIdx + 1).toLowerCase();
+    // Fetch tasks from Supabase (cached via sb)
+    sb.from('tasks').select('id,title,type,status').eq('status', 'open').order('created_at', {ascending: false}).limit(50).then(function(res) {
+      var matches = (res.data || []).filter(function(t) { return t.title.toLowerCase().includes(query); }).slice(0, 5);
+      while (taskSuggest.firstChild) taskSuggest.removeChild(taskSuggest.firstChild);
+      if (matches.length === 0) { taskSuggest.style.display = 'none'; return; }
+      taskSuggest.style.display = 'block';
+      matches.forEach(function(t) {
+        var item = el('div', {className: 'cal-task-suggest-item', textContent: (t.type === 'request' ? '↗ ' : '☐ ') + t.title});
+        item.addEventListener('click', function() {
+          descInput.value = val.substring(0, atIdx) + '@[' + t.title + '](#task-' + t.id + ') ';
+          taskSuggest.style.display = 'none';
+          descInput.focus();
+        });
+        taskSuggest.appendChild(item);
+      });
+    });
+  });
+
+  body.appendChild(el('div', {style: 'margin-bottom:12px;position:relative'}, [
+    el('label', {className: 'form-label', textContent: '説明'}),
+    descInput,
+    taskSuggest
+  ]));
 
   // Calendar select
-  var calSelect = el('select', {style: inputStyle});
+  var calSelect = el('select', {style: ist});
   GCAL_CALENDARS.forEach(function(c) {
     var opt = el('option', {value: c.id, textContent: c.label});
     if (isEdit && existingEvent.calendar_id === c.id) opt.selected = true;
     calSelect.appendChild(opt);
   });
-  modal.appendChild(el('div', {style: 'margin-bottom:20px'}, [
-    el('label', {textContent: 'カレンダー', style: 'font-size:12px;color:var(--text3);display:block;margin-bottom:4px'}),
+  body.appendChild(el('div', {style: 'margin-bottom:12px'}, [
+    el('label', {className: 'form-label', textContent: 'カレンダー'}),
     calSelect
   ]));
 
+  modal.appendChild(body);
+
   // Status
-  var statusMsg = el('div', {style: 'font-size:12px;color:var(--text3);margin-bottom:12px;min-height:16px'});
+  var statusMsg = el('div', {style: 'font-size:12px;color:var(--text3);padding:0 20px;min-height:16px'});
   modal.appendChild(statusMsg);
 
-  // Buttons
-  var btnRow = el('div', {style: 'display:flex;gap:8px;justify-content:flex-end'});
+  // Footer
+  var footer = el('div', {className: 'modal-footer'});
   if (isEdit) {
-    btnRow.appendChild(el('button', {textContent: '削除', style: 'padding:8px 16px;border:1px solid #ef4444;border-radius:6px;background:transparent;color:#ef4444;cursor:pointer;font-family:var(--font);font-size:13px;margin-right:auto', onClick: async function() {
+    footer.appendChild(el('button', {className: 'btn btn-d btn-sm', textContent: '削除', style: 'margin-right:auto', onClick: async function() {
       if (!confirm('この予定を削除しますか？')) return;
       statusMsg.textContent = '削除中...';
       try {
@@ -892,33 +941,31 @@ function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour, def
       } catch(e) { statusMsg.textContent = '削除エラー: ' + e.message; statusMsg.style.color = '#ef4444'; }
     }}));
   }
-  btnRow.appendChild(el('button', {textContent: 'キャンセル', style: 'padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font);font-size:13px', onClick: function() { overlay.remove(); }}));
-  btnRow.appendChild(el('button', {textContent: isEdit ? '更新' : '作成', style: 'padding:8px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600', onClick: async function() {
+  footer.appendChild(el('button', {className: 'btn btn-g', textContent: 'キャンセル', onClick: function() { overlay.remove(); }}));
+  footer.appendChild(el('button', {className: 'btn btn-p', textContent: isEdit ? '更新' : '作成', onClick: async function() {
     var title = summaryInput.value.trim();
-    if (!title) { statusMsg.textContent = 'タイトルを入力してください'; statusMsg.style.color = '#ef4444'; return; }
+    if (!title) { statusMsg.textContent = 'タイトルを入力'; statusMsg.style.color = '#ef4444'; return; }
     var calId = calSelect.value;
-    var body = {summary: title};
+    var evBody = {summary: title};
+    if (descInput.value.trim()) evBody.description = descInput.value.trim();
     if (allDayCheck.checked) {
-      body.start = {date: startDateInput.value};
+      evBody.start = {date: startDateInput.value};
       var endD = new Date(endDateInput.value); endD.setDate(endD.getDate() + 1);
-      body.end = {date: endD.toISOString().slice(0,10)};
+      evBody.end = {date: endD.toISOString().slice(0,10)};
     } else {
-      body.start = {dateTime: startDateInput.value + 'T' + startTimeInput.value + ':00', timeZone: 'Asia/Tokyo'};
-      body.end = {dateTime: endDateInput.value + 'T' + endTimeInput.value + ':00', timeZone: 'Asia/Tokyo'};
+      evBody.start = {dateTime: startDateInput.value + 'T' + startTimeInput.value + ':00', timeZone: 'Asia/Tokyo'};
+      evBody.end = {dateTime: endDateInput.value + 'T' + endTimeInput.value + ':00', timeZone: 'Asia/Tokyo'};
     }
     statusMsg.textContent = isEdit ? '更新中...' : '作成中...';
     statusMsg.style.color = 'var(--text3)';
     try {
-      if (isEdit) {
-        await gcalUpdateEvent(existingEvent.calendar_id, existingEvent.id, body);
-      } else {
-        await gcalCreateEvent(calId, body);
-      }
+      if (isEdit) await gcalUpdateEvent(existingEvent.calendar_id, existingEvent.id, evBody);
+      else await gcalCreateEvent(calId, evBody);
       overlay.remove();
       if (onSaved) onSaved();
     } catch(e) { statusMsg.textContent = 'エラー: ' + e.message; statusMsg.style.color = '#ef4444'; }
   }}));
-  modal.appendChild(btnRow);
+  modal.appendChild(footer);
 
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
