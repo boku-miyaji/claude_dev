@@ -5575,13 +5575,21 @@ async function renderArtifacts(root) {
     if (!artifact.content) {
       contentCard.appendChild(el('div', {className: 'empty', textContent: '未同期。次のセッション起動時に自動同期されます。'}));
     } else if (hasPdf) {
-      var pdfMatch = artifact.content.match(/data:application\/pdf;base64,[A-Za-z0-9+\/=]+/);
+      // Convert base64 PDF to Blob URL for reliable display
+      var pdfMatch = artifact.content.match(/base64,([A-Za-z0-9+\/=]+)/);
       if (pdfMatch) {
-        var pdfObj = el('object', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;border-radius:8px'});
-        pdfObj.setAttribute('type', 'application/pdf');
-        pdfObj.setAttribute('data', pdfMatch[0]);
-        pdfObj.textContent = 'PDF viewer not available';
-        contentCard.appendChild(pdfObj);
+        try {
+          var bin = atob(pdfMatch[1]);
+          var bytes = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          var blob = new Blob([bytes], {type: 'application/pdf'});
+          var blobUrl = URL.createObjectURL(blob);
+          var pdfObj = el('object', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;border-radius:8px'});
+          pdfObj.setAttribute('type', 'application/pdf');
+          pdfObj.setAttribute('data', blobUrl);
+          pdfObj.textContent = 'PDF viewer not available';
+          contentCard.appendChild(pdfObj);
+        } catch(e) { contentCard.appendChild(el('div', {textContent: 'PDF読み込みエラー: ' + e.message})); }
       }
     } else if (artifact.file_type === 'html') {
       var iframe = el('iframe', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;background:#fff;border-radius:8px'});
@@ -8570,13 +8578,20 @@ function openFullscreen(artifact) {
   if (!artifact.content) {
     contentEl.appendChild(el('div', {style: 'padding:40px;text-align:center;color:var(--text3)', textContent: '未同期。次のセッション起動時に自動同期されます。'}));
   } else if (artifact.file_type === 'html' && artifact.content.indexOf('data:application/pdf;base64,') !== -1) {
-    var pdfMatch2 = artifact.content.match(/data:application\/pdf;base64,[A-Za-z0-9+\/=]+/);
+    var pdfMatch2 = artifact.content.match(/base64,([A-Za-z0-9+\/=]+)/);
     if (pdfMatch2) {
-      var pdfObj2 = el('object', {style: 'width:100%;height:100%;border:none'});
-      pdfObj2.setAttribute('type', 'application/pdf');
-      pdfObj2.setAttribute('data', pdfMatch2[0]);
-      pdfObj2.textContent = 'PDF viewer not available';
-      contentEl.appendChild(pdfObj2);
+      try {
+        var bin2 = atob(pdfMatch2[1]);
+        var bytes2 = new Uint8Array(bin2.length);
+        for (var j = 0; j < bin2.length; j++) bytes2[j] = bin2.charCodeAt(j);
+        var blob2 = new Blob([bytes2], {type: 'application/pdf'});
+        var blobUrl2 = URL.createObjectURL(blob2);
+        var pdfObj2 = el('object', {style: 'width:100%;height:100%;border:none'});
+        pdfObj2.setAttribute('type', 'application/pdf');
+        pdfObj2.setAttribute('data', blobUrl2);
+        pdfObj2.textContent = 'PDF viewer not available';
+        contentEl.appendChild(pdfObj2);
+      } catch(e) { contentEl.appendChild(el('div', {textContent: 'PDF読み込みエラー: ' + e.message})); }
     }
   } else if (artifact.file_type === 'html') {
     var iframe = el('iframe', {style: 'width:100%;height:100%;border:none;background:#fff'});
