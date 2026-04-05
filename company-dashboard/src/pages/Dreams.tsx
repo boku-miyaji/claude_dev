@@ -128,12 +128,15 @@ export function Dreams() {
   const [newDesc, setNewDesc] = useState('')
   const [suggestedCat, setSuggestedCat] = useState<string | null>(null)
   const [manualCat, setManualCat] = useState('')
-  const [hasDeadline, setHasDeadline] = useState(false)
+  const [addKind, setAddKind] = useState<'dream' | 'goal' | 'wish'>('dream')
   const [goalLevel, setGoalLevel] = useState<GoalLevel>('yearly')
   const [goalYear, setGoalYear] = useState(String(new Date().getFullYear()))
   const [goalMonth, setGoalMonth] = useState('')
   const [goalDay, setGoalDay] = useState('')
   const [goalDreamId, setGoalDreamId] = useState('')
+  // Wish add form
+  const [wishAmount, setWishAmount] = useState('')
+  const [wishUrl, setWishUrl] = useState('')
 
   const loadWishlist = useCallback(async () => {
     const { data } = await supabase.from('wishlist').select('*').in('status', ['want', 'considering']).order('created_at', { ascending: false })
@@ -210,31 +213,29 @@ export function Dreams() {
 
   function resetForm() {
     setNewTitle(''); setNewDesc(''); setSuggestedCat(null); setManualCat('')
-    setHasDeadline(false); setGoalLevel('yearly'); setGoalYear(String(new Date().getFullYear()))
-    setGoalMonth(''); setGoalDay(''); setGoalDreamId('')
+    setAddKind('dream'); setGoalLevel('yearly'); setGoalYear(String(new Date().getFullYear()))
+    setGoalMonth(''); setGoalDay(''); setGoalDreamId(''); setWishAmount(''); setWishUrl('')
   }
 
   async function handleAdd() {
     if (!newTitle.trim()) return
-    const category = manualCat || suggestedCat || 'other'
 
-    if (hasDeadline) {
-      // Create as goal, optionally link to a dream
+    if (addKind === 'goal') {
       const result = await addGoal({
-        title: newTitle.trim(),
-        description: newDesc.trim() || null,
-        level: goalLevel,
-        target_date: buildTargetDate(),
-        dream_id: goalDreamId || null,
+        title: newTitle.trim(), description: newDesc.trim() || null,
+        level: goalLevel, target_date: buildTargetDate(), dream_id: goalDreamId || null,
       })
       if (result) { resetForm(); setShowAdd(false); toast('目標を追加しました') }
-    } else {
-      // Create as dream
-      const result = await addDream({
-        title: newTitle.trim(),
-        description: newDesc.trim() || null,
-        category,
+    } else if (addKind === 'wish') {
+      const { error } = await supabase.from('wishlist').insert({
+        title: newTitle.trim(), description: newDesc.trim() || null,
+        amount: parseInt(wishAmount) || 0, url: wishUrl.trim() || null,
+        category: manualCat || suggestedCat || 'other',
       })
+      if (!error) { resetForm(); setShowAdd(false); loadWishlist(); toast('ほしい物を追加しました') }
+    } else {
+      const category = manualCat || suggestedCat || 'other'
+      const result = await addDream({ title: newTitle.trim(), description: newDesc.trim() || null, category })
       if (result) { resetForm(); setShowAdd(false); toast(`「${category}」に追加しました`) }
     }
   }
@@ -392,27 +393,44 @@ export function Dreams() {
 
       {/* ════════ Add Modal ════════ */}
       <Modal open={showAdd} onClose={() => { setShowAdd(false); resetForm() }} title="新しく追加">
+        {/* Kind selector */}
+        <div className="filter-bar" style={{ marginBottom: 16 }}>
+          {([['dream', '☐ 夢'], ['goal', '🎯 目標'], ['wish', '🛒 ほしい物']] as const).map(([k, label]) => (
+            <button key={k} className={`btn btn-sm ${addKind === k ? 'btn-p' : 'btn-g'}`}
+              onClick={() => setAddKind(k)} type="button">{label}</button>
+          ))}
+        </div>
+
         <div style={{ marginBottom: 12 }}>
           <label className="form-label">タイトル</label>
-          <input className="input" placeholder="やりたいこと・達成したいこと" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
-            onBlur={() => !hasDeadline && runClassify(newTitle, newDesc)} />
+          <input className="input" placeholder={addKind === 'wish' ? '何がほしい？' : addKind === 'goal' ? '何を達成する？' : 'やりたいこと'}
+            value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
+            onBlur={() => addKind === 'dream' && runClassify(newTitle, newDesc)} />
         </div>
         <div style={{ marginBottom: 12 }}>
           <label className="form-label">説明 (任意)</label>
           <textarea className="input" placeholder="詳しく..." value={newDesc} onChange={(e) => setNewDesc(e.target.value)}
-            onBlur={() => !hasDeadline && newTitle.trim() && runClassify(newTitle, newDesc)} style={{ minHeight: 50 }} />
+            onBlur={() => addKind === 'dream' && newTitle.trim() && runClassify(newTitle, newDesc)} style={{ minHeight: 50 }} />
         </div>
 
-        {/* Deadline toggle */}
-        <div style={{ marginBottom: 12, padding: '10px 12px', background: 'var(--surface2)', borderRadius: 8 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
-            <input type="checkbox" checked={hasDeadline} onChange={(e) => setHasDeadline(e.target.checked)} />
-            <span style={{ fontWeight: 500 }}>期限を設定する</span>
-            <span style={{ fontSize: 11, color: 'var(--text3)' }}>→ {hasDeadline ? '目標として追加' : '夢として追加'}</span>
-          </label>
-        </div>
+        {/* ── Wish fields ── */}
+        {addKind === 'wish' && (
+          <>
+            <div className="form-row" style={{ marginBottom: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label className="form-label">金額（円）</label>
+                <input className="input" type="number" placeholder="120000" value={wishAmount} onChange={(e) => setWishAmount(e.target.value)} style={{ width: '100%' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="form-label">URL (任意)</label>
+                <input className="input" placeholder="商品リンク" value={wishUrl} onChange={(e) => setWishUrl(e.target.value)} style={{ width: '100%' }} />
+              </div>
+            </div>
+          </>
+        )}
 
-        {hasDeadline ? (
+        {/* ── Goal fields ── */}
+        {addKind === 'goal' && (
           <>
             <div style={{ marginBottom: 12 }}>
               <label className="form-label">スケール</label>
@@ -463,7 +481,10 @@ export function Dreams() {
               </select>
             </div>
           </>
-        ) : (
+        )}
+
+        {/* ── Dream fields ── */}
+        {addKind === 'dream' && (
           <div style={{ marginBottom: 12 }}>
             <label className="form-label">カテゴリ</label>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -476,8 +497,9 @@ export function Dreams() {
           </div>
         )}
 
-        <button className="btn btn-p" style={{ width: '100%' }} onClick={handleAdd} disabled={!newTitle.trim() || classifying}>
-          {hasDeadline ? '目標を追加' : '夢を追加'}
+        <button className="btn btn-p" style={{ width: '100%' }} onClick={handleAdd}
+          disabled={!newTitle.trim() || (addKind === 'dream' && classifying)}>
+          {addKind === 'goal' ? '目標を追加' : addKind === 'wish' ? 'ほしい物を追加' : '夢を追加'}
         </button>
       </Modal>
 
