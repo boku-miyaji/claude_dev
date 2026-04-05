@@ -186,7 +186,8 @@
       "Bash(npx supabase functions deploy:*)",
       "Bash(pdftotext \"/workspace/project-scotch-care/reference_docs/成果物/20260331_技術スタック採用方針.pdf\" -)",
       "Bash(pdftotext \"/workspace/project-scotch-care/reference_docs/受領資料/98_データ基盤構想整理/Sケア社_Foundryからの脱却と新データ基盤構想\\(施設のモニタリング\\)/【Sケア】DDA活用推進全体像（Confidential）.pdf\" -)",
-      "Bash(export SUPABASE_ACCESS_TOKEN=$\\(grep SUPABASE_ACCESS_TOKEN /workspace/.claude/hooks/supabase.env)"
+      "Bash(export SUPABASE_ACCESS_TOKEN=$\\(grep SUPABASE_ACCESS_TOKEN /workspace/.claude/hooks/supabase.env)",
+      "Bash(rm -rf node_modules/.vite)"
     ],
     "deny": [
       "Read(**/.env)",
