@@ -207,7 +207,8 @@
       "/home/node/.claude/plugins",
       "/workspace/.claude/commands",
       "/home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.claude-plugin",
-      "/home/node/.claude"
+      "/home/node/.claude",
+      "/workspace/project-scotch-care/docs"
     ]
   },
   "hooks": {

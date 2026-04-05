@@ -809,11 +809,253 @@ function TabHarness() {
   )
 }
 
+// ========== Tab: Improvement Proposals ==========
+
+interface Proposal {
+  id: string
+  priority: 'P0' | 'P1' | 'P2'
+  title: string
+  problem: string
+  solution: string
+  harnessPart: string
+  effort: string
+  impact: string
+  status: 'proposed' | 'in_progress' | 'done'
+}
+
+const PROPOSALS: Proposal[] = [
+  {
+    id: 'IMP-001',
+    priority: 'P0',
+    title: 'CLAUDE.md の60行以下への剪定',
+    problem: 'HD CLAUDE.md が208行。公式推奨は60行以下。指示が埋もれ、遵守率が低下。コンテキスト圧迫も大きい。',
+    solution: '手順的記述を .claude/rules/ に分離。CLAUDE.md には方針・判断基準のみ残す。部署CLAUDE.mdも同様に剪定。PostToolUse Hook で行数200超を自動警告。',
+    harnessPart: 'CLAUDE.md',
+    effort: '2時間',
+    impact: '指示遵守率の向上、コンテキスト消費削減。Stanford HAI によれば構造改善は品質+28-47%。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-002',
+    priority: 'P0',
+    title: 'ハンドオフ検出の構造化（正規表現→YAML）',
+    problem: '部署間ハンドオフが正規表現でテキストマッチ。フォーマットのずれで見逃す。ネストしたハンドオフに対応不可。',
+    solution: '成果物末尾に構造化YAMLブロックを書く形式に統一。PostToolUse(Write) Hook でYAMLパース→次部署を自動起動。handoff_id で重複防止。',
+    harnessPart: 'Hooks (PostToolUse)',
+    effort: '4時間',
+    impact: 'ハンドオフ漏れゼロ化。部署間連携の信頼性が根本的に改善。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-003',
+    priority: 'P0',
+    title: '重要ルールのHooks化（助言→強制）',
+    problem: '「QA未通過でリリースしない」「成果物は登録する」等がCLAUDE.md記載のみ。モデルが無視するリスク。',
+    solution: 'PreToolUse(Bash) で git push 前にテスト通過を確認。PostToolUse(Write) で成果物を自動登録。PostToolUse(Edit) でCLAUDE.md行数チェック。',
+    harnessPart: 'Hooks (PreToolUse/PostToolUse)',
+    effort: '3時間',
+    impact: '品質ゲートの確実な実行。「助言が無視される」問題の根本解決。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-004',
+    priority: 'P1',
+    title: 'Context Compaction 対策（PostCompact Hook）',
+    problem: '長時間セッションでContext Compactionが発生し、重要な決定事項が失われる。現在は対策なし。',
+    solution: 'PreCompact Hook で重要コンテキスト（現在のタスク、決定事項、パイプライン状態）をファイルに保存。PostCompact Hook で再注入。進捗ファイルを構造化JSONで管理。',
+    harnessPart: 'Hooks (PreCompact/PostCompact)',
+    effort: '3時間',
+    impact: '長時間セッション（1時間超）での情報損失防止。Anthropic公式パターンの適用。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-005',
+    priority: 'P1',
+    title: 'Sub-agent への最小権限適用',
+    problem: '全部署（Sub-agent）が全ツールにアクセス可能。リサーチ部が Write を使えたり、資料制作部が Bash を叩ける。',
+    solution: 'Agent tool 起動時に部署ごとのツール制限を設定。リサーチ = Read/Web系のみ。資料制作 = Read/Write のみ。セキュリティ部 = 全ツール。モデルも使い分け（リサーチ=opus, 定型=haiku）。',
+    harnessPart: 'Sub-agents',
+    effort: '2時間',
+    impact: '安全性向上+コスト最適化。haiku活用で月額30-50%削減の可能性。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-006',
+    priority: 'P1',
+    title: 'ナレッジ昇格にレビューゲート追加',
+    problem: 'confidence≥3で自動昇格。誤ったルールが CLAUDE.md に入るリスク。一度昇格すると降格されない。',
+    solution: '昇格候補をops部が検証→社長承認→昇格のフロー。降格条件を追加（60日間未使用 or 例外3回超で自動降格提案）。knowledge_base に last_validation, promotion_count カラム追加。',
+    harnessPart: 'CLAUDE.md + Hooks',
+    effort: '4時間',
+    impact: 'ルールの品質担保。「間違ったルールが永久に適用される」リスク排除。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-007',
+    priority: 'P1',
+    title: 'Stop Hook でタスク完了検証',
+    problem: 'エージェントが「完了」と言っても、テストが通っていない・ファイルが保存されていない等のケースがある。',
+    solution: 'Stop Hook（agent タイプ）で完了条件を自動検証。コード変更ならテスト実行確認、ドキュメントなら必須セクション確認、成果物ならartifacts登録確認。',
+    harnessPart: 'Hooks (Stop)',
+    effort: '3時間',
+    impact: '「完了したのに実は未完了」問題の解消。やり直しコスト削減。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-008',
+    priority: 'P2',
+    title: 'Hook 実行の可観測性ダッシュボード',
+    problem: 'Hookが || exit 0 で静かに失敗する。prompt-log が落ちてもログが欠落するだけで気づけない。',
+    solution: 'hook_execution テーブルに全実行ログ（timestamp, hook名, status, duration, error）を記録。ダッシュボードに「Hook Health」ウィジェット追加。失敗率5%超でアラート。',
+    harnessPart: 'Hooks + Dashboard',
+    effort: '5時間',
+    impact: 'サイレント障害の検出。システムの信頼性向上。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-009',
+    priority: 'P2',
+    title: '部署仕様レベルの均一化',
+    problem: 'UXデザイン部・セキュリティ部は仕様が詳細（5原則+心理学/8ルール+SLA）だが、PM部・マーケ部は基本ワークフローのみ。Sub-agentのプロンプト品質がバラバラ。',
+    solution: '全部署に統一テンプレート適用: ① 役割（1文）② 完了条件（チェックリスト）③ 入力/出力仕様 ④ 品質基準 ⑤ エスカレーション条件。仕様レベル低い部署から順に改善。',
+    harnessPart: 'Sub-agents (CLAUDE.md)',
+    effort: '6時間',
+    impact: '部署アウトプットの品質安定化。「PMの出力が曖昧」等の問題解消。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-010',
+    priority: 'P2',
+    title: 'ハーネス設計の継続的最新化（自動調査）',
+    problem: 'Claude Code は頻繁にアップデートされる。新しいHook、新しいSub-agentパターン等を見逃す。',
+    solution: 'freshness-policy.yaml に harness_research を追加（max_age_days: 14）。/company 起動時に情報収集部が最新記事を調査→ops部がギャップ分析→改善提案を自動更新。',
+    harnessPart: 'Freshness Policy + Intelligence',
+    effort: '2時間',
+    impact: 'システムが常に最新のベストプラクティスに追従。「知らなくて使えなかった」を防止。',
+    status: 'proposed',
+  },
+]
+
+const PRIORITY_STYLE: Record<string, { color: string; bg: string; border: string }> = {
+  P0: { color: 'var(--red)', bg: 'var(--red-bg)', border: 'var(--red-border)' },
+  P1: { color: 'var(--amber)', bg: 'var(--amber-bg)', border: 'var(--amber-border)' },
+  P2: { color: 'var(--blue)', bg: 'var(--blue-bg)', border: 'var(--blue-border)' },
+}
+
+const STATUS_LABEL: Record<string, { text: string; color: string }> = {
+  proposed: { text: '提案', color: 'var(--text3)' },
+  in_progress: { text: '進行中', color: 'var(--blue)' },
+  done: { text: '完了', color: 'var(--green)' },
+}
+
+function TabProposals() {
+  const [filterPriority, setFilterPriority] = useState<string>('')
+
+  const filtered = filterPriority ? PROPOSALS.filter((p) => p.priority === filterPriority) : PROPOSALS
+  const p0Count = PROPOSALS.filter((p) => p.priority === 'P0').length
+  const p1Count = PROPOSALS.filter((p) => p.priority === 'P1').length
+  const p2Count = PROPOSALS.filter((p) => p.priority === 'P2').length
+  const doneCount = PROPOSALS.filter((p) => p.status === 'done').length
+
+  return (
+    <>
+      <Section title="改善提案サマリー">
+        <P>情報収集部（最新ハーネス記事調査）× 運営改善部（現行システム分析）の協議結果。全提案はハーネスエンジニアリングの6構成要素に紐づく。最終調査日: 2026-04-05</P>
+        <div className="g3" style={{ marginBottom: 16 }}>
+          <Principle title={`P0: Critical — ${p0Count}件`} body="やらないと品質・信頼性に直結するリスク。CLAUDE.md肥大化、ハンドオフ漏れ、ルール無視。" color="var(--red)" />
+          <Principle title={`P1: Important — ${p1Count}件`} body="やると品質・効率が大幅に向上。Compaction対策、最小権限、昇格ゲート。" color="var(--amber)" />
+          <Principle title={`P2: Nice-to-have — ${p2Count}件`} body="運用が成熟してから取り組む。可観測性、部署仕様均一化、自動調査。" color="var(--blue)" />
+        </div>
+        <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text2)', marginBottom: 8 }}>
+          <span>全 <strong>{PROPOSALS.length}</strong> 件</span>
+          <span>完了 <strong style={{ color: 'var(--green)' }}>{doneCount}</strong>/{PROPOSALS.length}</span>
+          <span>推定工数合計 <strong style={{ fontFamily: 'var(--mono)' }}>{PROPOSALS.reduce((s, p) => s + parseInt(p.effort), 0)}h</strong></span>
+        </div>
+      </Section>
+
+      <Section title="提案一覧">
+        {/* Priority filter */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+          {[
+            { key: '', label: `全て (${PROPOSALS.length})` },
+            { key: 'P0', label: `P0 (${p0Count})` },
+            { key: 'P1', label: `P1 (${p1Count})` },
+            { key: 'P2', label: `P2 (${p2Count})` },
+          ].map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilterPriority(f.key)}
+              className="btn btn-g btn-sm"
+              style={{
+                fontSize: 11, padding: '4px 10px',
+                background: filterPriority === f.key ? 'var(--accent-bg)' : undefined,
+                color: filterPriority === f.key ? 'var(--accent)' : undefined,
+                borderColor: filterPriority === f.key ? 'var(--accent-border)' : undefined,
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {filtered.map((p) => {
+          const ps = PRIORITY_STYLE[p.priority] || PRIORITY_STYLE.P2
+          const st = STATUS_LABEL[p.status] || STATUS_LABEL.proposed
+          return (
+            <div key={p.id} className="card" style={{ padding: 16, marginBottom: 12 }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, color: ps.color, background: ps.bg, border: `1px solid ${ps.border}`, fontFamily: 'var(--mono)' }}>{p.priority}</span>
+                <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--text3)' }}>{p.id}</span>
+                <span style={{ fontWeight: 600, fontSize: 14, flex: 1 }}>{p.title}</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: st.color }}>{st.text}</span>
+              </div>
+              {/* Body */}
+              <div style={{ display: 'grid', gridTemplateColumns: '72px 1fr', gap: '6px 12px', fontSize: 12, lineHeight: 1.7 }}>
+                <span style={{ color: 'var(--text3)', fontWeight: 600 }}>Problem</span>
+                <span style={{ color: 'var(--text2)' }}>{p.problem}</span>
+                <span style={{ color: 'var(--text3)', fontWeight: 600 }}>Solution</span>
+                <span style={{ color: 'var(--text2)' }}>{p.solution}</span>
+                <span style={{ color: 'var(--text3)', fontWeight: 600 }}>対象</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent2)' }}>{p.harnessPart}</span>
+                <span style={{ color: 'var(--text3)', fontWeight: 600 }}>工数</span>
+                <span style={{ color: 'var(--text2)' }}>{p.effort}</span>
+                <span style={{ color: 'var(--text3)', fontWeight: 600 }}>Impact</span>
+                <span style={{ color: 'var(--text2)' }}>{p.impact}</span>
+              </div>
+            </div>
+          )
+        })}
+      </Section>
+
+      <Section title="継続調査の仕組み">
+        <P>この提案リストは自動的に最新化される。</P>
+        <Tbl headers={['トリガー', '実行内容', '頻度']} rows={[
+          ['/company 起動時', 'freshness-policy.yaml で harness_research の鮮度チェック', '毎回（14日超で調査起動）'],
+          ['自動調査', '情報収集部: 最新Claude Code記事・リリースノート調査', '14日ごと'],
+          ['ギャップ分析', '運営改善部: 現行システムと最新ベストプラクティスの差分分析', '調査完了後に自動'],
+          ['提案更新', 'HowItWorks 改善提案タブの更新提案を社長に提示', 'ギャップ発見時'],
+          ['手動トリガー', '/company → 「ハーネス最新化」で即時調査起動', '任意'],
+        ]} />
+        <div className="card" style={{ padding: 14, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)', marginTop: 12 }}>
+{`/company 起動
+  └→ freshness-check.sh
+       └→ harness_research: 最終調査 14日超?
+            ├→ YES: 情報収集部(最新記事) ∥ 運営改善部(GAP分析) 並列起動
+            │        └→ 統合 → 改善提案更新 → 社長に提示
+            └→ NO:  スキップ（鮮度OK）`}
+        </div>
+      </Section>
+    </>
+  )
+}
+
 // ========== Main ==========
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'harness', label: 'Harness Engineering' },
+  { key: 'proposals', label: 'Improvement Proposals' },
   { key: 'ai', label: 'AI Features' },
   { key: 'philosophy', label: 'Design Philosophy' },
   { key: 'architecture', label: 'Architecture' },
@@ -855,6 +1097,7 @@ export function HowItWorks() {
 
       {tab === 'overview' && <TabOverview />}
       {tab === 'harness' && <TabHarness />}
+      {tab === 'proposals' && <TabProposals />}
       {tab === 'ai' && <TabAiFeatures />}
       {tab === 'philosophy' && <TabDesignPhilosophy />}
       {tab === 'architecture' && <TabArchitecture />}
