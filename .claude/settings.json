@@ -187,7 +187,9 @@
       "Bash(pdftotext \"/workspace/project-scotch-care/reference_docs/成果物/20260331_技術スタック採用方針.pdf\" -)",
       "Bash(pdftotext \"/workspace/project-scotch-care/reference_docs/受領資料/98_データ基盤構想整理/Sケア社_Foundryからの脱却と新データ基盤構想\\(施設のモニタリング\\)/【Sケア】DDA活用推進全体像（Confidential）.pdf\" -)",
       "Bash(export SUPABASE_ACCESS_TOKEN=$\\(grep SUPABASE_ACCESS_TOKEN /workspace/.claude/hooks/supabase.env)",
-      "Bash(rm -rf node_modules/.vite)"
+      "Bash(rm -rf node_modules/.vite)",
+      "Bash(sed -i 's/特別なICがいなくても回せる/特別なSEを抱えなくても分析が回せる/g' 12_tech_stack_adoption_policy_v0.4.html)",
+      "Bash(sed -i 's/特別なICを前提にしない/専任SEを前提にしない/g' 12_tech_stack_adoption_policy_v0.4.html)"
     ],
     "deny": [
       "Read(**/.env)",

@@ -4,6 +4,7 @@ export interface Goal {
   description: string | null
   level: GoalLevel
   parent_id: string | null
+  category: string
   dream_id: string | null
   status: GoalStatus
   progress: number
