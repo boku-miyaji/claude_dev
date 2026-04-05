@@ -547,6 +547,52 @@ Step 3 [直列]: システム開発(実装) → QA(テスト)
         ]} />
       </Section>
 
+      <Section title="実装 ↔ ドキュメント同期 — How It Works が古くならない仕組み">
+        <Principle title="問題: 実装を変えてもドキュメントが追従しない" body="ai-agent/index.ts のモデルルーティングを3段階→6段階に変更しても、How It Works には古い3段階の記述が残る。手動同期は忘れる。全セッションで「あとで更新しよう」は運用に乗らない。" color="var(--red)" />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>3層の強制メカニズム</div>
+
+        <Tbl headers={['層', '仕組み', 'タイミング', '強制力']} rows={[
+          ['Layer 1: Hook', 'docs-sync-guard.sh（PostToolUse）', '対象ファイル編集時にリアルタイム警告', '高（additionalContext で即座に通知）'],
+          ['Layer 2: Freshness', 'impl_docs_sync（freshness-policy）', '/company 起動時に git log 日付比較', '中（ブリーフィングで報告）'],
+          ['Layer 3: Commit Rules', 'commit-rules.md の同期チェック表', 'コミット・PR作成時', '低（ルールベース、人間の判断）'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Layer 1: PostToolUse Hook（リアルタイム検出）</div>
+        <P><code>.claude/hooks/docs-sync-guard.sh</code> — Edit/Write の PostToolUse で発火。対象ファイルを編集すると、additionalContext で「How It Works の〇〇タブ更新必要」と警告。</P>
+        <Tbl headers={['変更ファイル', '警告メッセージ（更新先セクション）']} rows={[
+          ['supabase/functions/ai-agent/index.ts', 'AI Features タブ（モデル設定、ルーティング、ツール一覧、プロンプト構成）'],
+          ['src/pages/Today.tsx', 'Design Philosophy タブ（体験設計セクション）'],
+          ['.claude/hooks/*.sh', 'Overview タブ（データ鮮度マップ、更新連鎖マップ）+ Harness Engineering タブ（Hooks詳細）'],
+          ['.claude/rules/*.md', 'Operations タブ（パイプライン、ハンドオフ）+ Harness Engineering タブ'],
+          ['.company/departments/*/CLAUDE.md', 'Operations タブ（部署サイクル設計テーブル）'],
+          ['.company/freshness-policy.yaml', 'Overview タブ（自動メンテナンスセクション）'],
+          ['src/lib/fileExtract.ts', 'AI Features タブ（ファイル抽出対応形式）'],
+        ]} />
+        <P>この Hook はハーネスエンジニアリングの「決定論的制御」にあたる。CLAUDE.md に「ドキュメントを更新して」と書いても無視される可能性があるが、Hook は確実に発火する。</P>
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Layer 2: Freshness Policy（起動時チェック）</div>
+        <P><code>impl_docs_sync</code>（priority 1.5）— /company 起動時に実行。git log の最終更新日時を比較し、実装ファイルが HowItWorks.tsx より新しければ STALE と報告する。</P>
+        <div className="card" style={{ padding: 14, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)', marginTop: 8 }}>
+{`/company 起動
+  └→ freshness-check: impl_docs_sync
+       └→ git log で比較:
+            ai-agent/index.ts  最終変更: 4/5 16:00
+            HowItWorks.tsx     最終変更: 4/5 15:00
+            → STALE: ai-agent が1時間新しい → ブリーフィングで報告`}
+        </div>
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Layer 3: Commit Rules（コミット時チェック）</div>
+        <P><code>.claude/rules/commit-rules.md</code> に対応表を記載。PRチェックリスト #4: 「実装変更に対応する How It Works の更新があるか」を確認義務化。</P>
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>なぜ3層必要か</div>
+        <div className="g3" style={{ marginBottom: 12 }}>
+          <MiniCard title="Hook だけでは不足" body="Warning を出しても、そのセッション内で更新せずにコミットできてしまう。次のセッションでは警告が出ない。" />
+          <MiniCard title="Freshness だけでは不足" body="/company を起動しないセッションでは検出されない。また検出しても修正は手動。" />
+          <MiniCard title="Commit Rules だけでは不足" body="ルールを読んでいなければ素通り。助言的（CLAUDE.md と同じ弱さ）。3層の組み合わせで漏れを最小化。" />
+        </div>
+      </Section>
+
       <Section title="フォールバック">
         <Tbl headers={['障害', 'フォールバック']} rows={[
           ['Supabase障害', 'ローカルファイルで代替。マスターは常にファイル'],
