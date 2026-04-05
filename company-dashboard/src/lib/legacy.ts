@@ -6818,7 +6818,12 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
       if (loadingIndicator.parentNode) loadingIndicator.parentNode.removeChild(loadingIndicator);
       var msgs = res.data || [];
       msgs.forEach(function(m) {
-        if (m.role === 'user') appendUserMsg(messagesInner, m.content);
+        if (m.role === 'user') appendUserMsg(messagesInner, m.content, null, function(editText, editRow) {
+          while (editRow.nextSibling) editRow.nextSibling.remove();
+          editRow.remove();
+          textarea.value = editText;
+          textarea.focus();
+        });
         else if (m.role === 'assistant') appendAssistantMsg(messagesInner, m.content, m.model, m.tokens_input, m.tokens_output, m.cost_usd, m.step);
         else if (m.role === 'tool') appendToolMsg(messagesInner, m.tool_name, m.tool_input, m.content);
       });
@@ -6985,7 +6990,16 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     // Clear welcome
     if (!chatState.conversationId) { while (messagesInner.firstChild) messagesInner.removeChild(messagesInner.firstChild); }
 
-    appendUserMsg(messagesInner, text, attachments);
+    appendUserMsg(messagesInner, text, attachments, function(editText, editRow) {
+      // Remove this message and all subsequent messages
+      while (editRow.nextSibling) editRow.nextSibling.remove();
+      editRow.remove();
+      // Put text back in textarea for editing
+      textarea.value = editText;
+      textarea.focus();
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    });
     chatAutoScroll = true;
     messagesArea.scrollTop = messagesArea.scrollHeight;
 
@@ -7225,8 +7239,22 @@ function renderMarkdownSafeToTarget(text, target) {
   } else { target.textContent = text; }
 }
 
-function appendUserMsg(container, text, attachments) {
+function appendUserMsg(container, text, attachments, onEdit) {
   var row = el('div', {className: 'chat-msg-row user'});
+  var wrapper = el('div', {style: 'display:flex;align-items:flex-start;gap:6px;justify-content:flex-end'});
+
+  // Action buttons (left of bubble)
+  var actions = el('div', {style: 'display:flex;gap:2px;align-items:center;opacity:0;transition:opacity .15s;padding-top:8px'});
+  if (onEdit && text) {
+    var editBtn = el('button', {style: 'background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:4px;font-size:13px;color:var(--text3)', title: '編集して再送信'});
+    editBtn.textContent = '\u270E';
+    editBtn.onmouseenter = function() { editBtn.style.background = 'var(--surface2)'; };
+    editBtn.onmouseleave = function() { editBtn.style.background = 'none'; };
+    editBtn.onclick = function() { onEdit(text, row); };
+    actions.appendChild(editBtn);
+  }
+  wrapper.appendChild(actions);
+
   var bubble = el('div', {className: 'chat-bubble'});
   if (text) bubble.appendChild(el('div', {style:'white-space:pre-wrap', textContent: text}));
   if (attachments && attachments.length) {
@@ -7241,7 +7269,13 @@ function appendUserMsg(container, text, attachments) {
     });
     bubble.appendChild(attRow);
   }
-  row.appendChild(bubble);
+  wrapper.appendChild(bubble);
+
+  // Show actions on hover
+  row.onmouseenter = function() { actions.style.opacity = '1'; };
+  row.onmouseleave = function() { actions.style.opacity = '0'; };
+
+  row.appendChild(wrapper);
   container.appendChild(row);
 }
 
@@ -7253,6 +7287,25 @@ function appendAssistantMsg(container, text, model, tokIn, tokOut, cost, step) {
   var body = el('div', {className: 'md-body'});
   renderMarkdownSafeToTarget(text||'', body);
   bubble.appendChild(body);
+
+  // Action bar (copy button, shown on hover)
+  var actions = el('div', {style: 'display:flex;gap:4px;margin-top:8px;opacity:0;transition:opacity .15s'});
+  var copyBtn = el('button', {style: 'background:none;border:1px solid var(--border);cursor:pointer;padding:3px 8px;border-radius:4px;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px;font-family:var(--font)'});
+  copyBtn.textContent = '\uD83D\uDCCB Copy';
+  copyBtn.onmouseenter = function() { copyBtn.style.background = 'var(--surface2)'; copyBtn.style.color = 'var(--text2)'; };
+  copyBtn.onmouseleave = function() { copyBtn.style.background = 'none'; copyBtn.style.color = 'var(--text3)'; };
+  copyBtn.onclick = function() {
+    navigator.clipboard.writeText(text || '').then(function() {
+      copyBtn.textContent = '\u2713 Copied';
+      setTimeout(function() { copyBtn.textContent = '\uD83D\uDCCB Copy'; }, 1500);
+    });
+  };
+  actions.appendChild(copyBtn);
+  bubble.appendChild(actions);
+
+  row.onmouseenter = function() { actions.style.opacity = '1'; };
+  row.onmouseleave = function() { actions.style.opacity = '0'; };
+
   row.appendChild(bubble);
   container.appendChild(row);
 }
