@@ -194,7 +194,8 @@
       "Bash(sed -i \"s/await aiCompletion\\(userMessage, {$/await aiCompletion\\(userMessage, { source: 'ai_partner',/\" hooks/useMorningBriefing.ts)",
       "Bash(sed -i \"s/await aiCompletion\\(userData, {$/await aiCompletion\\(userData, { source: 'weekly_narrative',/\" hooks/useWeeklyNarrative.ts)",
       "Bash(sed -i \"s/await aiCompletion\\(userMessage, {$/await aiCompletion\\(userMessage, { source: 'dream_detection',/\" hooks/useDreamDetection.ts)",
-      "Bash(sed -i \"s/await aiCompletion\\(userData, {$/await aiCompletion\\(userData, { source: 'self_analysis',/\" hooks/useSelfAnalysis.ts)"
+      "Bash(sed -i \"s/await aiCompletion\\(userData, {$/await aiCompletion\\(userData, { source: 'self_analysis',/\" hooks/useSelfAnalysis.ts)",
+      "Read(//workspace/company-dashboard/**)"
     ],
     "deny": [
       "Read(**/.env)",
