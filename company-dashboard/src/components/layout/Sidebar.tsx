@@ -76,6 +76,7 @@ export function Sidebar() {
   const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ system: true })
+  const [sidebarHidden, setSidebarHidden] = useState(false)
 
   const currentPage = location.pathname.replace('/', '') || ''
 
@@ -96,10 +97,29 @@ export function Sidebar() {
   )
 
   return (
-    <nav className="sidebar">
-      <div className="logo">
-        <div className="logo-icon">M</div>
-        宮路HD
+    <>
+    {sidebarHidden && (
+      <button
+        className="sidebar-toggle"
+        onClick={() => setSidebarHidden(false)}
+        title="メニューを開く"
+      >
+        &#9776;
+      </button>
+    )}
+    <nav className={`sidebar${sidebarHidden ? ' collapsed' : ''}`}>
+      <div className="logo" style={{ justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="logo-icon">M</div>
+          宮路HD
+        </div>
+        <button
+          onClick={() => setSidebarHidden(true)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text3)', padding: '2px 6px', borderRadius: 4 }}
+          title="メニューを閉じる"
+        >
+          &#x2715;
+        </button>
       </div>
 
       {sections.map((section, si) => {
@@ -162,5 +182,6 @@ export function Sidebar() {
         <span className="nav-icon">→</span> Sign out
       </button>
     </nav>
+    </>
   )
 }
