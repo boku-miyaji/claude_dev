@@ -1063,6 +1063,15 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
         cell.style.position = 'relative';
         cell.setAttribute('data-day', String(di));
         cell.setAttribute('data-hour', String(h));
+        // Direct click handler on each cell — NOT all-day, with this hour
+        (function(dayIdx, hour) {
+          cell.addEventListener('click', function(e) {
+            if (dragState) return;
+            if (e.target !== cell && !e.target.classList.contains('cal-tg-cell')) return;
+            e.stopPropagation();
+            openCalEventModal(null, toLocalDateStr(days[dayIdx]), onRefresh, hour, false);
+          });
+        })(di, h);
         body.appendChild(cell);
       }
     }
@@ -1345,15 +1354,7 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
 
     });
 
-    // Click empty cell to add event
-    body.addEventListener('click', function(e) {
-      if (dragState) return; // ignore clicks during drag
-      var cell = e.target.closest('.cal-tg-cell');
-      if (!cell) return;
-      var di = parseInt(cell.getAttribute('data-day'), 10);
-      var h = parseInt(cell.getAttribute('data-hour'), 10);
-      openCalEventModal(null, toLocalDateStr(days[di]), onRefresh, h, false);
-    });
+    // Cell click handlers are now attached directly to each cell above
 
     root.appendChild(body);
 
