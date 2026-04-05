@@ -71,17 +71,23 @@ const TOOL_RESULT_SUFFIX = "[TOOL_OUTPUT_END]";
 // Write-capable tools that should not execute when web_search was used in the same loop
 const WRITE_TOOLS = new Set(["tasks_create"]);
 
+// 6-tier model routing: match question type to optimal model + reasoning
 const MODEL_MAP: Record<string, string> = {
-  simple: "gpt-5-nano",
-  moderate: "gpt-5-mini",
-  complex: "gpt-5",
+  casual:    "gpt-5-nano",   // 挨拶、雑談、はい/いいえ
+  factual:   "gpt-5-nano",   // 単純な事実質問（東京タワーの高さ等）
+  lookup:    "gpt-5-mini",   // ツール使用が必要（天気、タスク検索、Web検索）
+  creative:  "gpt-5-mini",   // 文章作成、メール、要約
+  analytical:"gpt-5-mini",   // 分析、比較、コード説明、ファイル解析
+  strategic: "gpt-5",        // 設計、戦略、多段推論、複雑な計算
 };
 
-// Reasoning effort per complexity tier (none/minimal/low/medium/high)
 const REASONING_MAP: Record<string, string> = {
-  simple: "none",       // no thinking — fast & cheap
-  moderate: "low",      // minimal thinking — reliable
-  complex: "high",      // extended thinking — deep reasoning
+  casual:    "none",     // 即答
+  factual:   "none",     // 即答
+  lookup:    "low",      // ツール選択に最低限の推論
+  creative:  "low",      // 構成を少し考える
+  analytical:"medium",   // しっかり分析
+  strategic: "high",     // 深く考える
 };
 
 const COST_TABLE: Record<string, { input: number; output: number }> = {
@@ -566,13 +572,24 @@ async function classifyComplexity(message: string): Promise<string> {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
         model: "gpt-5-nano", temperature: 0, max_completion_tokens: 5,
-        messages: [{ role: "user", content: `Classify complexity as "simple","moderate","complex":\n- simple: translation, factual, casual, short summary\n- moderate: code explanation, analysis, comparison\n- complex: architecture, long reasoning, strategy, multi-step\nMessage: "${message.substring(0, 200)}"\nOne word:` }],
+        messages: [{ role: "user", content: `Classify this message into exactly one category. Reply with ONE word only.
+
+Categories:
+- casual: greetings, chitchat, yes/no, thanks, simple reactions
+- factual: simple fact questions (height of X, capital of Y, definition)
+- lookup: needs real-time data or search (weather, news, current prices, task status, schedule)
+- creative: writing help (email, essay, summary, translation, naming)
+- analytical: analysis, comparison, code explanation, file/data interpretation, debugging, calculation
+- strategic: architecture design, business strategy, multi-step planning, complex reasoning, research
+
+Message: "${message.substring(0, 300)}"
+Category:` }],
       }),
     });
     const d = await res.json();
-    const w = (d.choices?.[0]?.message?.content || "moderate").trim().toLowerCase();
-    return ["simple", "moderate", "complex"].includes(w) ? w : "moderate";
-  } catch { return "moderate"; }
+    const w = (d.choices?.[0]?.message?.content || "analytical").trim().toLowerCase();
+    return ["casual", "factual", "lookup", "creative", "analytical", "strategic"].includes(w) ? w : "analytical";
+  } catch { return "analytical"; }
 }
 
 // ============================================================
@@ -846,7 +863,7 @@ async function agentLoop(
     send({ type: "routing", status: "classifying" });
     const c = await classifyComplexity(userMessage);
     selectedModel = MODEL_MAP[c] || "gpt-5-mini";
-    if (reasoningEffort === "auto") reasoningEffort = REASONING_MAP[c] || "low";
+    if (reasoningEffort === "auto") reasoningEffort = REASONING_MAP[c] || "medium";
     routingReason = `auto: ${c}`;
     send({ type: "routing", status: "done", complexity: c, model: selectedModel, reason: routingReason, reasoning: reasoningEffort });
   } else {
