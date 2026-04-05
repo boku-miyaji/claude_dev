@@ -3460,8 +3460,8 @@ async function renderFinance(root) {
   root.appendChild(skelF);
 
   // Tabs
-  var tabs = ['overview', 'subscriptions', 'wishlist', 'projects', 'invoices', 'expenses', 'time', 'tax'];
-  var tabLabels = {overview:'概要',subscriptions:'固定費',wishlist:'ほしい物',projects:'案件',invoices:'請求書',expenses:'経費',time:'稼働時間',tax:'税金'};
+  var tabs = ['overview', 'subscriptions', 'wishlist', 'api-costs', 'projects', 'invoices', 'expenses', 'time', 'tax'];
+  var tabLabels = {overview:'概要',subscriptions:'固定費',wishlist:'ほしい物','api-costs':'APIコスト',projects:'案件',invoices:'請求書',expenses:'経費',time:'稼働時間',tax:'税金'};
   var tabBar = el('div', {style: 'display:flex;gap:2px;margin:24px 0 20px;border-bottom:1px solid var(--border)'});
   var tabContent = el('div');
   root.appendChild(tabBar);
@@ -3470,7 +3470,7 @@ async function renderFinance(root) {
   function switchTab(tab) {
     tabBar.querySelectorAll('button').forEach(function(b) { b.style.borderBottom = b.dataset.tab === tab ? '2px solid var(--accent)' : '2px solid transparent'; b.style.color = b.dataset.tab === tab ? 'var(--text)' : 'var(--text3)'; });
     while (tabContent.firstChild) tabContent.removeChild(tabContent.firstChild);
-    var renderers = {overview: finOverview, subscriptions: finSubscriptions, wishlist: finWishlist, projects: finProjects, invoices: finInvoices, expenses: finExpenses, time: finTime, tax: finTax};
+    var renderers = {overview: finOverview, subscriptions: finSubscriptions, wishlist: finWishlist, 'api-costs': finApiCosts, projects: finProjects, invoices: finInvoices, expenses: finExpenses, time: finTime, tax: finTax};
     if (renderers[tab]) renderers[tab](tabContent);
   }
 
@@ -7605,13 +7605,23 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   async function sendEdgeFnMode(text, edgeFnUrl, metaDiv, contentDiv, msgContainer, assistantRow, attachments, metrics, signal) {
     var fullText = '';
     var images = (attachments||[]).filter(function(a){return a.type.startsWith('image/');}).map(function(a){return {data_url:a.dataUrl,name:a.name,type:a.type};});
+    // Append extracted file content to the message text
+    var fileAtts = (attachments||[]).filter(function(a){return !a.type.startsWith('image/');});
+    var messageWithFiles = text;
+    fileAtts.forEach(function(f) {
+      if (f.textContent && f.textContent.length > 10) {
+        messageWithFiles += '\n\n--- File: ' + f.name + ' ---\n' + f.textContent;
+      } else {
+        messageWithFiles += '\n\n[Attached: ' + f.name + ']';
+      }
+    });
     try {
       // Refresh session to avoid expired JWT → 401 from Supabase gateway
       var refreshed = await sb.auth.refreshSession();
       var session = refreshed.data.session ? refreshed : await sb.auth.getSession();
       var token = session.data.session ? session.data.session.access_token : '';
       var res = await fetch(edgeFnUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
-        body:JSON.stringify({conversation_id:chatState.conversationId,message:text,model:chatState.model,context_mode:chatState.contextMode,company_id:chatState.companyId,reasoning_effort:chatState.reasoningEffort,images:images.length?images:undefined,precision_mode:chatState.precisionMode||undefined}),signal:signal});
+        body:JSON.stringify({conversation_id:chatState.conversationId,message:messageWithFiles,model:chatState.model,context_mode:chatState.contextMode,company_id:chatState.companyId,reasoning_effort:chatState.reasoningEffort,images:images.length?images:undefined,precision_mode:chatState.precisionMode||undefined}),signal:signal});
       if (!res.ok) {
         if (res.status === 401) {
           contentDiv.textContent = 'Edge Function 認証エラー (401): Edge Function の OPENAI_API_KEY が未設定の可能性があります。Settings の Direct Mode に OpenAI API Key を設定してください。';
