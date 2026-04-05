@@ -6742,8 +6742,8 @@ function toggleReportDetail(card, data) {
 // ============================================================
 
 async function renderApiCosts(root) {
-  root.appendChild(el('div', {className: 'page-title', textContent: 'API Costs'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: 'AI Chat のAPI利用コストをモデル別・日別に集計'}));
+  root.appendChild(el('div', {className: 'page-title', textContent: 'APIコスト'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'AI Chat のAPI利用コストをモデル別・日別に集計（1$ = 150円換算）'}));
 
   // Period selector
   var periodDays = 30;
@@ -6813,6 +6813,10 @@ async function renderApiCosts(root) {
       byDay[day].count++;
     });
 
+    var JPY = 150; // USD to JPY rate
+    function toYen(usd) { return Math.round(usd * JPY); }
+    function fmtY(usd) { return '¥' + toYen(usd).toLocaleString(); }
+
     var avgPerDay = totalCost / Math.max(1, Object.keys(byDay).length);
     var projectedMonthly = avgPerDay * 30;
 
@@ -6825,24 +6829,23 @@ async function renderApiCosts(root) {
         sub ? el('div', {style: 'font-size:11px;color:var(--text3);margin-top:4px', textContent: sub}) : null
       ].filter(Boolean));
     }
-    kpiGrid.appendChild(kpiCard('Total Cost', '$' + totalCost.toFixed(4), days + ' days'));
-    kpiGrid.appendChild(kpiCard('Projected Monthly', '$' + projectedMonthly.toFixed(2), '$' + avgPerDay.toFixed(4) + '/day avg'));
-    kpiGrid.appendChild(kpiCard('Requests', totalRequests.toLocaleString(), (totalRequests / Math.max(1, Object.keys(byDay).length)).toFixed(1) + '/day avg'));
-    kpiGrid.appendChild(kpiCard('Total Tokens', ((totalIn + totalOut) / 1000).toFixed(1) + 'K', 'In:' + (totalIn/1000).toFixed(1) + 'K Out:' + (totalOut/1000).toFixed(1) + 'K'));
+    kpiGrid.appendChild(kpiCard('合計コスト', fmtY(totalCost), days + '日間 ($' + totalCost.toFixed(2) + ')'));
+    kpiGrid.appendChild(kpiCard('月額見込み', fmtY(projectedMonthly), '日平均 ' + fmtY(avgPerDay)));
+    kpiGrid.appendChild(kpiCard('リクエスト数', totalRequests.toLocaleString(), '日平均 ' + (totalRequests / Math.max(1, Object.keys(byDay).length)).toFixed(1) + '回'));
+    kpiGrid.appendChild(kpiCard('トークン合計', ((totalIn + totalOut) / 1000).toFixed(1) + 'K', 'In:' + (totalIn/1000).toFixed(1) + 'K Out:' + (totalOut/1000).toFixed(1) + 'K'));
     contentArea.appendChild(kpiGrid);
 
     // === Model breakdown ===
-    contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Model Breakdown'}));
+    contentArea.appendChild(el('div', {className: 'section-title', textContent: 'モデル別内訳'}));
     var modelCard = el('div', {className: 'card', style: 'margin-bottom:24px;overflow-x:auto'});
     var modelTable = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px'});
 
     var thead = el('tr', {style: 'border-bottom:2px solid var(--border)'});
-    ['Model', 'Requests', 'Input Tokens', 'Output Tokens', 'Cost', 'Avg/Req', 'Share'].forEach(function(h) {
+    ['モデル', '回数', '入力トークン', '出力トークン', 'コスト', '平均/回', '割合'].forEach(function(h) {
       thead.appendChild(el('th', {style: 'text-align:left;padding:8px 12px;font-weight:600;white-space:nowrap', textContent: h}));
     });
     modelTable.appendChild(thead);
 
-    // Sort by cost descending
     var modelKeys = Object.keys(byModel).sort(function(a, b) { return byModel[b].cost - byModel[a].cost; });
     modelKeys.forEach(function(model) {
       var d = byModel[model];
@@ -6853,8 +6856,8 @@ async function renderApiCosts(root) {
         d.count.toLocaleString(),
         d.tokIn.toLocaleString(),
         d.tokOut.toLocaleString(),
-        '$' + d.cost.toFixed(4),
-        '$' + (d.cost / Math.max(1, d.count)).toFixed(6),
+        fmtY(d.cost),
+        fmtY(d.cost / Math.max(1, d.count)),
         share.toFixed(1) + '%'
       ];
       cells.forEach(function(val, i) {
@@ -6867,7 +6870,7 @@ async function renderApiCosts(root) {
     contentArea.appendChild(modelCard);
 
     // === Cost bar chart (daily) ===
-    contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Daily Cost'}));
+    contentArea.appendChild(el('div', {className: 'section-title', textContent: '日別コスト'}));
     var chartCard = el('div', {className: 'card', style: 'margin-bottom:24px;padding:16px'});
 
     // Get sorted days
@@ -6882,7 +6885,7 @@ async function renderApiCosts(root) {
       var barWrap = el('div', {style: 'flex:1;min-width:' + Math.max(8, Math.floor(600 / dayKeys.length)) + 'px;display:flex;flex-direction:column;align-items:center;gap:2px'});
       var bar = el('div', {
         style: 'width:100%;background:var(--accent2);border-radius:3px 3px 0 0;min-height:2px;height:' + Math.max(2, pct) + '%;transition:height .3s',
-        title: day + ': $' + d.cost.toFixed(4) + ' (' + d.count + ' req)'
+        title: day + ': ' + fmtY(d.cost) + ' (' + d.count + '回)'
       });
       barWrap.appendChild(bar);
       // Show label for every Nth day
@@ -6896,19 +6899,19 @@ async function renderApiCosts(root) {
 
     // Y-axis labels
     var yLabel = el('div', {style: 'display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:24px'}, [
-      el('span', {textContent: '$0'}),
-      el('span', {textContent: '$' + maxDayCost.toFixed(4)})
+      el('span', {textContent: '¥0'}),
+      el('span', {textContent: fmtY(maxDayCost)})
     ]);
     chartCard.appendChild(yLabel);
     contentArea.appendChild(chartCard);
 
     // === Recent requests ===
-    contentArea.appendChild(el('div', {className: 'section-title', textContent: 'Recent Requests (last 20)'}));
+    contentArea.appendChild(el('div', {className: 'section-title', textContent: '直近のリクエスト (20件)'}));
     var recentCard = el('div', {className: 'card', style: 'overflow-x:auto'});
     var recentTable = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px'});
 
     var rHead = el('tr', {style: 'border-bottom:2px solid var(--border)'});
-    ['Time', 'Model', 'In', 'Out', 'Cost'].forEach(function(h) {
+    ['日時', 'モデル', '入力', '出力', 'コスト'].forEach(function(h) {
       rHead.appendChild(el('th', {style: 'text-align:left;padding:8px 12px;font-weight:600', textContent: h}));
     });
     recentTable.appendChild(rHead);
@@ -6922,7 +6925,7 @@ async function renderApiCosts(root) {
         m.model || '-',
         (m.tokens_input || 0).toLocaleString(),
         (m.tokens_output || 0).toLocaleString(),
-        '$' + (parseFloat(m.cost_usd) || 0).toFixed(6)
+        fmtY(parseFloat(m.cost_usd) || 0)
       ].forEach(function(val, i) {
         tr.appendChild(el('td', {style: 'padding:8px 12px;white-space:nowrap' + (i >= 2 ? ';font-family:var(--mono)' : ''), textContent: val}));
       });
