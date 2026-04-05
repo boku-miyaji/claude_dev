@@ -746,7 +746,8 @@ async function agentLoop(
   conversationId: string, userMessage: string, model: string | null,
   contextMode: string, companyId: string | null, send: (e: SSEEvent) => void,
   userReasoningEffort?: string, images?: { data_url: string; name: string; type: string }[],
-  precisionMode?: boolean, userJwt?: string, userId?: string | null
+  precisionMode?: boolean, userJwt?: string, userId?: string | null,
+  fileContext?: string
 ) {
   // Service client for server-side writes (messages, cost tracking)
   const sb = getServiceSupabase();
@@ -773,10 +774,12 @@ async function agentLoop(
     tool_calls: m.tool_calls || undefined, tool_call_id: m.tool_call_id || undefined, name: m.tool_name || undefined,
   }));
 
-  // Build user message (with images if provided)
-  let userContent: string | ContentBlock[] = userMessage;
+  // Build user message (with images and file context if provided)
+  // fileContext is included in LLM input but NOT saved to DB (too large for history)
+  const llmMessage = fileContext ? userMessage + fileContext : userMessage;
+  let userContent: string | ContentBlock[] = llmMessage;
   if (images && images.length > 0) {
-    const blocks: ContentBlock[] = [{ type: "text", text: userMessage }];
+    const blocks: ContentBlock[] = [{ type: "text", text: llmMessage }];
     for (const img of images) {
       blocks.push({ type: "image_url", image_url: { url: img.data_url, detail: "auto" } } as unknown as ContentBlock);
     }
@@ -1083,7 +1086,7 @@ Deno.serve(async (req) => {
       }
       send({ type: "conversation", id: conversationId });
       try {
-        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images, body.precision_mode, userJwt, userId);
+        await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images, body.precision_mode, userJwt, userId, body.file_context);
       } catch (err) { send({ type: "error", message: (err as Error).message }); }
       controller.close();
     },

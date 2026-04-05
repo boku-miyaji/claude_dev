@@ -6776,18 +6776,21 @@ async function renderApiCosts(root) {
     contentArea.appendChild(skeletonRows(4));
     var since = new Date(Date.now() - days * 86400000).toISOString();
 
-    // Fetch all messages with cost data
-    var res = await sb.from('messages')
-      .select('role,model,tokens_input,tokens_output,cost_usd,created_at')
-      .eq('role', 'assistant')
-      .gte('created_at', since)
-      .not('cost_usd', 'is', null)
-      .order('created_at', {ascending: false});
+    // Fetch from both messages (ai_chat) and api_cost_log (all other sources)
+    var [msgRes, logRes] = await Promise.all([
+      sb.from('messages').select('model,tokens_input,tokens_output,cost_usd,created_at').eq('role', 'assistant').gte('created_at', since).not('cost_usd', 'is', null).order('created_at', {ascending: false}),
+      sb.from('api_cost_log').select('source,model,tokens_input,tokens_output,cost_usd,prompt_summary,created_at').gte('created_at', since).order('created_at', {ascending: false})
+    ]);
 
     while (contentArea.firstChild) contentArea.removeChild(contentArea.firstChild);
 
-    if (res.error) { contentArea.appendChild(inlineError('APIコストの取得に失敗しました: ' + res.error.message, function() { loadCosts(days); })); return; }
-    var msgs = res.data || [];
+    if (msgRes.error && logRes.error) { contentArea.appendChild(inlineError('APIコストの取得に失敗しました', function() { loadCosts(days); })); return; }
+
+    // Unify into single list with source label
+    var msgs = [];
+    (msgRes.data || []).forEach(function(m) { msgs.push({source: 'ai_chat', model: m.model, tokens_input: m.tokens_input, tokens_output: m.tokens_output, cost_usd: m.cost_usd, created_at: m.created_at}); });
+    (logRes.data || []).forEach(function(m) { msgs.push({source: m.source, model: m.model, tokens_input: m.tokens_input, tokens_output: m.tokens_output, cost_usd: m.cost_usd, created_at: m.created_at, prompt_summary: m.prompt_summary}); });
+    msgs.sort(function(a, b) { return b.created_at.localeCompare(a.created_at); });
 
     if (msgs.length === 0) {
       contentArea.appendChild(emptyState('$', 'この期間のAPI利用データはありません'));
@@ -6798,6 +6801,8 @@ async function renderApiCosts(root) {
     var totalCost = 0, totalIn = 0, totalOut = 0, totalRequests = 0;
     var byModel = {};
     var byDay = {};
+    var bySource = {};
+    var sourceLabels = {ai_chat:'AIチャット',self_analysis:'自己分析',emotion_analysis:'感情分析',ai_partner:'AIパートナー',dream_classify:'夢/目標分類',dream_detection:'夢達成検出',weekly_narrative:'週次レポート',other:'その他'};
 
     msgs.forEach(function(m) {
       var cost = parseFloat(m.cost_usd) || 0;
@@ -6805,6 +6810,7 @@ async function renderApiCosts(root) {
       var tokOut = m.tokens_output || 0;
       var model = m.model || 'unknown';
       var day = m.created_at.substring(0, 10);
+      var source = m.source || 'other';
 
       totalCost += cost;
       totalIn += tokIn;
@@ -7627,14 +7633,14 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   async function sendEdgeFnMode(text, edgeFnUrl, metaDiv, contentDiv, msgContainer, assistantRow, attachments, metrics, signal) {
     var fullText = '';
     var images = (attachments||[]).filter(function(a){return a.type.startsWith('image/');}).map(function(a){return {data_url:a.dataUrl,name:a.name,type:a.type};});
-    // Append extracted file content to the message text
+    // Build file context separately — sent to LLM but NOT saved in message history
     var fileAtts = (attachments||[]).filter(function(a){return !a.type.startsWith('image/');});
-    var messageWithFiles = text;
+    var fileContext = '';
     fileAtts.forEach(function(f) {
       if (f.textContent && f.textContent.length > 10) {
-        messageWithFiles += '\n\n--- File: ' + f.name + ' ---\n' + f.textContent;
+        fileContext += '\n\n--- File: ' + f.name + ' ---\n' + f.textContent;
       } else {
-        messageWithFiles += '\n\n[Attached: ' + f.name + ']';
+        fileContext += '\n\n[Attached: ' + f.name + ']';
       }
     });
     try {
@@ -7643,7 +7649,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
       var session = refreshed.data.session ? refreshed : await sb.auth.getSession();
       var token = session.data.session ? session.data.session.access_token : '';
       var res = await fetch(edgeFnUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
-        body:JSON.stringify({conversation_id:chatState.conversationId,message:messageWithFiles,model:chatState.model,context_mode:chatState.contextMode,company_id:chatState.companyId,reasoning_effort:chatState.reasoningEffort,images:images.length?images:undefined,precision_mode:chatState.precisionMode||undefined}),signal:signal});
+        body:JSON.stringify({conversation_id:chatState.conversationId,message:text,file_context:fileContext||undefined,model:chatState.model,context_mode:chatState.contextMode,company_id:chatState.companyId,reasoning_effort:chatState.reasoningEffort,images:images.length?images:undefined,precision_mode:chatState.precisionMode||undefined}),signal:signal});
       if (!res.ok) {
         if (res.status === 401) {
           contentDiv.textContent = 'Edge Function 認証エラー (401): Edge Function の OPENAI_API_KEY が未設定の可能性があります。Settings の Direct Mode に OpenAI API Key を設定してください。';
