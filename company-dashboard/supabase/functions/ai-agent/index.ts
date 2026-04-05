@@ -774,8 +774,8 @@ async function agentLoop(
     tool_calls: m.tool_calls || undefined, tool_call_id: m.tool_call_id || undefined, name: m.tool_name || undefined,
   }));
 
-  // Debug: report history count to frontend
-  send({ type: "debug", history_count: history.length, history_roles: history.map(m => m.role).join(',') } as unknown as SSEEvent);
+  // Debug: report history count + conversation details
+  send({ type: "debug", history_count: history.length, history_roles: history.map(m => m.role).join(','), conversation_id: conversationId, user_id: userId || 'null' } as unknown as SSEEvent);
 
   // Build user message (with images and file context if provided)
   // fileContext is included in LLM input but NOT saved to DB (too large for history)
@@ -818,7 +818,8 @@ async function agentLoop(
     { role: "user", content: userContent },
   ];
 
-  await sb.from("messages").insert({ conversation_id: conversationId, role: "user", content: userMessage, step: 0, user_id: userId });
+  const { error: insertErr } = await sb.from("messages").insert({ conversation_id: conversationId, role: "user", content: userMessage, step: 0, user_id: userId });
+  if (insertErr) send({ type: "debug", error: "message_insert_failed", detail: insertErr.message } as unknown as SSEEvent);
 
   // Record to prompt_log for unified analytics (source: ai_chat)
   await sb.from("prompt_log").insert({
