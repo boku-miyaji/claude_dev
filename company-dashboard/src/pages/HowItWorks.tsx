@@ -170,9 +170,14 @@ function TabOverview() {
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--green)' }}>自動更新（人間の操作不要）</div>
         <Tbl headers={['データ', '更新タイミング', '仕組み', '連鎖先']} rows={[
           ['prompt_log', '毎回のユーザー入力', 'Hook (UserPromptSubmit)', 'CEO分析の材料、生活リズム分析'],
-          ['設定/MCP/CLAUDE.md同期', 'セッション開始', 'Hook (SessionStart)', 'ダッシュボードSettings反映'],
-          ['git pull (最新コード)', 'セッション開始', 'Hook (SessionStart)', '全ファイルが最新に'],
+          ['設定/MCP/CLAUDE.md同期', 'セッション開始', 'Hook (SessionStart, async)', 'ダッシュボードSettings反映'],
+          ['git pull (最新コード)', 'セッション開始', 'Hook (SessionStart, async)', '全ファイルが最新に'],
           ['git push', 'セッション終了', 'Hook (SessionStop)', '他サーバーに変更が伝播'],
+          ['セッション状態保存', 'Context Compaction直前', 'Hook (PreCompact)', '.session-state.json に退避'],
+          ['コンテキスト再注入', 'Context Compaction直後', 'Hook (PostCompact)', 'additionalContext で重要情報を再注入'],
+          ['CLAUDE.md肥大化警告', 'CLAUDE.mdへの書き込み後', 'Hook (PostToolUse)', '200行超で自動警告。60行以下推奨'],
+          ['Hook実行ログ', '全ツール実行後', 'Hook (PostToolUse)', '~/.claude/logs/hook-executions.jsonl に記録'],
+          ['危険コマンド監査', 'Bash実行前', 'Hook (PreToolUse)', 'ブロック時に blocked-commands.jsonl に記録'],
           ['emotion_analysis', '日記投稿直後', 'useEmotionAnalysis (自動)', 'diary_entries.wbi更新 → Journal可視化 → AI Partner再生成'],
           ['AI Partnerコメント', '日記投稿後 + 時間帯変更 + リロード', 'useMorningBriefing (invalidate)', '表示のみ（DB保存なし）'],
           ['夢進捗検出', '日記投稿後', 'useDreamDetection (自動)', 'toast通知のみ'],
@@ -182,8 +187,11 @@ function TabOverview() {
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--accent)' }}>ユーザー操作トリガー</div>
         <Tbl headers={['データ', '更新タイミング', 'トリガー', '連鎖先']} rows={[
           ['diary_entries', 'Today画面で「記録する」', 'ユーザー入力', '→ emotion_analysis → AI Partner → 夢検出（3つが自動連鎖）'],
-          ['tasks', 'Todayまたはタスクページで操作', 'ユーザー操作', '→ AI Partnerコメントの文脈に反映（次回生成時）'],
-          ['habits / habit_logs', 'Today画面でチェック', 'ユーザータップ', '→ Today画面のサマリーに即反映'],
+          ['tasks (完了)', 'Today画面でチェックボックス', 'インラインCRUD', 'status=done + 取り消し線表示。再クリックで戻す'],
+          ['tasks (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', 'due_date=今日で即追加。期限ソート（超過→今日→明日→日付順）'],
+          ['tasks (編集)', 'Today画面でタイトルクリック', 'インライン編集', 'タイトル・期限・優先度をその場で変更'],
+          ['habits (完了)', 'Today画面でチェック', 'ユーザータップ', '→ 統合プログレスバーに即反映'],
+          ['habits (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', '即追加。Habitsページで詳細編集'],
           ['weekly_narratives', 'Weeklyページで「生成」ボタン', 'ユーザー操作', 'DB保存。過去の週は再生成可能'],
           ['self_analysis', 'Self Analysisで分析ボタン', 'ユーザー操作', 'DB保存。日記件数でアンロック'],
           ['news_items', 'Reportsで「収集」ボタン', 'ユーザー操作', 'activity_logにも記録'],
@@ -191,11 +199,12 @@ function TabOverview() {
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--green)' }}>自動メンテナンス（/company 起動時に検出→修復）</div>
-        <P>freshness-policy.yaml で定義。stale検出→人間の操作なしでClaude Codeが自動修復。</P>
+        <P>freshness-policy.yaml で定義（14データソース）。stale検出→人間の操作なしでClaude Codeが自動修復。</P>
         <Tbl headers={['データ', '検出条件', '自動修復アクション']} rows={[
+          ['harness_research', '最終調査7日超', '情報収集部(最新記事) ∥ 運営改善部(GAP分析) → 改善提案更新'],
           ['growth_events', '最終記録7日超 + fix/refactor 3件以上', 'git log分析 → パターン検出 → Supabase INSERT'],
-          ['knowledge昇格', 'confidence ≥ 3 の未昇格ルール', 'rules/に追記 → status=promoted に更新'],
-          ['CLAUDE.md サイズ', '200行超', '手順的記述をrules/に分離 → CLAUDE.md縮小'],
+          ['knowledge昇格', 'confidence ≥ 3 の未昇格ルール', '社長に提示 → 承認後に rules/ 追記（自動昇格は禁止）'],
+          ['CLAUDE.md サイズ', '200行超', '手順的記述をrules/に分離 → CLAUDE.md縮小（Hook でも警告）'],
           ['design-philosophy / HowItWorks', '14日未更新 + AI機能変更あり', 'git diff分析 → 該当セクション自動追記'],
           ['docs/knowledge/', '14日未更新', '新しいドキュメントがあれば追記'],
         ]} />
@@ -206,35 +215,51 @@ function TabOverview() {
 {`日記を書く
   ├→ diary_entries INSERT
   ├→ emotion_analysis 自動生成（感情スコア+WBI）
-  │    └→ diary_entries.wbi UPDATE
-  │         └→ Journal ページの感情カレンダー更新
-  ├→ AI Partner コメント再生成（invalidate → fetch）
-  │    └→ 10データソース再収集 → LLM生成
-  └→ 夢進捗検出（diary × dreams照合）
-       └→ 一致あれば toast 通知
+  │    └→ diary_entries.wbi UPDATE → Journal 感情カレンダー更新
+  ├→ AI Partner コメント再生成（invalidate → 10データソース再収集 → LLM生成）
+  └→ 夢進捗検出（diary × dreams照合 → 一致あれば toast 通知）
 
-セッション開始
-  ├→ git pull（最新コード取得）
-  ├→ config-sync.sh（settings/MCP/CLAUDE.md → Supabase）
-  ├→ company-sync.sh（.company/ → Supabase companies/departments）
-  └→ prompt-log.sh 初期化
+Today画面でタスク操作
+  ├→ チェックボックス → status=done + 取り消し線（再クリックで戻す）
+  ├→ + ボタン → テキスト入力 → Enter → tasks INSERT（due_date=今日）
+  └→ タイトルクリック → インライン編集（タイトル/期限/優先度）→ Save
+
+Today画面で習慣操作
+  ├→ チェックボックス → habit_logs INSERT/DELETE（トグル）
+  ├→ + ボタン → テキスト入力 → Enter → habits INSERT
+  └→ 統合プログレスバー即更新（タスク+習慣の合算）
+
+セッション開始（並列実行）
+  ├→ git pull（async — 最新コード取得）
+  ├→ session-start-marker.sh（sync — タイムライン記録）
+  ├→ supabase-status.sh（async — DB接続確認）
+  └→ config-sync.sh（async — settings/MCP/CLAUDE.md → Supabase）
+
+Context Compaction 発生時
+  ├→ PreCompact: セッション状態を .session-state.json に退避
+  └→ PostCompact: additionalContext で重要情報を再注入
 
 /company 起動
   ├→ knowledge_base 読み込み（active ルール取得）
   ├→ 未処理コメント確認
   ├→ カレンダー取得（今日+明日）
-  └→ データ鮮度チェック（freshness-policy.yaml）
+  └→ データ鮮度チェック（14データソース, freshness-policy.yaml）
+       └→ harness_research 7日超? → 情報収集部 ∥ 運営改善部 → 改善提案更新
 
-AI機能を追加・変更
-  ├→ Edge Function 修正 → supabase functions deploy
-  ├→ HowItWorks AI Features タブ更新（手動・必須）
-  └→ design-philosophy.md に教訓追記（手動・必須）
+/company 起動時の自動メンテナンス
+  ├→ growth_events: git log分析 → パターン検出 → 自動INSERT
+  ├→ knowledge昇格: confidence≥3 → 社長に提示 → 承認後にrules/追記（自動昇格禁止）
+  ├→ CLAUDE.md: 200行超 → 手順をrules/に分離（PostToolUse Hookでも常時警告）
+  └→ design-philosophy / HowItWorks: 14日超 + 変更あり → 自動追記
 
-/company 起動時の自動メンテナンス（freshness-policy.yaml）
-  ├→ growth_events: git log分析 → 新しい失敗パターン検出 → 自動INSERT
-  ├→ knowledge昇格: confidence≥3 → rules/に自動追記 → status=promoted
-  ├→ CLAUDE.md: 200行超 → 手順をrules/に分離 → 自動スリム化
-  └→ design-philosophy / HowItWorks: 14日超 + 変更あり → 自動追記`}
+CLAUDE.mdを編集
+  └→ PostToolUse Hook: claude-md-size-guard.sh
+       └→ 200行超 → additionalContext で警告（60行以下推奨）
+
+危険コマンド実行
+  └→ PreToolUse Hook: bash-guard.sh
+       ├→ rm -rf / / force push / reset --hard / DROP → ブロック (exit 2)
+       └→ ブロック時 → blocked-commands.jsonl に監査ログ記録`}
         </div>
       </Section>
     </>
