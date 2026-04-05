@@ -11,30 +11,29 @@ interface NavEntry {
 }
 
 const NAV: NavEntry[] = [
-  // Input (daily input & capture)
   { type: 'item', page: '', icon: '◉', label: 'Home' },
   { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
   { type: 'item', page: 'chat', icon: '💬', label: 'AI Chat' },
-  // Manage (organize & plan)
-  { type: 'label', label: 'Manage' },
+  // Plan & Track
+  { type: 'label', label: 'Plan' },
   { type: 'item', page: 'tasks', icon: '☐', label: 'Tasks' },
   { type: 'item', page: 'dreams', icon: '🌟', label: 'Dreams & Goals' },
   { type: 'item', page: 'habits', icon: '🌱', label: 'Habits' },
   { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
-  // Analytics (review & reflect)
-  { type: 'label', label: 'Analytics' },
+  { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
+  // Understand
+  { type: 'label', label: 'Understand' },
   { type: 'item', page: 'insights', icon: '📊', label: 'Insights' },
   { type: 'item', page: 'me', icon: '🧬', label: 'Self-Analysis' },
-  { type: 'item', page: 'intelligence', icon: '📄', label: 'Reports' },
-  // System (collapsible — settings & structure)
-  { type: 'collapsible-start', label: 'System', groupKey: 'system' },
-  { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
+  { type: 'item', page: 'intelligence', icon: '📄', label: 'News' },
+  { type: 'item', page: 'growth', icon: '↗', label: 'Growth' },
+  // Data
+  { type: 'label', label: 'Data' },
   { type: 'item', page: 'companies', icon: '◫', label: 'Organization' },
   { type: 'item', page: 'knowledge', icon: '◈', label: 'Knowledge' },
   { type: 'item', page: 'artifacts', icon: '📄', label: 'Artifacts' },
   { type: 'item', page: 'prompts', icon: '▷', label: 'Prompts' },
   { type: 'item', page: 'commands', icon: '⌘', label: 'Commands' },
-  { type: 'item', page: 'growth', icon: '↗', label: 'Growth' },
   { type: 'item', page: 'how-it-works', icon: '?', label: 'How it Works' },
 ]
 
@@ -75,7 +74,7 @@ export function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ system: true })
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [sidebarHidden, setSidebarHidden] = useState(false)
 
   const currentPage = location.pathname.replace('/', '') || ''
