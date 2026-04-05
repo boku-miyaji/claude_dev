@@ -456,16 +456,16 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
     setError(null)
 
     try {
-      // Get previous analysis for delta mode
+      // Get previous analysis for context (changes_from_previous)
       const prevAnalysis = await getPreviousAnalysis(type)
       const prevResult = prevAnalysis?.result ?? null
-      const since = prevAnalysis?.created_at ?? null
 
-      // Collect data (only new entries if previous exists)
-      const { text: userData, count } = await collectData(type, since)
+      // Always collect all data (full mode) — delta mode caused "no data" errors
+      // when re-analyzing shortly after a previous analysis
+      const { text: userData, count } = await collectData(type, null)
 
       if (!userData.trim()) {
-        setError('前回の分析以降、新しいデータがありません。')
+        setError('分析に必要なデータがありません。日記を書いてください。')
         setRunning(false)
         setRunningType(null)
         return null

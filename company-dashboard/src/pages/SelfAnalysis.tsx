@@ -4,16 +4,20 @@ import { Card, PageHeader } from '@/components/ui'
 import { useSelfAnalysis, type AnalysisType, type AnalysisRecord } from '@/hooks/useSelfAnalysis'
 import { useDataStore } from '@/stores/data'
 
-type TabType = 'mbti' | 'big5' | 'strengths_finder' | 'values'
+type TabType = 'summary' | 'mbti' | 'big5' | 'strengths_finder' | 'values'
 
-const ALL_TYPES: TabType[] = ['mbti', 'big5', 'strengths_finder', 'values']
+/** Analysis types that are actually run via LLM */
+const ALL_TYPES: AnalysisType[] = ['mbti', 'big5', 'strengths_finder', 'values']
 
 const TAB_META: Record<TabType, { label: string; title: string }> = {
+  summary: { label: 'まとめ', title: '統合分析' },
   mbti: { label: 'MBTI', title: 'MBTI' },
   big5: { label: 'Big5', title: 'Big5' },
   strengths_finder: { label: 'SF', title: 'StrengthsFinder' },
   values: { label: 'Values', title: 'Values' },
 }
+
+const ALL_TABS: TabType[] = ['summary', 'mbti', 'big5', 'strengths_finder', 'values']
 
 // ---------------------------------------------------------------------------
 // SVG Pentagon Radar Chart for Big5
@@ -1071,6 +1075,226 @@ function ValuesDetail({ result }: { result: Record<string, unknown> }) {
 }
 
 // ---------------------------------------------------------------------------
+// Summary Tab: 統合分析
+// ---------------------------------------------------------------------------
+
+function SummaryTab({ latestByType }: { latestByType: (type: AnalysisType) => AnalysisRecord | undefined }) {
+  const mbti = latestByType('mbti')?.result
+  const big5 = latestByType('big5')?.result
+  const sf = latestByType('strengths_finder')?.result
+  const vals = latestByType('values')?.result
+
+  const hasAny = mbti || big5 || sf || vals
+
+  if (!hasAny) {
+    return (
+      <Card>
+        <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text3)', fontSize: 13 }}>
+          まずは各分析を実行してください
+        </div>
+      </Card>
+    )
+  }
+
+  // Extract key data
+  const mbtiType = mbti ? String(mbti.type ?? '') : ''
+  const mbtiName = mbti ? String(mbti.type_name ?? '') : ''
+  const mbtiDesc = mbti?.description
+  const coreInsight = typeof mbtiDesc === 'object' && mbtiDesc !== null
+    ? String((mbtiDesc as Record<string, unknown>).core_insight ?? '')
+    : ''
+
+  const big5Traits = big5 ? [
+    { key: '開放性', score: (big5.openness as number) ?? 0 },
+    { key: '誠実性', score: (big5.conscientiousness as number) ?? 0 },
+    { key: '外向性', score: (big5.extraversion as number) ?? 0 },
+    { key: '協調性', score: (big5.agreeableness as number) ?? 0 },
+    { key: '神経症傾向', score: (big5.neuroticism as number) ?? 0 },
+  ] : []
+  const highTraits = big5Traits.filter(t => t.score >= 60).map(t => t.key)
+  const lowTraits = big5Traits.filter(t => t.score < 40).map(t => t.key)
+
+  const topStrengths = sf
+    ? ((sf.top_strengths as { name: string; score: number; domain: string }[]) ?? []).slice(0, 5)
+    : []
+  const synergy = sf ? ((sf.synergy as { pattern: string; detail: string }[]) ?? []) : []
+  const blindSpots = sf ? ((sf.blind_spot as string[]) ?? []) : []
+
+  const topValues = vals
+    ? ((vals.values as { name: string; rank: number; score: number }[]) ?? []).slice(0, 5)
+    : []
+  const lifeQuestions = vals ? ((vals.life_question as string[]) ?? []) : []
+  const tensions = vals ? ((vals.tension as { values: string[]; detail: string }[]) ?? []) : []
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Hero: Who you are */}
+      <Card style={{ borderLeft: '4px solid var(--accent)' }}>
+        <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+          あなたという人
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 12 }}>
+          {mbtiType && (
+            <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--accent2)', fontFamily: 'var(--mono)', letterSpacing: 3 }}>
+              {mbtiType}
+            </span>
+          )}
+          {mbtiName && <span style={{ fontSize: 14, color: 'var(--text2)' }}>{mbtiName}</span>}
+        </div>
+        {coreInsight && (
+          <div style={{
+            fontSize: 14, color: 'var(--text)', lineHeight: 1.9, fontWeight: 400,
+            padding: '14px 18px', background: 'var(--surface2)', borderRadius: 8,
+            borderLeft: '3px solid var(--accent)',
+          }}>
+            {coreInsight}
+          </div>
+        )}
+      </Card>
+
+      {/* 2-column: Traits + Strengths */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+        {/* Big5 Traits */}
+        {big5Traits.length > 0 && (
+          <Card>
+            <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+              性格特性 (Big5)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {big5Traits.map(t => (
+                <div key={t.key}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                    <span style={{ color: 'var(--text2)', fontWeight: 500 }}>{t.key}</span>
+                    <span style={{
+                      fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600,
+                      color: t.score >= 60 ? 'var(--green)' : t.score < 40 ? 'var(--amber)' : 'var(--text3)',
+                    }}>{t.score}</span>
+                  </div>
+                  <div style={{ height: 5, background: 'var(--surface2)', borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', width: `${t.score}%`, borderRadius: 3,
+                      background: t.score >= 60 ? 'var(--green)' : t.score < 40 ? 'var(--amber)' : 'var(--accent)',
+                    }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {(highTraits.length > 0 || lowTraits.length > 0) && (
+              <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+                {highTraits.length > 0 && <div><strong style={{ color: 'var(--green)' }}>高い:</strong> {highTraits.join('・')}</div>}
+                {lowTraits.length > 0 && <div><strong style={{ color: 'var(--amber)' }}>控えめ:</strong> {lowTraits.join('・')}</div>}
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* Top Strengths */}
+        {topStrengths.length > 0 && (
+          <Card>
+            <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+              強み Top 5
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {topStrengths.map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent2)', fontWeight: 700, minWidth: 20 }}>#{i + 1}</span>
+                  <span style={{ fontSize: 13, color: 'var(--text)', flex: 1 }}>{s.name}</span>
+                  <span style={{
+                    fontSize: 9, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
+                    background: 'var(--surface2)', color: 'var(--text3)',
+                  }}>{s.domain}</span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600, color: 'var(--accent2)' }}>{s.score}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
+
+      {/* Values */}
+      {topValues.length > 0 && (
+        <Card>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            価値観
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {topValues.map((v, i) => (
+              <div key={i} style={{
+                padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 500,
+                background: i === 0 ? 'var(--amber)' : i < 3 ? 'rgba(245,158,11,0.15)' : 'var(--surface2)',
+                color: i === 0 ? '#fff' : i < 3 ? 'var(--amber)' : 'var(--text2)',
+              }}>
+                {v.name} <span style={{ fontFamily: 'var(--mono)', fontSize: 10, opacity: 0.8 }}>{v.score}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Synergy: 強みの掛け算 */}
+      {synergy.length > 0 && (
+        <Card style={{ borderLeft: '4px solid var(--green)' }}>
+          <div style={{ fontSize: 11, color: 'var(--green)', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            強みの掛け算
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {synergy.map((s, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{s.pattern}</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{s.detail}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Tensions + Blind Spots */}
+      {(tensions.length > 0 || blindSpots.length > 0) && (
+        <Card style={{ borderLeft: '4px solid var(--amber)' }}>
+          <div style={{ fontSize: 11, color: 'var(--amber)', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            葛藤と盲点
+          </div>
+          {tensions.map((t, i) => (
+            <div key={`t${i}`} style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 2 }}>
+                {t.values.join(' × ')}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.7 }}>{t.detail}</div>
+            </div>
+          ))}
+          {blindSpots.map((b, i) => (
+            <div key={`b${i}`} style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 6 }}>
+              {b}
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {/* Life Questions */}
+      {lifeQuestions.length > 0 && (
+        <Card style={{ background: 'var(--surface2)', border: 'none' }}>
+          <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            あなたへの問い
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {lifeQuestions.map((q, i) => (
+              <div key={i} style={{
+                fontSize: 14, color: 'var(--text)', lineHeight: 1.9, fontWeight: 400,
+                padding: '12px 16px', background: 'var(--bg)',
+                borderRadius: 8, borderLeft: '3px solid var(--accent)',
+                fontStyle: 'italic',
+              }}>
+                {q}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Progress Stepper (during analysis)
 // ---------------------------------------------------------------------------
 function ProgressStepper({ currentType, completedTypes }: { currentType: AnalysisType | null; completedTypes: Set<string> }) {
@@ -1079,7 +1303,7 @@ function ProgressStepper({ currentType, completedTypes }: { currentType: Analysi
       {ALL_TYPES.map((type, i) => {
         const isCompleted = completedTypes.has(type)
         const isCurrent = type === currentType
-        const meta = TAB_META[type]
+        const meta = TAB_META[type as TabType]
         return (
           <div key={type} style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
@@ -1182,7 +1406,7 @@ export function SelfAnalysis() {
   const { diaryEntries, fetchDiary, fetchTasks, fetchDreams } = useDataStore()
   const [loading, setLoading] = useState(true)
   const [pastResults, setPastResults] = useState<AnalysisRecord[]>([])
-  const [activeTab, setActiveTab] = useState<TabType>('mbti')
+  const [activeTab, setActiveTab] = useState<TabType>('summary')
   const [completedTypes, setCompletedTypes] = useState<Set<string>>(new Set())
   const [isRunningAll, setIsRunningAll] = useState(false)
 
@@ -1225,7 +1449,7 @@ export function SelfAnalysis() {
   const latestByType = (type: AnalysisType) =>
     pastResults.find((r) => r.analysis_type === type)
 
-  const activeResult = latestByType(activeTab)
+  const activeResult = activeTab !== 'summary' ? latestByType(activeTab) : undefined
 
   if (loading) {
     return (
@@ -1300,7 +1524,7 @@ export function SelfAnalysis() {
               {ALL_TYPES.map((type) => {
                 const r = latestByType(type)
                 if (!r) return <div key={type} />
-                const meta = TAB_META[type]
+                const meta = TAB_META[type as TabType]
                 const isActive = activeTab === type
                 return (
                   <Card
@@ -1310,7 +1534,7 @@ export function SelfAnalysis() {
                       border: isActive ? '1px solid var(--accent)' : '1px solid transparent',
                       transition: 'border-color 0.2s',
                     }}
-                    onClick={() => setActiveTab(type)}
+                    onClick={() => setActiveTab(type as TabType)}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: isActive ? 'var(--accent)' : 'var(--text2)' }}>{meta.title}</span>
@@ -1331,8 +1555,8 @@ export function SelfAnalysis() {
           {/* Tab Navigation */}
           <div className="section">
             <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
-              {ALL_TYPES.map((type) => {
-                const meta = TAB_META[type]
+              {ALL_TABS.map((type) => {
+                const meta = TAB_META[type as TabType]
                 const isActive = activeTab === type
                 return (
                   <button
@@ -1358,7 +1582,9 @@ export function SelfAnalysis() {
             </div>
 
             {/* Detail Content */}
-            {activeResult ? (
+            {activeTab === 'summary' ? (
+              <SummaryTab latestByType={latestByType} />
+            ) : activeResult ? (
               <Card>
                 {activeTab === 'mbti' && <MbtiDetail result={activeResult.result} />}
                 {activeTab === 'big5' && <Big5Detail result={activeResult.result} />}
