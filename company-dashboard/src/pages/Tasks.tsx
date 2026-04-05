@@ -26,7 +26,7 @@ export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState({ status: 'open', company: '', priority: '' })
+  const [filters, setFilters] = useState({ status: 'open', company: '', priority: '', type: '' })
   const [showAdd, setShowAdd] = useState(false)
 
   // Form state
@@ -57,6 +57,7 @@ export function Tasks() {
     if (filters.status && t.status !== filters.status) return false
     if (filters.company && t.company_id !== filters.company) return false
     if (filters.priority && t.priority !== filters.priority) return false
+    if (filters.type && t.type !== filters.type) return false
     return true
   })
 
@@ -172,6 +173,11 @@ export function Tasks() {
           <option value="normal">Normal</option>
           <option value="low">Low</option>
         </select>
+        <select className="input" value={filters.type} onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))}>
+          <option value="">すべてのタイプ</option>
+          <option value="task">Task</option>
+          <option value="request">Request</option>
+        </select>
       </div>
 
       {/* Task list */}
@@ -179,7 +185,7 @@ export function Tasks() {
         {filtered.length === 0 ? (
           <EmptyState icon="☐" message="フィルターに一致するタスクはありません"
             actionLabel="フィルターをリセット"
-            onAction={() => setFilters({ status: '', company: '', priority: '' })}
+            onAction={() => setFilters({ status: '', company: '', priority: '', type: '' })}
           />
         ) : filtered.map((t) => {
           const isDone = t.status === 'done'
@@ -192,6 +198,7 @@ export function Tasks() {
                 <div className={`task-title${isDone ? ' done' : ''}`}>{t.title}</div>
                 {t.description && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 3 }}>{t.description.substring(0, 120)}</div>}
                 <div className="task-meta">
+                  {t.type === 'request' && <Tag variant="info">request</Tag>}
                   <Tag variant="company">{t.company_id || 'HD'}</Tag>
                   <Tag variant={t.priority as 'high' | 'normal' | 'low'}>{t.priority}</Tag>
                   <Tag variant={t.status as 'open' | 'done' | 'in_progress'}>{t.status}</Tag>

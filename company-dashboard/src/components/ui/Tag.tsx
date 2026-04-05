@@ -1,6 +1,6 @@
 interface Props {
   children: string
-  variant?: 'high' | 'normal' | 'low' | 'open' | 'done' | 'in_progress' | 'company'
+  variant?: 'high' | 'normal' | 'low' | 'open' | 'done' | 'in_progress' | 'company' | 'info'
 }
 
 export function Tag({ children, variant = 'normal' }: Props) {
