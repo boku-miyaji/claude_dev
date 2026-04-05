@@ -264,6 +264,22 @@ data_sources:
       3. 設計判断（refactor, architecture変更）があれば design-philosophy.md に追記
       4. 更新履歴テーブルに日付と変更内容を追記
 
+  dept_knowledge_refresh:
+    priority: 3.5
+    max_age_days: 14
+    auto_update: false
+    blocking: false
+    check_method: file_check
+    check_file: ".company/departments/ops/knowledge-updates/"
+    stale_condition: "部署知識ローテーションが14日超過。各部署のベストプラクティスが古くなっている可能性"
+    update_action: |
+      1. ローテーション番号を日付から算出（epoch日数 ÷ 14 % 5）
+      2. references/dept-knowledge-sources.md からローテーション対象2部署を特定
+      3. 情報収集部: 対象部署の知識ソースをWeb調査（検索キーワード参照）
+      4. 運営改善部: 調査結果と現行CLAUDE.mdのGAP分析
+      5. GAP あり → 社長に更新提案を提示（自動更新しない）
+      6. 結果を departments/{dept}/knowledge-updates/YYYY-MM-DD.md に記録
+
   harness_research:
     priority: 2.5
     max_age_days: 7
