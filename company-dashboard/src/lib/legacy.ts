@@ -8,6 +8,7 @@
 
 import { supabase } from "./supabase";
 import { marked } from "marked";
+import { extractTextFromFile } from "./fileExtract";
 
 // Expose supabase client as global for legacy code
 const w = window as any;
@@ -7076,7 +7077,10 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
       var pill = el('div', {className: 'chat-attach-pill'});
       if (att.type.startsWith('image/')) { var t = el('img'); t.src = att.dataUrl; pill.appendChild(t); }
       else { var ext = att.name.split('.').pop().toLowerCase(); var ficon = {pdf:'\uD83D\uDCC4',xlsx:'\uD83D\uDCCA',xls:'\uD83D\uDCCA',pptx:'\uD83D\uDCDD',ppt:'\uD83D\uDCDD',docx:'\uD83D\uDCC3',doc:'\uD83D\uDCC3'}[ext]||'\uD83D\uDCC1'; pill.appendChild(el('span',{textContent:ficon,style:'font-size:16px'})); }
-      pill.appendChild(el('span', {textContent: att.name.length > 20 ? att.name.substring(0,17)+'...' : att.name}));
+      var label = att.name.length > 20 ? att.name.substring(0,17)+'...' : att.name;
+      if (att.extracting) label += ' (抽出中...)';
+      else if (att.textContent && att.textContent.length > 50) label += ' (\u2713 ' + Math.round(att.textContent.length/1000) + 'KB)';
+      pill.appendChild(el('span', {textContent: label}));
       var rm = el('span', {className: 'remove', textContent: '\u00D7'});
       rm.addEventListener('click', function() { pendingAttachments.splice(idx,1); renderPreviews(); });
       pill.appendChild(rm);
@@ -7088,6 +7092,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   var fileInput = el('input', {type:'file',accept:'image/*,.pdf,.txt,.md,.csv,.json,.xlsx,.xls,.pptx,.ppt,.docx,.doc,.yaml,.yml,.xml,.html,.css,.js,.ts,.py,.sql',multiple:true,style:'display:none'});
   function addFileAttachment(f) {
     var isText = /\.(txt|md|csv|json|yaml|yml|xml|html|css|js|ts|py|sql)$/i.test(f.name);
+    var isExtractable = /\.(pdf|xlsx|xls|docx|pptx)$/i.test(f.name);
     if (isText) {
       // Read as text so content can be sent to LLM
       var tr = new FileReader();
@@ -7098,8 +7103,18 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
         renderPreviews();
       };
       tr.readAsText(f);
+    } else if (isExtractable) {
+      // Extract text from PDF/Excel/Word/PPTX using browser-side libraries
+      var placeholder = {name:f.name,type:f.type,dataUrl:'',textContent:'[抽出中...]',size:f.size,extracting:true};
+      pendingAttachments.push(placeholder);
+      renderPreviews();
+      extractTextFromFile(f).then(function(text) {
+        placeholder.textContent = text || '[テキスト抽出失敗]';
+        placeholder.extracting = false;
+        renderPreviews();
+      });
     } else {
-      // Read as dataURL (images, PDF, office docs)
+      // Read as dataURL (images)
       var r = new FileReader();
       r.onload = function(e) { pendingAttachments.push({name:f.name,type:f.type,dataUrl:e.target.result,base64:e.target.result.split(',')[1],size:f.size}); renderPreviews(); };
       r.readAsDataURL(f);
