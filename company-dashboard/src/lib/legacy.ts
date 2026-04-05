@@ -825,7 +825,8 @@ function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour, def
   var summaryInput = el('input', {type: 'text', placeholder: 'タイトルを追加', value: isEdit ? existingEvent.summary : '', style: ist + ';font-size:16px;font-weight:500;border:none;border-bottom:2px solid var(--accent);border-radius:0;padding:8px 0'});
   body.appendChild(el('div', {style: 'margin-bottom:16px'}, [summaryInput]));
 
-  // All day toggle
+  // All day toggle — force off when hour is specified
+  if (typeof defaultHour === 'number') isAllDay = false;
   var allDayCheck = el('input', {type: 'checkbox', checked: isAllDay});
   body.appendChild(el('div', {style: 'margin-bottom:12px;display:flex;align-items:center;gap:8px'}, [
     allDayCheck,
@@ -1030,7 +1031,7 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
 
   if (viewMode === 'day' || viewMode === 'week') {
     // Google Calendar style time-grid
-    var HOUR_H = 40, START_H = 7, END_H = 23;
+    var HOUR_H = 48, START_H = 8, END_H = 22;
     var DAYS_COUNT = viewMode === 'day' ? 1 : 7;
     var gridCols = '56px repeat(' + DAYS_COUNT + ',1fr)';
     var days = [];
@@ -7003,14 +7004,11 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     if (!chatState.conversationId) { while (messagesInner.firstChild) messagesInner.removeChild(messagesInner.firstChild); }
 
     appendUserMsg(messagesInner, text, attachments, function(editText, editRow) {
-      // Remove this message and all subsequent messages
+      // Remove this message and all subsequent messages, then re-send
       while (editRow.nextSibling) editRow.nextSibling.remove();
       editRow.remove();
-      // Put text back in textarea for editing
       textarea.value = editText;
-      textarea.focus();
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
+      sendMessage();
     });
     chatAutoScroll = true;
     messagesArea.scrollTop = messagesArea.scrollHeight;
