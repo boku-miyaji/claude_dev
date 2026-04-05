@@ -1295,9 +1295,6 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
         }
       }
 
-      // Scroll to around current time
-      var scrollTo = Math.max(0, (Math.min(nowH, 10) - START_H) * HOUR_H - 40);
-      body.scrollTop = scrollTo;
     });
 
     // Click empty cell to add event
