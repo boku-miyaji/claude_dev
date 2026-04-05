@@ -574,6 +574,41 @@ function TabAiFeatures() {
         />
       </Section>
 
+      <Section title="Narrative Intelligence（計画中）">
+        <Principle title="Mirror → Narrator" body="現在のシステムはデータを映す「鏡」。次の進化は、あなたの人生データを「物語」として読み解き、語り、導く「語り手」になること。ルールベースの提案（WBI低い→休めば？）ではなく、LLMの深い推論で物語の弧を読む。" color="var(--accent)" />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>4つのエンジン</div>
+        <Tbl headers={['エンジン', '役割', 'モデル', '更新頻度']} rows={[
+          ['Arc Reader', '感情の時系列を「物語の弧」として解釈。今のフェーズを読み取る', 'gpt-5', '週次'],
+          ['Theme Finder', '数ヶ月の日記×夢×行動から人生の通底テーマを発見', 'gpt-5 / claude-sonnet', '月次'],
+          ['Moment Detector', '日記から転機（決断/気づき/突破/挫折）をリアルタイム検出', 'gpt-5-mini', '日記書き込み毎'],
+          ['Foresight Engine', '過去のパターンから物語の続きを予感し、提案する', 'gpt-5', '随時'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Narrative Memory（3層構造）</div>
+        <Tbl headers={['層', '内容', '更新']} rows={[
+          ['Layer 1: Raw Data', 'diary, emotions, dreams, goals, habits（既存）', 'リアルタイム'],
+          ['Layer 2: Narrative Memory', 'LLMがデータを「理解」した結果: identity, currentArc, chapters, emotionalDNA, aspirations', '日次〜月次'],
+          ['Layer 3: Active Context', '今の会話/提案に必要な物語文脈をLayer2から抽出', '会話開始時'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>ルールベース vs 物語ベースの提案</div>
+        <Tbl headers={['場面', 'ルールベース（v1）', '物語ベース（v2）']} rows={[
+          ['WBIが低い', '「少し休みましょう」', '「去年の同じ時期にも似た波がありました。あの時は2週間後に"見えた"と書いていました」'],
+          ['旅行の相談', '「性格に合う: 直島、屋久島…」', '「夢リストの南阿蘇、今の"再構築期"に響く場所だと思います」'],
+          ['目標が停滞', '「小さな一歩から始めましょう」', '「あなたの物語では、こういう沈黙の後にいつも跳躍があります」'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>共有機能: Courage Board</div>
+        <P>SNSとは逆の設計。評価されない、コメントされない、フォロワーなし。匿名の成長物語が並ぶ場所。リアクションは「共感した」だけ。自分の物語が誰かの勇気になる。</P>
+        <div className="g2" style={{ marginBottom: 12, marginTop: 8 }}>
+          <MiniCard title="Story Card" body="Chapterや転機を美しいカードに。LLMが匿名化+テキスト生成。画像出力対応" />
+          <MiniCard title="Growth Story" body="四半期/年間の物語を1つの文章に。結婚式の成長ムービーを日常に" />
+        </div>
+
+        <Principle title="詳細設計" body="docs/design/life-companion-evolution.md に全体設計書。story_memory / story_moments / shared_stories テーブル設計、コスト見積もり、実装フェーズを含む。" color="var(--green)" />
+      </Section>
+
       <Section title="AIチャットのツール一覧">
         <P>エージェントループで使えるツール。LLMが自律的に選択・実行する。</P>
         <Tbl headers={['ツール', '機能', 'データソース']} rows={[
