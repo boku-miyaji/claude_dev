@@ -263,9 +263,9 @@ export function Today() {
 
   const fragments = useMemo(() => diaryEntries.filter((e) => e.created_at.substring(0, 10) === todayStr), [diaryEntries, todayStr])
 
-  // Tasks: today's actionable items
-  const allOpenTasks = useMemo(() => tasks.filter((t) => t.status === 'open' || t.status === 'in_progress'), [tasks])
-  const completedToday = useMemo(() => tasks.filter((t) => t.status === 'done' && t.completed_at?.substring(0, 10) === todayStr), [tasks, todayStr])
+  // Tasks: today's actionable items (requests are excluded — they live in the Tasks page)
+  const allOpenTasks = useMemo(() => tasks.filter((t) => (t.status === 'open' || t.status === 'in_progress') && t.type !== 'request'), [tasks])
+  const completedToday = useMemo(() => tasks.filter((t) => t.status === 'done' && t.type !== 'request' && t.completed_at?.substring(0, 10) === todayStr), [tasks, todayStr])
 
   const priorityWeight = { high: 0, normal: 1, low: 2 } as const
 
