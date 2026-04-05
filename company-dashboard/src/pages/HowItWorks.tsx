@@ -635,10 +635,185 @@ function TabAiFeatures() {
   )
 }
 
+// ========== Tab: Harness Engineering ==========
+
+function TabHarness() {
+  return (
+    <>
+      <Section title="ハーネスエンジニアリングとは何か">
+        <P>AIの出力品質は「プロンプトの書き方」ではなく「AIを取り巻く環境（=ハーネス）の設計」で決まる。Claude Code は公式に "agentic harness" と位置づけられている。</P>
+
+        <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>3つの進化段階</div>
+        <P>AI協業の技術は入れ子構造で進化してきた。外側の層が内側を包含する。</P>
+        <Tbl headers={['段階', '時期', '問い', '操作対象', '品質への影響']} rows={[
+          ['Prompt Engineering', '2022-2023', '「どう聞けばいい？」', 'プロンプト文字列', '品質 +3% 未満（Stanford HAI, 2025）'],
+          ['Context Engineering', '2023-2024', '「AIは何を知る必要がある？」', 'RAG, Few-shot, システムプロンプト', '品質 +10-15%'],
+          ['Harness Engineering', '2025-現在', '「どんな環境を構築すべき？」', 'ツール, Hook, 権限, サブエージェント', '品質 +28-47%（Stanford HAI, 2025）'],
+        ]} />
+        <Principle
+          title="Stanford HAI 調査結果（2025年後半）"
+          body="12の本番ユースケースでの比較: プロンプト改善は出力品質を3%未満しか向上させなかったのに対し、ハーネスレベルの変更（検索追加、ツールアクセス拡張、構造化バリデーション導入）は 28-47% の品質向上をもたらした。品質のボトルネックはモデルの能力ではなく、モデルが動作する環境にある。"
+          color="var(--accent)"
+        />
+        <P>つまり「プロンプトをどう書くか」に時間を費やすより、「どんなツールを渡すか」「どんな制約を設けるか」「どんなフィードバックループを作るか」に注力すべき。OpenAI が自社の API ではなく Claude Code にプラグインを出荷した事実も、堀（moat）がモデルではなくハーネスにあることを示唆する。</P>
+      </Section>
+
+      <Section title="「ハーネス」の3つの比喩">
+        <div className="g3" style={{ marginBottom: 12 }}>
+          <Principle title="馬具 (Horse Harness)" body="AIの能力を正確に制御された方向へ導く。暴走を防ぎ、力を目的に集中させる。→ CLAUDE.md, Permission" color="var(--accent)" />
+          <Principle title="安全帯 (Safety Harness)" body="失敗を封じ込め、回復可能にする。Permission deny, sandbox, git revert。→ Hooks (PreToolUse), Permissions" color="var(--green)" />
+          <Principle title="テストハーネス (Test Harness)" body="デバッグ、可観測性、ツールセットを備えた実行環境。→ MCP, Tool Search, Sub-agents" color="var(--amber)" />
+        </div>
+      </Section>
+
+      <Section title="ハーネスの6構成要素">
+        <P>Claude Code のハーネスは6つの構成要素から成る。それぞれの性質の違いが重要。</P>
+        <Tbl headers={['構成要素', '役割', '性質', '遵守保証', '宮路HDでの実装']} rows={[
+          ['CLAUDE.md', '方針・規約の宣言', '助言的（読んでも無視されうる）', '低〜中', '.claude/CLAUDE.md + .company/CLAUDE.md + 部署CLAUDE.md'],
+          ['Hooks', 'ライフサイクル制御', '決定論的（確実に実行される）', '高', '.claude/hooks/ に24スクリプト'],
+          ['Permissions', '安全制御', '強制的（bypass不可）', '最高', 'settings.json の allow/deny リスト'],
+          ['MCP', 'ツール拡張', '外部サービス接続', '—', 'Google Calendar, Supabase, Serena, Context7'],
+          ['Sub-agents', 'コンテキスト分離', '独立メモリ・最小権限', '—', 'Agent tool で10部署を委譲'],
+          ['Skills', 'ナレッジ注入', 'オンデマンドロード', '—', '/company, /diary 等のスキル'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>CLAUDE.md vs Hooks — 「助言」vs「強制」</div>
+        <P>CLAUDE.md に「QAを通さずリリースしない」と書いても、モデルが無視する可能性がある。一方、PreToolUse Hook で <code>git push</code> 前にテスト通過を確認すれば、物理的にスキップできない。重要なルールほど Hooks に移すべき。</P>
+        <Tbl headers={['ルール', '現在の配置', '理想の配置', '理由']} rows={[
+          ['コミット規約', 'CLAUDE.md', 'CLAUDE.md（OK）', '助言で十分。フォーマット違反は致命的でない'],
+          ['ハンドオフ検出', 'CLAUDE.md（正規表現）', 'PostToolUse Hook', '見逃すと部署間連携が壊れる'],
+          ['QA未通過防止', 'CLAUDE.md', 'PreToolUse Hook (Bash)', 'テスト未通過のpushは本番障害に直結'],
+          ['成果物登録', 'CLAUDE.md（手動）', 'PostToolUse Hook (Write)', 'リアルタイム登録で漏れ防止'],
+          ['CLAUDE.md肥大化', 'ops部CLAUDE.md', 'PostToolUse Hook (Edit)', '200行超で自動警告'],
+        ]} />
+      </Section>
+
+      <Section title="CLAUDE.md の設計原則">
+        <Principle title="60行以下が理想" body="全てを1ファイルに詰め込むと指示が埋もれ、遵守率が下がる。Claudeのコンテキスト消費も増加。手順的な内容は rules/ やスキルに分離する。" color="var(--red)" />
+        <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="書くべきもの" body="Claudeが推測できないBashコマンド、デフォルトと異なるスタイル、テスト実行指示、PJ固有のアーキテクチャ決定、IMPORTANT/YOU MUST で強調" />
+          <MiniCard title="書くべきでないもの" body="コードを読めばわかること、標準的な言語慣習、詳細なAPIドキュメント、頻繁に変わる情報。@path/to/file でインポート可能" />
+        </div>
+        <P>配置階層: <code>~/.claude/CLAUDE.md</code>（全PJ共通）→ <code>./CLAUDE.md</code>（プロジェクト、Git共有可）→ <code>./CLAUDE.local.md</code>（個人）→ 子ディレクトリ（オンデマンド読込）</P>
+      </Section>
+
+      <Section title="Hooks 詳細 — 決定論的制御">
+        <P>Hooks はコンテキストウィンドウの外で実行される。つまりコンテキストを消費せず、確実に動作する。</P>
+
+        <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>利用可能なフックイベント</div>
+        <Tbl headers={['イベント', 'タイミング', '用途', '宮路HDでの活用']} rows={[
+          ['SessionStart', 'セッション開始 / compact後', 'コンテキスト再注入、環境セットアップ', 'auto-pull, config-sync, supabase-status'],
+          ['SessionStop', 'セッション終了', 'クリーンアップ、レポート', 'auto-push, session-summary'],
+          ['UserPromptSubmit', 'ユーザー入力時', 'additionalContext注入、ログ記録', 'prompt-log（全入力をSupabaseに記録）'],
+          ['PreToolUse', 'ツール実行前', 'ブロック / 入力書き換え / ポリシーガード', 'bash-guard（危険コマンドのブロック）'],
+          ['PostToolUse', 'ツール実行後', 'バリデーション、クリーンアップ', 'post-edit-check, artifact-auto-sync, tool-collector'],
+          ['Stop', 'エージェント応答完了', 'タスク完了確認、自動テスト', '（未活用）'],
+          ['PreCompact', 'コンテキスト圧縮前', '重要情報の保存', '（未活用）'],
+          ['PostCompact', '圧縮後', '重要コンテキストの再注入', '（未活用）'],
+          ['PermissionRequest', '許可ダイアログ表示時', '自動承認 / 条件付き承認', '（未活用）'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>4つのフックタイプ</div>
+        <Tbl headers={['タイプ', '仕組み', '用途']} rows={[
+          ['command', 'シェルコマンド実行。exit code + stdout で制御', 'ファイル操作、Git操作、外部API呼び出し'],
+          ['http', 'HTTP POST 送信。レスポンスで制御', 'Webhook、外部サービス連携'],
+          ['prompt', '単発LLM評価。テキスト返却', '出力の品質チェック（軽量）'],
+          ['agent', 'マルチターンサブエージェント検証', '複雑な検証ロジック（重い）'],
+        ]} />
+
+        <P><strong>重要</strong>: PreToolUse Hook は <code>bypassPermissions</code> モードでも deny を強制可能。つまり、どんな権限設定でもHookによるブロックは覆せない。最も強い制御メカニズム。</P>
+        <P>v2.0.10以降、PreToolUse はツール入力の書き換えが可能（ブロック+リトライではなく、入力を修正して続行）。</P>
+      </Section>
+
+      <Section title="Sub-agents — コンテキスト分離の設計">
+        <P>Sub-agent は「異なるプロンプト」ではなく「異なる作業メモリ」。親の会話を参照できず、プロンプト文字列だけで動作する。</P>
+        <div className="g2" style={{ marginBottom: 12 }}>
+          <MiniCard title="設計原則" body="1段落で説明可能 / 「完了」の定義が明確 / 出力フォーマットが記述可能 / 冗長な出力がメインコンテキストを圧迫しない（要約のみ返却）" />
+          <MiniCard title="最小権限の原則" body="各エージェントに必要なツールだけ提供。リサーチには読取系のみ、実装には書込系も。モデル選択: リサーチ=opus（高精度）、定型=haiku（高速・安価）" />
+        </div>
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>宮路HD部署 = Sub-agent としての設計</div>
+        <P>各部署は Agent tool で起動される Sub-agent。この視点で見ると、部署設計の良し悪しは Sub-agent のプロンプト品質に直結する。</P>
+        <Tbl headers={['部署', '仕様レベル', '完了条件', '課題']} rows={[
+          ['UXデザイン部', '最高（5原則+心理学）', '明確', '良好。他部署の模範'],
+          ['セキュリティ部', '最高（8ルール+SLA）', '明確', 'SLA追跡の自動化なし'],
+          ['AI開発部', '中（柔軟フロー）', 'やや曖昧', 'QAバイパス条件が不明確'],
+          ['システム開発部', '中（QAゲートあり）', '明確', 'コードレビュープロトコル未記載'],
+          ['リサーチ部', '高（3段構成+URL必須）', '明確', 'フィードバックループなし'],
+          ['PM部', '低（基本ワークフロー）', '曖昧', 'ハンドオフ検出が手動パース'],
+          ['資料制作部', '中（10原則）', '曖昧', '品質ルーブリック不在'],
+          ['情報収集部', '高（スコアリング）', '明確', 'キーワード抽出スクリプト未実装'],
+          ['マーケティング部', '低（3柱）', '曖昧', '分類ゲートなし'],
+          ['運営改善部', '高（メタ観察）', '明確', '閾値未定義'],
+        ]} />
+      </Section>
+
+      <Section title="Agentic Loop — Claude Code の動作原理">
+        <P>Claude Code は3フェーズのループを繰り返す。各ターンでAPIにメッセージを送り、ツール呼び出しを実行し、結果を次のターンに渡す。</P>
+        <CycleFlow steps={['Context Gather', 'Take Action (tool_use)', 'Verify Results']} />
+        <div className="g2" style={{ marginBottom: 12 }}>
+          <MiniCard title="Context Loading" body="モデル呼び出し前にシステムプロンプトを組み立て: 日付、Git状態、CLAUDE.md階層、ツールリスト。これがハーネスの「コンテキスト層」" />
+          <MiniCard title="Tool Dispatch" body="tool_useブロックをハンドラに振り分け。PreToolUse Hook → 実行 → PostToolUse Hook。5カテゴリ: File / Search / Execution / Web / Code Intelligence" />
+        </div>
+        <P>セキュリティ: Bash実行に対して23のチェック（ゼロ幅文字インジェクション検出、パストラバーサルブロック等）が内蔵されている。</P>
+      </Section>
+
+      <Section title="長時間エージェントのハーネス（Anthropic公式パターン）">
+        <P>Anthropic Engineering が提唱する、セッションを跨ぐマルチターンエージェントの設計パターン。宮路HDの /company + session-summary + Supabase に相当。</P>
+        <Tbl headers={['構成要素', '役割', '宮路HDの対応物']} rows={[
+          ['Initializer Agent', '環境セットアップ、進捗ファイル作成', '/company 起動時のブリーフィング + freshness-check'],
+          ['Progress File', 'セッション間の状態引き継ぎ（構造化JSON）', 'session-summary.sh + Supabase 各テーブル'],
+          ['Feature List', '離散的要件の追跡・ステータス管理', 'tasks テーブル + TodoWrite'],
+          ['Coding Agent', '進捗ファイル+Git履歴を読み込み1機能ずつ作業', '部署Agent（Sub-agent）'],
+        ]} />
+        <Principle title="Context Compaction 対策" body="長時間セッションでは Compaction（コンテキスト圧縮）が発生し、情報が失われる。重要な決定は即座にファイルに永続化すべき。PostCompact Hook でコンテキスト再注入も可能だが、現在は未活用。" color="var(--amber)" />
+      </Section>
+
+      <Section title="宮路HDシステムへの適用状況">
+        <P>現在のシステムをハーネスエンジニアリングの観点から評価すると、「先進的だが未完成」。約70%のカバレッジ。</P>
+
+        <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>実装済み（強み）</div>
+        <Tbl headers={['領域', '実装内容']} rows={[
+          ['Hook活用（24スクリプト）', 'prompt-log, config-sync, freshness-check, auto-pull/push, bash-guard, tool-collector 等'],
+          ['Freshness Policy', '14データソースの鮮度管理。stale検出→自動修復'],
+          ['部署CLAUDE.md分離', '10部署 × 独立仕様書。Sub-agent に近い設計'],
+          ['ナレッジ昇格パイプライン', 'memory → knowledge_base → CLAUDE.md。confidence による自動昇格'],
+          ['3層データ管理', 'ファイル（即時）→ Git（バージョン管理）→ Supabase（永続・分析）'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>未実装（改善余地）</div>
+        <Tbl headers={['領域', '現状', '改善案']} rows={[
+          ['重要ルールのHooks化', 'CLAUDE.mdに記載のみ', 'ハンドオフ検出・QA強制・肥大化防止をHookに'],
+          ['Sub-agentの最小権限', '全部署が全ツールアクセス可能', '部署ごとにツール・モデルを制限'],
+          ['Compaction対策', 'session-summaryのみ', 'PostCompact Hook で重要コンテキスト再注入'],
+          ['ハンドオフの構造化', '正規表現でテキスト検索', 'YAMLベースの構造化フォーマット'],
+          ['知識昇格のゲート', 'confidence≥3で自動昇格', 'ops部レビュー→承認→昇格'],
+          ['Stop Hook活用', '未使用', 'タスク完了時の自動検証・品質チェック'],
+        ]} />
+      </Section>
+
+      <Section title="Sources">
+        <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 2 }}>
+          <div><a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank" rel="noopener noreferrer">How Claude Code works (公式)</a></div>
+          <div><a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener noreferrer">Best Practices for Claude Code (公式)</a></div>
+          <div><a href="https://code.claude.com/docs/en/hooks-guide" target="_blank" rel="noopener noreferrer">Automate workflows with hooks (公式)</a></div>
+          <div><a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener noreferrer">Create custom subagents (公式)</a></div>
+          <div><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener noreferrer">Effective harnesses for long-running agents (Anthropic Engineering)</a></div>
+          <div><a href="https://dev.to/wonderlab/from-prompt-engineer-to-harness-engineer-three-evolutions-in-ai-collaboration-5bgp" target="_blank" rel="noopener noreferrer">From Prompt Engineer to Harness Engineer (DEV)</a></div>
+          <div><a href="https://wavespeed.ai/blog/posts/claude-code-agent-harness-architecture/" target="_blank" rel="noopener noreferrer">Claude Code Agent Harness Architecture (WaveSpeedAI)</a></div>
+          <div><a href="https://www.louisbouchard.ai/harness-engineering/" target="_blank" rel="noopener noreferrer">Harness Engineering: The Missing Layer (Louis Bouchard)</a></div>
+          <div>Stanford HAI Survey on LLM Deployment Patterns, 2025 H2 (12 production use cases)</div>
+        </div>
+      </Section>
+    </>
+  )
+}
+
 // ========== Main ==========
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
+  { key: 'harness', label: 'Harness Engineering' },
   { key: 'ai', label: 'AI Features' },
   { key: 'philosophy', label: 'Design Philosophy' },
   { key: 'architecture', label: 'Architecture' },
@@ -679,6 +854,7 @@ export function HowItWorks() {
       </div>
 
       {tab === 'overview' && <TabOverview />}
+      {tab === 'harness' && <TabHarness />}
       {tab === 'ai' && <TabAiFeatures />}
       {tab === 'philosophy' && <TabDesignPhilosophy />}
       {tab === 'architecture' && <TabArchitecture />}
