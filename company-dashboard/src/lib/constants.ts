@@ -11,7 +11,6 @@ export const GCAL_CALENDARS: GcalCalendar[] = [
 ]
 
 export const NAV_ITEMS: NavItem[] = [
-  { page: 'home', icon: '\u25C9', label: 'Home', group: 'Pages' },
   { page: 'calendar', icon: '\uD83D\uDCC5', label: 'Calendar', group: 'Pages' },
   { page: 'finance', icon: '\u00A5', label: 'Finance', group: 'Management' },
   { page: 'tasks', icon: '\u2610', label: 'Tasks', group: 'Management' },

@@ -68,6 +68,7 @@ export function App() {
           <Route path="/insights" element={<LegacyPage renderer={renderInsights} />} />
           <Route path="/prompts" element={<LegacyPage renderer={renderPrompts} />} />
           <Route path="/intelligence" element={<Reports />} />
+          <Route path="/news" element={<Reports />} />
           <Route path="/diary" element={<LegacyPage renderer={renderDiary} />} />
           <Route path="/artifacts/*" element={<LegacyPage renderer={renderArtifacts} />} />
           <Route path="/chat/*" element={<LegacyPage renderer={renderChat} />} />

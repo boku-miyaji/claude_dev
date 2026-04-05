@@ -13,6 +13,7 @@ import { useBriefingStore } from '@/stores/briefing'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
 import type { TimeMode } from '@/lib/timeMode'
 import type { DiaryEntry } from '@/types/diary'
+import { supabase } from '@/lib/supabase'
 
 /* ── Analysis Questions for Self-Analysis Precision ── */
 
@@ -598,6 +599,79 @@ export function Today() {
     </Card>
   )
 
+  /* ── [News] ── */
+
+  const [newsItems, setNewsItems] = useState<Array<{id: string; title: string; summary: string; url: string | null; source: string; topic: string}>>([])
+  const [newsCollecting, setNewsCollecting] = useState(false)
+
+  useEffect(() => {
+    supabase.from('news_items').select('id,title,summary,url,source,topic').order('collected_at', { ascending: false }).limit(5)
+      .then(({ data }) => { if (data) setNewsItems(data) })
+  }, [])
+
+  async function handleCollectNews() {
+    setNewsCollecting(true)
+    try {
+      const edgeAi = await import('@/lib/edgeAi')
+      const prefRes = await supabase.from('news_preferences').select('topic,interest_score').order('interest_score', { ascending: false })
+      const topTopics = (prefRes.data || []).filter((p: { interest_score: number }) => p.interest_score >= 0.5).map((p: { topic: string }) => p.topic)
+      let topicPrompt = 'AI/LLM、データプラットフォーム、Claude、OpenAI'
+      if (topTopics.length > 0) topicPrompt += '\n関心トピック: ' + topTopics.join('、')
+
+      const data = await edgeAi.aiCompletion(
+        topicPrompt + ' の最新ニュース5件をJSON配列で。[{"title":"","summary":"","url":"","source":"","topic":"","date":"YYYY-MM-DD"}]',
+        { systemPrompt: 'JSON配列のみ出力。', model: 'gpt-5-nano', maxTokens: 1500, source: 'news_collect' }
+      )
+      const match = data.content.match(/\[[\s\S]*\]/)
+      if (match) {
+        const items = JSON.parse(match[0])
+        for (const n of items) {
+          if (n.title?.length > 5) await supabase.from('news_items').insert({ title: n.title?.substring(0, 200), summary: n.summary?.substring(0, 300), url: n.url || null, source: n.source?.substring(0, 50), topic: n.topic?.substring(0, 30), published_date: n.date || null })
+        }
+        toast(items.length + '件のニュースを収集しました')
+        const { data: fresh } = await supabase.from('news_items').select('id,title,summary,url,source,topic').order('collected_at', { ascending: false }).limit(5)
+        if (fresh) setNewsItems(fresh)
+      }
+    } catch (e) { toast('ニュース収集に失敗しました') }
+    setNewsCollecting(false)
+  }
+
+  const NewsSection = (
+    <Card style={{ marginBottom: 16 }}>
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>ニュース</span>
+        <button className="btn btn-g btn-sm" style={{ fontSize: 10 }} onClick={handleCollectNews} disabled={newsCollecting}>
+          {newsCollecting ? '収集中...' : '最新を取得'}
+        </button>
+      </div>
+      {newsItems.length === 0 ? (
+        <div style={{ fontSize: 12, color: 'var(--text3)', padding: '8px 0' }}>ニュースはまだありません</div>
+      ) : (
+        newsItems.map((n) => (
+          <div key={n.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {n.url ? (
+                <a href={n.url} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 500, color: 'var(--text)', textDecoration: 'none' }}>{n.title}</a>
+              ) : (
+                <span style={{ fontWeight: 500 }}>{n.title}</span>
+              )}
+            </div>
+            {n.summary && <div style={{ color: 'var(--text3)', marginTop: 2, fontSize: 11 }}>{n.summary}</div>}
+            <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+              {n.source && <span style={{ fontSize: 10, color: 'var(--text3)' }}>{n.source}</span>}
+              {n.topic && <span style={{ fontSize: 10, color: 'var(--accent2)' }}>{n.topic}</span>}
+            </div>
+          </div>
+        ))
+      )}
+      <div style={{ marginTop: 8 }}>
+        <button className="btn btn-g btn-sm" style={{ fontSize: 10 }} onClick={() => navigate('/news')}>
+          もっと見る →
+        </button>
+      </div>
+    </Card>
+  )
+
   /* ── [4] Diary ── */
 
   const Diary = (
@@ -720,6 +794,7 @@ export function Today() {
         {Briefing}
         {Schedule}
         {ActionsSection}
+        {NewsSection}
         {Diary}
         {StatusBar}
         {Fragments}
@@ -735,6 +810,7 @@ export function Today() {
         {Diary}
         {Schedule}
         {ActionsSection}
+        {NewsSection}
         {Backlog}
         {Fragments}
       </div>
@@ -750,6 +826,7 @@ export function Today() {
       {Diary}
       {Backlog}
       {Tomorrow}
+      {NewsSection}
       {StatusBar}
       {Fragments}
     </div>

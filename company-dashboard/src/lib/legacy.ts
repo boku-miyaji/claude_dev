@@ -34,7 +34,6 @@ var sb = supabase;
 // Mobile tab definitions & click-based priority
 // ============================================================
 var ALL_MOB_TABS = [
-  {page: 'home', icon: '◉', label: 'Home'},
   {page: 'calendar', icon: '📅', label: 'Calendar'},
   {page: 'finance', icon: '¥', label: 'Finance'},
   {page: 'tasks', icon: '☐', label: 'Tasks'},
@@ -525,7 +524,6 @@ function openCommandPalette() {
   cmdPaletteOpen = true;
 
   var NAV_ITEMS = [
-    {icon: '◉', label: 'Home', page: 'home', group: 'Pages'},
     {icon: '📅', label: 'Calendar', page: 'calendar', group: 'Pages'},
     {icon: '☐', label: 'Tasks', page: 'tasks', group: 'Management'},
     {icon: '◫', label: 'Companies', page: 'companies', group: 'Management'},
@@ -648,7 +646,6 @@ function renderPage(page) {
   var p = el('div', {className: 'page'});
   c.appendChild(p);
   var renderers = {
-    home: renderDashboard,
     calendar: renderCalendar,
     tasks: renderTasks,
     companies: renderCompanies,
