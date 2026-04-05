@@ -117,8 +117,10 @@ export function Dreams() {
   // Goal add form
   const [goalTitle, setGoalTitle] = useState('')
   const [goalDesc, setGoalDesc] = useState('')
-  const [goalLevel, setGoalLevel] = useState<GoalLevel>('monthly')
-  const [goalDate, setGoalDate] = useState('')
+  const [goalLevel, setGoalLevel] = useState<GoalLevel>('yearly')
+  const [goalYear, setGoalYear] = useState(String(new Date().getFullYear()))
+  const [goalMonth, setGoalMonth] = useState('')
+  const [goalDay, setGoalDay] = useState('')
   const [goalDreamId, setGoalDreamId] = useState('')
 
   // Goal detail edit
@@ -209,17 +211,35 @@ export function Dreams() {
     }
   }
 
+  function buildTargetDate(): string | null {
+    if (!goalYear) return null
+    if (goalLevel === 'life') return null
+    if (goalLevel === 'yearly') return `${goalYear}-12-31`
+    if (goalLevel === 'quarterly' || goalLevel === 'monthly') {
+      const m = goalMonth || '12'
+      const lastDay = new Date(Number(goalYear), Number(m), 0).getDate()
+      return `${goalYear}-${m.padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    }
+    // weekly or specific date
+    if (goalDay) return `${goalYear}-${(goalMonth || '01').padStart(2, '0')}-${goalDay.padStart(2, '0')}`
+    if (goalMonth) {
+      const lastDay = new Date(Number(goalYear), Number(goalMonth), 0).getDate()
+      return `${goalYear}-${goalMonth.padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+    }
+    return `${goalYear}-12-31`
+  }
+
   async function handleAddGoal() {
-    if (!goalTitle.trim() || !goalDate) return
+    if (!goalTitle.trim()) return
     const result = await addGoal({
       title: goalTitle.trim(),
       description: goalDesc.trim() || null,
       level: goalLevel,
-      target_date: goalDate,
+      target_date: buildTargetDate(),
       dream_id: goalDreamId || null,
     })
     if (result) {
-      setGoalTitle(''); setGoalDesc(''); setGoalDate(''); setGoalDreamId(''); setShowAdd(false)
+      setGoalTitle(''); setGoalDesc(''); setGoalYear(String(new Date().getFullYear())); setGoalMonth(''); setGoalDay(''); setGoalDreamId(''); setShowAdd(false)
       toast('目標を追加しました')
     }
   }
@@ -465,18 +485,51 @@ export function Dreams() {
               <label className="form-label">説明 (任意)</label>
               <textarea className="input" placeholder="詳しく..." value={goalDesc} onChange={(e) => setGoalDesc(e.target.value)} style={{ minHeight: 50 }} />
             </div>
-            <div className="form-row" style={{ marginBottom: 12 }}>
-              <div style={{ flex: 1 }}>
-                <label className="form-label">期限</label>
-                <input className="input" type="date" value={goalDate} onChange={(e) => setGoalDate(e.target.value)} style={{ width: '100%' }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label className="form-label">スケール</label>
-                <select className="input" value={goalLevel} onChange={(e) => setGoalLevel(e.target.value as GoalLevel)} style={{ width: '100%' }}>
-                  {GOAL_LEVELS.map((l) => <option key={l.value} value={l.value}>{l.icon} {l.label}</option>)}
-                </select>
+            <div style={{ marginBottom: 12 }}>
+              <label className="form-label">スケール</label>
+              <div className="filter-bar" style={{ marginBottom: 0 }}>
+                {GOAL_LEVELS.map((l) => (
+                  <button key={l.value} className={`btn btn-sm ${goalLevel === l.value ? 'btn-p' : 'btn-g'}`}
+                    onClick={() => setGoalLevel(l.value)} type="button">
+                    {l.icon} {l.label}
+                  </button>
+                ))}
               </div>
             </div>
+            {goalLevel !== 'life' && (
+              <div className="form-row" style={{ marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label className="form-label">年</label>
+                  <select className="input" value={goalYear} onChange={(e) => setGoalYear(e.target.value)} style={{ width: '100%' }}>
+                    {Array.from({ length: 11 }, (_, i) => String(new Date().getFullYear() + i)).map((y) => (
+                      <option key={y} value={y}>{y}年</option>
+                    ))}
+                  </select>
+                </div>
+                {(goalLevel === 'quarterly' || goalLevel === 'monthly' || goalLevel === 'weekly') && (
+                  <div style={{ flex: 1 }}>
+                    <label className="form-label">月</label>
+                    <select className="input" value={goalMonth} onChange={(e) => setGoalMonth(e.target.value)} style={{ width: '100%' }}>
+                      <option value="">-</option>
+                      {Array.from({ length: 12 }, (_, i) => String(i + 1)).map((m) => (
+                        <option key={m} value={m}>{m}月</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {goalLevel === 'weekly' && goalMonth && (
+                  <div style={{ flex: 1 }}>
+                    <label className="form-label">日</label>
+                    <select className="input" value={goalDay} onChange={(e) => setGoalDay(e.target.value)} style={{ width: '100%' }}>
+                      <option value="">-</option>
+                      {Array.from({ length: 31 }, (_, i) => String(i + 1)).map((d) => (
+                        <option key={d} value={d}>{d}日</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ marginBottom: 12 }}>
               <label className="form-label">夢との紐付け (任意)</label>
               <select className="input" value={goalDreamId} onChange={(e) => setGoalDreamId(e.target.value)} style={{ width: '100%' }}>
@@ -484,7 +537,7 @@ export function Dreams() {
                 {activeDreams.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
               </select>
             </div>
-            <button className="btn btn-p" style={{ width: '100%' }} onClick={handleAddGoal} disabled={!goalTitle.trim() || !goalDate}>
+            <button className="btn btn-p" style={{ width: '100%' }} onClick={handleAddGoal} disabled={!goalTitle.trim()}>
               追加する
             </button>
           </>
