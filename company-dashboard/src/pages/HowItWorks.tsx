@@ -828,8 +828,8 @@ const PROPOSALS: Proposal[] = [
     id: 'IMP-001',
     priority: 'P0',
     title: 'CLAUDE.md の60行以下への剪定',
-    problem: 'HD CLAUDE.md が208行。公式推奨は60行以下。指示が埋もれ、遵守率が低下。コンテキスト圧迫も大きい。',
-    solution: '手順的記述を .claude/rules/ に分離。CLAUDE.md には方針・判断基準のみ残す。部署CLAUDE.mdも同様に剪定。PostToolUse Hook で行数200超を自動警告。',
+    problem: 'HD CLAUDE.md 208行（200行閾値超え済み）。公式推奨は60行以下。部署CLAUDE.mdは計1,004行（UXデザイン237行が最大、AI開発30行が最小）。指示が埋もれ遵守率が低下。freshness-policyのclaude_md_sizeチェックが blocking: false で警告止まり。',
+    solution: '即時: Hook責務分離表(15行)をrules/hook-responsibilities.mdに移動、MCPプロファイル管理(4行)をrules/に移動。部署は完了条件+入出力仕様に圧縮。claude_md_sizeのblocking: trueに変更し200行超で強制分離。',
     harnessPart: 'CLAUDE.md',
     effort: '2時間',
     impact: '指示遵守率の向上、コンテキスト消費削減。Stanford HAI によれば構造改善は品質+28-47%。',
@@ -934,6 +934,50 @@ const PROPOSALS: Proposal[] = [
     impact: 'システムが常に最新のベストプラクティスに追従。「知らなくて使えなかった」を防止。',
     status: 'proposed',
   },
+  {
+    id: 'IMP-011',
+    priority: 'P0',
+    title: 'SessionStart Hook の並列化',
+    problem: 'SessionStart に3つの sync hook が直列実行: auto-pull.sh → session-start-marker.sh → supabase-status.sh。セッション起動が遅延。各hookは独立しており待つ必要がない。',
+    solution: 'auto-pull.sh と supabase-status.sh を async: true に変更。session-start-marker.sh のみ sync 維持（タイムライン記録のため）。起動時間が約3分の1に。',
+    harnessPart: 'Hooks (SessionStart)',
+    effort: '30分',
+    impact: 'セッション起動の高速化。ユーザー体験の即座の改善。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-012',
+    priority: 'P1',
+    title: 'skipDangerousModePermissionPrompt の無効化',
+    problem: 'settings.json で skipDangerousModePermissionPrompt: true。rm -rf、git reset --hard、docker compose down 等の破壊的操作が確認なしで実行される。bash-guard がブロックするのは4パターンのみ。',
+    solution: 'skipDangerousModePermissionPrompt: false に変更。PermissionRequest Hook で permission-log.sh を追加し全許可判断を記録。bash-guard のブロックパターンも拡充。',
+    harnessPart: 'Permissions + Hooks',
+    effort: '1時間',
+    impact: '破壊的操作の事前確認が復活。監査証跡の確保。セキュリティリスクの大幅低減。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-013',
+    priority: 'P1',
+    title: 'bash-guard の監査ログ追加',
+    problem: 'bash-guard.sh がコマンドをブロック（exit 2）した際、ログが残らない。いつ何がブロックされたか追跡不可。',
+    solution: 'ブロック時に ~/.claude/logs/blocked-commands.jsonl に {timestamp, command, reason} を書き込み。ダッシュボードのHook Healthウィジェットで可視化。',
+    harnessPart: 'Hooks (PreToolUse)',
+    effort: '30分',
+    impact: 'セキュリティ監査の実現。ブロックパターンの改善材料。',
+    status: 'proposed',
+  },
+  {
+    id: 'IMP-014',
+    priority: 'P2',
+    title: 'freshness-policy の priority 重複修正',
+    problem: 'growth_events と intelligence_reports が両方 priority: 9。両方 stale の場合に実行順が不定。',
+    solution: 'intelligence_reports を priority 8.5 に変更（レポートはデータ入力、growth分析は洞察出力なのでレポートが先）。ceo_insights と knowledge_base を blocking: true に変更（全エージェントの判断品質に影響）。',
+    harnessPart: 'Freshness Policy',
+    effort: '15分',
+    impact: '更新順序の確定。重要データの鮮度保証。',
+    status: 'proposed',
+  },
 ]
 
 const PRIORITY_STYLE: Record<string, { color: string; bg: string; border: string }> = {
@@ -960,7 +1004,7 @@ function TabProposals() {
   return (
     <>
       <Section title="改善提案サマリー">
-        <P>情報収集部（最新ハーネス記事調査）× 運営改善部（現行システム分析）の協議結果。全提案はハーネスエンジニアリングの6構成要素に紐づく。最終調査日: 2026-04-05</P>
+        <P>情報収集部（最新ハーネス記事調査）× 運営改善部（現行システム分析）の協議結果。全提案はハーネスエンジニアリングの6構成要素に紐づく。HD CLAUDE.md: 208行 / 部署CLAUDE.md合計: 1,004行 / Hook: 24スクリプト / Freshness Policy: 13データソース。最終調査日: 2026-04-05</P>
         <div className="g3" style={{ marginBottom: 16 }}>
           <Principle title={`P0: Critical — ${p0Count}件`} body="やらないと品質・信頼性に直結するリスク。CLAUDE.md肥大化、ハンドオフ漏れ、ルール無視。" color="var(--red)" />
           <Principle title={`P1: Important — ${p1Count}件`} body="やると品質・効率が大幅に向上。Compaction対策、最小権限、昇格ゲート。" color="var(--amber)" />
