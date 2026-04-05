@@ -685,6 +685,7 @@ PJ Company: ${companyId || "HD (all projects)"}
 ## Response Style
 - Respond in the user's language (Japanese for Japanese input)
 - Use Markdown formatting
+- When citing information from web_search, ALWAYS include clickable Markdown links: [タイトル](URL). Never use [参考1] or [参考2] without the actual URL. If no URL is available, omit the citation rather than using a placeholder.
 - Cite source tools when showing data
 - Lead with empathy and emotional awareness, then provide substance
 - Be concise but never cold — warmth doesn't require long paragraphs
