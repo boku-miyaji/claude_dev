@@ -252,6 +252,7 @@
     <li><a href="#improvement">改善サイクル — 組織が賢くなる仕組み</a></li>
     <li><a href="#prep-intelligence">準備タイミングインテリジェンス</a></li>
     <li><a href="#philosophy">設計思想 — エンハンス、代替ではない</a></li>
+    <li><a href="#ai-features">AI機能 — LLMがどう動いているか</a></li>
   </ol>
 </div>
 
@@ -1022,6 +1023,237 @@ flowchart LR
       </tr>
     </tbody>
   </table>
+</section>
+
+<!-- 10. AI機能 — LLMがどう動いているか -->
+<section id="ai-features">
+  <h2>10. AI機能 — LLMがどう動いているか</h2>
+  <p>ダッシュボードに組み込まれた5つのAI機能。全てSupabase Edge Function (<code>ai-agent</code>) 経由でOpenAI APIを呼び出し、<code>edgeAi.ts</code> の <code>aiCompletion()</code> で統一的にアクセスする。</p>
+
+  <!-- 10.1 感情分析 -->
+  <h3 id="ai-emotion">10.1 感情分析</h3>
+  <div class="card">
+    <p>日記保存時に自動実行。テキストからPlutchik 8感情・Russell感情空間・PERMA+V・WBIスコアを数値化しDBに保存する。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["日記保存"] --> B["useEmotionAnalysis.analyze"]
+    B --> C["aiCompletion\njsonMode: true"]
+    C --> D["Edge Function: ai-agent"]
+    D --> E["gpt-5-nano"]
+    E --> F["JSON parse"]
+    F --> G1["emotion_analysis INSERT"]
+    F --> G2["diary_entries.wbi UPDATE"]
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>diary_entries.body</code></td><td>1件 (保存直後)</td><td>感情分析対象テキスト</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.3</td></tr>
+        <tr><td>maxTokens</td><td>1000</td></tr>
+        <tr><td>response_format</td><td>json_object</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>出力:</strong> <code>emotion_analysis</code> テーブルにINSERT (Plutchik 8値 0-100, valence/arousal -1.0~1.0, PERMA+V 0-10, WBI 0-10)。<code>diary_entries.wbi</code> もUPDATE。キャッシュ・差分分析なし。毎回新規分析。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useEmotionAnalysis.ts</code> (<code>useEmotionAnalysis</code>, <code>EMOTION_ANALYSIS_PROMPT</code>) / <code>edgeAi.ts</code> (<code>aiCompletion</code>) / <code>Today.tsx</code> (<code>saveEntry</code>, <code>PLUTCHIK_LABELS</code>)
+    <br/>詳細: <code>docs/ai-features/emotion-analysis.md</code></p>
+  </div>
+
+  <!-- 10.2 自己分析 -->
+  <h3 id="ai-self">10.2 自己分析</h3>
+  <div class="card">
+    <p>日記・プロンプトログ・タスク・カレンダー・夢の5データソースを統合し、MBTI・Big5・ストレングスファインダー・感情トリガー・価値観の5種分析をLLMで実行。差分分析モードにより前回以降の変化を追跡する。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["分析を開始ボタン"] --> B["useSelfAnalysis.runAnalysis"]
+    B --> C{"前回分析あり?"}
+    C -- Yes --> D["since = 前回created_at\ndelta mode"]
+    C -- No --> E["since = null\nfull mode"]
+    D --> F["collectData: 5ソース取得"]
+    E --> F
+    F --> G["PROMPT_BUILDERS:\n前回結果をコンテキスト注入"]
+    G --> H["aiCompletion\njsonMode: true"]
+    H --> I["self_analysis INSERT"]
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>diary_entries</code></td><td>最大80件</td><td>性格推定の主要データ</td></tr>
+        <tr><td><code>prompt_log</code></td><td>最大200件</td><td>行動パターン分析</td></tr>
+        <tr><td><code>tasks</code></td><td>最大100件</td><td>実行力・先延ばし傾向</td></tr>
+        <tr><td><code>calendar_events</code></td><td>最大50件</td><td>時間管理パターン</td></tr>
+        <tr><td><code>dreams</code></td><td>全件</td><td>価値観・志向性</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.4</td></tr>
+        <tr><td>maxTokens</td><td>3000</td></tr>
+        <tr><td>response_format</td><td>json_object</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>差分分析の仕組み:</strong></p>
+    <ol>
+      <li><code>self_analysis</code> から前回結果を取得 → <code>since = prevAnalysis.created_at</code></li>
+      <li><code>diary_entries</code> / <code>prompt_log</code> は <code>created_at > since</code> でフィルタ (新規データのみ)</li>
+      <li>前回結果をプロンプトに注入 (例: 前回タイプ INFP, スコア E_I=35...)</li>
+      <li>LLM出力に <code>changes_from_previous</code> フィールドが追加される</li>
+    </ol>
+
+    <p><strong>出力:</strong> <code>self_analysis</code> テーブルにINSERT (<code>analysis_type</code>, <code>result</code> jsonb, <code>summary</code>, <code>data_count</code>)。5タイプを順次実行。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useSelfAnalysis.ts</code> (<code>useSelfAnalysis</code>, <code>collectData</code>, <code>getPreviousAnalysis</code>, <code>mbtiPrompt</code> 他) / <code>SelfAnalysis.tsx</code> (<code>MbtiResult</code>, <code>Big5Result</code>, <code>ChangesFromPrevious</code> 他)
+    <br/>詳細: <code>docs/ai-features/self-analysis.md</code></p>
+  </div>
+
+  <!-- 10.3 朝の一言 -->
+  <h3 id="ai-briefing">10.3 朝の一言</h3>
+  <div class="card">
+    <p>Todayページ表示時に7データソースを並列取得し、時間帯 (朝/昼/夜) に応じた短い一言をLLMが生成。Zustandストアで24時間キャッシュされる。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["Today ページ mount"] --> B{"キャッシュあり?"}
+    B -- Yes --> Z["キャッシュ表示"]
+    B -- No --> C["7ソース並列取得"]
+    C --> D["コンテキスト組み立て"]
+    D --> E["時間帯別 systemPrompt"]
+    E --> F["aiCompletion"]
+    F --> G["briefingStore キャッシュ"]
+    G --> Z
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>diary_entries</code></td><td>直近5件</td><td>最近の日記 + WBI推移</td></tr>
+        <tr><td><code>emotion_analysis</code></td><td>直近10件</td><td>感情傾向・主要感情</td></tr>
+        <tr><td><code>tasks</code></td><td>直近10件</td><td>今日の完了/期限タスク</td></tr>
+        <tr><td><code>dreams</code></td><td>active 5件</td><td>進行中の夢リスト</td></tr>
+        <tr><td><code>ceo_insights</code></td><td>直近5件</td><td>ユーザーの特徴</td></tr>
+        <tr><td><code>prompt_log</code></td><td>直近50件</td><td>深夜作業率算出</td></tr>
+        <tr><td><code>calculateStreak()</code></td><td>1値</td><td>日記連続記録日数</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.3</td></tr>
+        <tr><td>maxTokens</td><td>200</td></tr>
+        <tr><td>jsonMode</td><td>false (テキスト応答)</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>出力:</strong> DBには保存しない。Zustandインメモリキャッシュのみ (キー: <code>{日付}_{timeMode}</code>)。日記保存時に <code>invalidateBriefing()</code> で再生成。エラー時は時間帯別フォールバックメッセージを表示。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useMorningBriefing.ts</code> (<code>useMorningBriefing</code>, <code>getFallback</code>) / <code>aiPartner.ts</code> (<code>buildPartnerSystemPrompt</code>) / <code>briefing.ts</code> (<code>useBriefingStore</code>)
+    <br/>詳細: <code>docs/ai-features/morning-briefing.md</code></p>
+  </div>
+
+  <!-- 10.4 夢進捗検出 -->
+  <h3 id="ai-dream">10.4 夢進捗検出</h3>
+  <div class="card">
+    <p>日記保存時に自動実行。日記内容と夢リストをLLMで照合し、夢の達成に近づいた可能性を検出。結果はToast通知で即時表示、DBには保存しない。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["日記保存"] --> B["useDreamDetection.detect"]
+    B --> C["dreams テーブル取得\nactive / in_progress"]
+    C --> D["aiCompletion\njsonMode: true"]
+    D --> E{"confidence?"}
+    E -- "high/medium" --> F["Toast 通知表示"]
+    E -- "low" --> G["破棄"]
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td>日記本文 (引数)</td><td>1件</td><td>照合対象テキスト</td></tr>
+        <tr><td><code>dreams</code></td><td>active/in_progress全件</td><td>照合元の夢リスト</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.3</td></tr>
+        <tr><td>maxTokens</td><td>500</td></tr>
+        <tr><td>response_format</td><td>json_object</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>出力:</strong> DBには保存しない。キャッシュもなし。confidence が medium 以上のみ <code>Toast</code> 通知 (<code>夢『{title}』に近づいているかもしれません！</code>)。毎回日記保存のたびに実行。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useDreamDetection.ts</code> (<code>useDreamDetection</code>, <code>DreamDetection</code>) / <code>edgeAi.ts</code> (<code>aiCompletion</code>) / <code>Today.tsx</code> (<code>saveEntry</code>)
+    <br/>詳細: <code>docs/ai-features/dream-detection.md</code></p>
+  </div>
+
+  <!-- 10.5 週次ナラティブ -->
+  <h3 id="ai-weekly">10.5 週次ナラティブ</h3>
+  <div class="card">
+    <p>1週間分の日記・感情・タスク・ゴール・習慣データを集約し、LLMがユーザーの週を温かく振り返る200-300字のナラティブを生成。<code>weekly_narratives</code> テーブルに永続保存。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["Weekly ページ\n週選択 + 生成ボタン"] --> B["useWeeklyNarrative.generate"]
+    B --> C["6ソース並列取得\nweekStart〜weekEnd"]
+    C --> D["統計計算\nWBI平均・主要感情・習慣達成率"]
+    D --> E["aiCompletion\nテキスト応答"]
+    E --> F["weekly_narratives INSERT"]
+    F --> G["UI更新"]
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>diary_entries</code></td><td>指定週の全件</td><td>週の出来事テキスト</td></tr>
+        <tr><td><code>emotion_analysis</code></td><td>指定週の全件</td><td>WBI平均・主要感情</td></tr>
+        <tr><td><code>tasks</code></td><td>指定週の完了分</td><td>達成リスト</td></tr>
+        <tr><td><code>goals</code></td><td>直近10件</td><td>ゴール進捗</td></tr>
+        <tr><td><code>habits</code></td><td>active全件</td><td>習慣達成率の分母</td></tr>
+        <tr><td><code>habit_logs</code></td><td>指定週の全件</td><td>習慣達成率の分子</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.7 (高め: 表現の多様性)</td></tr>
+        <tr><td>maxTokens</td><td>600</td></tr>
+        <tr><td>jsonMode</td><td>false (テキスト応答)</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>出力:</strong> <code>weekly_narratives</code> テーブルにINSERT (<code>week_start</code>, <code>week_end</code>, <code>narrative</code>, <code>stats</code> jsonb)。過去6週分を一覧表示し、未生成の週のみ「生成」ボタンを表示。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useWeeklyNarrative.ts</code> (<code>useWeeklyNarrative</code>, <code>WeeklyNarrativeRecord</code>, <code>WeekInfo</code>) / <code>edgeAi.ts</code> (<code>aiCompletion</code>)
+    <br/>詳細: <code>docs/ai-features/weekly-narrative.md</code></p>
+  </div>
 </section>
 
 <!-- Footer -->
