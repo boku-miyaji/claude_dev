@@ -4,6 +4,19 @@ import { aiCompletion } from '@/lib/edgeAi'
 
 export type AnalysisType = 'mbti' | 'big5' | 'strengths_finder' | 'emotion_triggers' | 'values'
 
+export interface AnalysisContext {
+  key_evidence: string[]              // 核心的な引用 3-5件
+  data_stats: {
+    total_entries: number
+    emotion_avg: Record<string, number>
+    wbi_avg: number
+    wbi_trend: 'improving' | 'stable' | 'declining'
+    top_topics: string[]
+    date_range: { from: string; to: string }
+  }
+  confidence_notes: string            // 確信度に関するメモ
+}
+
 export interface AnalysisRecord {
   id: number
   analysis_type: AnalysisType
@@ -12,6 +25,7 @@ export interface AnalysisRecord {
   data_count: number
   model_used: string | null
   created_at: string
+  analysis_context?: AnalysisContext | null
 }
 
 // ---------------------------------------------------------------------------
@@ -296,39 +310,45 @@ async function getPreviousAnalysis(type: AnalysisType): Promise<AnalysisRecord |
 }
 
 /**
- * Collect ALL available data sources for analysis.
- * Shared across all analysis types — the prompt decides what to focus on.
- * In delta mode (since != null), only fetches new entries.
+ * Collect data for analysis using hybrid mode:
+ * - If previous analysis exists: previous result + context + NEW data only + stats summary of old data
+ * - If no previous analysis: full data (initial analysis)
+ *
+ * This gives LLM fresh detail on recent entries while retaining past understanding efficiently.
  */
 async function collectData(
   _type: AnalysisType,
-  since: string | null,
+  prevAnalysis: AnalysisRecord | null,
 ): Promise<{ text: string; count: number }> {
 
-  // --- 1. Diary entries (core) ---
-  let diaryQ = supabase.from('diary_entries').select('body, entry_date, created_at')
-  if (since) diaryQ = diaryQ.gt('created_at', since)
-  const diaryRes = await diaryQ.order('entry_date', { ascending: false }).limit(80)
+  const since = prevAnalysis?.created_at ?? null
+  const prevCtx = prevAnalysis?.analysis_context as AnalysisContext | null | undefined
+  const isUpdate = !!since && !!prevCtx
+
+  // --- 1. Diary entries ---
+  // Update mode: new entries only (full text) + stats of old
+  // Initial mode: all entries (up to 80)
+  const diaryQ = supabase.from('diary_entries').select('body, entry_date, created_at')
+  const recentDiaryQ = isUpdate
+    ? diaryQ.gt('created_at', since).order('entry_date', { ascending: false }).limit(50)
+    : diaryQ.order('entry_date', { ascending: false }).limit(80)
+  const diaryRes = await recentDiaryQ
   const diaries = (diaryRes.data ?? []) as unknown as { body: string; entry_date: string }[]
   const diaryText = diaries.map(e => `[${e.entry_date}] ${e.body}`).join('\n\n')
 
-  // --- 2a. Prompt log: Claude Code指示 (behavioral: work patterns) ---
-  let promptQ = supabase.from('prompt_log').select('prompt, tags, created_at, source')
-  if (since) promptQ = promptQ.gt('created_at', since)
-  const promptRes = await promptQ.order('created_at', { ascending: false }).limit(200)
+  // --- 2a. Claude Code prompt log ---
+  const promptQ = supabase.from('prompt_log').select('prompt, tags, created_at, source')
+  const recentPromptQ = isUpdate
+    ? promptQ.gt('created_at', since).order('created_at', { ascending: false }).limit(100)
+    : promptQ.order('created_at', { ascending: false }).limit(200)
+  const promptRes = await recentPromptQ
   const allPrompts = (promptRes.data ?? []) as unknown as { prompt: string; tags: string[]; created_at: string; source: string }[]
-
-  // Split by source
   const codePrompts = allPrompts.filter(p => p.source === 'claude_code' || !p.source)
-  // dashboard_chat prompts are handled via messages table below
 
-  // Behavioral summary from code prompts
   const tagCounts: Record<string, number> = {}
   const hourCounts: Record<number, number> = {}
   for (const p of codePrompts) {
-    for (const t of (p.tags ?? [])) {
-      tagCounts[t] = (tagCounts[t] ?? 0) + 1
-    }
+    for (const t of (p.tags ?? [])) { tagCounts[t] = (tagCounts[t] ?? 0) + 1 }
     const h = new Date(p.created_at).getHours()
     hourCounts[h] = (hourCounts[h] ?? 0) + 1
   }
@@ -340,17 +360,18 @@ async function collectData(
     .map(p => `[${p.created_at.substring(0, 16)}] ${p.prompt.substring(0, 150)}`)
     .join('\n')
 
-  // --- 2b. AI Chat: ダッシュボードチャット（自然な会話・相談・興味） ---
-  let chatQ = supabase.from('messages').select('content, created_at')
-    .eq('role', 'user')
-  if (since) chatQ = chatQ.gt('created_at', since)
-  const chatRes = await chatQ.order('created_at', { ascending: false }).limit(50)
+  // --- 2b. AI Chat messages ---
+  const chatQ = supabase.from('messages').select('content, created_at').eq('role', 'user')
+  const recentChatQ = isUpdate
+    ? chatQ.gt('created_at', since).order('created_at', { ascending: false }).limit(30)
+    : chatQ.order('created_at', { ascending: false }).limit(50)
+  const chatRes = await recentChatQ
   const chatMsgs = (chatRes.data ?? []) as unknown as { content: string; created_at: string }[]
   const chatText = chatMsgs
     .map(m => `[${m.created_at.substring(0, 16)}] ${String(m.content).substring(0, 200)}`)
     .join('\n')
 
-  // --- 3. Tasks (execution patterns) ---
+  // --- 3. Tasks ---
   const taskRes = await supabase.from('tasks').select('title, status, created_at, completed_at')
     .order('created_at', { ascending: false }).limit(100)
   const tasks = (taskRes.data ?? []) as unknown as { title: string; status: string; created_at: string; completed_at: string | null }[]
@@ -360,7 +381,7 @@ async function collectData(
     .map(t => `- [${t.status}] ${t.title}${t.completed_at ? ` (完了: ${t.completed_at.substring(0, 10)})` : ''}`)
     .join('\n')
 
-  // --- 4. Calendar (time management) ---
+  // --- 4. Calendar ---
   const calRes = await supabase.from('calendar_events').select('title, start_time, end_time, is_all_day')
     .order('start_time', { ascending: false }).limit(50)
   const events = (calRes.data ?? []) as unknown as { title: string; start_time: string; end_time: string; is_all_day: number }[]
@@ -368,65 +389,183 @@ async function collectData(
     .map(e => `- ${e.start_time.substring(0, 16)} ${e.title}`)
     .join('\n')
 
-  // --- 5. Dreams/Goals ---
+  // --- 5. Dreams ---
   const dreamsRes = await supabase.from('dreams').select('title, description, category, status')
     .order('created_at', { ascending: false })
   const dreams = (dreamsRes.data ?? []) as unknown as { title: string; category: string; status: string }[]
   const dreamText = dreams.map(d => `- [${d.status}][${d.category}] ${d.title}`).join('\n')
 
-  // --- Combine all with source context ---
-  const sections = [
-    `## 日記 (${diaries.length}件)
+  // --- Build sections ---
+  const sections: string[] = []
+
+  // === PREVIOUS ANALYSIS CONTEXT (update mode only) ===
+  if (isUpdate && prevCtx && prevAnalysis) {
+    sections.push(`## 前回の分析結果（${prevAnalysis.created_at.substring(0, 10)}時点）
+【このデータの読み方】
+これは前回の分析結果と、その根拠となった核心的な引用です。
+前回の結論を「出発点」として、新しいデータに基づいて更新・修正してください。
+前回と同じ結論になる場合でも、新しいデータによる裏付けがあれば確信度が上がります。
+前回と矛盾するデータがあれば、結論を修正してください。
+
+### 前回の結論
+${JSON.stringify(prevAnalysis.result, null, 2).substring(0, 2000)}
+
+### 核心的な根拠（前回）
+${prevCtx.key_evidence.map(e => `- ${e}`).join('\n')}
+
+### 統計スナップショット（前回）
+- 分析データ件数: ${prevCtx.data_stats.total_entries}件
+- WBI平均: ${prevCtx.data_stats.wbi_avg.toFixed(1)}（傾向: ${prevCtx.data_stats.wbi_trend === 'improving' ? '改善中' : prevCtx.data_stats.wbi_trend === 'declining' ? '低下中' : '安定'}）
+- 主要トピック: ${prevCtx.data_stats.top_topics.join('、')}
+- 期間: ${prevCtx.data_stats.date_range.from} 〜 ${prevCtx.data_stats.date_range.to}
+
+### 確信度メモ
+${prevCtx.confidence_notes}`)
+  }
+
+  // === NEW DATA ===
+  const dataLabel = isUpdate ? '新しいデータ（前回以降）' : 'データ'
+
+  sections.push(`## 日記 — ${dataLabel} (${diaries.length}件)
 【このデータの読み方】
 日記は本人が自分のために書いた私的な記録です。ここに現れる感情・考え・悩みは「本音」です。
-ただし、日記は書きたい時に書くものなので、悩みや内省が多くなるバイアスがあります。
-楽しい日常は日記に書かない傾向があるため、ネガティブ寄りに見えても実際はもっとバランスが取れている可能性があります。
-具体的な出来事の記述（「○○に行った」「○○を食べた」）は行動記録であり、性格の直接的証拠ではありません。
-「なぜそれを書いたか」「どう感じたか」の部分に注目してください。
+ただし悩みや内省が多くなるバイアスがあり、楽しい日常は書かれにくいです。
+「なぜそれを書いたか」「どう感じたか」に注目してください。
 
-${diaryText}`,
-    `## Claude Code への業務指示 (${codePrompts.length}件)
+${diaryText || '(新しい日記なし)'}`)
+
+  if (codePrompts.length > 0) {
+    sections.push(`## Claude Code への業務指示 — ${dataLabel} (${codePrompts.length}件)
 【このデータの読み方】
-これはAIアシスタント（Claude Code）への業務指示です。「この人の普段の言葉遣い」ではありません。
-「○○して」「○○を調べて」という命令形はAIへの指示フォーマットであり、この人が普段から命令的な話し方をするわけではない。
-性格分析に有用なのは:
-- 関心テーマの分布（何を頻繁に指示するか）→ 仕事上の興味・優先順位
-- 指示の粒度（細かく指定 vs 大枠だけ）→ マネジメントスタイル
-- 活動時間帯 → 生活リズム・仕事パターン
-- 「壁打ち」「相談」「考えて」等の表現 → 内省・対話の傾向
+AIへの業務指示。命令形は指示フォーマットであり、普段の言葉遣いではない。
+有用なのは: 関心テーマの分布、指示の粒度、活動時間帯。
 
 よく使うタグ: ${topTags}
 活動ピーク時間帯(UTC): ${peakHours}
 
 ### 指示サンプル
-${sampleCodePrompts}`,
-    chatMsgs.length > 0 ? `## AIチャット（ダッシュボード） (${chatMsgs.length}件)
+${sampleCodePrompts}`)
+  }
+
+  if (chatMsgs.length > 0) {
+    sections.push(`## AIチャット（ダッシュボード） — ${dataLabel} (${chatMsgs.length}件)
 【このデータの読み方】
-これはダッシュボードのAIチャットでの会話です。Claude Codeへの業務指示とは異なり、
-より自然な会話・興味の探索・悩みの相談・雑談が含まれます。
-ここに現れる言葉遣い・話題・感情は、日記と同様に「本音に近い」ものです。
-性格・興味・価値観の分析において日記に次いで重要なソースです。
+自然な会話・興味の探索・悩み相談。日記と同様に本音に近い。
 
-${chatText}` : '',
-    `## タスク管理 (完了${tasksDone}件 / 未完了${tasksOpen}件)
+${chatText}`)
+  }
+
+  sections.push(`## タスク管理 (完了${tasksDone}件 / 未完了${tasksOpen}件)
 【このデータの読み方】
-タスクの完了率は「実行力」の指標ですが、このシステムではAIが自動でタスクを完了させることもあるため、
-本人の実行力と直結するとは限りません。タスクの「内容」と「どういう種類のタスクを作るか」に注目してください。
+AIが自動完了するタスクも含まれるため完了率≠本人の実行力。タスクの内容と種類に注目。
 
-${taskList}`,
-    events.length > 0 ? `## スケジュール (${events.length}件)
+${taskList}`)
+
+  if (events.length > 0) {
+    sections.push(`## スケジュール (${events.length}件)
 【このデータの読み方】
-実際に行動した記録です。人と会う頻度、1人の時間の取り方、仕事とプライベートの配分を見てください。
+実際の行動記録。人と会う頻度、1人の時間の取り方に注目。
 
-${calText}` : '',
-    dreams.length > 0 ? `## 夢・目標
+${calText}`)
+  }
+
+  if (dreams.length > 0) {
+    sections.push(`## 夢・目標
 【このデータの読み方】
-本人が「いつか叶えたい」と思って登録したリストです。ここに現れるテーマは価値観の直接的な証拠です。
+本人が「いつか叶えたい」と登録したリスト。価値観の直接的な証拠。
 
-${dreamText}` : '',
-  ].filter(Boolean).join('\n\n')
+${dreamText}`)
+  }
 
-  return { text: sections, count: diaries.length + allPrompts.length + chatMsgs.length }
+  return { text: sections.join('\n\n'), count: diaries.length + allPrompts.length + chatMsgs.length }
+}
+
+/**
+ * Build statistics summary for saving as analysis_context.
+ * Called after analysis to snapshot current data state.
+ */
+async function buildAnalysisContext(
+  result: Record<string, unknown>,
+): Promise<AnalysisContext> {
+  // Get emotion stats
+  const { data: emotions } = await supabase
+    .from('emotion_analysis')
+    .select('joy, trust, fear, surprise, sadness, disgust, anger, anticipation, wbi_score, created_at')
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  const emotionAvg: Record<string, number> = {}
+  let wbiSum = 0
+  const keys = ['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation']
+  const ems = (emotions ?? []) as Record<string, number>[]
+  for (const e of ems) {
+    for (const k of keys) { emotionAvg[k] = (emotionAvg[k] ?? 0) + (e[k] ?? 0) }
+    wbiSum += e.wbi_score ?? 0
+  }
+  if (ems.length > 0) {
+    for (const k of keys) { emotionAvg[k] = Math.round(emotionAvg[k] / ems.length) }
+  }
+  const wbiAvg = ems.length > 0 ? wbiSum / ems.length : 0
+
+  // WBI trend (compare first half vs second half)
+  let wbiTrend: 'improving' | 'stable' | 'declining' = 'stable'
+  if (ems.length >= 10) {
+    const mid = Math.floor(ems.length / 2)
+    const recentAvg = ems.slice(0, mid).reduce((s, e) => s + (e.wbi_score ?? 0), 0) / mid
+    const olderAvg = ems.slice(mid).reduce((s, e) => s + (e.wbi_score ?? 0), 0) / (ems.length - mid)
+    if (recentAvg - olderAvg > 0.5) wbiTrend = 'improving'
+    else if (olderAvg - recentAvg > 0.5) wbiTrend = 'declining'
+  }
+
+  // Date range
+  const { data: firstDiary } = await supabase.from('diary_entries').select('entry_date')
+    .order('entry_date', { ascending: true }).limit(1)
+  const { data: lastDiary } = await supabase.from('diary_entries').select('entry_date')
+    .order('entry_date', { ascending: false }).limit(1)
+  const { count: totalCount } = await supabase.from('diary_entries')
+    .select('id', { count: 'exact', head: true })
+
+  // Top topics from prompt_log
+  const { data: tagData } = await supabase.from('prompt_log').select('tags')
+    .order('created_at', { ascending: false }).limit(300)
+  const topicCounts: Record<string, number> = {}
+  for (const r of (tagData ?? []) as { tags: string[] }[]) {
+    for (const t of (r.tags ?? [])) { topicCounts[t] = (topicCounts[t] ?? 0) + 1 }
+  }
+  const topTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t)
+
+  // Extract key evidence from result
+  const keyEvidence: string[] = []
+  const evidence = (result.evidence as string[]) ?? []
+  keyEvidence.push(...evidence.slice(0, 5))
+  // Also check nested evidence in values/strengths
+  const vals = (result.values as { evidence: string | { point: string }[] }[]) ?? []
+  for (const v of vals.slice(0, 3)) {
+    if (typeof v.evidence === 'string' && v.evidence) keyEvidence.push(v.evidence.substring(0, 150))
+    else if (Array.isArray(v.evidence)) {
+      for (const e of v.evidence.slice(0, 1)) { if (e.point) keyEvidence.push(e.point.substring(0, 150)) }
+    }
+  }
+  const strengths = (result.top_strengths as { evidence: string }[]) ?? []
+  for (const s of strengths.slice(0, 3)) {
+    if (s.evidence) keyEvidence.push(s.evidence.substring(0, 150))
+  }
+
+  return {
+    key_evidence: keyEvidence.slice(0, 8),
+    data_stats: {
+      total_entries: totalCount ?? 0,
+      emotion_avg: emotionAvg,
+      wbi_avg: Math.round(wbiAvg * 10) / 10,
+      wbi_trend: wbiTrend,
+      top_topics: topTopics,
+      date_range: {
+        from: (firstDiary?.[0] as { entry_date: string })?.entry_date ?? '',
+        to: (lastDiary?.[0] as { entry_date: string })?.entry_date ?? '',
+      },
+    },
+    confidence_notes: String(result.confidence ?? result.confidence_notes ?? ''),
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -456,13 +595,12 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
     setError(null)
 
     try {
-      // Get previous analysis for context (changes_from_previous)
+      // Get previous analysis for hybrid mode
       const prevAnalysis = await getPreviousAnalysis(type)
       const prevResult = prevAnalysis?.result ?? null
 
-      // Always collect all data (full mode) — delta mode caused "no data" errors
-      // when re-analyzing shortly after a previous analysis
-      const { text: userData, count } = await collectData(type, null)
+      // Hybrid collection: previous context + new data (or full data if first time)
+      const { text: userData, count } = await collectData(type, prevAnalysis)
 
       if (!userData.trim()) {
         setError('分析に必要なデータがありません。日記を書いてください。')
@@ -471,37 +609,38 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
         return null
       }
 
-      // Build prompt with previous context + data source literacy preamble
-      const dataLiteracyPreamble = `【最重要: データソースの文脈を理解して分析すること】
+      // Build prompt with hybrid mode preamble + data source literacy
+      const isUpdate = !!prevAnalysis?.analysis_context
+      const modePreamble = isUpdate
+        ? `【分析モード: 更新分析】
+あなたには「前回の分析結果とその根拠」+「前回以降の新しいデータ」が渡されます。
+前回の結論を出発点として、新しいデータに基づいて更新・修正してください。
 
-あなたに渡されるデータは複数のソースから来ており、それぞれ性質が全く異なります。
-文脈を無視して全てを同列に扱うと、偏った分析になります。
+- 前回と一致するパターンが新データでも確認される → 確信度を上げる
+- 新データで矛盾が見つかる → 結論を修正する（変化した理由も説明）
+- 新データが少ない場合 → 前回の結論をほぼ維持しつつ、微調整のみ
+- 過去と現在で一貫して共通する部分を特に重視する（本質的な特性）
+- 最新のデータは「今の状態」を反映するので、やや重みを大きくする
 
-1. **日記**: 本人が自分のために書いた私的な感情・思考の記録。「本音」が最も現れる。
-   ただし悩みを書きやすいバイアスがあり、楽しい日常は書かれにくい。
-   「○○に行った」「○○をした」は行動の事実であり、性格の直接的な証拠ではない。
-   なぜそれを書いたのか、どう感じているのかに注目すること。
-
-2. **Claude Codeへの業務指示**: AIアシスタントへの業務指示。これは「この人の普段の言葉遣い」ではない。
-   「○○して」「○○を調べて」という命令形はAIへの指示フォーマットであり、
-   この人が普段から命令的な話し方をするわけではない。
-   有用なのは: 関心テーマの分布、指示の粒度、活動時間帯、壁打ち的な相談の頻度。
-
-3. **AIチャット（ダッシュボード）**: 日常的な会話・興味の探索・悩み相談。
-   Claude Codeへの指示とは性質が全く異なる。ここでの言葉遣い・話題・感情は
-   日記と同様に本音に近く、性格・興味・価値観の分析に重要。
-
-4. **タスク管理**: AIが自動完了するタスクも含まれるため、完了率＝本人の実行力ではない。
-   タスクの内容と種類に注目。
-
-5. **スケジュール**: 実際の行動記録。最も客観的。
-
-6. **夢・目標**: 本人が意識的に登録したもの。価値観の直接的な証拠。
-
-各セクションに【このデータの読み方】が付記されています。必ずそれに従って解釈してください。
+changes_from_previous フィールドに、前回からの変化を具体的に記載してください。
 
 `
-      const prompt = dataLiteracyPreamble + PROMPT_BUILDERS[type](prevResult)
+        : `【分析モード: 初回分析】
+全データが渡されます。全体を通して一貫するパターンと、時期による変化の両方に注目してください。
+
+`
+
+      const dataLiteracyPreamble = `【データソースの文脈を理解して分析すること】
+
+1. **日記**: 本音。ただし悩みが書かれやすいバイアスあり。「なぜそれを書いたか」に注目。
+2. **Claude Code指示**: AIへの業務指示。命令形は指示フォーマット。関心テーマ・時間帯が有用。
+3. **AIチャット**: 自然な会話。日記と同様に本音に近い。
+4. **タスク**: AI自動完了含む。内容と種類に注目。
+5. **スケジュール**: 客観的な行動記録。
+6. **夢・目標**: 価値観の直接的な証拠。
+
+`
+      const prompt = modePreamble + dataLiteracyPreamble + PROMPT_BUILDERS[type](prevResult)
 
       // Call AI via Edge Function (OpenAI)
       const { content: resultText } = await aiCompletion(userData, { source: 'self_analysis',
@@ -519,7 +658,10 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
           ? (rawSummary as Record<string, unknown>).profile_narrative ?? JSON.stringify(rawSummary).slice(0, 500)
           : null
 
-      // Save to self_analysis
+      // Build analysis context for next time (hybrid mode)
+      const analysisContext = await buildAnalysisContext(result)
+
+      // Save to self_analysis with context
       const { data: inserted, error: insertErr } = await supabase
         .from('self_analysis')
         .insert({
@@ -528,6 +670,7 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
           summary,
           data_count: count,
           model_used: 'gpt-5-nano',
+          analysis_context: analysisContext,
         })
         .select()
         .single()
