@@ -7200,6 +7200,8 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     var text = textarea.value.trim();
     var attachments = pendingAttachments.slice();
     if ((!text && !attachments.length) || chatState.streaming) return;
+    // Wait for file extraction to complete
+    if (pendingAttachments.some(function(a){return a.extracting;})) { toast('ファイル抽出中です...しばらくお待ちください'); return; }
     textarea.value = ''; textarea.style.height = 'auto';
     pendingAttachments = []; renderPreviews();
     chatState.streaming = true;
