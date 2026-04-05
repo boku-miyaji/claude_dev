@@ -319,6 +319,68 @@ graph TB
       <p>社長は「何をしたいか」だけ言えばいい。秘書がどの部署に振るか、どのPJかを判断する。</p>
     </div>
   </div>
+
+  <h3>ファイル構成</h3>
+  <pre><code>/workspace/
+├── .claude/                           Claude Code 設定ディレクトリ
+│   ├── settings.json                  共有設定（hooks/プラグイン/env） ← git管理
+│   ├── settings.local.json            マシン固有設定（パス/権限） ← gitignore
+│   ├── .mcp.json                      MCP サーバー接続設定
+│   ├── CLAUDE.md                      プロジェクト指示書
+│   ├── hooks/                         自動実行スクリプト群
+│   └── plugins/marketplaces/          インストール済みプラグイン
+│
+├── plugins/company/skills/            カスタムスキル (SKILL.md)
+│
+├── company-dashboard/                 ダッシュボード本体
+│   ├── index.html                     SPA
+│   ├── supabase-setup.sql             全テーブル一括セットアップ
+│   ├── supabase-migration-*.sql       差分マイグレーション
+│   └── docs/                          ドキュメント群
+│
+└── vercel.json                        Vercel 設定</code></pre>
+
+  <h3>settings.json の構造</h3>
+  <pre><code>{
+  "env": { ... },                // 環境変数
+  "permissions": {
+    "allow": [ ... ],            // 許可ルール
+    "additionalDirectories": [ ... ]
+  },
+  "hooks": {                     // SessionStart / UserPromptSubmit / PermissionRequest
+    "UserPromptSubmit": [ ... ],
+    "PermissionRequest": [ ... ],
+    "SessionStart": [ ... ]
+  },
+  "enabledPlugins": { ... },     // インストール済みプラグイン
+  "extraKnownMarketplaces": { ... }  // カスタムマーケットプレイス
+}</code></pre>
+
+  <h3>PJ会社のディレクトリ構造</h3>
+  <pre><code>/workspace/
+├── .company/              HD（ホールディングス）のルート
+│   ├── registry.md        全PJ会社の一覧・設定
+│   └── knowledge/         HD共通のナレッジ
+├── .company-ai/           AI開発会社
+├── .company-circuit/      回路図PJ会社
+├── .company-rikyu/        りきゅうPJ会社
+└── ...</code></pre>
+
+  <h3>マイグレーション一覧</h3>
+  <table>
+    <thead><tr><th>ファイル</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase-setup.sql</code></td><td>新規セットアップ用（全テーブル一括）</td></tr>
+      <tr><td><code>migration-002</code></td><td>user_id 削除</td></tr>
+      <tr><td><code>migration-003</code></td><td>prompt_log + ceo_insights</td></tr>
+      <tr><td><code>migration-004</code></td><td>knowledge_base + CLAUDE.md 可視化</td></tr>
+      <tr><td><code>migration-005</code></td><td>portfolio + career テーブル</td></tr>
+      <tr><td><code>migration-006</code></td><td>Hook 用 anon RLS ポリシー</td></tr>
+      <tr><td><code>migration-007</code></td><td>slash_commands テーブル</td></tr>
+      <tr><td><code>migration-008</code></td><td>財務テーブル（projects, invoices, expenses, time_entries, tax_payments）</td></tr>
+      <tr><td><code>migration-009</code></td><td>マルチサーバー対応（claude_settings に server_host 追加）</td></tr>
+    </tbody>
+  </table>
 </section>
 
 <!-- 2. Data Layers -->
@@ -388,6 +450,93 @@ graph LR
       </tr>
     </tbody>
   </table>
+
+  <details style="margin: 20px 0;">
+    <summary style="cursor: pointer; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-weight: 600; font-size: 0.95rem; color: var(--accent2); list-style: none; display: flex; align-items: center; gap: 8px;">
+      <span style="transition: transform .2s; display: inline-block;">&#9662;</span> 全テーブル一覧（クリックで展開）
+    </summary>
+    <div style="background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; padding: 20px;">
+
+      <h3 style="margin-top: 0;">組織・タスク</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>categories</code></td><td>大分類</td><td>/company</td></tr>
+          <tr><td><code>companies</code></td><td>PJ会社</td><td>/company</td></tr>
+          <tr><td><code>departments</code></td><td>部署</td><td>/company</td></tr>
+          <tr><td><code>tasks</code></td><td>タスク・TODO</td><td>/company / Inbox</td></tr>
+          <tr><td><code>comments</code></td><td>コメント</td><td>Web / /company</td></tr>
+          <tr><td><code>evaluations</code></td><td>部署評価</td><td>/company</td></tr>
+          <tr><td><code>activity_log</code></td><td>アクティビティ</td><td>各種操作</td></tr>
+        </tbody>
+      </table>
+
+      <h3>秘書・HR</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>secretary_notes</code></td><td>メモ・inbox・意思決定・学びログ（type列で区別）</td><td>/company</td></tr>
+          <tr><td><code>hr_proposals</code></td><td>組織改編提案</td><td>/company</td></tr>
+          <tr><td><code>hr_retrospectives</code></td><td>KPTレトロスペクティブ</td><td>/company</td></tr>
+        </tbody>
+      </table>
+
+      <h3>AI・ナレッジ</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>prompt_log</code></td><td>全入力履歴</td><td>prompt-log.sh (Hook)</td></tr>
+          <tr><td><code>ceo_insights</code></td><td>行動分析</td><td>/company</td></tr>
+          <tr><td><code>knowledge_base</code></td><td>ルール蓄積</td><td>/company</td></tr>
+          <tr><td><code>claude_settings</code></td><td>設定スナップショット + HD設定</td><td>config-sync.sh + /company</td></tr>
+          <tr><td><code>slash_commands</code></td><td>スキル一覧</td><td>sync-slash-commands.sh</td></tr>
+        </tbody>
+      </table>
+
+      <h3>ポートフォリオ・キャリア</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>services</code></td><td>提供サービス</td><td>/company</td></tr>
+          <tr><td><code>portfolio_projects</code></td><td>実績</td><td>/company</td></tr>
+          <tr><td><code>tech_stack</code></td><td>技術スタック</td><td>/company</td></tr>
+          <tr><td><code>career</code></td><td>キャリア目標</td><td>/company</td></tr>
+        </tbody>
+      </table>
+
+      <h3>財務</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>projects</code></td><td>案件マスター</td><td>/invoice</td></tr>
+          <tr><td><code>invoices</code></td><td>請求書（売上）</td><td>/invoice</td></tr>
+          <tr><td><code>expenses</code></td><td>経費</td><td>/invoice</td></tr>
+          <tr><td><code>time_entries</code></td><td>稼働時間</td><td>/invoice sync (Calendar)</td></tr>
+          <tr><td><code>tax_payments</code></td><td>税金スケジュール</td><td>/invoice tax</td></tr>
+        </tbody>
+      </table>
+
+      <h3>UI・パーソナライズ</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>tab_clicks</code></td><td>タブクリック数集計（ナビ優先順位の自動調整）</td><td>Dashboard (navigate)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>AI Chat</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>conversations</code></td><td>チャット会話</td><td>AI Chat</td></tr>
+          <tr><td><code>messages</code></td><td>メッセージ + attachments JSONB</td><td>AI Chat</td></tr>
+          <tr><td><code>chat_usage</code></td><td>日次コスト集計</td><td>AI Chat</td></tr>
+          <tr><td><code>chat-attachments</code> (Storage)</td><td>画像・ファイルの永続保存</td><td>AI Chat</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </details>
 
   <h3>なぜ3層？</h3>
   <div class="grid-3">
@@ -561,6 +710,57 @@ sequenceDiagram
         <td>権限レベル(full/safe/strict)に基づく自動判定</td>
         <td>No</td>
       </tr>
+    </tbody>
+  </table>
+
+  <h3>config-sync.sh の詳細フロー</h3>
+  <pre><code>セッション起動
+  |
+config-sync.sh 実行
+  ├── settings.json を読み取り
+  │   ├── plugins (enabledPlugins)
+  │   ├── permissions (allow ルール)
+  │   ├── hooks 設定
+  │   └── env 設定
+  ├── .mcp.json を読み取り → MCP サーバー一覧
+  ├── .claude/CLAUDE.md → 内容全文
+  ├── .company/CLAUDE.md → HD設定（company_claude_md）
+  ├── 全てを JSON にまとめて claude_settings テーブルに UPSERT
+  │
+  └── sync-slash-commands.sh を呼び出し
+      ├── 7つのソースから SKILL.md をスキャン:
+      │   1. plugins/*/skills/*/          (カスタム)
+      │   2. .claude/skills/*/            (ワークスペース)
+      │   3. ~/.claude/skills/*/          (ユーザー)
+      │   4. marketplaces/anthropic-agent-skills/
+      │   5. marketplaces/claude-plugins-official/plugins/
+      │   6. marketplaces/claude-plugins-official/external_plugins/
+      │   7. marketplaces/ai-company/.claude/skills/
+      ├── skills-cache.json と比較（差分検知）
+      ├── 変更があれば slash_commands テーブルに UPSERT
+      └── キャッシュを更新</code></pre>
+
+  <h3>prompt-log.sh の詳細フロー</h3>
+  <pre><code>ユーザーが入力
+  |
+prompt-log.sh 実行（async = バックグラウンド）
+  ├── stdin から JSON を読み取り（prompt 内容）
+  ├── 自動タグ付け（キーワードベース）
+  │   "テスト" → ["test"]
+  │   "バグ"   → ["debug"]
+  │   "設計"   → ["design"]
+  └── prompt_log テーブルに POST</code></pre>
+
+  <h3>Hook ファイル一覧</h3>
+  <table>
+    <thead><tr><th>ファイル</th><th>役割</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase.env</code></td><td>Supabase 接続情報（URL + Anon Key）</td></tr>
+      <tr><td><code>prompt-log.sh</code></td><td>UserPromptSubmit → prompt_log</td></tr>
+      <tr><td><code>config-sync.sh</code></td><td>SessionStart → claude_settings + slash_commands</td></tr>
+      <tr><td><code>sync-slash-commands.sh</code></td><td>全スキルスキャン + 差分同期</td></tr>
+      <tr><td><code>permission-guard.sh</code></td><td>権限レベルに応じた自動承認/拒否</td></tr>
+      <tr><td><code>skills-cache.json</code></td><td>スキル同期のキャッシュ（差分検知用）</td></tr>
     </tbody>
   </table>
 </section>

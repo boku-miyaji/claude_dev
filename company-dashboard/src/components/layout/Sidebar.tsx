@@ -11,22 +11,24 @@ interface NavEntry {
 }
 
 const NAV: NavEntry[] = [
-  // Core (always visible — daily use)
+  // Input (daily input & capture)
   { type: 'item', page: '', icon: '◉', label: 'Today' },
   { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
-  { type: 'item', page: 'dreams', icon: '🌟', label: 'Dreams & Goals' },
-  { type: 'item', page: 'tasks', icon: '☐', label: 'Tasks' },
   { type: 'item', page: 'chat', icon: '💬', label: 'AI Chat' },
-  // Analytics (weekly/monthly)
+  // Manage (organize & plan)
+  { type: 'label', label: 'Manage' },
+  { type: 'item', page: 'tasks', icon: '☐', label: 'Tasks' },
+  { type: 'item', page: 'dreams', icon: '🌟', label: 'Dreams & Goals' },
+  { type: 'item', page: 'habits', icon: '🌱', label: 'Habits' },
+  { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
+  // Analytics (review & reflect)
   { type: 'label', label: 'Analytics' },
   { type: 'item', page: 'insights', icon: '📊', label: 'Insights' },
   { type: 'item', page: 'me', icon: '🧬', label: 'Self-Analysis' },
   { type: 'item', page: 'intelligence', icon: '📄', label: 'Reports' },
+  // System (collapsible — settings & structure)
+  { type: 'collapsible-start', label: 'System', groupKey: 'system' },
   { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
-  // More (collapsible — infrequent)
-  { type: 'collapsible-start', label: 'More', groupKey: 'more' },
-  { type: 'item', page: 'habits', icon: '🌱', label: 'Habits' },
-  { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
   { type: 'item', page: 'companies', icon: '◫', label: 'Organization' },
   { type: 'item', page: 'knowledge', icon: '◈', label: 'Knowledge' },
   { type: 'item', page: 'artifacts', icon: '📄', label: 'Artifacts' },
@@ -73,7 +75,7 @@ export function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ more: true })
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ system: true })
 
   const currentPage = location.pathname.replace('/', '') || ''
 
