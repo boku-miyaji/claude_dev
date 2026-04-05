@@ -1429,11 +1429,11 @@ export function SelfAnalysis() {
   useEffect(() => { load() }, [load])
 
   // Run all analyses sequentially with stepper
-  const handleRunAll = useCallback(async () => {
+  const runAllWithMode = useCallback(async (forceFullScan: boolean) => {
     setIsRunningAll(true)
     setCompletedTypes(new Set())
     for (const type of ALL_TYPES) {
-      const result = await runAnalysis(type)
+      const result = await runAnalysis(type, forceFullScan)
       if (result) {
         setPastResults((prev) => {
           const filtered = prev.filter((r) => r.analysis_type !== type)
@@ -1444,6 +1444,9 @@ export function SelfAnalysis() {
     }
     setIsRunningAll(false)
   }, [runAnalysis])
+
+  const handleRunAll = useCallback(() => runAllWithMode(false), [runAllWithMode])
+  const handleRunAllFull = useCallback(() => runAllWithMode(true), [runAllWithMode])
 
   // Get latest result per type
   const latestByType = (type: AnalysisType) =>
@@ -1467,23 +1470,33 @@ export function SelfAnalysis() {
         description="日記データからあなたを多角的に分析します"
         actions={
           hasResults ? (
-            <button
-              className="btn btn-p"
-              disabled={running || diaryCount < 20}
-              onClick={handleRunAll}
-              style={{ whiteSpace: 'nowrap' }}
-            >
-              {running || isRunningAll ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{
-                    display: 'inline-block', width: 12, height: 12, borderRadius: '50%',
-                    border: '2px solid currentColor', borderTopColor: 'transparent',
-                    animation: 'spin 1s linear infinite',
-                  }} />
-                  分析中...
-                </span>
-              ) : '再分析'}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="btn btn-p"
+                disabled={running || diaryCount < 20}
+                onClick={handleRunAll}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {running || isRunningAll ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{
+                      display: 'inline-block', width: 12, height: 12, borderRadius: '50%',
+                      border: '2px solid currentColor', borderTopColor: 'transparent',
+                      animation: 'spin 1s linear infinite',
+                    }} />
+                    分析中...
+                  </span>
+                ) : '差分分析'}
+              </button>
+              <button
+                className="btn btn-g"
+                disabled={running || diaryCount < 20}
+                onClick={handleRunAllFull}
+                style={{ whiteSpace: 'nowrap', fontSize: 12 }}
+              >
+                全分析
+              </button>
+            </div>
           ) : undefined
         }
       />

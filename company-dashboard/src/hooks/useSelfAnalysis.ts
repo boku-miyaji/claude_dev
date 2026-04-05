@@ -573,7 +573,8 @@ async function buildAnalysisContext(
 // ---------------------------------------------------------------------------
 
 interface UseSelfAnalysisReturn {
-  runAnalysis: (type: AnalysisType) => Promise<AnalysisRecord | null>
+  /** Run analysis. forceFullScan=true ignores previous context and analyzes all data */
+  runAnalysis: (type: AnalysisType, forceFullScan?: boolean) => Promise<AnalysisRecord | null>
   running: boolean
   runningType: AnalysisType | null
   error: string | null
@@ -589,17 +590,17 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
   const [runningType, setRunningType] = useState<AnalysisType | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const runAnalysis = useCallback(async (type: AnalysisType): Promise<AnalysisRecord | null> => {
+  const runAnalysis = useCallback(async (type: AnalysisType, forceFullScan = false): Promise<AnalysisRecord | null> => {
     setRunning(true)
     setRunningType(type)
     setError(null)
 
     try {
-      // Get previous analysis for hybrid mode
-      const prevAnalysis = await getPreviousAnalysis(type)
+      // Get previous analysis for hybrid mode (skip if forcing full scan)
+      const prevAnalysis = forceFullScan ? null : await getPreviousAnalysis(type)
       const prevResult = prevAnalysis?.result ?? null
 
-      // Hybrid collection: previous context + new data (or full data if first time)
+      // Hybrid collection: previous context + new data (or full data if first time / forced)
       const { text: userData, count } = await collectData(type, prevAnalysis)
 
       if (!userData.trim()) {
