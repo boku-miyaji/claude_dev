@@ -69,6 +69,22 @@
 5. 改善提案レポートを secretary/notes/ に出力
 ```
 
+### 4. 部署知識ローテーション（14日サイクル）
+
+各部署のCLAUDE.mdを最新のベストプラクティスで更新するプロセス。
+全10部署を5回のローテーションで一巡（2部署/回、約5週間で全部署カバー）。
+
+```
+ローテーション判定 → 対象2部署特定 → 情報収集部(調査) ∥ ops(GAP分析)
+                                        → GAP あり → 社長に更新提案
+                                        → GAP なし → 「最新です」
+```
+
+- 詳細: `references/dept-knowledge-sources.md`
+- freshness-policy: `dept_knowledge_refresh`（14日サイクル）
+- **CLAUDE.mdの直接更新は禁止。必ず社長承認を経る**
+- 更新ログ: `departments/{dept}/knowledge-updates/YYYY-MM-DD.md`
+
 ## ルール
 
 - **手動操作を見つけたらスクリプト化を検討する**

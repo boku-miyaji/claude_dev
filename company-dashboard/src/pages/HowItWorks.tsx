@@ -202,6 +202,7 @@ function TabOverview() {
         <P>freshness-policy.yaml で定義（14データソース）。stale検出→人間の操作なしでClaude Codeが自動修復。</P>
         <Tbl headers={['データ', '検出条件', '自動修復アクション']} rows={[
           ['harness_research', '最終調査7日超', '情報収集部(最新記事) ∥ 運営改善部(GAP分析) → 改善提案更新'],
+          ['dept_knowledge_refresh', '最終更新14日超', 'ローテーションで2部署選定 → 情報収集(調査) ∥ ops(GAP分析) → 社長承認で更新'],
           ['growth_events', '最終記録7日超 + fix/refactor 3件以上', 'git log分析 → パターン検出 → Supabase INSERT'],
           ['knowledge昇格', 'confidence ≥ 3 の未昇格ルール', '社長に提示 → 承認後に rules/ 追記（自動昇格は禁止）'],
           ['CLAUDE.md サイズ', '200行超', '手順的記述をrules/に分離 → CLAUDE.md縮小（Hook でも警告）'],
@@ -416,6 +417,7 @@ function TabOperations() {
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
           <MiniCard title="スキップルールの明示" body="全ステップ毎回必須ではない。AI開発部の例: 1行修正→実装+動作確認のみ、新機能→全ステップ必須、アーキテクチャ変更→全ステップ+社長レビュー。省略条件を事前定義することで「省略していい判断」と「省略してはいけない判断」を分離。" />
           <MiniCard title="学習ステップの義務化" body="全部署のサイクル末尾に「学習」がある。成功/失敗に関わらず知見を記録（成果物末尾の「学習メモ」or growth_events）。これがナレッジ昇格パイプラインの入口になり、繰り返しの失敗を構造的に防止する。" />
+          <MiniCard title="部署知識ローテーション" body="各部署のCLAUDE.mdは作成時点で固定されがち。14日サイクルで2部署ずつ最新ベストプラクティスを調査→GAP分析→社長承認で更新。5ローテーション（約5週）で全10部署を一巡。情報収集部が調査、ops部がGAP分析。CLAUDE.md直接更新は禁止（社長承認必須）。" />
         </div>
       </Section>
 
