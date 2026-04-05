@@ -52,7 +52,15 @@ descriptionには以下を必ず含めてください（500字以上）:
 4. 「活かし方」3つ（具体的なアクション）
 5. 「注意点」3つ（具体的な落とし穴）
 
-evidenceは日記からの直接引用を5つ以上、[日付]付きで。
+evidenceは日記やプロンプトログからの直接引用を5つ以上、[日付]付きで。
+
+【行動データの活用】
+入力にはプロンプトログ（AIへの指示履歴）、タスク管理データ、スケジュールも含まれます:
+- プロンプトの指示の仕方 → コミュニケーションスタイル、リーダーシップタイプ
+- 活動時間帯 → 生活リズム、集中パターン
+- タスク完了率/未完了 → 実行力、先延ばし傾向
+- タグの分布 → 関心領域の偏り
+これらも性格分析の根拠として活用してください。
 JSON以外は返さないでください。`
 
   if (prev) {
@@ -72,7 +80,12 @@ function big5Prompt(prev: Record<string, unknown> | null): string {
   "summary": "各因子の詳細な説明。日記の具体的な行動パターンに基づいて500字以上で記述。各因子がどう日常に現れているか、因子間の関係性も。",
   "evidence": ["[日付] 引用1", "[日付] 引用2", ...]${prev ? ',\n  "changes_from_previous": "前回からの変化の説明"' : ''}
 }
-各値は0-100の整数。evidenceは5つ以上。JSON以外は返さないでください。`
+各値は0-100の整数。evidenceは5つ以上。
+
+【行動データの活用】
+プロンプトログの指示パターン、タスク完了率、活動時間帯も分析に含めてください。
+例: 誠実性はタスク完了率や先延ばしパターンから、外向性はプロンプトの内容（人との予定の頻度）から推定可能。
+JSON以外は返さないでください。`
 
   if (prev) {
     return base + `\n\n【前回の分析結果】\nO=${prev.openness} C=${prev.conscientiousness} E=${prev.extraversion} A=${prev.agreeableness} N=${prev.neuroticism}\n\n新しい日記から前回と比べてスコアに変動があればchanges_from_previousに記載。`
@@ -106,7 +119,13 @@ function strengthsFinderPrompt(prev: Record<string, unknown> | null): string {
 - 影響力: 活発性,指令性,コミュニケーション,競争性,最上志向,自己確信,自我,社交性
 - 実行力: 達成欲,アレンジ,信念,公平性,慎重さ,規律性,責任感,回復志向,目標志向
 
-top_strengthsは5件。scoreは0-100。growth_areasは3件。JSON以外は返さないでください。`
+top_strengthsは5件。scoreは0-100。growth_areasは3件。
+
+【行動データの活用】
+プロンプトログ（AIへの指示の仕方）はコミュニケーション資質、リーダーシップスタイルの分析に有用。
+タスク管理データは実行力ドメインの資質（達成欲、規律性、責任感等）の推定に直結。
+活動時間帯のパターンは適応性や規律性の判断材料。
+JSON以外は返さないでください。`
 
   if (prev) {
     const prevTop = (prev.top_strengths as {name:string;score:number}[])?.map(s => `${s.name}(${s.score})`).join(', ')
@@ -145,7 +164,12 @@ function valuesPrompt(prev: Record<string, unknown> | null): string {
   "changes": "最近の価値観の変化の記述（200字以上）",
   "summary": "価値観の全体説明（300字以上）"${prev ? ',\n  "changes_from_previous": "前回の分析からの具体的な変化"' : ''}
 }
-valuesは5-7件。scoreは0-100。JSON以外は返さないでください。`
+valuesは5-7件。scoreは0-100。
+
+【行動データの活用】
+プロンプトのタグ分布やタスクの内容から、実際に時間を費やしている領域（＝真の価値観）を推定。
+日記で語る価値観と実際の行動の乖離があればそれも指摘。
+JSON以外は返さないでください。`
 
   if (prev) {
     const prevVals = (prev.values as {name:string;rank:number;score:number}[])?.map(v => `#${v.rank} ${v.name}(${v.score})`).join(', ')
@@ -176,93 +200,82 @@ async function getPreviousAnalysis(type: AnalysisType): Promise<AnalysisRecord |
   return (data?.[0] as AnalysisRecord) ?? null
 }
 
+/**
+ * Collect ALL available data sources for analysis.
+ * Shared across all analysis types — the prompt decides what to focus on.
+ * In delta mode (since != null), only fetches new entries.
+ */
 async function collectData(
-  type: AnalysisType,
+  _type: AnalysisType,
   since: string | null,
 ): Promise<{ text: string; count: number }> {
-  // Helper: build diary query with optional date filter
-  function diaryQuery(limit: number, includeId = false) {
-    const cols = includeId ? 'id, body, entry_date, created_at' : 'body, entry_date, created_at'
-    let q = supabase
-      .from('diary_entries')
-      .select(cols)
-    if (since) q = q.gt('created_at', since)
-    return q.order('entry_date', { ascending: false }).limit(limit)
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mapDiary = (entries: any[]) =>
-    entries.map((e: { body: string; entry_date: string }) => `[${e.entry_date}] ${e.body}`).join('\n\n')
+  // --- 1. Diary entries (core) ---
+  let diaryQ = supabase.from('diary_entries').select('body, entry_date, created_at')
+  if (since) diaryQ = diaryQ.gt('created_at', since)
+  const diaryRes = await diaryQ.order('entry_date', { ascending: false }).limit(80)
+  const diaries = (diaryRes.data ?? []) as unknown as { body: string; entry_date: string }[]
+  const diaryText = diaries.map(e => `[${e.entry_date}] ${e.body}`).join('\n\n')
 
-  switch (type) {
-    case 'mbti': {
-      const { data } = await diaryQuery(80)
-      const entries = (data ?? []) as unknown as { body: string; entry_date: string }[]
-      return { text: mapDiary(entries), count: entries.length }
+  // --- 2. Prompt log (behavioral: how they think, what they ask, when) ---
+  let promptQ = supabase.from('prompt_log').select('prompt, tags, created_at')
+  if (since) promptQ = promptQ.gt('created_at', since)
+  const promptRes = await promptQ.order('created_at', { ascending: false }).limit(200)
+  const prompts = (promptRes.data ?? []) as unknown as { prompt: string; tags: string[]; created_at: string }[]
+
+  // Behavioral summary from prompts
+  const tagCounts: Record<string, number> = {}
+  const hourCounts: Record<number, number> = {}
+  for (const p of prompts) {
+    for (const t of (p.tags ?? [])) {
+      tagCounts[t] = (tagCounts[t] ?? 0) + 1
     }
-    case 'big5': {
-      const { data } = await diaryQuery(80)
-      const entries = (data ?? []) as unknown as { body: string; entry_date: string }[]
-      return { text: mapDiary(entries), count: entries.length }
-    }
-    case 'strengths_finder': {
-      const [taskRes, diaryRes] = await Promise.all([
-        supabase
-          .from('tasks')
-          .select('title, status, priority, completed_at')
-          .order('created_at', { ascending: false })
-          .limit(100),
-        diaryQuery(80),
-      ])
-      const tasks = taskRes.data ?? []
-      const diaries = diaryRes.data ?? []
-      const taskText = tasks
-        .map((t: { title: string; status: string; priority: string }) => `- [${t.status}][${t.priority}] ${t.title}`)
-        .join('\n')
-      const diaryText = mapDiary(diaries)
-      return { text: `## タスク実績\n${taskText}\n\n## 日記\n${diaryText}`, count: diaries.length }
-    }
-    case 'emotion_triggers': {
-      const [diaryRes, emotionRes] = await Promise.all([
-        diaryQuery(60, true),
-        supabase
-          .from('emotion_analysis')
-          .select('diary_entry_id, joy, trust, fear, surprise, sadness, disgust, anger, anticipation, valence, arousal, wbi_score, created_at')
-          .order('created_at', { ascending: false })
-          .limit(60),
-      ])
-      const diaries = (diaryRes.data ?? []) as unknown as { id: string; body: string; entry_date: string }[]
-      const emotions = (emotionRes.data ?? []) as unknown as Record<string, unknown>[]
-      const emotionMap = new Map<string, Record<string, unknown>>()
-      for (const e of emotions) {
-        emotionMap.set(e.diary_entry_id as string, e)
-      }
-      const lines = diaries.map((d) => {
-        const emo = emotionMap.get(d.id)
-        const emoStr = emo
-          ? ` | joy=${emo.joy} trust=${emo.trust} fear=${emo.fear} sadness=${emo.sadness} anger=${emo.anger} anticipation=${emo.anticipation} valence=${emo.valence}`
-          : ''
-        return `[${d.entry_date}] ${d.body}${emoStr}`
-      })
-      return { text: lines.join('\n\n'), count: diaries.length }
-    }
-    case 'values': {
-      const [diaryRes, dreamsRes] = await Promise.all([
-        diaryQuery(80),
-        supabase
-          .from('dreams')
-          .select('title, description, category, status')
-          .order('created_at', { ascending: false }),
-      ])
-      const diaries = diaryRes.data ?? []
-      const dreams = dreamsRes.data ?? []
-      const diaryText = mapDiary(diaries)
-      const dreamText = dreams
-        .map((d: { title: string; category: string; status: string }) => `- [${d.status}][${d.category}] ${d.title}`)
-        .join('\n')
-      return { text: `## 日記\n${diaryText}\n\n## 夢リスト\n${dreamText}`, count: diaries.length }
-    }
+    const h = new Date(p.created_at).getHours()
+    hourCounts[h] = (hourCounts[h] ?? 0) + 1
   }
+  const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 15)
+    .map(([t, c]) => `${t}: ${c}回`).join(', ')
+  const peakHours = Object.entries(hourCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
+    .map(([h, c]) => `${h}時: ${c}回`).join(', ')
+  // Sample prompts (how they give instructions — leadership/communication style)
+  const samplePrompts = prompts.slice(0, 30)
+    .map(p => `[${p.created_at.substring(0, 16)}] ${p.prompt.substring(0, 150)}`)
+    .join('\n')
+
+  // --- 3. Tasks (execution patterns) ---
+  const taskRes = await supabase.from('tasks').select('title, status, created_at, completed_at')
+    .order('created_at', { ascending: false }).limit(100)
+  const tasks = (taskRes.data ?? []) as unknown as { title: string; status: string; created_at: string; completed_at: string | null }[]
+  const tasksDone = tasks.filter(t => t.status === 'done').length
+  const tasksOpen = tasks.filter(t => t.status === 'open').length
+  const taskList = tasks.slice(0, 30)
+    .map(t => `- [${t.status}] ${t.title}${t.completed_at ? ` (完了: ${t.completed_at.substring(0, 10)})` : ''}`)
+    .join('\n')
+
+  // --- 4. Calendar (time management) ---
+  const calRes = await supabase.from('calendar_events').select('title, start_time, end_time, is_all_day')
+    .order('start_time', { ascending: false }).limit(50)
+  const events = (calRes.data ?? []) as unknown as { title: string; start_time: string; end_time: string; is_all_day: number }[]
+  const calText = events.slice(0, 20)
+    .map(e => `- ${e.start_time.substring(0, 16)} ${e.title}`)
+    .join('\n')
+
+  // --- 5. Dreams/Goals ---
+  const dreamsRes = await supabase.from('dreams').select('title, description, category, status')
+    .order('created_at', { ascending: false })
+  const dreams = (dreamsRes.data ?? []) as unknown as { title: string; category: string; status: string }[]
+  const dreamText = dreams.map(d => `- [${d.status}][${d.category}] ${d.title}`).join('\n')
+
+  // --- Combine all ---
+  const sections = [
+    `## 日記 (${diaries.length}件)\n${diaryText}`,
+    `## 行動分析: プロンプトログ (${prompts.length}件)\nよく使うタグ: ${topTags}\n活動ピーク時間帯(UTC): ${peakHours}\n\n### 指示サンプル（コミュニケーションスタイル分析用）\n${samplePrompts}`,
+    `## タスク管理 (完了${tasksDone}件 / 未完了${tasksOpen}件)\n${taskList}`,
+    events.length > 0 ? `## スケジュール (${events.length}件)\n${calText}` : '',
+    dreams.length > 0 ? `## 夢・目標\n${dreamText}` : '',
+  ].filter(Boolean).join('\n\n')
+
+  return { text: sections, count: diaries.length + prompts.length }
 }
 
 // ---------------------------------------------------------------------------
