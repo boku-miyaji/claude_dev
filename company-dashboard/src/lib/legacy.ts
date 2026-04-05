@@ -5590,6 +5590,17 @@ async function renderArtifacts(root) {
         iframe.contentDocument.open();
         iframe.contentDocument.write(artifact.content);
         iframe.contentDocument.close();
+        // Intercept artifact links inside iframe and navigate parent window
+        iframe.contentDocument.addEventListener('click', function(e) {
+          var link = e.target.closest('a');
+          if (!link) return;
+          var href = link.getAttribute('href') || '';
+          if (href.indexOf('artifacts/') !== -1) {
+            e.preventDefault();
+            var match = href.match(/artifacts\/(\d+)/);
+            if (match) { window.location.hash = 'artifacts/' + match[1]; }
+          }
+        });
       }, 0);
     } else if (artifact.file_type === 'md') {
       // Render markdown as HTML using marked + DOM-based sanitization
@@ -8572,6 +8583,16 @@ function openFullscreen(artifact) {
       iframe.contentDocument.open();
       iframe.contentDocument.write(artifact.content);
       iframe.contentDocument.close();
+      iframe.contentDocument.addEventListener('click', function(e) {
+        var link = e.target.closest('a');
+        if (!link) return;
+        var href = link.getAttribute('href') || '';
+        if (href.indexOf('artifacts/') !== -1) {
+          e.preventDefault();
+          var match = href.match(/artifacts\/(\d+)/);
+          if (match) { window.location.hash = 'artifacts/' + match[1]; }
+        }
+      });
     }, 0);
   } else if (artifact.file_type === 'md') {
     var mdIframe = el('iframe', {style: 'width:100%;height:100%;border:none;background:#fff'});
