@@ -561,14 +561,22 @@ Step 3 [直列]: システム開発(実装) → QA(テスト)
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Layer 1: PostToolUse Hook（リアルタイム検出）</div>
         <P><code>.claude/hooks/docs-sync-guard.sh</code> — Edit/Write の PostToolUse で発火。対象ファイルを編集すると、additionalContext で「How It Works の〇〇タブ更新必要」と警告。</P>
         <Tbl headers={['変更ファイル', '警告メッセージ（更新先セクション）']} rows={[
-          ['supabase/functions/ai-agent/index.ts', 'AI Features タブ（モデル設定、ルーティング、ツール一覧、プロンプト構成）'],
+          ['supabase/functions/ai-agent/index.ts', 'AI Features タブ（モデル設定、ルーティング、ツール一覧）'],
+          ['src/hooks/useSelfAnalysis.ts', 'AI Features タブ（自己分析カード）+ Design Philosophy タブ（ハイブリッド分析）'],
+          ['src/hooks/useEmotionAnalysis.ts', 'AI Features タブ（感情分析カード）+ Overview タブ（更新連鎖マップ）'],
+          ['src/hooks/useMorningBriefing.ts', 'AI Features タブ（AI Partnerカード）'],
+          ['src/hooks/useWeeklyNarrative.ts', 'AI Features タブ（週次ナラティブカード）'],
+          ['src/lib/aiPartner.ts', 'AI Features タブ（AI Partner）+ Vision タブ（Narrative Intelligence）'],
+          ['src/pages/SelfAnalysis.tsx', 'AI Features タブ（自己分析カード: 出力/可視化）'],
           ['src/pages/Today.tsx', 'Design Philosophy タブ（体験設計セクション）'],
-          ['.claude/hooks/*.sh', 'Overview タブ（データ鮮度マップ、更新連鎖マップ）+ Harness Engineering タブ（Hooks詳細）'],
-          ['.claude/rules/*.md', 'Operations タブ（パイプライン、ハンドオフ）+ Harness Engineering タブ'],
+          ['.claude/hooks/*.sh', 'Overview + Harness + Operations タブ（同期メカニズム含む）'],
+          ['.claude/rules/*.md', 'Operations タブ + Harness Engineering タブ'],
           ['.company/departments/*/CLAUDE.md', 'Operations タブ（部署サイクル設計テーブル）'],
           ['.company/freshness-policy.yaml', 'Overview タブ（自動メンテナンスセクション）'],
-          ['src/lib/fileExtract.ts', 'AI Features タブ（ファイル抽出対応形式）'],
+          ['.company/design-philosophy.md', 'Design Philosophy タブ（同期確認）'],
+          ['supabase-migration-*.sql', 'AI Features タブ（データ構造テーブル一覧）'],
         ]} />
+        <Principle title="教訓: 2026-04-06 useSelfAnalysis.ts 改修時" body="ハイブリッド分析方式を実装したが、対応表に useSelfAnalysis.ts がなかったため Hook が発火せず、社長に指摘されるまで HowItWorks が古いまま残った。対応表を7→14ファイルに拡充。新しいAI機能フックを追加したら必ずこの表にも追加すること。" color="var(--amber)" />
         <P>この Hook はハーネスエンジニアリングの「決定論的制御」にあたる。CLAUDE.md に「ドキュメントを更新して」と書いても無視される可能性があるが、Hook は確実に発火する。</P>
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Layer 2: Freshness Policy（起動時チェック）</div>
