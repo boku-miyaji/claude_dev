@@ -72,15 +72,15 @@ const TOOL_RESULT_SUFFIX = "[TOOL_OUTPUT_END]";
 const WRITE_TOOLS = new Set(["tasks_create"]);
 
 const MODEL_MAP: Record<string, string> = {
-  simple: "gpt-5-mini",    // was nano — too weak for quality answers
-  moderate: "gpt-5-mini",  // good balance of quality and cost
-  complex: "gpt-5",        // full power for complex reasoning
+  simple: "gpt-5-nano",
+  moderate: "gpt-5-mini",
+  complex: "gpt-5",
 };
 
 // Reasoning effort per complexity tier (none/minimal/low/medium/high)
 const REASONING_MAP: Record<string, string> = {
-  simple: "low",        // was none — need some reasoning for quality
-  moderate: "medium",   // was low — better analysis
+  simple: "none",       // no thinking — fast & cheap
+  moderate: "low",      // minimal thinking — reliable
   complex: "high",      // extended thinking — deep reasoning
 };
 
