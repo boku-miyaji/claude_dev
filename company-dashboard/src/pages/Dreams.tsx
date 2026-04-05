@@ -573,15 +573,46 @@ export function Dreams() {
         ) : undefined}>
         {editingGoal && (
           <div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-              <Tag variant="company">{`${LEVEL_MAP.get(editingGoal.level)?.icon || ''} ${LEVEL_MAP.get(editingGoal.level)?.label || editingGoal.level}`}</Tag>
-              <Tag variant={editingGoal.status === 'achieved' ? 'done' : 'in_progress'}>{GOAL_STATUSES.find((s) => s.value === editingGoal.status)?.label || editingGoal.status}</Tag>
-              {editingGoal.target_date && <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>期限: {editingGoal.target_date}</span>}
+            <div style={{ marginBottom: 12 }}>
+              <label className="form-label">タイトル</label>
+              <input className="input" value={editingGoal.title}
+                onChange={(e) => setEditingGoal({ ...editingGoal, title: e.target.value })}
+                onBlur={() => { updateGoal(editingGoal.id, { title: editingGoal.title }); toast('保存しました') }}
+                style={{ width: '100%', fontSize: 14, fontWeight: 500 }} />
             </div>
-            {editingGoal.description && <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 12 }}>{editingGoal.description}</p>}
-            {editingGoal.dream_id && dreamMap.has(editingGoal.dream_id) && (
-              <div style={{ fontSize: 11, color: 'var(--accent2)', marginBottom: 12 }}>夢: {dreamMap.get(editingGoal.dream_id)?.title}</div>
-            )}
+            <div style={{ marginBottom: 12 }}>
+              <label className="form-label">説明</label>
+              <textarea className="input" value={editingGoal.description || ''}
+                onChange={(e) => setEditingGoal({ ...editingGoal, description: e.target.value || null })}
+                onBlur={() => { updateGoal(editingGoal.id, { description: editingGoal.description }); toast('保存しました') }}
+                placeholder="詳しく..."
+                style={{ width: '100%', minHeight: 60 }} />
+            </div>
+            <div className="form-row" style={{ marginBottom: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label className="form-label">期限</label>
+                <input className="input" type="date" value={editingGoal.target_date || ''}
+                  onChange={(e) => { setEditingGoal({ ...editingGoal, target_date: e.target.value || null }); updateGoal(editingGoal.id, { target_date: e.target.value || null }) }}
+                  style={{ width: '100%' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="form-label">スケール</label>
+                <select className="input" value={editingGoal.level}
+                  onChange={(e) => { const v = e.target.value as GoalLevel; setEditingGoal({ ...editingGoal, level: v }); updateGoal(editingGoal.id, { level: v }) }}
+                  style={{ width: '100%' }}>
+                  {GOAL_LEVELS.map((l) => <option key={l.value} value={l.value}>{l.icon} {l.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label className="form-label">夢との紐付け</label>
+              <select className="input" value={editingGoal.dream_id || ''}
+                onChange={(e) => { const v = e.target.value || null; setEditingGoal({ ...editingGoal, dream_id: v }); updateGoal(editingGoal.id, { dream_id: v }) }}
+                style={{ width: '100%' }}>
+                <option value="">なし</option>
+                {activeDreams.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
+              </select>
+            </div>
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                 <span style={{ fontSize: 11, color: 'var(--text2)' }}>進捗</span>
