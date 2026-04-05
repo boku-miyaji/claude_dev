@@ -302,8 +302,8 @@ function TabArchitecture() {
 
       <Section title="自動化 — Hook + スキル + スクリプト">
         <Tbl headers={['種類', '代表例', '特性']} rows={[
-          ['Hook', 'prompt-log.sh, config-sync.sh', '軽量・非同期・毎回自動実行'],
-          ['スキル', '/migrate, /deploy, /company', '必要時に呼び出し。判断を伴う処理'],
+          ['Hook (27個)', 'prompt-log, bash-guard, claude-md-size-guard, pre/post-compact', '決定論的制御。コンテキスト外で実行。6イベント種別をカバー'],
+          ['スキル', '/company, /diary, /deploy', '必要時に呼び出し。判断を伴う処理'],
           ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期'],
         ]} />
       </Section>
@@ -317,11 +317,14 @@ function TabDesignPhilosophy() {
   return (
     <>
       <Section title="体験設計">
-        <Principle title="時間帯適応型UI" body="朝=計画（スケジュール先頭）、昼=実行（メモ先頭）、夜=振り返り（達成感先頭）。同じ画面を24時間出さない。" color="var(--accent)" />
+        <Principle title="Today = コマンドセンター" body="Todayページから一歩も出ずに日常の全操作が完結する設計。タスク完了/追加/編集、習慣チェック/追加、日記記録がすべてインライン。別ページへの遷移=離脱。" color="var(--accent)" />
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
-          <MiniCard title="ブランクページ問題" body="白紙のテキストエリアは書けない。時間帯+カレンダーから文脈プロンプトを動的生成。白紙より3-5倍の入力完了率。" />
-          <MiniCard title="ポジティブファースト" body="夜は完了タスクを先に見せる。未完了は「明日に持ち越す?」と穏やかに。ピーク・エンドの法則。" />
-          <MiniCard title="ファーストビュー3セクション" body="モバイルでスクロールなしに最重要情報だけ。8セクション全表示はスクロール疲れ。" />
+          <MiniCard title="統合Actionsブロック" body="タスクと習慣を1つのブロックに統合。プログレスバーで合算達成度を可視化。「今日やるべきこと」がひと目でわかる。" />
+          <MiniCard title="時間帯適応型UI" body="朝=全件フラット / 午後=未完了を上に+「あとX件」 / 夜=やり残し表示+明日の予定。同じ画面を24時間出さない。" />
+          <MiniCard title="インラインCRUD" body="タスク: チェック→完了(取り消し線で残る、再クリックで戻す)。+ →即追加(期限=今日)。タイトルクリック→編集。習慣: + →即追加。" />
+          <MiniCard title="期限ソート" body="超過(赤) → 今日(赤) → 明日(amber) → 日付順(gray) → 期限なし。同日内は優先度順。期限が最も重要なソート軸。" />
+          <MiniCard title="ブランクページ問題" body="白紙のテキストエリアは書けない。時間帯+カレンダーから文脈プロンプトを動的生成。" />
+          <MiniCard title="ナビゲーション整理" body="20タブ→8+More構成。毎日使うもの(Today/Journal/Tasks/Chat)だけトップ。月1回以下はMore(折りたたみ)に退避。" />
         </div>
       </Section>
 
@@ -357,7 +360,7 @@ function TabDesignPhilosophy() {
         <P>このシステム自体が改善され続けるための仕組み。</P>
         <Tbl headers={['ループ', '仕組み', 'データの場所']} rows={[
           ['日記ループ', '書く→分析→可視化→もっと書きたくなる→データ増→AI精度↑', 'diary_entries + emotion_analysis'],
-          ['ナレッジ昇格', '修正指示→memory→2回目でKB→3回目でCLAUDE.md', 'memory/ → knowledge_base → CLAUDE.md'],
+          ['ナレッジ昇格', '修正指示→memory→2回目でKB→3回目で社長承認→rules/', 'memory/ → knowledge_base → 承認 → rules/（自動昇格禁止）'],
           ['Growth Chronicle', '失敗→記録→パターン→ルール化→再発防止', 'growth_events'],
           ['人事部サイクル', '部署作業→評価→CLAUDE.md改善→精度↑', '.company/hr/evaluations/'],
           ['設計思想蓄積', '判断→design-philosophy.md追記→次の判断の土台', '.company/design-philosophy.md'],
@@ -401,7 +404,7 @@ Step 2 [並列]: AI開発(設計) ∥ PM(チケット) ← checkpoint
 Step 3 [直列]: システム開発(実装) → QA(テスト)
 完了: 成果物登録 + commit + 報告`}
         </div>
-        <P>ハンドオフ: 部署の成果物に「→ PM部への依頼」等があると秘書が自動検出して次の部署を起動。</P>
+        <P>ハンドオフ: 部署の成果物末尾にYAMLブロックで記述。秘書がパースして次の部署を自動起動。重複実行防止機能付き。（旧Markdown形式も後方互換で検出）</P>
       </Section>
 
       <Section title="ops部署 — 仕組みの仕組み">
