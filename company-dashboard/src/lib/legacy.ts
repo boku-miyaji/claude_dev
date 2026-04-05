@@ -804,8 +804,8 @@ async function gcalDeleteEvent(calendarId, eventId) {
 
 function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour, defaultAllDay) {
   var isEdit = !!existingEvent;
-  // If defaultHour is provided (e.g. 18), it's a time-specific event, never all-day
-  var isAllDay = isEdit ? existingEvent.all_day : (defaultHour != null ? false : !!defaultAllDay);
+  // defaultAllDay must be explicitly true AND no hour. Any other case = not all-day.
+  var isAllDay = isEdit ? !!existingEvent.all_day : (defaultAllDay === true && (defaultHour === null || defaultHour === undefined));
 
   var overlay = el('div', {className: 'modal-overlay'});
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
@@ -1351,7 +1351,7 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
       if (!cell) return;
       var di = parseInt(cell.getAttribute('data-day'), 10);
       var h = parseInt(cell.getAttribute('data-hour'), 10);
-      openCalEventModal(null, toLocalDateStr(days[di]), onRefresh, h);
+      openCalEventModal(null, toLocalDateStr(days[di]), onRefresh, h, false);
     });
 
     root.appendChild(body);
@@ -6726,7 +6726,19 @@ async function renderChat(root) {
   // --- Main ---
   var chatMain = el('div', {className: 'chat-main'});
 
+  // Toggle button
+  var toggleBtn = el('button', {style: 'position:absolute;top:12px;left:272px;z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3);transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.06)'});
+  toggleBtn.textContent = '\u2630';
+  toggleBtn.title = 'Toggle sidebar';
+  toggleBtn.onmouseenter = function() { toggleBtn.style.background = 'var(--surface2)'; toggleBtn.style.color = 'var(--text)'; };
+  toggleBtn.onmouseleave = function() { toggleBtn.style.background = 'var(--surface)'; toggleBtn.style.color = 'var(--text3)'; };
+  toggleBtn.onclick = function() {
+    var isCollapsed = chatSidebar.classList.toggle('collapsed');
+    toggleBtn.style.left = isCollapsed ? '12px' : '272px';
+  };
+
   layout.appendChild(chatSidebar);
+  layout.appendChild(toggleBtn);
   layout.appendChild(chatMain);
 
   // Direct Mode API key banner (inside main if needed)
