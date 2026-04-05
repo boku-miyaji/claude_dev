@@ -7754,7 +7754,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 var cr = await sb.from('conversations').select('id,title,model,company_id,updated_at').eq('archived',false).order('updated_at',{ascending:false}).limit(50);
                 chatState.conversations = cr.data||[];
                 break;
-              case 'error': contentDiv.textContent = 'Error: '+evt.message; contentDiv.style.color='var(--red)'; break;
+              case 'error': contentDiv.textContent = 'Error: '+evt.message; contentDiv.style.color='var(--red)'; console.error('[AI Chat Error]', evt.message, evt.stack); break;
               case 'max_steps': metaDiv.textContent = 'Max steps ('+evt.step+')'; break;
             }
           } catch(e) {}

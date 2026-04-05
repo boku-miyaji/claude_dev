@@ -1100,7 +1100,12 @@ Deno.serve(async (req) => {
       send({ type: "conversation", id: conversationId });
       try {
         await agentLoop(conversationId!, body.message, body.model || "auto", body.context_mode || "full", body.company_id || null, send, body.reasoning_effort, body.images, body.precision_mode, userJwt, userId, body.file_context);
-      } catch (err) { send({ type: "error", message: (err as Error).message }); }
+      } catch (err) {
+        const errMsg = (err as Error).message || String(err);
+        const errStack = (err as Error).stack || '';
+        console.error("[agentLoop crash]", errMsg, errStack);
+        try { send({ type: "error", message: errMsg, stack: errStack.substring(0, 500) } as unknown as SSEEvent); } catch { /* ignore */ }
+      }
       controller.close();
     },
   });
