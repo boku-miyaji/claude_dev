@@ -310,6 +310,11 @@
             "type": "command",
             "command": "/workspace/.claude/hooks/artifact-auto-sync.sh",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/claude-md-size-guard.sh",
+            "async": true
           }
         ]
       },
@@ -347,5 +352,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": false
 }

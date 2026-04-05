@@ -355,6 +355,10 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .chat-attach-pill img{width:28px;height:28px;object-fit:cover;border-radius:6px}
 .chat-attach-pill .remove{cursor:pointer;color:var(--text3);font-size:14px;line-height:1}
 .chat-attach-pill .remove:hover{color:var(--red)}
+.chat-attach-menu{position:absolute;bottom:44px;left:0;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:4px;z-index:10;min-width:160px}
+.chat-attach-menu-item{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;font-family:var(--font);border:none;background:none;color:var(--text);cursor:pointer;border-radius:6px;white-space:nowrap;width:100%;text-align:left}
+.chat-attach-menu-item:hover{background:var(--surface2)}
+.chat-history-loading{text-align:center;padding:20px;font-size:12px;color:var(--text3)}
 .chat-controls{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
 .chat-controls select{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:16px;background:var(--surface);color:var(--text2);font-family:var(--font);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;padding-right:20px;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238b95a5' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center}
 .chat-welcome{text-align:center;padding:80px 20px;color:var(--text3)}

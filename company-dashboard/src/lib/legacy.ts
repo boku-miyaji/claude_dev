@@ -6753,12 +6753,16 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     chatAutoScroll = atBottom;
   });
 
-  // Load existing messages
+  // Load existing messages (conversation history)
   if (chatState.conversationId) {
     window.location.hash = 'chat/' + chatState.conversationId;
+    var loadingIndicator = el('div', {className: 'chat-history-loading', textContent: '会話履歴を読み込み中...'});
+    messagesInner.appendChild(loadingIndicator);
     (async function() {
       var res = await sb.from('messages').select('*').eq('conversation_id', chatState.conversationId).order('created_at', {ascending: true});
-      (res.data || []).forEach(function(m) {
+      if (loadingIndicator.parentNode) loadingIndicator.parentNode.removeChild(loadingIndicator);
+      var msgs = res.data || [];
+      msgs.forEach(function(m) {
         if (m.role === 'user') appendUserMsg(messagesInner, m.content);
         else if (m.role === 'assistant') appendAssistantMsg(messagesInner, m.content, m.model, m.tokens_input, m.tokens_output, m.cost_usd, m.step);
         else if (m.role === 'tool') appendToolMsg(messagesInner, m.tool_name, m.tool_input, m.content);
@@ -6857,14 +6861,23 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
 
   // ChatGPT-style pill input box
   var inputBox = el('div', {className: 'chat-input-box'});
-  var attachBtn = el('button', {className: 'chat-input-btn attach', title: 'Attach file'});
+  // Unified attach button with popup menu (file + camera)
+  var attachBtn = el('button', {className: 'chat-input-btn attach', title: 'Attach'});
   attachBtn.appendChild(document.createTextNode('+'));
-  attachBtn.addEventListener('click', function() { fileInput.click(); });
-  var cameraBtn = el('button', {className: 'chat-input-btn attach', title: 'Take photo', style: 'font-size:16px'});
-  cameraBtn.appendChild(document.createTextNode('\uD83D\uDCF7'));
-  cameraBtn.addEventListener('click', function() { cameraInput.click(); });
+  var attachMenu = el('div', {className: 'chat-attach-menu', style: 'display:none'});
+  var menuFile = el('button', {className: 'chat-attach-menu-item', textContent: '\uD83D\uDCC1 ファイルを添付'});
+  var menuCamera = el('button', {className: 'chat-attach-menu-item', textContent: '\uD83D\uDCF7 写真を撮る'});
+  attachMenu.appendChild(menuFile);
+  attachMenu.appendChild(menuCamera);
+  menuFile.addEventListener('click', function() { attachMenu.style.display = 'none'; fileInput.click(); });
+  menuCamera.addEventListener('click', function() { attachMenu.style.display = 'none'; cameraInput.click(); });
+  attachBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    attachMenu.style.display = attachMenu.style.display === 'none' ? 'flex' : 'none';
+  });
+  document.addEventListener('click', function() { attachMenu.style.display = 'none'; });
 
-  var textarea = el('textarea', {rows: 1, placeholder: 'Message... (Shift+Enter for newline)'});
+  var textarea = el('textarea', {rows: 1, placeholder: 'Message... (Cmd+Enter で送信)'});
   // Auto-resize textarea
   textarea.addEventListener('input', function() {
     textarea.style.height = 'auto';
@@ -6877,8 +6890,10 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   stopBtn.appendChild(document.createTextNode('\u25A0'));
   var currentAbort = null;
 
-  inputBox.appendChild(attachBtn);
-  inputBox.appendChild(cameraBtn);
+  var attachWrap = el('div', {style: 'position:relative'});
+  attachWrap.appendChild(attachBtn);
+  attachWrap.appendChild(attachMenu);
+  inputBox.appendChild(attachWrap);
   inputBox.appendChild(textarea);
   inputBox.appendChild(sendBtn);
   inputBox.appendChild(stopBtn);
