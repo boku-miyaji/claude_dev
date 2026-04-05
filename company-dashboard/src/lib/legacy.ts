@@ -6828,6 +6828,12 @@ async function renderApiCosts(root) {
       byDay[day].tokIn += tokIn;
       byDay[day].tokOut += tokOut;
       byDay[day].count++;
+
+      if (!bySource[source]) bySource[source] = {cost: 0, tokIn: 0, tokOut: 0, count: 0};
+      bySource[source].cost += cost;
+      bySource[source].tokIn += tokIn;
+      bySource[source].tokOut += tokOut;
+      bySource[source].count++;
     });
 
     var JPY = 150; // USD to JPY rate
@@ -6886,6 +6892,41 @@ async function renderApiCosts(root) {
     modelCard.appendChild(modelTable);
     contentArea.appendChild(modelCard);
 
+    // === Source breakdown ===
+    var sourceKeys = Object.keys(bySource).sort(function(a, b) { return bySource[b].cost - bySource[a].cost; });
+    if (sourceKeys.length > 0) {
+      contentArea.appendChild(el('div', {className: 'section-title', textContent: 'カテゴリ別内訳'}));
+      var srcCard = el('div', {className: 'card', style: 'margin-bottom:24px'});
+
+      // Stacked bar
+      var srcBar = el('div', {style: 'display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:12px'});
+      var srcColors = {ai_chat:'#5046e5',self_analysis:'#0d9f6e',emotion_analysis:'#2563eb',ai_partner:'#d97706',dream_classify:'#8b5cf6',dream_detection:'#06b6d4',weekly_narrative:'#ec4899',other:'#6b7280'};
+      sourceKeys.forEach(function(src) {
+        var pct = totalCost > 0 ? Math.round(bySource[src].cost / totalCost * 100) : 0;
+        if (pct < 1) return;
+        srcBar.appendChild(el('div', {title: (sourceLabels[src]||src)+' '+fmtY(bySource[src].cost)+' ('+pct+'%)', style: 'width:'+pct+'%;background:'+(srcColors[src]||'#6b7280')}));
+      });
+      srcCard.appendChild(srcBar);
+
+      // List
+      sourceKeys.forEach(function(src) {
+        var d = bySource[src];
+        var pct = totalCost > 0 ? (d.cost / totalCost * 100) : 0;
+        var barW = totalCost > 0 ? Math.round(d.cost / totalCost * 100) : 0;
+        var row = el('div', {style: 'display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px'});
+        row.appendChild(el('span', {style: 'width:10px;height:10px;border-radius:2px;background:'+(srcColors[src]||'#6b7280')+';flex-shrink:0'}));
+        row.appendChild(el('span', {textContent: sourceLabels[src]||src, style: 'width:120px;font-weight:500'}));
+        row.appendChild(el('span', {textContent: d.count+'回', style: 'width:50px;color:var(--text3);font-size:11px'}));
+        var barBg = el('div', {style: 'flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden'});
+        barBg.appendChild(el('div', {style: 'height:100%;width:'+barW+'%;background:'+(srcColors[src]||'#6b7280')+';border-radius:3px'}));
+        row.appendChild(barBg);
+        row.appendChild(el('span', {textContent: fmtY(d.cost), style: 'width:70px;text-align:right;font-weight:600;font-family:var(--mono)'}));
+        row.appendChild(el('span', {textContent: pct.toFixed(1)+'%', style: 'width:45px;text-align:right;color:var(--text3);font-size:11px'}));
+        srcCard.appendChild(row);
+      });
+      contentArea.appendChild(srcCard);
+    }
+
     // === Cost bar chart (daily) ===
     contentArea.appendChild(el('div', {className: 'section-title', textContent: '日別コスト'}));
     var chartCard = el('div', {className: 'card', style: 'margin-bottom:24px;padding:16px'});
@@ -6928,7 +6969,7 @@ async function renderApiCosts(root) {
     var recentTable = el('table', {style: 'width:100%;border-collapse:collapse;font-size:12px'});
 
     var rHead = el('tr', {style: 'border-bottom:2px solid var(--border)'});
-    ['日時', 'モデル', '入力', '出力', 'コスト'].forEach(function(h) {
+    ['日時', 'ソース', 'モデル', '入力', '出力', 'コスト'].forEach(function(h) {
       rHead.appendChild(el('th', {style: 'text-align:left;padding:8px 12px;font-weight:600', textContent: h}));
     });
     recentTable.appendChild(rHead);
@@ -6939,6 +6980,7 @@ async function renderApiCosts(root) {
       var timeStr = (t.getMonth()+1) + '/' + t.getDate() + ' ' + t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
       [
         timeStr,
+        sourceLabels[m.source] || m.source || '-',
         m.model || '-',
         (m.tokens_input || 0).toLocaleString(),
         (m.tokens_output || 0).toLocaleString(),
