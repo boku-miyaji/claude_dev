@@ -115,7 +115,6 @@ export function Dreams() {
   const [detailDream, setDetailDream] = useState<Dream | null>(null)
   const [detailGoal, setDetailGoal] = useState<Goal | null>(null)
   const [detailWish, setDetailWish] = useState<WishItem | null>(null)
-  const [classifying, setClassifying] = useState(false)
   const [reviewing, setReviewing] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [kindFilter, setKindFilter] = useState<'all' | 'dream' | 'goal' | 'wish'>('all')
@@ -123,7 +122,6 @@ export function Dreams() {
   // Add form
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
-  const [suggestedCat, setSuggestedCat] = useState<string | null>(null)
   const [manualCat, setManualCat] = useState('')
   const [addKind, setAddKind] = useState<'dream' | 'goal' | 'wish'>('dream')
   const [goalLevel, setGoalLevel] = useState<GoalLevel>('yearly')
@@ -185,17 +183,6 @@ export function Dreams() {
     return goals.filter((g) => g.dream_id === detailDream.id)
   }, [detailDream, goals])
 
-  const runClassify = useCallback(async (title: string, desc: string) => {
-    if (!title.trim()) { setSuggestedCat(null); return }
-    setClassifying(true)
-    try {
-      const r = await classifyItem(title, desc, categories)
-      setSuggestedCat(r.category)
-      if (r.isNew) toast(`新カテゴリ「${r.category}」を提案`)
-    } catch { setSuggestedCat(null) }
-    setClassifying(false)
-  }, [categories])
-
   function buildTargetDate(): string | null {
     if (!goalYear) return null
     if (goalLevel === 'life') return null
@@ -214,32 +201,57 @@ export function Dreams() {
   }
 
   function resetForm() {
-    setNewTitle(''); setNewDesc(''); setSuggestedCat(null); setManualCat('')
+    setNewTitle(''); setNewDesc(''); setManualCat('')
     setAddKind('dream'); setGoalLevel('yearly'); setGoalYear(String(new Date().getFullYear()))
     setGoalMonth(''); setGoalDay(''); setGoalDreamId(''); setWishAmount(''); setWishUrl('')
   }
 
+  /** Classify in background after save — user doesn't wait */
+  function classifyInBackground(kind: 'dream' | 'goal' | 'wish', id: string, title: string, desc: string) {
+    classifyItem(title, desc, categories).then((result) => {
+      const table = kind === 'goal' ? 'goals' : kind === 'wish' ? 'wishlist' : 'dreams'
+      supabase.from(table).update({ category: result.category }).eq('id', id).then(() => {
+        // Refresh data silently
+        if (kind === 'dream') fetchDreams()
+        else if (kind === 'goal') fetchGoals()
+        else loadWishlist()
+      })
+    }).catch(() => { /* classification failed, keep 'other' */ })
+  }
+
   async function handleAdd() {
     if (!newTitle.trim()) return
+    const manualCategory = manualCat.trim() || undefined
 
     if (addKind === 'goal') {
-      const category = manualCat || suggestedCat || 'other'
       const result = await addGoal({
         title: newTitle.trim(), description: newDesc.trim() || null,
-        level: goalLevel, target_date: buildTargetDate(), dream_id: goalDreamId || null, category,
+        level: goalLevel, target_date: buildTargetDate(), dream_id: goalDreamId || null,
+        category: manualCategory || 'other',
       })
-      if (result) { resetForm(); setShowAdd(false); toast('目標を追加しました') }
+      if (result) {
+        resetForm(); setShowAdd(false); toast('目標を追加しました')
+        if (!manualCategory) classifyInBackground('goal', result.id, result.title, result.description || '')
+      }
     } else if (addKind === 'wish') {
-      const { error } = await supabase.from('wishlist').insert({
+      const { data, error } = await supabase.from('wishlist').insert({
         title: newTitle.trim(), description: newDesc.trim() || null,
         amount: parseInt(wishAmount) || 0, url: wishUrl.trim() || null,
-        category: manualCat || suggestedCat || 'other',
-      })
-      if (!error) { resetForm(); setShowAdd(false); loadWishlist(); toast('ほしい物を追加しました') }
+        category: manualCategory || 'other',
+      }).select('id,title,description').single()
+      if (!error && data) {
+        resetForm(); setShowAdd(false); loadWishlist(); toast('ほしい物を追加しました')
+        if (!manualCategory) classifyInBackground('wish', data.id, data.title, data.description || '')
+      }
     } else {
-      const category = manualCat || suggestedCat || 'other'
-      const result = await addDream({ title: newTitle.trim(), description: newDesc.trim() || null, category })
-      if (result) { resetForm(); setShowAdd(false); toast(`「${category}」に追加しました`) }
+      const result = await addDream({
+        title: newTitle.trim(), description: newDesc.trim() || null,
+        category: manualCategory || 'other',
+      })
+      if (result) {
+        resetForm(); setShowAdd(false); toast('追加しました')
+        if (!manualCategory) classifyInBackground('dream', result.id, result.title, result.description || '')
+      }
     }
   }
 
@@ -413,12 +425,12 @@ export function Dreams() {
           <label className="form-label">タイトル</label>
           <input className="input" placeholder={addKind === 'wish' ? '何がほしい？' : addKind === 'goal' ? '何を達成する？' : 'やりたいこと'}
             value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
-            onBlur={() => addKind !== 'wish' && runClassify(newTitle, newDesc)} />
+          />
         </div>
         <div style={{ marginBottom: 12 }}>
           <label className="form-label">説明 (任意)</label>
           <textarea className="input" placeholder="詳しく..." value={newDesc} onChange={(e) => setNewDesc(e.target.value)}
-            onBlur={() => addKind !== 'wish' && newTitle.trim() && runClassify(newTitle, newDesc)} style={{ minHeight: 50 }} />
+            style={{ minHeight: 50 }} />
         </div>
 
         {/* ── Wish fields ── */}
@@ -488,35 +500,20 @@ export function Dreams() {
                 {activeDreams.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
               </select>
             </div>
-            <div style={{ marginBottom: 12 }}>
-              <label className="form-label">カテゴリ</label>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                {classifying ? <span style={{ fontSize: 12, color: 'var(--text3)' }}>AI分類中...</span>
-                  : suggestedCat ? <span className="tag tag-co" style={{ fontSize: 12 }}>{getCategoryIcon(suggestedCat)} {suggestedCat}</span>
-                    : <span style={{ fontSize: 12, color: 'var(--text3)' }}>入力後に自動分類</span>}
-                <input className="input" placeholder="手動で変更" value={manualCat} onChange={(e) => setManualCat(e.target.value)}
-                  style={{ flex: 1, fontSize: 12, padding: '4px 8px' }} />
-              </div>
-            </div>
           </>
         )}
 
-        {/* ── Dream fields ── */}
-        {addKind === 'dream' && (
+        {/* ── Category (shared: dream + goal) ── */}
+        {addKind !== 'wish' && (
           <div style={{ marginBottom: 12 }}>
-            <label className="form-label">カテゴリ</label>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              {classifying ? <span style={{ fontSize: 12, color: 'var(--text3)' }}>AI分類中...</span>
-                : suggestedCat ? <span className="tag tag-co" style={{ fontSize: 12 }}>{getCategoryIcon(suggestedCat)} {suggestedCat}</span>
-                  : <span style={{ fontSize: 12, color: 'var(--text3)' }}>入力後に自動分類</span>}
-              <input className="input" placeholder="手動で変更" value={manualCat} onChange={(e) => setManualCat(e.target.value)}
-                style={{ flex: 1, fontSize: 12, padding: '4px 8px' }} />
-            </div>
+            <label className="form-label">カテゴリ (任意 — 空なら自動分類)</label>
+            <input className="input" placeholder="例: travel, skill, health" value={manualCat} onChange={(e) => setManualCat(e.target.value)}
+              style={{ fontSize: 13 }} />
           </div>
         )}
 
         <button className="btn btn-p" style={{ width: '100%' }} onClick={handleAdd}
-          disabled={!newTitle.trim() || (addKind === 'dream' && classifying)}>
+          disabled={!newTitle.trim()}>
           {addKind === 'goal' ? '目標を追加' : addKind === 'wish' ? 'ほしい物を追加' : '夢を追加'}
         </button>
       </Modal>
