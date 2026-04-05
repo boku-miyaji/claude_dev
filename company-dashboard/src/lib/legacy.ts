@@ -7178,7 +7178,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 break;
               case 'done':
                 metrics.tokIn = evt.tokensInput; metrics.tokOut = evt.tokensOutput; metrics.costUsd = evt.costUsd;
-                metaDiv.textContent = evt.model+' \u00B7 '+(evt.tokensInput+evt.tokensOutput)+' tok \u00B7 \u00A5'+((evt.costUsd||0)*150).toFixed(1);
+                metaDiv.textContent = evt.model+' \u00B7 '+(evt.tokensInput+evt.tokensOutput)+' tok \u00B7 '+((evt.costUsd||0)*150).toFixed(1)+'\u5186';
                 var cr = await sb.from('conversations').select('id,title,model,company_id,updated_at').eq('archived',false).order('updated_at',{ascending:false}).limit(50);
                 chatState.conversations = cr.data||[];
                 break;
@@ -7248,7 +7248,7 @@ function appendUserMsg(container, text, attachments) {
 function appendAssistantMsg(container, text, model, tokIn, tokOut, cost, step) {
   var row = el('div', {className: 'chat-msg-row assistant'});
   var bubble = el('div', {className: 'chat-bubble'});
-  var meta = el('div', {className:'chat-meta', textContent: (model||'')+(step?' \u00B7 Step '+step:'')+(cost?' \u00B7 \u00A5'+(cost*150).toFixed(1):'')});
+  var meta = el('div', {className:'chat-meta', textContent: (model||'')+(step?' \u00B7 Step '+step:'')+(cost?' \u00B7 '+(cost*150).toFixed(1)+'\u5186':'')});
   bubble.appendChild(meta);
   var body = el('div', {className: 'md-body'});
   renderMarkdownSafeToTarget(text||'', body);
