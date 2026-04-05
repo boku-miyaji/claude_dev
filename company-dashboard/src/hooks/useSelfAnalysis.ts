@@ -361,13 +361,48 @@ async function collectData(
   const dreams = (dreamsRes.data ?? []) as unknown as { title: string; category: string; status: string }[]
   const dreamText = dreams.map(d => `- [${d.status}][${d.category}] ${d.title}`).join('\n')
 
-  // --- Combine all ---
+  // --- Combine all with source context ---
   const sections = [
-    `## 日記 (${diaries.length}件)\n${diaryText}`,
-    `## 行動分析: プロンプトログ (${prompts.length}件)\nよく使うタグ: ${topTags}\n活動ピーク時間帯(UTC): ${peakHours}\n\n### 指示サンプル（コミュニケーションスタイル分析用）\n${samplePrompts}`,
-    `## タスク管理 (完了${tasksDone}件 / 未完了${tasksOpen}件)\n${taskList}`,
-    events.length > 0 ? `## スケジュール (${events.length}件)\n${calText}` : '',
-    dreams.length > 0 ? `## 夢・目標\n${dreamText}` : '',
+    `## 日記 (${diaries.length}件)
+【このデータの読み方】
+日記は本人が自分のために書いた私的な記録です。ここに現れる感情・考え・悩みは「本音」です。
+ただし、日記は書きたい時に書くものなので、悩みや内省が多くなるバイアスがあります。
+楽しい日常は日記に書かない傾向があるため、ネガティブ寄りに見えても実際はもっとバランスが取れている可能性があります。
+具体的な出来事の記述（「○○に行った」「○○を食べた」）は行動記録であり、性格の直接的証拠ではありません。
+「なぜそれを書いたか」「どう感じたか」の部分に注目してください。
+
+${diaryText}`,
+    `## AIへの指示ログ (${prompts.length}件)
+【このデータの読み方】
+これはAIアシスタント（Claude Code）への業務指示です。「この人の普段の言葉遣い」ではありません。
+指示口調（「○○して」「○○を調べて」）は仕事モードの指示であり、性格やコミュニケーションスタイルの直接的証拠にはなりません。
+ただし、以下は性格分析に有用です:
+- 指示の粒度（細かく指定する vs 大枠だけ伝える）→ 管理スタイルの傾向
+- 関心テーマの分布（何を頻繁に指示するか）→ 興味・価値観の間接的証拠
+- 活動時間帯 → 生活リズム
+- 指示の中に現れる「壁打ち」「相談」「考えて」→ 内省・対話の傾向
+
+よく使うタグ: ${topTags}
+活動ピーク時間帯(UTC): ${peakHours}
+
+### 指示サンプル
+${samplePrompts}`,
+    `## タスク管理 (完了${tasksDone}件 / 未完了${tasksOpen}件)
+【このデータの読み方】
+タスクの完了率は「実行力」の指標ですが、このシステムではAIが自動でタスクを完了させることもあるため、
+本人の実行力と直結するとは限りません。タスクの「内容」と「どういう種類のタスクを作るか」に注目してください。
+
+${taskList}`,
+    events.length > 0 ? `## スケジュール (${events.length}件)
+【このデータの読み方】
+実際に行動した記録です。人と会う頻度、1人の時間の取り方、仕事とプライベートの配分を見てください。
+
+${calText}` : '',
+    dreams.length > 0 ? `## 夢・目標
+【このデータの読み方】
+本人が「いつか叶えたい」と思って登録したリストです。ここに現れるテーマは価値観の直接的な証拠です。
+
+${dreamText}` : '',
   ].filter(Boolean).join('\n\n')
 
   return { text: sections, count: diaries.length + prompts.length }
@@ -415,8 +450,33 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
         return null
       }
 
-      // Build prompt with previous context
-      const prompt = PROMPT_BUILDERS[type](prevResult)
+      // Build prompt with previous context + data source literacy preamble
+      const dataLiteracyPreamble = `【最重要: データソースの文脈を理解して分析すること】
+
+あなたに渡されるデータは複数のソースから来ており、それぞれ性質が全く異なります。
+文脈を無視して全てを同列に扱うと、偏った分析になります。
+
+1. **日記**: 本人が自分のために書いた私的な感情・思考の記録。「本音」が最も現れる。
+   ただし悩みを書きやすいバイアスがあり、楽しい日常は書かれにくい。
+   「○○に行った」「○○をした」は行動の事実であり、性格の直接的な証拠ではない。
+   なぜそれを書いたのか、どう感じているのかに注目すること。
+
+2. **AIへの指示ログ**: AIアシスタントへの業務指示。これは「この人の普段の言葉遣い」ではない。
+   「○○して」「○○を調べて」という命令形はAIへの指示フォーマットであり、
+   この人が普段から命令的な話し方をするわけではない。
+   有用なのは: 関心テーマの分布、指示の粒度、活動時間帯、壁打ち的な相談の頻度。
+
+3. **タスク管理**: AIが自動完了するタスクも含まれるため、完了率＝本人の実行力ではない。
+   タスクの内容と種類に注目。
+
+4. **スケジュール**: 実際の行動記録。最も客観的。
+
+5. **夢・目標**: 本人が意識的に登録したもの。価値観の直接的な証拠。
+
+各セクションに【このデータの読み方】が付記されています。必ずそれに従って解釈してください。
+
+`
+      const prompt = dataLiteracyPreamble + PROMPT_BUILDERS[type](prevResult)
 
       // Call AI via Edge Function (OpenAI)
       const { content: resultText } = await aiCompletion(userData, { source: 'self_analysis',
