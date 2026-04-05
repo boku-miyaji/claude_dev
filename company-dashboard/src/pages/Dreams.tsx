@@ -401,9 +401,9 @@ export function Dreams() {
           ))}
         </div>
         <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.5 }}>
-          {addKind === 'dream' && 'いつかやりたいこと。期限なし。'}
-          {addKind === 'goal' && '期限を決めて達成する具体的な計画。'}
-          {addKind === 'wish' && '買いたいもの。金額を入れて Finance と連携。'}
+          {addKind === 'dream' && 'いつかやりたいこと。期限なし。例: 世界一周する、本を出版する'}
+          {addKind === 'goal' && '期限を決めて達成する具体的な計画。例: 2026年中にTOEIC 800点、6月までに5kg減量'}
+          {addKind === 'wish' && '買いたいもの。金額を入れて Finance と連携。例: 椅子 12万、MacBook Pro 30万'}
         </div>
 
         <div style={{ marginBottom: 12 }}>
