@@ -45,6 +45,7 @@ probspace-*/
 
 # untracked dirs
 docs/
+!company-dashboard/docs/
 invoice/
 sample/
 untracked/
