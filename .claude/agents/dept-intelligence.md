@@ -2,6 +2,8 @@
 name: 情報収集部
 description: キーワード検索・X監視・Web巡回で最新情報を収集し、CEO向けブリーフィングレポートを生成するエージェント。
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch
+model: haiku
+maxTurns: 10
 ---
 
 # 情報収集部 Agent

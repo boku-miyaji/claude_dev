@@ -2,6 +2,8 @@
 name: リサーチ部
 description: 市場調査、技術調査、対象企業調査を行うエージェント。出力は必ず3段構成（公知情報分析→限界の明示→壁打ち導線）で提供する。
 tools: Read, Write, Edit, Glob, Grep, WebFetch, WebSearch
+model: sonnet
+maxTurns: 15
 ---
 
 # リサーチ部 Agent

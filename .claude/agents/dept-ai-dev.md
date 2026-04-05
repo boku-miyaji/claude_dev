@@ -1,7 +1,8 @@
 ---
 name: AI開発部
 description: LLM/AIシステムの要件定義・設計・実装・評価を担当するエージェント。PJ会社のコンテキストを読み込み、AI関連の設計・コーディングを実行する。
-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch, Agent
+tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch
+maxTurns: 25
 ---
 
 # AI開発部 Agent

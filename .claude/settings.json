@@ -6,6 +6,13 @@
     "CLAUDE_CODE_DISABLE_TELEMETRY": "1"
   },
   "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.key)",
+      "Read(**/*secret*)",
+      "Read(**/*credentials*)"
+    ],
     "allow": [
       "// --- Shell: general tools ---",
       "Bash(python3:*)",
@@ -158,8 +165,6 @@
       "Bash(/tmp/qa_check.sh:*)",
       "Bash(/tmp/complete_check.sh:*)",
       "Bash(find /workspace/.company -type f \\\\\\(-name *.json -o -name *.md -o -name *.txt -o -name *.yaml -o -name *.yml \\\\\\))",
-      "Read(//workspace/{gsub\\(/ /**)",
-      "Read(//^\\\\|[[:space:]]+[a-z]/ && !/ID/ {gsub\\(/[[:space:]]/**)",
       "Bash(bash /workspace/.claude/hooks/freshness-check.sh)",
       "Bash(/tmp/extract_render_functions.sh)",
       "Bash(mkdir -p public)",
@@ -185,11 +190,7 @@
       "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.claude-plugin/marketplace.json)",
       "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.orphaned_at)",
       "Bash(node_modules/.bin/tsc --noEmit)",
-      "Bash(SUPABASE_ACCESS_TOKEN=sbp_e569100db8a84241452c54872319ed4579e41c8e npx supabase functions deploy ai-agent --project-ref akycymnahqypmtsfqhtr)",
-      "Bash(jq -r '.[] | \"[\" + .entry_date + \"] \" + \\(.body // \"\" | gsub\\(\"\\\\n\"; \" \"\\) | .[0:500]\\)' wc -l /tmp/diary_all.txt head -3 /tmp/diary_all.txt)",
-      "Bash(jq -r '.[] | \"[\" + .entry_date + \"]\\\\n\" + .body + \"\\\\n---\"' wc -c /tmp/diary_full_text.txt)",
-      "Bash(SUPABASE_ACCESS_TOKEN=sbp_45f36cb57028cf6fb1220af4826e24f84a243098 npx supabase functions deploy ai-agent --project-ref akycymnahqypmtsfqhtr)",
-      "Bash(SUPABASE_ACCESS_TOKEN=sbp_a4b0aec3a804c283cb393eaee163d92e16f87120 npx supabase functions deploy ai-agent --project-ref akycymnahqypmtsfqhtr)"
+      "Bash(npx supabase functions deploy:*)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",

@@ -2,6 +2,8 @@
 name: QA検証部
 description: パイプラインの各ステップの成果物を検証するエージェント。調査レポートのURL有無、設計書の完全性、コードのlint/型チェック/テスト実行を行う。
 tools: Read, Glob, Grep, Bash
+model: sonnet
+maxTurns: 20
 ---
 
 # QA検証部 Agent

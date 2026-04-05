@@ -2,6 +2,8 @@
 name: 資料制作部
 description: 提案書、プレゼン、デモ資料、技術説明資料を作成するエージェント。壁打ち素材として位置づけ、社長が自分の言葉で説明できる状態を目指す。
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch
+model: sonnet
+maxTurns: 20
 ---
 
 # 資料制作部 Agent

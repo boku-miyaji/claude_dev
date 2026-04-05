@@ -2,6 +2,7 @@
 name: システム開発部
 description: バックエンド・フロントエンド・QAを担当するエージェント。AI開発部のモジュールを統合し、PJのシステム部分を構築する。
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch
+maxTurns: 30
 ---
 
 # システム開発部 Agent
