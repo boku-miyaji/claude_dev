@@ -769,12 +769,25 @@ async function agentLoop(
   // Reverse to chronological order (oldest first)
   const hist = (histRaw || []).reverse();
 
-  const history: Message[] = hist
-    .filter(m => m.content != null)  // Skip messages with null content
-    .map(m => ({
-      role: m.role as Message["role"], content: m.content || "",
-      tool_calls: m.tool_calls || undefined, tool_call_id: m.tool_call_id || undefined, name: m.tool_name || undefined,
-    }));
+  // Build history, ensuring tool messages are properly paired with assistant tool_calls.
+  // Orphaned tool messages (without matching assistant) are converted to user context.
+  const rawHistory = hist.filter(m => m.content != null);
+  const history: Message[] = [];
+  for (let i = 0; i < rawHistory.length; i++) {
+    const m = rawHistory[i];
+    if (m.role === 'tool') {
+      // Check if previous message is assistant with tool_calls
+      const prev = history.length > 0 ? history[history.length - 1] : null;
+      if (prev && prev.role === 'assistant' && prev.tool_calls) {
+        history.push({ role: 'tool', content: (m.content || '').substring(0, 2000), tool_call_id: m.tool_call_id || prev.tool_calls[0]?.id || '', name: m.tool_name || undefined });
+      }
+      // else: orphaned tool message — skip it (would cause API error)
+    } else if (m.role === 'assistant' && m.tool_calls && m.tool_calls.length > 0) {
+      history.push({ role: 'assistant', content: m.content || '', tool_calls: m.tool_calls });
+    } else {
+      history.push({ role: m.role as Message["role"], content: m.content || '' });
+    }
+  }
 
   // Debug: report history count + conversation details
   send({ type: "debug", history_count: history.length, history_roles: history.map(m => m.role).join(','), conversation_id: conversationId, user_id: userId || 'null' } as unknown as SSEEvent);
