@@ -409,7 +409,7 @@ function TabArchitecture() {
 
       <Section title="自動化 — Hook + スキル + スクリプト">
         <Tbl headers={['種類', '代表例', '特性']} rows={[
-          ['Hook (27個)', 'prompt-log, bash-guard, claude-md-size-guard, pre/post-compact', '決定論的制御。コンテキスト外で実行。6イベント種別をカバー'],
+          ['Hook (25個)', 'prompt-log, bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, permission-guard', '決定論的制御。コンテキスト外で実行。9イベント種別をカバー'],
           ['スキル', '/company, /diary, /deploy', '必要時に呼び出し。判断を伴う処理'],
           ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期'],
         ]} />
@@ -467,7 +467,7 @@ function TabDesignPhilosophy() {
         <P>このシステム自体が改善され続けるための仕組み。</P>
         <Tbl headers={['ループ', '仕組み', 'データの場所']} rows={[
           ['日記ループ', '書く→分析→可視化→もっと書きたくなる→データ増→AI精度↑', 'diary_entries + emotion_analysis'],
-          ['ナレッジ昇格', '修正指示→memory→2回目でKB→3回目で社長承認→rules/', 'memory/ → knowledge_base → 承認 → rules/（自動昇格禁止）'],
+          ['ナレッジ昇格', '修正指示→memory→2回目でKB→confidence≥3で社長承認→CLAUDE.md/rules/', 'memory/ → knowledge_base → 社長承認 → CLAUDE.md or rules/（自動昇格禁止）'],
           ['Growth Chronicle', '失敗→記録→パターン→ルール化→再発防止', 'growth_events'],
           ['人事部サイクル', '部署作業→評価→CLAUDE.md改善→精度↑', '.company/hr/evaluations/'],
           ['設計思想蓄積', '判断→design-philosophy.md追記→次の判断の土台', '.company/design-philosophy.md'],
@@ -574,6 +574,8 @@ Step 3 [直列]: システム開発(実装) → QA(テスト)
           ['.company/departments/*/CLAUDE.md', 'Operations タブ（部署サイクル設計テーブル）'],
           ['.company/freshness-policy.yaml', 'Overview タブ（自動メンテナンスセクション）'],
           ['.company/design-philosophy.md', 'Design Philosophy タブ（同期確認）'],
+          ['src/hooks/useDreamDetection.ts', 'AI Features タブ（3. 夢進捗検出カード）'],
+          ['src/lib/fileExtract.ts', 'AI Features タブ（ファイル抽出対応形式）'],
           ['supabase-migration-*.sql', 'AI Features タブ（データ構造テーブル一覧）'],
         ]} />
         <Principle title="教訓: 2026-04-06 useSelfAnalysis.ts 改修時" body="ハイブリッド分析方式を実装したが、対応表に useSelfAnalysis.ts がなかったため Hook が発火せず、社長に指摘されるまで HowItWorks が古いまま残った。対応表を7→14ファイルに拡充。新しいAI機能フックを追加したら必ずこの表にも追加すること。" color="var(--amber)" />
@@ -701,7 +703,7 @@ function TabAiFeatures() {
         />
 
         <AiFeatureCard
-          name="5. 自己分析（4種類 + 統合まとめ）"
+          name="5. 自己分析（5種類 + 統合まとめ）"
           trigger="Self Analysisページで再分析ボタン押下（日記20件以上でアンロック）"
           input="ハイブリッド方式: 初回=全データ / 更新=前回結果+核心引用+統計スナップショット+新データのみ。データソース5種（日記=本音, AIチャット=自然な会話, Claude Code指示=関心テーマのみ, タスク/スケジュール, 夢リスト）。各ソースにデータ文脈ガイド付き"
           model="gpt-5-nano (completion mode, jsonMode)"
@@ -740,7 +742,7 @@ function TabAiFeatures() {
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>4つのエンジン</div>
         <Tbl headers={['エンジン', '役割', 'モデル', '更新頻度']} rows={[
           ['Arc Reader', '感情の時系列を「物語の弧」として解釈。今のフェーズを読み取る', 'gpt-5', '週次'],
-          ['Theme Finder', '数ヶ月の日記×夢×行動から人生の通底テーマを発見', 'gpt-5 / claude-sonnet', '月次'],
+          ['Theme Finder', '数ヶ月の日記×夢×行動から人生の通底テーマを発見', 'gpt-5 / claude-sonnet-4-6', '月次'],
           ['Moment Detector', '日記から転機（決断/気づき/突破/挫折）をリアルタイム検出', 'gpt-5-mini', '日記書き込み毎'],
           ['Foresight Engine', '過去のパターンから物語の続きを予感し、提案する', 'gpt-5', '随時'],
         ]} />
@@ -934,7 +936,7 @@ function TabHarness() {
         <P>Claude Code のハーネスは6つの構成要素から成る。それぞれの性質の違いが重要。</P>
         <Tbl headers={['構成要素', '役割', '性質', '遵守保証', '宮路HDでの実装']} rows={[
           ['CLAUDE.md', '方針・規約の宣言', '助言的（読んでも無視されうる）', '低〜中', '.claude/CLAUDE.md + .company/CLAUDE.md + 部署CLAUDE.md'],
-          ['Hooks', 'ライフサイクル制御', '決定論的（確実に実行される）', '高', '.claude/hooks/ に24スクリプト'],
+          ['Hooks', 'ライフサイクル制御', '決定論的（確実に実行される）', '高', '.claude/hooks/ に25スクリプト'],
           ['Permissions', '安全制御', '強制的（bypass不可）', '最高', 'settings.json の allow/deny リスト'],
           ['MCP', 'ツール拡張', '外部サービス接続', '—', 'Google Calendar, Supabase, Serena, Context7'],
           ['Sub-agents', 'コンテキスト分離', '独立メモリ・最小権限', '—', 'Agent tool で10部署を委譲'],
@@ -971,10 +973,10 @@ function TabHarness() {
           ['UserPromptSubmit', 'ユーザー入力時', 'additionalContext注入、ログ記録', 'prompt-log（全入力をSupabaseに記録）'],
           ['PreToolUse', 'ツール実行前', 'ブロック / 入力書き換え / ポリシーガード', 'bash-guard（危険コマンドのブロック）'],
           ['PostToolUse', 'ツール実行後', 'バリデーション、クリーンアップ', 'post-edit-check, artifact-auto-sync, tool-collector'],
-          ['Stop', 'エージェント応答完了', 'タスク完了確認、自動テスト', '（未活用）'],
-          ['PreCompact', 'コンテキスト圧縮前', '重要情報の保存', '（未活用）'],
-          ['PostCompact', '圧縮後', '重要コンテキストの再注入', '（未活用）'],
-          ['PermissionRequest', '許可ダイアログ表示時', '自動承認 / 条件付き承認', '（未活用）'],
+          ['Stop', 'エージェント応答完了', 'タスク完了確認、自動テスト', 'タスク完了時の品質検証（IMP-007）'],
+          ['PreCompact', 'コンテキスト圧縮前', '重要情報の保存', 'pre-compact-save.sh（セッション状態を.session-state.jsonに退避）'],
+          ['PostCompact', '圧縮後', '重要コンテキストの再注入', 'post-compact-restore.sh（重要コンテキスト再注入）'],
+          ['PermissionRequest', '許可ダイアログ表示時', '自動承認 / 条件付き承認', 'permission-guard.sh（許可判断を記録）'],
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>4つのフックタイプ</div>
@@ -1030,7 +1032,7 @@ function TabHarness() {
           ['Feature List', '離散的要件の追跡・ステータス管理', 'tasks テーブル + TodoWrite'],
           ['Coding Agent', '進捗ファイル+Git履歴を読み込み1機能ずつ作業', '部署Agent（Sub-agent）'],
         ]} />
-        <Principle title="Context Compaction 対策" body="長時間セッションでは Compaction（コンテキスト圧縮）が発生し、情報が失われる。重要な決定は即座にファイルに永続化すべき。PostCompact Hook でコンテキスト再注入も可能だが、現在は未活用。" color="var(--amber)" />
+        <Principle title="Context Compaction 対策" body="長時間セッションでは Compaction（コンテキスト圧縮）が発生し、情報が失われる。重要な決定は即座にファイルに永続化すべき。PreCompact Hook（pre-compact-save.sh）でセッション状態を保存し、PostCompact Hook（post-compact-restore.sh）で重要コンテキストを再注入する仕組みを実装済み。" color="var(--green)" />
       </Section>
 
       <Section title="宮路HDシステムへの適用状況">
@@ -1038,21 +1040,21 @@ function TabHarness() {
 
         <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>実装済み（強み）</div>
         <Tbl headers={['領域', '実装内容']} rows={[
-          ['Hook活用（24スクリプト）', 'prompt-log, config-sync, freshness-check, auto-pull/push, bash-guard, tool-collector 等'],
+          ['Hook活用（25スクリプト）', 'prompt-log, config-sync, freshness-check, auto-pull/push, bash-guard, tool-collector, docs-sync-guard, pre/post-compact, permission-guard 等'],
           ['Freshness Policy', '14データソースの鮮度管理。stale検出→自動修復'],
           ['部署CLAUDE.md分離', '10部署 × 独立仕様書。Sub-agent に近い設計'],
           ['ナレッジ昇格パイプライン', 'memory → knowledge_base → CLAUDE.md。confidence による自動昇格'],
           ['3層データ管理', 'ファイル（即時）→ Git（バージョン管理）→ Supabase（永続・分析）'],
         ]} />
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>未実装（改善余地）</div>
-        <Tbl headers={['領域', '現状', '改善案']} rows={[
-          ['重要ルールのHooks化', 'CLAUDE.mdに記載のみ', 'ハンドオフ検出・QA強制・肥大化防止をHookに'],
-          ['Sub-agentの最小権限', '全部署が全ツールアクセス可能', '部署ごとにツール・モデルを制限'],
-          ['Compaction対策', 'session-summaryのみ', 'PostCompact Hook で重要コンテキスト再注入'],
-          ['ハンドオフの構造化', '正規表現でテキスト検索', 'YAMLベースの構造化フォーマット'],
-          ['知識昇格のゲート', 'confidence≥3で自動昇格', 'ops部レビュー→承認→昇格'],
-          ['Stop Hook活用', '未使用', 'タスク完了時の自動検証・品質チェック'],
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>改善済み（IMP実行結果）</div>
+        <Tbl headers={['領域', '改善前', '改善後']} rows={[
+          ['重要ルールのHooks化', 'CLAUDE.mdに記載のみ', '✅ PreToolUse(Bash) + PostToolUse(Write/Edit) で強制'],
+          ['Sub-agentの最小権限', '全部署が全ツールアクセス可能', '✅ 部署ごとにツール・モデルを制限'],
+          ['Compaction対策', 'session-summaryのみ', '✅ pre-compact-save.sh + post-compact-restore.sh'],
+          ['ハンドオフの構造化', '正規表現でテキスト検索', '✅ YAMLベースの構造化フォーマット'],
+          ['知識昇格のゲート', 'confidence≥3で自動昇格', '✅ ops部レビュー→社長承認→昇格（自動昇格禁止）'],
+          ['Stop Hook活用', '未使用', '✅ タスク完了時の品質検証'],
         ]} />
       </Section>
 
@@ -1268,7 +1270,7 @@ function TabProposals() {
   return (
     <>
       <Section title="改善提案サマリー">
-        <P>情報収集部（最新ハーネス記事調査）× 運営改善部（現行システム分析）の協議結果。全提案はハーネスエンジニアリングの6構成要素に紐づく。HD CLAUDE.md: 208行 / 部署CLAUDE.md合計: 1,004行 / Hook: 24スクリプト / Freshness Policy: 13データソース。最終調査日: 2026-04-05</P>
+        <P>情報収集部（最新ハーネス記事調査）× 運営改善部（現行システム分析）の協議結果。全提案はハーネスエンジニアリングの6構成要素に紐づく。HD CLAUDE.md: 208行 / 部署CLAUDE.md合計: 1,004行 / Hook: 25スクリプト / Freshness Policy: 13データソース。最終調査日: 2026-04-06</P>
         <div className="g3" style={{ marginBottom: 16 }}>
           <Principle title={`P0: Critical — ${p0Count}件`} body="やらないと品質・信頼性に直結するリスク。CLAUDE.md肥大化、ハンドオフ漏れ、ルール無視。" color="var(--red)" />
           <Principle title={`P1: Important — ${p1Count}件`} body="やると品質・効率が大幅に向上。Compaction対策、最小権限、昇格ゲート。" color="var(--amber)" />
