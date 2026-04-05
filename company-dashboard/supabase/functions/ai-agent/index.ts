@@ -760,11 +760,11 @@ async function agentLoop(
   }
 
   // Load history — fetch more rows descending (newest first), then reverse.
-  // This ensures we always include the most recent conversation turns.
-  const { data: histRaw } = await sb.from("messages")
+  const { data: histRaw, error: histError } = await sb.from("messages")
     .select("role,content,model,tool_calls,tool_call_id,tool_name")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: false }).limit(MAX_HISTORY);
+  if (histError) send({ type: "debug", error: "history_load_failed", detail: histError.message } as unknown as SSEEvent);
 
   // Reverse to chronological order (oldest first)
   const hist = (histRaw || []).reverse();
