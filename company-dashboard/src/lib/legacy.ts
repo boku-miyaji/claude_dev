@@ -3497,7 +3497,7 @@ async function finOverview(root) {
   var startOfYear = year + '-01-01';
   var endOfYear = year + '-12-31';
 
-  var [invMonthRes, expMonthRes, timeMonthRes, projRes, invYearRes, expYearRes, timeYearRes, recurRes, wishRes] = await Promise.all([
+  var [invMonthRes, expMonthRes, timeMonthRes, projRes, invYearRes, expYearRes, timeYearRes, recurRes, wishRes, apiCostRes] = await Promise.all([
     sb.from('invoices').select('*').gte('invoice_date', startOfMonth).lte('invoice_date', endOfMonth),
     sb.from('expenses').select('*').gte('expense_date', startOfMonth).lte('expense_date', endOfMonth),
     sb.from('time_entries').select('*').gte('work_date', startOfMonth).lte('work_date', endOfMonth),
@@ -3506,7 +3506,8 @@ async function finOverview(root) {
     sb.from('expenses').select('*').gte('expense_date', startOfYear).lte('expense_date', endOfYear),
     sb.from('time_entries').select('*').gte('work_date', startOfYear).lte('work_date', endOfYear),
     sb.from('expenses').select('*').eq('is_recurring', true).eq('recurring_status', 'active'),
-    sb.from('wishlist').select('amount,status').in('status', ['want','considering'])
+    sb.from('wishlist').select('amount,status').in('status', ['want','considering']),
+    sb.from('messages').select('cost_usd').eq('role','assistant').gte('created_at', startOfMonth).not('cost_usd','is',null)
   ]);
 
   var skelEl = document.querySelector('.fin-skeleton');
@@ -3553,7 +3554,8 @@ async function finOverview(root) {
    {l:'稼働',v:totalHrs.toFixed(1)+'h',c:'var(--text)',sub:'年計 '+yearHrs.toFixed(1)+'h'},
    {l:'固定費',v:fmtYen(monthlyFixed),c:'var(--amber)',sub:recurSubs.length+'件 / 年'+fmtYen(monthlyFixed*12)},
    {l:'実質時給',v:fmtYen(hourlyRate),c:'var(--accent2)',sub:yearHrs>0?'年平均 '+fmtYen(Math.round(yearRev/yearHrs)):'-'},
-   {l:'ほしい物',v:fmtYen((wishRes.data||[]).reduce(function(s,w){return s+w.amount;},0)),c:'var(--blue)',sub:(wishRes.data||[]).length+'件'}
+   {l:'ほしい物',v:fmtYen((wishRes.data||[]).reduce(function(s,w){return s+w.amount;},0)),c:'var(--blue)',sub:(wishRes.data||[]).length+'件'},
+   {l:'APIコスト',v:'$'+(apiCostRes.data||[]).reduce(function(s,m){return s+parseFloat(m.cost_usd||0);},0).toFixed(2),c:'var(--amber)',sub:'今月 ('+Math.round((apiCostRes.data||[]).reduce(function(s,m){return s+parseFloat(m.cost_usd||0);},0)*150)+'円)'}
   ].forEach(function(d) {
     cards.appendChild(el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px'}, [
       el('div', {textContent: d.l, style: 'font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px'}),
