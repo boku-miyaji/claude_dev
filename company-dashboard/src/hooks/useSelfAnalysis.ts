@@ -312,16 +312,20 @@ async function collectData(
   const diaries = (diaryRes.data ?? []) as unknown as { body: string; entry_date: string }[]
   const diaryText = diaries.map(e => `[${e.entry_date}] ${e.body}`).join('\n\n')
 
-  // --- 2. Prompt log (behavioral: how they think, what they ask, when) ---
-  let promptQ = supabase.from('prompt_log').select('prompt, tags, created_at')
+  // --- 2a. Prompt log: Claude Code指示 (behavioral: work patterns) ---
+  let promptQ = supabase.from('prompt_log').select('prompt, tags, created_at, source')
   if (since) promptQ = promptQ.gt('created_at', since)
   const promptRes = await promptQ.order('created_at', { ascending: false }).limit(200)
-  const prompts = (promptRes.data ?? []) as unknown as { prompt: string; tags: string[]; created_at: string }[]
+  const allPrompts = (promptRes.data ?? []) as unknown as { prompt: string; tags: string[]; created_at: string; source: string }[]
 
-  // Behavioral summary from prompts
+  // Split by source
+  const codePrompts = allPrompts.filter(p => p.source === 'claude_code' || !p.source)
+  // dashboard_chat prompts are handled via messages table below
+
+  // Behavioral summary from code prompts
   const tagCounts: Record<string, number> = {}
   const hourCounts: Record<number, number> = {}
-  for (const p of prompts) {
+  for (const p of codePrompts) {
     for (const t of (p.tags ?? [])) {
       tagCounts[t] = (tagCounts[t] ?? 0) + 1
     }
@@ -332,9 +336,18 @@ async function collectData(
     .map(([t, c]) => `${t}: ${c}回`).join(', ')
   const peakHours = Object.entries(hourCounts).sort((a, b) => b[1] - a[1]).slice(0, 5)
     .map(([h, c]) => `${h}時: ${c}回`).join(', ')
-  // Sample prompts (how they give instructions — leadership/communication style)
-  const samplePrompts = prompts.slice(0, 30)
+  const sampleCodePrompts = codePrompts.slice(0, 20)
     .map(p => `[${p.created_at.substring(0, 16)}] ${p.prompt.substring(0, 150)}`)
+    .join('\n')
+
+  // --- 2b. AI Chat: ダッシュボードチャット（自然な会話・相談・興味） ---
+  let chatQ = supabase.from('messages').select('content, created_at')
+    .eq('role', 'user')
+  if (since) chatQ = chatQ.gt('created_at', since)
+  const chatRes = await chatQ.order('created_at', { ascending: false }).limit(50)
+  const chatMsgs = (chatRes.data ?? []) as unknown as { content: string; created_at: string }[]
+  const chatText = chatMsgs
+    .map(m => `[${m.created_at.substring(0, 16)}] ${String(m.content).substring(0, 200)}`)
     .join('\n')
 
   // --- 3. Tasks (execution patterns) ---
@@ -372,21 +385,29 @@ async function collectData(
 「なぜそれを書いたか」「どう感じたか」の部分に注目してください。
 
 ${diaryText}`,
-    `## AIへの指示ログ (${prompts.length}件)
+    `## Claude Code への業務指示 (${codePrompts.length}件)
 【このデータの読み方】
 これはAIアシスタント（Claude Code）への業務指示です。「この人の普段の言葉遣い」ではありません。
-指示口調（「○○して」「○○を調べて」）は仕事モードの指示であり、性格やコミュニケーションスタイルの直接的証拠にはなりません。
-ただし、以下は性格分析に有用です:
-- 指示の粒度（細かく指定する vs 大枠だけ伝える）→ 管理スタイルの傾向
-- 関心テーマの分布（何を頻繁に指示するか）→ 興味・価値観の間接的証拠
-- 活動時間帯 → 生活リズム
-- 指示の中に現れる「壁打ち」「相談」「考えて」→ 内省・対話の傾向
+「○○して」「○○を調べて」という命令形はAIへの指示フォーマットであり、この人が普段から命令的な話し方をするわけではない。
+性格分析に有用なのは:
+- 関心テーマの分布（何を頻繁に指示するか）→ 仕事上の興味・優先順位
+- 指示の粒度（細かく指定 vs 大枠だけ）→ マネジメントスタイル
+- 活動時間帯 → 生活リズム・仕事パターン
+- 「壁打ち」「相談」「考えて」等の表現 → 内省・対話の傾向
 
 よく使うタグ: ${topTags}
 活動ピーク時間帯(UTC): ${peakHours}
 
 ### 指示サンプル
-${samplePrompts}`,
+${sampleCodePrompts}`,
+    chatMsgs.length > 0 ? `## AIチャット（ダッシュボード） (${chatMsgs.length}件)
+【このデータの読み方】
+これはダッシュボードのAIチャットでの会話です。Claude Codeへの業務指示とは異なり、
+より自然な会話・興味の探索・悩みの相談・雑談が含まれます。
+ここに現れる言葉遣い・話題・感情は、日記と同様に「本音に近い」ものです。
+性格・興味・価値観の分析において日記に次いで重要なソースです。
+
+${chatText}` : '',
     `## タスク管理 (完了${tasksDone}件 / 未完了${tasksOpen}件)
 【このデータの読み方】
 タスクの完了率は「実行力」の指標ですが、このシステムではAIが自動でタスクを完了させることもあるため、
@@ -405,7 +426,7 @@ ${calText}` : '',
 ${dreamText}` : '',
   ].filter(Boolean).join('\n\n')
 
-  return { text: sections, count: diaries.length + prompts.length }
+  return { text: sections, count: diaries.length + allPrompts.length + chatMsgs.length }
 }
 
 // ---------------------------------------------------------------------------
@@ -461,17 +482,21 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
    「○○に行った」「○○をした」は行動の事実であり、性格の直接的な証拠ではない。
    なぜそれを書いたのか、どう感じているのかに注目すること。
 
-2. **AIへの指示ログ**: AIアシスタントへの業務指示。これは「この人の普段の言葉遣い」ではない。
+2. **Claude Codeへの業務指示**: AIアシスタントへの業務指示。これは「この人の普段の言葉遣い」ではない。
    「○○して」「○○を調べて」という命令形はAIへの指示フォーマットであり、
    この人が普段から命令的な話し方をするわけではない。
    有用なのは: 関心テーマの分布、指示の粒度、活動時間帯、壁打ち的な相談の頻度。
 
-3. **タスク管理**: AIが自動完了するタスクも含まれるため、完了率＝本人の実行力ではない。
+3. **AIチャット（ダッシュボード）**: 日常的な会話・興味の探索・悩み相談。
+   Claude Codeへの指示とは性質が全く異なる。ここでの言葉遣い・話題・感情は
+   日記と同様に本音に近く、性格・興味・価値観の分析に重要。
+
+4. **タスク管理**: AIが自動完了するタスクも含まれるため、完了率＝本人の実行力ではない。
    タスクの内容と種類に注目。
 
-4. **スケジュール**: 実際の行動記録。最も客観的。
+5. **スケジュール**: 実際の行動記録。最も客観的。
 
-5. **夢・目標**: 本人が意識的に登録したもの。価値観の直接的な証拠。
+6. **夢・目標**: 本人が意識的に登録したもの。価値観の直接的な証拠。
 
 各セクションに【このデータの読み方】が付記されています。必ずそれに従って解釈してください。
 
