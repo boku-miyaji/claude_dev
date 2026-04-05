@@ -61,6 +61,9 @@ tasks*
 # .company/ → tracked (HD structure, departments, registry)
 # .company-*/ → tracked (PJ company context, secretary)
 
+# company - PJ固有の調査レポート (claude_devの管理対象外)
+.company/departments/research/tech/
+
 # company - local repo map (server-specific, auto-generated)
 .company/repo-map.md
 
