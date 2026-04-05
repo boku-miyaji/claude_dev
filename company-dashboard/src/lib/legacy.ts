@@ -1860,28 +1860,24 @@ async function collectNews(container) {
       topicPrompt += '\n\n社長が特に関心の高いトピック: ' + topTopics.join('、') + '（こちらを優先的に）';
     }
 
-    var session = await sb.auth.getSession();
-    var token = session.data.session && session.data.session.access_token || '';
-    var res = await fetch(SUPABASE_URL + '/functions/v1/ai-agent', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},
-      body: JSON.stringify({
-        mode: 'completion',
-        system_prompt: '質問や確認をせず、即座にJSON配列だけを出力してください。前置き・説明・マークダウン記法は不要。',
-        message: topicPrompt + 'について、最新ニュースを5件出してください。\n\n'
-          + '出力形式（厳守・JSON配列のみ）:\n'
-          + '[{"title":"タイトル","summary":"1行要約","url":"出典URL","source":"メディア名","topic":"トピック名","date":"YYYY-MM-DD"}]\n\n'
-          + '注意:\n'
-          + '- urlは実在する記事の正確なURLを書く。不明なら空文字にする\n'
-          + '- sourceはTechCrunch, 公式ブログ, The Verge等の媒体名\n'
-          + '- topicはAI/LLM, Snowflake, Databricks, Claude, OpenAI等\n'
-          + '- JSON配列のみ出力。前置き・説明・マークダウン記法は不要',
-        model: 'gpt-5-nano',
-        max_tokens: 1500
-      })
-    });
-    if (res.ok) {
-      var data = await res.json();
+    // Use aiCompletion via dynamic import for cost tracking
+    var edgeAi = await import('@/lib/edgeAi');
+    var data = await edgeAi.aiCompletion(
+      topicPrompt + 'について、最新ニュースを5件出してください。\n\n'
+        + '出力形式（厳守・JSON配列のみ）:\n'
+        + '[{"title":"タイトル","summary":"1行要約","url":"出典URL","source":"メディア名","topic":"トピック名","date":"YYYY-MM-DD"}]\n\n'
+        + '注意:\n'
+        + '- urlは実在する記事の正確なURLを書く。不明なら空文字にする\n'
+        + '- sourceはTechCrunch, 公式ブログ, The Verge等の媒体名\n'
+        + '- topicはAI/LLM, Snowflake, Databricks, Claude, OpenAI等\n'
+        + '- JSON配列のみ出力。前置き・説明・マークダウン記法は不要',
+      {
+        systemPrompt: '質問や確認をせず、即座にJSON配列だけを出力してください。前置き・説明・マークダウン記法は不要。',
+        model: 'gpt-5-nano', maxTokens: 1500,
+        source: 'news_collect'
+      }
+    );
+    {
       var text = data.content || '';
       if (text) {
         // Extract JSON array from response
@@ -6802,7 +6798,7 @@ async function renderApiCosts(root) {
     var byModel = {};
     var byDay = {};
     var bySource = {};
-    var sourceLabels = {ai_chat:'AIチャット',self_analysis:'自己分析',emotion_analysis:'感情分析',ai_partner:'AIパートナー',dream_classify:'夢/目標分類',dream_detection:'夢達成検出',weekly_narrative:'週次レポート',other:'その他'};
+    var sourceLabels = {ai_chat:'AIチャット',self_analysis:'自己分析',emotion_analysis:'感情分析',ai_partner:'AIパートナー',dream_classify:'夢/目標分類',dream_detection:'夢達成検出',weekly_narrative:'週次レポート',news_collect:'ニュース収集',other:'その他'};
 
     msgs.forEach(function(m) {
       var cost = parseFloat(m.cost_usd) || 0;
@@ -6900,7 +6896,7 @@ async function renderApiCosts(root) {
 
       // Stacked bar
       var srcBar = el('div', {style: 'display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:12px'});
-      var srcColors = {ai_chat:'#5046e5',self_analysis:'#0d9f6e',emotion_analysis:'#2563eb',ai_partner:'#d97706',dream_classify:'#8b5cf6',dream_detection:'#06b6d4',weekly_narrative:'#ec4899',other:'#6b7280'};
+      var srcColors = {ai_chat:'#5046e5',self_analysis:'#0d9f6e',emotion_analysis:'#2563eb',ai_partner:'#d97706',dream_classify:'#8b5cf6',dream_detection:'#06b6d4',weekly_narrative:'#ec4899',news_collect:'#f59e0b',other:'#6b7280'};
       sourceKeys.forEach(function(src) {
         var pct = totalCost > 0 ? Math.round(bySource[src].cost / totalCost * 100) : 0;
         if (pct < 1) return;
