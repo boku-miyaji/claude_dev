@@ -6,6 +6,8 @@ interface CompletionOptions {
   temperature?: number
   maxTokens?: number
   jsonMode?: boolean
+  /** Source label for cost tracking (e.g. 'self_analysis', 'dream_classify') */
+  source?: string
 }
 
 interface CompletionResult {
@@ -18,6 +20,7 @@ interface CompletionResult {
  * Call the ai-agent Edge Function in completion mode.
  * Simple prompt → response, no conversation or agent loop.
  * API key is server-side only (Edge Function env var).
+ * Automatically logs cost to api_cost_log table.
  */
 export async function aiCompletion(
   message: string,
@@ -52,5 +55,23 @@ export async function aiCompletion(
     throw new Error(`Edge Function error: ${res.status} ${errBody.substring(0, 200)}`)
   }
 
-  return res.json()
+  const result: CompletionResult = await res.json()
+
+  // Log cost in background (don't block the caller)
+  if (result.usage || result.model) {
+    const tokIn = result.usage?.prompt_tokens || 0
+    const tokOut = result.usage?.completion_tokens || 0
+    // Estimate cost if not provided (GPT-5-nano ~$0.10/1M in, $0.40/1M out)
+    const costUsd = (tokIn * 0.0000001) + (tokOut * 0.0000004)
+    supabase.from('api_cost_log').insert({
+      source: options.source || 'other',
+      model: result.model || options.model || 'gpt-5-nano',
+      tokens_input: tokIn,
+      tokens_output: tokOut,
+      cost_usd: costUsd,
+      prompt_summary: message.substring(0, 100),
+    }).then(() => {})
+  }
+
+  return result
 }
