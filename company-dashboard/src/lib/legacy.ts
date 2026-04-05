@@ -428,6 +428,8 @@ function el(tag, attrs, children) {
     else if (k === 'textContent') n.textContent = attrs[k];
     else if (k === 'style' && typeof attrs[k] === 'string') n.setAttribute('style', attrs[k]);
     else if (k.startsWith('on') && typeof attrs[k] === 'function') n.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+    else if (k === 'checked' || k === 'disabled' || k === 'selected' || k === 'multiple') n[k] = !!attrs[k];
+    else if (k === 'value') n.value = attrs[k];
     else n.setAttribute(k, attrs[k]);
   });
   if (children) children.forEach(function(c) {
@@ -806,7 +808,6 @@ function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour, def
   var isEdit = !!existingEvent;
   // defaultAllDay must be explicitly true AND no hour. Any other case = not all-day.
   var isAllDay = isEdit ? !!existingEvent.all_day : (defaultAllDay === true && (defaultHour === null || defaultHour === undefined));
-  console.log('[CAL] openModal: defaultHour=' + defaultHour + ', defaultAllDay=' + defaultAllDay + ', isAllDay=' + isAllDay);
 
   var overlay = el('div', {className: 'modal-overlay'});
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
@@ -1068,7 +1069,6 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
         (function(dayIdx, hour) {
           cell.addEventListener('click', function(e) {
             if (dragState) return;
-            console.log('[CAL] cell click: hour=' + hour + ', target=' + e.target.className + ', isCell=' + (e.target === cell));
             e.stopPropagation();
             openCalEventModal(null, toLocalDateStr(days[dayIdx]), onRefresh, hour, false);
           });
@@ -6976,6 +6976,22 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   messagesArea.appendChild(messagesInner);
   container.appendChild(messagesArea);
 
+  // Drag & drop file upload on chat area
+  var dropOverlay = el('div', {style: 'display:none;position:absolute;inset:0;background:rgba(80,70,229,.08);border:2px dashed var(--accent);border-radius:12px;z-index:20;pointer-events:none;align-items:center;justify-content:center'});
+  dropOverlay.appendChild(el('div', {style: 'font-size:14px;color:var(--accent);font-weight:600', textContent: 'ファイルをドロップして添付'}));
+  container.style.position = 'relative';
+  container.appendChild(dropOverlay);
+  var dragCounter = 0;
+  container.addEventListener('dragenter', function(e) { e.preventDefault(); dragCounter++; dropOverlay.style.display = 'flex'; });
+  container.addEventListener('dragleave', function(e) { e.preventDefault(); dragCounter--; if (dragCounter <= 0) { dragCounter = 0; dropOverlay.style.display = 'none'; } });
+  container.addEventListener('dragover', function(e) { e.preventDefault(); });
+  container.addEventListener('drop', function(e) {
+    e.preventDefault(); dragCounter = 0; dropOverlay.style.display = 'none';
+    if (e.dataTransfer && e.dataTransfer.files) {
+      Array.from(e.dataTransfer.files).forEach(addFileAttachment);
+    }
+  });
+
   // Auto-scroll control: stop auto-scrolling when user scrolls up
   var chatAutoScroll = true;
   messagesArea.addEventListener('scroll', function() {
@@ -7073,12 +7089,28 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
 
   // File input (hidden) — accepts office docs, code files, and images
   var fileInput = el('input', {type:'file',accept:'image/*,.pdf,.txt,.md,.csv,.json,.xlsx,.xls,.pptx,.ppt,.docx,.doc,.yaml,.yml,.xml,.html,.css,.js,.ts,.py,.sql',multiple:true,style:'display:none'});
-  fileInput.addEventListener('change', function() {
-    Array.from(fileInput.files).forEach(function(f) {
+  function addFileAttachment(f) {
+    var isText = /\.(txt|md|csv|json|yaml|yml|xml|html|css|js|ts|py|sql)$/i.test(f.name);
+    if (isText) {
+      // Read as text so content can be sent to LLM
+      var tr = new FileReader();
+      tr.onload = function(e) {
+        var content = e.target.result;
+        if (content.length > 50000) content = content.substring(0, 50000) + '\n...(truncated)';
+        pendingAttachments.push({name:f.name,type:f.type,dataUrl:'',textContent:content,size:f.size});
+        renderPreviews();
+      };
+      tr.readAsText(f);
+    } else {
+      // Read as dataURL (images, PDF, office docs)
       var r = new FileReader();
       r.onload = function(e) { pendingAttachments.push({name:f.name,type:f.type,dataUrl:e.target.result,base64:e.target.result.split(',')[1],size:f.size}); renderPreviews(); };
       r.readAsDataURL(f);
-    });
+    }
+  }
+
+  fileInput.addEventListener('change', function() {
+    Array.from(fileInput.files).forEach(addFileAttachment);
     fileInput.value = '';
   });
 
@@ -7247,12 +7279,21 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
 
     var imageAtts = attachments.filter(function(a){return a.type.startsWith('image/');});
     var fileAtts = attachments.filter(function(a){return !a.type.startsWith('image/');});
+    // Build file content section for non-image attachments
+    var fileContext = '';
+    fileAtts.forEach(function(f) {
+      if (f.textContent) {
+        fileContext += '\n\n--- File: ' + f.name + ' ---\n' + f.textContent;
+      } else {
+        fileContext += '\n\n[Attached: ' + f.name + ' (' + (f.size > 1024 ? Math.round(f.size/1024) + 'KB' : f.size + 'B') + ')]';
+      }
+    });
     if (imageAtts.length > 0) {
-      var parts = [{type:'text',text:text+(fileAtts.length?'\n\n[Files: '+fileAtts.map(function(f){return f.name;}).join(', ')+']':'')}];
+      var parts = [{type:'text',text:text+fileContext}];
       imageAtts.forEach(function(img){parts.push({type:'image_url',image_url:{url:img.dataUrl,detail:'auto'}});});
       oaiMessages.push({role:'user',content:parts});
     } else {
-      oaiMessages.push({role:'user',content:text+(fileAtts.length?'\n\n[Files: '+fileAtts.map(function(f){return f.name;}).join(', ')+']':'')});
+      oaiMessages.push({role:'user',content:text+fileContext});
     }
 
     if (!chatState.conversationId) {
