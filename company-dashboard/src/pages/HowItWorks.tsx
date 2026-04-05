@@ -833,7 +833,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'CLAUDE.md',
     effort: '2時間',
     impact: '指示遵守率の向上、コンテキスト消費削減。Stanford HAI によれば構造改善は品質+28-47%。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-002',
@@ -844,7 +844,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Hooks (PostToolUse)',
     effort: '4時間',
     impact: 'ハンドオフ漏れゼロ化。部署間連携の信頼性が根本的に改善。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-003',
@@ -855,7 +855,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Hooks (PreToolUse/PostToolUse)',
     effort: '3時間',
     impact: '品質ゲートの確実な実行。「助言が無視される」問題の根本解決。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-004',
@@ -866,7 +866,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Hooks (PreCompact/PostCompact)',
     effort: '3時間',
     impact: '長時間セッション（1時間超）での情報損失防止。Anthropic公式パターンの適用。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-005',
@@ -877,7 +877,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Sub-agents',
     effort: '2時間',
     impact: '安全性向上+コスト最適化。haiku活用で月額30-50%削減の可能性。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-006',
@@ -888,7 +888,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'CLAUDE.md + Hooks',
     effort: '4時間',
     impact: 'ルールの品質担保。「間違ったルールが永久に適用される」リスク排除。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-007',
@@ -899,7 +899,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Hooks (Stop)',
     effort: '3時間',
     impact: '「完了したのに実は未完了」問題の解消。やり直しコスト削減。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-008',
@@ -910,7 +910,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Hooks + Dashboard',
     effort: '5時間',
     impact: 'サイレント障害の検出。システムの信頼性向上。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-009',
@@ -921,7 +921,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Sub-agents (CLAUDE.md)',
     effort: '6時間',
     impact: '部署アウトプットの品質安定化。「PMの出力が曖昧」等の問題解消。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-010',
@@ -932,7 +932,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Freshness Policy + Intelligence',
     effort: '2時間',
     impact: 'システムが常に最新のベストプラクティスに追従。「知らなくて使えなかった」を防止。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-011',
@@ -943,7 +943,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Hooks (SessionStart)',
     effort: '30分',
     impact: 'セッション起動の高速化。ユーザー体験の即座の改善。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-012',
@@ -954,7 +954,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Permissions + Hooks',
     effort: '1時間',
     impact: '破壊的操作の事前確認が復活。監査証跡の確保。セキュリティリスクの大幅低減。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-013',
@@ -965,7 +965,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Hooks (PreToolUse)',
     effort: '30分',
     impact: 'セキュリティ監査の実現。ブロックパターンの改善材料。',
-    status: 'proposed',
+    status: 'done',
   },
   {
     id: 'IMP-014',
@@ -976,7 +976,7 @@ const PROPOSALS: Proposal[] = [
     harnessPart: 'Freshness Policy',
     effort: '15分',
     impact: '更新順序の確定。重要データの鮮度保証。',
-    status: 'proposed',
+    status: 'done',
   },
 ]
 
