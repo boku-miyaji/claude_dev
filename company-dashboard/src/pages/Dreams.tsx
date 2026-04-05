@@ -509,15 +509,32 @@ export function Dreams() {
         ) : undefined}>
         {detail && (
           <div>
+            <div style={{ marginBottom: 12 }}>
+              <label className="form-label">タイトル</label>
+              <input className="input" value={detail.title}
+                onChange={(e) => { const updated = { ...detail, title: e.target.value }; setDetailId(detail.id); updateDream(detail.id, { title: e.target.value }) }}
+                onBlur={() => toast('保存しました')}
+                style={{ width: '100%', fontSize: 14, fontWeight: 500 }} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label className="form-label">説明</label>
+              <textarea className="input" value={detail.description || ''}
+                onChange={(e) => updateDream(detail.id, { description: e.target.value || null })}
+                onBlur={() => toast('保存しました')}
+                placeholder="詳しく..."
+                style={{ width: '100%', minHeight: 60 }} />
+            </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-              <input className="input" value={detail.category}
-                onChange={async (e) => { await updateDream(detail.id, { category: e.target.value }); toast(`カテゴリを「${e.target.value}」に変更`) }}
-                style={{ width: 'auto', maxWidth: 160, fontSize: 12, padding: '4px 8px' }} />
+              <div>
+                <label className="form-label">カテゴリ</label>
+                <input className="input" value={detail.category}
+                  onChange={(e) => updateDream(detail.id, { category: e.target.value })}
+                  style={{ width: 'auto', maxWidth: 160, fontSize: 12, padding: '4px 8px' }} />
+              </div>
               <Tag variant={detail.status === 'achieved' ? 'done' : detail.status === 'in_progress' ? 'in_progress' : 'open'}>
                 {DREAM_STATUSES.find((s) => s.value === detail.status)?.label || detail.status}
               </Tag>
             </div>
-            {detail.description && <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 12 }}>{detail.description}</p>}
             {linkedGoals.length > 0 && (
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 8 }}>紐づく目標 ({linkedGoals.length}件)</div>
