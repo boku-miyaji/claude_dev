@@ -5586,10 +5586,21 @@ async function renderArtifacts(root) {
     } else if (artifact.file_type === 'html') {
       var iframe = el('iframe', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;background:#fff;border-radius:8px'});
       contentCard.appendChild(iframe);
+      // Listen for postMessage from iframe for artifact navigation
+      var msgHandler = function(ev) {
+        if (ev.data && ev.data.type === 'navigateArtifact' && ev.data.id) {
+          window.removeEventListener('message', msgHandler);
+          window.location.hash = 'artifacts/' + ev.data.id;
+          // Fetch and show the target artifact
+          sb.from('artifacts').select('*,companies(name)').eq('id', ev.data.id).single().then(function(res) {
+            if (res.data) showDetail(res.data);
+          });
+        }
+      };
+      window.addEventListener('message', msgHandler);
       setTimeout(function() {
         iframe.contentDocument.open();
-        // Inject a script that intercepts artifact links and navigates the parent window
-        var navScript = '<script>document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";var m=h.match(/artifacts\\/(\\d+)/);if(m){e.preventDefault();e.stopPropagation();try{window.top.location.hash="artifacts/"+m[1]}catch(x){window.parent.location.hash="artifacts/"+m[1]}}});<\/script>';
+        var navScript = '<script>document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";var m=h.match(/artifacts\\/(\\d+)/);if(m){e.preventDefault();e.stopPropagation();window.top.postMessage({type:"navigateArtifact",id:m[1]},"*")}});<\/script>';
         iframe.contentDocument.write(artifact.content + navScript);
         iframe.contentDocument.close();
       }, 0);
@@ -8570,9 +8581,19 @@ function openFullscreen(artifact) {
   } else if (artifact.file_type === 'html') {
     var iframe = el('iframe', {style: 'width:100%;height:100%;border:none;background:#fff'});
     contentEl.appendChild(iframe);
+    var msgHandler2 = function(ev) {
+      if (ev.data && ev.data.type === 'navigateArtifact' && ev.data.id) {
+        window.removeEventListener('message', msgHandler2);
+        window.location.hash = 'artifacts/' + ev.data.id;
+        sb.from('artifacts').select('*,companies(name)').eq('id', ev.data.id).single().then(function(res) {
+          if (res.data) { closeFullscreen(); showDetail(res.data); }
+        });
+      }
+    };
+    window.addEventListener('message', msgHandler2);
     setTimeout(function() {
       iframe.contentDocument.open();
-      var navScript2 = '<script>document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";var m=h.match(/artifacts\\/(\\d+)/);if(m){e.preventDefault();e.stopPropagation();try{window.top.location.hash="artifacts/"+m[1]}catch(x){window.parent.location.hash="artifacts/"+m[1]}}});<\/script>';
+      var navScript2 = '<script>document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";var m=h.match(/artifacts\\/(\\d+)/);if(m){e.preventDefault();e.stopPropagation();window.top.postMessage({type:"navigateArtifact",id:m[1]},"*")}});<\/script>';
       iframe.contentDocument.write(artifact.content + navScript2);
       iframe.contentDocument.close();
     }, 0);
