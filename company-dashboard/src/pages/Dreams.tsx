@@ -7,6 +7,25 @@ import { useDataStore } from '@/stores/data'
 
 const CATEGORY_MAP = new Map(DREAM_CATEGORIES.map((c) => [c.value, c]))
 
+/** Auto-classify dream category from title + description using keyword matching */
+function autoClassify(title: string, desc: string): DreamCategory {
+  const text = `${title} ${desc}`.toLowerCase()
+  const rules: [DreamCategory, RegExp][] = [
+    ['career', /仕事|キャリア|転職|昇進|起業|経営|ビジネス|売上|事業|副業|独立|会社|プロジェクト|案件|営業|コンサル/],
+    ['financial', /お金|貯金|投資|年収|資産|収入|不動産|株|万円|億|ローン|節税|financial|salary|income/],
+    ['travel', /旅行|旅|海外|国内|観光|世界一周|visit|travel|ヨーロッパ|アジア|アメリカ|ハワイ|沖縄|北海道/],
+    ['skill', /スキル|勉強|学習|資格|英語|プログラミング|読書|learn|study|技術|言語|大学|講座|セミナー|開発/],
+    ['health', /健康|運動|ダイエット|筋トレ|ジム|マラソン|体重|睡眠|ヨガ|体力|禁煙|health|fitness|走/],
+    ['relationship', /家族|友人|結婚|パートナー|子ども|親|恋人|人間関係|コミュニティ|仲間|出会い|友達/],
+    ['creative', /作品|音楽|絵|写真|動画|ブログ|本|小説|映画|デザイン|アート|YouTube|創作|制作|ポッドキャスト/],
+    ['experience', /体験|挑戦|イベント|ライブ|フェス|スカイダイビング|ボランティア|経験|初めて|やってみ/],
+  ]
+  for (const [cat, pattern] of rules) {
+    if (pattern.test(text)) return cat
+  }
+  return 'other'
+}
+
 export function Dreams() {
   const {
     dreams, goals,
@@ -22,7 +41,7 @@ export function Dreams() {
   // Add form state
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
-  const [newCategory, setNewCategory] = useState<DreamCategory>('other')
+  const autoCategory = useMemo(() => autoClassify(newTitle, newDesc), [newTitle, newDesc])
 
   useEffect(() => {
     fetchDreams()
@@ -69,14 +88,14 @@ export function Dreams() {
     const result = await addDream({
       title: newTitle.trim(),
       description: newDesc.trim() || null,
-      category: newCategory,
+      category: autoCategory,
     })
     if (result) {
       setNewTitle('')
       setNewDesc('')
-      setNewCategory('other')
       setShowAdd(false)
-      toast('夢を追加しました')
+      const catInfo = CATEGORY_MAP.get(autoCategory)
+      toast(`${catInfo?.icon} ${catInfo?.label}に分類しました`)
     }
   }
 
@@ -218,18 +237,14 @@ export function Dreams() {
             style={{ minHeight: 60 }}
           />
         </div>
-        <div style={{ marginBottom: 12 }}>
-          <label className="form-label">カテゴリ</label>
-          <select
-            className="input"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value as DreamCategory)}
-          >
-            {DREAM_CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
-            ))}
-          </select>
-        </div>
+        {newTitle.trim() && (
+          <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>自動分類:</span>
+            <span className="tag tag-co">
+              {CATEGORY_MAP.get(autoCategory)?.icon} {CATEGORY_MAP.get(autoCategory)?.label}
+            </span>
+          </div>
+        )}
         <button className="btn btn-p" style={{ width: '100%' }} onClick={handleAddDream} disabled={!newTitle.trim()}>
           追加する
         </button>
@@ -261,10 +276,22 @@ export function Dreams() {
       >
         {detail && (
           <div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <span className="tag tag-co">
-                {CATEGORY_MAP.get(detail.category)?.icon} {CATEGORY_MAP.get(detail.category)?.label}
-              </span>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <select
+                className="input"
+                value={detail.category}
+                onChange={async (e) => {
+                  const newCat = e.target.value as DreamCategory
+                  await updateDream(detail.id, { category: newCat })
+                  const catInfo = CATEGORY_MAP.get(newCat)
+                  toast(`${catInfo?.icon} ${catInfo?.label}に変更しました`)
+                }}
+                style={{ width: 'auto', fontSize: 11, padding: '3px 8px' }}
+              >
+                {DREAM_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
+                ))}
+              </select>
               <span className={`tag ${detail.status === 'achieved' ? 'tag-done' : detail.status === 'in_progress' ? 'tag-in_progress' : 'tag-open'}`}>
                 {DREAM_STATUSES.find((s) => s.value === detail.status)?.label}
               </span>
