@@ -5588,19 +5588,10 @@ async function renderArtifacts(root) {
       contentCard.appendChild(iframe);
       setTimeout(function() {
         iframe.contentDocument.open();
-        iframe.contentDocument.write(artifact.content);
+        // Inject a script that intercepts artifact links and navigates the parent window
+        var navScript = '<script>document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";var m=h.match(/artifacts\\/(\\d+)/);if(m){e.preventDefault();e.stopPropagation();try{window.top.location.hash="artifacts/"+m[1]}catch(x){window.parent.location.hash="artifacts/"+m[1]}}});<\/script>';
+        iframe.contentDocument.write(artifact.content + navScript);
         iframe.contentDocument.close();
-        // Intercept artifact links inside iframe and navigate parent window
-        iframe.contentDocument.addEventListener('click', function(e) {
-          var link = e.target.closest('a');
-          if (!link) return;
-          var href = link.getAttribute('href') || '';
-          if (href.indexOf('artifacts/') !== -1) {
-            e.preventDefault();
-            var match = href.match(/artifacts\/(\d+)/);
-            if (match) { window.location.hash = 'artifacts/' + match[1]; }
-          }
-        });
       }, 0);
     } else if (artifact.file_type === 'md') {
       // Render markdown as HTML using marked + DOM-based sanitization
@@ -8581,18 +8572,9 @@ function openFullscreen(artifact) {
     contentEl.appendChild(iframe);
     setTimeout(function() {
       iframe.contentDocument.open();
-      iframe.contentDocument.write(artifact.content);
+      var navScript2 = '<script>document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";var m=h.match(/artifacts\\/(\\d+)/);if(m){e.preventDefault();e.stopPropagation();try{window.top.location.hash="artifacts/"+m[1]}catch(x){window.parent.location.hash="artifacts/"+m[1]}}});<\/script>';
+      iframe.contentDocument.write(artifact.content + navScript2);
       iframe.contentDocument.close();
-      iframe.contentDocument.addEventListener('click', function(e) {
-        var link = e.target.closest('a');
-        if (!link) return;
-        var href = link.getAttribute('href') || '';
-        if (href.indexOf('artifacts/') !== -1) {
-          e.preventDefault();
-          var match = href.match(/artifacts\/(\d+)/);
-          if (match) { window.location.hash = 'artifacts/' + match[1]; }
-        }
-      });
     }, 0);
   } else if (artifact.file_type === 'md') {
     var mdIframe = el('iframe', {style: 'width:100%;height:100%;border:none;background:#fff'});
