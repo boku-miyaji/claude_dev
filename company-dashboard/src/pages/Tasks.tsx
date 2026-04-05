@@ -117,6 +117,13 @@ export function Tasks() {
     toast(newStatus === 'done' ? '完了しました' : '再オープンしました')
   }
 
+  async function toggleType(t: Task) {
+    const newType = t.type === 'task' ? 'request' : 'task'
+    await supabase.from('tasks').update({ type: newType }).eq('id', t.id)
+    setTasks((prev) => prev.map((x) => x.id === t.id ? { ...x, type: newType } : x))
+    toast(`${newType === 'task' ? 'Task' : 'Request'} に変更しました`)
+  }
+
   async function deleteTask(t: Task) {
     if (!confirm(`"${t.title}" を削除しますか？`)) return
     await supabase.from('tasks').delete().eq('id', t.id)
@@ -283,6 +290,13 @@ export function Tasks() {
                   <Tag variant={t.status as 'open' | 'done' | 'in_progress'}>{t.status}</Tag>
                 </div>
               </div>
+              <button
+                className={`tasks-type-toggle${t.type === 'request' ? ' req' : ''}`}
+                title={`${t.type === 'task' ? 'Request' : 'Task'} に変更`}
+                onClick={() => toggleType(t)}
+              >
+                {t.type === 'task' ? 'T' : 'R'}
+              </button>
               <button className="tasks-delete" title="削除" onClick={() => deleteTask(t)}>&times;</button>
             </div>
           )
