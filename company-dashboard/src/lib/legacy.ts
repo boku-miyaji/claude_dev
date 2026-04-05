@@ -5580,7 +5580,27 @@ async function renderArtifacts(root) {
         iframe.contentDocument.close();
       }, 0);
     } else if (artifact.file_type === 'md') {
-      contentCard.appendChild(el('div', {style: 'white-space:pre-wrap;font-size:13px;line-height:1.7;font-family:var(--mono)', textContent: artifact.content}));
+      // Render markdown as HTML using marked + DOM-based sanitization
+      // Content is from our own DB (artifacts table), same approach as SafeMarkdown in Reports.tsx
+      var mdDiv = el('div', {className: 'md-body', style: 'font-size:13px;line-height:1.8'});
+      var mdHtml = marked.parse(artifact.content, {async: false}) as string;
+      var tpl = document.createElement('template');
+      tpl.innerHTML = mdHtml; // eslint-disable-line -- sanitized below via DOM traversal
+      var frag = tpl.content;
+      frag.querySelectorAll('script,iframe,object,embed,form').forEach(function(node) { node.remove(); });
+      frag.querySelectorAll('*').forEach(function(node) {
+        Array.from(node.attributes).forEach(function(attr) {
+          if (attr.name.startsWith('on')) node.removeAttribute(attr.name);
+        });
+      });
+      frag.querySelectorAll('a').forEach(function(a) {
+        var href = (a.getAttribute('href') || '').trim().toLowerCase();
+        if (href.startsWith('javascript:') || href.startsWith('data:')) a.removeAttribute('href');
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+      });
+      mdDiv.appendChild(frag);
+      contentCard.appendChild(mdDiv);
     } else {
       contentCard.appendChild(el('pre', {style: 'font-size:12px;overflow:auto;max-height:calc(100vh - 280px)', textContent: artifact.content}));
     }
