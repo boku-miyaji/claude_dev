@@ -15,7 +15,7 @@ export interface Dream {
   id: string
   title: string
   description: string | null
-  category: DreamCategory
+  category: string
   status: DreamStatus
   achieved_at: string | null
   priority: number

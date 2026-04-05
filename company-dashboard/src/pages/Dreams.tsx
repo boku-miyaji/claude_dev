@@ -1,30 +1,115 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Card, PageHeader, Modal, EmptyState } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
-import { DREAM_CATEGORIES, DREAM_STATUSES } from '@/types/dreams'
-import type { DreamCategory, DreamStatus } from '@/types/dreams'
+import { DREAM_STATUSES } from '@/types/dreams'
+import type { DreamStatus } from '@/types/dreams'
+import type { Dream } from '@/types/dreams'
 import { useDataStore } from '@/stores/data'
+import { aiCompletion } from '@/lib/edgeAi'
 
-const CATEGORY_MAP = new Map(DREAM_CATEGORIES.map((c) => [c.value, c]))
+/* ── Dynamic Categories ── */
 
-/** Auto-classify dream category from title + description using keyword matching */
-function autoClassify(title: string, desc: string): DreamCategory {
-  const text = `${title} ${desc}`.toLowerCase()
-  const rules: [DreamCategory, RegExp][] = [
-    ['career', /仕事|キャリア|転職|昇進|起業|経営|ビジネス|売上|事業|副業|独立|会社|プロジェクト|案件|営業|コンサル/],
-    ['financial', /お金|貯金|投資|年収|資産|収入|不動産|株|万円|億|ローン|節税|financial|salary|income/],
-    ['travel', /旅行|旅|海外|国内|観光|世界一周|visit|travel|ヨーロッパ|アジア|アメリカ|ハワイ|沖縄|北海道/],
-    ['skill', /スキル|勉強|学習|資格|英語|プログラミング|読書|learn|study|技術|言語|大学|講座|セミナー|開発/],
-    ['health', /健康|運動|ダイエット|筋トレ|ジム|マラソン|体重|睡眠|ヨガ|体力|禁煙|health|fitness|走/],
-    ['relationship', /家族|友人|結婚|パートナー|子ども|親|恋人|人間関係|コミュニティ|仲間|出会い|友達/],
-    ['creative', /作品|音楽|絵|写真|動画|ブログ|本|小説|映画|デザイン|アート|YouTube|創作|制作|ポッドキャスト/],
-    ['experience', /体験|挑戦|イベント|ライブ|フェス|スカイダイビング|ボランティア|経験|初めて|やってみ/],
-  ]
-  for (const [cat, pattern] of rules) {
-    if (pattern.test(text)) return cat
-  }
-  return 'other'
+interface Category {
+  value: string
+  label: string
+  icon: string
 }
+
+/** Derive categories dynamically from existing dreams */
+function deriveCategories(dreams: Dream[]): Category[] {
+  const catSet = new Set<string>()
+  for (const d of dreams) {
+    if (d.category) catSet.add(d.category)
+  }
+  const cats: Category[] = []
+  for (const v of catSet) {
+    cats.push({ value: v, label: v, icon: getCategoryIcon(v) })
+  }
+  return cats.sort((a, b) => a.label.localeCompare(b.label))
+}
+
+function getCategoryIcon(cat: string): string {
+  const map: Record<string, string> = {
+    career: '🎯', travel: '✈️', skill: '📚', health: '💪',
+    relationship: '❤️', creative: '🎨', financial: '💰',
+    experience: '🌟', other: '✨', キャリア: '🎯', 旅行: '✈️',
+    スキル: '📚', 健康: '💪', 人間関係: '❤️', クリエイティブ: '🎨',
+    資産: '💰', 体験: '🌟', その他: '✨',
+  }
+  return map[cat] || '📌'
+}
+
+/* ── AI Classification ── */
+
+async function classifyDream(
+  title: string,
+  description: string,
+  existingCategories: Category[],
+): Promise<{ category: string; isNew: boolean }> {
+  const catList = existingCategories.map((c) => `${c.icon} ${c.value}`).join(', ')
+
+  const result = await aiCompletion(
+    `以下の「夢」を最適なカテゴリに分類してください。
+
+夢: ${title}
+${description ? `説明: ${description}` : ''}
+
+既存カテゴリ: [${catList || 'なし'}]
+
+ルール:
+- 既存カテゴリに当てはまるならそのカテゴリ名を返す
+- 当てはまらない場合は新しいカテゴリ名を作成して返す（短く、日本語、一般的な名前）
+- カテゴリ名のみ返す（説明不要）`,
+    { model: 'gpt-5-nano', temperature: 0.2, maxTokens: 50 },
+  )
+
+  const category = result.content.trim().replace(/^[「『"']+|[」』"']+$/g, '')
+  const isNew = !existingCategories.some((c) => c.value === category)
+  return { category, isNew }
+}
+
+async function reviewCategories(
+  dreams: Dream[],
+  currentCategories: Category[],
+): Promise<{ newCategories: Record<string, string>; reason: string } | null> {
+  if (dreams.length < 3) return null
+
+  const dreamList = dreams.map((d) => `- "${d.title}" → ${d.category}`).join('\n')
+  const catList = currentCategories.map((c) => c.value).join(', ')
+
+  const result = await aiCompletion(
+    `以下の夢リストとカテゴリ分類を見て、カテゴリ構造を見直すべきか判断してください。
+
+現在のカテゴリ: [${catList}]
+
+夢リスト:
+${dreamList}
+
+以下のJSON形式で返してください:
+{
+  "needs_review": true/false,
+  "reason": "見直し理由（不要ならnull）",
+  "changes": { "旧カテゴリ名": "新カテゴリ名", ... }
+}
+
+見直し基準:
+- 1件しかないカテゴリが複数ある → 統合を検討
+- 5件以上のカテゴリがある → 分割を検討
+- 類似カテゴリがある → 統合
+- 見直し不要なら needs_review: false`,
+    { model: 'gpt-5-nano', temperature: 0.2, maxTokens: 500, jsonMode: true },
+  )
+
+  try {
+    const parsed = JSON.parse(result.content)
+    if (!parsed.needs_review) return null
+    return { newCategories: parsed.changes || {}, reason: parsed.reason || '' }
+  } catch {
+    return null
+  }
+}
+
+/* ── Component ── */
 
 export function Dreams() {
   const {
@@ -37,16 +122,23 @@ export function Dreams() {
   const [filter, setFilter] = useState<DreamStatus | ''>('')
   const [showAdd, setShowAdd] = useState(false)
   const [detailId, setDetailId] = useState<string | null>(null)
+  const [classifying, setClassifying] = useState(false)
+  const [reviewing, setReviewing] = useState(false)
 
   // Add form state
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
-  const autoCategory = useMemo(() => autoClassify(newTitle, newDesc), [newTitle, newDesc])
+  const [suggestedCat, setSuggestedCat] = useState<string | null>(null)
+  const [manualCat, setManualCat] = useState<string>('')
 
   useEffect(() => {
     fetchDreams()
     fetchGoals()
   }, [fetchDreams, fetchGoals])
+
+  // Dynamic categories derived from existing dreams
+  const categories = useMemo(() => deriveCategories(dreams), [dreams])
+  const categoryMap = useMemo(() => new Map(categories.map((c) => [c.value, c])), [categories])
 
   const detail = useMemo(() => {
     if (!detailId) return null
@@ -59,12 +151,9 @@ export function Dreams() {
   }, [dreams, filter])
 
   const grouped = useMemo(() => {
-    const map = new Map<DreamCategory, typeof dreams>()
-    for (const cat of DREAM_CATEGORIES) {
-      map.set(cat.value, [])
-    }
+    const map = new Map<string, typeof dreams>()
     for (const d of filtered) {
-      const cat = d.category as DreamCategory
+      const cat = d.category || 'other'
       if (!map.has(cat)) map.set(cat, [])
       map.get(cat)!.push(d)
     }
@@ -77,26 +166,76 @@ export function Dreams() {
     return { achieved, inProgress, total: dreams.length }
   }, [dreams])
 
-  // Goals linked to the detail dream
   const linkedGoals = useMemo(() => {
     if (!detail) return []
     return goals.filter((g) => g.dream_id === detail.id)
   }, [detail, goals])
 
+  // Auto-classify when title changes (debounced)
+  const runClassify = useCallback(async (title: string, desc: string) => {
+    if (!title.trim()) { setSuggestedCat(null); return }
+    setClassifying(true)
+    try {
+      const result = await classifyDream(title, desc, categories)
+      setSuggestedCat(result.category)
+      if (result.isNew) toast(`新カテゴリ「${result.category}」を提案`)
+    } catch {
+      setSuggestedCat(null)
+    }
+    setClassifying(false)
+  }, [categories])
+
   async function handleAddDream() {
     if (!newTitle.trim()) return
+    const category = manualCat || suggestedCat || 'other'
     const result = await addDream({
       title: newTitle.trim(),
       description: newDesc.trim() || null,
-      category: autoCategory,
+      category,
     })
     if (result) {
       setNewTitle('')
       setNewDesc('')
+      setSuggestedCat(null)
+      setManualCat('')
       setShowAdd(false)
-      const catInfo = CATEGORY_MAP.get(autoCategory)
-      toast(`${catInfo?.icon} ${catInfo?.label}に分類しました`)
+      toast(`「${category}」に分類して追加しました`)
     }
+  }
+
+  async function handleReviewCategories() {
+    setReviewing(true)
+    try {
+      const result = await reviewCategories(dreams, categories)
+      if (!result) {
+        toast('現在のカテゴリ構造は適切です')
+        setReviewing(false)
+        return
+      }
+
+      const changes = result.newCategories
+      const entries = Object.entries(changes)
+      if (entries.length === 0) {
+        toast('変更なし: ' + result.reason)
+        setReviewing(false)
+        return
+      }
+
+      // Apply changes
+      let updated = 0
+      for (const dream of dreams) {
+        const newCat = changes[dream.category]
+        if (newCat) {
+          await updateDream(dream.id, { category: newCat })
+          updated++
+        }
+      }
+      await fetchDreams()
+      toast(`${result.reason} — ${updated}件を再分類しました`)
+    } catch (e) {
+      toast('カテゴリ見直しに失敗しました')
+    }
+    setReviewing(false)
   }
 
   async function handleUpdateStatus(dreamId: string, title: string, status: DreamStatus) {
@@ -126,15 +265,29 @@ export function Dreams() {
     )
   }
 
+  // Sort categories by item count (desc)
+  const sortedCats = [...grouped.entries()].sort((a, b) => b[1].length - a[1].length)
+
   return (
     <div className="page">
       <PageHeader
         title="100の夢リスト"
-        description="いつか叶えたい夢を自由に書き出す場所。具体的な計画は Goals で。"
+        description="いつか叶えたい夢を自由に書き出す場所。AIが自動でカテゴリ分類。"
         actions={
-          <button className="btn btn-p btn-sm" onClick={() => setShowAdd(true)}>
-            + 新しい夢を追加
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {dreams.length >= 3 && (
+              <button
+                className="btn btn-g btn-sm"
+                onClick={handleReviewCategories}
+                disabled={reviewing}
+              >
+                {reviewing ? '分析中...' : 'カテゴリ見直し'}
+              </button>
+            )}
+            <button className="btn btn-p btn-sm" onClick={() => setShowAdd(true)}>
+              + 新しい夢を追加
+            </button>
+          </div>
         }
       />
 
@@ -143,9 +296,10 @@ export function Dreams() {
         <span>達成: <strong>{stats.achieved}</strong></span>
         <span>進行中: <strong>{stats.inProgress}</strong></span>
         <span>全: <strong>{stats.total}</strong></span>
+        <span>カテゴリ: <strong>{categories.length}</strong></span>
       </div>
 
-      {/* Filters */}
+      {/* Status Filters */}
       <div className="filter-bar">
         {[
           { value: '' as const, label: '全て' },
@@ -161,7 +315,7 @@ export function Dreams() {
         ))}
       </div>
 
-      {/* Grouped by category */}
+      {/* Grouped by dynamic category */}
       {dreams.length === 0 ? (
         <Card>
           <EmptyState
@@ -173,13 +327,14 @@ export function Dreams() {
         </Card>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {DREAM_CATEGORIES.map((cat) => {
-            const items = grouped.get(cat.value) || []
+          {sortedCats.map(([catValue, items]) => {
             if (items.length === 0) return null
+            const catInfo = categoryMap.get(catValue)
+            const icon = catInfo?.icon || getCategoryIcon(catValue)
             return (
-              <div key={cat.value}>
+              <div key={catValue}>
                 <div className="section-title" style={{ marginBottom: 8 }}>
-                  {cat.icon} {cat.label} ({items.length}件)
+                  {icon} {catValue} ({items.length}件)
                 </div>
                 <Card>
                   {items.map((d) => (
@@ -217,7 +372,7 @@ export function Dreams() {
       )}
 
       {/* Add modal */}
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="新しい夢を追加">
+      <Modal open={showAdd} onClose={() => { setShowAdd(false); setSuggestedCat(null); setManualCat('') }} title="新しい夢を追加">
         <div style={{ marginBottom: 12 }}>
           <label className="form-label">タイトル</label>
           <input
@@ -225,6 +380,7 @@ export function Dreams() {
             placeholder="あなたの夢は?"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
+            onBlur={() => runClassify(newTitle, newDesc)}
           />
         </div>
         <div style={{ marginBottom: 12 }}>
@@ -234,18 +390,33 @@ export function Dreams() {
             placeholder="詳しく書いてみてください..."
             value={newDesc}
             onChange={(e) => setNewDesc(e.target.value)}
+            onBlur={() => newTitle.trim() && runClassify(newTitle, newDesc)}
             style={{ minHeight: 60 }}
           />
         </div>
-        {newTitle.trim() && (
-          <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 11, color: 'var(--text3)' }}>自動分類:</span>
-            <span className="tag tag-co">
-              {CATEGORY_MAP.get(autoCategory)?.icon} {CATEGORY_MAP.get(autoCategory)?.label}
-            </span>
+        {/* AI category suggestion + manual override */}
+        <div style={{ marginBottom: 12 }}>
+          <label className="form-label">カテゴリ</label>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {classifying ? (
+              <span style={{ fontSize: 12, color: 'var(--text3)' }}>AI分類中...</span>
+            ) : suggestedCat ? (
+              <span className="tag tag-co" style={{ fontSize: 12 }}>
+                {getCategoryIcon(suggestedCat)} {suggestedCat}
+              </span>
+            ) : (
+              <span style={{ fontSize: 12, color: 'var(--text3)' }}>入力後に自動分類</span>
+            )}
+            <input
+              className="input"
+              placeholder="手動で変更"
+              value={manualCat}
+              onChange={(e) => setManualCat(e.target.value)}
+              style={{ flex: 1, fontSize: 12, padding: '4px 8px' }}
+            />
           </div>
-        )}
-        <button className="btn btn-p" style={{ width: '100%' }} onClick={handleAddDream} disabled={!newTitle.trim()}>
+        </div>
+        <button className="btn btn-p" style={{ width: '100%' }} onClick={handleAddDream} disabled={!newTitle.trim() || classifying}>
           追加する
         </button>
       </Modal>
@@ -277,21 +448,15 @@ export function Dreams() {
         {detail && (
           <div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-              <select
+              <input
                 className="input"
                 value={detail.category}
                 onChange={async (e) => {
-                  const newCat = e.target.value as DreamCategory
-                  await updateDream(detail.id, { category: newCat })
-                  const catInfo = CATEGORY_MAP.get(newCat)
-                  toast(`${catInfo?.icon} ${catInfo?.label}に変更しました`)
+                  await updateDream(detail.id, { category: e.target.value })
+                  toast(`カテゴリを「${e.target.value}」に変更しました`)
                 }}
-                style={{ width: 'auto', fontSize: 11, padding: '3px 8px' }}
-              >
-                {DREAM_CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
-                ))}
-              </select>
+                style={{ width: 'auto', maxWidth: 160, fontSize: 12, padding: '4px 8px' }}
+              />
               <span className={`tag ${detail.status === 'achieved' ? 'tag-done' : detail.status === 'in_progress' ? 'tag-in_progress' : 'tag-open'}`}>
                 {DREAM_STATUSES.find((s) => s.value === detail.status)?.label}
               </span>
@@ -302,7 +467,6 @@ export function Dreams() {
               </p>
             )}
 
-            {/* Linked Goals section */}
             {linkedGoals.length > 0 && (
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 8 }}>
