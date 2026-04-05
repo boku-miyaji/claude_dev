@@ -200,7 +200,6 @@ export function Tasks() {
             placeholder={activeTab === 'task' ? '何をする？' : '依頼内容'}
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && newTitle.trim()) addTask() }}
             autoFocus
           />
           <textarea

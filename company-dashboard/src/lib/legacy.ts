@@ -288,7 +288,7 @@ function openQuickAsk(contextText) {
   }
 
   qaSend.addEventListener('click', doQuickAsk);
-  qaInput.addEventListener('keydown', function(e) { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); doQuickAsk(); } });
+  qaInput.addEventListener('keydown', function(e) { if ((e.ctrlKey||e.metaKey)&&e.key==='Enter') { e.preventDefault(); doQuickAsk(); } });
 }
 
 /** Fetch tab click counts from Supabase and rebuild mobile nav */
@@ -1920,8 +1920,6 @@ async function renderInbox(root) {
     renderInbox(clearEl('page-container').appendChild(el('div', {className: 'page'})));
   }});
 
-  titleInput.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addBtn.click(); } });
-
   var form = el('div', {className: 'card', style: 'margin-bottom:28px'}, [
     el('div', {className: 'form-row'}, [typeSelect, coSelect, priSelect]),
     el('div', {style: 'margin-bottom:10px'}, [titleInput]),
@@ -1996,7 +1994,6 @@ async function renderTasks(root) {
     toast('"' + title + '" を追加しました');
     renderTaskList();
   }});
-  titleInput.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveBtn.click(); } });
 
   var addForm = el('div', {className: 'card', style: 'display:none'}, [
     el('div', {className: 'form-row', style: 'margin-bottom:8px'}, [typeSelect, coSelect, priSelect]),
@@ -7129,8 +7126,8 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
   };
   sendBtn.onclick = sendMessage;
   textarea.addEventListener('keydown', function(e) {
-    // Desktop only: Enter to send (mobile uses send button)
-    if (e.key==='Enter'&&!e.shiftKey&&window.innerWidth>768) { e.preventDefault(); sendMessage(); }
+    // Ctrl/Cmd+Enter to send (Enter = newline)
+    if ((e.ctrlKey||e.metaKey)&&e.key==='Enter') { e.preventDefault(); sendMessage(); }
   });
   textarea.focus();
 }

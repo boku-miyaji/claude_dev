@@ -139,7 +139,7 @@ function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
             className="input"
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
+            onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
             autoFocus
             style={{ flex: 1, fontSize: 13, padding: '5px 8px' }}
           />
@@ -434,14 +434,6 @@ export function Today() {
               placeholder="新しいタスク..."
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && newTaskTitle.trim()) {
-                  addTask({ title: newTaskTitle.trim(), due_date: todayStr })
-                  setNewTaskTitle('')
-                  setShowAddTask(false)
-                  toast('タスクを追加しました')
-                }
-              }}
               autoFocus
               style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
             />
@@ -488,14 +480,6 @@ export function Today() {
               placeholder="新しい習慣..."
               value={newHabitTitle}
               onChange={(e) => setNewHabitTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && newHabitTitle.trim()) {
-                  addHabit({ title: newHabitTitle.trim() })
-                  setNewHabitTitle('')
-                  setShowAddHabit(false)
-                  toast('習慣を追加しました')
-                }
-              }}
               autoFocus
               style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
             />
