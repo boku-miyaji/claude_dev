@@ -7708,6 +7708,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
           try { var evt = JSON.parse(line.slice(6));
             switch (evt.type) {
               case 'conversation': chatState.conversationId = evt.id; window.location.hash = 'chat/' + evt.id; break;
+              case 'debug': console.log('[AI Chat Debug]', evt); break;
               case 'routing':
                 metaDiv.textContent = evt.status==='classifying'?'Routing...':evt.reason+' \u2192 '+evt.model;
                 if (evt.model) metrics.model = evt.model;

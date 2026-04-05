@@ -774,6 +774,9 @@ async function agentLoop(
     tool_calls: m.tool_calls || undefined, tool_call_id: m.tool_call_id || undefined, name: m.tool_name || undefined,
   }));
 
+  // Debug: report history count to frontend
+  send({ type: "debug", history_count: history.length, history_roles: history.map(m => m.role).join(',') } as unknown as SSEEvent);
+
   // Build user message (with images and file context if provided)
   // fileContext is included in LLM input but NOT saved to DB (too large for history)
   const llmMessage = fileContext ? userMessage + fileContext : userMessage;
