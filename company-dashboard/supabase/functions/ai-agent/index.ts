@@ -769,10 +769,12 @@ async function agentLoop(
   // Reverse to chronological order (oldest first)
   const hist = (histRaw || []).reverse();
 
-  const history: Message[] = hist.map(m => ({
-    role: m.role as Message["role"], content: m.content,
-    tool_calls: m.tool_calls || undefined, name: m.tool_name || undefined,
-  }));
+  const history: Message[] = hist
+    .filter(m => m.content != null)  // Skip messages with null content
+    .map(m => ({
+      role: m.role as Message["role"], content: m.content || "",
+      tool_calls: m.tool_calls || undefined, name: m.tool_name || undefined,
+    }));
 
   // Debug: report history count + conversation details
   send({ type: "debug", history_count: history.length, history_roles: history.map(m => m.role).join(','), conversation_id: conversationId, user_id: userId || 'null' } as unknown as SSEEvent);
