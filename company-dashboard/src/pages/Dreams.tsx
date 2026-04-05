@@ -6,6 +6,7 @@ import type { Dream } from '@/types/dreams'
 import { GOAL_LEVELS, GOAL_STATUSES } from '@/types/goals'
 import type { Goal, GoalLevel, GoalStatus } from '@/types/goals'
 import { useDataStore } from '@/stores/data'
+import { supabase } from '@/lib/supabase'
 import { aiCompletion } from '@/lib/edgeAi'
 
 /* ── Dynamic Categories ── */
@@ -55,8 +56,20 @@ async function reviewCategories(dreams: Dream[], cats: Category[]): Promise<{ ch
 
 /* ── Unified Item type ── */
 
+interface WishItem {
+  id: string
+  title: string
+  description: string | null
+  amount: number
+  url: string | null
+  category: string
+  priority: string
+  status: string
+  created_at: string
+}
+
 interface UnifiedItem {
-  kind: 'dream' | 'goal'
+  kind: 'dream' | 'goal' | 'wish'
   id: string
   title: string
   description: string | null
@@ -68,17 +81,21 @@ interface UnifiedItem {
   dream_id?: string | null
   achieved_at?: string | null
   created_at: string
+  amount?: number
+  url?: string | null
 }
 
-function unifyItems(dreams: Dream[], goals: Goal[]): UnifiedItem[] {
+function unifyItems(dreams: Dream[], goals: Goal[], wishes: WishItem[]): UnifiedItem[] {
   const items: UnifiedItem[] = []
   for (const d of dreams) {
     items.push({ kind: 'dream', id: d.id, title: d.title, description: d.description, category: d.category || 'other', status: d.status, achieved_at: d.achieved_at, created_at: d.created_at })
   }
   for (const g of goals) {
-    // Goals inherit category from linked dream, or 'goal'
     const linkedDream = g.dream_id ? dreams.find((d) => d.id === g.dream_id) : null
     items.push({ kind: 'goal', id: g.id, title: g.title, description: g.description, category: linkedDream?.category || 'goal', status: g.status, progress: g.progress, target_date: g.target_date, level: g.level, dream_id: g.dream_id, achieved_at: g.achieved_at, created_at: g.created_at })
+  }
+  for (const w of wishes) {
+    items.push({ kind: 'wish', id: w.id, title: w.title, description: w.description, category: w.category || 'ほしい物', status: w.status === 'purchased' ? 'achieved' : w.status === 'dropped' ? 'paused' : 'active', amount: w.amount, url: w.url, created_at: w.created_at })
   }
   return items
 }
@@ -94,13 +111,15 @@ export function Dreams() {
     loading,
   } = useDataStore()
 
+  const [wishlist, setWishlist] = useState<WishItem[]>([])
   const [showAdd, setShowAdd] = useState(false)
   const [detailDream, setDetailDream] = useState<Dream | null>(null)
   const [detailGoal, setDetailGoal] = useState<Goal | null>(null)
+  const [detailWish, setDetailWish] = useState<WishItem | null>(null)
   const [classifying, setClassifying] = useState(false)
   const [reviewing, setReviewing] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>('')
-  const [kindFilter, setKindFilter] = useState<'all' | 'dream' | 'goal'>('all')
+  const [kindFilter, setKindFilter] = useState<'all' | 'dream' | 'goal' | 'wish'>('all')
 
   // Add form
   const [newTitle, setNewTitle] = useState('')
@@ -114,17 +133,23 @@ export function Dreams() {
   const [goalDay, setGoalDay] = useState('')
   const [goalDreamId, setGoalDreamId] = useState('')
 
-  useEffect(() => { fetchDreams(); fetchGoals() }, [fetchDreams, fetchGoals])
+  const loadWishlist = useCallback(async () => {
+    const { data } = await supabase.from('wishlist').select('*').in('status', ['want', 'considering']).order('created_at', { ascending: false })
+    setWishlist((data as WishItem[]) || [])
+  }, [])
+
+  useEffect(() => { fetchDreams(); fetchGoals(); loadWishlist() }, [fetchDreams, fetchGoals, loadWishlist])
 
   const categories = useMemo(() => deriveCategories(dreams), [dreams])
   const activeDreams = useMemo(() => dreams.filter((d) => d.status === 'active' || d.status === 'in_progress'), [dreams])
 
-  const allItems = useMemo(() => unifyItems(dreams, goals), [dreams, goals])
+  const allItems = useMemo(() => unifyItems(dreams, goals, wishlist), [dreams, goals, wishlist])
 
   const filtered = useMemo(() => {
     return allItems.filter((item) => {
       if (kindFilter === 'dream' && item.kind !== 'dream') return false
       if (kindFilter === 'goal' && item.kind !== 'goal') return false
+      if (kindFilter === 'wish' && item.kind !== 'wish') return false
       if (statusFilter && item.status !== statusFilter) return false
       return true
     })
@@ -142,8 +167,10 @@ export function Dreams() {
   const stats = useMemo(() => ({
     dreams: dreams.length,
     goals: goals.length,
+    wishes: wishlist.length,
+    wishTotal: wishlist.reduce((s, w) => s + w.amount, 0),
     achieved: allItems.filter((i) => i.status === 'achieved').length,
-  }), [dreams, goals, allItems])
+  }), [dreams, goals, wishlist, allItems])
 
   // Linked goals for dream detail
   const linkedGoals = useMemo(() => {
