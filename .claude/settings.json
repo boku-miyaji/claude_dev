@@ -6,13 +6,6 @@
     "CLAUDE_CODE_DISABLE_TELEMETRY": "1"
   },
   "permissions": {
-    "deny": [
-      "Read(**/.env)",
-      "Read(**/.env.*)",
-      "Read(**/*.key)",
-      "Read(**/*secret*)",
-      "Read(**/*credentials*)"
-    ],
     "allow": [
       "// --- Shell: general tools ---",
       "Bash(python3:*)",
@@ -190,7 +183,16 @@
       "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.claude-plugin/marketplace.json)",
       "Bash(rm /home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.orphaned_at)",
       "Bash(node_modules/.bin/tsc --noEmit)",
-      "Bash(npx supabase functions deploy:*)"
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(pdftotext \"/workspace/project-scotch-care/reference_docs/成果物/20260331_技術スタック採用方針.pdf\" -)",
+      "Bash(pdftotext \"/workspace/project-scotch-care/reference_docs/受領資料/98_データ基盤構想整理/Sケア社_Foundryからの脱却と新データ基盤構想\\(施設のモニタリング\\)/【Sケア】DDA活用推進全体像（Confidential）.pdf\" -)"
+    ],
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.key)",
+      "Read(**/*secret*)",
+      "Read(**/*credentials*)"
     ],
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
