@@ -3460,8 +3460,8 @@ async function renderFinance(root) {
   root.appendChild(skelF);
 
   // Tabs
-  var tabs = ['overview', 'subscriptions', 'projects', 'invoices', 'expenses', 'time', 'tax'];
-  var tabLabels = {overview:'概要',subscriptions:'固定費',projects:'案件',invoices:'請求書',expenses:'経費',time:'稼働時間',tax:'税金'};
+  var tabs = ['overview', 'subscriptions', 'wishlist', 'projects', 'invoices', 'expenses', 'time', 'tax'];
+  var tabLabels = {overview:'概要',subscriptions:'固定費',wishlist:'ほしい物',projects:'案件',invoices:'請求書',expenses:'経費',time:'稼働時間',tax:'税金'};
   var tabBar = el('div', {style: 'display:flex;gap:2px;margin:24px 0 20px;border-bottom:1px solid var(--border)'});
   var tabContent = el('div');
   root.appendChild(tabBar);
@@ -3470,7 +3470,7 @@ async function renderFinance(root) {
   function switchTab(tab) {
     tabBar.querySelectorAll('button').forEach(function(b) { b.style.borderBottom = b.dataset.tab === tab ? '2px solid var(--accent)' : '2px solid transparent'; b.style.color = b.dataset.tab === tab ? 'var(--text)' : 'var(--text3)'; });
     while (tabContent.firstChild) tabContent.removeChild(tabContent.firstChild);
-    var renderers = {overview: finOverview, subscriptions: finSubscriptions, projects: finProjects, invoices: finInvoices, expenses: finExpenses, time: finTime, tax: finTax};
+    var renderers = {overview: finOverview, subscriptions: finSubscriptions, wishlist: finWishlist, projects: finProjects, invoices: finInvoices, expenses: finExpenses, time: finTime, tax: finTax};
     if (renderers[tab]) renderers[tab](tabContent);
   }
 
@@ -3497,7 +3497,7 @@ async function finOverview(root) {
   var startOfYear = year + '-01-01';
   var endOfYear = year + '-12-31';
 
-  var [invMonthRes, expMonthRes, timeMonthRes, projRes, invYearRes, expYearRes, timeYearRes, recurRes] = await Promise.all([
+  var [invMonthRes, expMonthRes, timeMonthRes, projRes, invYearRes, expYearRes, timeYearRes, recurRes, wishRes] = await Promise.all([
     sb.from('invoices').select('*').gte('invoice_date', startOfMonth).lte('invoice_date', endOfMonth),
     sb.from('expenses').select('*').gte('expense_date', startOfMonth).lte('expense_date', endOfMonth),
     sb.from('time_entries').select('*').gte('work_date', startOfMonth).lte('work_date', endOfMonth),
@@ -3505,7 +3505,8 @@ async function finOverview(root) {
     sb.from('invoices').select('*').gte('invoice_date', startOfYear).lte('invoice_date', endOfYear),
     sb.from('expenses').select('*').gte('expense_date', startOfYear).lte('expense_date', endOfYear),
     sb.from('time_entries').select('*').gte('work_date', startOfYear).lte('work_date', endOfYear),
-    sb.from('expenses').select('*').eq('is_recurring', true).eq('recurring_status', 'active')
+    sb.from('expenses').select('*').eq('is_recurring', true).eq('recurring_status', 'active'),
+    sb.from('wishlist').select('amount,status').in('status', ['want','considering'])
   ]);
 
   var skelEl = document.querySelector('.fin-skeleton');
@@ -3551,7 +3552,8 @@ async function finOverview(root) {
    {l:'粗利',v:fmtYen(grossProfit),c:grossProfit>=0?'#22c55e':'#ef4444',sub:(totalRev>0?Math.round(grossProfit/totalRev*100):0)+'%'},
    {l:'稼働',v:totalHrs.toFixed(1)+'h',c:'var(--text)',sub:'年計 '+yearHrs.toFixed(1)+'h'},
    {l:'固定費',v:fmtYen(monthlyFixed),c:'var(--amber)',sub:recurSubs.length+'件 / 年'+fmtYen(monthlyFixed*12)},
-   {l:'実質時給',v:fmtYen(hourlyRate),c:'var(--accent2)',sub:yearHrs>0?'年平均 '+fmtYen(Math.round(yearRev/yearHrs)):'-'}
+   {l:'実質時給',v:fmtYen(hourlyRate),c:'var(--accent2)',sub:yearHrs>0?'年平均 '+fmtYen(Math.round(yearRev/yearHrs)):'-'},
+   {l:'ほしい物',v:fmtYen((wishRes.data||[]).reduce(function(s,w){return s+w.amount;},0)),c:'var(--blue)',sub:(wishRes.data||[]).length+'件'}
   ].forEach(function(d) {
     cards.appendChild(el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px'}, [
       el('div', {textContent: d.l, style: 'font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px'}),
@@ -4529,6 +4531,191 @@ async function finSubscriptions(root) {
     }
 
     var close = showModal(isEdit ? '固定費を編集' : '固定費を追加', formFields);
+    cancelBtn.onclick = close;
+  }
+}
+
+// --- Finance: Wishlist ---
+async function finWishlist(root) {
+  var res = await sb.from('wishlist').select('*').order('priority').order('created_at', {ascending: false});
+  var items = res.data || [];
+  var statusLabels = {want:'欲しい',considering:'検討中',purchased:'購入済',dropped:'見送り'};
+  var statusColors = {want:'var(--accent)',considering:'var(--amber)',purchased:'var(--green)',dropped:'var(--text3)'};
+  var catLabels = {equipment:'機材',software:'ソフトウェア',furniture:'家具',experience:'体験',book:'本',gadget:'ガジェット',other:'その他'};
+  var priLabels = {high:'高',normal:'中',low:'低'};
+
+  var active = items.filter(function(i){return i.status==='want'||i.status==='considering';});
+  var totalWant = active.reduce(function(s,i){return s+i.amount;},0);
+
+  // KPI
+  var kpiRow = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px'});
+  [{l:'ほしい物合計',v:fmtYen(totalWant),c:'var(--accent)'},{l:'アイテム数',v:active.length+'件',c:'var(--text)'},{l:'購入済み',v:items.filter(function(i){return i.status==='purchased';}).length+'件',c:'var(--green)'}].forEach(function(d) {
+    kpiRow.appendChild(el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px'}, [
+      el('div', {textContent: d.l, style: 'font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'}),
+      el('div', {textContent: d.v, style: 'font-size:20px;font-weight:600;color:'+d.c})
+    ]));
+  });
+  root.appendChild(kpiRow);
+
+  // Comparison with monthly income context
+  if (totalWant > 0) {
+    root.appendChild(el('div', {style: 'font-size:12px;color:var(--text3);margin-bottom:16px'}, [
+      el('span', {textContent: '固定費に対する比率: '}),
+      el('span', {textContent: '月額固定費の約' + Math.round(totalWant / Math.max(1, 1)) + '倍', style: 'font-weight:500;color:var(--text2)'})
+    ]));
+  }
+
+  // Add button
+  var addBtn = el('button', {className: 'btn btn-p btn-sm', style: 'margin-bottom:16px', textContent: '+ ほしい物を追加'});
+  addBtn.onclick = function() { showWishForm(null); };
+  root.appendChild(addBtn);
+
+  if (items.length === 0) {
+    root.appendChild(el('div', {textContent: 'ほしい物リストが空です。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
+    return;
+  }
+
+  // Visual list with bars
+  var maxAmt = Math.max.apply(null, items.map(function(i){return i.amount;}).concat([1]));
+
+  items.forEach(function(item) {
+    var isPurchased = item.status === 'purchased';
+    var isDropped = item.status === 'dropped';
+    var barPct = Math.round(item.amount / maxAmt * 100);
+
+    var row = el('div', {style: 'padding:12px 0;border-bottom:1px solid var(--border)'+(isDropped?';opacity:.35':'')});
+
+    // Top: name + amount + actions
+    var top = el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:4px'});
+    var leftEl = el('div', {style: 'display:flex;align-items:center;gap:8px;min-width:0;flex:1'});
+    leftEl.appendChild(el('span', {style: 'width:8px;height:8px;border-radius:50%;background:'+(statusColors[item.status]||'var(--text3)')+';flex-shrink:0'}));
+    leftEl.appendChild(el('span', {textContent: item.title, style: 'font-weight:500;font-size:13px'+(isPurchased?';text-decoration:line-through;color:var(--text3)':'')}));
+    if (item.category && item.category !== 'other') {
+      leftEl.appendChild(el('span', {textContent: catLabels[item.category]||item.category, style: 'font-size:10px;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:3px'}));
+    }
+    top.appendChild(leftEl);
+
+    var rightEl = el('div', {style: 'display:flex;align-items:center;gap:8px;flex-shrink:0'});
+    rightEl.appendChild(el('span', {textContent: fmtYen(item.amount), style: 'font-weight:700;font-family:var(--mono);font-size:15px;color:'+(item.amount>=100000?'var(--red)':item.amount>=30000?'var(--amber)':'var(--text)')}));
+    var editBtn = el('button', {className:'btn btn-g btn-sm', style:'font-size:10px;padding:2px 8px', textContent:'編集'});
+    editBtn.onclick = function() { showWishForm(item); };
+    rightEl.appendChild(editBtn);
+    top.appendChild(rightEl);
+    row.appendChild(top);
+
+    // Bar
+    if (!isDropped && !isPurchased) {
+      var barBg = el('div', {style: 'height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:2px'});
+      barBg.appendChild(el('div', {style: 'height:100%;width:'+barPct+'%;background:'+(statusColors[item.status]||'var(--accent)')+';border-radius:3px;transition:width .3s'}));
+      row.appendChild(barBg);
+    }
+
+    // Sub info
+    var subParts = [];
+    subParts.push(statusLabels[item.status]||item.status);
+    if (item.priority === 'high') subParts.push('優先: 高');
+    if (item.url) subParts.push('リンクあり');
+    if (item.description) subParts.push(item.description.substring(0,40));
+    row.appendChild(el('div', {textContent: subParts.join(' · '), style: 'font-size:10px;color:var(--text3)'}));
+
+    root.appendChild(row);
+  });
+
+  // Form
+  function showWishForm(existing) {
+    var isEdit = !!existing;
+    var fields = [];
+
+    var nameInput = el('input', {className:'input', placeholder:'何がほしい？', value: existing ? existing.title : '', style:'margin-bottom:8px'});
+    fields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px', textContent:'アイテム名'}));
+    fields.push(nameInput);
+
+    var amountInput = el('input', {className:'input', type:'number', placeholder:'金額（円）', value: existing ? existing.amount : '', style:'margin-bottom:8px'});
+    fields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'金額（税込）'}));
+    fields.push(amountInput);
+
+    var urlInput = el('input', {className:'input', placeholder:'商品URL（任意）', value: existing ? (existing.url||'') : '', style:'margin-bottom:8px'});
+    fields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'URL'}));
+    fields.push(urlInput);
+
+    var descInput = el('textarea', {className:'input', placeholder:'メモ（任意）', value: existing ? (existing.description||'') : '', style:'margin-bottom:8px;min-height:40px'});
+    fields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'メモ'}));
+    fields.push(descInput);
+
+    var catSelect = el('select', {className:'input', style:'margin-bottom:8px'});
+    Object.keys(catLabels).forEach(function(k) {
+      var opt = el('option', {value:k, textContent:catLabels[k]});
+      if (existing && existing.category === k) opt.selected = true;
+      catSelect.appendChild(opt);
+    });
+    fields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'カテゴリ'}));
+    fields.push(catSelect);
+
+    var priSelect = el('select', {className:'input', style:'margin-bottom:8px'});
+    [{v:'high',l:'高'},{v:'normal',l:'中'},{v:'low',l:'低'}].forEach(function(o) {
+      var opt = el('option', {value:o.v, textContent:o.l});
+      if (existing && existing.priority === o.v) opt.selected = true;
+      priSelect.appendChild(opt);
+    });
+    fields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'優先度'}));
+    fields.push(priSelect);
+
+    if (isEdit) {
+      var statusSelect = el('select', {className:'input', style:'margin-bottom:8px'});
+      [{v:'want',l:'欲しい'},{v:'considering',l:'検討中'},{v:'purchased',l:'購入済み'},{v:'dropped',l:'見送り'}].forEach(function(o) {
+        var opt = el('option', {value:o.v, textContent:o.l});
+        if (existing.status === o.v) opt.selected = true;
+        statusSelect.appendChild(opt);
+      });
+      fields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'ステータス'}));
+      fields.push(statusSelect);
+    }
+
+    var btnRow = el('div', {style:'display:flex;gap:8px;margin-top:12px'});
+    var saveBtn = el('button', {className:'btn btn-p', textContent: isEdit ? '更新' : '追加'});
+    var cancelBtn = el('button', {className:'btn btn-g', textContent:'キャンセル'});
+
+    saveBtn.onclick = async function() {
+      var name = nameInput.value.trim();
+      var amount = parseInt(amountInput.value) || 0;
+      if (!name) return;
+      var payload = {
+        title: name, amount: amount,
+        url: urlInput.value.trim() || null,
+        description: descInput.value.trim() || null,
+        category: catSelect.value,
+        priority: priSelect.value,
+      };
+      if (isEdit) {
+        payload.status = statusSelect.value;
+        if (statusSelect.value === 'purchased' && existing.status !== 'purchased') payload.purchased_at = new Date().toISOString();
+        await sb.from('wishlist').update(payload).eq('id', existing.id);
+      } else {
+        await sb.from('wishlist').insert(payload);
+      }
+      close();
+      while (root.firstChild) root.removeChild(root.firstChild);
+      finWishlist(root);
+    };
+
+    btnRow.appendChild(saveBtn);
+    btnRow.appendChild(cancelBtn);
+    fields.push(btnRow);
+
+    if (isEdit) {
+      var delBtn = el('button', {className:'btn', style:'color:var(--red);font-size:11px;margin-top:8px;background:none;border:1px solid var(--red-border)', textContent:'削除'});
+      delBtn.onclick = async function() {
+        if (confirm('削除しますか？')) {
+          await sb.from('wishlist').delete().eq('id', existing.id);
+          close();
+          while (root.firstChild) root.removeChild(root.firstChild);
+          finWishlist(root);
+        }
+      };
+      fields.push(delBtn);
+    }
+
+    var close = showModal(isEdit ? 'ほしい物を編集' : 'ほしい物を追加', fields);
     cancelBtn.onclick = close;
   }
 }
