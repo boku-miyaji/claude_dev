@@ -195,7 +195,9 @@
       "Bash(sed -i \"s/await aiCompletion\\(userData, {$/await aiCompletion\\(userData, { source: 'weekly_narrative',/\" hooks/useWeeklyNarrative.ts)",
       "Bash(sed -i \"s/await aiCompletion\\(userMessage, {$/await aiCompletion\\(userMessage, { source: 'dream_detection',/\" hooks/useDreamDetection.ts)",
       "Bash(sed -i \"s/await aiCompletion\\(userData, {$/await aiCompletion\\(userData, { source: 'self_analysis',/\" hooks/useSelfAnalysis.ts)",
-      "Read(//workspace/company-dashboard/**)"
+      "Read(//workspace/company-dashboard/**)",
+      "Skill(pptx-aces-rikyu)",
+      "Skill(pptx-aces-rikyu:*)"
     ],
     "deny": [
       "Read(**/.env)",
