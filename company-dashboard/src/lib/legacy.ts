@@ -804,8 +804,8 @@ async function gcalDeleteEvent(calendarId, eventId) {
 
 function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour, defaultAllDay) {
   var isEdit = !!existingEvent;
-  // Determine if all-day: explicit flag, or if no hour specified and not editing
-  var isAllDay = isEdit ? existingEvent.all_day : (defaultAllDay === true && defaultHour == null);
+  // If defaultHour is provided (e.g. 18), it's a time-specific event, never all-day
+  var isAllDay = isEdit ? existingEvent.all_day : (defaultHour != null ? false : !!defaultAllDay);
 
   var overlay = el('div', {className: 'modal-overlay'});
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
