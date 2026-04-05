@@ -1,6 +1,6 @@
 /**
  * Extract text from PDF, XLSX, DOCX, PPTX files in the browser.
- * Libraries are dynamically imported to avoid bloating the initial bundle.
+ * Uses pdfjs-dist v4 (stable CDN worker), SheetJS, mammoth.
  */
 
 const MAX_TEXT_LENGTH = 80000
@@ -25,13 +25,9 @@ export async function extractTextFromFile(file: File): Promise<string | null> {
 async function extractPdf(file: File): Promise<string> {
   const buffer = await file.arrayBuffer()
   const pdfjsLib = await import('pdfjs-dist')
-  const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url')
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs'
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl.default
-  const loadingTask = pdfjsLib.getDocument({
-    data: new Uint8Array(buffer),
-  })
-  const pdf = await loadingTask.promise
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise
   const pages: string[] = []
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i)
@@ -41,7 +37,7 @@ async function extractPdf(file: File): Promise<string> {
       .join(' ')
     if (text.trim()) pages.push(`--- Page ${i}/${pdf.numPages} ---\n${text}`)
   }
-  if (pages.length === 0) return `[PDF: ${pdf.numPages}ページ、テキストを抽出できませんでした（スキャンPDFの可能性）]`
+  if (pages.length === 0) return `[PDF: ${pdf.numPages}ページ、テキスト抽出不可（スキャンPDFの可能性）]`
   return truncate(pages.join('\n\n'))
 }
 
