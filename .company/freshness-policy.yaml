@@ -160,7 +160,7 @@ data_sources:
   # ── 優先度3: 基盤データ（自動更新済みだが確認は必要） ──
 
   intelligence_reports:
-    priority: 9
+    priority: 8
     max_age_days: 1
     auto_update: true
     blocking: false

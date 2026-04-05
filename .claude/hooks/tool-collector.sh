@@ -25,4 +25,10 @@ if [ "$TOOL_NAME" = "Agent" ]; then
 fi
 
 echo "$TOOL_NAME" >> /tmp/claude-tools-used.txt
+
+# Hook 実行ログ（可観測性）
+LOG_DIR="$HOME/.claude/logs"
+mkdir -p "$LOG_DIR" 2>/dev/null || true
+echo "{\"ts\":\"$(date -Iseconds)\",\"hook\":\"tool-collector\",\"tool\":\"$TOOL_NAME\",\"status\":\"ok\"}" >> "$LOG_DIR/hook-executions.jsonl" 2>/dev/null || true
+
 exit 0
