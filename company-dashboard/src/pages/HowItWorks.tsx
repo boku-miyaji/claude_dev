@@ -928,7 +928,7 @@ const PROPOSALS: Proposal[] = [
     priority: 'P2',
     title: 'ハーネス設計の継続的最新化（自動調査）',
     problem: 'Claude Code は頻繁にアップデートされる。新しいHook、新しいSub-agentパターン等を見逃す。',
-    solution: 'freshness-policy.yaml に harness_research を追加（max_age_days: 14）。/company 起動時に情報収集部が最新記事を調査→ops部がギャップ分析→改善提案を自動更新。',
+    solution: 'freshness-policy.yaml に harness_research を追加（max_age_days: 7）。/company 起動時に情報収集部が最新記事を調査→ops部がギャップ分析→改善提案を自動更新。',
     harnessPart: 'Freshness Policy + Intelligence',
     effort: '2時間',
     impact: 'システムが常に最新のベストプラクティスに追従。「知らなくて使えなかった」を防止。',

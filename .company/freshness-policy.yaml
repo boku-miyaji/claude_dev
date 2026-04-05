@@ -264,6 +264,21 @@ data_sources:
       3. 設計判断（refactor, architecture変更）があれば design-philosophy.md に追記
       4. 更新履歴テーブルに日付と変更内容を追記
 
+  harness_research:
+    priority: 2.5
+    max_age_days: 7
+    auto_update: false
+    blocking: false
+    check_method: file_check
+    check_file: ".company/departments/research/tech/harness-engineering-claude-code-2026.md"
+    stale_condition: "ハーネスエンジニアリング調査が7日超過。Claude Code の新機能・新Hookパターンを見逃している可能性"
+    update_action: |
+      1. 情報収集部: Claude Code 最新リリースノート・ハーネス記事をWeb調査
+      2. 運営改善部: 現行システムと最新ベストプラクティスのギャップ分析
+      3. 並列起動（Agent tool × 2）→ 結果統合
+      4. HowItWorks Improvement Proposals タブの更新提案を社長に提示
+      5. research/tech/harness-engineering-claude-code-2026.md を更新
+
 execution_rules:
   # ブリーフィング表示順: priority 昇順
   # auto_update=true のものは確認なしで実行

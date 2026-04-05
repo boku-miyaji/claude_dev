@@ -250,7 +250,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/workspace/.claude/hooks/auto-pull.sh"
+            "command": "/workspace/.claude/hooks/auto-pull.sh",
+            "async": true
           },
           {
             "type": "command",
@@ -258,7 +259,8 @@
           },
           {
             "type": "command",
-            "command": "/workspace/.claude/hooks/supabase-status.sh"
+            "command": "/workspace/.claude/hooks/supabase-status.sh",
+            "async": true
           },
           {
             "type": "command",
