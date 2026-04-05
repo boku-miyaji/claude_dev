@@ -947,7 +947,7 @@ async function agentLoop(
 
       await sb.from("messages").insert({
         conversation_id: conversationId, role: "tool", content: truncated,
-        tool_name: tc.name, tool_input: tc.input, tool_call_id: tc.id, step, user_id: userId,
+        tool_name: tc.name, tool_input: tc.input, step, user_id: userId,
       });
 
       messages.push({ role: "tool", content: safeResult, tool_call_id: tc.id, name: isAnthropicModel(selectedModel) ? undefined : tc.name });
