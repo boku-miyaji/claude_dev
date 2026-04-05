@@ -860,15 +860,11 @@ function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour, def
       row.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: '終了'}), endDateInput]));
       timeArea.appendChild(row);
     } else {
-      // Time-specific: stacked rows
-      var r1 = el('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px'});
-      r1.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: '開始'}), startDateInput]));
-      r1.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: ''}), startTimeInput]));
-      var r2 = el('div', {style: 'display:grid;grid-template-columns:1fr 1fr;gap:8px'});
-      r2.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: '終了'}), endDateInput]));
-      r2.appendChild(el('div', {}, [el('label', {className: 'form-label', textContent: ''}), endTimeInput]));
-      timeArea.appendChild(r1);
-      timeArea.appendChild(r2);
+      // Time-specific: label then date+time on same line
+      timeArea.appendChild(el('label', {className: 'form-label', textContent: '開始'}));
+      timeArea.appendChild(el('div', {style: 'display:flex;gap:8px;margin-bottom:8px'}, [startDateInput, startTimeInput]));
+      timeArea.appendChild(el('label', {className: 'form-label', textContent: '終了'}));
+      timeArea.appendChild(el('div', {style: 'display:flex;gap:8px'}, [endDateInput, endTimeInput]));
     }
   }
 
