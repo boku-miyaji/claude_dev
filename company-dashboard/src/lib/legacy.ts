@@ -4720,6 +4720,12 @@ async function finWishlist(root) {
   }
 }
 
+// --- Finance: API Costs (embedded) ---
+async function finApiCosts(root) {
+  // Reuse the standalone renderApiCosts function
+  await renderApiCosts(root);
+}
+
 // --- Finance: Time Entries ---
 async function finTime(root) {
   var res = await sb.from('time_entries').select('*').order('work_date', {ascending:false}).limit(100);
