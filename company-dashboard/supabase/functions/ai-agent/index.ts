@@ -833,7 +833,13 @@ async function agentLoop(
     { role: "user", content: userContent },
   ];
 
-  const { error: insertErr } = await sb.from("messages").insert({ conversation_id: conversationId, role: "user", content: userMessage, step: 0, user_id: userId });
+  // Save user message with truncated file summary (so AI remembers file context in history)
+  let savedContent = userMessage;
+  if (fileContext) {
+    // Include first 3000 chars of file content in DB (enough for AI to remember what was discussed)
+    savedContent = userMessage + '\n\n[Attached file summary]\n' + fileContext.substring(0, 3000) + (fileContext.length > 3000 ? '\n...(truncated for history)' : '');
+  }
+  const { error: insertErr } = await sb.from("messages").insert({ conversation_id: conversationId, role: "user", content: savedContent, step: 0, user_id: userId });
   if (insertErr) send({ type: "debug", error: "message_insert_failed", detail: insertErr.message } as unknown as SSEEvent);
 
   // Record to prompt_log for unified analytics (source: ai_chat)
