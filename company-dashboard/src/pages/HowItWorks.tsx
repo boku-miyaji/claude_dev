@@ -356,7 +356,17 @@ CLAUDE.mdを編集
 危険コマンド実行
   └→ PreToolUse Hook: bash-guard.sh
        ├→ rm -rf / / force push / reset --hard / DROP → ブロック (exit 2)
-       └→ ブロック時 → blocked-commands.jsonl に監査ログ記録`}
+       └→ ブロック時 → blocked-commands.jsonl に監査ログ記録
+
+実装ファイルを変更
+  └→ PostToolUse Hook: docs-sync-guard.sh
+       └→ 対象ファイル？ → additionalContext で警告
+            ai-agent/index.ts → "AI Features タブ更新必要"
+            .claude/hooks/*.sh → "Overview + Harness タブ更新必要"
+            .claude/rules/*.md → "Operations タブ更新必要"
+            departments/*/CLAUDE.md → "Operations タブ更新必要"
+       └→ commit-rules.md にも同期チェック義務化
+       └→ freshness-policy: impl_docs_sync で git log 日付比較`}
         </div>
       </Section>
     </>

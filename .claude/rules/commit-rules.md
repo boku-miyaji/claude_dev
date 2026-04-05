@@ -39,8 +39,25 @@ claude_dev/
 └── docs/                ← 横断的なものは claude_dev にコミットOK
 ```
 
+## ドキュメント同期チェック（IMPORTANT）
+
+以下のファイルを変更した場合、**How It Works ページの更新が必須**:
+
+| 変更ファイル | 更新先セクション |
+|---|---|
+| `supabase/functions/ai-agent/` | AI Features タブ |
+| `.claude/hooks/*.sh` | Overview（鮮度マップ）+ Harness Engineering |
+| `.claude/rules/*.md` | Operations タブ |
+| `.company/departments/*/CLAUDE.md` | Operations（部署サイクル） |
+| `.company/freshness-policy.yaml` | Overview（自動メンテナンス） |
+| `src/pages/Today.tsx` | Design Philosophy |
+| `src/lib/fileExtract.ts` | AI Features（ファイル抽出） |
+
+**PostToolUse Hook `docs-sync-guard.sh` が自動で警告するが、更新は手動で行うこと。**
+
 ## PR レビュー・チェックリスト
 
 1. テストは追加されているか
 2. 破壊的変更がある場合、README / MIGRATION に記載したか
 3. 新規依存は license & size を確認したか
+4. **実装変更に対応する How It Works の更新があるか**

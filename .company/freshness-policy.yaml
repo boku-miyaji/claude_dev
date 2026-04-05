@@ -264,6 +264,34 @@ data_sources:
       3. 設計判断（refactor, architecture変更）があれば design-philosophy.md に追記
       4. 更新履歴テーブルに日付と変更内容を追記
 
+  impl_docs_sync:
+    priority: 1.5
+    max_age_days: 0
+    auto_update: false
+    blocking: false
+    check_method: script
+    check_script: |
+      # Compare last modified dates of implementation files vs HowItWorks
+      IMPL_FILES="supabase/functions/ai-agent/index.ts .claude/hooks/*.sh .claude/rules/*.md .company/departments/*/CLAUDE.md .company/freshness-policy.yaml"
+      DOC_FILE="company-dashboard/src/pages/HowItWorks.tsx"
+      DOC_DATE=$(git log -1 --format=%ct -- "$DOC_FILE" 2>/dev/null || echo 0)
+      STALE=""
+      for pattern in $IMPL_FILES; do
+        for f in $pattern; do
+          [ -f "$f" ] || continue
+          F_DATE=$(git log -1 --format=%ct -- "$f" 2>/dev/null || echo 0)
+          if [ "$F_DATE" -gt "$DOC_DATE" ]; then
+            STALE="$STALE $f"
+          fi
+        done
+      done
+      [ -n "$STALE" ] && echo "STALE:$STALE"
+    stale_condition: "実装ファイルが HowItWorks より新しい → ドキュメントが古くなっている"
+    update_action: |
+      1. git log で実装変更の内容を確認
+      2. HowItWorks.tsx の該当セクションを更新
+      3. 対応表: ai-agent→AI Features, hooks→Overview/Harness, rules→Operations, departments→Operations
+
   dept_knowledge_refresh:
     priority: 3.5
     max_age_days: 14
