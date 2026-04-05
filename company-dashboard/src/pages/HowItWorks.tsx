@@ -88,6 +88,102 @@ function StatusDot({ ok }: { ok: boolean }) {
   return <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: ok ? 'var(--green)' : 'var(--red)', marginRight: 6 }} />
 }
 
+// ========== Tab: Vision ==========
+
+function TabVision() {
+  return (
+    <>
+      <Section title="このシステムは何か">
+        <Principle title="あなたの人生には、あなたがまだ気づいていない物語がある。" body="このシステムは、日記・感情・夢・目標・習慣・行動のすべてを蓄積し、AIがあなたの人生を「物語」として読み解く。データの集計ではない。あなたの感情の波の意味を解釈し、夢と現実の間にある葛藤を理解し、あなた自身がまだ気づいていない人生のテーマを見つける。" color="var(--accent)" />
+      </Section>
+
+      <Section title="なぜストーリーなのか">
+        <P>上白石萌歌が「366日」を歌う映像に感動するのはなぜか。スポーツ選手の試合に涙するのはなぜか。結婚式の成長ムービーが胸を打つのはなぜか。</P>
+        <P><strong>そこにストーリーがあるから。</strong></P>
+        <P>Mrs. Green Apple のように、才能がストーリーを超越して感動させることもある。だが、ほとんどの人はそっち側ではない。それでも、すべての人の人生には物語がある。その物語に光を当てれば、誰の人生にも感動がある。</P>
+        <div className="g2" style={{ marginBottom: 12, marginTop: 16 }}>
+          <MiniCard title="SNS = 見せるための自分" body="他者の視線を意識した編集された人生。いいね数で測られる価値。比較と消耗のループ。" />
+          <MiniCard title="このシステム = 本当の自分の物語" body="誰にも見せなくていい。でも確かにそこにある、あなただけの成長と葛藤と発見の記録。" />
+        </div>
+      </Section>
+
+      <Section title="3段階の進化">
+        <Tbl headers={['段階', '名前', '何をするか', '限界']} rows={[
+          ['Stage 1', 'Mirror（鏡）', 'データを映す。「今日の感情はこうです」「WBIは5.2です」', '数字を見せるだけ。意味を解釈しない'],
+          ['Stage 2', 'Compass（羅針盤）', 'ルールベースで提案。「WBIが低いから休みましょう」', '機械的。誰にでも同じことを言う。心に響かない'],
+          ['Stage 3', 'Narrator（語り手）', '物語を読み、語り、導く。「あなたの物語では、こういう静かな時期の後にいつも新しい何かが始まっています」', '目指す姿'],
+        ]} />
+        <Principle title="Narrator が目標" body="Stage 2（ルールベース提案）で妥協しない。LLMの深い推論で、その人にしか言えない言葉を、その人の物語の文脈で語る。安直なソリューションに落ち着かない。" color="var(--green)" />
+      </Section>
+
+      <Section title="Narrative Intelligence — 4つのエンジン">
+        <P>あなたの人生データを「物語」として読解するAIレイヤー。ルールベースでは不可能なことだけをLLMにやらせる。</P>
+        <div className="g2" style={{ marginBottom: 12 }}>
+          <Principle title="Arc Reader（弧を読む）" body="感情の時系列を物語の弧として解釈する。「この低下は疲労ではなく、新しい挑戦への不安だ」と読み解く。去年の同じパターンとの意味の接続もする。" color="var(--accent)" />
+          <Principle title="Theme Finder（テーマを見つける）" body="数ヶ月の日記×夢×行動から、人生の通底テーマを発見する。「つくる人」「意味を問う人」「つなぐ人」。自分では気づけない自分の本質。" color="var(--green)" />
+          <Principle title="Moment Detector（転機を見つける）" body="日記の中から物語の転換点をリアルタイムに検出する。決断、気づき、突破、出会い、挫折。その瞬間を記録し、後から振り返れるようにする。" color="var(--amber)" />
+          <Principle title="Foresight Engine（物語の続きを予感する）" body="過去のパターンから次の展開を予感する。「去年も同じ兆候の後に新しいプロジェクトを始めている。今のあなたなら○○が合うかもしれない」。" color="var(--blue)" />
+        </div>
+        <P>これらはすべて、ルールベースのif文では実現できない。感情データの時系列を「物語」として解釈し、過去の類似パターンと意味のレベルで接続し、今の自分の位置づけを語る — LLMの深い推論が必要。</P>
+      </Section>
+
+      <Section title="物語ベースの提案 vs ルールベースの提案">
+        <Tbl headers={['場面', 'ルールベース（やらない）', '物語ベース（やる）']} rows={[
+          ['調子が悪い', '「最近お疲れのようです。休息を取りましょう」', '「去年の秋にも同じ波がありました。あの時あなたは○○で乗り越えました。今回は少し違う — 最近"意味"という言葉が増えていて、新しい何かを探しているのかもしれません」'],
+          ['旅行の相談', '「内向型×openness高 → 直島、屋久島がおすすめ」', '「夢リストの"南阿蘇に行きたい"、今の"再構築期"に響く場所だと思います。あなたは"つくる人"なので、ただ休むより何かを持ち帰れる旅が充電になるはずです」'],
+          ['目標が止まっている', '「2週間更新がありません。小さな一歩から始めましょう」', '「あなたの物語では、こういう静かな時期の後にいつも跳躍があります。焦らなくて大丈夫です。答えはたぶん、あなたの中にもうあります」'],
+        ]} />
+      </Section>
+
+      <Section title="共有のビジョン: Courage Board">
+        <P>このシステムで蓄積された物語は、自分のためだけではない。</P>
+        <div className="g3" style={{ marginBottom: 12 }}>
+          <Principle title="Story Card" body="人生の章や転機を美しいカードに。LLMが匿名化し、個人が特定されない形で、あなたの成長物語を1枚のカードに凝縮する。" color="var(--accent)" />
+          <Principle title="Courage Board" body="匿名の成長物語が並ぶ場所。SNSとは逆 — 評価されない、コメントされない、フォロワーもない。リアクションは「共感した」だけ。自分の物語が誰かの勇気になる。" color="var(--green)" />
+          <Principle title="Growth Story" body="結婚式の成長ムービーを、日常に。年末に1年の物語を長文で生成。全ての章と転機とテーマの変遷が、1つの物語になる。" color="var(--amber)" />
+        </div>
+      </Section>
+
+      <Section title="なぜ他にないのか">
+        <Tbl headers={['競合', '何をしているか', 'うちとの違い']} rows={[
+          ['ChatGPT / Claude', '今日の会話だけ。あなたを知らない', '数ヶ月分の感情×行動×夢×性格の掛け算。物語として読む'],
+          ['Day One 等のジャーナリング', '記録するだけ。書いた後は放置', '記録を「物語」に変える。転機を検出し、章を生成し、テーマを発見する'],
+          ['コーチングアプリ', '汎用的なアドバイス。テンプレート', 'あなた固有の物語に基づく、あなたにしか言えない言葉'],
+          ['性格診断アプリ', '一時点のスナップショット', '継続的に変化を追い、成長を物語る。前回との差分分析'],
+          ['SNS', '見せるための自分。比較と消耗', '本当の自分の物語。勇気のための共有'],
+        ]} />
+      </Section>
+
+      <Section title="ビジネスモデル">
+        <Tbl headers={['プラン', '内容', '価格感']} rows={[
+          ['Free', '日記 + 基本感情分析 + 週次ナラティブ', '¥0'],
+          ['Plus', '全Narrative Intelligence + Story ページ + プロアクティブ提案', '¥980/月'],
+          ['Pro', '上記 + Courage Board + Growth Story + 優先モデル(gpt-5)', '¥1,980/月'],
+        ]} />
+        <P>フリーミアム。日記を書くだけで価値がある → 書くほどAIが賢くなる → 手放せなくなる。</P>
+      </Section>
+
+      <Section title="プライバシーの原則">
+        <div className="g2" style={{ marginBottom: 12 }}>
+          <MiniCard title="全データはユーザー所有" body="Supabase RLS で厳密に分離。他のユーザーのデータは物理的にアクセス不可。" />
+          <MiniCard title="LLMへの送信は最小限" body="Narrative Memory の要約のみ送信。生の日記全文は送らない。" />
+          <MiniCard title="いつでもエクスポート・削除" body="JSON/CSV でダウンロード可能。アカウント削除で全データ完全消去。" />
+          <MiniCard title="共有は完全にオプトイン" body="Courage Board への公開は明示的な許可が必要。デフォルトは非公開。" />
+        </div>
+      </Section>
+
+      <Section title="設計書">
+        <P>詳細な技術設計・テーブル設計・実装フェーズは以下を参照:</P>
+        <div className="card" style={{ padding: 14, fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+          <div><strong>設計書:</strong> docs/design/life-companion-evolution.md</div>
+          <div><strong>実装タスク:</strong> docs/design/narrator-implementation-tasks.md</div>
+          <div><strong>設計思想:</strong> .company/design-philosophy.md（Narrator セクション）</div>
+        </div>
+      </Section>
+    </>
+  )
+}
+
 // ========== Tab: Overview ==========
 
 function TabOverview() {
@@ -1185,6 +1281,7 @@ function TabProposals() {
 // ========== Main ==========
 
 const TABS = [
+  { key: 'vision', label: 'Vision' },
   { key: 'overview', label: 'Overview' },
   { key: 'harness', label: 'Harness Engineering' },
   { key: 'proposals', label: 'Improvement Proposals' },
@@ -1197,7 +1294,7 @@ const TABS = [
 type TabKey = typeof TABS[number]['key']
 
 export function HowItWorks() {
-  const [tab, setTab] = useState<TabKey>('overview')
+  const [tab, setTab] = useState<TabKey>('vision')
 
   return (
     <div className="page">
@@ -1227,6 +1324,7 @@ export function HowItWorks() {
         ))}
       </div>
 
+      {tab === 'vision' && <TabVision />}
       {tab === 'overview' && <TabOverview />}
       {tab === 'harness' && <TabHarness />}
       {tab === 'proposals' && <TabProposals />}
