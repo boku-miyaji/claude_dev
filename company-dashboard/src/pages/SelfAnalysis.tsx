@@ -336,12 +336,79 @@ function ValuesDashCard({ result }: { result: Record<string, unknown> }) {
 }
 
 // ---------------------------------------------------------------------------
+// Shared: Section card with colored border
+// ---------------------------------------------------------------------------
+interface SectionCardProps {
+  title: string
+  color: 'accent' | 'green' | 'amber' | 'red'
+  icon?: string
+  children: React.ReactNode
+  style?: React.CSSProperties
+}
+
+function SectionCard({ title, color, icon, children, style }: SectionCardProps) {
+  const colorMap: Record<string, { border: string; bg: string; text: string }> = {
+    accent: { border: 'var(--accent)', bg: 'var(--accent-bg)', text: 'var(--accent)' },
+    green: { border: 'var(--green)', bg: 'var(--green-bg)', text: 'var(--green)' },
+    amber: { border: 'var(--amber)', bg: 'var(--amber-bg)', text: 'var(--amber)' },
+    red: { border: 'var(--red)', bg: 'var(--red-bg)', text: 'var(--red)' },
+  }
+  const c = colorMap[color]
+  return (
+    <div style={{
+      padding: '16px 20px', background: c.bg, borderRadius: 10,
+      borderLeft: `3px solid ${c.border}`, ...style,
+    }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: c.text, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+        {icon && <span style={{ marginRight: 6 }}>{icon}</span>}{title}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+// Shared: Quote block
+function QuoteBlock({ text }: { text: string }) {
+  const dateMatch = text.match(/^\[([^\]]+)\]\s*(.*)$/)
+  return (
+    <div style={{
+      padding: '8px 12px', background: 'var(--surface2)', borderRadius: 6,
+      borderLeft: '2px solid var(--text3)', marginTop: 6,
+      fontSize: 11, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic',
+    }}>
+      {dateMatch ? (
+        <>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)', fontStyle: 'normal', marginRight: 8 }}>{dateMatch[1]}</span>
+          {dateMatch[2]}
+        </>
+      ) : text}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Type guard helpers for structured description
+// ---------------------------------------------------------------------------
+interface MbtiDescStructured {
+  core_insight: string
+  daily_patterns: { pattern: string; detail: string; quote: string }[]
+  strengths_in_action: { strength: string; detail: string; quote: string }[]
+  growth_edges: { edge: string; detail: string; suggestion: string }[]
+  advice: { title: string; detail: string }[]
+}
+
+function isMbtiDescStructured(d: unknown): d is MbtiDescStructured {
+  return typeof d === 'object' && d !== null && 'core_insight' in d
+}
+
+// ---------------------------------------------------------------------------
 // Detail Tab: MBTI
 // ---------------------------------------------------------------------------
 function MbtiDetail({ result }: { result: Record<string, unknown> }) {
   const dims = result.dimensions as Record<string, { score: number; label: string }> | undefined
   const typeName = result.type_name as string | undefined
   const evidence = (result.evidence as string[]) ?? []
+  const desc = result.description
 
   const dimLabels: Record<string, [string, string]> = {
     E_I: ['外向的 (E)', '内向的 (I)'],
@@ -377,7 +444,6 @@ function MbtiDetail({ result }: { result: Record<string, unknown> }) {
                   <span style={{ color: 'var(--text2)', fontWeight: 500 }}>{rightLabel}</span>
                 </div>
                 <div style={{ height: 8, background: 'var(--surface2)', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
-                  {/* Center marker */}
                   <div style={{ position: 'absolute', left: '50%', top: 0, width: 1, height: '100%', background: 'var(--text3)', opacity: 0.4, zIndex: 1 }} />
                   <div style={{
                     position: 'absolute',
@@ -397,8 +463,88 @@ function MbtiDetail({ result }: { result: Record<string, unknown> }) {
         </div>
       )}
 
-      {/* Structured description */}
-      {Boolean(result.description) && <FormattedDescription text={String(result.description)} />}
+      {/* Structured description (new format) */}
+      {isMbtiDescStructured(desc) ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Core Insight — hero quote */}
+          <div style={{
+            padding: '20px 24px', background: 'var(--accent-bg)', borderRadius: 12,
+            borderLeft: '4px solid var(--accent)',
+          }}>
+            <div style={{ fontSize: 15, color: 'var(--text)', lineHeight: 1.8, fontWeight: 500 }}>
+              {desc.core_insight}
+            </div>
+          </div>
+
+          {/* Daily Patterns */}
+          <SectionCard title="Daily Patterns" color="accent">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {desc.daily_patterns.map((p, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                    {p.pattern}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{p.detail}</div>
+                  {p.quote && <QuoteBlock text={p.quote} />}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Strengths in Action */}
+          <SectionCard title="Strengths in Action" color="green">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {desc.strengths_in_action.map((s, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                    {s.strength}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{s.detail}</div>
+                  {s.quote && <QuoteBlock text={s.quote} />}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Growth Edges */}
+          <SectionCard title="Growth Edges" color="amber">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {desc.growth_edges.map((g, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                    {g.edge}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 4 }}>{g.detail}</div>
+                  <div style={{ fontSize: 12, color: 'var(--green)', lineHeight: 1.6 }}>
+                    <span style={{ fontWeight: 600 }}>Tip: </span>{g.suggestion}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Advice */}
+          <SectionCard title="Advice" color="accent">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {desc.advice.map((a, i) => (
+                <div key={i} style={{ display: 'flex', gap: 12 }}>
+                  <span style={{
+                    fontSize: 16, fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--mono)',
+                    minWidth: 24, textAlign: 'center',
+                  }}>{i + 1}</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{a.title}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{a.detail}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+      ) : (
+        /* Fallback: old string format */
+        Boolean(desc) && <FormattedDescription text={String(desc)} />
+      )}
 
       {/* Evidence */}
       <EvidenceList evidence={evidence} />
@@ -412,6 +558,17 @@ function MbtiDetail({ result }: { result: Record<string, unknown> }) {
 // ---------------------------------------------------------------------------
 // Detail Tab: Big5
 // ---------------------------------------------------------------------------
+interface Big5SummaryStructured {
+  profile_narrative: string
+  trait_insights: { trait: string; score_meaning: string; quote: string }[]
+  trait_interactions: { combo: string; insight: string }[]
+  advice: { title: string; detail: string }[]
+}
+
+function isBig5SummaryStructured(s: unknown): s is Big5SummaryStructured {
+  return typeof s === 'object' && s !== null && 'profile_narrative' in s
+}
+
 function Big5Detail({ result }: { result: Record<string, unknown> }) {
   const traits = [
     { key: 'openness', label: '開放性' },
@@ -423,15 +580,18 @@ function Big5Detail({ result }: { result: Record<string, unknown> }) {
   const scores = traits.map(t => (result[t.key] as number) ?? 0)
   const labels = traits.map(t => t.label)
   const evidence = (result.evidence as string[]) ?? []
+  const summaryRaw = result.summary
+  const structured = isBig5SummaryStructured(summaryRaw) ? summaryRaw : null
+  // Build a trait insight lookup for structured mode
+  const traitInsightMap = new Map(
+    structured?.trait_insights?.map(ti => [ti.trait, ti]) ?? [],
+  )
 
   function getLevel(score: number): { label: string; color: string } {
     if (score >= 65) return { label: 'HIGH', color: 'var(--green)' }
     if (score >= 40) return { label: 'MID', color: 'var(--text3)' }
     return { label: 'LOW', color: 'var(--amber)' }
   }
-
-  // Extract per-trait descriptions from summary if available
-  const summary = String(result.summary ?? '')
 
   return (
     <div>
@@ -440,24 +600,32 @@ function Big5Detail({ result }: { result: Record<string, unknown> }) {
         <PentagonRadar scores={scores} labels={labels} size={300} />
       </div>
 
-      {/* Factor cards - 2 column grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-        gap: 12,
-        marginBottom: 20,
-      }}>
+      {/* Profile Narrative (structured) */}
+      {structured?.profile_narrative && (
+        <div style={{
+          padding: '20px 24px', background: 'var(--accent-bg)', borderRadius: 12,
+          borderLeft: '4px solid var(--accent)', marginBottom: 20,
+        }}>
+          <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.8, fontWeight: 500 }}>
+            {structured.profile_narrative}
+          </div>
+        </div>
+      )}
+
+      {/* Factor cards with integrated insights */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
         {traits.map((t, i) => {
           const score = scores[i]
           const level = getLevel(score)
+          const insight = traitInsightMap.get(t.label)
           return (
             <div key={t.key} style={{
-              padding: '12px 16px', background: 'var(--surface2)', borderRadius: 8,
+              padding: '14px 18px', background: 'var(--surface2)', borderRadius: 10,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t.label}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{t.label}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: 'var(--accent2)' }}>{score}</span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 18, fontWeight: 700, color: 'var(--accent2)' }}>{score}</span>
                   <span style={{
                     fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
                     background: level.color === 'var(--green)' ? 'rgba(34,197,94,0.15)' :
@@ -470,16 +638,62 @@ function Big5Detail({ result }: { result: Record<string, unknown> }) {
                   </span>
                 </div>
               </div>
-              <div style={{ height: 4, background: 'var(--bg)', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}>
-                <div style={{ height: '100%', width: `${score}%`, background: 'var(--accent)', borderRadius: 2 }} />
+              <div style={{ height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: insight ? 10 : 0 }}>
+                <div style={{ height: '100%', width: `${score}%`, background: 'var(--accent)', borderRadius: 3 }} />
               </div>
+              {insight && (
+                <>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+                    {insight.score_meaning}
+                  </div>
+                  {insight.quote && <QuoteBlock text={insight.quote} />}
+                </>
+              )}
             </div>
           )
         })}
       </div>
 
-      {/* Summary */}
-      {summary && <FormattedDescription text={summary} />}
+      {/* Trait Interactions */}
+      {structured?.trait_interactions && structured.trait_interactions.length > 0 && (
+        <SectionCard title="Trait Interactions" color="accent" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {structured.trait_interactions.map((ti, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                  {ti.combo}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{ti.insight}</div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Advice */}
+      {structured?.advice && structured.advice.length > 0 && (
+        <SectionCard title="Advice" color="green" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {structured.advice.map((a, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12 }}>
+                <span style={{
+                  fontSize: 16, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--mono)',
+                  minWidth: 24, textAlign: 'center',
+                }}>{i + 1}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{a.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{a.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Fallback: old string format */}
+      {!structured && typeof summaryRaw === 'string' && summaryRaw && (
+        <FormattedDescription text={summaryRaw} />
+      )}
 
       {/* Evidence */}
       <EvidenceList evidence={evidence} />
@@ -493,11 +707,21 @@ function Big5Detail({ result }: { result: Record<string, unknown> }) {
 // ---------------------------------------------------------------------------
 // Detail Tab: StrengthsFinder
 // ---------------------------------------------------------------------------
+type SfEvidenceItem = { point: string; quote: string }
+type SfStrength = { name: string; name_en?: string; score: number; domain: string; evidence: string | SfEvidenceItem[] }
+type SfSynergy = { combo: string; insight: string }
+type SfBlindSpot = { point: string; mitigation: string }
+type SfAction = { action: string; why: string }
+
 function SfDetail({ result }: { result: Record<string, unknown> }) {
-  const strengths = (result.top_strengths as { name: string; name_en?: string; score: number; domain: string; evidence: string }[]) ?? []
+  const strengths = (result.top_strengths as SfStrength[]) ?? []
   const domainSummary = result.domain_summary as Record<string, { score: number; label: string; description?: string }> | undefined
   const workFit = (result.work_fit as string[]) ?? []
   const growthAreas = (result.growth_areas as string[]) ?? []
+  const synergy = (result.synergy as SfSynergy[]) ?? []
+  const blindSpot = (result.blind_spot as SfBlindSpot[]) ?? []
+  const actionPlan = (result.action_plan as SfAction[]) ?? []
+
   const domainColors: Record<string, string> = {
     strategic_thinking: 'var(--accent)',
     relationship_building: 'var(--green)',
@@ -518,36 +742,106 @@ function SfDetail({ result }: { result: Record<string, unknown> }) {
         Top 5 Strengths
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-        {strengths.map((s, i) => (
-          <div key={i} style={{ padding: '14px 16px', background: 'var(--surface2)', borderRadius: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--accent2)', fontFamily: 'var(--mono)' }}>#{i + 1}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{s.name}</span>
-                  {s.name_en && <span style={{ fontSize: 11, color: 'var(--text3)' }}>({s.name_en})</span>}
+        {strengths.map((s, i) => {
+          const hasStructuredEvidence = Array.isArray(s.evidence)
+          return (
+            <div key={i} style={{ padding: '14px 16px', background: 'var(--surface2)', borderRadius: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--accent2)', fontFamily: 'var(--mono)' }}>#{i + 1}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{s.name}</span>
+                    {s.name_en && <span style={{ fontSize: 11, color: 'var(--text3)' }}>({s.name_en})</span>}
+                  </div>
+                </div>
+                <span style={{
+                  fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 10,
+                  background: domainTagColors[s.domain] ? `${domainTagColors[s.domain]}22` : 'var(--accent-bg)',
+                  color: domainTagColors[s.domain] ?? 'var(--accent)',
+                }}>
+                  {s.domain}
+                </span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: 'var(--accent2)' }}>{s.score}</span>
+              </div>
+              <div style={{ height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{ height: '100%', width: `${s.score}%`, background: 'var(--accent)', borderRadius: 3 }} />
+              </div>
+              {/* Structured evidence (new) */}
+              {hasStructuredEvidence ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {(s.evidence as SfEvidenceItem[]).map((ev, j) => (
+                    <div key={j}>
+                      <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+                        {ev.point}
+                      </div>
+                      {ev.quote && <QuoteBlock text={ev.quote} />}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Fallback: old string evidence */
+                s.evidence && typeof s.evidence === 'string' && (
+                  <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                    {s.evidence}
+                  </div>
+                )
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Synergy */}
+      {synergy.length > 0 && (
+        <SectionCard title="Synergy" color="accent" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {synergy.map((sy, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                  {sy.combo}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{sy.insight}</div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Blind Spot */}
+      {blindSpot.length > 0 && (
+        <SectionCard title="Blind Spot" color="amber" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {blindSpot.map((bs, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 4 }}>{bs.point}</div>
+                <div style={{ fontSize: 12, color: 'var(--green)', lineHeight: 1.6 }}>
+                  <span style={{ fontWeight: 600 }}>Mitigation: </span>{bs.mitigation}
                 </div>
               </div>
-              <span style={{
-                fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 10,
-                background: domainTagColors[s.domain] ? `${domainTagColors[s.domain]}22` : 'var(--accent-bg)',
-                color: domainTagColors[s.domain] ?? 'var(--accent)',
-              }}>
-                {s.domain}
-              </span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: 'var(--accent2)' }}>{s.score}</span>
-            </div>
-            <div style={{ height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
-              <div style={{ height: '100%', width: `${s.score}%`, background: 'var(--accent)', borderRadius: 3 }} />
-            </div>
-            {s.evidence && (
-              <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
-                {s.evidence}
-              </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
+        </SectionCard>
+      )}
+
+      {/* Action Plan */}
+      {actionPlan.length > 0 && (
+        <SectionCard title="Action Plan" color="green" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {actionPlan.map((ap, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12 }}>
+                <span style={{
+                  fontSize: 16, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--mono)',
+                  minWidth: 24, textAlign: 'center',
+                }}>{i + 1}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{ap.action}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6 }}>{ap.why}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
 
       {/* 4 Domain Balance */}
       {domainSummary && (
@@ -613,7 +907,9 @@ function SfDetail({ result }: { result: Record<string, unknown> }) {
       )}
 
       {/* Summary */}
-      {Boolean(result.summary) && <FormattedDescription text={String(result.summary)} />}
+      {Boolean(result.summary) && typeof result.summary === 'string' && (
+        <FormattedDescription text={String(result.summary)} />
+      )}
 
       <ChangesFromPrevious result={result} />
     </div>
@@ -623,32 +919,133 @@ function SfDetail({ result }: { result: Record<string, unknown> }) {
 // ---------------------------------------------------------------------------
 // Detail Tab: Values
 // ---------------------------------------------------------------------------
+type ValEvidenceItem = { point: string; quote: string }
+type ValTension = { values: string[]; detail: string; quote?: string }
+type ValAlignment = {
+  aligned?: { value: string; detail: string }[]
+  gap?: { value: string; stated: string; actual: string; detail: string }[]
+}
+type ValValue = { name: string; rank: number; score: number; evidence: string | ValEvidenceItem[] }
+
 function ValuesDetail({ result }: { result: Record<string, unknown> }) {
-  const values = (result.values as { name: string; rank: number; score: number; evidence: string }[]) ?? []
+  const values = (result.values as ValValue[]) ?? []
+  const tension = (result.tension as ValTension[]) ?? []
+  const alignment = (result.alignment as ValAlignment) ?? null
+  const lifeQuestions = (result.life_question as string[]) ?? []
   const amberShades = ['rgba(245,158,11,1)', 'rgba(245,158,11,0.8)', 'rgba(245,158,11,0.65)', 'rgba(245,158,11,0.5)', 'rgba(245,158,11,0.35)', 'rgba(245,158,11,0.25)', 'rgba(245,158,11,0.2)']
 
   return (
     <div>
       {/* Ranking */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
-        {values.map((v, i) => (
-          <div key={v.rank} style={{ padding: '12px 16px', background: 'var(--surface2)', borderRadius: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={{ fontSize: 18, fontWeight: 700, color: amberShades[i] ?? 'var(--amber)', fontFamily: 'var(--mono)' }}>#{v.rank}</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', flex: 1 }}>{v.name}</span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: amberShades[i] ?? 'var(--amber)' }}>{v.score}</span>
-            </div>
-            <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
-              <div style={{ height: '100%', width: `${v.score}%`, background: amberShades[i] ?? 'var(--amber)', borderRadius: 3 }} />
-            </div>
-            {v.evidence && (
-              <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
-                {v.evidence}
+        {values.map((v, i) => {
+          const hasStructuredEvidence = Array.isArray(v.evidence)
+          return (
+            <div key={v.rank} style={{ padding: '14px 18px', background: 'var(--surface2)', borderRadius: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 18, fontWeight: 700, color: amberShades[i] ?? 'var(--amber)', fontFamily: 'var(--mono)' }}>#{v.rank}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', flex: 1 }}>{v.name}</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: amberShades[i] ?? 'var(--amber)' }}>{v.score}</span>
               </div>
-            )}
-          </div>
-        ))}
+              <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{ height: '100%', width: `${v.score}%`, background: amberShades[i] ?? 'var(--amber)', borderRadius: 3 }} />
+              </div>
+              {/* Structured evidence (new) */}
+              {hasStructuredEvidence ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {(v.evidence as ValEvidenceItem[]).map((ev, j) => (
+                    <div key={j}>
+                      <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+                        {ev.point}
+                      </div>
+                      {ev.quote && <QuoteBlock text={ev.quote} />}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Fallback: old string evidence */
+                v.evidence && typeof v.evidence === 'string' && (
+                  <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                    {v.evidence}
+                  </div>
+                )
+              )}
+            </div>
+          )
+        })}
       </div>
+
+      {/* Tension */}
+      {tension.length > 0 && (
+        <SectionCard title="Values in Tension" color="amber" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {tension.map((t, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                  {t.values.join(' vs ')}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{t.detail}</div>
+                {t.quote && <QuoteBlock text={t.quote} />}
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Alignment */}
+      {alignment && (
+        <>
+          {alignment.aligned && alignment.aligned.length > 0 && (
+            <SectionCard title="Aligned: Words = Action" color="green" style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {alignment.aligned.map((a, i) => (
+                  <div key={i}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{a.value}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{a.detail}</div>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          )}
+          {alignment.gap && alignment.gap.length > 0 && (
+            <SectionCard title="Gap: Ideal vs Reality" color="accent" style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {alignment.gap.map((g, i) => (
+                  <div key={i}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{g.value}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600 }}>Stated: </span>{g.stated}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600 }}>Actual: </span>{g.actual}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.7 }}>{g.detail}</div>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          )}
+        </>
+      )}
+
+      {/* Life Questions */}
+      {lifeQuestions.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          {lifeQuestions.map((q, i) => (
+            <div key={i} style={{
+              padding: '20px 24px', background: 'var(--accent-bg)', borderRadius: 12,
+              borderLeft: '4px solid var(--accent)', marginBottom: i < lifeQuestions.length - 1 ? 12 : 0,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                Question for You
+              </div>
+              <div style={{ fontSize: 15, color: 'var(--text)', lineHeight: 1.8, fontWeight: 500 }}>
+                {q}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Value Changes */}
       {Boolean(result.changes) && (
@@ -664,7 +1061,9 @@ function ValuesDetail({ result }: { result: Record<string, unknown> }) {
       )}
 
       {/* Summary */}
-      {Boolean(result.summary) && <FormattedDescription text={String(result.summary)} />}
+      {Boolean(result.summary) && typeof result.summary === 'string' && (
+        <FormattedDescription text={String(result.summary)} />
+      )}
 
       <ChangesFromPrevious result={result} />
     </div>
