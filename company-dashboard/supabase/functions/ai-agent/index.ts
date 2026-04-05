@@ -61,7 +61,7 @@ const MAX_STEPS_PRECISION = 20;
 const MAX_COST_PRECISION = 0.50;  // $0.50 per request cost cap
 const MAX_COST_DAILY = 5.00;     // $5.00 daily cost cap
 const MAX_COST_MONTHLY = 50.00;  // $50.00 monthly cost cap
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 50;
 const MAX_TOOL_RESULT_CHARS = 4000;
 
 // Tool safety: boundary markers to mitigate indirect prompt injection
@@ -758,13 +758,17 @@ async function agentLoop(
     return;
   }
 
-  // Load history
-  const { data: hist } = await sb.from("messages")
+  // Load history — fetch more rows descending (newest first), then reverse.
+  // This ensures we always include the most recent conversation turns.
+  const { data: histRaw } = await sb.from("messages")
     .select("role,content,model,tool_calls,tool_call_id,tool_name")
     .eq("conversation_id", conversationId)
-    .order("created_at", { ascending: true }).limit(MAX_HISTORY);
+    .order("created_at", { ascending: false }).limit(MAX_HISTORY);
 
-  const history: Message[] = (hist || []).map(m => ({
+  // Reverse to chronological order (oldest first)
+  const hist = (histRaw || []).reverse();
+
+  const history: Message[] = hist.map(m => ({
     role: m.role as Message["role"], content: m.content,
     tool_calls: m.tool_calls || undefined, tool_call_id: m.tool_call_id || undefined, name: m.tool_name || undefined,
   }));

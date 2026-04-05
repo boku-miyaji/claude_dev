@@ -5577,8 +5577,19 @@ async function renderArtifacts(root) {
 
     // Content
     var contentCard = el('div', {className: 'card', style: 'margin-bottom:20px;overflow:auto'});
+    // Check if content contains an embedded PDF
+    var hasPdf = artifact.content && artifact.content.indexOf('data:application/pdf;base64,') !== -1;
     if (!artifact.content) {
       contentCard.appendChild(el('div', {className: 'empty', textContent: '未同期。次のセッション起動時に自動同期されます。'}));
+    } else if (hasPdf) {
+      var pdfMatch = artifact.content.match(/data:application\/pdf;base64,[A-Za-z0-9+\/=]+/);
+      if (pdfMatch) {
+        var pdfObj = el('object', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;border-radius:8px'});
+        pdfObj.setAttribute('type', 'application/pdf');
+        pdfObj.setAttribute('data', pdfMatch[0]);
+        pdfObj.textContent = 'PDF viewer not available';
+        contentCard.appendChild(pdfObj);
+      }
     } else if (artifact.file_type === 'html') {
       var iframe = el('iframe', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;background:#fff;border-radius:8px'});
       contentCard.appendChild(iframe);
@@ -8503,7 +8514,16 @@ function openFullscreen(artifact) {
 
   if (!artifact.content) {
     contentEl.appendChild(el('div', {style: 'padding:40px;text-align:center;color:var(--text3)', textContent: '未同期。次のセッション起動時に自動同期されます。'}));
-  } else if (artifact.file_type === 'html') {
+  } else if (hasPdf) {
+      var pdfMatch = artifact.content.match(/data:application\/pdf;base64,[A-Za-z0-9+\/=]+/);
+      if (pdfMatch) {
+        var pdfObj = el('object', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;border-radius:8px'});
+        pdfObj.setAttribute('type', 'application/pdf');
+        pdfObj.setAttribute('data', pdfMatch[0]);
+        pdfObj.textContent = 'PDF viewer not available';
+        contentCard.appendChild(pdfObj);
+      }
+    } else if (artifact.file_type === 'html') {
     var iframe = el('iframe', {style: 'width:100%;height:100%;border:none;background:#fff'});
     contentEl.appendChild(iframe);
     setTimeout(function() {
