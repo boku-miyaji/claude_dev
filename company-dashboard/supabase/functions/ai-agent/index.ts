@@ -761,7 +761,7 @@ async function agentLoop(
 
   // Load history — fetch more rows descending (newest first), then reverse.
   const { data: histRaw, error: histError } = await sb.from("messages")
-    .select("role,content,model,tool_calls,tool_name")
+    .select("role,content,model,tool_calls,tool_call_id,tool_name")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: false }).limit(MAX_HISTORY);
   if (histError) send({ type: "debug", error: "history_load_failed", detail: histError.message } as unknown as SSEEvent);
@@ -773,7 +773,7 @@ async function agentLoop(
     .filter(m => m.content != null)  // Skip messages with null content
     .map(m => ({
       role: m.role as Message["role"], content: m.content || "",
-      tool_calls: m.tool_calls || undefined, name: m.tool_name || undefined,
+      tool_calls: m.tool_calls || undefined, tool_call_id: m.tool_call_id || undefined, name: m.tool_name || undefined,
     }));
 
   // Debug: report history count + conversation details
@@ -949,7 +949,7 @@ async function agentLoop(
 
       await sb.from("messages").insert({
         conversation_id: conversationId, role: "tool", content: truncated,
-        tool_name: tc.name, tool_input: tc.input, step, user_id: userId,
+        tool_name: tc.name, tool_input: tc.input, tool_call_id: tc.id, step, user_id: userId,
       });
 
       messages.push({ role: "tool", content: safeResult, tool_call_id: tc.id, name: isAnthropicModel(selectedModel) ? undefined : tc.name });
