@@ -4362,6 +4362,33 @@ async function finSubscriptions(root) {
   });
   root.appendChild(kpiRow);
 
+  // Category breakdown bar (horizontal stacked bar)
+  if (active.length > 0) {
+    var byCat = {};
+    active.forEach(function(s) {
+      var m = s.recurring_interval === 'yearly' ? Math.round(s.amount/12) : s.recurring_interval === 'quarterly' ? Math.round(s.amount/3) : s.amount;
+      byCat[s.category] = (byCat[s.category] || 0) + m;
+    });
+    var catColors = {subscription:'#5046e5',communication:'#2563eb',equipment:'#0d9f6e',office:'#d97706',outsourcing:'#dc2626',education:'#8b5cf6',insurance:'#06b6d4',other:'#6b7280',supplies:'#f59e0b',entertainment:'#ec4899',tax_payment:'#64748b',transportation:'#14b8a6'};
+    var stackedBar = el('div', {style: 'display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:8px'});
+    Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a];}).forEach(function(cat) {
+      var pct = Math.round(byCat[cat] / monthlyTotal * 100);
+      if (pct < 1) return;
+      stackedBar.appendChild(el('div', {title: (catLabels[cat]||cat)+' '+fmtYen(byCat[cat])+'/月 ('+pct+'%)', style: 'width:'+pct+'%;background:'+(catColors[cat]||'#6b7280')+';transition:width .3s'}));
+    });
+    root.appendChild(stackedBar);
+
+    var catLegend = el('div', {style: 'display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;font-size:11px'});
+    Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a];}).forEach(function(cat) {
+      var pct = Math.round(byCat[cat] / monthlyTotal * 100);
+      catLegend.appendChild(el('div', {style: 'display:flex;align-items:center;gap:4px'}, [
+        el('span', {style: 'width:8px;height:8px;border-radius:2px;background:'+(catColors[cat]||'#6b7280')+';flex-shrink:0'}),
+        el('span', {textContent: (catLabels[cat]||cat)+' '+fmtYen(byCat[cat])+' ('+pct+'%)', style: 'color:var(--text2)'})
+      ]));
+    });
+    root.appendChild(catLegend);
+  }
+
   // Add button
   var addBtn = el('button', {className: 'btn btn-p btn-sm', style: 'margin-bottom:16px', textContent: '+ 固定費を追加'});
   addBtn.onclick = function() { showSubscriptionForm(null); };
@@ -4373,26 +4400,47 @@ async function finSubscriptions(root) {
     return;
   }
 
+  // Visual bar list — each item shows amount as horizontal bar
+  var maxMonthly = Math.max.apply(null, subs.filter(function(s){return s.recurring_status==='active';}).map(function(s) {
+    return s.recurring_interval === 'yearly' ? Math.round(s.amount/12) : s.recurring_interval === 'quarterly' ? Math.round(s.amount/3) : s.amount;
+  }).concat([1]));
+
   subs.forEach(function(s) {
     var monthlyAmt = s.recurring_interval === 'yearly' ? Math.round(s.amount/12) : s.recurring_interval === 'quarterly' ? Math.round(s.amount/3) : s.amount;
-    var row = el('div', {style: 'display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px'+(s.recurring_status==='cancelled'?';opacity:0.4':'')});
+    var barPct = Math.round(monthlyAmt / maxMonthly * 100);
+    var catColors = {subscription:'#5046e5',communication:'#2563eb',equipment:'#0d9f6e',office:'#d97706',outsourcing:'#dc2626',education:'#8b5cf6',insurance:'#06b6d4',other:'#6b7280',supplies:'#f59e0b',entertainment:'#ec4899',tax_payment:'#64748b',transportation:'#14b8a6'};
+    var barColor = catColors[s.category] || '#6b7280';
+    var isCancelled = s.recurring_status === 'cancelled';
 
-    var left = el('div', {style:'display:flex;flex-direction:column;gap:2px'});
-    left.appendChild(el('div', {style:'display:flex;align-items:center;gap:8px'}, [
+    var row = el('div', {style: 'padding:10px 0;border-bottom:1px solid var(--border);font-size:13px'+(isCancelled?';opacity:0.35':'')});
+
+    // Top: name + amount + edit
+    var top = el('div', {style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px'});
+    top.appendChild(el('div', {style: 'display:flex;align-items:center;gap:8px'}, [
       el('span', {style:'width:8px;height:8px;border-radius:50%;background:'+(statusColors[s.recurring_status]||'var(--text3)')+';flex-shrink:0'}),
       el('span', {textContent: s.service_name || s.description, style:'font-weight:500'}),
       el('span', {textContent: catLabels[s.category]||s.category, style:'font-size:10px;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:3px'})
     ]));
-    left.appendChild(el('div', {textContent: (intervalLabels[s.recurring_interval]||'月額')+' '+fmtYen(s.amount)+(s.recurring_interval!=='monthly'?' (月あたり '+fmtYen(monthlyAmt)+')':''), style:'font-size:11px;color:var(--text3);margin-left:16px'}));
-
-    var right = el('div', {style:'display:flex;align-items:center;gap:8px'});
-    right.appendChild(el('span', {textContent: statusLabels[s.recurring_status]||'', style:'font-size:10px;color:'+(statusColors[s.recurring_status]||'var(--text3)')+';font-weight:600'}));
+    var rightInfo = el('div', {style:'display:flex;align-items:center;gap:8px'});
+    rightInfo.appendChild(el('span', {textContent: fmtYen(monthlyAmt)+'/月', style:'font-weight:600;font-family:var(--mono);font-size:14px'}));
     var editBtn = el('button', {className:'btn btn-g btn-sm', style:'font-size:10px;padding:2px 8px', textContent:'編集'});
     editBtn.onclick = function() { showSubscriptionForm(s); };
-    right.appendChild(editBtn);
+    rightInfo.appendChild(editBtn);
+    top.appendChild(rightInfo);
+    row.appendChild(top);
 
-    row.appendChild(left);
-    row.appendChild(right);
+    // Bar
+    if (!isCancelled) {
+      var barBg = el('div', {style: 'height:6px;background:var(--surface2);border-radius:3px;overflow:hidden'});
+      barBg.appendChild(el('div', {style: 'height:100%;width:'+barPct+'%;background:'+barColor+';border-radius:3px;transition:width .3s'}));
+      row.appendChild(barBg);
+    }
+
+    // Sub info
+    if (s.recurring_interval !== 'monthly') {
+      row.appendChild(el('div', {textContent: (intervalLabels[s.recurring_interval]||'')+' '+fmtYen(s.amount), style:'font-size:10px;color:var(--text3);margin-top:2px'}));
+    }
+
     root.appendChild(row);
   });
 
