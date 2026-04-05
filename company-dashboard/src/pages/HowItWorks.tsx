@@ -289,7 +289,7 @@ function TabOverview() {
           ['habits (完了)', 'Today画面でチェック', 'ユーザータップ', '→ 統合プログレスバーに即反映'],
           ['habits (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', '即追加。Habitsページで詳細編集'],
           ['weekly_narratives', 'Weeklyページで「生成」ボタン', 'ユーザー操作', 'DB保存。過去の週は再生成可能'],
-          ['self_analysis', 'Self Analysisで分析ボタン', 'ユーザー操作', 'DB保存。日記件数でアンロック'],
+          ['self_analysis', 'Self Analysisで再分析ボタン', 'ユーザー操作', 'ハイブリッド方式: 初回=全データ分析→analysis_context保存、更新=前回context+差分データで効率的更新。統合まとめタブで全分析結果を一覧'],
           ['news_items', 'Reportsで「収集」ボタン', 'ユーザー操作', 'activity_logにも記録'],
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
         ]} />
@@ -693,13 +693,13 @@ function TabAiFeatures() {
         />
 
         <AiFeatureCard
-          name="5. 自己分析（6種類）"
-          trigger="Self Analysisページで分析ボタン押下（日記件数でアンロック）"
-          input="日記(30-80件), タスク実績, 感情分析データ, 夢リスト（分析タイプにより異なる）"
+          name="5. 自己分析（4種類 + 統合まとめ）"
+          trigger="Self Analysisページで再分析ボタン押下（日記20件以上でアンロック）"
+          input="ハイブリッド方式: 初回=全データ / 更新=前回結果+核心引用+統計スナップショット+新データのみ。データソース5種（日記=本音, AIチャット=自然な会話, Claude Code指示=関心テーマのみ, タスク/スケジュール, 夢リスト）。各ソースにデータ文脈ガイド付き"
           model="gpt-5-nano (completion mode, jsonMode)"
-          pipeline="分析タイプ別にデータ収集 → タイプ別プロンプト → JSON応答 → DB保存 → 可視化"
-          output="MBTI推定, Big5スコア, 強み分析, ストレングスファインダーTop5, 感情トリガー, 価値観分析"
-          storage="self_analysis テーブル(analysis_type, result JSON, summary, data_count)"
+          pipeline="ハイブリッド収集(前回analysis_context+差分データ) → データソース文脈プリアンブル → 初回/更新モード切替 → 構造化プロンプト → JSON応答 → analysis_context生成・保存 → 統合まとめタブ + 個別タブ"
+          output="MBTI(core_insight/daily_patterns/strengths_in_action/growth_edges/advice), Big5(profile_narrative/trait_insights/trait_interactions/advice), SF(synergy/blind_spot/action_plan), Values(tension/alignment/life_question) + 統合まとめ"
+          storage="self_analysis テーブル(analysis_type, result JSON, summary, data_count, analysis_context JSONB)"
           hook="useSelfAnalysis.ts"
         />
 
@@ -874,7 +874,7 @@ function TabAiFeatures() {
         <Tbl headers={['テーブル', 'カラム（主要）', '知識区分']} rows={[
           ['diary_entries', 'body, entry_type, entry_date, wbi', 'データ → ナレッジ（分析後）'],
           ['emotion_analysis', 'plutchik 8感情, russell, perma_v, wbi_score', 'ナレッジ（データから自動生成）'],
-          ['self_analysis', 'analysis_type, result(JSON), summary', 'ナレッジ（蓄積データから生成）'],
+          ['self_analysis', 'analysis_type, result(JSON), summary, analysis_context(JSONB)', 'ナレッジ（ハイブリッド分析。analysis_contextに中間根拠を保存し次回の更新分析に活用）'],
           ['weekly_narratives', 'narrative, stats(JSON)', 'ナレッジ（週次集約）'],
           ['knowledge_base', 'category, rule, reason, confidence', 'ナレッジ → 形式知（昇格時）'],
           ['ceo_insights', 'category, insight, evidence', 'ナレッジ（暗黙知の間接抽出）'],
