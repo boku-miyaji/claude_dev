@@ -88,7 +88,6 @@ JSON形式で返してください:
 
 type TabType = 'dreams' | 'goals'
 
-const LEVEL_MAP: Map<string, (typeof GOAL_LEVELS)[number]> = new Map(GOAL_LEVELS.map((l) => [l.value, l]))
 
 /* ── Component ── */
 
@@ -131,7 +130,7 @@ export function Dreams() {
   }, [fetchDreams, fetchGoals])
 
   const categories = useMemo(() => deriveCategories(dreams), [dreams])
-  const categoryMap = useMemo(() => new Map(categories.map((c) => [c.value, c])), [categories])
+
 
   const detail = useMemo(() => {
     if (!detailId) return null
@@ -512,7 +511,7 @@ export function Dreams() {
             <div style={{ marginBottom: 12 }}>
               <label className="form-label">タイトル</label>
               <input className="input" value={detail.title}
-                onChange={(e) => { const updated = { ...detail, title: e.target.value }; setDetailId(detail.id); updateDream(detail.id, { title: e.target.value }) }}
+                onChange={(e) => updateDream(detail.id, { title: e.target.value })}
                 onBlur={() => toast('保存しました')}
                 style={{ width: '100%', fontSize: 14, fontWeight: 500 }} />
             </div>
