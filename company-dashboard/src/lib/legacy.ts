@@ -806,6 +806,7 @@ function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour, def
   var isEdit = !!existingEvent;
   // defaultAllDay must be explicitly true AND no hour. Any other case = not all-day.
   var isAllDay = isEdit ? !!existingEvent.all_day : (defaultAllDay === true && (defaultHour === null || defaultHour === undefined));
+  console.log('[CAL] openModal: defaultHour=' + defaultHour + ', defaultAllDay=' + defaultAllDay + ', isAllDay=' + isAllDay);
 
   var overlay = el('div', {className: 'modal-overlay'});
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
@@ -1067,7 +1068,7 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
         (function(dayIdx, hour) {
           cell.addEventListener('click', function(e) {
             if (dragState) return;
-            if (e.target !== cell && !e.target.classList.contains('cal-tg-cell')) return;
+            console.log('[CAL] cell click: hour=' + hour + ', target=' + e.target.className + ', isCell=' + (e.target === cell));
             e.stopPropagation();
             openCalEventModal(null, toLocalDateStr(days[dayIdx]), onRefresh, hour, false);
           });
