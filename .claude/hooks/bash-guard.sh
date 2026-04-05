@@ -36,6 +36,10 @@ if echo "$COMMAND" | grep -qiE '(DROP\s+TABLE|DROP\s+DATABASE)'; then
 fi
 
 if [ -n "$BLOCKED" ]; then
+  # 監査ログに記録
+  LOG_DIR="$HOME/.claude/logs"
+  mkdir -p "$LOG_DIR"
+  echo "{\"timestamp\":\"$(date -Iseconds)\",\"command\":$(echo "$COMMAND" | jq -Rs .),\"reason\":\"$BLOCKED\"}" >> "$LOG_DIR/blocked-commands.jsonl" 2>/dev/null || true
   echo "$BLOCKED" >&2
   exit 2
 fi
