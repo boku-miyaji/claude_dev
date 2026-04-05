@@ -317,9 +317,12 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .chat-sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .chat-sidebar-header{padding:16px;border-bottom:1px solid var(--border)}
 .chat-sidebar-list{flex:1;overflow-y:auto;padding:8px}
-.chat-conv-item{padding:10px 12px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--text2);transition:background .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-group-label{font-size:10px;color:var(--text3);font-weight:600;padding:12px 12px 4px;text-transform:uppercase;letter-spacing:.06em}
+.chat-group-label:first-child{padding-top:4px}
+.chat-conv-item{padding:8px 12px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--text2);transition:background .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-conv-item:hover{background:var(--surface2)}
 .chat-conv-item.active{background:var(--accent-bg);color:var(--accent);font-weight:600}
+.chat-conv-title{overflow:hidden;text-overflow:ellipsis}
 .chat-main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
 .chat-messages{flex:1;overflow-y:auto;padding:24px 0}
 .chat-messages-inner{max-width:720px;margin:0 auto;padding:0 24px}
