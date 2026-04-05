@@ -44,8 +44,19 @@ case "$EXT" in
     ;;
 esac
 
+# AI feature docs freshness check
+AI_HOOKS="useEmotionAnalysis useSelfAnalysis useMorningBriefing useDreamDetection useWeeklyNarrative"
+BASENAME=$(basename "$FILE_PATH" .ts)
+BASENAME_TSX=$(basename "$FILE_PATH" .tsx)
+for hook in $AI_HOOKS; do
+  if [ "$BASENAME" = "$hook" ] || [ "$BASENAME_TSX" = "$hook" ]; then
+    WARNINGS="${WARNINGS:+$WARNINGS\n}⚠️ AI機能のソースコードが変更されました。how-it-works.html と docs/ai-features/ の該当セクションも更新してください。"
+    break
+  fi
+done
+
 if [ -n "$WARNINGS" ]; then
-  echo "$WARNINGS" >&2
+  echo -e "$WARNINGS" >&2
 fi
 
 exit 0
