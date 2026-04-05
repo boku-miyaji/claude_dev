@@ -106,6 +106,11 @@ a{color:var(--accent2);text-decoration:none}
 .md-body pre code{background:none;padding:0}
 .md-body hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 .md-body blockquote{border-left:3px solid var(--accent-border);padding-left:12px;color:var(--text2);margin:0 0 10px}
+.md-body table{width:100%;border-collapse:collapse;margin:0 0 14px;font-size:12px}
+.md-body thead th{background:var(--surface2);font-weight:600;text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);color:var(--text);font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+.md-body tbody td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.md-body tbody tr:nth-child(odd){background:var(--surface)}
+.md-body tbody tr:hover{background:var(--surface2)}
 .tag-low{background:var(--surface2);color:var(--text3);border:1px solid var(--border)}
 .tag-open{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .tag-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}

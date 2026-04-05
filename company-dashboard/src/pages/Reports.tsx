@@ -200,6 +200,12 @@ function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }:
               </span>
             )}
           </div>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>
+            {r.file_path}
+            <span style={{ marginLeft: 8, fontSize: 10, padding: '1px 5px', borderRadius: 3, background: 'var(--surface2)', color: 'var(--text3)', textTransform: 'uppercase', fontWeight: 600 }}>
+              {r.file_type}
+            </span>
+          </div>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {r.tags.map((t) => (
               <span key={t} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--surface2)', color: 'var(--text3)' }}>{t}</span>
@@ -227,7 +233,16 @@ function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }:
 
       {expanded && r.content && (
         <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-          <SafeMarkdown content={r.content} />
+          {r.file_type === 'html' ? (
+            <iframe
+              srcDoc={r.content}
+              style={{ width: '100%', height: '80vh', border: '1px solid var(--border)', borderRadius: 'var(--r)', background: '#fff' }}
+              sandbox="allow-same-origin"
+              title={r.title}
+            />
+          ) : (
+            <SafeMarkdown content={r.content} />
+          )}
         </div>
       )}
     </div>

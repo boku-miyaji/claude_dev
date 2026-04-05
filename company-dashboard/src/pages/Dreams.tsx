@@ -9,6 +9,8 @@ import { useDataStore } from '@/stores/data'
 import { supabase } from '@/lib/supabase'
 import { aiCompletion } from '@/lib/edgeAi'
 
+function fmtYen(n: number): string { return '¥' + n.toLocaleString() }
+
 /* ── Dynamic Categories ── */
 
 interface Category { value: string; label: string; icon: string }
@@ -115,7 +117,7 @@ export function Dreams() {
   const [showAdd, setShowAdd] = useState(false)
   const [detailDream, setDetailDream] = useState<Dream | null>(null)
   const [detailGoal, setDetailGoal] = useState<Goal | null>(null)
-  const [detailWish, setDetailWish] = useState<WishItem | null>(null)
+  const [, setDetailWish] = useState<WishItem | null>(null)
   const [classifying, setClassifying] = useState(false)
   const [reviewing, setReviewing] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -259,9 +261,12 @@ export function Dreams() {
     if (item.kind === 'dream') {
       const d = dreams.find((x) => x.id === item.id)
       if (d) setDetailDream(d)
-    } else {
+    } else if (item.kind === 'goal') {
       const g = goals.find((x) => x.id === item.id)
       if (g) setDetailGoal(g)
+    } else if (item.kind === 'wish') {
+      const w = wishlist.find((x) => x.id === item.id)
+      if (w) setDetailWish(w)
     }
   }
 
@@ -309,6 +314,7 @@ export function Dreams() {
       <div style={{ display: 'flex', gap: 16, marginBottom: 16, fontSize: 12, color: 'var(--text2)' }}>
         <span>夢: <strong>{stats.dreams}</strong></span>
         <span>目標: <strong>{stats.goals}</strong></span>
+        {stats.wishes > 0 && <span>ほしい物: <strong>{stats.wishes}件 ({fmtYen(stats.wishTotal)})</strong></span>}
         <span>達成: <strong>{stats.achieved}</strong></span>
       </div>
 
@@ -317,6 +323,7 @@ export function Dreams() {
         <button className={`btn btn-sm ${kindFilter === 'all' ? 'btn-p' : 'btn-g'}`} onClick={() => setKindFilter('all')}>全て</button>
         <button className={`btn btn-sm ${kindFilter === 'dream' ? 'btn-p' : 'btn-g'}`} onClick={() => setKindFilter('dream')}>夢のみ</button>
         <button className={`btn btn-sm ${kindFilter === 'goal' ? 'btn-p' : 'btn-g'}`} onClick={() => setKindFilter('goal')}>目標のみ</button>
+        <button className={`btn btn-sm ${kindFilter === 'wish' ? 'btn-p' : 'btn-g'}`} onClick={() => setKindFilter('wish')}>ほしい物</button>
         <span style={{ width: 1, background: 'var(--border)', margin: '0 4px' }} />
         <button className={`btn btn-sm ${statusFilter === '' ? 'btn-p' : 'btn-g'}`} onClick={() => setStatusFilter('')}>All</button>
         <button className={`btn btn-sm ${statusFilter === 'active' ? 'btn-p' : 'btn-g'}`} onClick={() => setStatusFilter('active')}>未着手</button>
@@ -343,7 +350,7 @@ export function Dreams() {
                       style={{ padding: '10px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 13 }}
                       onClick={() => openItem(item)}>
                       <span style={{ fontSize: 14 }}>
-                        {isDone ? '✅' : item.status === 'in_progress' ? '🔄' : item.status === 'paused' ? '⏸' : item.kind === 'goal' ? '🎯' : '☐'}
+                        {isDone ? '✅' : item.status === 'in_progress' ? '🔄' : item.status === 'paused' ? '⏸' : item.kind === 'goal' ? '🎯' : item.kind === 'wish' ? '🛒' : '☐'}
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -351,6 +358,8 @@ export function Dreams() {
                             {item.title}
                           </span>
                           {item.kind === 'goal' && <span style={{ fontSize: 9, color: 'var(--accent2)', fontFamily: 'var(--mono)', background: 'var(--accent-bg)', padding: '1px 5px', borderRadius: 3 }}>目標</span>}
+                          {item.kind === 'wish' && <span style={{ fontSize: 9, color: 'var(--amber)', fontFamily: 'var(--mono)', background: 'var(--amber-bg)', padding: '1px 5px', borderRadius: 3 }}>ほしい物</span>}
+                          {item.kind === 'wish' && item.amount ? <span style={{ fontSize: 11, fontWeight: 700, fontFamily: 'var(--mono)', color: (item.amount ?? 0) >= 100000 ? 'var(--red)' : (item.amount ?? 0) >= 30000 ? 'var(--amber)' : 'var(--text2)' }}>{fmtYen(item.amount)}</span> : null}
                           {isOverdue && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600 }}>期限超過</span>}
                         </div>
                         {item.kind === 'goal' && item.target_date && (
@@ -590,6 +599,49 @@ export function Dreams() {
               <input type="range" min={0} max={100} step={5} value={detailGoal.progress}
                 onChange={(e) => { const v = Number(e.target.value); updateGoal(detailGoal.id, { progress: v, ...(v >= 100 ? { status: 'achieved', achieved_at: new Date().toISOString() } : {}) }); setDetailGoal({ ...detailGoal, progress: v }) }}
                 style={{ width: '100%' }} />
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ════════ Wish Detail ════════ */}
+      <Modal open={!!detailWish} onClose={() => setDetailWish(null)} title="ほしい物の詳細"
+        footer={detailWish ? (
+          <div style={{ display: 'flex', gap: 8, width: '100%', justifyContent: 'space-between' }}>
+            <button className="btn btn-d btn-sm" onClick={async () => { await supabase.from('wishlist').delete().eq('id', detailWish.id); setDetailWish(null); loadWishlist(); toast('削除しました') }}>削除</button>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {detailWish.status !== 'purchased' && (
+                <button className="btn btn-p btn-sm" onClick={async () => {
+                  await supabase.from('wishlist').update({ status: 'purchased', purchased_at: new Date().toISOString() }).eq('id', detailWish.id)
+                  setDetailWish(null); loadWishlist(); toast('購入済みにしました')
+                }}>購入済み</button>
+              )}
+              {detailWish.status !== 'dropped' && (
+                <button className="btn btn-g btn-sm" onClick={async () => {
+                  await supabase.from('wishlist').update({ status: 'dropped' }).eq('id', detailWish.id)
+                  setDetailWish(null); loadWishlist(); toast('見送りにしました')
+                }}>見送り</button>
+              )}
+            </div>
+          </div>
+        ) : undefined}>
+        {detailWish && (
+          <div>
+            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mono)', marginBottom: 12, color: detailWish.amount >= 100000 ? 'var(--red)' : detailWish.amount >= 30000 ? 'var(--amber)' : 'var(--text)' }}>
+              {fmtYen(detailWish.amount)}
+            </div>
+            <div style={{ marginBottom: 12, fontSize: 16, fontWeight: 500 }}>{detailWish.title}</div>
+            {detailWish.description && <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 12 }}>{detailWish.description}</p>}
+            {detailWish.url && (
+              <a href={detailWish.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--accent2)', display: 'block', marginBottom: 12 }}>
+                商品リンクを開く →
+              </a>
+            )}
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+              カテゴリ: {detailWish.category} · 優先度: {detailWish.priority === 'high' ? '高' : detailWish.priority === 'low' ? '低' : '中'}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>
+              Finance → ほしい物タブでも管理できます
             </div>
           </div>
         )}
