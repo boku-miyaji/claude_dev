@@ -1,6 +1,7 @@
 /**
  * Extract text from PDF, XLSX, DOCX, PPTX files in the browser.
- * Uses pdfjs-dist v4 (stable CDN worker), SheetJS, mammoth.
+ * PDF uses CDN-loaded pdf.js (no npm package — avoids Vite dep optimization issues).
+ * XLSX/DOCX use npm dynamic imports.
  */
 
 const MAX_TEXT_LENGTH = 80000
@@ -22,19 +23,50 @@ export async function extractTextFromFile(file: File): Promise<string | null> {
   }
 }
 
+/**
+ * PDF extraction via CDN-loaded pdf.js.
+ * Loads the library from cdnjs on first use, caches on window.
+ */
+async function loadPdfJs(): Promise<unknown> {
+  const w = window as Record<string, unknown>
+  if (w._pdfjsLib) return w._pdfjsLib
+
+  // Load pdf.js v4.4.168 (stable, verified on CDN)
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs'
+    script.type = 'module'
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Failed to load pdf.js from CDN'))
+    document.head.appendChild(script)
+  })
+
+  // pdf.js loaded as ES module doesn't expose to window automatically
+  // Use the global import approach instead
+  const mod = await import(/* @vite-ignore */ 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs')
+  w._pdfjsLib = mod
+  // Set worker
+  mod.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs'
+  return mod
+}
+
 async function extractPdf(file: File): Promise<string> {
   const buffer = await file.arrayBuffer()
-  const pdfjsLib = await import('pdfjs-dist')
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs'
+  const pdfjsLib = await loadPdfJs() as {
+    getDocument: (opts: { data: Uint8Array }) => { promise: Promise<{
+      numPages: number
+      getPage: (n: number) => Promise<{
+        getTextContent: () => Promise<{ items: Array<{ str?: string }> }>
+      }>
+    }> }
+  }
 
   const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise
   const pages: string[] = []
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i)
     const content = await page.getTextContent()
-    const text = content.items
-      .map((item) => ('str' in item ? item.str : ''))
-      .join(' ')
+    const text = content.items.map((item) => item.str || '').join(' ')
     if (text.trim()) pages.push(`--- Page ${i}/${pdf.numPages} ---\n${text}`)
   }
   if (pages.length === 0) return `[PDF: ${pdf.numPages}ページ、テキスト抽出不可（スキャンPDFの可能性）]`
