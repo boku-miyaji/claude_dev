@@ -6706,27 +6706,38 @@ async function renderChat(root) {
 
   function renderConvList() {
     while (convListEl.firstChild) convListEl.removeChild(convListEl.firstChild);
-    // Group: Today, Yesterday, Older
+    // Group: Today, Yesterday, This Week, This Month, Older
     var now = new Date(); var today = now.toISOString().substring(0,10);
-    var yesterday = new Date(now - 86400000).toISOString().substring(0,10);
-    var groups = {today:[], yesterday:[], older:[]};
+    var yesterday = new Date(now.getTime() - 86400000).toISOString().substring(0,10);
+    // Start of this week (Monday)
+    var weekStart = new Date(now); weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7)); weekStart.setHours(0,0,0,0);
+    var weekStartStr = weekStart.toISOString().substring(0,10);
+    // Start of this month
+    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0,10);
+    var groups = {today:[], yesterday:[], thisWeek:[], thisMonth:[], older:[]};
     chatState.conversations.forEach(function(c) {
       var d = (c.updated_at||'').substring(0,10);
       if (d === today) groups.today.push(c);
       else if (d === yesterday) groups.yesterday.push(c);
+      else if (d >= weekStartStr) groups.thisWeek.push(c);
+      else if (d >= monthStart) groups.thisMonth.push(c);
       else groups.older.push(c);
     });
     function addGroup(label, items) {
       if (items.length === 0) return;
-      convListEl.appendChild(el('div', {style: 'font-size:11px;color:var(--text3);font-weight:600;padding:8px 12px 4px;text-transform:uppercase;letter-spacing:.05em', textContent: label}));
+      convListEl.appendChild(el('div', {className: 'chat-group-label', textContent: label}));
       items.forEach(function(c) {
-        var item = el('div', {className: 'chat-conv-item' + (c.id === chatState.conversationId ? ' active' : ''), textContent: c.title || 'Untitled'});
+        var item = el('div', {className: 'chat-conv-item' + (c.id === chatState.conversationId ? ' active' : '')});
+        var titleSpan = el('span', {className: 'chat-conv-title', textContent: c.title || 'Untitled'});
+        item.appendChild(titleSpan);
         item.onclick = function() { chatState.conversationId = c.id; renderConvList(); renderChatMain(chatMain, edgeFnUrl, renderConvList); };
         convListEl.appendChild(item);
       });
     }
     addGroup('Today', groups.today);
     addGroup('Yesterday', groups.yesterday);
+    addGroup('This Week', groups.thisWeek);
+    addGroup('This Month', groups.thisMonth);
     addGroup('Older', groups.older);
   }
   renderConvList();
