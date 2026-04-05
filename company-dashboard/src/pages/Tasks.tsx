@@ -290,14 +290,12 @@ export function Tasks() {
                   <Tag variant={t.status as 'open' | 'done' | 'in_progress'}>{t.status}</Tag>
                 </div>
               </div>
-              <button
-                className={`tasks-type-toggle${t.type === 'request' ? ' req' : ''}`}
-                title={`${t.type === 'task' ? 'Request' : 'Task'} に変更`}
-                onClick={() => toggleType(t)}
-              >
-                {t.type === 'task' ? 'T' : 'R'}
-              </button>
-              <button className="tasks-delete" title="削除" onClick={() => deleteTask(t)}>&times;</button>
+              <div className="tasks-actions">
+                <button className="tasks-action-btn" onClick={() => toggleType(t)}>
+                  → {t.type === 'task' ? 'Request' : 'Task'}
+                </button>
+                <button className="tasks-action-btn danger" onClick={() => deleteTask(t)}>削除</button>
+              </div>
             </div>
           )
         })}
