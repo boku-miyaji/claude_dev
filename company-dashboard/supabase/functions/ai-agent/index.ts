@@ -761,7 +761,7 @@ async function agentLoop(
 
   // Load history — fetch more rows descending (newest first), then reverse.
   const { data: histRaw, error: histError } = await sb.from("messages")
-    .select("role,content,model,tool_calls,tool_call_id,tool_name")
+    .select("role,content,model,tool_calls,tool_name")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: false }).limit(MAX_HISTORY);
   if (histError) send({ type: "debug", error: "history_load_failed", detail: histError.message } as unknown as SSEEvent);
@@ -771,7 +771,7 @@ async function agentLoop(
 
   const history: Message[] = hist.map(m => ({
     role: m.role as Message["role"], content: m.content,
-    tool_calls: m.tool_calls || undefined, tool_call_id: m.tool_call_id || undefined, name: m.tool_name || undefined,
+    tool_calls: m.tool_calls || undefined, name: m.tool_name || undefined,
   }));
 
   // Debug: report history count + conversation details
