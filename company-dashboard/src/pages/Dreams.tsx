@@ -394,11 +394,16 @@ export function Dreams() {
       {/* ════════ Add Modal ════════ */}
       <Modal open={showAdd} onClose={() => { setShowAdd(false); resetForm() }} title="新しく追加">
         {/* Kind selector */}
-        <div className="filter-bar" style={{ marginBottom: 16 }}>
+        <div className="filter-bar" style={{ marginBottom: 8 }}>
           {([['dream', '☐ 夢'], ['goal', '🎯 目標'], ['wish', '🛒 ほしい物']] as const).map(([k, label]) => (
             <button key={k} className={`btn btn-sm ${addKind === k ? 'btn-p' : 'btn-g'}`}
               onClick={() => setAddKind(k)} type="button">{label}</button>
           ))}
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.5 }}>
+          {addKind === 'dream' && 'いつかやりたいこと。期限なし。'}
+          {addKind === 'goal' && '期限を決めて達成する具体的な計画。'}
+          {addKind === 'wish' && '買いたいもの。金額を入れて Finance と連携。'}
         </div>
 
         <div style={{ marginBottom: 12 }}>
