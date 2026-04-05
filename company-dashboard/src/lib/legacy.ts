@@ -7071,8 +7071,8 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     });
   }
 
-  // File input (hidden)
-  var fileInput = el('input', {type:'file',accept:'image/*,.pdf,.txt,.md,.csv,.json',multiple:true,style:'display:none'});
+  // File input (hidden) — accepts office docs, code files, and images
+  var fileInput = el('input', {type:'file',accept:'image/*,.pdf,.txt,.md,.csv,.json,.xlsx,.xls,.pptx,.ppt,.docx,.doc,.yaml,.yml,.xml,.html,.css,.js,.ts,.py,.sql',multiple:true,style:'display:none'});
   fileInput.addEventListener('change', function() {
     Array.from(fileInput.files).forEach(function(f) {
       var r = new FileReader();
