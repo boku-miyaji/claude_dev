@@ -8,7 +8,7 @@ interface MobileNavItem {
 }
 
 const MAIN_TABS: MobileNavItem[] = [
-  { page: '', icon: '◉', label: 'Today' },
+  { page: '', icon: '◉', label: 'Home' },
   { page: 'journal', icon: '📔', label: 'Journal' },
   { page: 'tasks', icon: '☐', label: 'Tasks' },
   { page: 'chat', icon: '💬', label: 'AI' },
