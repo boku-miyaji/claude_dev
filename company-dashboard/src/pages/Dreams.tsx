@@ -88,7 +88,7 @@ JSON形式で返してください:
 
 type TabType = 'dreams' | 'goals'
 
-const LEVEL_MAP = new Map(GOAL_LEVELS.map((l) => [l.value, l]))
+const LEVEL_MAP: Map<string, (typeof GOAL_LEVELS)[number]> = new Map(GOAL_LEVELS.map((l) => [l.value, l]))
 
 /* ── Component ── */
 
