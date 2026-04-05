@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { PageHeader, EmptyState, Tag, SkeletonRows } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
@@ -14,6 +14,7 @@ interface Task {
   due_date: string | null
   completed_at: string | null
   created_at: string
+  sort_order: number
   companies: { name: string } | null
 }
 
@@ -22,11 +23,7 @@ interface Company {
   name: string
 }
 
-type SortKey = 'created_at' | 'priority' | 'due_date'
-type SortDir = 'asc' | 'desc'
 type TabType = 'task' | 'request'
-
-const PRIORITY_ORDER: Record<string, number> = { high: 0, normal: 1, low: 2 }
 
 export function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -34,8 +31,6 @@ export function Tasks() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabType>('task')
   const [filters, setFilters] = useState({ status: 'open', company: '', priority: '' })
-  const [sortKey, setSortKey] = useState<SortKey>('created_at')
-  const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [showAdd, setShowAdd] = useState(false)
 
   // Form state
@@ -45,14 +40,20 @@ export function Tasks() {
   const [newPriority, setNewPriority] = useState('normal')
   const [newDueDate, setNewDueDate] = useState('')
 
-  // Inline edit state
+  // Edit state
   const [editing, setEditing] = useState<Task | null>(null)
+
+  // Drag state
+  const dragItem = useRef<string | null>(null)
+  const dragOverItem = useRef<string | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     const [cosRes, tasksRes] = await Promise.all([
       supabase.from('companies').select('id, name').eq('status', 'active'),
-      supabase.from('tasks').select('*, companies(name)').order('created_at', { ascending: false }),
+      supabase.from('tasks').select('*, companies(name)').order('sort_order', { ascending: true }),
     ])
     setCompanies(cosRes.data || [])
     setTasks((tasksRes.data as Task[]) || [])
@@ -67,30 +68,19 @@ export function Tasks() {
   }), [tasks])
 
   const sorted = useMemo(() => {
-    const filtered = tasks.filter((t) => {
+    return tasks.filter((t) => {
       if (t.type !== activeTab) return false
       if (filters.status && t.status !== filters.status) return false
       if (filters.company && t.company_id !== filters.company) return false
       if (filters.priority && t.priority !== filters.priority) return false
       return true
     })
-    return [...filtered].sort((a, b) => {
-      let cmp = 0
-      if (sortKey === 'priority') {
-        cmp = (PRIORITY_ORDER[a.priority] ?? 1) - (PRIORITY_ORDER[b.priority] ?? 1)
-      } else if (sortKey === 'due_date') {
-        const ad = a.due_date || '9999-99-99'
-        const bd = b.due_date || '9999-99-99'
-        cmp = ad < bd ? -1 : ad > bd ? 1 : 0
-      } else {
-        cmp = a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
-      }
-      return sortDir === 'asc' ? cmp : -cmp
-    })
-  }, [tasks, activeTab, filters, sortKey, sortDir])
+  }, [tasks, activeTab, filters])
 
   async function addTask() {
     if (!newTitle.trim()) return
+    // New task gets sort_order 0 (top of list)
+    const minOrder = Math.min(0, ...tasks.filter((t) => t.type === activeTab).map((t) => t.sort_order)) - 1
     const { data } = await supabase.from('tasks').insert({
       company_id: newCompany || null,
       type: activeTab,
@@ -98,13 +88,14 @@ export function Tasks() {
       description: newDesc.trim() || null,
       priority: newPriority,
       due_date: newDueDate || null,
+      sort_order: minOrder,
     }).select('*, companies(name)')
     if (data?.[0]) setTasks((prev) => [data[0] as Task, ...prev])
     setNewTitle('')
     setNewDesc('')
     setNewDueDate('')
     setShowAdd(false)
-    toast(`追加しました`)
+    toast('追加しました')
   }
 
   async function toggleStatus(t: Task) {
@@ -147,16 +138,60 @@ export function Tasks() {
     setEditing(null)
   }
 
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) {
-      setSortDir((d) => d === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortKey(key)
-      setSortDir(key === 'priority' ? 'asc' : 'desc')
+  // --- Drag & Drop ---
+  function handleDragStart(id: string) {
+    dragItem.current = id
+    setDraggingId(id)
+  }
+
+  function handleDragOver(e: React.DragEvent, id: string) {
+    e.preventDefault()
+    dragOverItem.current = id
+    setDragOverId(id)
+  }
+
+  async function handleDrop() {
+    const fromId = dragItem.current
+    const toId = dragOverItem.current
+    setDraggingId(null)
+    setDragOverId(null)
+    dragItem.current = null
+    dragOverItem.current = null
+
+    if (!fromId || !toId || fromId === toId) return
+
+    const items = [...sorted]
+    const fromIdx = items.findIndex((t) => t.id === fromId)
+    const toIdx = items.findIndex((t) => t.id === toId)
+    if (fromIdx === -1 || toIdx === -1) return
+
+    // Reorder
+    const [moved] = items.splice(fromIdx, 1)
+    items.splice(toIdx, 0, moved)
+
+    // Assign new sort_order values
+    const updates = items.map((t, i) => ({ id: t.id, sort_order: i }))
+
+    // Optimistic update
+    setTasks((prev) => {
+      const updated = [...prev]
+      for (const u of updates) {
+        const idx = updated.findIndex((t) => t.id === u.id)
+        if (idx !== -1) updated[idx] = { ...updated[idx], sort_order: u.sort_order }
+      }
+      return updated.sort((a, b) => a.sort_order - b.sort_order)
+    })
+
+    // Persist to DB
+    for (const u of updates) {
+      await supabase.from('tasks').update({ sort_order: u.sort_order }).eq('id', u.id)
     }
   }
 
-  const sortLabel = (key: SortKey) => sortKey === key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''
+  function handleDragEnd() {
+    setDraggingId(null)
+    setDragOverId(null)
+  }
 
   if (loading) return <div className="page"><PageHeader title="Tasks" /><SkeletonRows count={6} /></div>
 
@@ -166,7 +201,7 @@ export function Tasks() {
     <div className="page">
       <PageHeader
         title="Tasks"
-        description="タスクと依頼を一元管理"
+        description="タスクと依頼を一元管理。ドラッグで優先順を変更"
         actions={
           <button className="btn btn-p btn-sm" onClick={() => setShowAdd(!showAdd)}>
             {showAdd ? '閉じる' : `+ ${activeTab === 'task' ? 'タスク' : 'リクエスト'}追加`}
@@ -225,7 +260,7 @@ export function Tasks() {
         </div>
       )}
 
-      {/* Filters + Sort */}
+      {/* Filters */}
       <div className="tasks-toolbar">
         <div className="tasks-filters">
           <select className="input" value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}>
@@ -246,17 +281,6 @@ export function Tasks() {
             <option value="low">Low</option>
           </select>
         </div>
-        <div className="tasks-sort">
-          <button className={`tasks-sort-btn${sortKey === 'created_at' ? ' active' : ''}`} onClick={() => toggleSort('created_at')}>
-            Date{sortLabel('created_at')}
-          </button>
-          <button className={`tasks-sort-btn${sortKey === 'priority' ? ' active' : ''}`} onClick={() => toggleSort('priority')}>
-            Priority{sortLabel('priority')}
-          </button>
-          <button className={`tasks-sort-btn${sortKey === 'due_date' ? ' active' : ''}`} onClick={() => toggleSort('due_date')}>
-            Due{sortLabel('due_date')}
-          </button>
-        </div>
       </div>
 
       {/* List */}
@@ -272,7 +296,16 @@ export function Tasks() {
           const isDone = t.status === 'done'
           const isOverdue = t.due_date && t.due_date < todayStr && !isDone
           return (
-            <div key={t.id} className={`tasks-row${isDone ? ' done' : ''}${isOverdue ? ' overdue' : ''}`}>
+            <div
+              key={t.id}
+              className={`tasks-row${isDone ? ' done' : ''}${isOverdue ? ' overdue' : ''}${draggingId === t.id ? ' dragging' : ''}${dragOverId === t.id ? ' drag-over' : ''}`}
+              draggable
+              onDragStart={() => handleDragStart(t.id)}
+              onDragOver={(e) => handleDragOver(e, t.id)}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="tasks-drag-handle" title="ドラッグで並び替え">⠿</div>
               <button className={`tasks-check${isDone ? ' checked' : ''}`} onClick={() => toggleStatus(t)}>
                 {isDone && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 3.5L3.5 6L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
               </button>

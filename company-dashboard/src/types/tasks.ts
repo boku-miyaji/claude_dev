@@ -11,6 +11,7 @@ export interface Task {
   completed_at: string | null
   created_at: string
   tags: string[]
+  sort_order: number
   source: string | null
   /** Joined field from tasks query with companies */
   companies?: { name: string } | null

@@ -165,6 +165,12 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .tasks-row:hover{background:var(--surface2)}
 .tasks-row.done{opacity:.6}
 .tasks-row.overdue{background:var(--red-bg)}
+.tasks-row.dragging{opacity:.3}
+.tasks-row.drag-over{border-top:2px solid var(--accent);padding-top:12px}
+
+.tasks-drag-handle{color:var(--text3);cursor:grab;font-size:14px;flex-shrink:0;padding:2px 4px;opacity:.3;transition:opacity .15s;user-select:none;letter-spacing:-2px}
+.tasks-drag-handle:active{cursor:grabbing}
+.tasks-row:hover .tasks-drag-handle{opacity:.7}
 
 .tasks-check{width:18px;height:18px;border:2px solid var(--border2);border-radius:6px;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .2s;background:none;color:transparent}
 .tasks-check:hover{border-color:var(--green);background:var(--green-bg)}
