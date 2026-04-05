@@ -802,7 +802,7 @@ async function gcalDeleteEvent(calendarId, eventId) {
   if (!resp.ok && resp.status !== 204) throw new Error('Delete failed: ' + resp.status);
 }
 
-function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour) {
+function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour, defaultAllDay) {
   var isEdit = !!existingEvent;
   var overlay = el('div', {style: 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center'});
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
@@ -825,7 +825,7 @@ function openCalEventModal(existingEvent, defaultDate, onSaved, defaultHour) {
   ]));
 
   // All day checkbox
-  var allDayCheck = el('input', {type: 'checkbox', checked: isEdit ? existingEvent.all_day : false});
+  var allDayCheck = el('input', {type: 'checkbox', checked: isEdit ? existingEvent.all_day : !!defaultAllDay});
   modal.appendChild(el('div', {style: 'margin-bottom:12px;display:flex;align-items:center;gap:6px'}, [
     allDayCheck,
     el('label', {textContent: '終日', style: 'font-size:12px;color:var(--text2);cursor:pointer', onClick: function() { allDayCheck.checked = !allDayCheck.checked; toggleTimeInputs(); }})
@@ -945,7 +945,7 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
     var addBtn = el('button', {textContent: '+', title: '予定を追加', style: 'background:none;border:none;color:var(--text3);font-size:14px;cursor:pointer;padding:0 3px;line-height:1;opacity:.4;transition:opacity .15s'});
     addBtn.addEventListener('mouseenter', function() { this.style.opacity = '1'; });
     addBtn.addEventListener('mouseleave', function() { this.style.opacity = '.4'; });
-    (function(ds) { addBtn.addEventListener('click', function(ev) { ev.stopPropagation(); openCalEventModal(null, ds, onRefresh); }); })(dateStr);
+    (function(ds) { addBtn.addEventListener('click', function(ev) { ev.stopPropagation(); openCalEventModal(null, ds, onRefresh, null, true); }); })(dateStr);
 
     var numStyle = 'font-size:'+(compact?'12':'20')+'px;font-weight:700;'+(isToday?'color:#fff;background:var(--accent);border-radius:50%;width:'+(compact?'22':'28')+'px;height:'+(compact?'22':'28')+'px;display:flex;align-items:center;justify-content:center;':'color:var(--text);');
     var dayEl = el('div', {className: 'cal-day' + (isToday ? ' cal-today' : ''), style: compact ? 'min-height:90px;padding:8px' : ''}, [
@@ -983,7 +983,7 @@ function renderCalendarView(root, events, viewMode, viewDate, onRefresh) {
 
   if (viewMode === 'day' || viewMode === 'week') {
     // Google Calendar style time-grid
-    var HOUR_H = 60, START_H = 8, END_H = 21;
+    var HOUR_H = 40, START_H = 7, END_H = 23;
     var DAYS_COUNT = viewMode === 'day' ? 1 : 7;
     var gridCols = '56px repeat(' + DAYS_COUNT + ',1fr)';
     var days = [];
@@ -7134,7 +7134,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 break;
               case 'done':
                 metrics.tokIn = evt.tokensInput; metrics.tokOut = evt.tokensOutput; metrics.costUsd = evt.costUsd;
-                metaDiv.textContent = evt.model+' \u00B7 '+(evt.tokensInput+evt.tokensOutput)+' tok \u00B7 $'+(evt.costUsd||0).toFixed(4);
+                metaDiv.textContent = evt.model+' \u00B7 '+(evt.tokensInput+evt.tokensOutput)+' tok \u00B7 \u00A5'+((evt.costUsd||0)*150).toFixed(1);
                 var cr = await sb.from('conversations').select('id,title,model,company_id,updated_at').eq('archived',false).order('updated_at',{ascending:false}).limit(50);
                 chatState.conversations = cr.data||[];
                 break;
@@ -7204,7 +7204,7 @@ function appendUserMsg(container, text, attachments) {
 function appendAssistantMsg(container, text, model, tokIn, tokOut, cost, step) {
   var row = el('div', {className: 'chat-msg-row assistant'});
   var bubble = el('div', {className: 'chat-bubble'});
-  var meta = el('div', {className:'chat-meta', textContent: (model||'')+(step?' \u00B7 Step '+step:'')+(cost?' \u00B7 $'+cost.toFixed(4):'')});
+  var meta = el('div', {className:'chat-meta', textContent: (model||'')+(step?' \u00B7 Step '+step:'')+(cost?' \u00B7 \u00A5'+(cost*150).toFixed(1):'')});
   bubble.appendChild(meta);
   var body = el('div', {className: 'md-body'});
   renderMarkdownSafeToTarget(text||'', body);
