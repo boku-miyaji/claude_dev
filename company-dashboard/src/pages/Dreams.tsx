@@ -117,7 +117,7 @@ export function Dreams() {
   const [showAdd, setShowAdd] = useState(false)
   const [detailDream, setDetailDream] = useState<Dream | null>(null)
   const [detailGoal, setDetailGoal] = useState<Goal | null>(null)
-  const [, setDetailWish] = useState<WishItem | null>(null)
+  const [detailWish, setDetailWish] = useState<WishItem | null>(null)
   const [classifying, setClassifying] = useState(false)
   const [reviewing, setReviewing] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>('')
