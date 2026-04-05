@@ -350,7 +350,7 @@ export function useSelfAnalysis(): UseSelfAnalysisReturn {
       const prompt = PROMPT_BUILDERS[type](prevResult)
 
       // Call AI via Edge Function (OpenAI)
-      const { content: resultText } = await aiCompletion(userData, {
+      const { content: resultText } = await aiCompletion(userData, { source: 'self_analysis',
         systemPrompt: prompt,
         jsonMode: true,
         temperature: 0.4,

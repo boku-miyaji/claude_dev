@@ -193,7 +193,7 @@ ${modeInstructions[timeMode]}
         ? contextParts.join('\n\n')
         : '（特にデータなし。穏やかな一言を）'
 
-      const result = await aiCompletion(userMessage, {
+      const result = await aiCompletion(userMessage, { source: 'ai_partner',
         systemPrompt,
         maxTokens: 200,
       })

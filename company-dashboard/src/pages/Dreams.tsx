@@ -34,7 +34,7 @@ async function classifyItem(title: string, description: string, existingCategori
   const catList = existingCategories.map((c) => `${c.icon} ${c.value}`).join(', ')
   const result = await aiCompletion(
     `以下を最適なカテゴリに分類。既存: [${catList || 'なし'}]。当てはまらなければ新カテゴリ作成（短く日本語）。カテゴリ名のみ返す。\n\n「${title}」${description ? `（${description}）` : ''}`,
-    { model: 'gpt-5-nano', temperature: 0.2, maxTokens: 50 },
+    { model: 'gpt-5-nano', temperature: 0.2, maxTokens: 50, source: 'dream_classify' },
   )
   const category = result.content.trim().replace(/^[「『"']+|[」』"']+$/g, '')
   return { category, isNew: !existingCategories.some((c) => c.value === category) }
@@ -44,7 +44,7 @@ async function reviewCategories(dreams: Dream[], cats: Category[]): Promise<{ ch
   if (dreams.length < 3) return null
   const result = await aiCompletion(
     `カテゴリ見直し。現在: [${cats.map((c) => c.value).join(', ')}]\n夢:\n${dreams.map((d) => `- "${d.title}" → ${d.category}`).join('\n')}\n\nJSON: {"needs_review":bool,"reason":"","changes":{"旧":"新"}}`,
-    { model: 'gpt-5-nano', temperature: 0.2, maxTokens: 500, jsonMode: true },
+    { model: 'gpt-5-nano', temperature: 0.2, maxTokens: 500, jsonMode: true, source: 'dream_classify' },
   )
   try {
     const p = JSON.parse(result.content)

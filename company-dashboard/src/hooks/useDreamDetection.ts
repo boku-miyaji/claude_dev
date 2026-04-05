@@ -50,7 +50,7 @@ JSON以外は返さないでください。`
 
       const userMessage = `## 日記\n${diaryContent}\n\n## 夢リスト\n${dreamList}`
 
-      const { content: resultText } = await aiCompletion(userMessage, {
+      const { content: resultText } = await aiCompletion(userMessage, { source: 'dream_detection',
         systemPrompt,
         jsonMode: true,
         temperature: 0.3,

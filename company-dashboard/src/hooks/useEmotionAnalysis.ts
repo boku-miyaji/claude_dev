@@ -45,7 +45,7 @@ export function useEmotionAnalysis(): UseEmotionAnalysisReturn {
     setError(null)
 
     try {
-      const { content: resultText } = await aiCompletion(content, {
+      const { content: resultText } = await aiCompletion(content, { source: 'emotion_analysis',
         systemPrompt: EMOTION_ANALYSIS_PROMPT,
         jsonMode: true,
         temperature: 0.3,

@@ -247,7 +247,7 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
 - 「〜でした」「〜ですね」の丁寧な口調
 テキストのみ返してください。JSONではなく純粋なテキストです。`
 
-      const { content: narrative } = await aiCompletion(userData, {
+      const { content: narrative } = await aiCompletion(userData, { source: 'weekly_narrative',
         systemPrompt,
         temperature: 0.7,
         maxTokens: 600,

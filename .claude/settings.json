@@ -189,7 +189,12 @@
       "Bash(export SUPABASE_ACCESS_TOKEN=$\\(grep SUPABASE_ACCESS_TOKEN /workspace/.claude/hooks/supabase.env)",
       "Bash(rm -rf node_modules/.vite)",
       "Bash(sed -i 's/特別なICがいなくても回せる/特別なSEを抱えなくても分析が回せる/g' 12_tech_stack_adoption_policy_v0.4.html)",
-      "Bash(sed -i 's/特別なICを前提にしない/専任SEを前提にしない/g' 12_tech_stack_adoption_policy_v0.4.html)"
+      "Bash(sed -i 's/特別なICを前提にしない/専任SEを前提にしない/g' 12_tech_stack_adoption_policy_v0.4.html)",
+      "Bash(sed -i \"s/await aiCompletion\\(content, {/await aiCompletion\\(content, { source: 'emotion_analysis',/\" hooks/useEmotionAnalysis.ts)",
+      "Bash(sed -i \"s/await aiCompletion\\(userMessage, {$/await aiCompletion\\(userMessage, { source: 'ai_partner',/\" hooks/useMorningBriefing.ts)",
+      "Bash(sed -i \"s/await aiCompletion\\(userData, {$/await aiCompletion\\(userData, { source: 'weekly_narrative',/\" hooks/useWeeklyNarrative.ts)",
+      "Bash(sed -i \"s/await aiCompletion\\(userMessage, {$/await aiCompletion\\(userMessage, { source: 'dream_detection',/\" hooks/useDreamDetection.ts)",
+      "Bash(sed -i \"s/await aiCompletion\\(userData, {$/await aiCompletion\\(userData, { source: 'self_analysis',/\" hooks/useSelfAnalysis.ts)"
     ],
     "deny": [
       "Read(**/.env)",
