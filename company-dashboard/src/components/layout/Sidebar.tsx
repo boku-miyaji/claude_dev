@@ -12,7 +12,7 @@ interface NavEntry {
 
 const NAV: NavEntry[] = [
   // Input (daily input & capture)
-  { type: 'item', page: '', icon: '◉', label: 'Today' },
+  { type: 'item', page: '', icon: '◉', label: 'Home' },
   { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
   { type: 'item', page: 'chat', icon: '💬', label: 'AI Chat' },
   // Manage (organize & plan)
