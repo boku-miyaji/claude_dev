@@ -15,11 +15,7 @@ function fmtYen(n: number): string { return '¥' + n.toLocaleString() }
 
 interface Category { value: string; label: string; icon: string }
 
-function deriveCategories(dreams: Dream[]): Category[] {
-  const catSet = new Set<string>()
-  for (const d of dreams) if (d.category) catSet.add(d.category)
-  return [...catSet].map((v) => ({ value: v, label: v, icon: getCategoryIcon(v) })).sort((a, b) => a.label.localeCompare(b.label))
-}
+
 
 function getCategoryIcon(cat: string): string {
   const map: Record<string, string> = {
@@ -94,7 +90,8 @@ function unifyItems(dreams: Dream[], goals: Goal[], wishes: WishItem[]): Unified
   }
   for (const g of goals) {
     const linkedDream = g.dream_id ? dreams.find((d) => d.id === g.dream_id) : null
-    items.push({ kind: 'goal', id: g.id, title: g.title, description: g.description, category: linkedDream?.category || 'goal', status: g.status, progress: g.progress, target_date: g.target_date, level: g.level, dream_id: g.dream_id, achieved_at: g.achieved_at, created_at: g.created_at })
+    const goalCat = (g.category && g.category !== 'other') ? g.category : linkedDream?.category || g.category || 'other'
+    items.push({ kind: 'goal', id: g.id, title: g.title, description: g.description, category: goalCat, status: g.status, progress: g.progress, target_date: g.target_date, level: g.level, dream_id: g.dream_id, achieved_at: g.achieved_at, created_at: g.created_at })
   }
   for (const w of wishes) {
     items.push({ kind: 'wish', id: w.id, title: w.title, description: w.description, category: w.category || 'ほしい物', status: w.status === 'purchased' ? 'achieved' : w.status === 'dropped' ? 'paused' : 'active', amount: w.amount, url: w.url, created_at: w.created_at })
@@ -145,7 +142,12 @@ export function Dreams() {
 
   useEffect(() => { fetchDreams(); fetchGoals(); loadWishlist() }, [fetchDreams, fetchGoals, loadWishlist])
 
-  const categories = useMemo(() => deriveCategories(dreams), [dreams])
+  const categories = useMemo(() => {
+    const allCats = new Set<string>()
+    for (const d of dreams) if (d.category) allCats.add(d.category)
+    for (const g of goals) if (g.category && g.category !== 'other') allCats.add(g.category)
+    return [...allCats].map((v) => ({ value: v, label: v, icon: getCategoryIcon(v) })).sort((a, b) => a.label.localeCompare(b.label))
+  }, [dreams, goals])
   const activeDreams = useMemo(() => dreams.filter((d) => d.status === 'active' || d.status === 'in_progress'), [dreams])
 
   const allItems = useMemo(() => unifyItems(dreams, goals, wishlist), [dreams, goals, wishlist])
@@ -221,9 +223,10 @@ export function Dreams() {
     if (!newTitle.trim()) return
 
     if (addKind === 'goal') {
+      const category = manualCat || suggestedCat || 'other'
       const result = await addGoal({
         title: newTitle.trim(), description: newDesc.trim() || null,
-        level: goalLevel, target_date: buildTargetDate(), dream_id: goalDreamId || null,
+        level: goalLevel, target_date: buildTargetDate(), dream_id: goalDreamId || null, category,
       })
       if (result) { resetForm(); setShowAdd(false); toast('目標を追加しました') }
     } else if (addKind === 'wish') {
@@ -410,12 +413,12 @@ export function Dreams() {
           <label className="form-label">タイトル</label>
           <input className="input" placeholder={addKind === 'wish' ? '何がほしい？' : addKind === 'goal' ? '何を達成する？' : 'やりたいこと'}
             value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
-            onBlur={() => addKind === 'dream' && runClassify(newTitle, newDesc)} />
+            onBlur={() => addKind !== 'wish' && runClassify(newTitle, newDesc)} />
         </div>
         <div style={{ marginBottom: 12 }}>
           <label className="form-label">説明 (任意)</label>
           <textarea className="input" placeholder="詳しく..." value={newDesc} onChange={(e) => setNewDesc(e.target.value)}
-            onBlur={() => addKind === 'dream' && newTitle.trim() && runClassify(newTitle, newDesc)} style={{ minHeight: 50 }} />
+            onBlur={() => addKind !== 'wish' && newTitle.trim() && runClassify(newTitle, newDesc)} style={{ minHeight: 50 }} />
         </div>
 
         {/* ── Wish fields ── */}
@@ -484,6 +487,16 @@ export function Dreams() {
                 <option value="">なし</option>
                 {activeDreams.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
               </select>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label className="form-label">カテゴリ</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {classifying ? <span style={{ fontSize: 12, color: 'var(--text3)' }}>AI分類中...</span>
+                  : suggestedCat ? <span className="tag tag-co" style={{ fontSize: 12 }}>{getCategoryIcon(suggestedCat)} {suggestedCat}</span>
+                    : <span style={{ fontSize: 12, color: 'var(--text3)' }}>入力後に自動分類</span>}
+                <input className="input" placeholder="手動で変更" value={manualCat} onChange={(e) => setManualCat(e.target.value)}
+                  style={{ flex: 1, fontSize: 12, padding: '4px 8px' }} />
+              </div>
             </div>
           </>
         )}
