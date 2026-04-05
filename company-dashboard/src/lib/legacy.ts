@@ -3461,8 +3461,8 @@ async function renderFinance(root) {
   root.appendChild(skelF);
 
   // Tabs
-  var tabs = ['overview', 'projects', 'invoices', 'expenses', 'time', 'tax'];
-  var tabLabels = {overview:'概要',projects:'案件',invoices:'請求書',expenses:'経費',time:'稼働時間',tax:'税金'};
+  var tabs = ['overview', 'subscriptions', 'projects', 'invoices', 'expenses', 'time', 'tax'];
+  var tabLabels = {overview:'概要',subscriptions:'固定費',projects:'案件',invoices:'請求書',expenses:'経費',time:'稼働時間',tax:'税金'};
   var tabBar = el('div', {style: 'display:flex;gap:2px;margin:24px 0 20px;border-bottom:1px solid var(--border)'});
   var tabContent = el('div');
   root.appendChild(tabBar);
@@ -3471,7 +3471,7 @@ async function renderFinance(root) {
   function switchTab(tab) {
     tabBar.querySelectorAll('button').forEach(function(b) { b.style.borderBottom = b.dataset.tab === tab ? '2px solid var(--accent)' : '2px solid transparent'; b.style.color = b.dataset.tab === tab ? 'var(--text)' : 'var(--text3)'; });
     while (tabContent.firstChild) tabContent.removeChild(tabContent.firstChild);
-    var renderers = {overview: finOverview, projects: finProjects, invoices: finInvoices, expenses: finExpenses, time: finTime, tax: finTax};
+    var renderers = {overview: finOverview, subscriptions: finSubscriptions, projects: finProjects, invoices: finInvoices, expenses: finExpenses, time: finTime, tax: finTax};
     if (renderers[tab]) renderers[tab](tabContent);
   }
 
@@ -3498,14 +3498,15 @@ async function finOverview(root) {
   var startOfYear = year + '-01-01';
   var endOfYear = year + '-12-31';
 
-  var [invMonthRes, expMonthRes, timeMonthRes, projRes, invYearRes, expYearRes, timeYearRes] = await Promise.all([
+  var [invMonthRes, expMonthRes, timeMonthRes, projRes, invYearRes, expYearRes, timeYearRes, recurRes] = await Promise.all([
     sb.from('invoices').select('*').gte('invoice_date', startOfMonth).lte('invoice_date', endOfMonth),
     sb.from('expenses').select('*').gte('expense_date', startOfMonth).lte('expense_date', endOfMonth),
     sb.from('time_entries').select('*').gte('work_date', startOfMonth).lte('work_date', endOfMonth),
     sb.from('projects').select('*').eq('status', 'active'),
     sb.from('invoices').select('*').gte('invoice_date', startOfYear).lte('invoice_date', endOfYear),
     sb.from('expenses').select('*').gte('expense_date', startOfYear).lte('expense_date', endOfYear),
-    sb.from('time_entries').select('*').gte('work_date', startOfYear).lte('work_date', endOfYear)
+    sb.from('time_entries').select('*').gte('work_date', startOfYear).lte('work_date', endOfYear),
+    sb.from('expenses').select('*').eq('is_recurring', true).eq('recurring_status', 'active')
   ]);
 
   var skelEl = document.querySelector('.fin-skeleton');
@@ -3528,6 +3529,14 @@ async function finOverview(root) {
   var yearExp = allExp.reduce(function(s,e){return s+e.amount;}, 0);
   var yearHrs = allTime.reduce(function(s,t){return s+parseFloat(t.hours);}, 0);
 
+  // Recurring monthly fixed costs
+  var recurSubs = recurRes.data || [];
+  var monthlyFixed = recurSubs.reduce(function(sum, s) {
+    if (s.recurring_interval === 'yearly') return sum + Math.round(s.amount / 12);
+    if (s.recurring_interval === 'quarterly') return sum + Math.round(s.amount / 3);
+    return sum + s.amount;
+  }, 0);
+
   // Count months with actual invoice data
   var ovMonthSet = {};
   allInv.forEach(function(i) { ovMonthSet[i.invoice_date.substring(0,7)] = true; });
@@ -3542,6 +3551,7 @@ async function finOverview(root) {
    {l:'経費',v:fmtYen(totalExp),c:'var(--text3)',sub:'年計 '+fmtYen(yearExp)},
    {l:'粗利',v:fmtYen(grossProfit),c:grossProfit>=0?'#22c55e':'#ef4444',sub:(totalRev>0?Math.round(grossProfit/totalRev*100):0)+'%'},
    {l:'稼働',v:totalHrs.toFixed(1)+'h',c:'var(--text)',sub:'年計 '+yearHrs.toFixed(1)+'h'},
+   {l:'固定費',v:fmtYen(monthlyFixed),c:'var(--amber)',sub:recurSubs.length+'件 / 年'+fmtYen(monthlyFixed*12)},
    {l:'実質時給',v:fmtYen(hourlyRate),c:'var(--accent2)',sub:yearHrs>0?'年平均 '+fmtYen(Math.round(yearRev/yearHrs)):'-'}
   ].forEach(function(d) {
     cards.appendChild(el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px'}, [
@@ -4324,6 +4334,156 @@ async function finExpenses(root) {
       ])
     ]));
   });
+}
+
+// --- Finance: Subscriptions / Fixed Costs ---
+async function finSubscriptions(root) {
+  var res = await sb.from('expenses').select('*').eq('is_recurring', true).order('recurring_status').order('amount', {ascending: false});
+  var subs = res.data || [];
+  var catLabels = {equipment:'機材',transportation:'交通費',communication:'通信費',office:'事務所',outsourcing:'外注',supplies:'消耗品',insurance:'保険',tax_payment:'税金',subscription:'サブスク',education:'研修',entertainment:'交際費',other:'他'};
+  var intervalLabels = {monthly:'月額',quarterly:'四半期',yearly:'年額'};
+  var statusColors = {active:'var(--green)',paused:'var(--amber)',cancelled:'var(--text3)'};
+  var statusLabels = {active:'契約中',paused:'一時停止',cancelled:'解約済み'};
+
+  var active = subs.filter(function(s){return s.recurring_status === 'active';});
+  var monthlyTotal = active.reduce(function(sum, s) {
+    if (s.recurring_interval === 'yearly') return sum + Math.round(s.amount / 12);
+    if (s.recurring_interval === 'quarterly') return sum + Math.round(s.amount / 3);
+    return sum + s.amount;
+  }, 0);
+  var yearlyTotal = monthlyTotal * 12;
+
+  // KPI
+  var kpiRow = el('div', {style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px'});
+  [{l:'月額合計',v:fmtYen(monthlyTotal),c:'var(--accent)'},{l:'年額合計',v:fmtYen(yearlyTotal),c:'var(--text)'},{l:'契約数',v:active.length+'件',c:'var(--green)'},{l:'解約済み',v:subs.filter(function(s){return s.recurring_status==='cancelled';}).length+'件',c:'var(--text3)'}].forEach(function(d) {
+    kpiRow.appendChild(el('div', {style: 'background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px'}, [
+      el('div', {textContent: d.l, style: 'font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px'}),
+      el('div', {textContent: d.v, style: 'font-size:20px;font-weight:600;color:'+d.c})
+    ]));
+  });
+  root.appendChild(kpiRow);
+
+  // Add button
+  var addBtn = el('button', {className: 'btn btn-p btn-sm', style: 'margin-bottom:16px', textContent: '+ 固定費を追加'});
+  addBtn.onclick = function() { showSubscriptionForm(null); };
+  root.appendChild(addBtn);
+
+  // List
+  if (subs.length === 0) {
+    root.appendChild(el('div', {textContent: '固定費が未登録です。上の「+固定費を追加」ボタンから追加してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
+    return;
+  }
+
+  subs.forEach(function(s) {
+    var monthlyAmt = s.recurring_interval === 'yearly' ? Math.round(s.amount/12) : s.recurring_interval === 'quarterly' ? Math.round(s.amount/3) : s.amount;
+    var row = el('div', {style: 'display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px'+(s.recurring_status==='cancelled'?';opacity:0.4':'')});
+
+    var left = el('div', {style:'display:flex;flex-direction:column;gap:2px'});
+    left.appendChild(el('div', {style:'display:flex;align-items:center;gap:8px'}, [
+      el('span', {style:'width:8px;height:8px;border-radius:50%;background:'+(statusColors[s.recurring_status]||'var(--text3)')+';flex-shrink:0'}),
+      el('span', {textContent: s.service_name || s.description, style:'font-weight:500'}),
+      el('span', {textContent: catLabels[s.category]||s.category, style:'font-size:10px;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:3px'})
+    ]));
+    left.appendChild(el('div', {textContent: (intervalLabels[s.recurring_interval]||'月額')+' '+fmtYen(s.amount)+(s.recurring_interval!=='monthly'?' (月あたり '+fmtYen(monthlyAmt)+')':''), style:'font-size:11px;color:var(--text3);margin-left:16px'}));
+
+    var right = el('div', {style:'display:flex;align-items:center;gap:8px'});
+    right.appendChild(el('span', {textContent: statusLabels[s.recurring_status]||'', style:'font-size:10px;color:'+(statusColors[s.recurring_status]||'var(--text3)')+';font-weight:600'}));
+    var editBtn = el('button', {className:'btn btn-g btn-sm', style:'font-size:10px;padding:2px 8px', textContent:'編集'});
+    editBtn.onclick = function() { showSubscriptionForm(s); };
+    right.appendChild(editBtn);
+
+    row.appendChild(left);
+    row.appendChild(right);
+    root.appendChild(row);
+  });
+
+  // Add/Edit form
+  function showSubscriptionForm(existing) {
+    var isEdit = !!existing;
+    var formFields = [];
+
+    var nameInput = el('input', {className:'input', placeholder:'サービス名（例: ChatGPT Plus）', value: existing ? (existing.service_name||existing.description||'') : '', style:'margin-bottom:8px'});
+    formFields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px', textContent:'サービス名'}));
+    formFields.push(nameInput);
+
+    var amountInput = el('input', {className:'input', type:'number', placeholder:'金額（円）', value: existing ? existing.amount : '', style:'margin-bottom:8px'});
+    formFields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'金額（税込）'}));
+    formFields.push(amountInput);
+
+    var intervalSelect = el('select', {className:'input', style:'margin-bottom:8px'});
+    [{v:'monthly',l:'月額'},{v:'quarterly',l:'四半期'},{v:'yearly',l:'年額'}].forEach(function(o) {
+      var opt = el('option', {value:o.v, textContent:o.l});
+      if (existing && existing.recurring_interval === o.v) opt.selected = true;
+      intervalSelect.appendChild(opt);
+    });
+    formFields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'支払い間隔'}));
+    formFields.push(intervalSelect);
+
+    var catSelect = el('select', {className:'input', style:'margin-bottom:8px'});
+    Object.keys(catLabels).forEach(function(k) {
+      var opt = el('option', {value:k, textContent:catLabels[k]});
+      if (existing && existing.category === k) opt.selected = true;
+      else if (!existing && k === 'subscription') opt.selected = true;
+      catSelect.appendChild(opt);
+    });
+    formFields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'カテゴリ'}));
+    formFields.push(catSelect);
+
+    var statusSelect = el('select', {className:'input', style:'margin-bottom:8px'});
+    [{v:'active',l:'契約中'},{v:'paused',l:'一時停止'},{v:'cancelled',l:'解約済み'}].forEach(function(o) {
+      var opt = el('option', {value:o.v, textContent:o.l});
+      if (existing && existing.recurring_status === o.v) opt.selected = true;
+      statusSelect.appendChild(opt);
+    });
+    formFields.push(el('label', {style:'font-size:12px;color:var(--text3);margin-bottom:2px;margin-top:8px', textContent:'ステータス'}));
+    formFields.push(statusSelect);
+
+    var btnRow = el('div', {style:'display:flex;gap:8px;margin-top:12px'});
+    var saveBtn = el('button', {className:'btn btn-p', textContent: isEdit ? '更新' : '追加'});
+    var cancelBtn = el('button', {className:'btn btn-g', textContent:'キャンセル'});
+
+    saveBtn.onclick = async function() {
+      var name = nameInput.value.trim();
+      var amount = parseInt(amountInput.value);
+      if (!name || !amount) return;
+      var payload = {
+        service_name: name, description: name, amount: amount,
+        category: catSelect.value, is_recurring: true,
+        recurring_interval: intervalSelect.value,
+        recurring_status: statusSelect.value,
+        expense_date: new Date().toISOString().substring(0,10),
+        is_deductible: true
+      };
+      if (isEdit) {
+        await sb.from('expenses').update(payload).eq('id', existing.id);
+      } else {
+        await sb.from('expenses').insert(payload);
+      }
+      close();
+      while (root.firstChild) root.removeChild(root.firstChild);
+      finSubscriptions(root);
+    };
+
+    btnRow.appendChild(saveBtn);
+    btnRow.appendChild(cancelBtn);
+    formFields.push(btnRow);
+
+    if (isEdit) {
+      var delBtn = el('button', {className:'btn', style:'color:var(--red);font-size:11px;margin-top:8px;background:none;border:1px solid var(--red-border)', textContent:'削除'});
+      delBtn.onclick = async function() {
+        if (confirm('この固定費を削除しますか？')) {
+          await sb.from('expenses').delete().eq('id', existing.id);
+          close();
+          while (root.firstChild) root.removeChild(root.firstChild);
+          finSubscriptions(root);
+        }
+      };
+      formFields.push(delBtn);
+    }
+
+    var close = showModal(isEdit ? '固定費を編集' : '固定費を追加', formFields);
+    cancelBtn.onclick = close;
+  }
 }
 
 // --- Finance: Time Entries ---
