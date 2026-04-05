@@ -909,8 +909,15 @@ async function agentLoop(
       return;
     }
 
-    // Tool calls
-    messages.push({ role: "assistant", content: result.text || "", tool_calls: result.toolCalls });
+    // Tool calls — save intermediate assistant message (with tool_calls) to DB
+    // This is critical: without it, tool messages become orphaned in history,
+    // and the LLM cannot see prior tool interactions on subsequent turns.
+    const assistantToolMsg = { role: "assistant" as const, content: result.text || "", tool_calls: result.toolCalls };
+    messages.push(assistantToolMsg);
+    await sb.from("messages").insert({
+      conversation_id: conversationId, role: "assistant", content: result.text || "",
+      tool_calls: result.toolCalls, model: selectedModel, step, user_id: userId,
+    });
 
     for (const tc of result.toolCalls) {
       // Guard: block write tools when web_search was used in the same loop (indirect injection risk)
