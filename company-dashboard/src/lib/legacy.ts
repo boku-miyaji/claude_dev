@@ -6835,7 +6835,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
           while (editRow.nextSibling) editRow.nextSibling.remove();
           editRow.remove();
           textarea.value = editText;
-          textarea.focus();
+          sendMessage();
         });
         else if (m.role === 'assistant') appendAssistantMsg(messagesInner, m.content, m.model, m.tokens_input, m.tokens_output, m.cost_usd, m.step);
         else if (m.role === 'tool') appendToolMsg(messagesInner, m.tool_name, m.tool_input, m.content);
