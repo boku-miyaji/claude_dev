@@ -26,12 +26,10 @@ async function extractPdf(file: File): Promise<string> {
   const buffer = await file.arrayBuffer()
   const pdfjsLib = await import('pdfjs-dist')
 
-  // Disable worker entirely for Vite compatibility
-  pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+  // Use CDN worker matching the installed version
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
   const loadingTask = pdfjsLib.getDocument({
     data: new Uint8Array(buffer),
-    disableAutoFetch: true,
-    disableStream: true,
   })
   const pdf = await loadingTask.promise
   const pages: string[] = []
