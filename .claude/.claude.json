@@ -695,6 +695,10 @@
     "document-skills:xlsx": {
       "usageCount": 1,
       "lastUsedAt": 1775442308596
+    },
+    "xlsx": {
+      "usageCount": 1,
+      "lastUsedAt": 1775446896004
     }
   },
   "oauthAccount": {
