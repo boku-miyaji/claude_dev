@@ -398,6 +398,32 @@ function TabArchitecture() {
         ]} />
       </Section>
 
+      <Section title="LLM Wiki 思想 — 知識コンパイラとしてのAI">
+        <Principle title="Karpathy LLM Wiki (2026-04)" body="RAGの根本的限界「毎回ゼロから発見し直す」を克服するアーキテクチャ。LLMを検索エンジンではなく知識コンパイラとして使い、Markdownファイル群を生きた百科事典として育てる。宮路HDは約80%一致済み。" color="var(--accent)" />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>3つのキーファイルと宮路HDの対応</div>
+        <Tbl headers={['Karpathyの概念', '役割', '宮路HDの対応物']} rows={[
+          ['index.md（横断目録）', '全ナレッジの1行サマリー付き目録。LLMが「どこに何があるか」を即判断', 'memory/knowledge-index.md（新設）'],
+          ['log.md（追記型年表）', 'ingest・昇格・Lintの全履歴。append-only', 'memory/knowledge-log.md（新設）'],
+          ['schema.md（行動規範）', 'LLMを「規律ある知識維持者」として動作させる指示書', 'CLAUDE.md + .claude/rules/（既存・一致）'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>3つのワークフローと実装状況</div>
+        <Tbl headers={['ワークフロー', '内容', '実装状況']} rows={[
+          ['Ingest（取り込み）', '新情報投入 → LLMが分析 → wikiページ作成 → index更新 → log記録', 'knowledge_base + memory/ で実装済み。index/logは新設'],
+          ['Query（検索回答）', 'index参照 → 対象ページ読み → 引用付き回答 → 良い回答はwikiに還流', '回答の還流は未実装（P1-3として予定）'],
+          ['Lint（品質チェック）', '矛盾・古さ・孤立ページを定期検出', 'SessionStart Hook で日次実行。30日超=stale、参照0=orphaned、100行超=largeを検出'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Knowledge Lint（日次品質チェック）</div>
+        <P>SessionStart Hook <code>knowledge-lint.sh</code> が24時間ごとに自動実行。</P>
+        <Tbl headers={['検出項目', '条件', 'アクション']} rows={[
+          ['STALE（古い）', '最終更新から30日超', '内容を更新 or secretary/archive/ にアーカイブ'],
+          ['ORPHANED（孤立）', '他のファイルから参照されていない', 'knowledge-index.md に追記 or 削除'],
+          ['LARGE（肥大化）', 'CLAUDE.md が100行超', 'rules/ に分離してスリム化'],
+        ]} />
+      </Section>
+
       <Section title="3層データ管理">
         <div className="g3" style={{ marginBottom: 12 }}>
           <MiniCard title="Layer 1: ファイル" body="CLAUDE.md / メモ / TODO。エージェントが即座に読み書き" />
@@ -409,7 +435,7 @@ function TabArchitecture() {
 
       <Section title="自動化 — Hook + スキル + スクリプト">
         <Tbl headers={['種類', '代表例', '特性']} rows={[
-          ['Hook (25個)', 'prompt-log, bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, permission-guard', '決定論的制御。コンテキスト外で実行。9イベント種別をカバー'],
+          ['Hook (28個)', 'prompt-log, bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, knowledge-lint', '決定論的制御。コンテキスト外で実行。9イベント種別をカバー'],
           ['スキル', '/company, /diary, /deploy', '必要時に呼び出し。判断を伴う処理'],
           ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期'],
         ]} />

@@ -264,6 +264,20 @@ data_sources:
       3. 設計判断（refactor, architecture変更）があれば design-philosophy.md に追記
       4. 更新履歴テーブルに日付と変更内容を追記
 
+  knowledge_lint:
+    priority: 1
+    max_age_days: 1
+    auto_update: false
+    blocking: false
+    check_method: script
+    check_script: "bash /workspace/.claude/hooks/knowledge-lint.sh"
+    stale_condition: "ナレッジLintが24時間以上未実行。成果物の矛盾・古さ・孤立を検出すべき"
+    update_action: |
+      SessionStart Hook で自動実行。検出結果:
+      - STALE: 30日超未更新のファイル → 更新 or アーカイブ
+      - ORPHANED: 他から参照されていないファイル → index.mdに追記 or 削除
+      - LARGE: 100行超のCLAUDE.md → rules/に分離
+
   impl_docs_sync:
     priority: 1.5
     max_age_days: 0
