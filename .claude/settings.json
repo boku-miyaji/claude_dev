@@ -285,6 +285,11 @@
           },
           {
             "type": "command",
+            "command": "/workspace/.claude/hooks/knowledge-lint.sh",
+            "async": true
+          },
+          {
+            "type": "command",
             "command": "/workspace/.claude/hooks/doc-freshness-check.sh",
             "async": true
           }
