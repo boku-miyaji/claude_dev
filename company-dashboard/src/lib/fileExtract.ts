@@ -28,7 +28,7 @@ export async function extractTextFromFile(file: File): Promise<string | null> {
  * Loads the library from cdnjs on first use, caches on window.
  */
 async function loadPdfJs(): Promise<unknown> {
-  const w = window as Record<string, unknown>
+  const w = window as unknown as Record<string, unknown>
   if (w._pdfjsLib) return w._pdfjsLib
 
   // Load pdf.js v4.4.168 (stable, verified on CDN)
@@ -43,6 +43,7 @@ async function loadPdfJs(): Promise<unknown> {
 
   // pdf.js loaded as ES module doesn't expose to window automatically
   // Use the global import approach instead
+  // @ts-ignore CDN dynamic import has no type declarations
   const mod = await import(/* @vite-ignore */ 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs')
   w._pdfjsLib = mod
   // Set worker
