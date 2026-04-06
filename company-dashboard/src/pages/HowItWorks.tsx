@@ -190,16 +190,19 @@ function TabOverview() {
   const [stats, setStats] = useState<{
     knowledgeCount: number; sessionCount: number; sessionsExtracted: number;
     memoryCount: number; growthCount: number; diaryCount: number;
+    pipelineRunsCount: number; correctionLogCount: number;
   } | null>(null)
 
   useEffect(() => {
     async function load() {
-      const [kbRes, sessRes, sessExtRes, growthRes, diaryRes] = await Promise.all([
+      const [kbRes, sessRes, sessExtRes, growthRes, diaryRes, pipelineRes, correctionRes] = await Promise.all([
         supabase.from('knowledge_base').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('prompt_sessions').select('id', { count: 'exact', head: true }),
         supabase.from('prompt_sessions').select('id', { count: 'exact', head: true }).eq('knowledge_extracted', true),
         supabase.from('growth_events').select('id', { count: 'exact', head: true }),
         supabase.from('diary_entries').select('id', { count: 'exact', head: true }),
+        supabase.from('pipeline_runs').select('id', { count: 'exact', head: true }),
+        supabase.from('correction_log').select('id', { count: 'exact', head: true }),
       ])
       setStats({
         knowledgeCount: kbRes.count || 0,
@@ -208,6 +211,8 @@ function TabOverview() {
         memoryCount: 0,
         growthCount: growthRes.count || 0,
         diaryCount: diaryRes.count || 0,
+        pipelineRunsCount: pipelineRes.count || 0,
+        correctionLogCount: correctionRes.count || 0,
       })
     }
     load()
@@ -235,6 +240,22 @@ function TabOverview() {
         <CycleFlow steps={['問題検出', '原因分析', '仕組みの修正', '検証', '運用定着']} />
       </Section>
 
+      <Section title="進化ループ — AlphaEvolve着想">
+        <P>AlphaEvolveの思想: 評価関数（フィットネス）を定義し、実績データで変異と選択を繰り返す。このシステムは同じ原理で自己進化する。</P>
+        <div className="g3" style={{ marginBottom: 16 }}>
+          <Principle title="Record First, Evolve Later" body="進化させるなら、まず評価できる状態を作れ。pipeline_runs / correction_log にすべての実行結果を記録。記録がないところに改善はない。" color="var(--accent)" />
+          <Principle title="Fitness-Driven Selection" body="人間の直感ではなく実績データで判断。一発OK率、差し戻し回数、実行時間の実績がルール改善の根拠になる。" color="var(--green)" />
+          <Principle title="Volatility-Adaptive Autonomy" body="安定しているところは自動化を深め、不安定なところは人間の判断を入れる。全部自動でも全部手動でもない。" color="var(--yellow)" />
+        </div>
+        <CycleFlow steps={['記録', '評価', '変異提案', '社長承認', '適用']} />
+        <div className="g2" style={{ marginTop: 12 }}>
+          <MiniCard title="Pipeline Runs" body="パイプライン実行ごとに所要時間・結果・差し戻しを記録" />
+          <MiniCard title="Correction Log" body="修正指示の種類・重症度を構造化記録。何度も同じ修正→ルール自動進化のトリガー" />
+          <MiniCard title="First-Time OK Rate" body="部署×タスク種別ごとの一発OK率。フィットネス関数の核" />
+          <MiniCard title="Volatility Score" body="直近5回の実績の標準偏差。パイプライン自動度の推奨に使用" />
+        </div>
+      </Section>
+
       <Section title="システム健全性">
         {stats ? (
           <div className="g2">
@@ -245,6 +266,9 @@ function TabOverview() {
                 <div><StatusDot ok={stats.sessionCount > 0} /> Sessions Tracked: {stats.sessionCount}</div>
                 <div><StatusDot ok={stats.growthCount > 0} /> Growth Events: {stats.growthCount}</div>
                 <div><StatusDot ok={stats.diaryCount > 0} /> Diary Entries: {stats.diaryCount}</div>
+                <div><StatusDot ok={stats.pipelineRunsCount > 0} /> Pipeline Runs: {stats.pipelineRunsCount}</div>
+                <div><StatusDot ok={stats.correctionLogCount > 0} /> Correction Log: {stats.correctionLogCount}</div>
+                <div><StatusDot ok={stats.correctionLogCount > 0} /> First-Time OK Rate: {stats.correctionLogCount > 0 ? '算出可能' : 'データ不足'}</div>
               </div>
             </Card>
             <Card style={{ padding: 14 }}>
