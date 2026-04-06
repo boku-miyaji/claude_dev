@@ -681,8 +681,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 16,
-      "lastUsedAt": 1775441969083
+      "usageCount": 17,
+      "lastUsedAt": 1775442467545
     },
     "register": {
       "usageCount": 2,
@@ -691,6 +691,10 @@
     "pptx-aces-rikyu": {
       "usageCount": 1,
       "lastUsedAt": 1775400259891
+    },
+    "document-skills:xlsx": {
+      "usageCount": 1,
+      "lastUsedAt": 1775442308596
     }
   },
   "oauthAccount": {
