@@ -4566,14 +4566,13 @@ async function finWishlist(root) {
   root.appendChild(addBtn);
 
   if (items.length === 0) {
-    root.appendChild(el('div', {textContent: 'ほしい物リストが空です。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
-    return;
+    root.appendChild(el('div', {textContent: 'ほしい物リストが空です。「+ ほしい物を追加」から追加してください。', style: 'color:var(--text3);padding:40px 0;text-align:center'}));
   }
 
-  // Visual list with bars
-  var maxAmt = Math.max.apply(null, items.map(function(i){return i.amount;}).concat([1]));
+  // Visual list with bars (only if items exist)
+  var maxAmt = items.length > 0 ? Math.max.apply(null, items.map(function(i){return i.amount;}).concat([1])) : 1;
 
-  items.forEach(function(item) {
+  if (items.length > 0) items.forEach(function(item) {
     var isPurchased = item.status === 'purchased';
     var isDropped = item.status === 'dropped';
     var barPct = Math.round(item.amount / maxAmt * 100);
