@@ -46,9 +46,9 @@ a{color:var(--accent2);text-decoration:none}
 /* Mobile nav */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:100;padding:6px 0 env(safe-area-inset-bottom)}
 .mobile-nav-inner{display:flex;justify-content:space-around}
-.mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;font-size:10px;color:var(--text3);border:none;background:none;cursor:pointer;font-family:var(--font);font-weight:500;transition:color .2s}
+.mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 16px;font-size:10px;color:var(--text3);border:none;background:none;cursor:pointer;font-family:var(--font);font-weight:500;transition:color .2s;min-height:48px;-webkit-tap-highlight-color:transparent}
 .mob-nav-item.active{color:var(--accent2)}
-.mob-nav-item .mob-icon{font-size:20px}
+.mob-nav-item .mob-icon{font-size:22px}
 
 @media(max-width:768px){
   .sidebar{display:none}
@@ -579,3 +579,79 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
   .modal-overlay.mobile-sheet .modal{max-width:100%;border-radius:var(--r3) var(--r3) 0 0;max-height:85vh;animation:sheetUp .3s cubic-bezier(.16,1,.3,1)}
 }
 @keyframes sheetUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+
+/* ============================================================
+   Mobile optimization — touch targets, spacing, readability
+   ============================================================ */
+@media(max-width:768px){
+  /* Larger touch targets (Apple HIG: 44px minimum) */
+  button,.btn{min-height:44px;padding:10px 16px;font-size:14px}
+  .btn-sm{min-height:36px;padding:6px 12px;font-size:13px}
+  input,select,textarea{min-height:44px;font-size:16px !important} /* 16px prevents iOS zoom */
+
+  /* Page layout */
+  .page-title{font-size:20px}
+  .page-desc{font-size:12px;margin-bottom:16px}
+  .section{margin-bottom:24px}
+  .section-title{font-size:10px;margin-bottom:8px}
+
+  /* Cards */
+  .card{padding:16px;border-radius:var(--r)}
+
+  /* KPI */
+  .kpi{padding:16px 12px}
+  .kpi-val{font-size:24px}
+
+  /* Tab navigation — horizontal scroll instead of wrap */
+  [style*="borderBottom: 1px solid"],
+  [style*="border-bottom: 1px solid"] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  [style*="borderBottom: 1px solid"]::-webkit-scrollbar,
+  [style*="border-bottom: 1px solid"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Tasks */
+  .tasks-row{padding:14px 16px;gap:12px}
+  .tasks-row .tasks-actions{opacity:1} /* Always show on mobile (no hover) */
+  .tasks-cb{width:22px;height:22px}
+
+  /* Table cells */
+  table{font-size:11px}
+  th,td{padding:6px 8px}
+
+  /* Modal */
+  .modal{margin:0;max-width:100%;width:100%;border-radius:var(--r3) var(--r3) 0 0}
+  .modal-overlay{align-items:flex-end;padding:0}
+
+  /* Toast closer to bottom nav */
+  .toast{bottom:80px;left:16px;right:16px;font-size:12px;padding:10px 16px}
+
+  /* Company cards */
+  .co-stats{gap:12px}
+  .co-stat-val{font-size:16px}
+
+  /* Prevent text selection lag on mobile */
+  .tasks-row,.habit-row,.dream-card{-webkit-user-select:none;user-select:none}
+
+  /* Bottom nav spacing for scrollable content */
+  .mobile-nav{padding-bottom:env(safe-area-inset-bottom)}
+}
+
+/* Small phones (iPhone SE, etc) */
+@media(max-width:375px){
+  .page{padding:16px 12px 90px}
+  .card{padding:14px}
+  .g2{gap:10px}
+  .kpi-val{font-size:20px}
+  .page-title{font-size:18px}
+}
+
+/* PWA standalone mode — no browser chrome */
+@media(display-mode:standalone){
+  body{padding-top:env(safe-area-inset-top)}
+  .mobile-nav{padding-bottom:env(safe-area-inset-bottom)}
+}
