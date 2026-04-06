@@ -378,6 +378,15 @@ export function Today() {
   const diaryPrompt = useMemo(() => getDiaryPrompt(timeMode, recentEventName ?? undefined), [timeMode, recentEventName])
   const todayQuestions = useMemo(() => getTodayQuestions(todayStr), [todayStr])
 
+  // News state — must be before any conditional return to satisfy Rules of Hooks
+  const [newsItems, setNewsItems] = useState<Array<{id: string; title: string; summary: string; url: string | null; source: string; topic: string}>>([])
+  const [newsCollecting, setNewsCollecting] = useState(false)
+
+  useEffect(() => {
+    supabase.from('news_items').select('id,title,summary,url,source,topic').order('collected_at', { ascending: false }).limit(5)
+      .then(({ data }) => { if (data) setNewsItems(data) })
+  }, [])
+
   const isLoading = loading.diary || loading.tasks || loading.dreams
   if (isLoading && fragments.length === 0) {
     return (
@@ -600,14 +609,6 @@ export function Today() {
   )
 
   /* ── [News] ── */
-
-  const [newsItems, setNewsItems] = useState<Array<{id: string; title: string; summary: string; url: string | null; source: string; topic: string}>>([])
-  const [newsCollecting, setNewsCollecting] = useState(false)
-
-  useEffect(() => {
-    supabase.from('news_items').select('id,title,summary,url,source,topic').order('collected_at', { ascending: false }).limit(5)
-      .then(({ data }) => { if (data) setNewsItems(data) })
-  }, [])
 
   async function handleCollectNews() {
     setNewsCollecting(true)
