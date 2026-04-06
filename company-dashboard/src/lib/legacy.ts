@@ -5584,7 +5584,7 @@ async function renderArtifacts(root) {
           for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
           var blob = new Blob([bytes], {type: 'application/pdf'});
           var blobUrl = URL.createObjectURL(blob);
-          var pdfObj = el('object', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;border-radius:8px'});
+          var pdfObj = el('object', {style: 'width:100%;height:calc(100vh - 200px);min-height:300px;border:none;border-radius:8px'});
           pdfObj.setAttribute('type', 'application/pdf');
           pdfObj.setAttribute('data', blobUrl);
           pdfObj.textContent = 'PDF viewer not available';
@@ -5592,7 +5592,7 @@ async function renderArtifacts(root) {
         } catch(e) { contentCard.appendChild(el('div', {textContent: 'PDF読み込みエラー: ' + e.message})); }
       }
     } else if (artifact.file_type === 'html') {
-      var iframe = el('iframe', {style: 'width:100%;height:calc(100vh - 280px);min-height:500px;border:none;background:#fff;border-radius:8px'});
+      var iframe = el('iframe', {style: 'width:100%;height:calc(100vh - 200px);min-height:400px;border:none;background:#fff;border-radius:8px'});
       contentCard.appendChild(iframe);
       // Listen for postMessage from iframe for artifact navigation
       var msgHandler = function(ev) {
@@ -5608,8 +5608,19 @@ async function renderArtifacts(root) {
       window.addEventListener('message', msgHandler);
       setTimeout(function() {
         iframe.contentDocument.open();
+        var viewportMeta = '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">';
+        var responsiveStyle = '<style>body{max-width:100%;overflow-x:hidden;word-wrap:break-word}img,table,pre{max-width:100%;overflow-x:auto}*{box-sizing:border-box}</style>';
         var navScript = '<script>document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";var m=h.match(/artifacts\\/(\\d+)/);if(m){e.preventDefault();e.stopPropagation();window.top.postMessage({type:"navigateArtifact",id:m[1]},"*")}});<\/script>';
-        iframe.contentDocument.write(artifact.content + navScript);
+        // Inject viewport + responsive styles into artifact content
+        var content = artifact.content;
+        if (content.indexOf('<head>') !== -1) {
+          content = content.replace('<head>', '<head>' + viewportMeta + responsiveStyle);
+        } else if (content.indexOf('<html>') !== -1) {
+          content = content.replace('<html>', '<html><head>' + viewportMeta + responsiveStyle + '</head>');
+        } else {
+          content = '<!DOCTYPE html><html><head>' + viewportMeta + responsiveStyle + '</head><body>' + content + '</body></html>';
+        }
+        iframe.contentDocument.write(content + navScript);
         iframe.contentDocument.close();
       }, 0);
     } else if (artifact.file_type === 'md') {
@@ -8608,8 +8619,18 @@ function openFullscreen(artifact) {
     window.addEventListener('message', msgHandler2);
     setTimeout(function() {
       iframe.contentDocument.open();
+      var viewportMeta2 = '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">';
+      var responsiveStyle2 = '<style>body{max-width:100%;overflow-x:hidden;word-wrap:break-word}img,table,pre{max-width:100%;overflow-x:auto}*{box-sizing:border-box}</style>';
       var navScript2 = '<script>document.addEventListener("click",function(e){var a=e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";var m=h.match(/artifacts\\/(\\d+)/);if(m){e.preventDefault();e.stopPropagation();window.top.postMessage({type:"navigateArtifact",id:m[1]},"*")}});<\/script>';
-      iframe.contentDocument.write(artifact.content + navScript2);
+      var content2 = artifact.content;
+      if (content2.indexOf('<head>') !== -1) {
+        content2 = content2.replace('<head>', '<head>' + viewportMeta2 + responsiveStyle2);
+      } else if (content2.indexOf('<html>') !== -1) {
+        content2 = content2.replace('<html>', '<html><head>' + viewportMeta2 + responsiveStyle2 + '</head>');
+      } else {
+        content2 = '<!DOCTYPE html><html><head>' + viewportMeta2 + responsiveStyle2 + '</head><body>' + content2 + '</body></html>';
+      }
+      iframe.contentDocument.write(content2 + navScript2);
       iframe.contentDocument.close();
     }, 0);
   } else if (artifact.file_type === 'md') {

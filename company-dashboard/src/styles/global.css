@@ -326,7 +326,13 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .fs-fab{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(80,70,229,.4);z-index:1001;display:none;align-items:center;justify-content:center;transition:transform .15s}
 .fs-fab:hover{transform:scale(1.08)}
 .fs-overlay.active~.fs-fab{display:flex}
-@media(max-width:600px){.fs-comment-panel.open{width:100%;position:absolute;top:48px;bottom:0;right:0;z-index:2}}
+@media(max-width:768px){
+  .fs-topbar{padding:8px 12px;gap:8px}
+  .fs-topbar .fs-title{font-size:12px}
+  .fs-topbar .fs-meta{display:none}
+  .fs-comment-panel.open{width:100%;position:absolute;top:48px;bottom:0;right:0;z-index:2}
+  .fs-content iframe,.fs-content object,.fs-content pre{min-height:calc(100vh - 48px) !important}
+}
 
 /* AI Chat (ChatGPT-inspired) */
 .chat-layout{display:flex;height:calc(100vh - 0px);overflow:hidden;position:relative}
