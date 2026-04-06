@@ -197,7 +197,8 @@
       "Bash(sed -i \"s/await aiCompletion\\(userData, {$/await aiCompletion\\(userData, { source: 'self_analysis',/\" hooks/useSelfAnalysis.ts)",
       "Read(//workspace/company-dashboard/**)",
       "Skill(pptx-aces-rikyu)",
-      "Skill(pptx-aces-rikyu:*)"
+      "Skill(pptx-aces-rikyu:*)",
+      "Bash(gh auth:*)"
     ],
     "deny": [
       "Read(**/.env)",
