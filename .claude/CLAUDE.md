@@ -18,3 +18,11 @@
 | `coding-style.md` | コーディング規約、新機能ワークフロー |
 | `knowledge-accumulation.md` | ナレッジ蓄積・昇格ルール |
 | `skill-management.md` | スキル追加・同期・整合性チェックのルール |
+
+## Compact Instructions
+
+Context Compaction 後に必ず保持すべき情報:
+- 現在実行中のパイプライン（A/B/C/D/E）とそのステップ
+- 処理中のタスクID（Supabase tasks テーブル）
+- チェックポイントの状態（承認済み/待ち）
+- 直前の社長の指示の要約
