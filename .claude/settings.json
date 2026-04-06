@@ -198,7 +198,8 @@
       "Read(//workspace/company-dashboard/**)",
       "Skill(pptx-aces-rikyu)",
       "Skill(pptx-aces-rikyu:*)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(corepack enable:*)"
     ],
     "deny": [
       "Read(**/.env)",
