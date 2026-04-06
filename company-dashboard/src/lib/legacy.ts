@@ -8648,16 +8648,31 @@ function openFullscreen(artifact) {
   }
 
   fsOverlay.classList.add('active');
+  // Lock body scroll (iOS Safari needs position:fixed to prevent background scroll)
   document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
   loadFsComments();
 }
 
 function closeFullscreen() {
   if (fsOverlay) fsOverlay.classList.remove('active');
-  document.getElementById('fs-panel').classList.remove('open');
+  var panel = document.getElementById('fs-panel');
+  if (panel) panel.classList.remove('open');
   document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
   fsCurrentArtifact = null;
 }
+
+// Safety: always restore body scroll on hash change (e.g. browser back)
+window.addEventListener('hashchange', function() {
+  if (document.body.style.overflow === 'hidden' && (!fsOverlay || !fsOverlay.classList.contains('active'))) {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+  }
+});
 
 async function loadFsComments() {
   var list = document.getElementById('fs-comments');
