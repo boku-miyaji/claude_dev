@@ -151,7 +151,8 @@
       "Bash(node_modules/.bin/tsc --noEmit)",
       "// --- Common Read ---",
       "Read(//home/node/**)",
-      "Read(//workspace/company-dashboard/**)"
+      "Read(//workspace/company-dashboard/**)",
+      "Edit(~/.claude/skills/company/**)"
     ],
     "deny": [
       "Read(**/.env)",
