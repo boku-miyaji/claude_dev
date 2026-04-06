@@ -113,6 +113,9 @@ RUN npm install -g @anthropic-ai/claude-code
 # install ccusage
 RUN npm install -g ccusage
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # Copy and set up firewall script
 COPY init-firewall.sh /usr/local/bin/
 USER root
