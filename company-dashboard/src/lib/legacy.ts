@@ -5435,17 +5435,20 @@ async function renderArtifacts(root) {
     detailContainer.style.display = 'none';
     while (listContainer.firstChild) listContainer.removeChild(listContainer.firstChild);
 
-    var query = sb.from('artifacts').select('*,companies(name)').eq('status','active').order('updated_at',{ascending:false});
+    var query = sb.from('artifacts').select('id,title,file_path,file_type,company_id,last_synced_at,status,created_at,updated_at,companies(name)').eq('status','active').order('updated_at',{ascending:false}).limit(30);
     if (filterCompany.value) query = query.eq('company_id', filterCompany.value);
     var res = await query;
     var arts = res.data || [];
 
-    // Count open comments per artifact
-    var commentRes = await sb.from('artifact_comments').select('artifact_id,id').eq('status','open');
-    var commentCounts = {};
-    (commentRes.data || []).forEach(function(c) {
-      commentCounts[c.artifact_id] = (commentCounts[c.artifact_id] || 0) + 1;
-    });
+    // Count open comments per artifact (only fetch artifact_id for counting)
+    var artIds = arts.map(function(a) { return a.id; });
+    var commentCounts: Record<string, number> = {};
+    if (artIds.length > 0) {
+      var commentRes = await sb.from('artifact_comments').select('artifact_id').eq('status','open').in('artifact_id', artIds);
+      (commentRes.data || []).forEach(function(c: { artifact_id: string }) {
+        commentCounts[c.artifact_id] = (commentCounts[c.artifact_id] || 0) + 1;
+      });
+    }
 
     if (arts.length === 0) {
       listContainer.appendChild(el('div', {className: 'card'}, [
@@ -5523,9 +5526,69 @@ async function renderArtifacts(root) {
           ])
         ])
       ]);
-      card.onclick = function() { window.location.hash = 'artifacts/' + a.id; showDetail(a); };
+      card.onclick = async function() {
+        window.location.hash = 'artifacts/' + a.id;
+        // Fetch full content only when detail view is opened
+        var full = await sb.from('artifacts').select('*,companies(name)').eq('id', a.id).single();
+        if (full.data) showDetail(full.data); else showDetail(a);
+      };
       listContainer.appendChild(card);
     });
+
+    // Load more button (pagination)
+    if (arts.length >= 30) {
+      var loadMoreBtn = el('button', {className: 'btn', style: 'width:100%;margin-top:8px;padding:10px', textContent: 'さらに読み込む'});
+      loadMoreBtn.onclick = async function() {
+        loadMoreBtn.textContent = '読み込み中...';
+        loadMoreBtn.disabled = true;
+        var offset = listContainer.querySelectorAll('.card').length;
+        var moreQuery = sb.from('artifacts').select('id,title,file_path,file_type,company_id,last_synced_at,status,created_at,updated_at,companies(name)').eq('status','active').order('updated_at',{ascending:false}).range(offset, offset + 29);
+        if (filterCompany.value) moreQuery = moreQuery.eq('company_id', filterCompany.value);
+        var moreRes = await moreQuery;
+        var moreArts = moreRes.data || [];
+        if (moreArts.length > 0) {
+          // Fetch comment counts for new batch
+          var moreIds = moreArts.map(function(a) { return a.id; });
+          var moreCommentRes = await sb.from('artifact_comments').select('artifact_id').eq('status','open').in('artifact_id', moreIds);
+          var moreCounts: Record<string, number> = {};
+          (moreCommentRes.data || []).forEach(function(c: { artifact_id: string }) {
+            moreCounts[c.artifact_id] = (moreCounts[c.artifact_id] || 0) + 1;
+          });
+          loadMoreBtn.remove();
+          moreArts.forEach(function(a) {
+            var coName = a.companies ? a.companies.name : 'HD';
+            var synced = a.last_synced_at ? new Date(a.last_synced_at).toLocaleString('ja-JP') : '未同期';
+            var openComments = moreCounts[a.id] || 0;
+            var badge = openComments > 0
+              ? el('span', {style: 'background:var(--orange);color:#000;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600', textContent: openComments + ' コメント'})
+              : el('span', {style: 'color:var(--text3);font-size:11px', textContent: 'コメントなし'});
+            var mCard = el('div', {className: 'card', style: 'cursor:pointer;margin-bottom:12px'}, [
+              el('div', {style: 'display:flex;justify-content:space-between;align-items:center;gap:12px'}, [
+                el('div', {style: 'flex:1;min-width:0'}, [
+                  el('div', {style: 'font-weight:600;margin-bottom:4px', textContent: a.title}),
+                  el('div', {style: 'font-size:12px;color:var(--text3);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis', textContent: a.file_path})
+                ]),
+                el('div', {style: 'text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px'}, [
+                  el('div', {style: 'display:flex;gap:6px;align-items:center'}, [el('span', {className: 'tag tag-normal', textContent: coName}), badge]),
+                  el('div', {style: 'font-size:11px;color:var(--text3)', textContent: '同期: ' + synced})
+                ])
+              ])
+            ]);
+            mCard.onclick = async function() {
+              window.location.hash = 'artifacts/' + a.id;
+              var full = await sb.from('artifacts').select('*,companies(name)').eq('id', a.id).single();
+              if (full.data) showDetail(full.data); else showDetail(a);
+            };
+            listContainer.appendChild(mCard);
+          });
+          if (moreArts.length >= 30) listContainer.appendChild(loadMoreBtn);
+        }
+        loadMoreBtn.textContent = 'さらに読み込む';
+        loadMoreBtn.disabled = false;
+        if (moreArts.length < 30) loadMoreBtn.remove();
+      };
+      listContainer.appendChild(loadMoreBtn);
+    }
   }
 
   async function showDetail(artifact) {
@@ -5811,6 +5874,9 @@ async function renderGrowth(root) {
     ])
   ]);
   root.appendChild(summaryGrid);
+
+  // --- Work Intensity (Prompt count + work hours per day) ---
+  await renderWorkIntensity(root, events);
 
   // --- Category Progress ---
   var categories = ['security', 'architecture', 'devops', 'automation', 'tooling', 'organization', 'process'];

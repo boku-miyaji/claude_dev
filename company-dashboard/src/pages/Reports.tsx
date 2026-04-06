@@ -105,7 +105,7 @@ function ResearchReports() {
   const load = useCallback(() => {
     supabase
       .from('artifacts')
-      .select('*')
+      .select('id,title,file_path,file_type,company_id,tags,status,created_at,updated_at')
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         setReports((data as Report[]) || [])
@@ -161,7 +161,17 @@ function ResearchReports() {
 
       {active.map((r) => (
         <ReportCard key={r.id} r={r} expanded={expanded === r.id}
-          onToggle={() => setExpanded(expanded === r.id ? null : r.id)}
+          onToggle={async () => {
+            if (expanded === r.id) { setExpanded(null); return }
+            // Lazy-load content on first expand
+            if (!r.content) {
+              const { data } = await supabase.from('artifacts').select('content').eq('id', r.id).single()
+              if (data?.content) {
+                setReports((prev) => prev.map((x) => x.id === r.id ? { ...x, content: data.content } : x))
+              }
+            }
+            setExpanded(r.id)
+          }}
           onArchive={(e) => archiveReport(e, r)}
         />
       ))}
