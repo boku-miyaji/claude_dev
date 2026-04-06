@@ -308,12 +308,32 @@ export function Today() {
   }, [allOpenTasks, todayTasks])
 
   // Habits
+  /** Get the Monday of the current week as YYYY-MM-DD (ISO week: Mon-Sun) */
+  const weekStartStr = useMemo(() => {
+    const d = new Date(todayStr + 'T00:00:00')
+    const day = d.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
+    const diff = day === 0 ? -6 : 1 - day // shift back to Monday
+    d.setDate(d.getDate() + diff)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }, [todayStr])
+
   const todayHabits = useMemo(() => {
     return habits.map((habit) => {
       const todayCount = habitLogs.filter((l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr).length
-      return { ...habit, todayCount, completed: todayCount >= habit.target_count }
+      if (habit.frequency === 'weekly') {
+        // Weekly habits: completed if there is at least one log this week (Mon–Sun)
+        const weekCount = habitLogs.filter(
+          (l) =>
+            l.habit_id === habit.id &&
+            l.completed_at.substring(0, 10) >= weekStartStr &&
+            l.completed_at.substring(0, 10) <= todayStr,
+        ).length
+        const weekCompleted = weekCount >= habit.target_count
+        return { ...habit, todayCount, weekCount, completed: weekCompleted, weekCompleted }
+      }
+      return { ...habit, todayCount, weekCount: 0, completed: todayCount >= habit.target_count, weekCompleted: false }
     })
-  }, [habits, habitLogs, todayStr])
+  }, [habits, habitLogs, todayStr, weekStartStr])
   const habitsCompleted = todayHabits.filter((h) => h.completed).length
 
   // Combined progress
@@ -536,9 +556,21 @@ export function Today() {
               <span style={{ color: h.completed ? 'var(--text3)' : 'var(--text)', textDecoration: h.completed ? 'line-through' : 'none', fontWeight: 500, flex: 1 }}>
                 {h.icon} {h.title}
               </span>
+              {/* Weekly badge: shown for weekly habits to distinguish from daily */}
+              {h.frequency === 'weekly' && (
+                <span style={{
+                  fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3,
+                  color: h.weekCompleted ? 'var(--green)' : 'var(--text3)',
+                  background: h.weekCompleted ? 'var(--green-bg)' : 'var(--surface2)',
+                  border: `1px solid ${h.weekCompleted ? 'var(--green)' : 'var(--border)'}`,
+                  fontFamily: 'var(--mono)',
+                }}>
+                  {h.weekCompleted ? '今週済' : '週1回'}
+                </span>
+              )}
               {h.target_count > 1 && (
                 <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: h.completed ? 'var(--green)' : 'var(--text3)' }}>
-                  {h.todayCount}/{h.target_count}
+                  {h.frequency === 'weekly' ? `${h.weekCount}/${h.target_count}` : `${h.todayCount}/${h.target_count}`}
                 </span>
               )}
             </div>

@@ -349,6 +349,16 @@
     ],
     "PostToolUse": [
       {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/skill-usage-log.sh",
+            "async": true
+          }
+        ]
+      },
+      {
         "matcher": "Edit|Write",
         "hooks": [
           {
