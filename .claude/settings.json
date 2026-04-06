@@ -225,7 +225,8 @@
       "/workspace/.claude/commands",
       "/home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.claude-plugin",
       "/home/node/.claude",
-      "/workspace/project-scotch-care/docs"
+      "/workspace/project-scotch-care/docs",
+      "/workspace/aces-rikyu-sales-proposals-poc/server/app/system-spec"
     ]
   },
   "hooks": {
