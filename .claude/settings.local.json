@@ -78,7 +78,30 @@
       "WebFetch(domain:www.smashingmagazine.com)",
       "Bash(bash:*)",
       "Bash(gh run:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "// --- PJ固有: settings.json から移動 (2026-04-06) ---",
+      "WebFetch(domain:www.cse.cuhk.edu.hk)",
+      "WebFetch(domain:par.nsf.gov)",
+      "WebFetch(domain:www.industrialmind.ai)",
+      "WebFetch(domain:www.researchgate.net)",
+      "WebFetch(domain:www.sciencedirect.com)",
+      "WebFetch(domain:ams-net.github.io)",
+      "WebFetch(domain:paperswithcode.com)",
+      "WebFetch(domain:shipxu123.github.io)",
+      "WebFetch(domain:sesamedisk.com)",
+      "WebFetch(domain:danielmiessler.com)",
+      "WebFetch(domain:pecollective.com)",
+      "WebFetch(domain:docs.kicad.org)",
+      "WebFetch(domain:dev-docs.kicad.org)",
+      "WebFetch(domain:forum.kicad.info)",
+      "WebFetch(domain:www.notion.so)",
+      "Skill(pptx-aces-rikyu)",
+      "Skill(pptx-aces-rikyu:*)"
+    ],
+    "additionalDirectories": [
+      "/workspace/.company-polaris/secretary",
+      "/workspace/project-scotch-care/docs",
+      "/workspace/aces-rikyu-sales-proposals-poc/server/app/system-spec"
     ]
   }
 }
