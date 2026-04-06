@@ -5834,6 +5834,212 @@ async function renderArtifacts(root) {
 }
 
 // ============================================================
+// Work Intensity Chart (used in Growth page)
+// ============================================================
+async function renderWorkIntensity(root: HTMLElement, events: any[]) {
+  var intensitySection = el('div', {className: 'section', style: 'margin-bottom:28px'});
+  intensitySection.appendChild(el('div', {className: 'section-title', textContent: 'Work Intensity'}));
+
+  var promptRes = await sb.from('prompt_log').select('created_at').order('created_at', {ascending: true});
+  var promptRows = (promptRes.data || []) as Array<{created_at: string}>;
+
+  // Aggregate by date (JST)
+  var dayStats: Record<string, {count: number; first: number; last: number}> = {};
+  promptRows.forEach(function(row) {
+    var d = new Date(row.created_at);
+    var jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+    var dateKey = jst.toISOString().slice(0, 10);
+    if (!dayStats[dateKey]) {
+      dayStats[dateKey] = {count: 0, first: d.getTime(), last: d.getTime()};
+    }
+    dayStats[dateKey].count++;
+    if (d.getTime() < dayStats[dateKey].first) dayStats[dateKey].first = d.getTime();
+    if (d.getTime() > dayStats[dateKey].last) dayStats[dateKey].last = d.getTime();
+  });
+
+  // Growth events per day
+  var growthByDay: Record<string, number> = {};
+  events.forEach(function(e: any) {
+    growthByDay[e.event_date] = (growthByDay[e.event_date] || 0) + 1;
+  });
+
+  var allDates = Object.keys(dayStats).sort();
+  var recentDates = allDates.slice(-30);
+
+  if (recentDates.length === 0) {
+    intensitySection.appendChild(el('div', {className: 'card empty', textContent: 'Prompt data not available yet.'}));
+    root.appendChild(intensitySection);
+    return;
+  }
+
+  var maxPrompts = Math.max.apply(null, recentDates.map(function(dk) { return dayStats[dk].count; }));
+  var maxHours = Math.max.apply(null, recentDates.map(function(dk) {
+    return (dayStats[dk].last - dayStats[dk].first) / 3600000;
+  }));
+  if (maxHours < 1) maxHours = 1;
+
+  // KPI summary
+  var totalPrompts = recentDates.reduce(function(s, dk) { return s + dayStats[dk].count; }, 0);
+  var totalHours = recentDates.reduce(function(s, dk) { return s + (dayStats[dk].last - dayStats[dk].first) / 3600000; }, 0);
+  var avgPrompts = Math.round(totalPrompts / recentDates.length);
+  var avgHoursStr = (totalHours / recentDates.length).toFixed(1);
+
+  intensitySection.appendChild(el('div', {className: 'growth-summary', style: 'grid-template-columns:repeat(4,1fr);margin-bottom:18px'}, [
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', style: 'color:var(--accent)', textContent: String(totalPrompts)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Total Prompts (' + recentDates.length + 'd)'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', style: 'color:var(--accent)', textContent: String(avgPrompts)}),
+      el('div', {className: 'kpi-lbl', textContent: 'Avg Prompts / Day'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', style: 'color:var(--blue)', textContent: totalHours.toFixed(0) + 'h'}),
+      el('div', {className: 'kpi-lbl', textContent: 'Total Work Hours'})
+    ]),
+    el('div', {className: 'card kpi'}, [
+      el('div', {className: 'kpi-val', style: 'color:var(--blue)', textContent: avgHoursStr + 'h'}),
+      el('div', {className: 'kpi-lbl', textContent: 'Avg Hours / Day'})
+    ])
+  ]));
+
+  // SVG bar chart
+  var barW = 28, gapW = 4, chartH = 140, labelH = 40;
+  var svgW = recentDates.length * (barW + gapW) + 20;
+  var ns = 'http://www.w3.org/2000/svg';
+
+  var chartCard = el('div', {className: 'card', style: 'padding:20px;overflow-x:auto'});
+
+  // Legend
+  chartCard.appendChild(el('div', {style: 'display:flex;gap:16px;margin-bottom:14px;font-size:11px;color:var(--text3)'}, [
+    el('span', {}, [
+      el('span', {style: 'display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--accent);margin-right:4px;vertical-align:middle'}),
+      document.createTextNode('Prompts')
+    ]),
+    el('span', {}, [
+      el('span', {style: 'display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--blue);margin-right:4px;vertical-align:middle'}),
+      document.createTextNode('Work Hours')
+    ]),
+    el('span', {}, [
+      el('span', {style: 'display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);margin-right:4px;vertical-align:middle'}),
+      document.createTextNode('Growth Events')
+    ])
+  ]));
+
+  var svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('width', String(Math.max(svgW, 400)));
+  svg.setAttribute('height', String(chartH + labelH));
+  svg.setAttribute('viewBox', '0 0 ' + Math.max(svgW, 400) + ' ' + (chartH + labelH));
+  svg.style.display = 'block';
+  svg.style.minWidth = svgW + 'px';
+
+  // Grid lines
+  for (var gi = 0; gi <= 4; gi++) {
+    var gy = chartH - (chartH / 4) * gi;
+    var gridLine = document.createElementNS(ns, 'line');
+    gridLine.setAttribute('x1', '0'); gridLine.setAttribute('y1', String(gy));
+    gridLine.setAttribute('x2', String(svgW)); gridLine.setAttribute('y2', String(gy));
+    gridLine.setAttribute('stroke', 'var(--border)'); gridLine.setAttribute('stroke-dasharray', '3,3');
+    svg.appendChild(gridLine);
+  }
+
+  recentDates.forEach(function(dk, i) {
+    var x = 10 + i * (barW + gapW);
+    var stat = dayStats[dk];
+    var promptH = Math.max((stat.count / maxPrompts) * (chartH - 10), 2);
+    var hours = (stat.last - stat.first) / 3600000;
+    var hourH = Math.max((hours / maxHours) * (chartH - 10), 2);
+    var growthCount = growthByDay[dk] || 0;
+
+    // Prompt bar (left)
+    var pBar = document.createElementNS(ns, 'rect');
+    pBar.setAttribute('x', String(x)); pBar.setAttribute('y', String(chartH - promptH));
+    pBar.setAttribute('width', String(barW / 2 - 1)); pBar.setAttribute('height', String(promptH));
+    pBar.setAttribute('rx', '2'); pBar.setAttribute('fill', 'var(--accent)'); pBar.setAttribute('opacity', '0.8');
+    svg.appendChild(pBar);
+
+    // Hours bar (right)
+    var hBar = document.createElementNS(ns, 'rect');
+    hBar.setAttribute('x', String(x + barW / 2)); hBar.setAttribute('y', String(chartH - hourH));
+    hBar.setAttribute('width', String(barW / 2 - 1)); hBar.setAttribute('height', String(hourH));
+    hBar.setAttribute('rx', '2'); hBar.setAttribute('fill', 'var(--blue)'); hBar.setAttribute('opacity', '0.7');
+    svg.appendChild(hBar);
+
+    // Growth event dot
+    if (growthCount > 0) {
+      var gDot = document.createElementNS(ns, 'circle');
+      gDot.setAttribute('cx', String(x + barW / 2));
+      gDot.setAttribute('cy', String(Math.max(chartH - promptH - 12, 8)));
+      gDot.setAttribute('r', String(Math.min(3 + growthCount, 8)));
+      gDot.setAttribute('fill', 'var(--green)'); gDot.setAttribute('opacity', '0.9');
+      svg.appendChild(gDot);
+      if (growthCount >= 3) {
+        var cTxt = document.createElementNS(ns, 'text');
+        cTxt.setAttribute('x', String(x + barW / 2));
+        cTxt.setAttribute('y', String(Math.max(chartH - promptH - 9, 11)));
+        cTxt.setAttribute('text-anchor', 'middle'); cTxt.setAttribute('fill', 'white');
+        cTxt.setAttribute('font-size', '8'); cTxt.setAttribute('font-weight', '700');
+        cTxt.textContent = String(growthCount);
+        svg.appendChild(cTxt);
+      }
+    }
+
+    // Date label
+    var dLabel = document.createElementNS(ns, 'text');
+    dLabel.setAttribute('x', String(x + barW / 2)); dLabel.setAttribute('y', String(chartH + 14));
+    dLabel.setAttribute('text-anchor', 'middle'); dLabel.setAttribute('fill', 'var(--text3)');
+    dLabel.setAttribute('font-size', '9'); dLabel.setAttribute('font-family', 'var(--mono)');
+    dLabel.textContent = dk.slice(5);
+    svg.appendChild(dLabel);
+
+    // Hover tooltip
+    var hRect = document.createElementNS(ns, 'rect');
+    hRect.setAttribute('x', String(x)); hRect.setAttribute('y', '0');
+    hRect.setAttribute('width', String(barW)); hRect.setAttribute('height', String(chartH + labelH));
+    hRect.setAttribute('fill', 'transparent'); hRect.style.cursor = 'default';
+
+    var tipG = document.createElementNS(ns, 'g');
+    tipG.setAttribute('opacity', '0'); tipG.style.transition = 'opacity .15s';
+
+    var tipX = Math.min(Math.max(x - 30, 0), svgW - 100);
+    var tipBg = document.createElementNS(ns, 'rect');
+    tipBg.setAttribute('x', String(tipX)); tipBg.setAttribute('y', '0');
+    tipBg.setAttribute('width', '100'); tipBg.setAttribute('height', '44');
+    tipBg.setAttribute('rx', '4'); tipBg.setAttribute('fill', 'var(--surface)'); tipBg.setAttribute('stroke', 'var(--border)');
+    tipG.appendChild(tipBg);
+
+    var t1 = document.createElementNS(ns, 'text');
+    t1.setAttribute('x', String(tipX + 8)); t1.setAttribute('y', '16');
+    t1.setAttribute('fill', 'var(--text)'); t1.setAttribute('font-size', '10'); t1.setAttribute('font-weight', '600');
+    t1.textContent = stat.count + ' prompts';
+    tipG.appendChild(t1);
+
+    var t2 = document.createElementNS(ns, 'text');
+    t2.setAttribute('x', String(tipX + 8)); t2.setAttribute('y', '30');
+    t2.setAttribute('fill', 'var(--text2)'); t2.setAttribute('font-size', '10');
+    t2.textContent = hours.toFixed(1) + 'h' + (growthCount > 0 ? ' · ' + growthCount + ' events' : '');
+    tipG.appendChild(t2);
+
+    svg.appendChild(tipG);
+    hRect.addEventListener('mouseenter', function() { tipG.setAttribute('opacity', '1'); });
+    hRect.addEventListener('mouseleave', function() { tipG.setAttribute('opacity', '0'); });
+    svg.appendChild(hRect);
+  });
+
+  // Y-axis max
+  var yLabel = document.createElementNS(ns, 'text');
+  yLabel.setAttribute('x', String(svgW - 2)); yLabel.setAttribute('y', '12');
+  yLabel.setAttribute('text-anchor', 'end'); yLabel.setAttribute('fill', 'var(--text3)');
+  yLabel.setAttribute('font-size', '9'); yLabel.setAttribute('font-family', 'var(--mono)');
+  yLabel.textContent = maxPrompts + 'p';
+  svg.appendChild(yLabel);
+
+  chartCard.appendChild(svg);
+  intensitySection.appendChild(chartCard);
+  root.appendChild(intensitySection);
+}
+
+// ============================================================
 // Growth Chronicle Page
 // ============================================================
 async function renderGrowth(root) {
