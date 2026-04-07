@@ -13,7 +13,8 @@ PROJECT_DIR="${1:-/workspace}"
 CACHE_FILE="$SCRIPT_DIR/skills-cache.json"
 HOME_DIR="${HOME:-/home/node}"
 TMPFILE=$(mktemp)
-trap 'rm -f "$TMPFILE"' EXIT
+CONTENT_TMPFILE=""
+trap 'rm -f "$TMPFILE" "$CONTENT_TMPFILE"' EXIT
 
 # --- Collect: source_label<TAB>path ---
 {
@@ -116,48 +117,53 @@ function strip_yaml_quotes(s) {
   ] | unique_by(.id)')
 
 # --- Attach SKILL.md body (strip frontmatter) to each entry ---
-CURRENT_SKILLS=$(echo "$CURRENT_SKILLS" | jq -c '.[]' | while IFS= read -r entry; do
+# All data flows through files to avoid "Argument list too long" errors
+CONTENT_TMPFILE=$(mktemp)
+SKILLS_FILE=$(mktemp)
+echo "$CURRENT_SKILLS" | jq -c '.[]' | while IFS= read -r entry; do
   fpath=$(echo "$entry" | jq -r '.source_path // empty')
   if [ -n "$fpath" ] && [ -f "$fpath" ]; then
-    # Strip YAML frontmatter (between first two ---), take body only, limit 30KB
     body=$(awk 'BEGIN{d=0} /^---$/{d++;next} d>=2{print}' "$fpath" | head -c 30000)
     echo "$entry" | jq --arg b "$body" '. + {skill_content: $b}'
   else
     echo "$entry" | jq '. + {skill_content: null}'
   fi
-done | jq -s '.')
+done > "$CONTENT_TMPFILE"
+jq -s '.' < "$CONTENT_TMPFILE" > "$SKILLS_FILE"
 
 # Handle empty
-[ -z "$CURRENT_SKILLS" ] && CURRENT_SKILLS="[]"
+[ ! -s "$SKILLS_FILE" ] && echo "[]" > "$SKILLS_FILE"
 
 # --- Load cache ---
-CACHED_SKILLS="[]"
-if [ -f "$CACHE_FILE" ]; then
-  CACHED_SKILLS=$(cat "$CACHE_FILE")
-fi
+CACHE_CONTENT="[]"
+[ -f "$CACHE_FILE" ] && CACHE_CONTENT=$(cat "$CACHE_FILE")
 
-# --- Diff ---
-CURRENT_HASH=$(echo "$CURRENT_SKILLS" | jq -S '.' | md5sum | cut -d' ' -f1)
-CACHED_HASH=$(echo "$CACHED_SKILLS" | jq -S '.' | md5sum | cut -d' ' -f1)
+# --- Diff (compare without skill_content for speed) ---
+CURRENT_HASH=$(jq -S '[.[] | del(.skill_content)]' < "$SKILLS_FILE" | md5sum | cut -d' ' -f1)
+CACHED_HASH=$(echo "$CACHE_CONTENT" | jq -S '[.[] | del(.skill_content)]' 2>/dev/null | md5sum | cut -d' ' -f1)
 
 if [ "$CURRENT_HASH" = "$CACHED_HASH" ]; then
+  rm -f "$CONTENT_TMPFILE" "$SKILLS_FILE"
   exit 0
 fi
 
-# --- Batch upsert ---
+# --- Batch upsert (file-based to avoid arg size limits) ---
 curl -4 -s -o /dev/null -w "" \
   "${SUPABASE_URL}/rest/v1/slash_commands?on_conflict=id" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
   -H "Content-Type: application/json" \
   -H "Prefer: return=minimal,resolution=merge-duplicates" \
-  -d "$CURRENT_SKILLS" \
-  --max-time 10 \
+  -d @"$SKILLS_FILE" \
+  --max-time 15 \
   2>/dev/null || true
 
 # --- Mark removed as deprecated ---
-REMOVED=$(echo "$CACHED_SKILLS" | jq -c --argjson current "$CURRENT_SKILLS" \
-  '[.[] | select(.id as $id | ($current | map(.id) | index($id)) == null) | .id]')
+CURRENT_IDS_FILE=$(mktemp)
+jq -c '[.[].id]' < "$SKILLS_FILE" > "$CURRENT_IDS_FILE"
+REMOVED=$(echo "$CACHE_CONTENT" | jq -c --slurpfile cids "$CURRENT_IDS_FILE" \
+  '[.[] | select(.id as $id | ($cids[0] | index($id)) == null) | .id]' 2>/dev/null)
+rm -f "$CURRENT_IDS_FILE"
 
 if [ "$REMOVED" != "[]" ] && [ "$REMOVED" != "null" ] && [ -n "$REMOVED" ]; then
   echo "$REMOVED" | jq -r '.[]' | while read -r rid; do
@@ -175,6 +181,7 @@ if [ "$REMOVED" != "[]" ] && [ "$REMOVED" != "null" ] && [ -n "$REMOVED" ]; then
 fi
 
 # --- Update cache ---
-echo "$CURRENT_SKILLS" | jq -S '.' > "$CACHE_FILE"
+jq -S '.' < "$SKILLS_FILE" > "$CACHE_FILE"
+rm -f "$CONTENT_TMPFILE" "$SKILLS_FILE"
 
 exit 0
