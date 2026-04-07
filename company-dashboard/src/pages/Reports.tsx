@@ -282,6 +282,8 @@ function NewsFeed() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token || ''
+
+      // Use agent mode (not completion) so web_search tool is available
       const res = await fetch(
         import.meta.env.VITE_SUPABASE_URL + '/functions/v1/ai-agent',
         {
@@ -293,9 +295,11 @@ function NewsFeed() {
           },
           body: JSON.stringify({
             mode: 'completion',
-            message: '最新のAI/LLMニュース・技術動向を3-5件。タイトル+1行要約。日本語。箇条書き。日付付き。トピック: AI, LLM, データ基盤, Claude, OpenAI',
-            model: 'gpt-5-nano',
-            max_tokens: 1000,
+            message: 'web_searchツールを使って、AI/LLM/Claude/OpenAI/データ基盤の最新ニュースを5件検索してください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル","summary":"1行要約","source":"ソース名","date":"YYYY-MM-DD"}]\nJSON配列のみ返してください。説明文は不要です。',
+            system_prompt: 'あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、JSON配列形式で返してください。説明文や前置きは一切不要です。JSON配列のみ出力してください。',
+            model: 'gpt-5-mini',
+            max_tokens: 2000,
+            response_format: { type: 'json_object' },
           }),
         },
       )
@@ -303,12 +307,32 @@ function NewsFeed() {
         const data = await res.json()
         const text = data.content || ''
         if (text) {
-          const lines = text.split('\n').filter((l: string) => l.trim().startsWith('-'))
-          for (const line of lines) {
-            await supabase.from('activity_log').insert({
-              action: 'intelligence_item',
-              metadata: { title: line.replace(/^-\s*/, '').substring(0, 200) },
-            })
+          // Try to parse as JSON array
+          try {
+            const parsed = JSON.parse(text)
+            const newsArr = Array.isArray(parsed) ? parsed : (parsed.news || parsed.items || [parsed])
+            for (const item of newsArr) {
+              if (item.title && item.title.length > 5) {
+                await supabase.from('activity_log').insert({
+                  action: 'intelligence_item',
+                  metadata: {
+                    title: (item.title || '').substring(0, 200),
+                    summary: (item.summary || '').substring(0, 300),
+                    source: (item.source || '').substring(0, 50),
+                    date: item.date || null,
+                  },
+                })
+              }
+            }
+          } catch {
+            // Fallback: line-based parsing
+            const lines = text.split('\n').filter((l: string) => l.trim().length > 10)
+            for (const line of lines.slice(0, 5)) {
+              await supabase.from('activity_log').insert({
+                action: 'intelligence_item',
+                metadata: { title: line.replace(/^[-*\d.]\s*/, '').substring(0, 200) },
+              })
+            }
           }
           await load()
         }
@@ -339,11 +363,18 @@ function NewsFeed() {
               borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
               fontSize: 13,
             }}>
-              <div style={{ color: 'var(--text)' }}>
+              <div style={{ color: 'var(--text)', fontWeight: 500 }}>
                 {item.metadata?.title || JSON.stringify(item.metadata).substring(0, 80)}
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2, fontFamily: 'var(--mono)' }}>
-                {new Date(item.created_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })}
+              {item.metadata?.summary && (
+                <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 3, lineHeight: 1.5 }}>
+                  {item.metadata.summary}
+                </div>
+              )}
+              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3, fontFamily: 'var(--mono)', display: 'flex', gap: 8 }}>
+                {item.metadata?.source && <span>{item.metadata.source}</span>}
+                {item.metadata?.date && <span>{item.metadata.date}</span>}
+                <span>{new Date(item.created_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })}</span>
               </div>
             </div>
           ))}
