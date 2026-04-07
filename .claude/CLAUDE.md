@@ -7,6 +7,7 @@
 - [ultrathink] 実装する際はテストコードを作成し、デグレがないことを確認できるようにする。
 - 実装後は必ず docs を最新化する。
 - 実装したら必ず commit する。
+- **IMPORTANT: TodoWriteでタスク作成時、最後のステップに「Blueprint更新確認」を必ず含める。** 実装変更があれば `company-dashboard/src/pages/Blueprint.tsx` の該当セクションを確認・更新してからタスクをdoneにする。
 
 ## ルール参照
 
