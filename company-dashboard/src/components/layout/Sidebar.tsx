@@ -75,9 +75,13 @@ export function Sidebar() {
   const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
-  const [sidebarHidden, setSidebarHidden] = useState(false)
-
   const currentPage = location.pathname.replace('/', '') || ''
+  const isChat = currentPage.startsWith('chat')
+
+  // Auto-hide main sidebar on chat page (chat has its own sidebar)
+  const [manualHidden, setManualHidden] = useState(false)
+  const sidebarHidden = isChat || manualHidden
+  const setSidebarHidden = setManualHidden
 
   const sections = buildSections(NAV)
 
@@ -97,7 +101,7 @@ export function Sidebar() {
 
   return (
     <>
-    {sidebarHidden && (
+    {sidebarHidden && !isChat && (
       <button
         className="sidebar-toggle"
         onClick={() => setSidebarHidden(false)}

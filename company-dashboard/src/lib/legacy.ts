@@ -7497,6 +7497,13 @@ async function renderChat(root) {
   // --- Sidebar ---
   var chatSidebar = el('div', {className: 'chat-sidebar'});
   var sidebarHeader = el('div', {className: 'chat-sidebar-header'});
+  // Back to main nav
+  var backBtn = el('button', {style: 'background:none;border:none;cursor:pointer;font-size:12px;color:var(--text3);font-family:var(--font);padding:4px 0;margin-bottom:8px;display:flex;align-items:center;gap:4px;transition:color .15s'});
+  backBtn.textContent = '\u2190 Home';
+  backBtn.onmouseenter = function() { backBtn.style.color = 'var(--accent)'; };
+  backBtn.onmouseleave = function() { backBtn.style.color = 'var(--text3)'; };
+  backBtn.onclick = function() { window.location.hash = '/'; };
+  sidebarHeader.appendChild(backBtn);
   var newChatBtn = el('button', {className: 'btn btn-primary', style: 'width:100%;font-size:13px;border-radius:var(--r2)', textContent: '+ New Chat'});
   newChatBtn.onclick = function() { chatState.conversationId = null; renderChatMain(chatMain, edgeFnUrl, renderConvList); };
   sidebarHeader.appendChild(newChatBtn);
