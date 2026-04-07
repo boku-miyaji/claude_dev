@@ -38,7 +38,7 @@ const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
       { page: 'artifacts', icon: '📄', label: 'Artifacts' },
       { page: 'growth', icon: '↗', label: 'Growth' },
       { page: 'settings', icon: '⚙', label: 'Settings' },
-      { page: 'how-it-works', icon: '?', label: 'Guide' },
+      { page: 'blueprint', icon: '◇', label: 'Blueprint' },
     ],
   },
 ]

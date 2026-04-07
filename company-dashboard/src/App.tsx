@@ -12,7 +12,7 @@ import {
   renderApiCosts, renderGrowth,
   renderSettings, renderCareer, renderPortfolio,
 } from '@/lib/legacy'
-import { HowItWorks } from '@/pages/HowItWorks'
+import { Blueprint } from '@/pages/Blueprint'
 import { SlashCommands } from '@/pages/SlashCommands'
 import { Knowledge } from '@/pages/Knowledge'
 import { Tasks } from '@/pages/Tasks'
@@ -74,7 +74,7 @@ export function App() {
           <Route path="/chat/*" element={<LegacyPage renderer={renderChat} />} />
           <Route path="/api-costs" element={<LegacyPage renderer={renderApiCosts} />} />
           <Route path="/growth" element={<LegacyPage renderer={renderGrowth} />} />
-          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/blueprint" element={<Blueprint />} />
           <Route path="/commands" element={<SlashCommands />} />
           <Route path="/settings" element={<LegacyPage renderer={renderSettings} />} />
           <Route path="/career" element={<LegacyPage renderer={renderCareer} />} />

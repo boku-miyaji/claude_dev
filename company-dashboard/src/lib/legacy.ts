@@ -541,7 +541,7 @@ function openCommandPalette() {
     {icon: '💬', label: 'AI Chat', page: 'chat', group: 'Tools'},
     {icon: '⌘', label: 'Commands', page: 'commands', group: 'Tools'},
     {icon: '⚙', label: 'Settings', page: 'settings', group: 'Tools'},
-    {icon: '?', label: 'How it Works', page: 'how-it-works', group: 'Tools'}
+    {icon: '◇', label: 'Blueprint', page: 'blueprint', group: 'Tools'}
   ];
 
   var selectedIdx = 0;
@@ -662,7 +662,7 @@ function renderPage(page) {
     'chat-spec': renderChatSpec,
     'api-costs': renderApiCosts,
     growth: renderGrowth,
-    'how-it-works': renderHowItWorks,
+    'blueprint': renderBlueprint,
     commands: renderSlashCommands,
     settings: renderSettings
   };
@@ -6292,11 +6292,11 @@ async function renderGrowth(root) {
 }
 
 // ============================================================
-// How it Works Page (native)
+// Blueprint Page (native legacy fallback)
 // ============================================================
-async function renderHowItWorks(root) {
-  root.appendChild(el('div', {className: 'page-title', textContent: 'How it Works'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: '宮路HDの仮想カンパニーシステムがどう動いているか'}));
+async function renderBlueprint(root) {
+  root.appendChild(el('div', {className: 'page-title', textContent: 'Blueprint'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'Focus You — 設計図とロードマップ'}));
 
   function section(title, children) {
     var s = el('div', {style: 'margin-bottom:32px'});
@@ -9079,7 +9079,7 @@ export {
   renderDashboard, renderCalendar, renderTasks, renderCompanies,
   renderOrgChart, renderFinance, renderInsights, renderPrompts,
   renderIntelligence, renderDiary, renderArtifacts, renderChat,
-  renderApiCosts, renderGrowth, renderHowItWorks, renderSlashCommands,
+  renderApiCosts, renderGrowth, renderBlueprint, renderSlashCommands,
   renderSettings, renderCareer, renderKnowledge, renderPortfolio
 };
 

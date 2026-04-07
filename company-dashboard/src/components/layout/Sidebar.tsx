@@ -34,7 +34,7 @@ const NAV: NavEntry[] = [
   { type: 'item', page: 'artifacts', icon: '📄', label: 'Artifacts' },
   { type: 'item', page: 'prompts', icon: '▷', label: 'Prompts' },
   { type: 'item', page: 'commands', icon: '⌘', label: 'Commands' },
-  { type: 'item', page: 'how-it-works', icon: '?', label: 'How it Works' },
+  { type: 'item', page: 'blueprint', icon: '◇', label: 'Blueprint' },
 ]
 
 /** Group NAV entries into sections for collapsible rendering */
