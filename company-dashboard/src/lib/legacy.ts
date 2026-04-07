@@ -7851,6 +7851,11 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     var bubble = el('div', {className: 'chat-bubble'});
     var metaDiv = el('div', {className: 'chat-meta'});
     var contentDiv = el('div', {className: 'md-body'});
+    // Show thinking indicator until first content arrives
+    var thinkingEl = el('div', {style: 'display:flex;align-items:center;gap:8px;color:var(--text3);font-size:12px'});
+    thinkingEl.innerHTML = '<div style="width:12px;height:12px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin 1s linear infinite"></div>';
+    thinkingEl.appendChild(el('span', {textContent: '考え中...'}));
+    contentDiv.appendChild(thinkingEl);
     bubble.appendChild(metaDiv);
     bubble.appendChild(contentDiv);
     row.appendChild(bubble);
@@ -8018,7 +8023,8 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
               case 'conversation': chatState.conversationId = evt.id; window.location.hash = 'chat/' + evt.id; break;
               case 'debug': console.log('[AI Chat Debug]', evt); break;
               case 'routing':
-                metaDiv.textContent = evt.status==='classifying'?'Routing...':evt.reason+' \u2192 '+evt.model;
+                metaDiv.textContent = evt.status==='classifying'?'Routing...':evt.model;
+                if (thinkingEl && thinkingEl.parentNode) thinkingEl.querySelector('span').textContent = evt.status==='classifying'?'分類中...':'考え中...';
                 if (evt.model) metrics.model = evt.model;
                 if (evt.complexity) metrics.complexity = evt.complexity;
                 break;
@@ -8033,6 +8039,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
               }
               case 'step_start':
                 metaDiv.textContent = evt.model+(evt.step>1?' \u00B7 Step '+evt.step:'');
+                if (thinkingEl && thinkingEl.parentNode) thinkingEl.querySelector('span').textContent = evt.step>1?'ツール結果を分析中...':'考え中...';
                 metrics.stepCount = evt.step;
                 break;
               case 'delta':
@@ -8043,6 +8050,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 metrics.toolsUsed.push({name: evt.tool, start: Date.now(), duration_ms: null, input_summary: JSON.stringify(evt.input).substring(0,80)});
                 if (!activityLog) activityLog = [];
                 activityLog.push({type:'tool', name:evt.tool, input:JSON.stringify(evt.input).substring(0,60)});
+                if (thinkingEl && thinkingEl.parentNode) thinkingEl.querySelector('span').textContent = evt.tool + ' を実行中...';
 
                 // Update or create compact activity line
                 if (!activityBlock) {
