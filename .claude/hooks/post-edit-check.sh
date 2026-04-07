@@ -50,7 +50,7 @@ BASENAME=$(basename "$FILE_PATH" .ts)
 BASENAME_TSX=$(basename "$FILE_PATH" .tsx)
 for hook in $AI_HOOKS; do
   if [ "$BASENAME" = "$hook" ] || [ "$BASENAME_TSX" = "$hook" ]; then
-    WARNINGS="${WARNINGS:+$WARNINGS\n}⚠️ AI機能のソースコードが変更されました。how-it-works.html と docs/ai-features/ の該当セクションも更新してください。"
+    WARNINGS="${WARNINGS:+$WARNINGS\n}⚠️ AI機能のソースコードが変更されました。Blueprint ページ (Blueprint.tsx) と docs/ai-features/ の該当セクションも更新してください。"
     break
   fi
 done
