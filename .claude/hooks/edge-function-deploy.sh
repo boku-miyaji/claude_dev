@@ -25,9 +25,14 @@ if [ -f "$MARKER" ]; then
 fi
 echo "$(date +%s)" > "$MARKER"
 
-# Supabase Access Token
+# Supabase Access Token — try multiple sources
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/supabase.env" 2>/dev/null || true
+
+# Fallback: Supabase CLI token (from `npx supabase login`)
+if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
+  SUPABASE_ACCESS_TOKEN=$(cat "$HOME/.supabase/access-token" 2>/dev/null || true)
+fi
 
 if [ -z "${SUPABASE_ACCESS_TOKEN:-}" ]; then
   exit 0
