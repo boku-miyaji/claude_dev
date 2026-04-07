@@ -7631,7 +7631,9 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
           while (editRow.nextSibling) editRow.nextSibling.remove();
           editRow.remove();
           textarea.value = editText;
-          sendMessage();
+          textarea.focus();
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
         });
         else if (m.role === 'assistant') appendAssistantMsg(messagesInner, m.content, m.model, m.tokens_input, m.tokens_output, m.cost_usd, m.step);
         else if (m.role === 'tool') appendToolMsg(messagesInner, m.tool_name, m.tool_input, m.content);
@@ -7833,11 +7835,13 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     if (!chatState.conversationId) { while (messagesInner.firstChild) messagesInner.removeChild(messagesInner.firstChild); }
 
     appendUserMsg(messagesInner, text, attachments, function(editText, editRow) {
-      // Remove this message and all subsequent messages, then re-send
+      // Remove this message and all subsequent messages, put text in textarea for editing
       while (editRow.nextSibling) editRow.nextSibling.remove();
       editRow.remove();
       textarea.value = editText;
-      sendMessage();
+      textarea.focus();
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
     });
     chatAutoScroll = true;
     messagesArea.scrollTop = messagesArea.scrollHeight;
