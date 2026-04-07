@@ -459,7 +459,7 @@ function TabArchitecture() {
 
       <Section title="自動化 — Hook + スキル + スクリプト">
         <Tbl headers={['種類', '代表例', '特性']} rows={[
-          ['Hook (28個)', 'prompt-log, bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, knowledge-lint', '決定論的制御。コンテキスト外で実行。9イベント種別をカバー'],
+          ['Hook (30個)', 'prompt-log(LLM分類), bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, knowledge-lint, edge-function-deploy, agent-activity-log', '決定論的制御。コンテキスト外で実行。9イベント種別をカバー'],
           ['スキル', '/company, /diary, /deploy', '必要時に呼び出し。判断を伴う処理'],
           ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期'],
         ]} />
