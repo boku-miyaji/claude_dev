@@ -7974,6 +7974,10 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
 
   async function sendEdgeFnMode(text, edgeFnUrl, metaDiv, contentDiv, msgContainer, assistantRow, attachments, metrics, signal) {
     var fullText = '';
+    var activityLog = null;
+    var activityBlock = null;
+    var activityLabel = null;
+    var activityDetail = null;
     var images = (attachments||[]).filter(function(a){return a.type.startsWith('image/');}).map(function(a){return {data_url:a.dataUrl,name:a.name,type:a.type};});
     // Build file context separately — sent to LLM but NOT saved in message history
     var fileAtts = (attachments||[]).filter(function(a){return !a.type.startsWith('image/');});
@@ -8021,41 +8025,70 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
               case 'context_injection': {
                 var parts = [];
                 if (evt.knowledge_rules) parts.push(evt.knowledge_rules + ' knowledge rules');
-                if (evt.diary_entries) parts.push(evt.diary_entries + ' diary entries');
                 if (evt.ceo_insights) parts.push(evt.ceo_insights + ' insights');
-                if (evt.personalization_fields && evt.personalization_fields.length) parts.push('profile: ' + evt.personalization_fields.join(', '));
-                if (parts.length) {
-                  var ctxNote = el('div', {className:'chat-tool-block', style:'opacity:0.6;font-size:11px'});
-                  ctxNote.appendChild(el('span',{textContent:'\uD83D\uDD12 '}));
-                  ctxNote.appendChild(el('span',{textContent:'Context sent to LLM: ' + parts.join(' \u00B7 ')}));
-                  msgContainer.insertBefore(el('div',{className:'chat-msg-row assistant'},[ctxNote]), assistantRow);
-                }
+                // Store for activity log but don't show as separate block
+                if (!activityLog) activityLog = [];
+                activityLog.push({type:'context', text:'Context: ' + parts.join(' \u00B7 ')});
                 break;
               }
               case 'step_start':
-                metaDiv.textContent = 'Step '+evt.step+'/'+evt.maxSteps+' \u00B7 '+evt.model+(evt.reasoning?' \u00B7 '+evt.reasoning:'');
+                metaDiv.textContent = evt.model+(evt.step>1?' \u00B7 Step '+evt.step:'');
                 metrics.stepCount = evt.step;
                 break;
               case 'delta':
                 if (!metrics.ttft) metrics.ttft = Date.now() - metrics.startTime;
                 fullText += evt.content; renderMarkdownSafeToTarget(fullText, contentDiv); if (chatAutoScroll) messagesArea.scrollTop = messagesArea.scrollHeight;
                 break;
-              case 'tool_start':
+              case 'tool_start': {
                 metrics.toolsUsed.push({name: evt.tool, start: Date.now(), duration_ms: null, input_summary: JSON.stringify(evt.input).substring(0,80)});
-                var tb = el('div', {className:'chat-tool-block'});
-                tb.appendChild(el('span',{className:'tool-icon',textContent:'\uD83D\uDD27'}));
-                tb.appendChild(el('span',{className:'tool-name',textContent:evt.tool}));
-                tb.appendChild(el('span',{className:'tool-summary',textContent:JSON.stringify(evt.input).substring(0,60)}));
-                msgContainer.insertBefore(el('div',{className:'chat-msg-row assistant'},[tb]), assistantRow);
+                if (!activityLog) activityLog = [];
+                activityLog.push({type:'tool', name:evt.tool, input:JSON.stringify(evt.input).substring(0,60)});
+
+                // Update or create compact activity line
+                if (!activityBlock) {
+                  activityBlock = el('div', {className:'chat-activity-block', style:'font-size:11px;color:var(--text3);padding:6px 0;cursor:pointer;display:flex;align-items:center;gap:6px'});
+                  activityBlock.innerHTML = '<span style="font-size:12px">\u2699</span>';
+                  activityLabel = el('span', {textContent:''});
+                  activityDetail = el('div', {style:'display:none;padding:6px 0 2px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);margin-top:4px'});
+                  activityBlock.appendChild(activityLabel);
+                  var actWrap = el('div', {style:'margin:4px 0'});
+                  actWrap.appendChild(activityBlock);
+                  actWrap.appendChild(activityDetail);
+                  activityBlock.onclick = function() {
+                    activityDetail.style.display = activityDetail.style.display === 'none' ? 'block' : 'none';
+                  };
+                  msgContainer.insertBefore(el('div',{className:'chat-msg-row assistant'},[actWrap]), assistantRow);
+                }
+                activityLabel.textContent = evt.tool + ' ' + JSON.stringify(evt.input).substring(0,40) + '...';
+                // Add detail line
+                var detailLine = el('div', {style:'padding:2px 0;display:flex;align-items:center;gap:6px'});
+                detailLine.innerHTML = '<span style="color:var(--accent)">\uD83D\uDD27</span>';
+                detailLine.appendChild(el('span', {style:'font-weight:500', textContent:evt.tool}));
+                detailLine.appendChild(el('span', {style:'color:var(--text3)', textContent:JSON.stringify(evt.input).substring(0,50)}));
+                activityDetail.appendChild(detailLine);
+
                 if (chatAutoScroll) messagesArea.scrollTop = messagesArea.scrollHeight;
                 break;
-              case 'tool_result':
+              }
+              case 'tool_result': {
                 var lastTool = metrics.toolsUsed[metrics.toolsUsed.length - 1];
                 if (lastTool) lastTool.duration_ms = Date.now() - lastTool.start;
+                // Update activity label to show completion
+                if (activityLabel && metrics.toolsUsed.length > 0) {
+                  var toolCount = metrics.toolsUsed.length;
+                  var lastName = metrics.toolsUsed[toolCount-1].name;
+                  activityLabel.textContent = toolCount > 1 ? toolCount + ' tools used' : lastName + ' completed';
+                }
                 break;
+              }
               case 'done':
                 metrics.tokIn = evt.tokensInput; metrics.tokOut = evt.tokensOutput; metrics.costUsd = evt.costUsd;
-                metaDiv.textContent = evt.model+' \u00B7 '+(evt.tokensInput+evt.tokensOutput)+' tok \u00B7 '+((evt.costUsd||0)*150).toFixed(1)+'\u5186';
+                var elapsed = ((Date.now() - metrics.startTime) / 1000).toFixed(1);
+                metaDiv.textContent = evt.model+' \u00B7 '+((evt.costUsd||0)*150).toFixed(1)+'\u5186 \u00B7 '+elapsed+'s';
+                // Finalize activity label
+                if (activityLabel && metrics.toolsUsed.length > 0) {
+                  activityLabel.textContent = metrics.toolsUsed.length + ' tools \u00B7 ' + elapsed + 's';
+                }
                 var cr = await sb.from('conversations').select('id,title,model,company_id,updated_at').eq('archived',false).order('updated_at',{ascending:false}).limit(50);
                 chatState.conversations = cr.data||[];
                 break;
