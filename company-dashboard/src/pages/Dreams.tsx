@@ -239,7 +239,8 @@ export function Dreams() {
         amount: parseInt(wishAmount) || 0, url: wishUrl.trim() || null,
         category: manualCategory || 'other',
       }).select('id,title,description').single()
-      if (!error && data) {
+      if (error) { console.error('wishlist insert error:', error); toast('追加に失敗しました'); return }
+      if (data) {
         resetForm(); setShowAdd(false); loadWishlist(); toast('ほしい物を追加しました')
         if (!manualCategory) classifyInBackground('wish', data.id, data.title, data.description || '')
       }
