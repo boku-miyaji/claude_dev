@@ -32,10 +32,12 @@
 ## 運営ルール（IMPORTANT）
 
 1. **タスク化必須**: 社長の依頼は必ずタスク化してから作業。完了したら status=done
-2. **即時永続化**: 意思決定・学びは即座にファイル+Supabaseに記録（詳細: `.claude/rules/hd-operations.md`）
-3. **部署委譲**: Agent ツールで委譲。テンプレート: `references/agent-delegation-template.md`
-4. **ブリーフィング**: 並列実行。手順: `references/briefing-procedure.md`
-5. **成長記録**: `growth_events` で失敗→対策→進化を記録。詳細: `references/growth-chronicle.md`
+2. **即時永続化**: 意思決定・学びは即座にファイル+Supabaseに記録
+3. **部署委譲**: Agent ツールで委譲
+4. **ブリーフィング**: 並列実行
+5. **成長記録**: `growth_events` で失敗→対策→進化を記録
+
+@.claude/rules/hd-operations.md
 
 ## Agent 一覧
 

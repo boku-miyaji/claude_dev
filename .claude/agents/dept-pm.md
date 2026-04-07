@@ -2,7 +2,7 @@
 name: PM部
 description: プロジェクトの進捗管理、チケット作成、マイルストーン追跡を行うエージェント。
 tools: Read, Write, Edit, Glob, Grep
-model: sonnet
+model: haiku
 maxTurns: 10
 ---
 

@@ -64,3 +64,25 @@ instructions:
 - 昇格から **60日間** 適用されなかった（参照ゼロ）ルール → 降格提案
 - 例外が **3回以上** 発生したルール → 降格提案
 - 降格提案も社長承認が必要
+
+## Auto Memory と独自ナレッジの役割分担
+
+**重複させない。それぞれの得意領域に特化する。**
+
+| 仕組み | 格納先 | 用途 | ロードタイミング |
+|--------|--------|------|----------------|
+| **Auto Memory** | `memory/*.md` | ユーザーの好み・フィードバック・PJ文脈。Claude Code が自動管理。短期〜中期の記憶 | セッション開始時（常時） |
+| **rules/** | `.claude/rules/*.md` | 恒久ルール。全セッションで強制適用。昇格されたナレッジの最終到達点 | セッション開始時（常時） |
+| **knowledge_base** | Supabase | 行動ルール（confidence付き）。昇格候補の中間蓄積。LLMデフォルトとの差分 | `/company` 起動時 |
+| **knowledge-index/log** | `memory/` | ナレッジ全体の横断目録・変更履歴。LLMのナビゲーション用 | セッション開始時（常時） |
+
+**何をどこに書くか:**
+- 「Enter で送信しない」 → **Auto Memory**（UIの好み、短期フィードバック）
+- 「テストは必ず pytest」 → **knowledge_base**（行動ルール、confidence蓄積）→ 昇格 → **rules/**
+- 「CLAUDE.md は60行以下」 → **rules/**（恒久ルール、直接記載）
+- 「rikyu PJのクライアントは〇〇」 → **Auto Memory**（PJ固有文脈）
+
+**書いてはいけない場所:**
+- Auto Memory に恒久ルールを書かない（rules/ に書く）
+- rules/ に一時的な好みを書かない（Auto Memory に書く）
+- knowledge_base と Auto Memory に同じ内容を重複させない

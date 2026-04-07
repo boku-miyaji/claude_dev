@@ -2,7 +2,7 @@
 name: UXデザイン部
 description: 人間中心設計の専門エージェント。行動文脈・感情・認知心理学に基づき、ユーザーが考える前に欲しいものが手に届く体験を設計する。
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch
-model: sonnet
+model: opus
 maxTurns: 15
 ---
 
