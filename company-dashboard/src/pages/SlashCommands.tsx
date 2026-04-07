@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { PageHeader, KpiCard, EmptyState } from '@/components/ui'
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery'
+import { renderMarkdownSafe } from '@/lib/markdown'
 
 interface SlashCommand {
   id: string
@@ -8,6 +10,7 @@ interface SlashCommand {
   category: string
   source: string
   source_path: string
+  skill_content: string | null
   status: string
 }
 
@@ -23,6 +26,8 @@ const CAT_META: Record<string, { label: string; icon: string; color: string }> =
 }
 
 export function SlashCommands() {
+  const [expanded, setExpanded] = useState<string | null>(null)
+
   const { data: cmds, loading } = useSupabaseQuery<SlashCommand>({
     table: 'slash_commands',
     select: '*',
@@ -68,29 +73,61 @@ export function SlashCommands() {
               {meta.icon} {meta.label} ({items.length})
             </div>
             <div className="card">
-              {items.map((cmd, i) => (
-                <div key={cmd.id} style={{
-                  padding: '12px 16px',
-                  borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
-                  display: 'flex', alignItems: 'flex-start', gap: 16,
-                }}>
-                  <code style={{
-                    background: 'var(--accent-bg)', color: 'var(--accent)',
-                    padding: '3px 10px', borderRadius: 4, fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap',
+              {items.map((cmd, i) => {
+                const isOpen = expanded === cmd.id
+                const hasContent = !!cmd.skill_content
+                return (
+                  <div key={cmd.id} style={{
+                    borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
                   }}>
-                    {cmd.trigger}
-                  </code>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {cmd.description && (
-                      <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>{cmd.description}</div>
-                    )}
-                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>
-                      {cmd.source}
-                      {cmd.source_path && <> · <span style={{ opacity: 0.7 }}>{cmd.source_path}</span></>}
+                    <div
+                      onClick={() => hasContent && setExpanded(isOpen ? null : cmd.id)}
+                      style={{
+                        padding: '12px 16px',
+                        display: 'flex', alignItems: 'flex-start', gap: 16,
+                        cursor: hasContent ? 'pointer' : 'default',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => { if (hasContent) e.currentTarget.style.background = 'var(--bg2)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '' }}
+                    >
+                      <code style={{
+                        background: 'var(--accent-bg)', color: 'var(--accent)',
+                        padding: '3px 10px', borderRadius: 4, fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap',
+                      }}>
+                        {cmd.trigger}
+                      </code>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {cmd.description && (
+                          <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>{cmd.description}</div>
+                        )}
+                        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>
+                          {cmd.source}
+                          {cmd.source_path && <> · <span style={{ opacity: 0.7 }}>{cmd.source_path}</span></>}
+                        </div>
+                      </div>
+                      {hasContent && (
+                        <span style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0, marginTop: 2 }}>
+                          {isOpen ? '▲' : '▼'}
+                        </span>
+                      )}
                     </div>
+                    {isOpen && cmd.skill_content && (
+                      <div style={{
+                        padding: '0 16px 16px 16px',
+                        borderTop: '1px solid var(--border)',
+                        background: 'var(--bg2)',
+                      }}>
+                        <div
+                          className="markdown-body"
+                          style={{ fontSize: 13, lineHeight: 1.6, padding: '12px 0' }}
+                          dangerouslySetInnerHTML={{ __html: renderMarkdownSafe(cmd.skill_content) }}
+                        />
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )

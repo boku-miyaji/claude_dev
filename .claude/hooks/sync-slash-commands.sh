@@ -115,6 +115,18 @@ function strip_yaml_quotes(s) {
     category: .[3], source: .[4], source_path: .[5], status: "active"}
   ] | unique_by(.id)')
 
+# --- Attach SKILL.md body (strip frontmatter) to each entry ---
+CURRENT_SKILLS=$(echo "$CURRENT_SKILLS" | jq -c '.[]' | while IFS= read -r entry; do
+  fpath=$(echo "$entry" | jq -r '.source_path // empty')
+  if [ -n "$fpath" ] && [ -f "$fpath" ]; then
+    # Strip YAML frontmatter (between first two ---), take body only, limit 30KB
+    body=$(awk 'BEGIN{d=0} /^---$/{d++;next} d>=2{print}' "$fpath" | head -c 30000)
+    echo "$entry" | jq --arg b "$body" '. + {skill_content: $b}'
+  else
+    echo "$entry" | jq '. + {skill_content: null}'
+  fi
+done | jq -s '.')
+
 # Handle empty
 [ -z "$CURRENT_SKILLS" ] && CURRENT_SKILLS="[]"
 
