@@ -774,22 +774,48 @@ async function agentLoop(
   const hist = (histRaw || []).reverse();
 
   // Build history, ensuring tool messages are properly paired with assistant tool_calls.
-  // Orphaned tool messages (without matching assistant) are converted to user context.
-  const rawHistory = hist.filter(m => m.content != null);
+  // OpenAI requires: every tool_call_id in an assistant message MUST have a matching tool response.
+  // Strategy: scan ahead to verify all tool responses exist before including an assistant+tools block.
+  const rawHistory = hist.filter(m => m.content != null || m.role === 'assistant');
   const history: Message[] = [];
-  for (let i = 0; i < rawHistory.length; i++) {
+  let i = 0;
+  while (i < rawHistory.length) {
     const m = rawHistory[i];
-    if (m.role === 'tool') {
-      // Check if previous message is assistant with tool_calls
-      const prev = history.length > 0 ? history[history.length - 1] : null;
-      if (prev && prev.role === 'assistant' && prev.tool_calls) {
-        history.push({ role: 'tool', content: (m.content || '').substring(0, 2000), tool_call_id: m.tool_call_id || prev.tool_calls[0]?.id || '', name: m.tool_name || undefined });
+
+    if (m.role === 'assistant' && m.tool_calls && m.tool_calls.length > 0) {
+      // Scan ahead for ALL matching tool responses
+      const expectedIds = new Set(m.tool_calls.map((tc: { id: string }) => tc.id));
+      const toolResponses: Message[] = [];
+      let j = i + 1;
+      while (j < rawHistory.length && rawHistory[j].role === 'tool') {
+        const toolMsg = rawHistory[j];
+        if (toolMsg.tool_call_id && expectedIds.has(toolMsg.tool_call_id)) {
+          toolResponses.push({
+            role: 'tool',
+            content: (toolMsg.content || '').substring(0, 2000),
+            tool_call_id: toolMsg.tool_call_id,
+            name: toolMsg.tool_name || undefined,
+          });
+          expectedIds.delete(toolMsg.tool_call_id);
+        }
+        j++;
       }
-      // else: orphaned tool message — skip it (would cause API error)
-    } else if (m.role === 'assistant' && m.tool_calls && m.tool_calls.length > 0) {
-      history.push({ role: 'assistant', content: m.content || '', tool_calls: m.tool_calls });
+
+      if (expectedIds.size === 0) {
+        // All tool_calls have matching responses — include the full block
+        history.push({ role: 'assistant', content: m.content || '', tool_calls: m.tool_calls });
+        toolResponses.forEach(tr => history.push(tr));
+        i = j; // Skip past the tool messages
+      } else {
+        // Missing tool responses — skip this entire assistant+tools block
+        i = j;
+      }
+    } else if (m.role === 'tool') {
+      // Orphaned tool message (no preceding assistant with tool_calls) — skip
+      i++;
     } else {
       history.push({ role: m.role as Message["role"], content: m.content || '' });
+      i++;
     }
   }
 
