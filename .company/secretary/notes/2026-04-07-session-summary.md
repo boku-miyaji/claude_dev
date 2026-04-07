@@ -104,3 +104,12 @@
 - /workspace/.company/secretary/notes/2026-04-07-session-summary.md
 - /workspace/.company/CLAUDE.md
 
+
+---
+## Session 2026-04-07T12:16:20
+
+### 変更ファイル
+- /workspace/.company/secretary/notes/2026-04-06-decisions.md
+- /workspace/.company/secretary/notes/2026-04-07-session-summary.md
+- /workspace/.company/CLAUDE.md
+

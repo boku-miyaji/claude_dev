@@ -263,11 +263,6 @@
             "type": "command",
             "command": "/workspace/.claude/hooks/session-summary.sh",
             "async": true
-          },
-          {
-            "type": "command",
-            "command": "/workspace/.claude/hooks/edge-function-deploy.sh",
-            "async": true
           }
         ]
       }
@@ -337,6 +332,11 @@
           {
             "type": "command",
             "command": "/workspace/.claude/hooks/docs-sync-guard.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/edge-function-deploy.sh",
             "async": true
           }
         ]
