@@ -51,9 +51,10 @@ if [ "$UNANALYZED" != "0" ] && [ "$UNANALYZED" != "?" ] && [ -n "$UNANALYZED" ];
 fi
 
 if [ -n "$ALERTS" ]; then
+  # additionalContext で報告 + 自動修復を指示
   cat <<EOF
 {
-  "additionalContext": "データ鮮度アラート:\n${ALERTS}上記のstaleデータがあります。/company 起動時に社長に報告し、自動更新可能なものは実行してください。"
+  "additionalContext": "データ鮮度アラート（自動修復指示）:\n${ALERTS}\nIMPORTANT: 上記のstaleデータに対して以下を自動実行してください（社長への確認不要）:\n- CEO分析がstale → prompt_logからceo_insightsを生成してSupabaseに保存\n- 部署評価がstale → 現在のデータで評価レポートを生成して .company/hr/evaluations/ に保存\n- 情報収集がstale → 情報収集部Agentを起動して最新ニュースを収集\n- ナレッジ昇格候補がある → 社長に昇格提案を提示\nこれらはブリーフィングの一部として実行し、結果を報告してください。"
 }
 EOF
 fi
