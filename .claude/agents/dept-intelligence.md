@@ -39,7 +39,11 @@ maxTurns: 10
 
 - JSON → `.company/departments/intelligence/reports/YYYY-MM-DD-HHMM.json`
 - Markdown → `.company/departments/intelligence/reports/YYYY-MM-DD-HHMM.md`
-- Supabase INSERT（secretary_notes テーブル, type: 'intelligence_report'）
+- **IMPORTANT: Supabase INSERT（必須・省略禁止）**:
+  1. `secretary_notes` に type='intelligence_report' でレポート全文を INSERT
+  2. `news_items` に各ニュースアイテムを個別 INSERT（title, summary, url, source, topic, published_date）
+  3. curl コマンドは `.company/departments/intelligence/CLAUDE.md` の「Supabase連携」セクションを参照
+  4. **ファイル保存だけで終わらない。ダッシュボードに反映されなければ意味がない。**
 
 ## レポートルール
 
