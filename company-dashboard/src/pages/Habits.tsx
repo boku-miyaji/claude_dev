@@ -1048,7 +1048,7 @@ export function Habits() {
           </div>
 
           <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target / day</label>
+            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target / {formFrequency === 'weekly' ? 'week' : 'day'}</label>
             <input
               className="input"
               type="number"
