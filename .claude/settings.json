@@ -152,7 +152,9 @@
       "// --- Common Read ---",
       "Read(//home/node/**)",
       "Read(//workspace/company-dashboard/**)",
-      "Edit(~/.claude/skills/company/**)"
+      "Edit(~/.claude/skills/company/**)",
+      "Bash(export LANG=en_US.UTF-8)",
+      "Bash(export LC_ALL=en_US.UTF-8)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -340,6 +342,11 @@
           {
             "type": "command",
             "command": "/workspace/.claude/hooks/tool-collector.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/agent-activity-log.sh",
             "async": true
           }
         ]
