@@ -41,7 +41,7 @@ claude_dev/
 
 ## ドキュメント同期チェック（IMPORTANT）
 
-以下のファイルを変更した場合、**How It Works ページの更新が必須**:
+以下のファイルを変更した場合、**Blueprint ページの更新が必須**:
 
 | 変更ファイル | 更新先セクション |
 |---|---|
@@ -52,6 +52,7 @@ claude_dev/
 | `.company/freshness-policy.yaml` | Overview（自動メンテナンス） |
 | `src/pages/Today.tsx` | Design Philosophy |
 | `src/lib/fileExtract.ts` | AI Features（ファイル抽出） |
+| 商用化関連の意思決定 | Roadmap（意思決定ログ） |
 
 **PostToolUse Hook `docs-sync-guard.sh` が自動で警告するが、更新は手動で行うこと。**
 
@@ -60,4 +61,4 @@ claude_dev/
 1. テストは追加されているか
 2. 破壊的変更がある場合、README / MIGRATION に記載したか
 3. 新規依存は license & size を確認したか
-4. **実装変更に対応する How It Works の更新があるか**
+4. **実装変更に対応する Blueprint の更新があるか**
