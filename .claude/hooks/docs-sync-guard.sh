@@ -66,7 +66,7 @@ esac
 if [ -n "$NEEDS_UPDATE" ]; then
   cat <<EOF
 {
-  "additionalContext": "WARNING: ${FILE} を変更しました。How It Works ページの更新が必要です: ${NEEDS_UPDATE}。commit前に company-dashboard/src/pages/HowItWorks.tsx を確認・更新してください。"
+  "additionalContext": "WARNING: ${FILE} を変更しました。Blueprint ページの更新が必要です: ${NEEDS_UPDATE}。commit前に company-dashboard/src/pages/Blueprint.tsx を確認・更新してください。"
 }
 EOF
 fi

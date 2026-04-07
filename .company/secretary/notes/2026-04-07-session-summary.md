@@ -563,3 +563,10 @@
 - /workspace/.company/secretary/notes/2026-04-07-decisions.md
 - /workspace/.company/secretary/notes/2026-04-07-session-summary.md
 
+
+---
+## Session 2026-04-07T22:51:04
+
+### 変更ファイル
+- /workspace/.company/departments/intelligence/reports/2026-04-07-2200.md
+
