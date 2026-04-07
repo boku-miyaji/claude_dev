@@ -390,7 +390,25 @@ CLAUDE.mdを編集
             .claude/rules/*.md → "Operations タブ更新必要"
             departments/*/CLAUDE.md → "Operations タブ更新必要"
        └→ commit-rules.md にも同期チェック義務化
-       └→ freshness-policy: impl_docs_sync で git log 日付比較`}
+       └→ freshness-policy: impl_docs_sync で git log 日付比較
+
+Edge Function (ai-agent/index.ts) を編集
+  └→ PostToolUse Hook: edge-function-deploy.sh
+       └→ パスが ai-agent/index.ts にマッチ？
+            └→ YES: 自動デプロイ（10秒デバウンス）
+                 └→ "Edge Function ai-agent を自動デプロイしました"
+            └→ NO: スキップ
+
+部署Agent を起動
+  └→ PostToolUse Hook: agent-activity-log.sh
+       └→ Agent tool を検出 → dept, model, description を記録
+            └→ ~/.claude/logs/agent-activity.jsonl
+
+プロンプトを入力
+  └→ UserPromptSubmit Hook: prompt-log.sh
+       └→ LLM分類（gpt-5-nano, Edge Function completion mode）
+            └→ pj / intent / dept / cat を自動タグ付け
+       └→ Supabase prompt_log に INSERT`}
         </div>
       </Section>
     </>
@@ -1018,11 +1036,11 @@ function TabHarness() {
 
         <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>利用可能なフックイベント</div>
         <Tbl headers={['イベント', 'タイミング', '用途', '宮路HDでの活用']} rows={[
-          ['SessionStart', 'セッション開始 / compact後', 'コンテキスト再注入、環境セットアップ', 'auto-pull, config-sync, supabase-status'],
+          ['SessionStart', 'セッション開始 / compact後', 'コンテキスト再注入、環境セットアップ', 'auto-pull, config-sync, supabase-status, knowledge-lint(日次)'],
           ['SessionStop', 'セッション終了', 'クリーンアップ、レポート', 'auto-push, session-summary'],
-          ['UserPromptSubmit', 'ユーザー入力時', 'additionalContext注入、ログ記録', 'prompt-log（全入力をSupabaseに記録）'],
-          ['PreToolUse', 'ツール実行前', 'ブロック / 入力書き換え / ポリシーガード', 'bash-guard（危険コマンドのブロック）'],
-          ['PostToolUse', 'ツール実行後', 'バリデーション、クリーンアップ', 'post-edit-check, artifact-auto-sync, tool-collector'],
+          ['UserPromptSubmit', 'ユーザー入力時', 'LLM分類+ログ記録', 'prompt-log（gpt-5-nanoでタグ自動分類→Supabase記録）'],
+          ['PreToolUse', 'ツール実行前', 'ブロック / 入力書き換え / ポリシーガード', 'bash-guard（危険コマンドのブロック+監査ログ）'],
+          ['PostToolUse', 'ツール実行後', 'バリデーション、自動デプロイ、ログ', 'docs-sync-guard, edge-function-deploy(即時), agent-activity-log, tool-collector'],
           ['Stop', 'エージェント応答完了', 'タスク完了確認、自動テスト', 'タスク完了時の品質検証（IMP-007）'],
           ['PreCompact', 'コンテキスト圧縮前', '重要情報の保存', 'pre-compact-save.sh（セッション状態を.session-state.jsonに退避）'],
           ['PostCompact', '圧縮後', '重要コンテキストの再注入', 'post-compact-restore.sh（重要コンテキスト再注入）'],
