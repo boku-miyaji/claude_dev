@@ -323,7 +323,7 @@ function TabOverview() {
         <Tbl headers={['データ', '検出条件', '自動修復アクション']} rows={[
           ['harness_research', '最終調査7日超', '情報収集部(最新記事) ∥ 運営改善部(GAP分析) → 改善提案更新'],
           ['dept_knowledge_refresh', '最終更新14日超', 'ローテーションで2部署選定 → 情報収集(調査) ∥ ops(GAP分析) → 社長承認で更新'],
-          ['growth_events', '最終記録7日超 + fix/refactor 3件以上', 'git log分析 → パターン検出 → Supabase INSERT'],
+          ['growth_events', '失敗シグナル3件蓄積 or 7日超', 'LLM自動検出（growth-detector.sh）→ 3件で即要約・INSERT。git log分析も併用'],
           ['knowledge昇格', 'confidence ≥ 3 の未昇格ルール', '社長に提示 → 承認後に rules/ 追記（自動昇格は禁止）'],
           ['CLAUDE.md サイズ', '200行超', '手順的記述をrules/に分離 → CLAUDE.md縮小（Hook でも警告）'],
           ['design-philosophy / Blueprint', '14日未更新 + AI機能変更あり', 'git diff分析 → 該当セクション自動追記'],
@@ -405,10 +405,14 @@ Edge Function (ai-agent/index.ts) を編集
             └→ ~/.claude/logs/agent-activity.jsonl
 
 プロンプトを入力
-  └→ UserPromptSubmit Hook: prompt-log.sh
-       └→ LLM分類（gpt-5-nano, Edge Function completion mode）
-            └→ pj / intent / dept / cat を自動タグ付け
-       └→ Supabase prompt_log に INSERT`}
+  └→ UserPromptSubmit Hook（3つ並列実行）:
+       ├→ prompt-log.sh: LLM分類（gpt-5-nano）→ pj/intent/dept/cat タグ → prompt_log INSERT
+       ├→ growth-detector.sh: 失敗シグナル検出（LLM分類）
+       │    └→ bug_report/correction/frustration/missed/repeated を検出
+       │    └→ ~/.claude/logs/growth-signals.jsonl に永続保存
+       │    └→ 3件以上 → growth-summarize.sh を即実行 → growth_events INSERT
+       └→ session-summary-periodic.sh: 10プロンプトごとにサマリ更新
+            └→ SessionStop依存を排除（クラッシュでもサマリが残る）`}
         </div>
       </Section>
     </>
@@ -477,7 +481,7 @@ function TabArchitecture() {
 
       <Section title="自動化 — Hook + スキル + スクリプト">
         <Tbl headers={['種類', '代表例', '特性']} rows={[
-          ['Hook (30個)', 'prompt-log(LLM分類), bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, knowledge-lint, edge-function-deploy, agent-activity-log', '決定論的制御。コンテキスト外で実行。9イベント種別をカバー'],
+          ['Hook (32個)', 'prompt-log(LLM分類), growth-detector(LLM検出), session-summary-periodic, bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, knowledge-lint, edge-function-deploy', '決定論的制御。SessionStop依存を排除し、クラッシュ耐性を確保'],
           ['スキル', '/company, /diary, /deploy', '必要時に呼び出し。判断を伴う処理'],
           ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期'],
         ]} />
@@ -536,7 +540,7 @@ function TabDesignPhilosophy() {
         <Tbl headers={['ループ', '仕組み', 'データの場所']} rows={[
           ['日記ループ', '書く→分析→可視化→もっと書きたくなる→データ増→AI精度↑', 'diary_entries + emotion_analysis'],
           ['ナレッジ昇格', '修正指示→memory→2回目でKB→confidence≥3で社長承認→CLAUDE.md/rules/', 'memory/ → knowledge_base → 社長承認 → CLAUDE.md or rules/（自動昇格禁止）'],
-          ['Growth Chronicle', '失敗→記録→パターン→ルール化→再発防止', 'growth_events'],
+          ['Growth Chronicle', '失敗をLLMが自動検出→シグナル蓄積→3件で自動要約→growth_events INSERT→パターン→ルール化', 'growth_events（自動）+ ~/.claude/logs/growth-signals.jsonl（永続）'],
           ['人事部サイクル', '部署作業→評価→CLAUDE.md改善→精度↑', '.company/hr/evaluations/'],
           ['設計思想蓄積', '判断→design-philosophy.md追記→次の判断の土台', '.company/design-philosophy.md'],
         ]} />
