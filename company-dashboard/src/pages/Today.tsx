@@ -341,13 +341,16 @@ export function Today() {
   }, [habits, habitLogs, todayStr, weekStartStr, monthStartStr])
   const habitsCompleted = todayHabits.filter((h) => h.completed).length
 
-  // Combined progress
-  const totalActions = todayTasks.length + todayHabits.length
-  const doneActions = completedToday.length + habitsCompleted
+  // Combined progress — only count tasks due today/overdue and daily habits
+  const todayDueTasks = todayTasks.filter((t) => t.due_date && t.due_date <= todayStr)
+  const dailyHabits = todayHabits.filter((h) => h.frequency === 'daily' || h.frequency === 'weekdays')
+  const dailyHabitsCompleted = dailyHabits.filter((h) => h.completed).length
+  const totalActions = todayDueTasks.length + dailyHabits.length
+  const doneActions = completedToday.length + dailyHabitsCompleted
   const actionProgress = totalActions > 0 ? doneActions / (todayTasks.length + todayHabits.length + completedToday.length) : 0
   // For display: done / (active + done)
-  const totalWithCompleted = todayTasks.length + todayHabits.length + completedToday.length
-  const allDone = totalActions > 0 && todayTasks.length === 0 && habitsCompleted === todayHabits.length
+  const totalWithCompleted = todayDueTasks.length + dailyHabits.length + completedToday.length
+  const allDone = totalActions > 0 && todayDueTasks.length === 0 && dailyHabitsCompleted === dailyHabits.length
 
   // Dreams
   const dreamsCount = useMemo(() => dreams.filter((d) => d.status === 'active' || d.status === 'in_progress').length, [dreams])
@@ -445,7 +448,7 @@ export function Today() {
     <div className="section">
       <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>
-          {timeMode === 'morning' ? '今日やること' : timeMode === 'afternoon' ? (allDone ? '今日やること — All done!' : `今日やること — あと${todayTasks.length + todayHabits.length - habitsCompleted}件`) : (allDone ? '今日の達成' : `今日の達成 — ${todayTasks.length + todayHabits.length - habitsCompleted}件やり残し`)}
+          {timeMode === 'morning' ? '今日やること' : timeMode === 'afternoon' ? (allDone ? '今日やること — All done!' : `今日やること — あと${todayDueTasks.length + dailyHabits.length - dailyHabitsCompleted}件`) : (allDone ? '今日の達成' : `今日の達成 — ${todayDueTasks.length + dailyHabits.length - dailyHabitsCompleted}件やり残し`)}
         </span>
         <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
           {doneActions}/{totalWithCompleted}
