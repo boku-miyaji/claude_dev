@@ -269,3 +269,14 @@
 - /workspace/.company/secretary/notes/2026-04-07-session-summary.md
 - /workspace/.company/CLAUDE.md
 
+
+---
+## Session 2026-04-07T12:56:13
+
+### 変更ファイル
+- /workspace/.company/hr/evaluations/2026-04-07-second.md
+- /workspace/.company/departments/ops/CLAUDE.md
+- /workspace/.company/secretary/notes/2026-04-06-decisions.md
+- /workspace/.company/secretary/notes/2026-04-07-session-summary.md
+- /workspace/.company/CLAUDE.md
+
