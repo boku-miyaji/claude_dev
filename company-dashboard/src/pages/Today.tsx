@@ -317,23 +317,27 @@ export function Today() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }, [todayStr])
 
+  const monthStartStr = useMemo(() => todayStr.substring(0, 8) + '01', [todayStr])
+
   const todayHabits = useMemo(() => {
     return habits.map((habit) => {
       const todayCount = habitLogs.filter((l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr).length
+      const doneToday = todayCount > 0
       if (habit.frequency === 'weekly') {
-        // Weekly habits: completed if there is at least one log this week (Mon–Sun)
-        const weekCount = habitLogs.filter(
-          (l) =>
-            l.habit_id === habit.id &&
-            l.completed_at.substring(0, 10) >= weekStartStr &&
-            l.completed_at.substring(0, 10) <= todayStr,
+        const periodCount = habitLogs.filter(
+          (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) >= weekStartStr && l.completed_at.substring(0, 10) <= todayStr,
         ).length
-        const weekCompleted = weekCount >= habit.target_count
-        return { ...habit, todayCount, weekCount, completed: weekCompleted, weekCompleted }
+        return { ...habit, todayCount, periodCount, completed: periodCount >= habit.target_count, doneToday }
       }
-      return { ...habit, todayCount, weekCount: 0, completed: todayCount >= habit.target_count, weekCompleted: false }
+      if (habit.frequency === 'monthly') {
+        const periodCount = habitLogs.filter(
+          (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) >= monthStartStr && l.completed_at.substring(0, 10) <= todayStr,
+        ).length
+        return { ...habit, todayCount, periodCount, completed: periodCount >= habit.target_count, doneToday }
+      }
+      return { ...habit, todayCount, periodCount: todayCount, completed: todayCount >= habit.target_count, doneToday }
     })
-  }, [habits, habitLogs, todayStr, weekStartStr])
+  }, [habits, habitLogs, todayStr, weekStartStr, monthStartStr])
   const habitsCompleted = todayHabits.filter((h) => h.completed).length
 
   // Combined progress
@@ -546,31 +550,31 @@ export function Today() {
             >
               <span style={{
                 width: 18, height: 18, borderRadius: 4,
-                border: `2px solid ${h.completed ? 'var(--green)' : 'var(--border)'}`,
-                background: h.completed ? 'var(--green)' : 'transparent',
+                border: `2px solid ${h.doneToday ? 'var(--green)' : 'var(--border)'}`,
+                background: h.doneToday ? 'var(--green)' : 'transparent',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 10, color: '#fff', flexShrink: 0, transition: 'all .2s',
               }}>
-                {h.completed ? '✓' : ''}
+                {h.doneToday ? '✓' : ''}
               </span>
-              <span style={{ color: h.completed ? 'var(--text3)' : 'var(--text)', textDecoration: h.completed ? 'line-through' : 'none', fontWeight: 500, flex: 1 }}>
+              <span style={{ color: h.doneToday ? 'var(--text3)' : 'var(--text)', textDecoration: h.doneToday ? 'line-through' : 'none', fontWeight: 500, flex: 1 }}>
                 {h.icon} {h.title}
               </span>
-              {/* Weekly badge: shown for weekly habits to distinguish from daily */}
-              {h.frequency === 'weekly' && (
+              {/* Period badge: shown for weekly/monthly habits */}
+              {h.frequency !== 'daily' && (
                 <span style={{
                   fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3,
-                  color: h.weekCompleted ? 'var(--green)' : 'var(--text3)',
-                  background: h.weekCompleted ? 'var(--green-bg)' : 'var(--surface2)',
-                  border: `1px solid ${h.weekCompleted ? 'var(--green)' : 'var(--border)'}`,
+                  color: h.completed ? 'var(--green)' : 'var(--text3)',
+                  background: h.completed ? 'var(--green-bg)' : 'var(--surface2)',
+                  border: `1px solid ${h.completed ? 'var(--green)' : 'var(--border)'}`,
                   fontFamily: 'var(--mono)',
                 }}>
-                  {h.weekCompleted ? '今週済' : '週1回'}
+                  {h.periodCount}/{h.target_count} {h.frequency === 'weekly' ? '/週' : '/月'}
                 </span>
               )}
-              {h.target_count > 1 && (
+              {h.frequency === 'daily' && h.target_count > 1 && (
                 <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: h.completed ? 'var(--green)' : 'var(--text3)' }}>
-                  {h.frequency === 'weekly' ? `${h.weekCount}/${h.target_count}` : `${h.todayCount}/${h.target_count}`}
+                  {h.todayCount}/{h.target_count}
                 </span>
               )}
             </div>
@@ -714,6 +718,7 @@ export function Today() {
         placeholder={diaryPrompt}
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && text.trim() && !saving && !analyzing) { e.preventDefault(); saveEntry(text) } }}
         style={{ minHeight: timeMode === 'evening' ? 100 : 44, width: '100%', boxSizing: 'border-box', marginBottom: 8 }}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

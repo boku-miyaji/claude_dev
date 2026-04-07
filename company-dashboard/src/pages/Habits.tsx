@@ -25,6 +25,19 @@ function isHabitApplicable(frequency: string, _dateStr: string): boolean {
   return frequency === 'daily' || frequency === 'weekly' || frequency === 'monthly'
 }
 
+/** Get the start date of the current period for a given frequency */
+function getPeriodStart(frequency: string, dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  if (frequency === 'weekly') {
+    const day = d.getDay()
+    const diff = day === 0 ? 6 : day - 1 // Monday = start of week
+    d.setDate(d.getDate() - diff)
+  } else if (frequency === 'monthly') {
+    d.setDate(1)
+  }
+  return formatDate(d)
+}
+
 /* ─── streak calculation ─── */
 
 interface StreakInfo {
@@ -246,10 +259,11 @@ export function Habits() {
     return habits.find((h) => h.id === editHabitId) ?? null
   }, [editHabitId, habits])
 
-  /** Get today's completion count for a habit */
-  const getTodayCount = useCallback((habitId: number): number => {
+  /** Get completion count for a habit in the current period (day/week/month) */
+  const getPeriodCount = useCallback((habitId: number, frequency: string): number => {
+    const periodStart = getPeriodStart(frequency, todayStr)
     return habitLogs.filter(
-      (l) => l.habit_id === habitId && l.completed_at.substring(0, 10) === todayStr,
+      (l) => l.habit_id === habitId && l.completed_at.substring(0, 10) >= periodStart && l.completed_at.substring(0, 10) <= todayStr,
     ).length
   }, [habitLogs, todayStr])
 
@@ -257,15 +271,16 @@ export function Habits() {
   const handleToggle = useCallback(async (habitId: number) => {
     const habit = habits.find((h) => h.id === habitId)
     if (!habit) return
+    const wasDoneToday = habitLogs.some(
+      (l) => l.habit_id === habitId && l.completed_at.substring(0, 10) === todayStr,
+    )
     await toggleHabitLog(habit, todayStr)
-    const todayCount = getTodayCount(habit.id)
-    const completed = todayCount >= habit.target_count
-    if (!completed) {
+    if (!wasDoneToday) {
       toast(`${habit.icon} ${habit.title} done!`)
     } else {
       toast('Undone')
     }
-  }, [habits, toggleHabitLog, todayStr, getTodayCount])
+  }, [habits, habitLogs, toggleHabitLog, todayStr])
 
   /* ─── Computed data ─── */
 
@@ -569,8 +584,11 @@ export function Habits() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {habits.map((habit) => {
-              const todayCount = getTodayCount(habit.id)
-              const completed = todayCount >= habit.target_count
+              const periodCount = getPeriodCount(habit.id, habit.frequency)
+              const completed = periodCount >= habit.target_count
+              const doneToday = habitLogs.some(
+                (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr,
+              )
               const streak = habitStreaks.get(habit.id) ?? 0
               const isExpanded = expandedHabitId === habit.id
 
@@ -589,14 +607,14 @@ export function Habits() {
                       <div
                         style={{
                           width: 26, height: 26, borderRadius: 6,
-                          border: `2px solid ${completed ? 'var(--green)' : 'var(--border)'}`,
-                          background: completed ? 'var(--green)' : 'transparent',
+                          border: `2px solid ${doneToday ? 'var(--green)' : 'var(--border)'}`,
+                          background: doneToday ? 'var(--green)' : 'transparent',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 13, color: completed ? '#fff' : 'var(--text3)',
+                          fontSize: 13, color: doneToday ? '#fff' : 'var(--text3)',
                           transition: 'all .2s', flexShrink: 0,
                         }}
                       >
-                        {completed ? '\u2713' : ''}
+                        {doneToday ? '\u2713' : ''}
                       </div>
 
                       {/* Title + count */}
@@ -609,7 +627,7 @@ export function Habits() {
                           {habit.icon} {habit.title}
                         </div>
                         <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 1 }}>
-                          {todayCount}/{habit.target_count}
+                          {periodCount}/{habit.target_count}
                         </div>
                       </div>
 

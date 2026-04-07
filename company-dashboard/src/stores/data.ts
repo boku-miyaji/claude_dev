@@ -383,12 +383,12 @@ export const useDataStore = create<DataStore>((set, get) => ({
 
   toggleHabitLog: async (habit, todayStr) => {
     const state = get()
-    const todayCount = state.habitLogs.filter(
+    const todayLogged = state.habitLogs.some(
       (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr,
-    ).length
+    )
 
-    if (todayCount >= habit.target_count) {
-      // Uncomplete: remove last log for today
+    if (todayLogged) {
+      // Uncomplete: remove today's log
       const todayLog = state.habitLogs.find(
         (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr,
       )
@@ -397,7 +397,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
         set((s) => ({ habitLogs: s.habitLogs.filter((l) => l.id !== todayLog.id) }))
       }
     } else {
-      // Complete: add log
+      // Complete: add log for today
       const { data } = await supabase
         .from('habit_logs')
         .insert({ habit_id: habit.id })
