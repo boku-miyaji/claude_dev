@@ -107,7 +107,7 @@ Reply ONLY with valid JSON:
 {\"new_candidates\":[{\"pattern_name\":\"kebab-case\",\"pattern_description\":\"desc\",\"example_prompts\":[\"p1\"]}],\"count_updates\":[{\"pattern_name\":\"name\",\"new_examples\":[\"prompt\"]}]}
 Empty arrays are fine. Be conservative. JSON only."
 
-ANALYSIS=$(echo "$CLAUDE_INPUT" | claude --print --model haiku 2>/dev/null)
+ANALYSIS=$(echo "$CLAUDE_INPUT" | claude --print --model opus 2>/dev/null)
 
 # Extract JSON (claude may wrap in markdown code blocks)
 if echo "$ANALYSIS" | jq '.' >/dev/null 2>&1; then

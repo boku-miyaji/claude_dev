@@ -81,7 +81,7 @@ Tags to assign:
 
 Prompts: ${PROMPTS_FOR_CLASSIFY}
 
-Reply ONLY valid JSON array: [{\"id\": N, \"pj\": ..., \"intent\": ..., \"dept\": ..., \"cat\": ...}]" | claude --print --model haiku 2>/dev/null)
+Reply ONLY valid JSON array: [{\"id\": N, \"pj\": ..., \"intent\": ..., \"dept\": ..., \"cat\": ...}]" | claude --print --model opus 2>/dev/null)
 
   # Extract JSON
   CLASSIFY_JSON=$(echo "$CLASSIFY_RESULT" | python3 -c "
@@ -156,7 +156,7 @@ for l in lines[-20:]:
 {\"title\": \"concise title\", \"what_happened\": \"what went wrong\", \"root_cause\": \"likely cause\", \"countermeasure\": \"suggested fix\"}
 
 Signals (${SIGNAL_COUNT} total, showing last 20):
-${SIGNAL_TEXT}" | claude --print --model haiku 2>/dev/null)
+${SIGNAL_TEXT}" | claude --print --model opus 2>/dev/null)
 
       # Extract JSON and insert to growth_events
       GROWTH_JSON=$(echo "$SUMMARY" | python3 -c "
@@ -247,7 +247,7 @@ Rate each active department on 5 axes (A/B/C/D):
 - utilization: actively used
 
 Reply ONLY valid JSON:
-{\"date\": \"$(date +%Y-%m-%d)\", \"departments\": [{\"name\": \"dept-name\", \"autonomy\": \"B\", \"first_pass\": \"A\", \"collaboration\": \"B\", \"goal_alignment\": \"A\", \"utilization\": \"C\", \"note\": \"brief comment\"}], \"overall\": \"overall assessment\", \"proposals\": [\"improvement suggestion\"]}" | claude --print --model haiku 2>/dev/null)
+{\"date\": \"$(date +%Y-%m-%d)\", \"departments\": [{\"name\": \"dept-name\", \"autonomy\": \"B\", \"first_pass\": \"A\", \"collaboration\": \"B\", \"goal_alignment\": \"A\", \"utilization\": \"C\", \"note\": \"brief comment\"}], \"overall\": \"overall assessment\", \"proposals\": [\"improvement suggestion\"]}" | claude --print --model opus 2>/dev/null)
 
   # Save evaluation
   EVAL_DIR="/workspace/.company/hr/evaluations"
@@ -337,7 +337,7 @@ Identify:
 4. tendency: things often forgotten or delayed
 
 Reply ONLY valid JSON array:
-[{\"category\": \"pattern|preference|tendency|work_rhythm\", \"insight\": \"description\", \"confidence\": \"high|medium|low\"}]" | claude --print --model haiku 2>/dev/null)
+[{\"category\": \"pattern|preference|tendency|work_rhythm\", \"insight\": \"description\", \"confidence\": \"high|medium|low\"}]" | claude --print --model opus 2>/dev/null)
 
   # Parse and insert
   INSIGHT_JSON=$(echo "$INSIGHT_RESULT" | python3 -c "

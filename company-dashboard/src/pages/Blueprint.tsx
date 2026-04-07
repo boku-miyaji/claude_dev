@@ -344,7 +344,7 @@ function TabOverview() {
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--text3)' }}>コスト分離の原則</div>
         <Tbl headers={['処理場所', '使用モデル', 'コスト', '用途']} rows={[
           ['ダッシュボード（リアルタイム）', 'gpt-5-nano (Edge Function)', 'OpenAI API従量課金', '感情分析、朝ブリーフィング、自己分析、夢検出、週次ナラティブ'],
-          ['Claude Code（バッチ）', 'Claude CLI haiku', 'サブスク内（追加費用なし）', 'プロンプト分類、成長分析、スキル進化、部署評価、CEOインサイト'],
+          ['Claude Code（バッチ）', 'Claude CLI opus', 'サブスク内（追加費用なし）', 'プロンプト分類、成長分析、スキル進化、部署評価、CEOインサイト'],
           ['Claude Code（Hook）', 'なし（キーワードのみ）', 'ゼロ', 'prompt-log タグ付け、growth-detector シグナル検出'],
         ]} />
       </Section>
@@ -433,7 +433,7 @@ Edge Function (ai-agent/index.ts) を編集
             └→ SessionStop依存を排除（クラッシュでもサマリが残る）
 
 /company 起動時 or セッション開始時（24h経過の場合）
-  └→ daily-analysis-batch.sh: Claude CLI (haiku) で全バッチ分析
+  └→ daily-analysis-batch.sh: Claude CLI (opus) で全バッチ分析
        ├→ [1] プロンプト分類: 未タグの prompt_log にLLMタグ付与
        ├→ [2] 失敗シグナル要約: growth-signals.jsonl → growth_events INSERT
        ├→ [3] スキル進化: パターン検出 → skill_candidates 蓄積
