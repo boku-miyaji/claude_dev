@@ -33,3 +33,11 @@
 - /workspace/.company/departments/research/tech/paper-application-alphaevolve-hd.md
 - /workspace/.company/secretary/notes/2026-04-07-session-summary.md
 
+
+---
+## Session 2026-04-07T11:43:48
+
+### 変更ファイル
+- /workspace/.company/secretary/notes/2026-04-06-decisions.md
+- /workspace/.company/CLAUDE.md
+
