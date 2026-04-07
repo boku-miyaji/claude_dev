@@ -19,18 +19,10 @@ function getDaysInRange(start: Date, count: number): string[] {
   return days
 }
 
-function isWeekday(dateStr: string): boolean {
-  const d = new Date(dateStr + 'T00:00:00')
-  const day = d.getDay()
-  return day !== 0 && day !== 6
-}
-
 /** Check if a habit is applicable on a given date based on its frequency */
-function isHabitApplicable(frequency: string, dateStr: string): boolean {
-  if (frequency === 'daily') return true
-  if (frequency === 'weekdays') return isWeekday(dateStr)
-  // 'weekly' — applicable any day (user picks when)
-  return true
+function isHabitApplicable(frequency: string, _dateStr: string): boolean {
+  // daily / weekly / monthly — all applicable any day (user picks when)
+  return frequency === 'daily' || frequency === 'weekly' || frequency === 'monthly'
 }
 
 /* ─── streak calculation ─── */
@@ -1034,7 +1026,7 @@ export function Habits() {
               {[
                 { value: 'daily' as const, label: 'Daily' },
                 { value: 'weekly' as const, label: 'Weekly' },
-                { value: 'weekdays' as const, label: 'Weekdays' },
+                { value: 'monthly' as const, label: 'Monthly' },
               ].map((f) => (
                 <button
                   key={f.value}
@@ -1048,7 +1040,7 @@ export function Habits() {
           </div>
 
           <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target / {formFrequency === 'weekly' ? 'week' : 'day'}</label>
+            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target / {{ daily: 'day', weekly: 'week', monthly: 'month' }[formFrequency]}</label>
             <input
               className="input"
               type="number"
