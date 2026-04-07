@@ -137,7 +137,9 @@ export function useMorningBriefing(
         .join(', ') || ''
 
       // Build the context block
-      const contextParts: string[] = []
+      const now = new Date()
+      const currentTime = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
+      const contextParts: string[] = [`現在時刻: ${currentTime}`]
       if (emotionContext) contextParts.push(emotionContext)
       if (wbiTrend) contextParts.push(wbiTrend)
       if (recentDiary) contextParts.push(`直近の日記:\n${recentDiary}`)
