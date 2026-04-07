@@ -103,7 +103,7 @@ fi
 
 # 7. prep-log: FB未入力のMTG数（quality フィールドがないもの）
 PREP_NO_FB=0
-for f in "$WORKSPACE/.company/secretary/prep-log/"*.yaml 2>/dev/null; do
+for f in "$WORKSPACE"/.company/secretary/prep-log/*.yaml; do
   [ -f "$f" ] || continue
   if ! grep -q "quality:" "$f" 2>/dev/null; then
     PREP_NO_FB=$((PREP_NO_FB + 1))

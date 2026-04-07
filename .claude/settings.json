@@ -245,6 +245,11 @@
           },
           {
             "type": "command",
+            "command": "/workspace/.claude/hooks/freshness-alert.sh",
+            "async": true
+          },
+          {
+            "type": "command",
             "command": "/workspace/.claude/hooks/doc-freshness-check.sh",
             "async": true
           }
