@@ -7852,9 +7852,11 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
     var metaDiv = el('div', {className: 'chat-meta'});
     var contentDiv = el('div', {className: 'md-body'});
     // Show thinking indicator until first content arrives
+    var spinnerDot = el('div', {style: 'width:12px;height:12px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin 1s linear infinite;flex-shrink:0'});
+    var thinkingText = el('span', {textContent: '考え中...'});
     var thinkingEl = el('div', {style: 'display:flex;align-items:center;gap:8px;color:var(--text3);font-size:12px'});
-    thinkingEl.innerHTML = '<div style="width:12px;height:12px;border-radius:50%;border:2px solid var(--accent);border-top-color:transparent;animation:spin 1s linear infinite"></div>';
-    thinkingEl.appendChild(el('span', {textContent: '考え中...'}));
+    thinkingEl.appendChild(spinnerDot);
+    thinkingEl.appendChild(thinkingText);
     contentDiv.appendChild(thinkingEl);
     bubble.appendChild(metaDiv);
     bubble.appendChild(contentDiv);
@@ -8024,7 +8026,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
               case 'debug': console.log('[AI Chat Debug]', evt); break;
               case 'routing':
                 metaDiv.textContent = evt.status==='classifying'?'Routing...':evt.model;
-                if (thinkingEl && thinkingEl.parentNode) thinkingEl.querySelector('span').textContent = evt.status==='classifying'?'分類中...':'考え中...';
+                if (thinkingEl && thinkingEl.parentNode) thinkingText.textContent = evt.status==='classifying'?'分類中...':'考え中...';
                 if (evt.model) metrics.model = evt.model;
                 if (evt.complexity) metrics.complexity = evt.complexity;
                 break;
@@ -8038,8 +8040,8 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 break;
               }
               case 'step_start':
-                metaDiv.textContent = evt.model+(evt.step>1?' \u00B7 Step '+evt.step:'');
-                if (thinkingEl && thinkingEl.parentNode) thinkingEl.querySelector('span').textContent = evt.step>1?'ツール結果を分析中...':'考え中...';
+                metaDiv.textContent = evt.model;
+                if (thinkingEl && thinkingEl.parentNode) thinkingText.textContent = evt.step>1?'結果をまとめています...':'考え中...';
                 metrics.stepCount = evt.step;
                 break;
               case 'delta':
@@ -8050,7 +8052,7 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 metrics.toolsUsed.push({name: evt.tool, start: Date.now(), duration_ms: null, input_summary: JSON.stringify(evt.input).substring(0,80)});
                 if (!activityLog) activityLog = [];
                 activityLog.push({type:'tool', name:evt.tool, input:JSON.stringify(evt.input).substring(0,60)});
-                if (thinkingEl && thinkingEl.parentNode) thinkingEl.querySelector('span').textContent = evt.tool + ' を実行中...';
+                if (thinkingEl && thinkingEl.parentNode) thinkingText.textContent = evt.tool + ' を実行中...';
 
                 // Update or create compact activity line
                 if (!activityBlock) {
@@ -8067,7 +8069,8 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                   };
                   msgContainer.insertBefore(el('div',{className:'chat-msg-row assistant'},[actWrap]), assistantRow);
                 }
-                activityLabel.textContent = evt.tool + ' ' + JSON.stringify(evt.input).substring(0,40) + '...';
+                var toolNum = metrics.toolsUsed.length;
+                activityLabel.textContent = evt.tool + ' を検索中...' + (toolNum > 1 ? ' (' + toolNum + '/' + toolNum + ')' : '');
                 // Add detail line
                 var detailLine = el('div', {style:'padding:2px 0;display:flex;align-items:center;gap:6px'});
                 detailLine.innerHTML = '<span style="color:var(--accent)">\uD83D\uDD27</span>';
@@ -8095,13 +8098,13 @@ function renderChatMain(container, edgeFnUrl, onConvUpdate) {
                 metaDiv.textContent = evt.model+' \u00B7 '+((evt.costUsd||0)*150).toFixed(1)+'\u5186 \u00B7 '+elapsed+'s';
                 // Finalize activity label
                 if (activityLabel && metrics.toolsUsed.length > 0) {
-                  activityLabel.textContent = metrics.toolsUsed.length + ' tools \u00B7 ' + elapsed + 's';
+                  activityLabel.textContent = metrics.toolsUsed.length + '\u4EF6\u691C\u7D22 \u00B7 ' + elapsed + 's';
                 }
                 var cr = await sb.from('conversations').select('id,title,model,company_id,updated_at').eq('archived',false).order('updated_at',{ascending:false}).limit(50);
                 chatState.conversations = cr.data||[];
                 break;
               case 'error': contentDiv.textContent = 'Error: '+evt.message; contentDiv.style.color='var(--red)'; console.error('[AI Chat Error]', evt.message, evt.stack); break;
-              case 'max_steps': metaDiv.textContent = 'Max steps ('+evt.step+')'; break;
+              case 'max_steps': metaDiv.textContent = '\u4E0A\u9650\u5230\u9054\uFF08'+evt.step+'\u56DE\uFF09'; break;
             }
           } catch(e) {}
         }
