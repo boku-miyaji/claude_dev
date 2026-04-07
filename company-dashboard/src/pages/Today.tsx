@@ -240,7 +240,8 @@ export function Today() {
     return tomorrowEvents.map((e) => `${formatEventTime(e.start)} ${e.summary}`).join('\n')
   }, [tomorrowEvents])
 
-  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing(timeMode, todayEventsText, tomorrowEventsText)
+  const weatherText = weather ? `今日の天気: ${weather.today.icon} ${weather.today.tempMax}℃/${weather.today.tempMin}℃、明日: ${weather.tomorrow.icon} ${weather.tomorrow.tempMax}℃/${weather.tomorrow.tempMin}℃` : undefined
+  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing(timeMode, todayEventsText, tomorrowEventsText, weatherText)
 
   const {
     diaryEntries, tasks, dreams, habits, habitLogs,

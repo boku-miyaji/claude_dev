@@ -17,6 +17,7 @@ export function useMorningBriefing(
   timeMode: TimeMode,
   todayEventsText?: string,
   tomorrowEventsText?: string,
+  weatherText?: string,
 ) {
   const { message, loading, lastFetched, setMessage, setLoading, setLastFetched } = useBriefingStore()
 
@@ -140,6 +141,7 @@ export function useMorningBriefing(
       const now = new Date()
       const currentTime = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
       const contextParts: string[] = [`現在時刻: ${currentTime}`]
+      if (weatherText) contextParts.push(weatherText)
       if (emotionContext) contextParts.push(emotionContext)
       if (wbiTrend) contextParts.push(wbiTrend)
       if (recentDiary) contextParts.push(`直近の日記:\n${recentDiary}`)
@@ -216,7 +218,7 @@ ${modeInstructions[timeMode]}
     } finally {
       setLoading(false)
     }
-  }, [isCached, cacheKey, timeMode, todayEventsText, tomorrowEventsText, setMessage, setLoading, setLastFetched])
+  }, [isCached, cacheKey, timeMode, todayEventsText, tomorrowEventsText, weatherText, setMessage, setLoading, setLastFetched])
 
   useEffect(() => {
     generate()
