@@ -8510,7 +8510,10 @@ async function renderSettings(root) {
       + 'SUPABASE_URL="' + SUPABASE_URL + '"\n'
       + 'SUPABASE_ANON_KEY="' + SUPABASE_ANON_KEY + '"\n\n'
       + '# Ingest API Key (migration-015)\n'
-      + 'SUPABASE_INGEST_KEY="' + (keyInput.value.trim() || '') + '"\n';
+      + 'SUPABASE_INGEST_KEY="' + (keyInput.value.trim() || '') + '"\n\n'
+      + '# Supabase Access Token (for Edge Function deploy)\n'
+      + '# Run: npx supabase login → copy token here\n'
+      + 'SUPABASE_ACCESS_TOKEN="<YOUR_TOKEN_HERE>"\n';
     navigator.clipboard.writeText(envContent).then(function() { toast('supabase.env をコピーしました'); });
   });
   userCard.appendChild(copyEnvBtn);
