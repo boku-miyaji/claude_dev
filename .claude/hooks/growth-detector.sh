@@ -26,27 +26,21 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/supabase-check.sh" 2>/dev/null || true
 [ "${SUPABASE_AVAILABLE:-false}" = "true" ] || exit 0
 
-# LLM classification via Edge Function (gpt-5-nano)
+# Keyword-based signal detection (no LLM call — batch analysis later)
 PROMPT_SHORT=$(echo "$PROMPT" | head -c 300)
-CLASSIFY_PAYLOAD=$(jq -n \
-  --arg msg "$PROMPT_SHORT" \
-  '{
-    mode: "completion",
-    model: "gpt-5-nano",
-    max_tokens: 50,
-    system_prompt: "Classify if this user message contains a failure signal. Reply with ONE JSON object:\n{\"signal\": \"none\" | \"bug_report\" | \"correction\" | \"frustration\" | \"missed_expectation\" | \"repeated_issue\"}\n\n- bug_report: user reports something broken, not working, error\n- correction: user asks to fix, asks why something failed\n- frustration: user expresses dissatisfaction with output quality\n- missed_expectation: user expected something to be done but it wasnt\n- repeated_issue: user says they asked the same thing before\n- none: normal request, no failure signal\n\nJSON only.",
-    message: $msg,
-    response_format: {"type": "json_object"}
-  }')
+SIGNAL="none"
 
-RESULT=$(curl -s --max-time 8 \
-  "${SUPABASE_URL}/functions/v1/ai-agent" \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-  -H "Content-Type: application/json" \
-  -d "$CLASSIFY_PAYLOAD" 2>/dev/null) || exit 0
-
-SIGNAL=$(echo "$RESULT" | jq -r '.content // empty' 2>/dev/null | jq -r '.signal // "none"' 2>/dev/null)
+if echo "$PROMPT_SHORT" | grep -qiP 'バグ|壊れ|動かない|エラー|error|broken|crash'; then
+  SIGNAL="bug_report"
+elif echo "$PROMPT_SHORT" | grep -qiP '直して|修正して|なぜ|なんで|fix|why.*not|違う.*やって'; then
+  SIGNAL="correction"
+elif echo "$PROMPT_SHORT" | grep -qiP '意味ない|使えない|ダメ|だめ|やめて|違う$|ちがう'; then
+  SIGNAL="frustration"
+elif echo "$PROMPT_SHORT" | grep -qiP 'さっきも|前も|何回も|また同じ|繰り返し'; then
+  SIGNAL="repeated_issue"
+elif echo "$PROMPT_SHORT" | grep -qiP 'なぜやらない|なんでやってない|忘れてる|抜けてる'; then
+  SIGNAL="missed_expectation"
+fi
 
 if [ -n "$SIGNAL" ] && [ "$SIGNAL" != "none" ] && [ "$SIGNAL" != "null" ]; then
   TIMESTAMP=$(date -Iseconds)

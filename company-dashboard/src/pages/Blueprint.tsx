@@ -289,7 +289,7 @@ function TabOverview() {
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--green)' }}>自動更新（人間の操作不要）</div>
         <Tbl headers={['データ', '更新タイミング', '仕組み', '連鎖先']} rows={[
-          ['prompt_log', '毎回のユーザー入力', 'Hook (UserPromptSubmit)', 'CEO分析の材料、生活リズム分析'],
+          ['prompt_log', '毎回のユーザー入力', 'Hook (UserPromptSubmit) — キーワード分類のみ、LLM分類はバッチ', 'CEO分析の材料、生活リズム分析'],
           ['設定/MCP/CLAUDE.md同期', 'セッション開始', 'Hook (SessionStart, async)', 'ダッシュボードSettings反映'],
           ['git pull (最新コード)', 'セッション開始', 'Hook (SessionStart, async)', '全ファイルが最新に'],
           ['git push', 'セッション終了', 'Hook (SessionStop)', '他サーバーに変更が伝播'],
@@ -323,11 +323,29 @@ function TabOverview() {
         <Tbl headers={['データ', '検出条件', '自動修復アクション']} rows={[
           ['harness_research', '最終調査7日超', '情報収集部(最新記事) ∥ 運営改善部(GAP分析) → 改善提案更新'],
           ['dept_knowledge_refresh', '最終更新14日超', 'ローテーションで2部署選定 → 情報収集(調査) ∥ ops(GAP分析) → 社長承認で更新'],
-          ['growth_events', '失敗シグナル3件蓄積 or 7日超', 'LLM自動検出（growth-detector.sh）→ 3件で即要約・INSERT。git log分析も併用'],
-          ['knowledge昇格', 'confidence ≥ 3 の未昇格ルール', '社長に提示 → 承認後に rules/ 追記（自動昇格は禁止）'],
+          ['growth_events', '失敗シグナル蓄積', 'growth-detector.sh（キーワード検出）→ ファイル蓄積 → daily-analysis-batch.sh（Claude CLI）で要約・INSERT'],
+          ['knowledge昇格', 'confidence ≥ 3 の未昇格ルール', 'daily-analysis-batch.sh で検出 → 社長に提示 → 承認後に rules/ 追記'],
           ['CLAUDE.md サイズ', '200行超', '手順的記述をrules/に分離 → CLAUDE.md縮小（Hook でも警告）'],
           ['design-philosophy / Blueprint', '14日未更新 + AI機能変更あり', 'git diff分析 → 該当セクション自動追記'],
           ['docs/knowledge/', '14日未更新', '新しいドキュメントがあれば追記'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: '#8b5cf6' }}>日次バッチ分析（daily-analysis-batch.sh — Claude CLI, APIコスト不要）</div>
+        <P>/company 起動時 or セッション開始時に24h経過で自動実行。全てClaude Code CLI (haiku) で処理。</P>
+        <Tbl headers={['タスク', '内容', '頻度', '出力先']} rows={[
+          ['プロンプト分類', '未分類のClaude Codeプロンプトにpj/intent/dept/catタグ付与', '毎日', 'prompt_log.tags'],
+          ['失敗シグナル要約', 'キーワード検出した失敗シグナルをLLMで要約', '毎日', 'growth_events'],
+          ['スキル進化', 'prompt_logからパターン検出→候補蓄積→count≥3で提案', '毎日', 'skill_candidates'],
+          ['部署評価', 'activity_log + growth_eventsから5軸評価', '7日間隔', '.company/hr/evaluations/'],
+          ['ナレッジ昇格チェック', 'confidence≥3の未昇格ルールを検出→社長に提案', '毎日', '/tmp（ブリーフィングで提示）'],
+          ['CEOインサイト', '20件以上の新プロンプトがあれば行動パターン分析', '毎日', 'ceo_insights'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--text3)' }}>コスト分離の原則</div>
+        <Tbl headers={['処理場所', '使用モデル', 'コスト', '用途']} rows={[
+          ['ダッシュボード（リアルタイム）', 'gpt-5-nano (Edge Function)', 'OpenAI API従量課金', '感情分析、朝ブリーフィング、自己分析、夢検出、週次ナラティブ'],
+          ['Claude Code（バッチ）', 'Claude CLI haiku', 'サブスク内（追加費用なし）', 'プロンプト分類、成長分析、スキル進化、部署評価、CEOインサイト'],
+          ['Claude Code（Hook）', 'なし（キーワードのみ）', 'ゼロ', 'prompt-log タグ付け、growth-detector シグナル検出'],
         ]} />
       </Section>
 
@@ -407,12 +425,21 @@ Edge Function (ai-agent/index.ts) を編集
 プロンプトを入力
   └→ UserPromptSubmit Hook（3つ並列実行）:
        ├→ prompt-log.sh: LLM分類（gpt-5-nano）→ pj/intent/dept/cat タグ → prompt_log INSERT
-       ├→ growth-detector.sh: 失敗シグナル検出（LLM分類）
-       │    └→ bug_report/correction/frustration/missed/repeated を検出
+       ├→ growth-detector.sh: 失敗シグナル検出（キーワードベース、LLM不要）
+       │    └→ bug_report/correction/frustration/missed/repeated をキーワードで検出
        │    └→ ~/.claude/logs/growth-signals.jsonl に永続保存
-       │    └→ 3件以上 → growth-summarize.sh を即実行 → growth_events INSERT
+       │    └→ 3件以上 → growth-summarize.sh（ファイル保存のみ、要約はバッチ）
        └→ session-summary-periodic.sh: 10プロンプトごとにサマリ更新
-            └→ SessionStop依存を排除（クラッシュでもサマリが残る）`}
+            └→ SessionStop依存を排除（クラッシュでもサマリが残る）
+
+/company 起動時 or セッション開始時（24h経過の場合）
+  └→ daily-analysis-batch.sh: Claude CLI (haiku) で全バッチ分析
+       ├→ [1] プロンプト分類: 未タグの prompt_log にLLMタグ付与
+       ├→ [2] 失敗シグナル要約: growth-signals.jsonl → growth_events INSERT
+       ├→ [3] スキル進化: パターン検出 → skill_candidates 蓄積
+       ├→ [4] 部署評価: activity_log分析 → evaluations（7日間隔）
+       ├→ [5] ナレッジ昇格: confidence≥3 検出 → ブリーフィングで提案
+       └→ [6] CEOインサイト: 20件以上で行動パターン分析`}
         </div>
       </Section>
     </>
@@ -484,6 +511,8 @@ function TabArchitecture() {
           ['Hook (32個)', 'prompt-log(LLM分類), growth-detector(LLM検出), session-summary-periodic, bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, knowledge-lint, edge-function-deploy', '決定論的制御。SessionStop依存を排除し、クラッシュ耐性を確保'],
           ['スキル', '/company, /diary, /deploy', '必要時に呼び出し。判断を伴う処理'],
           ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期'],
+          ['スキル同期', 'sync-slash-commands.sh', 'SessionStart時にSKILL.md全文をslash_commandsに同期（skill_content含む）'],
+          ['スキル進化', 'skill-evolution-batch.sh', '/company起動時（24h間隔）にprompt_logからパターン検出→候補蓄積'],
         ]} />
       </Section>
     </>

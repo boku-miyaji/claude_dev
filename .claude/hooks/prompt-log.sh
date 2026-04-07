@@ -85,50 +85,23 @@ if [ -n "$DETECTED_SKILL" ]; then
   fi
 fi
 
-# --- LLM-based classification (gpt-5-nano, ~0.01円/call) ---
-LLM_TAGS=""
+# --- LLM classification skipped for Claude Code prompts ---
+# Claude Code のプロンプトはバッチで後から分類する（daily-analysis-batch.sh）
+# ダッシュボードのAIチャットは別途 gpt-5-nano でリアルタイム分類
+# ここではキーワードベースの軽量タグのみ付与
 PROMPT_SHORT=$(echo "$PROMPT" | head -c 500)
-CLASSIFY_PAYLOAD=$(jq -n \
-  --arg msg "$PROMPT_SHORT" \
-  '{
-    mode: "completion",
-    model: "gpt-5-nano",
-    max_tokens: 100,
-    system_prompt: "You are a prompt classifier. Given a user message, output a JSON object with these fields:\n- pj: project name if mentioned (rikyu/circuit/foundry/instagram or null)\n- intent: one of implement/fix/investigate/design/review/brainstorm/manage/info/chat\n- dept: most relevant department (ai-dev/sys-dev/security/materials/intelligence/research/ux-design/pm/ops/secretary or null)\n- cat: category (feature/infra/docs/quality/ops or null)\nRespond with ONLY the JSON object, no explanation.",
-    message: $msg,
-    response_format: {"type": "json_object"}
-  }')
 
-LLM_RESPONSE=$(curl -4 -s \
-  "${SUPABASE_URL}/functions/v1/ai-agent" \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-  -H "Content-Type: application/json" \
-  -d "$CLASSIFY_PAYLOAD" \
-  --connect-timeout 5 \
-  --max-time 10 \
-  2>/dev/null) || LLM_RESPONSE=""
-
-if [ -n "$LLM_RESPONSE" ]; then
-  # Extract content from completion response
-  LLM_CONTENT=$(echo "$LLM_RESPONSE" | jq -r '.content // empty' 2>/dev/null)
-  if [ -n "$LLM_CONTENT" ]; then
-    # Parse JSON tags
-    PJ=$(echo "$LLM_CONTENT" | jq -r '.pj // empty' 2>/dev/null)
-    INTENT=$(echo "$LLM_CONTENT" | jq -r '.intent // empty' 2>/dev/null)
-    DEPT=$(echo "$LLM_CONTENT" | jq -r '.dept // empty' 2>/dev/null)
-    CAT=$(echo "$LLM_CONTENT" | jq -r '.cat // empty' 2>/dev/null)
-
-    [ -n "$PJ" ] && [ "$PJ" != "null" ] && TAG_LIST+=("pj:${PJ}")
-    [ -n "$INTENT" ] && [ "$INTENT" != "null" ] && TAG_LIST+=("intent:${INTENT}")
-    [ -n "$DEPT" ] && [ "$DEPT" != "null" ] && TAG_LIST+=("dept:${DEPT}")
-    [ -n "$CAT" ] && [ "$CAT" != "null" ] && TAG_LIST+=("cat:${CAT}")
-
-    # Also update company_id from LLM if not already set
-    if [ -z "$COMPANY_ID" ] && [ -n "$PJ" ] && [ "$PJ" != "null" ]; then
-      COMPANY_ID="$PJ"
-    fi
-  fi
+# Intent detection (keyword-based, no LLM)
+if echo "$PROMPT_SHORT" | grep -qiP '作って|実装して|追加して|新機能'; then
+  TAG_LIST+=("intent:implement")
+elif echo "$PROMPT_SHORT" | grep -qiP '直して|修正|バグ|エラー|fix'; then
+  TAG_LIST+=("intent:fix")
+elif echo "$PROMPT_SHORT" | grep -qiP '調べて|調査|比較|分析'; then
+  TAG_LIST+=("intent:investigate")
+elif echo "$PROMPT_SHORT" | grep -qiP '資料|プレゼン|提案書|まとめて'; then
+  TAG_LIST+=("intent:document")
+elif echo "$PROMPT_SHORT" | grep -qiP '設計|アーキ|design'; then
+  TAG_LIST+=("intent:design")
 fi
 
 if [ ${#TAG_LIST[@]} -gt 0 ]; then
