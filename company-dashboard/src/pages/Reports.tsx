@@ -294,12 +294,10 @@ function NewsFeed() {
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
-            mode: 'completion',
-            message: 'web_searchツールを使って、AI/LLM/Claude/OpenAI/データ基盤の最新ニュースを5件検索してください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル","summary":"1行要約","source":"ソース名","date":"YYYY-MM-DD"}]\nJSON配列のみ返してください。説明文は不要です。',
-            system_prompt: 'あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、JSON配列形式で返してください。説明文や前置きは一切不要です。JSON配列のみ出力してください。',
+            message: 'web_searchツールを使って、AI/LLM/Claude/OpenAI/データ基盤の最新ニュースを5件検索してください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル","summary":"1行要約","source":"ソース名","date":"YYYY-MM-DD"}]\n最終回答はJSON配列のみ返してください。説明文は不要です。',
+            system_prompt: 'あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。',
             model: 'gpt-5-mini',
             max_tokens: 2000,
-            response_format: { type: 'json_object' },
           }),
         },
       )
