@@ -71,46 +71,63 @@ if [ -z "$COMPANY_ID" ]; then
 fi
 # GENERATED:COMPANY_PATTERNS:END
 
-# Auto-tag based on content
+# Auto-tag using LLM (gpt-5-nano via Edge Function completion mode)
+# Falls back to empty tags if LLM call fails (never blocks)
 TAGS="[]"
 TAG_LIST=()
 
-# --- PJ auto-tagging (session-tagger) ---
-echo "$PROMPT" | grep -qi "rikyu\|りきゅう\|りそな\|proposal\|アンケート\|営業支援\|設問\|集計" && TAG_LIST+=("pj:rikyu")
-echo "$PROMPT" | grep -qi "回路\|circuit\|図面\|polaris\|暗黙知\|tacit" && TAG_LIST+=("pj:circuit")
-echo "$PROMPT" | grep -qi "sompo\|foundry\|scotch\|SOMPOケア\|技術スタック\|RFI\|RFP\|Lakehouse" && TAG_LIST+=("pj:foundry")
-
-# --- 軸0: intent（指示の種類） ---
-echo "$PROMPT" | grep -qi "実装\|implement\|コード\|code\|関数\|function\|作って\|追加して\|作成" && TAG_LIST+=("intent:implement")
-echo "$PROMPT" | grep -qi "バグ\|bug\|fix\|修正\|エラー\|error\|直して\|壊れ" && TAG_LIST+=("intent:fix")
-echo "$PROMPT" | grep -qi "調べ\|調査\|リサーチ\|研究\|競合\|確認して\|チェック" && TAG_LIST+=("intent:investigate")
-echo "$PROMPT" | grep -qi "設計\|design\|アーキ\|architect\|方針\|どうする" && TAG_LIST+=("intent:design")
-echo "$PROMPT" | grep -qi "レビュー\|review\|PR\|見て\|チェックして" && TAG_LIST+=("intent:review")
-echo "$PROMPT" | grep -qi "壁打ち\|相談\|ブレスト\|brainstorm\|考え\|どう思" && TAG_LIST+=("intent:brainstorm")
-echo "$PROMPT" | grep -qi "タスク\|TODO\|管理\|運用\|ルール\|設定\|push\|commit" && TAG_LIST+=("intent:manage")
-echo "$PROMPT" | grep -qi "教えて\|質問\|how\|what\|why\|？\|?" && TAG_LIST+=("intent:info")
-
-# --- 軸2: dept（部署） ---
-echo "$PROMPT" | grep -qi "セキュリティ\|security\|SHA\|vulnerability\|脆弱性\|攻撃" && TAG_LIST+=("dept:security")
-echo "$PROMPT" | grep -qi "LLM\|プロンプト\|RAG\|エージェント\|AI開発\|モデル" && TAG_LIST+=("dept:ai-dev")
-echo "$PROMPT" | grep -qi "API\|DB\|フロント\|バックエンド\|UI\|画面\|ダッシュボード" && TAG_LIST+=("dept:sys-dev")
-echo "$PROMPT" | grep -qi "pptx\|スライド\|資料作成\|プレゼン\|提案書" && TAG_LIST+=("dept:materials")
-echo "$PROMPT" | grep -qi "情報収集\|intelligence\|ニュース\|キャッチアップ" && TAG_LIST+=("dept:intelligence")
-echo "$PROMPT" | grep -qi "company\|秘書\|組織\|ブリーフィング" && TAG_LIST+=("dept:secretary")
-
-# --- 軸3: cat（カテゴリ） ---
-echo "$PROMPT" | grep -qi "新機能\|feature\|新しく" && TAG_LIST+=("cat:feature")
-echo "$PROMPT" | grep -qi "CI\|CD\|Actions\|deploy\|デプロイ\|インフラ" && TAG_LIST+=("cat:infra")
-echo "$PROMPT" | grep -qi "ドキュメント\|docs\|README\|説明" && TAG_LIST+=("cat:docs")
-echo "$PROMPT" | grep -qi "テスト\|test\|品質" && TAG_LIST+=("cat:quality")
-echo "$PROMPT" | grep -qi "リファクタ\|refactor\|整理\|cleanup" && TAG_LIST+=("cat:ops")
-
-# --- 軸4: skill（スラッシュコマンド検出） ---
+# --- Skill detection (deterministic, no LLM needed) ---
 DETECTED_SKILL=$(echo "$PROMPT" | grep -oP '^/' | head -1 || true)
 if [ -n "$DETECTED_SKILL" ]; then
   SKILL_CMD=$(echo "$PROMPT" | grep -oP '^/[a-zA-Z0-9_:-]+' | head -1 || true)
   if [ -n "$SKILL_CMD" ]; then
     TAG_LIST+=("skill:${SKILL_CMD}")
+  fi
+fi
+
+# --- LLM-based classification (gpt-5-nano, ~0.01円/call) ---
+LLM_TAGS=""
+PROMPT_SHORT=$(echo "$PROMPT" | head -c 500)
+CLASSIFY_PAYLOAD=$(jq -n \
+  --arg msg "$PROMPT_SHORT" \
+  '{
+    mode: "completion",
+    model: "gpt-5-nano",
+    max_tokens: 100,
+    system_prompt: "You are a prompt classifier. Given a user message, output a JSON object with these fields:\n- pj: project name if mentioned (rikyu/circuit/foundry/instagram or null)\n- intent: one of implement/fix/investigate/design/review/brainstorm/manage/info/chat\n- dept: most relevant department (ai-dev/sys-dev/security/materials/intelligence/research/ux-design/pm/ops/secretary or null)\n- cat: category (feature/infra/docs/quality/ops or null)\nRespond with ONLY the JSON object, no explanation.",
+    message: $msg,
+    response_format: {"type": "json_object"}
+  }')
+
+LLM_RESPONSE=$(curl -4 -s \
+  "${SUPABASE_URL}/functions/v1/ai-agent" \
+  -H "apikey: ${SUPABASE_ANON_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "$CLASSIFY_PAYLOAD" \
+  --connect-timeout 5 \
+  --max-time 10 \
+  2>/dev/null) || LLM_RESPONSE=""
+
+if [ -n "$LLM_RESPONSE" ]; then
+  # Extract content from completion response
+  LLM_CONTENT=$(echo "$LLM_RESPONSE" | jq -r '.content // empty' 2>/dev/null)
+  if [ -n "$LLM_CONTENT" ]; then
+    # Parse JSON tags
+    PJ=$(echo "$LLM_CONTENT" | jq -r '.pj // empty' 2>/dev/null)
+    INTENT=$(echo "$LLM_CONTENT" | jq -r '.intent // empty' 2>/dev/null)
+    DEPT=$(echo "$LLM_CONTENT" | jq -r '.dept // empty' 2>/dev/null)
+    CAT=$(echo "$LLM_CONTENT" | jq -r '.cat // empty' 2>/dev/null)
+
+    [ -n "$PJ" ] && [ "$PJ" != "null" ] && TAG_LIST+=("pj:${PJ}")
+    [ -n "$INTENT" ] && [ "$INTENT" != "null" ] && TAG_LIST+=("intent:${INTENT}")
+    [ -n "$DEPT" ] && [ "$DEPT" != "null" ] && TAG_LIST+=("dept:${DEPT}")
+    [ -n "$CAT" ] && [ "$CAT" != "null" ] && TAG_LIST+=("cat:${CAT}")
+
+    # Also update company_id from LLM if not already set
+    if [ -z "$COMPANY_ID" ] && [ -n "$PJ" ] && [ "$PJ" != "null" ]; then
+      COMPANY_ID="$PJ"
+    fi
   fi
 fi
 
