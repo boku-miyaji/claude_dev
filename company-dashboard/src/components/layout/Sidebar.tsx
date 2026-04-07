@@ -12,17 +12,17 @@ interface NavEntry {
 
 const NAV: NavEntry[] = [
   { type: 'item', page: '', icon: '◉', label: 'Home' },
-  { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
   { type: 'item', page: 'chat', icon: '💬', label: 'AI Chat' },
+  { type: 'item', page: 'tasks', icon: '☐', label: 'Tasks' },
   // Plan & Track
   { type: 'label', label: 'Plan' },
-  { type: 'item', page: 'tasks', icon: '☐', label: 'Tasks' },
   { type: 'item', page: 'dreams', icon: '🌟', label: 'Dreams & Goals' },
   { type: 'item', page: 'habits', icon: '🌱', label: 'Habits' },
   { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
   { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
   // Understand
   { type: 'label', label: 'Understand' },
+  { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
   { type: 'item', page: 'insights', icon: '📊', label: 'Insights' },
   { type: 'item', page: 'me', icon: '🧬', label: 'Self-Analysis' },
   { type: 'item', page: 'intelligence', icon: '📄', label: 'News' },
