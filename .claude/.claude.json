@@ -665,7 +665,7 @@
         "currency": "USD"
       },
       "remaining_passes": 3,
-      "timestamp": 1775478990707
+      "timestamp": 1775566564713
     }
   },
   "feedbackSurveyState": {
@@ -707,8 +707,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 25,
-      "lastUsedAt": 1775556830234
+      "usageCount": 26,
+      "lastUsedAt": 1775566598716
     },
     "register": {
       "usageCount": 2,
