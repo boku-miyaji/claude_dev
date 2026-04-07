@@ -191,6 +191,11 @@
             "type": "command",
             "command": "/workspace/.claude/hooks/prompt-log.sh",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/growth-detector.sh",
+            "async": true
           }
         ]
       },
@@ -272,6 +277,11 @@
           {
             "type": "command",
             "command": "/workspace/.claude/hooks/session-summary.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/growth-summarize.sh",
             "async": true
           }
         ]
