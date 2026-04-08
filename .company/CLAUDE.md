@@ -47,6 +47,7 @@
 |-------|---------|-----------|
 | AI開発部署 | `.claude/agents/dept-ai-dev.md` | ai-dev |
 | 情報収集部 | `.claude/agents/dept-intelligence.md` | intelligence |
+| 調査部 | `.claude/agents/dept-investigation.md` | investigation |
 | マーケティング部 | — | marketing |
 | 資料制作部署 | `.claude/agents/dept-materials.md` | materials |
 | 運営改善部 | — | ops |
