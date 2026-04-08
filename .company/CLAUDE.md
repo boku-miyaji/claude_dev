@@ -18,7 +18,7 @@
 ## アーキテクチャ
 
 - HD構成・PJ会社一覧 → `registry.md`（SSOT）
-- 共通部署（10部署） → `departments/*/CLAUDE.md`
+- 共通部署（11部署） → `departments/*/CLAUDE.md`
 - 変更手順: マスター編集 → `bash scripts/company/sync-registry.sh` → commit + push
 
 ## HD秘書の役割
@@ -55,6 +55,7 @@
 | セキュリティ部 | — | security |
 | システム開発部署 | `.claude/agents/dept-sys-dev.md` | sys-dev |
 | UXデザイン部 | `.claude/agents/dept-ux-design.md` | ux-design |
+| リファクタリング部 | — | refactoring |
 <!-- GENERATED:AGENT_TABLE:END -->
 
 ## 人事部
