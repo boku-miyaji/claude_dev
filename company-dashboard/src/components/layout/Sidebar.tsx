@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth'
 
@@ -82,6 +82,13 @@ export function Sidebar() {
   const [manualHidden, setManualHidden] = useState(false)
   const sidebarHidden = isChat || manualHidden
   const setSidebarHidden = setManualHidden
+
+  // Listen for Cmd+Shift+S shortcut
+  useEffect(() => {
+    const handler = () => setSidebarHidden((v) => !v)
+    window.addEventListener('shortcut:toggle-sidebar', handler)
+    return () => window.removeEventListener('shortcut:toggle-sidebar', handler)
+  }, [])
 
   const sections = buildSections(NAV)
 

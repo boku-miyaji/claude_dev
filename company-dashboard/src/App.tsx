@@ -26,10 +26,13 @@ import { Goals } from '@/pages/Goals'
 import { Habits } from '@/pages/Habits'
 import { WeeklyNarrative } from '@/pages/WeeklyNarrative'
 import { GoogleAuthCallback } from '@/pages/GoogleAuthCallback'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { ShortcutHelp } from '@/components/ShortcutHelp'
 
 export function App() {
   useAuth()
   const { loading, appReady, user } = useAuthStore()
+  const { showHelp, setShowHelp } = useKeyboardShortcuts()
 
   // loading中 or ユーザーはいるがappReady待ち → ローディング表示（AuthPageを見せない）
   if (loading || (user && !appReady)) {
@@ -87,6 +90,7 @@ export function App() {
       <MobileNav />
       <div className="toast" id="toast" />
       <div id="modal-root" />
+      {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
     </div>
   )
 }

@@ -271,6 +271,21 @@ export function Today() {
     calculateStreak().then(setStreak)
   }, [fetchDiary, fetchEmotions, fetchTasks, fetchDreams, fetchHabits, fetchHabitLogs])
 
+  // Keyboard shortcut listeners
+  useEffect(() => {
+    const onAddTask = () => setShowAddTask(true)
+    const onFocusDiary = () => {
+      const textarea = document.querySelector<HTMLTextAreaElement>('textarea[placeholder]')
+      textarea?.focus()
+    }
+    window.addEventListener('shortcut:add-task', onAddTask)
+    window.addEventListener('shortcut:focus-diary', onFocusDiary)
+    return () => {
+      window.removeEventListener('shortcut:add-task', onAddTask)
+      window.removeEventListener('shortcut:focus-diary', onFocusDiary)
+    }
+  }, [])
+
   /* ── Computed data ── */
 
   const fragments = useMemo(() => diaryEntries.filter((e) => e.created_at.substring(0, 10) === todayStr), [diaryEntries, todayStr])

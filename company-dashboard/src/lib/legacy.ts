@@ -7472,6 +7472,39 @@ async function renderChat(root) {
   layout.appendChild(toggleBtn);
   layout.appendChild(chatMain);
 
+  // --- Keyboard shortcut event listeners ---
+  function onNewChat() { chatState.conversationId = null; renderChatMain(chatMain, edgeFnUrl, renderConvList); }
+  function onToggleSidebar() { var isCollapsed = chatSidebar.classList.toggle('collapsed'); toggleBtn.style.left = isCollapsed ? '12px' : '272px'; }
+  function onCopyLastResponse() {
+    var msgs = chatMain.querySelectorAll('.chat-msg-assistant .chat-msg-content');
+    if (msgs.length > 0) { var last = msgs[msgs.length - 1]; navigator.clipboard.writeText(last.textContent || '').then(function() { toast('Copied!'); }); }
+  }
+  function onDeleteChat() {
+    if (!chatState.conversationId) return;
+    if (!confirm('このチャットを削除しますか？')) return;
+    sb.from('conversations').update({archived: true}).eq('id', chatState.conversationId).then(function() {
+      chatState.conversationId = null;
+      chatState.conversations = chatState.conversations.filter(function(c) { return c.id !== chatState.conversationId; });
+      renderConvList();
+      renderChatMain(chatMain, edgeFnUrl, renderConvList);
+      toast('チャットを削除しました');
+    });
+  }
+  function onPrevChat() {
+    var idx = chatState.conversations.findIndex(function(c) { return c.id === chatState.conversationId; });
+    if (idx > 0) { chatState.conversationId = chatState.conversations[idx - 1].id; renderConvList(); renderChatMain(chatMain, edgeFnUrl, renderConvList); }
+  }
+  function onNextChat() {
+    var idx = chatState.conversations.findIndex(function(c) { return c.id === chatState.conversationId; });
+    if (idx >= 0 && idx < chatState.conversations.length - 1) { chatState.conversationId = chatState.conversations[idx + 1].id; renderConvList(); renderChatMain(chatMain, edgeFnUrl, renderConvList); }
+  }
+  window.addEventListener('shortcut:new-chat', onNewChat);
+  window.addEventListener('shortcut:toggle-sidebar', onToggleSidebar);
+  window.addEventListener('shortcut:copy-last-response', onCopyLastResponse);
+  window.addEventListener('shortcut:delete-chat', onDeleteChat);
+  window.addEventListener('shortcut:prev-chat', onPrevChat);
+  window.addEventListener('shortcut:next-chat', onNextChat);
+
   // Direct Mode API key banner (inside main if needed)
   if (chatState.directMode && !getChatApiKey()) {
     var banner = el('div', {style: 'margin:24px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2)'});
