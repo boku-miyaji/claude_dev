@@ -339,13 +339,14 @@ function TabOverview() {
           ['スキル進化', 'prompt_logからパターン検出→候補蓄積→count≥3で提案', '毎日', 'skill_candidates'],
           ['部署評価', 'activity_log + growth_eventsから5軸評価', '7日間隔', '.company/hr/evaluations/'],
           ['ナレッジ昇格チェック', 'confidence≥3の未昇格ルールを検出→社長に提案', '毎日', '/tmp（ブリーフィングで提示）'],
-          ['CEOインサイト', '20件以上の新プロンプトがあれば行動パターン分析', '毎日', 'ceo_insights'],
+          ['CEOインサイト (3層)', 'L1:日記下処理(日次) → L2:週次分析(生データ+prompt) → L3:月次深掘り(仮説検証)', '日次/週次/月次', 'diary_entries, diary_analysis, ceo_insights'],
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--text3)' }}>コスト分離の原則</div>
         <Tbl headers={['処理場所', '使用モデル', 'コスト', '用途']} rows={[
           ['ダッシュボード（リアルタイム）', 'gpt-5-nano (Edge Function)', 'OpenAI API従量課金', '感情分析、朝ブリーフィング、自己分析、夢検出、週次ナラティブ'],
-          ['Claude Code（バッチ）', 'Claude CLI opus', 'サブスク内（追加費用なし）', 'プロンプト分類、成長分析、スキル進化、部署評価、CEOインサイト'],
+          ['Claude Code（バッチ）', 'Claude CLI opus', 'サブスク内（追加費用なし）', 'プロンプト分類、成長分析、スキル進化、部署評価'],
+          ['Edge Function（バッチ分析）', 'gpt-5-mini', 'OpenAI API（月$0.1以下）', 'CEOインサイト3層分析（日記+prompt_log）'],
           ['Claude Code（Hook）', 'なし（キーワードのみ）', 'ゼロ', 'prompt-log タグ付け、growth-detector シグナル検出'],
         ]} />
       </Section>
