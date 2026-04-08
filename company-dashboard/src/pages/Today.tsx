@@ -653,23 +653,46 @@ export function Today() {
   async function handleCollectNews() {
     setNewsCollecting(true)
     try {
-      const edgeAi = await import('@/lib/edgeAi')
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token || ''
+
       const prefRes = await supabase.from('news_preferences').select('topic,interest_score').order('interest_score', { ascending: false })
       const topTopics = (prefRes.data || []).filter((p: { interest_score: number }) => p.interest_score >= 0.5).map((p: { topic: string }) => p.topic)
       let topicPrompt = 'AI/LLM、データプラットフォーム、Claude、OpenAI'
-      if (topTopics.length > 0) topicPrompt += '\n関心トピック: ' + topTopics.join('、')
+      if (topTopics.length > 0) topicPrompt += '、' + topTopics.join('、')
 
-      const data = await edgeAi.aiCompletion(
-        topicPrompt + ' の最新ニュース5件をJSON配列で。[{"title":"","summary":"","url":"","source":"","topic":"","date":"YYYY-MM-DD"}]',
-        { systemPrompt: 'JSON配列のみ出力。', model: 'gpt-5-nano', maxTokens: 1500, source: 'news_collect' }
+      // Use agent mode (not completion) so web_search tool is available
+      const res = await fetch(
+        import.meta.env.VITE_SUPABASE_URL + '/functions/v1/ai-agent',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            message: `web_searchツールを使って、${topicPrompt} の最新ニュース5件を検索してください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル","summary":"1行要約","url":"記事URL","source":"ソース名","topic":"トピック","date":"YYYY-MM-DD"}]\n最終回答はJSON配列のみ返してください。説明文は不要です。`,
+            system_prompt: 'あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。',
+            model: 'gpt-5-mini',
+            max_tokens: 2000,
+          }),
+        },
       )
-      const match = data.content.match(/\[[\s\S]*\]/)
+      if (!res.ok) throw new Error(`Edge Function error: ${res.status}`)
+      const data = await res.json()
+      const text = data.content || ''
+      const match = text.match(/\[[\s\S]*\]/)
       if (match) {
         const items = JSON.parse(match[0])
+        let count = 0
         for (const n of items) {
-          if (n.title?.length > 5) await supabase.from('news_items').insert({ title: n.title?.substring(0, 200), summary: n.summary?.substring(0, 300), url: n.url || null, source: n.source?.substring(0, 50), topic: n.topic?.substring(0, 30), published_date: n.date || null })
+          if (n.title?.length > 5) {
+            await supabase.from('news_items').insert({ title: n.title?.substring(0, 200), summary: n.summary?.substring(0, 300), url: n.url || null, source: n.source?.substring(0, 50), topic: n.topic?.substring(0, 30), published_date: n.date || null })
+            count++
+          }
         }
-        toast(items.length + '件のニュースを収集しました')
+        toast(count + '件のニュースを収集しました')
         const { data: fresh } = await supabase.from('news_items').select('id,title,summary,url,source,topic').order('collected_at', { ascending: false }).limit(5)
         if (fresh) setNewsItems(fresh)
       }
