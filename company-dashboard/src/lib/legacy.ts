@@ -3321,6 +3321,20 @@ async function renderInsights(root) {
   }
 
   var catConfig = {
+    // Diary-based (inner state)
+    mood_cycle: {label: '気分の波', icon: '〜', color: 'var(--accent2)'},
+    trigger: {label: 'トリガー', icon: '⚡', color: 'var(--amber)'},
+    correlation: {label: '相関', icon: '↔', color: 'var(--blue)'},
+    disconnect: {label: 'ズレ', icon: '≠', color: 'var(--red)'},
+    value: {label: '大事にしてること', icon: '♦', color: 'var(--green)'},
+    drift: {label: '変化', icon: '↗', color: 'var(--accent)'},
+    fading: {label: '消えたテーマ', icon: '…', color: 'var(--text3)'},
+    // Prompt-based (interest/behavior)
+    focus: {label: '今の関心', icon: '◎', color: 'var(--accent2)'},
+    recurring: {label: '繰り返し気にしてる', icon: '↻', color: 'var(--amber)'},
+    shift: {label: '関心の変化', icon: '→', color: 'var(--blue)'},
+    blind_spot: {label: '盲点', icon: '?', color: 'var(--red)'},
+    // Legacy
     pattern: {label: 'パターン', icon: '◎', color: 'var(--accent2)'},
     preference: {label: '好み', icon: '♡', color: 'var(--green)'},
     strength: {label: '得意分野', icon: '★', color: 'var(--amber)'},
