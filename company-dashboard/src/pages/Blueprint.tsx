@@ -619,12 +619,13 @@ function TabOperations() {
           ['セキュリティ', '日次監視→週次スキャン→月次監査→[SLA追跡]', 'Critical 24h / High 7d / Medium 30d / Low 90d のSLA', 'VERY HIGH'],
           ['マーケ', '仮説→施策実行→計測→[判定]→学習→ピボット or 強化', '仮説検証ループ（成功→強化、失敗→ピボット、不明→計測改善）', 'MEDIUM-HIGH'],
           ['運営改善', 'ヘルスチェック→問題検出→修正→検証→定着', 'CLAUDE.md行数/スキル同期/マイグレーション/ナレッジ重複の4点チェック', 'MEDIUM-HIGH'],
+          ['リファクタリング', '重複検出→影響分析→共通化設計→[設計確認]→実装→型チェック→学習', 'Rule of Two（2箇所目で共通化）+ Service Layer強制 + AI生成コード重複チェック', 'HIGH'],
         ]} />
 
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
           <MiniCard title="スキップルールの明示" body="全ステップ毎回必須ではない。AI開発部の例: 1行修正→実装+動作確認のみ、新機能→全ステップ必須、アーキテクチャ変更→全ステップ+社長レビュー。省略条件を事前定義することで「省略していい判断」と「省略してはいけない判断」を分離。" />
           <MiniCard title="学習ステップの義務化" body="全部署のサイクル末尾に「学習」がある。成功/失敗に関わらず知見を記録（成果物末尾の「学習メモ」or growth_events）。これがナレッジ昇格パイプラインの入口になり、繰り返しの失敗を構造的に防止する。" />
-          <MiniCard title="部署知識ローテーション" body="各部署のCLAUDE.mdは作成時点で固定されがち。14日サイクルで2部署ずつ最新ベストプラクティスを調査→GAP分析→社長承認で更新。5ローテーション（約5週）で全10部署を一巡。情報収集部が調査、ops部がGAP分析。CLAUDE.md直接更新は禁止（社長承認必須）。" />
+          <MiniCard title="部署知識ローテーション" body="各部署のCLAUDE.mdは作成時点で固定されがち。14日サイクルで2部署ずつ最新ベストプラクティスを調査→GAP分析→社長承認で更新。5ローテーション（約5週）で全11部署を一巡。情報収集部が調査、ops部がGAP分析。CLAUDE.md直接更新は禁止（社長承認必須）。" />
         </div>
       </Section>
 
@@ -843,8 +844,8 @@ function TabAiFeatures() {
           model="gpt-5-mini (agent mode + web_search)"
           pipeline="関心度高いトピック抽出 → agent mode で web_search 実行 → JSON配列パース → news_items テーブルに保存"
           output="[{title, summary, url, source, topic, date}] の配列"
-          storage="news_items テーブル + activity_log"
-          hook="Today.tsx (handleCollectNews) / Reports.tsx (collectNews)"
+          storage="news_items テーブル（Single Source of Truth）"
+          hook="lib/newsCollect.ts（共通モジュール）← Today.tsx / Reports.tsx / legacy.ts から呼び出し"
         />
       </Section>
 
