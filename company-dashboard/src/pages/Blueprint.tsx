@@ -541,6 +541,15 @@ function TabDesignPhilosophy() {
         </div>
       </Section>
 
+      <Section title="キーボードショートカット設計">
+        <Principle title="3層設計: Global → Common → Page-specific" body="lib/shortcuts.ts にSingle Source of Truth。Cmd+Shift+{文字}=アクション、Cmd+{数字}=ナビ、Cmd+Enter=確定、Escape=取消。ChatGPT準拠のキーバインド。" color="var(--blue)" />
+        <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="Global" body="Cmd+K(パレット), Cmd+Shift+O(新チャット), Cmd+Shift+S(サイドバー), Cmd+/(ヘルプ), Cmd+1~9(ページ移動)" />
+          <MiniCard title="Page-specific" body="Chat: Cmd+Shift+C(コピー)/Del(削除)/↑↓(切替)。Today: Cmd+Shift+T(タスク追加)/D(日記フォーカス)。Calendar: ←→(期間)/T(今日)" />
+          <MiniCard title="アーキテクチャ" body="CustomEventで疎結合。useKeyboardShortcuts(App) → window.dispatchEvent → 各ページがaddEventListenerで受信。定義追加はshortcuts.ts一箇所。" />
+        </div>
+      </Section>
+
       <Section title="AI設計">
         <Principle title="ディープパーソナライズ" body="10のデータソース（日記感情・WBI推移・生活リズム・カレンダー・CEO分析等）から「この人だからこそ」のコメント。汎用的な「頑張りましょう」は禁止。" color="var(--green)" />
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
