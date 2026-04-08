@@ -353,11 +353,9 @@ export function Today() {
       return { ...habit, todayCount, periodCount: todayCount, completed: todayCount >= habit.target_count, doneToday }
     })
   }, [habits, habitLogs, todayStr, weekStartStr, monthStartStr])
-  const habitsCompleted = todayHabits.filter((h) => h.completed).length
-
   // Combined progress — only count tasks due today/overdue and daily habits
   const todayDueTasks = todayTasks.filter((t) => t.due_date && t.due_date <= todayStr)
-  const dailyHabits = todayHabits.filter((h) => h.frequency === 'daily' || h.frequency === 'weekdays')
+  const dailyHabits = todayHabits.filter((h) => h.frequency === 'daily' || (h.frequency as string) === 'weekdays')
   const dailyHabitsCompleted = dailyHabits.filter((h) => h.completed).length
   const totalActions = todayDueTasks.length + dailyHabits.length
   const doneActions = completedToday.length + dailyHabitsCompleted
