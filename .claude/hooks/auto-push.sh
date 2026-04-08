@@ -33,6 +33,14 @@ fi
 # Stage tracked changes only (no untracked files — those need explicit add)
 git add -u 2>/dev/null || exit 0
 
+# Safety: unstage anything that looks like secrets or large binaries
+DANGEROUS_PATTERNS=(.env .env.* credentials* token.json *.key *.pem *.p12 *.pfx)
+for pat in "${DANGEROUS_PATTERNS[@]}"; do
+  git diff --cached --name-only 2>/dev/null | grep -i "$pat" | while read -r f; do
+    git reset HEAD -- "$f" 2>/dev/null || true
+  done
+done
+
 # Double-check there's something staged
 if git diff --cached --quiet HEAD 2>/dev/null; then
   exit 0
