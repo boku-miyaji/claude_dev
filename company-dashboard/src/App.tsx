@@ -25,6 +25,7 @@ import { SelfAnalysis } from '@/pages/SelfAnalysis'
 import { Goals } from '@/pages/Goals'
 import { Habits } from '@/pages/Habits'
 import { WeeklyNarrative } from '@/pages/WeeklyNarrative'
+import { GoogleAuthCallback } from '@/pages/GoogleAuthCallback'
 
 export function App() {
   useAuth()
@@ -80,6 +81,7 @@ export function App() {
           <Route path="/career" element={<LegacyPage renderer={renderCareer} />} />
           <Route path="/knowledge" element={<Knowledge />} />
           <Route path="/portfolio" element={<LegacyPage renderer={renderPortfolio} />} />
+          <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
         </Routes>
       </div>
       <MobileNav />

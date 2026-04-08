@@ -11,6 +11,8 @@ export interface CalendarEvent {
   all_day: boolean
   status?: string
   response_status?: string | null
+  location?: string | null
+  hangoutLink?: string | null
 }
 
 export interface GcalCalendar {
