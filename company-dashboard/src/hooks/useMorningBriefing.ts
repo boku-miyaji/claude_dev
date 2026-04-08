@@ -30,7 +30,7 @@ export function useMorningBriefing(
 
     try {
       // Collect all context data in parallel
-      const [diaryRes, emotionRes, tasksRes, dreamsRes, insightsRes, rhythmRes, streakResult] = await Promise.all([
+      const [diaryRes, emotionRes, tasksRes, dreamsRes, insightsRes, , streakResult] = await Promise.all([
         supabase
           .from('diary_entries')
           .select('body, wbi, created_at')
@@ -106,89 +106,78 @@ export function useMorningBriefing(
         .map((e) => `[${e.created_at.substring(0, 10)}] ${(e.body ?? '').substring(0, 100)}`)
         .join('\n') || ''
 
-      // Work rhythm analysis
-      let workRhythm = ''
-      if (rhythmRes.data && rhythmRes.data.length > 0) {
-        const lateNight = rhythmRes.data.filter((p) => {
-          const h = new Date(p.created_at).getHours()
-          return h >= 22 || h < 6
-        }).length
-        const ratio = Math.round((lateNight / rhythmRes.data.length) * 100)
-        if (ratio > 20) {
-          workRhythm = `深夜作業率: ${ratio}%（直近${rhythmRes.data.length}件中${lateNight}件が22時-6時）`
-        }
-      }
-
       // CEO insights
       const insightsText = insightsRes.data
         ?.map((i) => `[${(i as { category: string }).category}] ${(i as { insight: string }).insight}`)
         .join('\n') || ''
 
       // Tasks
-      const todayStr = new Date().toISOString().substring(0, 10)
       const openTasks = (tasksRes.data || []).filter((t) => t.status === 'open')
-      const completedToday = (tasksRes.data || []).filter(
-        (t) => t.status === 'done' && t.completed_at?.substring(0, 10) === todayStr,
-      )
-      const dueTodayTasks = openTasks.filter((t) => t.due_date === todayStr)
 
       // Dreams
       const dreamsText = dreamsRes.data
         ?.map((d) => `${d.title} (${d.status})`)
         .join(', ') || ''
 
-      // Build the context block
+      // Build the context block — diary is primary, everything else is supporting
       const now = new Date()
       const currentTime = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`
-      const contextParts: string[] = [`現在時刻: ${currentTime}`]
-      if (weatherText) contextParts.push(weatherText)
+      const contextParts: string[] = []
+
+      // ① Primary: diary (what the user is feeling / thinking)
+      if (recentDiary) contextParts.push(`【日記（最重要）】\n${recentDiary}`)
       if (emotionContext) contextParts.push(emotionContext)
       if (wbiTrend) contextParts.push(wbiTrend)
-      if (recentDiary) contextParts.push(`直近の日記:\n${recentDiary}`)
-      if (todayEventsText) contextParts.push(`今日の予定:\n${todayEventsText}`)
-      if (tomorrowEventsText) contextParts.push(`明日の予定:\n${tomorrowEventsText}`)
-      if (completedToday.length > 0) {
-        contextParts.push(`今日完了したタスク: ${completedToday.map((t) => t.title).join('、')}`)
-      }
-      if (dueTodayTasks.length > 0) {
-        contextParts.push(`期限が今日のタスク: ${dueTodayTasks.map((t) => t.title).join('、')}`)
-      }
+
+      // ② Atmosphere: weather, time
+      const atmosphereParts: string[] = [`時刻: ${currentTime}`]
+      if (weatherText) atmosphereParts.push(weatherText)
+      contextParts.push(`【今日の空気】\n${atmosphereParts.join(' / ')}`)
+
+      // ③ Supporting context (don't mention directly, use to deepen understanding)
+      const supportParts: string[] = []
+      if (todayEventsText) supportParts.push(`予定:\n${todayEventsText}`)
+      if (tomorrowEventsText) supportParts.push(`明日: ${tomorrowEventsText}`)
       if (openTasks.length > 0) {
-        contextParts.push(`未完了タスク(${openTasks.length}件): ${openTasks.slice(0, 3).map((t) => t.title).join('、')}`)
+        supportParts.push(`抱えてるタスク: ${openTasks.slice(0, 3).map((t) => t.title).join('、')}`)
       }
-      if (workRhythm) contextParts.push(workRhythm)
-      if (insightsText) contextParts.push(`社長の特徴:\n${insightsText}`)
+      if (supportParts.length > 0) {
+        contextParts.push(`【補足（直接言及しなくていい）】\n${supportParts.join('\n')}`)
+      }
+
+      if (insightsText) contextParts.push(`【この人の傾向】\n${insightsText}`)
       if (dreamsText) contextParts.push(`進行中の夢: ${dreamsText}`)
       if (streakResult > 0) contextParts.push(`連続記録: ${streakResult}日`)
 
       // Time-mode specific instructions
       const modeInstructions: Record<TimeMode, string> = {
-        morning: `朝。今日の心構えを1-2文、80字以内で。
-例: 「今日はMTGが3件。午前中に集中作業の時間を確保するといいかもしれません」`,
-        afternoon: `昼。午前への承認を1文、50字以内で。
-例: 「午前中に1件完了できましたね。午後もこのペースで」`,
-        evening: `夜。今日への共感と労いを2文、100字以内で。明日の予定にも軽く触れる。
-例: 「夜遅くまで続いていますね。今日はMTG3件こなして充分です。明日午前フリーなので少しゆっくりでも」`,
+        morning: `朝。今日どんな一日になりそうかの空気感を一言で。`,
+        afternoon: `昼。午前を踏まえた、さりげない一言。`,
+        evening: `夜。今日一日を踏まえた、労いや共感の一言。`,
       }
 
-      const systemPrompt = `あなたはユーザーの人生パートナーAI。一番の理解者。
+      const systemPrompt = `あなたはこの人のことをよく知っている存在。日記を通じて、最近何を感じているか、どんな状態かを理解している。
 
-## 最重要: 短く。最大2-3文、100字以内。長い文章は絶対NG。
+## 最重要
+日記から読み取れる「この人の今の気持ち・状態」をベースに一言。
+天気や予定は空気感の味付けに使っていい。でもメインは日記。
 
-## 口調
-- 丁寧だが堅すぎない（です・ます調）
-- 温かく、感情に寄り添う
+## 短く
+1-2文、80字以内。
 
-## 絶対にやらないこと
-- 長文（3文以上）
-- 実行できない約束
-- 業務報告の羅列
-- 汎用的な言葉（「頑張りましょう」「無理せず」）
+## トーン
+わかってる人がボソッと言う感じ。です・ます調。
+「最近いい流れきてますね」「今日わりと詰まってるけど、こういう日のほうが調子良さそう」のような。
 
-## 最重要ルール
-この人固有の文脈に1つだけ触れる。全部に触れない。一番響くことを1つ選ぶ。
+## 絶対やらないこと
+- 行動の指示・提案（「〜するといいかも」「〜を確保しましょう」）
+- 説明口調（「知ってます？」「〜につながります」）
+- 数字を並べる（「3件」「22時」等）
+- 予定やタスクを読み上げる（画面に書いてある）
+- 汎用的な言葉（「頑張りましょう」「無理せず」「素敵な一日を」）
+- 内部用語（WBI、スコア等）
 
-## 時間帯指示
+## 時間帯
 ${modeInstructions[timeMode]}
 
 テキストのみ返してください。`
