@@ -331,8 +331,8 @@ function TabOverview() {
           ['docs/knowledge/', '14日未更新', '新しいドキュメントがあれば追記'],
         ]} />
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: '#8b5cf6' }}>日次バッチ分析（daily-analysis-batch.sh — Claude CLI, APIコスト不要）</div>
-        <P>/company 起動時 or セッション開始時に24h経過で自動実行。全てClaude Code CLI (haiku) で処理。</P>
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: '#8b5cf6' }}>日次バッチ分析（daily-analysis-batch.sh）</div>
+        <P>/company 起動時 or セッション開始時に24h経過で自動実行。Task 1-5はClaude CLI、Task 6 (CEOインサイト) はgpt-5-mini (Edge Function)。</P>
         <Tbl headers={['タスク', '内容', '頻度', '出力先']} rows={[
           ['プロンプト分類', '未分類のClaude Codeプロンプトにpj/intent/dept/catタグ付与', '毎日', 'prompt_log.tags'],
           ['失敗シグナル要約', 'キーワード検出した失敗シグナルをLLMで要約', '毎日', 'growth_events'],
@@ -357,7 +357,7 @@ function TabOverview() {
   ├→ diary_entries INSERT
   ├→ emotion_analysis 自動生成（感情スコア+WBI）
   │    └→ diary_entries.wbi UPDATE → Journal 感情カレンダー更新
-  ├→ AI Partner コメント再生成（invalidate → 10データソース再収集 → LLM生成）
+  ├→ AI Partner コメント再生成（invalidate → 日記[主役]+天気[空気]+予定/タスク[補足] → LLM生成）
   └→ 夢進捗検出（diary × dreams照合 → 一致あれば toast 通知）
 
 Today画面でタスク操作
@@ -435,13 +435,16 @@ Edge Function (ai-agent/index.ts) を編集
             └→ SessionStop依存を排除（クラッシュでもサマリが残る）
 
 /company 起動時 or セッション開始時（24h経過の場合）
-  └→ daily-analysis-batch.sh: Claude CLI (opus) で全バッチ分析
-       ├→ [1] プロンプト分類: 未タグの prompt_log にLLMタグ付与
-       ├→ [2] 失敗シグナル要約: growth-signals.jsonl → growth_events INSERT
-       ├→ [3] スキル進化: パターン検出 → skill_candidates 蓄積
-       ├→ [4] 部署評価: activity_log分析 → evaluations（7日間隔）
-       ├→ [5] ナレッジ昇格: confidence≥3 検出 → ブリーフィングで提案
-       └→ [6] CEOインサイト: 20件以上で行動パターン分析`}
+  └→ daily-analysis-batch.sh
+       ├→ [1] プロンプト分類: 未タグの prompt_log にLLMタグ付与（Claude CLI）
+       ├→ [2] 失敗シグナル要約: growth-signals.jsonl → growth_events INSERT（Claude CLI）
+       ├→ [3] スキル進化: パターン検出 → skill_candidates 蓄積（Claude CLI）
+       ├→ [4] 部署評価: activity_log分析 → evaluations（7日間隔）（Claude CLI）
+       ├→ [5] ナレッジ昇格: confidence≥3 検出 → ブリーフィングで提案（Claude CLI）
+       └→ [6] CEOインサイト 3層分析（gpt-5-mini via Edge Function）
+            ├→ L1 日次: 未処理日記にtopics/ai_summary付与 → diary_entries UPDATE
+            ├→ L2 週次: 日記生テキスト全件+prompt_log → 週次パターン → diary_analysis + ceo_insights
+            └→ L3 月次: 全件+週次要約 → 仮説生成 → 過去データで検証 → diary_analysis + ceo_insights`}
         </div>
       </Section>
     </>
@@ -785,12 +788,12 @@ function TabAiFeatures() {
         />
 
         <AiFeatureCard
-          name="2. AI Partner コメント（ディープパーソナライズ）"
+          name="2. AI Partner コメント（日記中心パーソナライズ）"
           trigger="Today画面表示時 + 日記投稿後に自動再生成"
-          input="直近日記(5件), 感情分析(10件), WBI推移, カレンダー(今日+明日), タスク(完了+未完了), CEOインサイト, 生活リズム(prompt_log), 連続記録, 夢リスト"
+          input="【主役】日記(3件,生テキスト) + 感情傾向 + WBI推移 → 【空気】天気・時刻 → 【補足(直接言及しない)】カレンダー, タスク → 【傾向】CEOインサイト, 夢, 連続記録"
           model="gpt-5-nano (completion mode)"
-          pipeline="10データソース並列取得 → コンテキスト組み立て → 時間帯別プロンプト(朝/昼/夜) → AI生成 → 表示"
-          output="2-3文、100字以内のパーソナライズコメント"
+          pipeline="データ並列取得 → 日記を最重要、予定・タスクは補足として構造化 → 時間帯別プロンプト(朝/昼/夜) → AI生成 → 表示"
+          output="1-2文、80字以内。「わかってる人がボソッと言う一言」。行動指示・数字・データ読み上げ・汎用語は禁止"
           storage="Zustand in-memory（キャッシュキー: 日付_timeMode、日記投稿で無効化）"
           hook="useMorningBriefing.ts"
         />
@@ -896,7 +899,7 @@ function TabAiFeatures() {
           ['knowledge_search', 'ナレッジ検索（カテゴリ, scope）', 'knowledge_base テーブル'],
           ['company_info', 'PJ会社情報・部署構成', 'companies + departments テーブル'],
           ['prompt_history', '直近のプロンプト履歴検索', 'prompt_log テーブル'],
-          ['insights_read', 'CEOインサイト（行動パターン等）', 'ceo_insights テーブル'],
+          ['insights_read', 'CEOインサイト（日記ベース内面分析+prompt_log関心分析）', 'ceo_insights テーブル'],
           ['activity_search', 'アクティビティログ検索', 'activity_log テーブル'],
           ['intelligence_read', '最新ニュース/レポート', 'news_items テーブル'],
           ['web_search', 'Web検索（外部API）', 'Brave Search API'],
@@ -959,9 +962,9 @@ function TabAiFeatures() {
         <P>社長の頭の中にある知識のうち、システムがまだ完全には捕捉できていないもの。日記・行動ログから間接的に抽出を試みている。</P>
         <Tbl headers={['ID', '暗黙知', '現在の捕捉方法', '形式化状態']} rows={[
           ['TK-001', '「今日は調子がいい/悪い」の身体感覚', 'diary + emotion_analysis → WBI推移', '部分捕捉。気分ログ(Level 0)で改善予定'],
-          ['TK-002', '「このPJは今が勝負時」の事業判断', 'prompt_log の頻度・集中度から推定', '間接推定。CEOインサイトで検出'],
-          ['TK-003', '「この人との関係性」の対人感覚', 'diary の人名・感情パターンから抽出', '間接推定。emotion_triggers分析'],
-          ['TK-004', '「朝型/夜型」「集中できる時間帯」', 'prompt_log timestamps → 生活リズム分析', '定量化済み。AI Partner コメントに反映'],
+          ['TK-002', '「このPJは今が勝負時」の事業判断', 'prompt_log focus/shift + diary value分析', '間接推定。CEOインサイト3層で検出'],
+          ['TK-003', '「この人との関係性」の対人感覚', 'diary の人名・感情パターンから抽出', '間接推定。diary trigger/correlation分析'],
+          ['TK-004', '「朝型/夜型」「集中できる時間帯」', 'prompt_log timestamps + diary mood_cycle', 'CEOインサイト3層（L2週次/L3月次）で相関分析'],
           ['TK-005', '「この技術は将来有望」の技術直感', 'diary + prompt_log の技術キーワード', '未捕捉。トピック分析で改善可能'],
           ['TK-006', '「このやり方は自分に合う」の作業スタイル', 'knowledge_base feedback カテゴリ', '部分捕捉。2回同じフィードバック→ルール化'],
           ['TK-007', '設計判断の美意識・好み', 'design-philosophy.md への蓄積', '言語知(C2)まで昇格済み。形式知化は困難'],
@@ -974,7 +977,7 @@ function TabAiFeatures() {
 社長の頭の中            →     記録・言語化              →     コード・ルール化
 
 日記を書く              →  diary_entries              →  emotion_analysis (自動)
-「調子悪い」と感じる     →  WBI 4.2 と数値化           →  AI Partner が体調に言及
+「調子悪い」と感じる     →  WBI 4.2 と数値化           →  AI Partner が日記ベースで状態を反映
 
 修正指示を出す          →  memory/ に feedback記録    →  knowledge_base (confidence↑)
 「pytest使って」         →  KB: "テストはpytest"        →  CLAUDE.md に昇格 (自動適用)
@@ -1002,7 +1005,8 @@ function TabAiFeatures() {
           ['self_analysis', 'analysis_type, result(JSON), summary, analysis_context(JSONB)', 'ナレッジ（ハイブリッド分析。analysis_contextに中間根拠を保存し次回の更新分析に活用）'],
           ['weekly_narratives', 'narrative, stats(JSON)', 'ナレッジ（週次集約）'],
           ['knowledge_base', 'category, rule, reason, confidence', 'ナレッジ → 形式知（昇格時）'],
-          ['ceo_insights', 'category, insight, evidence', 'ナレッジ（暗黙知の間接抽出）'],
+          ['ceo_insights', 'category, insight, evidence, confidence', 'ナレッジ（日記ベース: mood_cycle/trigger/correlation/disconnect/value/drift/fading、prompt_logベース: focus/recurring/shift/blind_spot）'],
+          ['diary_analysis', 'period_type(weekly/monthly), ai_insights, highlights(JSONB)', 'ナレッジ（週次/月次の中間分析結果。3層分析のL2/L3出力）'],
           ['growth_events', 'what_happened, root_cause, countermeasure', 'ナレッジ（事例パターン）'],
           ['prompt_log', 'prompt, context, tags, created_at', 'データ（生ログ）'],
           ['tasks', 'title, status, priority, completed_at', 'データ（行動記録）'],
