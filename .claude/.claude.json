@@ -666,7 +666,7 @@
         "currency": "USD"
       },
       "remaining_passes": 3,
-      "timestamp": 1775566564713
+      "timestamp": 1775657922894
     }
   },
   "feedbackSurveyState": {
@@ -677,7 +677,6 @@
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 11,
-  "opus1mMergeNoticeSeenCount": 6,
   "passesUpsellSeenCount": 3,
   "effortCalloutV2Dismissed": true,
   "groveConfigCache": {
