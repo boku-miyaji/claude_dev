@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<title>宮路HD</title>
+<title>focus-you</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◆</text></svg>">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -517,7 +517,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 <div id="auth-screen" class="auth-page hidden">
   <div class="auth-box">
     <div class="auth-logo">M</div>
-    <h1>宮路HD</h1>
+    <h1>focus-you</h1>
     <p>Holding Company Dashboard</p>
     <button class="btn-github" id="btn-login">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -532,7 +532,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
   <nav class="sidebar">
     <div class="logo">
       <div class="logo-icon">M</div>
-      宮路HD
+      focus-you
     </div>
     <button class="nav-item active" data-page="home"><span class="nav-icon">◉</span> Home</button>
     <button class="nav-item" data-page="calendar"><span class="nav-icon">📅</span> Calendar</button>
@@ -646,8 +646,8 @@ function showConfigPrompt() {
   var authScreen = document.getElementById('auth-screen');
   var box = authScreen.querySelector('.auth-box');
   while (box.firstChild) box.removeChild(box.firstChild);
-  box.appendChild(el('div', {className: 'auth-logo', textContent: 'M'}));
-  box.appendChild(el('h1', {textContent: '宮路HD Setup'}));
+  box.appendChild(el('div', {className: 'auth-logo', textContent: 'F'}));
+  box.appendChild(el('h1', {textContent: 'focus-you Setup'}));
   box.appendChild(el('p', {textContent: 'Supabase の接続情報を入力してください'}));
   var urlInput = el('input', {className: 'input', placeholder: 'Supabase URL (https://xxx.supabase.co)', style: 'margin-bottom:10px'});
   var keyInput = el('input', {className: 'input', placeholder: 'Publishable Key', style: 'margin-bottom:20px'});
@@ -2160,7 +2160,7 @@ async function renderDashboard(root) {
 
   if (apiKey) {
     try {
-      var sysPrompt = 'あなたは宮路HDの秘書AIです。社長への日次ブリーフィングを生成します。\n'+
+      var sysPrompt = 'あなたはfocus-youの秘書AIです。社長への日次ブリーフィングを生成します。\n'+
         'ルール:\n- 日本語、簡潔、秘書の口調\n- 最初に「今日のポイント」を3行以内で\n'+
         '- セクション: 予定→注意事項→財務→気づき\n- 問題なければ安心させる。問題あれば具体的に何をすべきか\n'+
         '- 300-500字目安。Markdown形式\n- データない項目は省略\n- 時間帯考慮（朝=予定中心、夕方=振り返り）';
@@ -2730,7 +2730,7 @@ async function renderOrgChart(root) {
   var howCard = el('div', {style: cardStyle});
   howCard.appendChild(el('div', {style: labelStyle, textContent: 'Architecture'}));
   howCard.appendChild(el('div', {style: 'font-size:13px;color:var(--text2);line-height:1.8', innerHTML:
-    '<b>宮路HD</b> が全体を統括。共通部署はHDに集約し、子会社（PJ）が共有利用する。<br>' +
+    '<b>focus-you</b> が全体を統括。共通部署はHDに集約し、子会社（PJ）が共有利用する。<br>' +
     '<b>秘書室</b>: 各PJ会社の窓口。社長の指示を受け、適切な部署に振り分けるオーケストレーター。<br>' +
     '<b>CLAUDE.md</b>: 各部署・PJ会社のルールブック。AI Agentがこれに従って動く。<br>' +
     '<b>スキル（/command）</b>: Claude Code の拡張コマンド。特定のワークフローを1コマンドで実行する。'
@@ -5760,7 +5760,7 @@ async function renderGrowth(root) {
 // ============================================================
 async function renderHowItWorks(root) {
   root.appendChild(el('div', {className: 'page-title', textContent: 'How it Works'}));
-  root.appendChild(el('div', {className: 'page-desc', textContent: '宮路HDの仮想カンパニーシステムがどう動いているか'}));
+  root.appendChild(el('div', {className: 'page-desc', textContent: 'focus-youの仮想カンパニーシステムがどう動いているか'}));
 
   function section(title, children) {
     var s = el('div', {style: 'margin-bottom:32px'});

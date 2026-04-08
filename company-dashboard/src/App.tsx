@@ -35,8 +35,8 @@ export function App() {
     return (
       <div className="auth-page">
         <div className="auth-box">
-          <div className="auth-logo">M</div>
-          <h1>宮路HD</h1>
+          <div className="auth-logo">F</div>
+          <h1>focus-you</h1>
           <p style={{ color: 'var(--text3)' }}>Loading...</p>
         </div>
       </div>

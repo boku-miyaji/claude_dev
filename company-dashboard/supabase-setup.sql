@@ -1,5 +1,5 @@
 -- ============================================================
--- 宮路HD Dashboard - Supabase Schema
+-- focus-you Dashboard - Supabase Schema
 -- ============================================================
 -- Run this in Supabase SQL Editor (Dashboard > SQL Editor > New query)
 -- Execute all at once. Do not split.

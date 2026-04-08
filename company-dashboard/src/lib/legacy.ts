@@ -67,8 +67,8 @@ function showConfigPrompt() {
   var authScreen = document.getElementById('auth-screen');
   var box = authScreen.querySelector('.auth-box');
   while (box.firstChild) box.removeChild(box.firstChild);
-  box.appendChild(el('div', {className: 'auth-logo', textContent: 'M'}));
-  box.appendChild(el('h1', {textContent: '宮路HD Setup'}));
+  box.appendChild(el('div', {className: 'auth-logo', textContent: 'F'}));
+  box.appendChild(el('h1', {textContent: 'focus-you Setup'}));
   box.appendChild(el('p', {textContent: 'Supabase の接続情報を入力してください'}));
   var urlInput = el('input', {className: 'input', placeholder: 'Supabase URL (https://xxx.supabase.co)', style: 'margin-bottom:10px'});
   var keyInput = el('input', {className: 'input', placeholder: 'Publishable Key', style: 'margin-bottom:20px'});
@@ -2392,7 +2392,7 @@ async function renderOrgChart(root) {
   var howCard = el('div', {style: cardStyle});
   howCard.appendChild(el('div', {style: labelStyle, textContent: 'Architecture'}));
   howCard.appendChild(el('div', {style: 'font-size:13px;color:var(--text2);line-height:1.8', innerHTML:
-    '<b>宮路HD</b> が全体を統括。共通部署はHDに集約し、子会社（PJ）が共有利用する。<br>' +
+    '<b>focus-you</b> が全体を統括。共通部署はHDに集約し、子会社（PJ）が共有利用する。<br>' +
     '<b>秘書室</b>: 各PJ会社の窓口。社長の指示を受け、適切な部署に振り分けるオーケストレーター。<br>' +
     '<b>CLAUDE.md</b>: 各部署・PJ会社のルールブック。AI Agentがこれに従って動く。<br>' +
     '<b>スキル（/command）</b>: Claude Code の拡張コマンド。特定のワークフローを1コマンドで実行する。'

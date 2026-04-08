@@ -1,4 +1,4 @@
-# 宮路HD - Claude Code 組織プラグイン
+# focus-you - Claude Code 組織プラグイン
 
 Claude Code 用の仮想組織プラグイン。`/company` コマンドで HD 秘書が起動し、複数の PJ 会社を統括管理する。
 

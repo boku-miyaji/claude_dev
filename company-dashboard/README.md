@@ -1,4 +1,4 @@
-# 宮路HD Dashboard
+# focus-you Dashboard
 
 PJ会社（プロジェクト単位の仮想組織）を一元管理する Web ダッシュボード。
 Supabase (PostgreSQL + Auth) + Vercel (静的ホスティング) で構成。

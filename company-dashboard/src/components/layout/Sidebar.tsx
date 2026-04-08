@@ -113,8 +113,8 @@ export function Sidebar() {
     <nav className={`sidebar${sidebarHidden ? ' collapsed' : ''}`}>
       <div className="logo" style={{ justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div className="logo-icon">M</div>
-          宮路HD
+          <div className="logo-icon">F</div>
+          focus-you
         </div>
         <button
           onClick={() => setSidebarHidden(true)}

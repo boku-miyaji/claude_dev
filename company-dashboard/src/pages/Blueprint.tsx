@@ -472,10 +472,10 @@ function TabArchitecture() {
       </Section>
 
       <Section title="LLM Wiki 思想 — 知識コンパイラとしてのAI">
-        <Principle title="Karpathy LLM Wiki (2026-04)" body="RAGの根本的限界「毎回ゼロから発見し直す」を克服するアーキテクチャ。LLMを検索エンジンではなく知識コンパイラとして使い、Markdownファイル群を生きた百科事典として育てる。宮路HDは約80%一致済み。" color="var(--accent)" />
+        <Principle title="Karpathy LLM Wiki (2026-04)" body="RAGの根本的限界「毎回ゼロから発見し直す」を克服するアーキテクチャ。LLMを検索エンジンではなく知識コンパイラとして使い、Markdownファイル群を生きた百科事典として育てる。focus-youは約80%一致済み。" color="var(--accent)" />
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>3つのキーファイルと宮路HDの対応</div>
-        <Tbl headers={['Karpathyの概念', '役割', '宮路HDの対応物']} rows={[
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>3つのキーファイルとfocus-youの対応</div>
+        <Tbl headers={['Karpathyの概念', '役割', 'focus-youの対応物']} rows={[
           ['index.md（横断目録）', '全ナレッジの1行サマリー付き目録。LLMが「どこに何があるか」を即判断', 'memory/knowledge-index.md（新設）'],
           ['log.md（追記型年表）', 'ingest・昇格・Lintの全履歴。append-only', 'memory/knowledge-log.md（新設）'],
           ['schema.md（行動規範）', 'LLMを「規律ある知識維持者」として動作させる指示書', 'CLAUDE.md + .claude/rules/（既存・一致）'],
@@ -918,7 +918,7 @@ function TabAiFeatures() {
       </Section>
 
       <Section title="ナレッジ体系 — データ・ナレッジ・暗黙知">
-        <P>rikyuプロジェクトのナレッジ分類モデルを宮路HDに適用。全ての知識を「形式化度」と「機能（How/What）」の2軸で整理。</P>
+        <P>rikyuプロジェクトのナレッジ分類モデルをfocus-youに適用。全ての知識を「形式化度」と「機能（How/What）」の2軸で整理。</P>
 
         <div className="card" style={{ padding: 14, fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 2, whiteSpace: 'pre', overflowX: 'auto', color: 'var(--text2)', marginBottom: 16 }}>
 {`┌─────────────────────────────────────────────────────────────────┐
@@ -946,7 +946,7 @@ function TabAiFeatures() {
         </div>
 
         <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>形式化度の3段階</div>
-        <Tbl headers={['レベル', '名称', '状態', '宮路HDでの例', '蓄積場所']} rows={[
+        <Tbl headers={['レベル', '名称', '状態', 'focus-youでの例', '蓄積場所']} rows={[
           ['C1 形式知', 'コードとして計算可能', 'ルール化・自動実行される', 'CLAUDE.md, rules/, Hooks, Edge Function', 'Git + 全セッション自動適用'],
           ['C2 言語知', '言語化済みだが未構造化', '記録されているが手動適用', 'knowledge_base, memory/, design-philosophy.md', 'Supabase + ファイル'],
           ['C3 暗黙知', '言語化困難、経験的', '社長の頭の中にしかない', '下記 TK-001〜008 参照', '日記・行動ログから間接抽出'],
@@ -984,7 +984,7 @@ function TabAiFeatures() {
         </div>
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>データ・ナレッジ・暗黙知の定義</div>
-        <Tbl headers={['区分', '定義', '特徴', '宮路HDでの例']} rows={[
+        <Tbl headers={['区分', '定義', '特徴', 'focus-youでの例']} rows={[
           ['データ', '事実の記録。解釈を含まない生のログ', '量が多い、自動蓄積、そのままでは意味がない', 'prompt_log, habit_logs, activity_log, calendar events'],
           ['ナレッジ', 'データから抽出された意味のある知見。再利用可能', '構造化されている、文脈依存、陳腐化する', 'knowledge_base, ceo_insights, emotion_analysis, design-philosophy.md'],
           ['暗黙知', '言語化困難な経験的知識。身体感覚・直感・美意識', '個人に属する、伝達困難、最も価値が高い', '事業判断の勘、対人感覚、作業スタイルの好み、設計の美意識'],
@@ -1046,7 +1046,7 @@ function TabHarness() {
 
       <Section title="ハーネスの6構成要素">
         <P>Claude Code のハーネスは6つの構成要素から成る。それぞれの性質の違いが重要。</P>
-        <Tbl headers={['構成要素', '役割', '性質', '遵守保証', '宮路HDでの実装']} rows={[
+        <Tbl headers={['構成要素', '役割', '性質', '遵守保証', 'focus-youでの実装']} rows={[
           ['CLAUDE.md', '方針・規約の宣言', '助言的（読んでも無視されうる）', '低〜中', '.claude/CLAUDE.md + .company/CLAUDE.md + 部署CLAUDE.md'],
           ['Hooks', 'ライフサイクル制御', '決定論的（確実に実行される）', '高', '.claude/hooks/ に25スクリプト'],
           ['Permissions', '安全制御', '強制的（bypass不可）', '最高', 'settings.json の allow/deny リスト'],
@@ -1079,7 +1079,7 @@ function TabHarness() {
         <P>Hooks はコンテキストウィンドウの外で実行される。つまりコンテキストを消費せず、確実に動作する。</P>
 
         <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>利用可能なフックイベント</div>
-        <Tbl headers={['イベント', 'タイミング', '用途', '宮路HDでの活用']} rows={[
+        <Tbl headers={['イベント', 'タイミング', '用途', 'focus-youでの活用']} rows={[
           ['SessionStart', 'セッション開始 / compact後', 'コンテキスト再注入、環境セットアップ', 'auto-pull, config-sync, supabase-status, knowledge-lint(日次)'],
           ['SessionStop', 'セッション終了', 'クリーンアップ、レポート', 'auto-push, session-summary'],
           ['UserPromptSubmit', 'ユーザー入力時', 'LLM分類+ログ記録', 'prompt-log（gpt-5-nanoでタグ自動分類→Supabase記録）'],
@@ -1110,7 +1110,7 @@ function TabHarness() {
           <MiniCard title="最小権限の原則" body="各エージェントに必要なツールだけ提供。リサーチには読取系のみ、実装には書込系も。モデル選択: リサーチ=opus（高精度）、定型=haiku（高速・安価）" />
         </div>
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>宮路HD部署 = Sub-agent としての設計</div>
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>focus-you部署 = Sub-agent としての設計</div>
         <P>各部署は Agent tool で起動される Sub-agent。この視点で見ると、部署設計の良し悪しは Sub-agent のプロンプト品質に直結する。</P>
         <Tbl headers={['部署', '仕様レベル', '完了条件', '課題']} rows={[
           ['UXデザイン部', '最高（5原則+心理学）', '明確', '良好。他部署の模範'],
@@ -1137,8 +1137,8 @@ function TabHarness() {
       </Section>
 
       <Section title="長時間エージェントのハーネス（Anthropic公式パターン）">
-        <P>Anthropic Engineering が提唱する、セッションを跨ぐマルチターンエージェントの設計パターン。宮路HDの /company + session-summary + Supabase に相当。</P>
-        <Tbl headers={['構成要素', '役割', '宮路HDの対応物']} rows={[
+        <P>Anthropic Engineering が提唱する、セッションを跨ぐマルチターンエージェントの設計パターン。focus-youの /company + session-summary + Supabase に相当。</P>
+        <Tbl headers={['構成要素', '役割', 'focus-youの対応物']} rows={[
           ['Initializer Agent', '環境セットアップ、進捗ファイル作成', '/company 起動時のブリーフィング + freshness-check'],
           ['Progress File', 'セッション間の状態引き継ぎ（構造化JSON）', 'session-summary.sh + Supabase 各テーブル'],
           ['Feature List', '離散的要件の追跡・ステータス管理', 'tasks テーブル + TodoWrite'],
@@ -1147,7 +1147,7 @@ function TabHarness() {
         <Principle title="Context Compaction 対策" body="長時間セッションでは Compaction（コンテキスト圧縮）が発生し、情報が失われる。重要な決定は即座にファイルに永続化すべき。PreCompact Hook（pre-compact-save.sh）でセッション状態を保存し、PostCompact Hook（post-compact-restore.sh）で重要コンテキストを再注入する仕組みを実装済み。" color="var(--green)" />
       </Section>
 
-      <Section title="宮路HDシステムへの適用状況">
+      <Section title="focus-youシステムへの適用状況">
         <P>現在のシステムをハーネスエンジニアリングの観点から評価すると、「先進的だが未完成」。約70%のカバレッジ。</P>
 
         <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>実装済み（強み）</div>
