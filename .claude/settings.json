@@ -154,7 +154,8 @@
       "Read(//workspace/company-dashboard/**)",
       "Edit(~/.claude/skills/company/**)",
       "Bash(export LANG=en_US.UTF-8)",
-      "Bash(export LC_ALL=en_US.UTF-8)"
+      "Bash(export LC_ALL=en_US.UTF-8)",
+      "Bash(openssl rand:*)"
     ],
     "deny": [
       "Read(**/.env)",

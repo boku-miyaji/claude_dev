@@ -9,6 +9,18 @@ PROJECT_DIR="${CWD:-/workspace}"
 cd "$PROJECT_DIR" || exit 0
 git remote -v &>/dev/null || exit 0
 
+# Skip if Claude Code is in the middle of an explicit commit workflow
+# (lock file is created by the agent before staging, removed after commit)
+LOCK_FILE="/tmp/claude-explicit-commit.lock"
+if [ -f "$LOCK_FILE" ]; then
+  LOCK_AGE=$(( $(date +%s) - $(stat -c %Y "$LOCK_FILE" 2>/dev/null || echo 0) ))
+  # Only respect lock if it's less than 60 seconds old (prevents stale locks)
+  if [ "$LOCK_AGE" -lt 60 ]; then
+    exit 0
+  fi
+  rm -f "$LOCK_FILE"
+fi
+
 # Check for uncommitted changes (tracked files only)
 if git diff --quiet HEAD 2>/dev/null && git diff --cached --quiet HEAD 2>/dev/null; then
   # No changes to tracked files
