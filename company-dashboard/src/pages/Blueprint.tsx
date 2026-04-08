@@ -838,13 +838,13 @@ function TabAiFeatures() {
 
         <AiFeatureCard
           name="7. ニュース収集"
-          trigger="Reportsページで収集ボタン / HOME画面の一言生成"
-          input="トピックリスト(AI/LLM, Snowflake等) + ユーザー関心度(interest_score)"
-          model="gpt-5-nano (completion mode)"
-          pipeline="関心度高いトピック抽出 → AI にニュース生成依頼 → JSON配列パース → news_items テーブルに保存"
+          trigger="Today画面「最新を取得」ボタン / Reportsページ「手動収集」ボタン"
+          input="トピックリスト(AI/LLM, Claude, OpenAI等) + ユーザー関心度(news_preferences.interest_score)"
+          model="gpt-5-mini (agent mode + web_search)"
+          pipeline="関心度高いトピック抽出 → agent mode で web_search 実行 → JSON配列パース → news_items テーブルに保存"
           output="[{title, summary, url, source, topic, date}] の配列"
           storage="news_items テーブル + activity_log"
-          hook="legacy.ts (collectNews) / Reports.tsx"
+          hook="Today.tsx (handleCollectNews) / Reports.tsx (collectNews)"
         />
       </Section>
 
