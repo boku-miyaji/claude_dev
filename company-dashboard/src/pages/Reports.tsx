@@ -16,11 +16,13 @@ interface Report {
   updated_at: string
 }
 
-interface NewsItem {
-  id: number
-  action: string
-  metadata: { title?: string; summary?: string } | null
-  created_at: string
+interface ReportNewsItem {
+  id: string
+  title: string
+  summary: string
+  url: string | null
+  source: string
+  topic: string
 }
 
 type Tab = 'research' | 'news'
@@ -260,81 +262,25 @@ function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }:
 }
 
 function NewsFeed() {
-  const [items, setItems] = useState<NewsItem[]>([])
+  const [items, setItems] = useState<ReportNewsItem[]>([])
   const [loading, setLoading] = useState(true)
   const [collecting, setCollecting] = useState(false)
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from('activity_log')
-      .select('id,action,metadata,created_at')
-      .eq('action', 'intelligence_item')
-      .order('created_at', { ascending: false })
-      .limit(20)
-    setItems((data as NewsItem[]) || [])
+    const { loadNews } = await import('@/lib/newsCollect')
+    const news = await loadNews(20)
+    setItems(news as ReportNewsItem[])
     setLoading(false)
   }, [])
 
   useEffect(() => { load() }, [load])
 
-  async function collectNews() {
+  async function handleCollect() {
     setCollecting(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token || ''
-
-      // Use agent mode (not completion) so web_search tool is available
-      const res = await fetch(
-        import.meta.env.VITE_SUPABASE_URL + '/functions/v1/ai-agent',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            message: 'web_searchツールを使って、AI/LLM/Claude/OpenAI/データ基盤の最新ニュースを5件検索してください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル","summary":"1行要約","source":"ソース名","date":"YYYY-MM-DD"}]\n最終回答はJSON配列のみ返してください。説明文は不要です。',
-            system_prompt: 'あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。',
-            model: 'gpt-5-mini',
-            max_tokens: 2000,
-          }),
-        },
-      )
-      if (res.ok) {
-        const data = await res.json()
-        const text = data.content || ''
-        if (text) {
-          // Try to parse as JSON array
-          try {
-            const parsed = JSON.parse(text)
-            const newsArr = Array.isArray(parsed) ? parsed : (parsed.news || parsed.items || [parsed])
-            for (const item of newsArr) {
-              if (item.title && item.title.length > 5) {
-                await supabase.from('activity_log').insert({
-                  action: 'intelligence_item',
-                  metadata: {
-                    title: (item.title || '').substring(0, 200),
-                    summary: (item.summary || '').substring(0, 300),
-                    source: (item.source || '').substring(0, 50),
-                    date: item.date || null,
-                  },
-                })
-              }
-            }
-          } catch {
-            // Fallback: line-based parsing
-            const lines = text.split('\n').filter((l: string) => l.trim().length > 10)
-            for (const line of lines.slice(0, 5)) {
-              await supabase.from('activity_log').insert({
-                action: 'intelligence_item',
-                metadata: { title: line.replace(/^[-*\d.]\s*/, '').substring(0, 200) },
-              })
-            }
-          }
-          await load()
-        }
-      }
+      const { collectNews } = await import('@/lib/newsCollect')
+      const { count } = await collectNews()
+      if (count > 0) await load()
     } catch (e) {
       console.error('News collect error:', e)
     }
@@ -346,7 +292,7 @@ function NewsFeed() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-        <button className="btn btn-g btn-sm" onClick={collectNews} disabled={collecting}>
+        <button className="btn btn-g btn-sm" onClick={handleCollect} disabled={collecting}>
           {collecting ? '収集中...' : '手動収集'}
         </button>
       </div>
@@ -361,18 +307,21 @@ function NewsFeed() {
               borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
               fontSize: 13,
             }}>
-              <div style={{ color: 'var(--text)', fontWeight: 500 }}>
-                {item.metadata?.title || JSON.stringify(item.metadata).substring(0, 80)}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {item.url ? (
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text)', fontWeight: 500, textDecoration: 'none' }}>{item.title}</a>
+                ) : (
+                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>{item.title}</span>
+                )}
               </div>
-              {item.metadata?.summary && (
+              {item.summary && (
                 <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 3, lineHeight: 1.5 }}>
-                  {item.metadata.summary}
+                  {item.summary}
                 </div>
               )}
               <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3, fontFamily: 'var(--mono)', display: 'flex', gap: 8 }}>
-                {item.metadata?.source && <span>{item.metadata.source}</span>}
-                {item.metadata?.date && <span>{item.metadata.date}</span>}
-                <span>{new Date(item.created_at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })}</span>
+                {item.source && <span>{item.source}</span>}
+                {item.topic && <span style={{ color: 'var(--accent2)' }}>{item.topic}</span>}
               </div>
             </div>
           ))}

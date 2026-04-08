@@ -1847,69 +1847,12 @@ async function collectNews(container) {
   var btn = container.querySelector('.btn');
   if (btn) { btn.textContent = '収集中...'; btn.disabled = true; }
   try {
-    // Fetch topic preferences for personalization
-    var prefRes = await sb.from('news_preferences').select('topic,interest_score,click_total').order('interest_score',{ascending:false});
-    var prefs = prefRes.data || [];
-    var topTopics = prefs.filter(function(p){return p.interest_score >= 0.5;}).map(function(p){return p.topic;});
-
-    var topicPrompt = 'AI/LLM、データプラットフォーム、Snowflake、Databricks、Claude、OpenAI';
-    if (topTopics.length > 0) {
-      topicPrompt += '\n\n社長が特に関心の高いトピック: ' + topTopics.join('、') + '（こちらを優先的に）';
-    }
-
-    // Use aiCompletion via dynamic import for cost tracking
-    var edgeAi = await import('@/lib/edgeAi');
-    var data = await edgeAi.aiCompletion(
-      topicPrompt + 'について、最新ニュースを5件出してください。\n\n'
-        + '出力形式（厳守・JSON配列のみ）:\n'
-        + '[{"title":"タイトル","summary":"1行要約","url":"出典URL","source":"メディア名","topic":"トピック名","date":"YYYY-MM-DD"}]\n\n'
-        + '注意:\n'
-        + '- urlは実在する記事の正確なURLを書く。不明なら空文字にする\n'
-        + '- sourceはTechCrunch, 公式ブログ, The Verge等の媒体名\n'
-        + '- topicはAI/LLM, Snowflake, Databricks, Claude, OpenAI等\n'
-        + '- JSON配列のみ出力。前置き・説明・マークダウン記法は不要',
-      {
-        systemPrompt: '質問や確認をせず、即座にJSON配列だけを出力してください。前置き・説明・マークダウン記法は不要。',
-        model: 'gpt-5-nano', maxTokens: 1500,
-        source: 'news_collect'
-      }
-    );
-    {
-      var text = data.content || '';
-      if (text) {
-        // Extract JSON array from response
-        var jsonMatch = text.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          try {
-            var newsItems = JSON.parse(jsonMatch[0]);
-            var inserts = newsItems.filter(function(n) { return n.title && n.title.length > 5; }).map(function(n) {
-              return sb.from('news_items').insert({
-                title: (n.title||'').substring(0,200),
-                summary: (n.summary||'').substring(0,300),
-                url: n.url || null,
-                source: (n.source||'').substring(0,50),
-                topic: (n.topic||'').substring(0,30),
-                published_date: n.date || null
-              });
-            });
-            await Promise.all(inserts);
-            toast(inserts.length + ' 件のニュースを収集しました');
-            navigate('home');
-            return;
-          } catch(e) { console.error('JSON parse error:', e, text); }
-        }
-        // Fallback: plain text parsing
-        var lines = text.split('\n').filter(function(l){ return l.trim().length > 15 && !l.includes('？'); });
-        if (lines.length > 0) {
-          var fallbackInserts = lines.slice(0,5).map(function(l) {
-            return sb.from('news_items').insert({title: l.replace(/^[-*]\s*/,'').substring(0,200), topic: 'misc'});
-          });
-          await Promise.all(fallbackInserts);
-          toast(fallbackInserts.length + ' 件のニュースを収集しました');
-          navigate('home');
-          return;
-        }
-      }
+    var mod = await import('@/lib/newsCollect');
+    var result = await mod.collectNews();
+    if (result.count > 0) {
+      toast(result.count + ' 件のニュースを収集しました');
+      navigate('home');
+      return;
     }
     toast('ニュースを取得できませんでした');
   } catch(e) { console.error('News collect error:', e); toast('ニュース収集エラー: '+e.message); }

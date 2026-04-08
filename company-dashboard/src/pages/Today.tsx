@@ -13,7 +13,6 @@ import { useBriefingStore } from '@/stores/briefing'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
 import type { TimeMode } from '@/lib/timeMode'
 import type { DiaryEntry } from '@/types/diary'
-import { supabase } from '@/lib/supabase'
 
 /* ── Analysis Questions for Self-Analysis Precision ── */
 
@@ -407,12 +406,13 @@ export function Today() {
   const todayQuestions = useMemo(() => getTodayQuestions(todayStr), [todayStr])
 
   // News state — must be before any conditional return to satisfy Rules of Hooks
-  const [newsItems, setNewsItems] = useState<Array<{id: string; title: string; summary: string; url: string | null; source: string; topic: string}>>([])
+  const [newsItems, setNewsItems] = useState<Array<{ id?: string; title: string; summary: string; url: string | null; source: string; topic: string }>>([])
   const [newsCollecting, setNewsCollecting] = useState(false)
 
   useEffect(() => {
-    supabase.from('news_items').select('id,title,summary,url,source,topic').order('collected_at', { ascending: false }).limit(5)
-      .then(({ data }) => { if (data) setNewsItems(data) })
+    import('@/lib/newsCollect').then(({ loadNews }) =>
+      loadNews().then((items) => { if (items.length) setNewsItems(items) })
+    )
   }, [])
 
   const isLoading = loading.diary || loading.tasks || loading.dreams
@@ -653,50 +653,18 @@ export function Today() {
   async function handleCollectNews() {
     setNewsCollecting(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token || ''
-
-      const prefRes = await supabase.from('news_preferences').select('topic,interest_score').order('interest_score', { ascending: false })
-      const topTopics = (prefRes.data || []).filter((p: { interest_score: number }) => p.interest_score >= 0.5).map((p: { topic: string }) => p.topic)
-      let topicPrompt = 'AI/LLM、データプラットフォーム、Claude、OpenAI'
-      if (topTopics.length > 0) topicPrompt += '、' + topTopics.join('、')
-
-      // Use agent mode (not completion) so web_search tool is available
-      const res = await fetch(
-        import.meta.env.VITE_SUPABASE_URL + '/functions/v1/ai-agent',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            message: `web_searchツールを使って、${topicPrompt} の最新ニュース5件を検索してください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル","summary":"1行要約","url":"記事URL","source":"ソース名","topic":"トピック","date":"YYYY-MM-DD"}]\n最終回答はJSON配列のみ返してください。説明文は不要です。`,
-            system_prompt: 'あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。',
-            model: 'gpt-5-mini',
-            max_tokens: 2000,
-          }),
-        },
-      )
-      if (!res.ok) throw new Error(`Edge Function error: ${res.status}`)
-      const data = await res.json()
-      const text = data.content || ''
-      const match = text.match(/\[[\s\S]*\]/)
-      if (match) {
-        const items = JSON.parse(match[0])
-        let count = 0
-        for (const n of items) {
-          if (n.title?.length > 5) {
-            await supabase.from('news_items').insert({ title: n.title?.substring(0, 200), summary: n.summary?.substring(0, 300), url: n.url || null, source: n.source?.substring(0, 50), topic: n.topic?.substring(0, 30), published_date: n.date || null })
-            count++
-          }
-        }
+      const { collectNews } = await import('@/lib/newsCollect')
+      const { count, items } = await collectNews()
+      if (count > 0) {
         toast(count + '件のニュースを収集しました')
-        const { data: fresh } = await supabase.from('news_items').select('id,title,summary,url,source,topic').order('collected_at', { ascending: false }).limit(5)
-        if (fresh) setNewsItems(fresh)
+        setNewsItems(items)
+      } else {
+        toast('ニュースを取得できませんでした')
       }
-    } catch (e) { toast('ニュース収集に失敗しました') }
+    } catch (e) {
+      console.error('News collect error:', e)
+      toast('ニュース収集に失敗しました')
+    }
     setNewsCollecting(false)
   }
 
