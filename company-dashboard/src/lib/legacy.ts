@@ -3296,12 +3296,17 @@ async function renderInsights(root) {
     for (var dw = 0; dw < 7; dw++) {
       var dpct = Math.round(dowCounts[dw] / maxDow * 100);
       var isWeekend = dw === 0 || dw === 6;
-      dowBar.appendChild(el('div', {style: 'flex:1;display:flex;flex-direction:column;align-items:center;gap:4px'}, [
-        el('div', {style: 'width:100%;background:' + (isWeekend ? 'var(--amber)' : 'var(--accent)') + ';height:' + Math.max(2, dpct) + '%;border-radius:3px;opacity:' + (dpct > 0 ? Math.max(0.3, dpct/100) : 0.1)}),
-        el('div', {textContent: dowLabels[dw], style: 'font-size:10px;color:var(--text3)'})
-      ]));
+      dowBar.appendChild(el('div', {
+        title: dowLabels[dw] + ' — ' + dowCounts[dw] + '件',
+        style: 'flex:1;min-width:0;background:' + (isWeekend ? 'var(--amber)' : 'var(--accent)') + ';opacity:' + (dpct > 0 ? Math.max(0.3, dpct/100) : 0.1) + ';height:' + Math.max(2, dpct) + '%;border-radius:3px 3px 0 0;cursor:default'
+      }));
     }
     rhythmCard.appendChild(dowBar);
+    var dowLabelsRow = el('div', {style: 'display:flex;gap:4px;font-size:10px;color:var(--text3)'});
+    for (var dw2 = 0; dw2 < 7; dw2++) {
+      dowLabelsRow.appendChild(el('div', {style: 'flex:1;min-width:0;text-align:center', textContent: dowLabels[dw2]}));
+    }
+    rhythmCard.appendChild(dowLabelsRow);
 
     // Stats summary
     var peakHour = hourCounts.indexOf(maxHour);
