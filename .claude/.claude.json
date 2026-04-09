@@ -730,6 +730,10 @@
     "xlsx": {
       "usageCount": 2,
       "lastUsedAt": 1775728199994
+    },
+    "no-edit": {
+      "usageCount": 1,
+      "lastUsedAt": 1775729015905
     }
   },
   "overageCreditUpsellSeenCount": 2,
