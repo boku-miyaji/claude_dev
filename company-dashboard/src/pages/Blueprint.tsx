@@ -451,6 +451,272 @@ Edge Function (ai-agent/index.ts) を編集
   )
 }
 
+// ========== Tab: Experience Design ==========
+
+function TabExperienceDesign() {
+  return (
+    <>
+      <Section title="体験設計フレームワーク — 10領域">
+        <P>LLMベースシステムの体験設計で考えるべき全領域。汎用フレームワーク（他PJにも再利用可能）+ focus-youへの具体適用。</P>
+        <Tbl headers={['#', '領域', '汎用の問い', 'LLM特有の考慮']} rows={[
+          ['1', '行動文脈設計', 'Who/When/Where/Why（JTBD）', 'LLMへの入力時の精神状態、出力をどの注意力で受け取るか'],
+          ['2', '感情ジャーニー', 'First Touch → 探索 → 日常化 → 深化 → 伝播', '「AIが自分を理解している」瞬間=定着、「的外れ」=離脱'],
+          ['3', 'LLMインタラクション', '応答速度・トーン・記憶・幻覚対策・信頼構築', '信頼性4レベル: 事実→分析→洞察→予測'],
+          ['4', 'バッチ vs リアルタイム', '鮮度要求/入力トリガー/コスト感度', '高コスト・高レイテンシのLLM処理をいつ走らせるか'],
+          ['5', 'プライバシー&信頼', '技術的/意図的/能力的信頼の3層', '日記・感情データは最もセンシティブ。学習に使わないことの明示'],
+          ['6', 'コールドスタート', 'Day 0から価値を感じさせる', 'LLMはゼロデータでも会話可能だが「あなた向け」ではない'],
+          ['7', '定着設計', 'Hook Model: Trigger→Action→Variable Reward→Investment', '蓄積価値（使うほどAIが賢くなる）がLLM最大のレバー'],
+          ['8', 'エラー&回復', 'LLMエラー5分類と回復パターン', '幻覚/的外れ/トーン違反/API障害/レイテンシ超過'],
+          ['9', '段階的開示', 'データ量/時間/行動の3トリガー', 'データ不足で高度な分析を動かすと的外れ→信頼崩壊'],
+          ['10', 'パフォーマンス体験', 'レイテンシ閾値とストリーミング戦略', 'TTFT（Time To First Token）が体感速度を決める'],
+        ]} />
+      </Section>
+
+      <Section title="行動文脈 — 時間帯別の精神状態">
+        <P>ユーザーは「機能が欲しい」のではなく「状況を解決したい」。同じ画面を24時間出さない。</P>
+        <Tbl headers={['時間帯', '精神状態', '達成したいこと', '許容できる認知負荷']} rows={[
+          ['朝 5-11', '覚醒途中、受動的', '今日の全体像を30秒で掴む', '低。情報は「読む」ではなく「受け取る」'],
+          ['昼 11-17', '活動中、断片的な空き時間', '忘れる前にメモ、残タスク確認', '中。短時間の集中は可能'],
+          ['夜 17-5', '疲労、内省的', '一日を穏やかに閉じる、達成感を感じる', '低。罪悪感を刺激しない'],
+        ]} />
+      </Section>
+
+      <Section title="感情ジャーニー — 5フェーズ">
+        <Tbl headers={['フェーズ', '期間', '支配的感情', '設計目標']} rows={[
+          ['First Touch', '初回-3日', '期待+不安+懐疑', '「これは自分に価値がある」と確信させる'],
+          ['Exploration', '1-2週', '好奇心+手探り感', '機能を段階的に発見させ、小さな成功体験を積ませる'],
+          ['Routine', '2週-2ヶ月', '安定+やや退屈', '習慣化トリガーを埋め込む、飽きさせない変化を仕込む'],
+          ['Deepening', '2ヶ月-', '信頼+驚き+愛着', 'データ蓄積による体験の質的変化を見せる'],
+          ['Advocacy', '不定', '誇り+共感', '物語の共有機能、他者への推薦動機'],
+        ]} />
+        <Principle title="Deepeningフェーズの鍵" body="2ヶ月目にTheme Finderが初めて動くタイミング。「このアプリは他のどのツールとも違う」と確信する瞬間。データ蓄積が体験の質を変える瞬間をデザインする。" color="var(--accent)" />
+      </Section>
+
+      <Section title="LLMインタラクション — トーン&記憶&信頼性">
+        <P>ブランドパーソナリティ: 「あなたの物語を長く見てきた、信頼できる語り手」</P>
+        <Tbl headers={['時間帯', 'トーン', '例']} rows={[
+          ['朝', '静かに寄り添う', '「おはよう。今日は○○があるね」'],
+          ['昼', '軽く承認', '「午前中、お疲れさま」'],
+          ['夜', '深い共感', '「今日はこんな一日だったんだね」'],
+          ['深夜', '心配', '「遅くまでお疲れさま。体、大事にしてね」'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>記憶設計 — 4層</div>
+        <Tbl headers={['記憶層', 'データソース', 'ユーザー体験']} rows={[
+          ['短期（今日）', '今日の日記、直近の会話 → プロンプト直接注入', '「昨日の日記の話をしたら覚えてた」→ 当然'],
+          ['中期（今週）', '今週の感情推移、最近の転機 → Active Context', '「先月の転機に触れてきた」→ 嬉しい驚き'],
+          ['長期（数ヶ月）', '人生テーマ、物語の章 → Narrative Memory', '「去年の同じ時期の話を持ち出してきた」→ 深い感動'],
+          ['永久', '性格特性、価値観 → self_analysis', '「自分の性格をわかった上で話してくる」→ 信頼'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>幻覚対策</div>
+        <Tbl headers={['対策', '具体策']} rows={[
+          ['事実はコードで生成', '「今日の予定は3件」はテンプレートリテラルで注入。LLMに言わせない'],
+          ['日記引用は原文参照', '「先月こう書いていました」→ diary_entry から引用。LLMの記憶に頼らない'],
+          ['分析には根拠を添える', '「anticipationが高まっています（直近7日: 62→78）」と数値を添える'],
+          ['洞察は一人称で語る', '「あなたは○○です」ではなく「私は○○と感じています」'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>信頼性レベル</div>
+        <Tbl headers={['レベル', '性質', '扱い']} rows={[
+          ['事実', '検証可能（予定、タスク数、日付）', 'データソースから直接取得。LLMに生成させない'],
+          ['分析', 'データに基づく解釈（感情傾向）', 'LLMが生成するが、根拠データへのリンクを添える'],
+          ['洞察', '深い推論（テーマ発見、物語解釈）', 'LLMの核心的価値。「私はこう読みました」と一人称で'],
+          ['予測', '未来の推論（Foresight）', '必ず「予感」「かもしれません」の語調。断言しない'],
+        ]} />
+      </Section>
+
+      <Section title="バッチ vs リアルタイム — 判断フレームワーク">
+        <P>LLMの処理は高コスト・高レイテンシ。「いつ処理するか」がUXとコストの両方を左右する。</P>
+        <Tbl headers={['判断軸', 'リアルタイム向き', 'バッチ向き']} rows={[
+          ['鮮度要求', 'ユーザーが「今」の情報を期待', '昨日/先週のデータで十分'],
+          ['入力トリガー', 'ユーザーのアクション（日記投稿、質問）', '時刻（朝7時）、蓄積量（日記N件）'],
+          ['出力の消費', '入力直後（チャット応答）', '次にアプリを開いた時'],
+          ['処理の重さ', '軽い（1-2秒）', '重い（10秒以上、複数データソース）'],
+          ['失敗の影響', 'ユーザーが待っているので致命的', 'リトライ可能、ユーザーは気づかない'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>focus-you バッチ設計</div>
+        <Tbl headers={['処理', 'タイミング', '種別', '判断根拠']} rows={[
+          ['朝ブリーフィング', 'pg_cron 7:00', 'バッチ', 'Predictive Batch。起床前に事前生成'],
+          ['ニュース収集', 'pg_cron 7:00/19:00', 'バッチ', 'ユーザーアクション不要'],
+          ['感情分析', '日記投稿後', 'リアルタイム', '投稿直後にフィードバックが欲しい'],
+          ['AIコメント', '日記投稿後', 'リアルタイム', 'フィードバックループの核'],
+          ['Moment Detector', '日記投稿後', 'リアルタイム', '書いた直後に転機確認。翌朝では温度差が出る'],
+          ['Arc Reader', '週次（日曜深夜）', 'バッチ', '感情の弧は「線」。1日分では見えない。週次レビューで消費'],
+          ['Theme Finder', '月次（月末深夜）', 'バッチ', '大量データ横断分析。コスト大。月1回で十分'],
+          ['Foresight Engine', '週次（Arc Reader後）', 'バッチ', 'Arc Readerの出力に依存。即座に不要'],
+          ['Chapter生成', '四半期', 'バッチ', '長期的な物語。急がない'],
+          ['Weekly Narrative', '月曜早朝', 'バッチ', '月曜朝に先週の物語を読む体験'],
+          ['習慣ストリーク', '毎日深夜0:05', 'バッチ', '日付変更直後に確定。日付境界問題を回避'],
+          ['WBI集計', '毎日深夜0:10', 'バッチ', '日次集計。リアルタイム不要'],
+        ]} />
+      </Section>
+
+      <Section title="Narrator体験 — 4エンジンがユーザーにどう見えるか">
+        <Principle title="エンジン名はユーザーに見せない" body="「Arc Readerが分析しました」は技術者の自己満足。ユーザーには「あなたの感情の流れ」「あなたの物語のテーマ」として見せる。技術はブランド名ではなく、体験の質で語る。" color="var(--accent)" />
+        <Tbl headers={['ユーザーが体験すること', 'エンジン', '表示場所']} rows={[
+          ['「先月と今月で気分の流れが全然違う」と気づく', 'Arc Reader', 'Story: 感情の弧ビジュアル'],
+          ['「自分はこういう人間なんだ」という発見', 'Theme Finder', 'Self Analysis: テーマバッジ（3つまで）'],
+          ['日記を書いた直後に「これは大きな出来事ですね」', 'Moment Detector', 'Today: インラインカード（モーダルではない）'],
+          ['「去年の同じ時期にも...」と過去との接続', 'Foresight Engine', 'AIコメント / チャット内に自然に溶け込む'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Moment Detector — 転機の確認UI</div>
+        <div className="card" style={{ padding: 16, fontSize: 12, color: 'var(--text2)', lineHeight: 1.8, borderLeft: '3px solid var(--amber)' }}>
+          <div style={{ marginBottom: 8 }}>今日の日記に、大きな決断について書いていましたね。</div>
+          <div style={{ marginBottom: 12 }}>この瞬間を、あなたの物語に記録しておきますか? 後から振り返った時、ここがターニングポイントだったとわかるかもしれません。</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <span style={{ background: 'var(--accent)', color: '#fff', padding: '4px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>記録する</span>
+            <span style={{ background: 'var(--bg2)', border: '1px solid var(--border)', padding: '4px 12px', borderRadius: 6, fontSize: 11 }}>今はいい</span>
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 8 }}>表示: 日記投稿後 / インラインカード / 1日最大1回</div>
+        </div>
+      </Section>
+
+      <Section title="時間帯別の完全体験フロー">
+        <div className="g3" style={{ marginBottom: 16 }}>
+          <div className="card" style={{ padding: 14, borderLeft: '3px solid var(--amber)' }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: 'var(--amber)' }}>朝（5-11時）受動的インプット</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+              <div>1. 挨拶 + 天気 + AIコメント（バッチ生成済み）</div>
+              <div>2. スケジュール概要（3件のみ）</div>
+              <div>3. フォーカスタスク（今日期限+高優先 最大3件）</div>
+              <div>4. 日記エリア（下部。朝は書かない人が多い）</div>
+              <div>5. 習慣チェック（朝ルーティンのみ）</div>
+              <div style={{ marginTop: 8, color: 'var(--text3)', fontSize: 11 }}>所要時間: 30秒-2分</div>
+            </div>
+          </div>
+          <div className="card" style={{ padding: 14, borderLeft: '3px solid var(--accent)' }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: 'var(--accent)' }}>昼（11-17時）能動的アウトプット</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+              <div>1. 日記入力エリアが上部に来る</div>
+              <div>2. プロンプト:「{'{'}直前MTG名{'}'}の後、何か思ったこと?」</div>
+              <div>3. 残りスケジュール（午後のみ）</div>
+              <div>4. AIコメント（投稿後に即反応）</div>
+              <div style={{ marginTop: 8, color: 'var(--text3)', fontSize: 11 }}>所要時間: 1-5分</div>
+            </div>
+          </div>
+          <div className="card" style={{ padding: 14, borderLeft: '3px solid var(--green)' }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: 'var(--green)' }}>夜（17-翌5時）内省と安息</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+              <div>1. 完了サマリー（達成ファースト）</div>
+              <div>2. 日記入力 + 分析質問（日替わり）</div>
+              <div>3. AIコメント（深い共感トーン）</div>
+              <div>4. 明日の予告（軽く。重荷を見せない）</div>
+              <div>5. Moment Detector（転機があれば）</div>
+              <div style={{ marginTop: 8, color: 'var(--text3)', fontSize: 11 }}>所要時間: 3-10分 / ピーク: AIの共感 / エンド: 穏やか</div>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="リズム設計 — 日次〜年次">
+        <Tbl headers={['粒度', '体験', '感情ピーク', 'バッチタイミング']} rows={[
+          ['毎日', 'AIコメント + 日記 + 感情分析', '「今日も見てくれている」安心感', '05:00 WBI集計 / 07:00 ブリーフィング'],
+          ['毎週', 'Weekly Narrative + Arc Reader更新', '「自分の1週間にこんな意味があったのか」驚き', '日曜深夜 Arc Reader / 月曜早朝 Narrative'],
+          ['毎月', 'Theme Finder更新 + 月次振り返り', '「自分の人生のテーマが見えた」感動', '月末深夜 Theme Finder'],
+          ['四半期', 'Chapter生成', '「物語の章が増えた」達成感', '四半期末 Chapter生成'],
+          ['毎年', '年間物語 + Growth Chronicle', '「1年間の自分の成長物語」深い感動', '12月下旬 年間物語生成'],
+        ]} />
+      </Section>
+
+      <Section title="定着設計 — Hook Model">
+        <div className="g2" style={{ marginBottom: 16 }}>
+          <div className="card" style={{ padding: 14 }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>日次Hook</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+              <div><strong>Trigger:</strong> 朝の通知 / 「書き留めたい」衝動</div>
+              <div><strong>Action:</strong> Today画面 → 日記（最小1行でOK）</div>
+              <div><strong>Variable Reward:</strong> AIコメントが毎回異なる / 感情分析の意外な発見 / ストリーク更新 / Moment Detector（不定期サプライズ）</div>
+              <div><strong>Investment:</strong> Narrative Memory蓄積 → AI精度向上 → スイッチングコスト</div>
+            </div>
+          </div>
+          <div className="card" style={{ padding: 14 }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>週次/月次/年次Hook</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+              <div><strong>週次:</strong> Weekly Narrative → 自分の1週間が「物語」として語られる驚き</div>
+              <div><strong>月次:</strong> Theme Finder更新 → 人生テーマの発見・更新</div>
+              <div><strong>年次:</strong> 年間物語生成 → 「1年前の自分はこうだったのか」という感動</div>
+              <div style={{ marginTop: 8 }}><strong>共通Investment:</strong> データが増えるほど分析が深化。複利で効く。</div>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="コールドスタート — Day 0 からの体験設計">
+        <P>データがゼロの初日から価値を感じさせなければ、2日目はない。</P>
+        <Tbl headers={['データ蓄積量', '解放される体験', 'ユーザーへの告知']} rows={[
+          ['日記 1件', '感情分析、AIコメント', '（告知不要、即座に体験）'],
+          ['日記 7件', '週次の感情推移グラフ', '「1週間分のデータが揃いました」'],
+          ['日記 14件', 'Weekly Narrative', '「2週間書き続けてくれましたね。最初の物語をお届けします」'],
+          ['日記 30件', 'Arc Reader（感情の弧）', '「1ヶ月分の物語が見えてきました」'],
+          ['日記 90件', 'Theme Finder', '「3ヶ月のデータから、あなたの人生のテーマが浮かび上がりました」'],
+          ['日記 180件', 'Foresight Engine', '「あなたの物語のパターンから、次の展開が見え始めます」'],
+        ]} />
+        <Principle title="Day 0 の最重要ポイント" body="日記を1行書いたら即座にAIが反応する。白紙に書いて放置される日記帳ではないと伝える。翌日、AIが昨日の日記に触れる — 「覚えている」ことがDay 1の定着トリガー。" color="var(--green)" />
+      </Section>
+
+      <Section title="エラー&回復設計">
+        <Tbl headers={['エラー', '深刻度', '回復設計']} rows={[
+          ['幻覚（存在しない日記に言及）', '高', '根拠データへのリンクで検証可能に'],
+          ['的外れ（意図と異なる解釈）', '中', '「違います」フィードバック→即座に再生成'],
+          ['トーン違反（疲れている時に元気）', '低-中', '時間帯・感情データでトーンを事前制御'],
+          ['API障害', '高', 'フォールバック（キャッシュ or ルールベース応答）'],
+          ['レイテンシ超過（10秒+）', '中', 'ストリーミング + スケルトンUI'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>AIコメント障害時のフォールバック</div>
+        <Flow steps={['5秒以内', '通常表示']} />
+        <Flow steps={['5秒超過', '「考え中...」表示']} />
+        <Flow steps={['15秒超過', '前回コメント表示 + 「整理中です」']} />
+        <Flow steps={['API障害', '時間帯別の定型メッセージ（定型であることを隠さない）']} />
+
+        <Principle title="日記入力は絶対に失わない" body="ネットワーク障害 → localStorageに自動保存 → 再送信ボタン表示。ユーザーの入力を消すことは許されない。" color="var(--red)" />
+      </Section>
+
+      <Section title="パフォーマンス体験 — Today画面のローディング">
+        <Tbl headers={['Step', '時間', '表示内容']} rows={[
+          ['1. HTMLシェル', '< 100ms', 'ナビゲーション、セクション骨格'],
+          ['2. ローカルデータ', '< 300ms', 'Zustandキャッシュ、時間帯挨拶（ローカル計算）'],
+          ['3. 軽量API', '< 1s', '天気、カレンダー、タスク → スケルトンから実データへ'],
+          ['4. 重量API', '1-3s', 'AIコメント（バッチ済みならキャッシュヒット）、感情分析'],
+          ['5. バックグラウンド', 'ユーザー閲覧中', 'AIコメント鮮度チェック→staleなら再生成'],
+        ]} />
+        <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="楽観的UI" body="日記投稿→即座に「投稿済み」表示→裏で感情分析。習慣チェック→即チェックマーク→裏でAPI保存。" />
+          <MiniCard title="タイプライター演出" body="バッチ生成済みのAIコメントもあえて0.5秒かけて表示。「AIが考えて書いた」感覚を演出。即座に出ると機械的。" />
+        </div>
+      </Section>
+
+      <Section title="実装ロードマップ（体験設計観点）">
+        <Tbl headers={['Tier', '時期', '施策', '理由']} rows={[
+          ['1', '今すぐ', 'フィードバックループ強化、時間帯別セクション順序、エラーフォールバック、日記ローカル保存', '日次の体験品質に直結。新機能より既存の磨き込みが先'],
+          ['2', '1ヶ月', 'Weekly Narrative改善、Moment Detector、習慣マイクロインタラクション、感情バッジ強化', 'Moment Detectorのデータ蓄積は複利で効く。早く始めるほど将来の精度が上がる'],
+          ['3', '3ヶ月', 'Arc Reader、Storyページ、Theme Finder', '3ヶ月分のデータで初回の感動を最大化。Theme Finderは待つことで質を担保'],
+          ['4', '6ヶ月', 'Foresight Engine、Chapter生成、Narrative Memoryチャット注入', '全エンジン出力が揃ってから。部分的注入は中途半端'],
+          ['5', '一般公開時', 'コールドスタート完全設計、段階的開示ナビ、Courage Board、プッシュ通知', '現在は唯一のユーザーが十分なデータを持っているため不要'],
+        ]} />
+        <Principle title="なぜTier 1が「フィードバックループ強化」なのか" body="日記を書く→AIが反応する→もっと書きたくなる。このループがfocus-youの生命線。ループが途切れる瞬間（AI応答失敗、遅延、的外れ）は致命的。既に動いている核心的ループの品質を磨くことが、新機能追加より価値が高い。" color="var(--accent)" />
+      </Section>
+
+      <Section title="設計判断ログ">
+        <Tbl headers={['判断', '理由']} rows={[
+          ['時間帯でセクション順序を変える', '朝と夜でユーザーの目的が根本的に異なる'],
+          ['AIコメントを2-3文、100字以内', '疲れている時に長文は読めない。一番響く1つに絞る'],
+          ['Moment Detectorをインラインカードで', 'モーダルはフロー状態を遮断する'],
+          ['エンジン名をユーザーに見せない', '技術名は認知負荷。体験の質で語る'],
+          ['Theme Finderを3ヶ月後に解放', 'データ不足での的外れは信頼を壊す。待つ方が初回の感動が大きい'],
+          ['夜は完了タスクを先に表示', 'ピーク・エンドの法則。一日をポジティブに閉じる'],
+          ['Foresightは「予感」「かもしれません」の語調', '予測の断言は幻覚と同じリスク。修辞で緩衝する'],
+          ['バッチ結果にタイプライター演出', '即座に出ると機械的。「考えた」感を演出して信頼を高める'],
+        ]} />
+        <P>詳細: <code>.company/departments/ux/experience-design-focus-you.md</code></P>
+      </Section>
+    </>
+  )
+}
+
 // ========== Tab: Architecture ==========
 
 function TabArchitecture() {
@@ -1601,6 +1867,7 @@ function TabRoadmap() {
 
 const TABS = [
   { key: 'vision', label: 'Vision' },
+  { key: 'experience', label: 'Experience Design' },
   { key: 'roadmap', label: 'Roadmap' },
   { key: 'ai', label: 'AI Features' },
   { key: 'philosophy', label: 'Design Philosophy' },
@@ -1645,6 +1912,7 @@ export function Blueprint() {
       </div>
 
       {tab === 'vision' && <TabVision />}
+      {tab === 'experience' && <TabExperienceDesign />}
       {tab === 'roadmap' && <TabRoadmap />}
       {tab === 'ai' && <TabAiFeatures />}
       {tab === 'philosophy' && <TabDesignPhilosophy />}
