@@ -713,6 +713,71 @@ function TabExperienceDesign() {
         ]} />
         <P>詳細: <code>.company/departments/ux/experience-design-focus-you.md</code></P>
       </Section>
+
+      <Section title="モデル選定 — 誰が待っているかで決める">
+        <Principle title="判断原則" body="ユーザーが画面を見つめて待っている → OpenAI API（速度優先）。誰も待っていない + CLI可能 → Claude CLI（品質優先・無料）。誰も待っていない + pg_cron内 → OpenAI API最安モデル。" color="var(--accent)" />
+        <Tbl headers={['機能', 'ユーザーの状態', 'モデル', 'API', '理由']} rows={[
+          ['感情分析', '投稿後、画面を見ている', 'gpt-5-nano', 'OpenAI', '3秒以内。nano精度で十分'],
+          ['AIコメント', 'Today画面を見ている', 'gpt-5-nano', 'OpenAI', '即座のフィードバックが定着の核'],
+          ['Moment Detector', '投稿後、画面を見ている', 'gpt-5-nano', 'OpenAI', '感情分析直後。軽い判定'],
+          ['チャット応答', '送信後、待っている', '6段階ルーティング', 'OpenAI', 'SSEストリーミングで体感確保'],
+          ['自己分析', 'ボタン押下後、待っている', 'gpt-5-nano', 'OpenAI', '4500トークン。段階的表示で体感改善'],
+          ['朝ブリーフィング', '誰も待っていない(7:00)', 'gpt-5-nano', 'OpenAI (pg_cron)', 'Supabase内部。CLI不可'],
+          ['ニュース収集', '誰も待っていない(バッチ)', 'gpt-5-mini', 'OpenAI (pg_cron)', 'web_searchにmini必要'],
+          ['Arc Reader', '誰も待っていない(週次)', 'Claude CLI', 'Claude (無料)', '深い分析。品質>速度'],
+          ['Theme Finder', '誰も待っていない(月次)', 'Claude CLI', 'Claude (無料)', '最も品質が必要。コストゼロ'],
+          ['Foresight Engine', '誰も待っていない(週次)', 'Claude CLI', 'Claude (無料)', 'Arc Reader出力の解釈。深い推論'],
+          ['Chapter生成', '誰も待っていない(四半期)', 'Claude CLI', 'Claude (無料)', '最長・最深の分析'],
+          ['Weekly Narrative', '誰も待っていない(月曜早朝)', 'Claude CLI', 'Claude (無料)', '物語生成。品質重視'],
+          ['WBI集計/ストリーク', '誰も待っていない', 'LLM不要(SQL)', '—', '数値計算にLLMは使わない'],
+        ]} />
+        <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="コスト構造" body="OpenAI API: $3-5/月（nano中心）+ Claude CLI: $0（サブスク内）= 合計$3-5/月。バッチ処理をCLIに寄せることでAPI費用を最小化。" />
+          <MiniCard title="一般公開時の変化" body="Claude CLI → OpenAI Batch API に移行（ユーザー数に比例するため）。移行を容易にするため、プロンプト設計はAPI呼び出しでも動く形に。" />
+        </div>
+      </Section>
+
+      <Section title="速度要件 — レイテンシ予算">
+        <Tbl headers={['カテゴリ', '時間', '設計パターン', '該当機能']} rows={[
+          ['即座', '< 300ms', '楽観的UI更新。サーバー応答を待たない', '習慣チェック、タスク完了、日記投稿ボタン'],
+          ['快適', '300ms-3s', 'スケルトンUI or スピナー', '感情分析、AIコメント、Moment Detector'],
+          ['待てる', '3-15s', 'プログレスバー + 段階的表示', '自己分析、週次ナラティブ（手動）'],
+          ['バックグラウンド', '15s-数分', '次回表示時にキャッシュ', 'Arc Reader、朝ブリーフィング'],
+          ['夜間処理', '数分-数十分', 'Claude CLI。翌朝に反映', 'Chapter生成、年間物語'],
+        ]} />
+        <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="ストリーミング判断" body="チャット: ✅必須（会話の自然さ）。AIコメント: ❌不要→タイプライター演出。感情分析: ❌不要（JSON応答）。自己分析: 🔶検討（分析種別ごとに段階表示）。" />
+          <MiniCard title="体感速度の演出" body="バッチ生成済みのAIコメントもあえて0.5秒かける。「AIが考えて書いた」感覚。即座に出ると機械的に感じる。" />
+        </div>
+      </Section>
+
+      <Section title="動線設計 — 欲しいときに欲しいものが手に届く">
+        <Principle title="Today画面が宇宙の中心" body="全ての体験はTodayから始まりTodayに帰る。他ページへの遷移は「Todayの情報を深掘りする」行為。Todayに十分な入口を配置する。" color="var(--accent)" />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>現状の問題点</div>
+        <Tbl headers={['問題', '詳細']} rows={[
+          ['ナビゲーション過多', '21ルート×13セクション。初見はどこに何があるかわからない'],
+          ['Todayからの動線が弱い', 'Journal/SelfAnalysis/Weeklyへは直接行けない。サイドバーを探す必要'],
+          ['時間帯で動線が変わらない', '朝はCalendarへの動線、夜はJournal/Weeklyへの動線が欲しいが、常に同じ'],
+          ['データ蓄積の通知がない', '日記30件でArc Reader解放されてもユーザーは気づかない'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>動線の3原則</div>
+        <div className="g3" style={{ marginBottom: 16 }}>
+          <MiniCard title="1. Todayが中心" body="全ページへの入口をTodayに配置。感情バッジ→Journal、Moment確認→Story、スケジュール→Calendar。" />
+          <MiniCard title="2. 時間帯が動線を変える" body="朝: Today→Calendar。昼: Today→日記→感情分析。夜: Today→Journal→Weekly。時間帯コンテキストリンクを動的表示。" />
+          <MiniCard title="3. データが動線を作る" body="日記7件→「感情推移が見えます」→Journal。30件→「物語の弧が…」→Story。マイルストーン通知で新体験への誘導。" />
+        </div>
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>サイドバー再構成案</div>
+        <Tbl headers={['カテゴリ', '項目', '表示条件']} rows={[
+          ['常時表示', 'Home / AI Chat / Journal / Tasks', '常に表示（4項目）'],
+          ['Discover', 'Weekly / Self Analysis / Story', 'データ蓄積で段階的出現（日記14件/20件/30件）'],
+          ['Plan', 'Dreams & Goals / Habits / Calendar', '常に表示（3項目）'],
+          ['More（折りたたみ）', 'Finance / News / Growth / Organization / Knowledge 等', '折りたたみ内（使用頻度低）'],
+        ]} />
+        <P>初日は7項目、3ヶ月後は10項目。現状の21項目から大幅削減。</P>
+      </Section>
     </>
   )
 }
