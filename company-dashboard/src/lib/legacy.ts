@@ -3320,6 +3320,63 @@ async function renderInsights(root) {
       el('span', {}, [el('span', {textContent: '深夜率: ', style: 'color:var(--text3)'}), el('span', {textContent: lateRate+'%', style: 'font-weight:600;color:' + (lateRate > 20 ? 'var(--red)' : 'var(--text)')})])
     ]));
 
+    // --- Rhythm insights ---
+    var rhythmInsights = [];
+    // 1. Late night pattern
+    if (lateRate > 40) {
+      rhythmInsights.push({color: 'var(--red)', text: '深夜帯（22時〜6時）の作業が全体の' + lateRate + '%。睡眠への影響が懸念される水準'});
+    } else if (lateRate > 20) {
+      rhythmInsights.push({color: 'var(--amber)', text: '深夜帯の作業が' + lateRate + '%。慢性化すると判断力が鈍りやすい'});
+    }
+    // 2. Weekend work
+    var weekendTotal = dowCounts[0] + dowCounts[6];
+    var weekendRate = logs.length > 0 ? Math.round(weekendTotal / logs.length * 100) : 0;
+    if (weekendRate > 30) {
+      rhythmInsights.push({color: 'var(--red)', text: '土日の稼働が全体の' + weekendRate + '%。オン/オフの境界が曖昧になっている可能性'});
+    } else if (weekendRate > 15) {
+      rhythmInsights.push({color: 'var(--amber)', text: '週末にも' + weekendRate + '%の稼働あり。意図的な作業か惰性か、振り返る価値あり'});
+    } else if (weekendRate < 5 && logs.length >= 20) {
+      rhythmInsights.push({color: 'var(--green)', text: '週末はほぼ稼働なし。オン/オフの切り替えが明確'});
+    }
+    // 3. Concentration vs spread
+    var activeDays = dowCounts.filter(function(c) { return c > 0; }).length;
+    var dowStdDev = Math.sqrt(dowCounts.reduce(function(sum, c) { var avg = logs.length / 7; return sum + Math.pow(c - avg, 2); }, 0) / 7);
+    var dowCv = (logs.length / 7) > 0 ? dowStdDev / (logs.length / 7) : 0;
+    if (activeDays <= 3 && logs.length >= 20) {
+      rhythmInsights.push({color: 'var(--accent)', text: '稼働が週' + activeDays + '日に集中。短期集中型のワークスタイル'});
+    } else if (dowCv < 0.3 && logs.length >= 20) {
+      rhythmInsights.push({color: 'var(--accent)', text: '曜日ごとの稼働量が均一。安定したリズムが維持されている'});
+    } else if (dowCv > 0.7 && logs.length >= 20) {
+      rhythmInsights.push({color: 'var(--amber)', text: '曜日による稼働のばらつきが大きい。特定の日に負荷が偏っている'});
+    }
+    // 4. Peak hour insight
+    if (peakHour >= 5 && peakHour <= 9) {
+      rhythmInsights.push({color: 'var(--green)', text: '朝型のリズム。午前中にピークが来ており、集中力の高い時間を活用できている'});
+    } else if (peakHour >= 22 || peakHour <= 4) {
+      rhythmInsights.push({color: 'var(--red)', text: '夜型のリズム。ピークが' + peakHour + '時台。生活リズムの見直しを検討'});
+    } else if (peakHour >= 13 && peakHour <= 15) {
+      rhythmInsights.push({color: 'var(--accent)', text: '午後にピーク。午前はMTGや情報収集、午後に集中作業というパターンか'});
+    }
+    // 5. Low activity day
+    var minDow = dowCounts.indexOf(Math.min.apply(null, dowCounts));
+    var minDowCount = dowCounts[minDow];
+    var maxDowCount = dowCounts[peakDow];
+    if (maxDowCount > 0 && minDowCount / maxDowCount < 0.2 && minDow >= 1 && minDow <= 5) {
+      rhythmInsights.push({color: 'var(--text3)', text: dowLabels[minDow] + '曜日の稼働が極端に少ない（' + minDowCount + '件）。MTG集中日 or 意図的なオフ？'});
+    }
+
+    if (rhythmInsights.length > 0) {
+      var insightBox = el('div', {style: 'margin-top:16px;padding:12px 14px;background:var(--bg2);border-radius:8px;display:flex;flex-direction:column;gap:8px'});
+      insightBox.appendChild(el('div', {textContent: '示唆', style: 'font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px'}));
+      rhythmInsights.forEach(function(ins) {
+        insightBox.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);display:flex;align-items:baseline;gap:8px'}, [
+          el('span', {style: 'width:6px;height:6px;min-width:6px;border-radius:50%;background:' + ins.color + ';display:inline-block;position:relative;top:0px'}),
+          el('span', {textContent: ins.text})
+        ]));
+      });
+      rhythmCard.appendChild(insightBox);
+    }
+
     root.appendChild(rhythmCard);
   }
 
