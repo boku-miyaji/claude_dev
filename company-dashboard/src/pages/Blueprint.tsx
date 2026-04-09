@@ -456,6 +456,54 @@ Edge Function (ai-agent/index.ts) を編集
 function TabExperienceDesign() {
   return (
     <>
+      <Section title="設計思想 — なぜこの体験を届けるのか">
+        <Principle title="足りないもの" body="人は毎日、断片を生きている。でも「今日はどんな1日だったか」と聞かれると、ほとんどの人は答えられない。自分の日々を「意味のある流れ」として見る仕組みがない。SNSは他人の物語を見せてくれるが、自分の物語は誰も語ってくれない。" color="var(--accent)" />
+        <div className="g2" style={{ marginBottom: 16, marginTop: 12 }}>
+          <MiniCard title="Before" body="「今日も1日終わった。なんか忙しかった」「最近調子悪い。なんでだろう」「自分って何がしたいんだろう」" />
+          <MiniCard title="After" body={'「今日は"つくる人"としての自分がまた一歩前に進んだ日だった」「去年の同じ時期にも同じ波があった。あの時は2週間後に突破があった」'} />
+        </div>
+      </Section>
+
+      <Section title="ユーザーに体験してほしい5つのこと">
+        <P>設計の全判断は、この5つを実現するために行う。5つが満たされていれば機能の多寡は問わない。</P>
+        <Tbl headers={['#', '体験', '具体的な瞬間', '設計への影響']} rows={[
+          ['E1', '「覚えてくれている」', 'AIが昨日の日記に触れる。先月の転機を引用する', '記憶設計（4層）、Narrative Memory'],
+          ['E2', '「自分でも気づかなかった」', '3ヶ月の日記から人生テーマを発見される', 'Theme Finder、データ蓄積→体験変化'],
+          ['E3', '「今の自分の位置がわかる」', '感情の弧で「今は沈黙期、でもいつも跳躍の前」と知る', 'Arc Reader、Foresight Engine'],
+          ['E4', '「書いたら反応がある」', '日記を書いた直後にAIが共感してくれる', 'フィードバックループ、即時性'],
+          ['E5', '「この場所は安全だ」', '本音を書いても評価されない。データは自分だけのもの', 'プライバシー設計、トーン設計'],
+        ]} />
+      </Section>
+
+      <Section title="語り手の人格 & 設計原則">
+        <div className="g2" style={{ marginBottom: 16 }}>
+          <div className="card" style={{ padding: 14, borderLeft: '3px solid var(--accent)' }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: 'var(--accent)' }}>語り手（Narrator）の人格</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+              <div>あなたの物語を長く見てきた、信頼できる語り手。</div>
+              <div>友人のような親しみ、だが軽すぎない。核心を突く。</div>
+              <div style={{ marginTop: 8 }}><strong>する:</strong> 物語として語る / 問いを投げる / 本人の言葉を引用する</div>
+              <div><strong>しない:</strong> 指示する / 評価する / 断定する / 数字を読み上げる</div>
+            </div>
+          </div>
+          <div className="card" style={{ padding: 14 }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>立ち位置: 何であり、何でないか</div>
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+              <div>○ 物語の「語り手」 / 自分を理解する「鏡」 / 長く付き合う「伴走者」</div>
+              <div>× データの「集計ツール」 / 他人と比較する「SNS」 / 仕事の「効率化ツール」</div>
+              <div style={{ marginTop: 8, color: 'var(--text3)', fontSize: 11 }}>商用化の軸は「仕事効率化」ではなく「自己理解・幸せ・物語」</div>
+            </div>
+          </div>
+        </div>
+        <Tbl headers={['#', '原則', '意味', '違反の例']} rows={[
+          ['P1', '意図の先読み', 'ユーザーが考える前に欲しいものが手に届く', '夜に「朝のスケジュール」を見せる'],
+          ['P2', '認知負荷の最小化', '疲れている時にも使える', '一度に10個の感情スコアを表示'],
+          ['P3', 'フィードバックループ', '書いたら反応がある。使うほど賢くなる', '日記を書いても翌日まで何も起きない'],
+          ['P4', 'エラー回復の人間化', 'AIが間違えても信頼を壊さない', '「エラーが発生しました」の無機質な画面'],
+          ['P5', 'フロー状態の保護', '内省の流れを遮断しない', '日記を書いている最中にポップアップ'],
+        ]} />
+      </Section>
+
       <Section title="体験設計フレームワーク — 10領域">
         <P>LLMベースシステムの体験設計で考えるべき全領域。汎用フレームワーク（他PJにも再利用可能）+ focus-youへの具体適用。</P>
         <Tbl headers={['#', '領域', '汎用の問い', 'LLM特有の考慮']} rows={[
