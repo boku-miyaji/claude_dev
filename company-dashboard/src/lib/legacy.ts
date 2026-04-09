@@ -700,6 +700,7 @@ function initGcalTokenClient(callback) {
       if (callback) callback();
     }
   });
+  gcalTokenClient.requestAccessToken();
 }
 
 function getGcalToken() {
@@ -1555,13 +1556,10 @@ async function renderCalendar(root) {
   var signInCard = el('div', {className: 'card', style: 'text-align:center;padding:40px 20px'}, [
     el('div', {style: 'font-size:36px;margin-bottom:16px', textContent: '\uD83D\uDCC5'}),
     el('div', {style: 'font-size:15px;font-weight:600;margin-bottom:8px', textContent: 'Google Calendar \u3068\u9023\u643A'}),
-    el('div', {style: 'font-size:13px;color:var(--text2);margin-bottom:24px;max-width:400px;margin-left:auto;margin-right:auto',
-      textContent: 'Googleアカウントでサインインすると、3つのカレンダーからリアルタイムで予定を取得・追加・編集できます。トークンはブラウザセッション内のみ保持されます。'}),
     el('button', {className: 'btn btn-p', style: 'font-size:14px;padding:12px 32px', textContent: '\uD83D\uDD12 Sign in with Google', onClick: function() {
       initGcalTokenClient(function() {
         renderPage('calendar');
       });
-      gcalTokenClient.requestAccessToken();
     }})
   ]);
   contentArea.appendChild(signInCard);
