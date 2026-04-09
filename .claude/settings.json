@@ -155,7 +155,8 @@
       "Edit(~/.claude/skills/company/**)",
       "Bash(export LANG=en_US.UTF-8)",
       "Bash(export LC_ALL=en_US.UTF-8)",
-      "Bash(openssl rand:*)"
+      "Bash(openssl rand:*)",
+      "mcp__claude_ai_Google_Calendar__gcal_list_calendars"
     ],
     "deny": [
       "Read(**/.env)",
