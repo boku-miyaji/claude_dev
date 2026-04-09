@@ -21,21 +21,26 @@ LOG_DIR="$HOME/.claude/logs"
 mkdir -p "$LOG_DIR" 2>/dev/null || true
 echo "{\"ts\":\"$TS\",\"event\":\"agent_dispatch\",\"dept\":\"$AGENT_TYPE\",\"desc\":\"$DESCRIPTION\",\"model\":\"$MODEL\",\"background\":$BACKGROUND}" >> "$LOG_DIR/agent-activity.jsonl" 2>/dev/null || true
 
-# --- 2. Supabase activity_log ---
+# --- 2. Supabase activity_log (x-ingest-key for RLS) ---
 ENV_FILE="$HOME/.claude/hooks/supabase.env"
 [ -f "$ENV_FILE" ] && source "$ENV_FILE" || exit 0
 
-[ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ] && exit 0
+[ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ] || [ -z "$SUPABASE_INGEST_KEY" ] && exit 0
 
-# Escape strings for JSON
-DESC_ESCAPED=$(echo "$DESCRIPTION" | sed 's/"/\\"/g' | head -c 200)
-DEPT_ESCAPED=$(echo "$AGENT_TYPE" | sed 's/"/\\"/g')
+# Build JSON payload safely with jq
+PAYLOAD=$(jq -n \
+  --arg desc "$DESCRIPTION" \
+  --arg dept "$AGENT_TYPE" \
+  --arg model "$MODEL" \
+  --argjson bg "$BACKGROUND" \
+  '{action:"dept_dispatch", description:($desc|.[:200]), metadata:{dept:$dept, model:$model, background:$bg}}')
 
 curl -s -X POST "${SUPABASE_URL}/rest/v1/activity_log" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
   -H "Content-Type: application/json" \
-  -d "{\"action\":\"dept_dispatch\",\"description\":\"${DESC_ESCAPED}\",\"metadata\":{\"dept\":\"${DEPT_ESCAPED}\",\"model\":\"${MODEL}\",\"background\":${BACKGROUND}}}" \
+  -d "$PAYLOAD" \
   >/dev/null 2>&1 || true
 
 exit 0

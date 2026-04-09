@@ -156,7 +156,8 @@
       "Bash(export LANG=en_US.UTF-8)",
       "Bash(export LC_ALL=en_US.UTF-8)",
       "Bash(openssl rand:*)",
-      "mcp__claude_ai_Google_Calendar__gcal_list_calendars"
+      "mcp__claude_ai_Google_Calendar__gcal_list_calendars",
+      "Bash(/workspace/.claude/hooks/dept-eval-trigger.sh)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -270,6 +271,11 @@
           {
             "type": "command",
             "command": "/workspace/.claude/hooks/doc-freshness-check.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/dept-eval-trigger.sh",
             "async": true
           }
         ]
