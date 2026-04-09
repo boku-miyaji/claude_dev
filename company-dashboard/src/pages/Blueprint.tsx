@@ -298,6 +298,8 @@ function TabOverview() {
           ['CLAUDE.md肥大化警告', 'CLAUDE.mdへの書き込み後', 'Hook (PostToolUse)', '200行超で自動警告。60行以下推奨'],
           ['Hook実行ログ', '全ツール実行後', 'Hook (PostToolUse)', '~/.claude/logs/hook-executions.jsonl に記録'],
           ['危険コマンド監査', 'Bash実行前', 'Hook (PreToolUse)', 'ブロック時に blocked-commands.jsonl に記録'],
+          ['部署稼働ログ', 'Agent起動時', 'Hook (PostToolUse) — Supabase activity_log INSERT', 'dept_dispatch + metadata.dept で集計可能'],
+          ['部署評価リマインド', 'セッション開始', 'Hook (SessionStart) — 14日超で警告', '評価サイクルの自動維持'],
           ['emotion_analysis', '日記投稿直後', 'useEmotionAnalysis (自動)', 'diary_entries.wbi更新 → Journal可視化 → AI Partner再生成'],
           ['AI Partnerコメント', '日記投稿後 + 時間帯変更 + リロード', 'useMorningBriefing (invalidate)', '表示のみ（DB保存なし）'],
           ['夢進捗検出', '日記投稿後', 'useDreamDetection (自動)', 'toast通知のみ'],
@@ -422,7 +424,8 @@ Edge Function (ai-agent/index.ts) を編集
 部署Agent を起動
   └→ PostToolUse Hook: agent-activity-log.sh
        └→ Agent tool を検出 → dept, model, description を記録
-            └→ ~/.claude/logs/agent-activity.jsonl
+            ├→ ~/.claude/logs/agent-activity.jsonl（ローカル）
+            └→ Supabase activity_log INSERT（action=dept_dispatch, metadata.dept）
 
 プロンプトを入力
   └→ UserPromptSubmit Hook（3つ並列実行）:
