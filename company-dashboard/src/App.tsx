@@ -39,8 +39,8 @@ export function App() {
     return (
       <div className="auth-page">
         <div className="auth-box">
-          <div className="auth-logo">F</div>
-          <h1>focus-you</h1>
+          <img src="/icon.svg" alt="Focus You" width={56} height={56} style={{ borderRadius: 14 }} />
+          <h1>Focus You</h1>
           <p style={{ color: 'var(--text3)' }}>Loading...</p>
         </div>
       </div>
