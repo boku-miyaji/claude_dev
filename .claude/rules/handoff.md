@@ -52,6 +52,12 @@ handoff:
 1. パスが登録対象（`.company/departments/`, `docs/final_output/`, `secretary/archive/` 等）
 2. ファイルサイズが 5KB 以上
 3. 拡張子が `.md`, `.html`, `.pptx`, `.pdf`
+
+**登録時のタイトルと description ルール:**
+- **title**: 内容がわかる具体的なタイトル（日付だけは不可）
+  - 良い例: `情報収集: Advisor Strategy, Memory Agent論文（04/10）`
+  - 悪い例: `情報収集レポート 2026-04-10`
+- **description**: 1行の概要（120文字以内）。一覧画面で中身が判断できること
 4. ファイル名が `temp-`, `wip-`, `draft-` で始まらない
 
 条件を満たす場合、パイプライン完了報告時にまとめて登録する。

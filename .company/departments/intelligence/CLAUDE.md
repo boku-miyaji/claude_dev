@@ -169,7 +169,7 @@ intelligence/
 テーブル: secretary_notes
 カラム:
   type: 'intelligence_report'
-  title: '情報収集レポート YYYY-MM-DD HH:MM'
+  title: '情報収集: [主要トピック2-3個]（MM/DD）'  ← 例: '情報収集: Advisor Strategy, Memory Agent論文, Meta Llama 4（04/10）'
   body: レポート全文（Markdown）
   note_date: 'YYYY-MM-DD'
   tags: ['intelligence', 'manual']
