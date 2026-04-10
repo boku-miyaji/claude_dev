@@ -93,15 +93,36 @@ web_sources:
     category: "AI"
     name: "OpenAI Blog"
     frequency: daily
+    priority: high
+  - url: "https://openai.com/research/"
+    category: "AI research"
+    name: "OpenAI Research"
+    note: "GPT/o-series, 安全性, alignment の研究論文・テクニカルレポート"
+    frequency: daily
+    priority: high
   - url: "https://blog.google/technology/ai/"
     category: "AI"
     name: "Google AI Blog"
     frequency: daily
+    priority: high
   - url: "https://deepmind.google/discover/blog/"
     category: "AI research"
     name: "Google DeepMind Blog"
-    note: "研究論文・技術発表"
+    note: "Gemini, AlphaFold, 基盤研究の論文・レポート"
     frequency: daily
+    priority: high
+  - url: "https://ai.meta.com/blog/"
+    category: "AI"
+    name: "Meta AI Blog"
+    note: "Llama, オープンモデル, 研究発表"
+    frequency: daily
+    priority: high
+  - url: "https://ai.meta.com/research/publications/"
+    category: "AI research"
+    name: "Meta AI Research Publications"
+    note: "FAIR の論文・テクニカルレポート"
+    frequency: weekly
+    priority: high
 
   # --- ツール公式 ---
   - url: "https://code.claude.com/docs/en/changelog"

@@ -62,13 +62,23 @@ WHERE action IN ('intelligence_like', 'intelligence_click')
 GROUP BY cat ORDER BY cnt DESC LIMIT 10
 ```
 
-### 1. 公式ブログ・リリースノート（最優先・WebFetch）
+### 1. 主要AI企業の公式ブログ・レポート（最優先・WebFetch）
 **以下は毎回必ずチェックする。漏れ厳禁。**
-- `claude.com/blog` — Claude Code, Managed Agents, Advisor Strategy 等
-- `anthropic.com/engineering` — ハーネス設計, エージェント評価, セキュリティ
-- `anthropic.com/research` — 安全性・解釈可能性の論文
-- `anthropic.com/news` — 公式アナウンス
-- その他 sources.yaml の web_sources をWebFetchで巡回
+
+| 企業 | 必須チェック先 | 何を拾うか |
+|------|-------------|-----------|
+| **Anthropic** | `claude.com/blog` | プロダクト発表（Managed Agents, Advisor Strategy等） |
+| | `anthropic.com/engineering` | 技術深掘り（ハーネス設計, エージェント評価） |
+| | `anthropic.com/research` | 安全性・解釈可能性の論文 |
+| | `anthropic.com/news` | 公式アナウンス |
+| **OpenAI** | `openai.com/news/` | プロダクト・モデル発表 |
+| | `openai.com/research/` | GPT/o-series, alignment のテクニカルレポート |
+| **Google** | `blog.google/technology/ai/` | プロダクト発表 |
+| | `deepmind.google/discover/blog/` | Gemini, 基盤研究の論文・レポート |
+| **Meta** | `ai.meta.com/blog/` | Llama, オープンモデル |
+| | `ai.meta.com/research/publications/` | FAIR のテクニカルレポート |
+
+**レポートに `## 🏢 各社レポート・発表` セクションを設け、企業別に整理して報告する。**
 
 ### 2. 学術論文（arXiv・研究機関）
 - sources.yaml の `academic_papers` セクションのキーワードでarXivを検索
