@@ -6,7 +6,8 @@ import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis'
 import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { useDreamDetection } from '@/hooks/useDreamDetection'
 import { useTodayWeather } from '@/hooks/useTodayWeather'
-import { useTodaySchedule } from '@/hooks/useTodaySchedule'
+import { useTodayTimeline } from '@/hooks/useTodayTimeline'
+import type { TimelineItem } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
 import { useDataStore } from '@/stores/data'
 import { useBriefingStore } from '@/stores/briefing'
@@ -225,22 +226,8 @@ export function Today() {
   const { analyze, analyzing, error: emotionError } = useEmotionAnalysis()
   const { detect } = useDreamDetection()
   const weather = useTodayWeather()
-  const { todayEvents, tomorrowEvents, recentEventName } = useTodaySchedule()
 
   const timeMode: TimeMode = useMemo(() => getTimeMode(), [])
-
-  const todayEventsText = useMemo(() => {
-    if (todayEvents.length === 0) return undefined
-    return todayEvents.map((e) => `${formatEventTime(e.start)} ${e.summary}${e.isPast ? ' (完了)' : ''}`).join('\n')
-  }, [todayEvents])
-
-  const tomorrowEventsText = useMemo(() => {
-    if (tomorrowEvents.length === 0) return undefined
-    return tomorrowEvents.map((e) => `${formatEventTime(e.start)} ${e.summary}`).join('\n')
-  }, [tomorrowEvents])
-
-  const weatherText = weather ? `今日の天気: ${weather.today.icon} ${weather.today.tempMax}℃/${weather.today.tempMin}℃、明日: ${weather.tomorrow.icon} ${weather.tomorrow.tempMax}℃/${weather.tomorrow.tempMin}℃` : undefined
-  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing(timeMode, todayEventsText, tomorrowEventsText, weatherText)
 
   const {
     diaryEntries, tasks, dreams, habits, habitLogs,
@@ -294,33 +281,59 @@ export function Today() {
   const allOpenTasks = useMemo(() => tasks.filter((t) => (t.status === 'open' || t.status === 'in_progress') && t.type !== 'request'), [tasks])
   const completedToday = useMemo(() => tasks.filter((t) => t.status === 'done' && t.type !== 'request' && t.completed_at?.substring(0, 10) === todayStr), [tasks, todayStr])
 
+  // Timeline: merges calendar events + time-bound tasks into 30-min slots
+  const timeline = useTodayTimeline(allOpenTasks, completedToday)
+  const { slots: timelineSlots, todayTasks: timelineTodayTasks, upcomingTasks, tomorrowEvents, recentEventName } = timeline
+
+  // Briefing text from timeline data
+  const todayEventsText = useMemo(() => {
+    const events: string[] = []
+    for (const slot of timelineSlots) {
+      for (const item of slot.items) {
+        if (item.type === 'event') events.push(`${formatEventTime(item.startTime)} ${item.title}${item.isPast ? ' (完了)' : ''}`)
+      }
+    }
+    return events.length > 0 ? events.join('\n') : undefined
+  }, [timelineSlots])
+
+  const tomorrowEventsText = useMemo(() => {
+    if (tomorrowEvents.length === 0) return undefined
+    return tomorrowEvents.map((e) => `${formatEventTime(e.startTime)} ${e.title}`).join('\n')
+  }, [tomorrowEvents])
+
+  const weatherText = weather ? `今日の天気: ${weather.today.icon} ${weather.today.tempMax}℃/${weather.today.tempMin}℃、明日: ${weather.tomorrow.icon} ${weather.tomorrow.tempMax}℃/${weather.tomorrow.tempMin}℃` : undefined
+  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing(timeMode, todayEventsText, tomorrowEventsText, weatherText)
+
   const priorityWeight = { high: 0, normal: 1, low: 2 } as const
 
+  // todayTasks = tasks from timeline (no specific time, due today/overdue/high priority)
   const todayTasks = useMemo(() => {
-    // Overdue, due today, high priority, or in_progress
-    const relevant = allOpenTasks.filter((t) =>
-      (t.due_date && t.due_date <= todayStr) || t.priority === 'high' || t.status === 'in_progress',
-    )
-    // Sort: overdue first → due today → due later/none. Within same date group, by priority.
-    return [...relevant].sort((a, b) => {
+    return [...timelineTodayTasks].sort((a, b) => {
       const aDate = a.due_date || '9999-99-99'
       const bDate = b.due_date || '9999-99-99'
       if (aDate !== bDate) return aDate < bDate ? -1 : 1
       return (priorityWeight[a.priority] ?? 1) - (priorityWeight[b.priority] ?? 1)
     })
-  }, [allOpenTasks, todayStr])
+  }, [timelineTodayTasks])
 
+  // otherOpenTasks = backlog (not in timeline or todayTasks)
   const otherOpenTasks = useMemo(() => {
+    const timelineTaskIds = new Set<string>()
+    for (const slot of timelineSlots) {
+      for (const item of slot.items) {
+        if (item.type === 'task') timelineTaskIds.add(item.id)
+      }
+    }
     const todayIds = new Set(todayTasks.map((t) => t.id))
-    const others = allOpenTasks.filter((t) => !todayIds.has(t.id))
-    // Sort by due_date (soonest first), then priority
-    return [...others].sort((a, b) => {
-      const aDate = a.due_date || '9999-99-99'
-      const bDate = b.due_date || '9999-99-99'
-      if (aDate !== bDate) return aDate < bDate ? -1 : 1
-      return (priorityWeight[a.priority] ?? 1) - (priorityWeight[b.priority] ?? 1)
-    })
-  }, [allOpenTasks, todayTasks])
+    const upcomingIds = new Set(upcomingTasks.map((t) => t.id))
+    return allOpenTasks.filter((t) => !timelineTaskIds.has(t.id) && !todayIds.has(t.id) && !upcomingIds.has(t.id))
+      .sort((a, b) => {
+        const aDate = a.due_date || '9999-99-99'
+        const bDate = b.due_date || '9999-99-99'
+        if (aDate !== bDate) return aDate < bDate ? -1 : 1
+        return (priorityWeight[a.priority] ?? 1) - (priorityWeight[b.priority] ?? 1)
+      })
+  }, [allOpenTasks, timelineSlots, todayTasks, upcomingTasks])
 
   // Habits
   /** Get the Monday of the current week as YYYY-MM-DD (ISO week: Mon-Sun) */
@@ -603,27 +616,103 @@ export function Today() {
     </div>
   )
 
-  /* ── [2] Schedule ── */
+  /* ── [2] Timeline — unified 30-min slot view ── */
 
-  const scheduleEvents = timeMode === 'afternoon' ? todayEvents.filter((e) => !e.isPast) : todayEvents
-  const Schedule = (
+  const nowMarkerTime = useMemo(() => {
+    const d = new Date()
+    return `${String(d.getHours()).padStart(2, '0')}:${d.getMinutes() < 30 ? '00' : '30'}`
+  }, [])
+
+  const filteredSlots = useMemo(() => {
+    if (timeMode === 'afternoon') return timelineSlots.filter((s) => s.items.some((i) => !i.isPast))
+    return timelineSlots
+  }, [timelineSlots, timeMode])
+
+  const TimelineSection = filteredSlots.length > 0 ? (
     <div className="section">
       <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{timeMode === 'afternoon' ? 'この後の予定' : '今日のスケジュール'}</span>
+        <span>{timeMode === 'afternoon' ? 'この後の予定' : 'タイムライン'}</span>
         <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/calendar')}>カレンダー</button>
       </div>
       <Card>
-        {scheduleEvents.length > 0 ? scheduleEvents.map((e) => (
-          <div key={e.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', gap: 10, opacity: e.isPast ? 0.5 : 1 }}>
-            <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text2)', minWidth: 42 }}>{formatEventTime(e.start)}</span>
-            <span style={{ color: 'var(--text)', textDecoration: e.isPast ? 'line-through' : 'none' }}>{e.summary}</span>
-          </div>
-        )) : (
-          <div style={{ padding: '6px 0', fontSize: 12, color: 'var(--text3)' }}>予定なし</div>
-        )}
+        {filteredSlots.map((slot, si) => {
+          const isCurrentSlot = slot.time === nowMarkerTime
+          return (
+            <div key={slot.time}>
+              {/* Now marker */}
+              {isCurrentSlot && (
+                <div style={{ position: 'relative', height: 0, marginBottom: 2 }}>
+                  <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 2, background: 'var(--red)', borderRadius: 1, opacity: 0.7 }} />
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 10, padding: '6px 0', borderBottom: si < filteredSlots.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: isCurrentSlot ? 'var(--red)' : 'var(--text3)', minWidth: 42, fontSize: 12, paddingTop: 1 }}>{slot.time}</span>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {slot.items.map((item: TimelineItem) => {
+                    if (item.type === 'event') {
+                      const endTime = formatEventTime(item.endTime)
+                      return (
+                        <div key={item.id} style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, opacity: item.isPast ? 0.5 : 1 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
+                          <span style={{ textDecoration: item.isPast ? 'line-through' : 'none' }}>{item.title}</span>
+                          {endTime && <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>~{endTime}</span>}
+                        </div>
+                      )
+                    }
+                    // Task
+                    return (
+                      <div key={item.id} style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, opacity: item.isPast && item.completed ? 0.5 : 1 }}>
+                        <span
+                          onClick={() => {
+                            const newStatus = item.completed ? 'open' : 'done'
+                            updateTask(item.id, { status: newStatus, completed_at: newStatus === 'done' ? new Date().toISOString() : null })
+                            toast(newStatus === 'done' ? '完了!' : '戻しました')
+                          }}
+                          style={{
+                            width: 16, height: 16, borderRadius: 3, flexShrink: 0, cursor: 'pointer',
+                            border: `2px solid ${item.completed ? 'var(--green)' : 'var(--border)'}`,
+                            background: item.completed ? 'var(--green)' : 'transparent',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 9, color: '#fff', transition: 'all .15s',
+                          }}
+                        >{item.completed ? '✓' : ''}</span>
+                        <span style={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? 'var(--text3)' : 'var(--text)', fontWeight: 500 }}>
+                          {item.title}
+                        </span>
+                        {item.isDeadline && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600, padding: '1px 4px', background: 'var(--red-bg)', borderRadius: 3, border: '1px solid var(--red-border)' }}>〆</span>}
+                        {item.estimatedMinutes && <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{item.estimatedMinutes}min</span>}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </Card>
     </div>
-  )
+  ) : null
+
+  /* ── [2b] Upcoming deadlines ── */
+
+  const UpcomingSection = upcomingTasks.length > 0 ? (
+    <div className="section">
+      <div className="section-title">近日の締切</div>
+      <Card>
+        {upcomingTasks.slice(0, 5).map((t) => {
+          const due = formatDueDate(t.due_date, todayStr)
+          return (
+            <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text3)', flexShrink: 0 }} />
+              <span style={{ flex: 1 }}>{t.title}</span>
+              {due && <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3, color: due.color, background: due.bg, border: `1px solid ${due.border}`, fontFamily: 'var(--mono)' }}>{due.label}</span>}
+            </div>
+          )
+        })}
+        {upcomingTasks.length > 5 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {upcomingTasks.length - 5}件</div>}
+      </Card>
+    </div>
+  ) : null
 
   const Tomorrow = tomorrowEvents.length > 0 ? (
     <div className="section">
@@ -631,8 +720,8 @@ export function Today() {
       <Card>
         {tomorrowEvents.slice(0, 3).map((e) => (
           <div key={e.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', gap: 10 }}>
-            <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text2)', minWidth: 42 }}>{formatEventTime(e.start)}</span>
-            <span>{e.summary}</span>
+            <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text2)', minWidth: 42 }}>{formatEventTime(e.startTime)}</span>
+            <span>{e.title}</span>
           </div>
         ))}
         {tomorrowEvents.length > 3 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {tomorrowEvents.length - 3}件</div>}
@@ -838,8 +927,9 @@ export function Today() {
       <div className="page">
         {Greeting}
         {Briefing}
-        {Schedule}
+        {TimelineSection}
         {ActionsSection}
+        {UpcomingSection}
         {NewsSection}
         {Diary}
         {StatusBar}
@@ -854,8 +944,9 @@ export function Today() {
         {Greeting}
         {Briefing}
         {Diary}
-        {Schedule}
+        {TimelineSection}
         {ActionsSection}
+        {UpcomingSection}
         {NewsSection}
         {Backlog}
         {Fragments}
@@ -870,6 +961,7 @@ export function Today() {
       {Briefing}
       {ActionsSection}
       {Diary}
+      {UpcomingSection}
       {Backlog}
       {Tomorrow}
       {NewsSection}
