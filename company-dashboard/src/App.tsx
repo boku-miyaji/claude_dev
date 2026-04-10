@@ -25,6 +25,7 @@ import { SelfAnalysis } from '@/pages/SelfAnalysis'
 import { Goals } from '@/pages/Goals'
 import { Habits } from '@/pages/Habits'
 import { WeeklyNarrative } from '@/pages/WeeklyNarrative'
+import { Story } from '@/pages/Story'
 import { GoogleAuthCallback } from '@/pages/GoogleAuthCallback'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { ShortcutHelp } from '@/components/ShortcutHelp'
@@ -86,6 +87,7 @@ export function App() {
           <Route path="/me" element={<SelfAnalysis />} />
           <Route path="/habits" element={<Habits />} />
           <Route path="/weekly" element={<WeeklyNarrative />} />
+          <Route path="/story" element={<Story />} />
           <Route path="/dashboard-legacy" element={<LegacyPage renderer={renderDashboard} />} />
           <Route path="/calendar" element={<LegacyPage renderer={renderCalendar} />} />
           <Route path="/tasks" element={<Tasks />} />

@@ -22,6 +22,7 @@ const NAV: NavEntry[] = [
   { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
   // Understand
   { type: 'label', label: 'Understand' },
+  { type: 'item', page: 'story', icon: '📖', label: 'Story' },
   { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
   { type: 'item', page: 'insights', icon: '📊', label: 'Insights' },
   { type: 'item', page: 'me', icon: '🧬', label: 'Self-Analysis' },
