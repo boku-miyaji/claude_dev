@@ -24,6 +24,8 @@ interface ReportNewsItem {
   url: string | null
   source: string
   topic: string
+  published_date: string | null
+  collected_at: string | null
 }
 
 type Tab = 'research' | 'news'
@@ -281,14 +283,23 @@ function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }:
   )
 }
 
+function formatNewsDate(item: ReportNewsItem): string {
+  const dateStr = item.published_date || item.collected_at
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return ''
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
 function NewsFeed() {
   const [items, setItems] = useState<ReportNewsItem[]>([])
   const [loading, setLoading] = useState(true)
   const [collecting, setCollecting] = useState(false)
+  const [expanded, setExpanded] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const { loadNews } = await import('@/lib/newsCollect')
-    const news = await loadNews(20)
+    const news = await loadNews(30)
     setItems(news as ReportNewsItem[])
     setLoading(false)
   }, [])
@@ -321,30 +332,61 @@ function NewsFeed() {
         <EmptyState icon="📰" message="ニュースはまだありません。「手動収集」で取得できます。" />
       ) : (
         <div className="card">
-          {items.map((item, i) => (
-            <div key={item.id} style={{
-              padding: '10px 0',
-              borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
-              fontSize: 13,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {item.url ? (
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text)', fontWeight: 500, textDecoration: 'none' }}>{item.title}</a>
-                ) : (
-                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>{item.title}</span>
+          {items.map((item, i) => {
+            const isExpanded = expanded === item.id
+            const dateLabel = formatNewsDate(item)
+            return (
+              <div
+                key={item.id}
+                style={{
+                  padding: '12px 0',
+                  borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setExpanded(isExpanded ? null : (item.id || null))}
+              >
+                {/* Header row: date + title */}
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  {dateLabel && (
+                    <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', minWidth: 36, flexShrink: 0 }}>
+                      {dateLabel}
+                    </span>
+                  )}
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', flex: 1 }}>
+                    {item.title}
+                  </span>
+                </div>
+
+                {/* Meta: source + topic */}
+                <div style={{ display: 'flex', gap: 6, marginTop: 4, marginLeft: dateLabel ? 44 : 0, alignItems: 'center' }}>
+                  {item.source && <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{item.source}</span>}
+                  {item.topic && <span style={{ fontSize: 10, padding: '0 5px', borderRadius: 3, background: 'var(--surface2)', color: 'var(--accent2)' }}>{item.topic}</span>}
+                </div>
+
+                {/* Expanded: summary + link */}
+                {isExpanded && (
+                  <div style={{ marginTop: 10, marginLeft: dateLabel ? 44 : 0, padding: 12, background: 'var(--surface)', borderRadius: 6, border: '1px solid var(--border)' }}>
+                    {item.summary && (
+                      <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, marginBottom: item.url ? 10 : 0 }}>
+                        {item.summary}
+                      </div>
+                    )}
+                    {item.url && (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}
+                      >
+                        記事を読む →
+                      </a>
+                    )}
+                  </div>
                 )}
               </div>
-              {item.summary && (
-                <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 3, lineHeight: 1.5 }}>
-                  {item.summary}
-                </div>
-              )}
-              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3, fontFamily: 'var(--mono)', display: 'flex', gap: 8 }}>
-                {item.source && <span>{item.source}</span>}
-                {item.topic && <span style={{ color: 'var(--accent2)' }}>{item.topic}</span>}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

@@ -9,6 +9,7 @@ export interface NewsItem {
   source: string
   topic: string
   published_date?: string | null
+  collected_at?: string | null
 }
 
 const DEFAULT_TOPICS = 'AI/LLM、データプラットフォーム、Claude、OpenAI'
@@ -39,8 +40,8 @@ export async function collectNews(options?: {
         'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
       },
       body: JSON.stringify({
-        message: `web_searchツールを使って、${topicPrompt} の最新ニュースを${limit}件検索してください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル","summary":"1行要約","url":"記事URL","source":"ソース名","topic":"トピック","date":"YYYY-MM-DD"}]\n最終回答はJSON配列のみ返してください。説明文は不要です。`,
-        system_prompt: 'あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。',
+        message: `web_searchツールを使って、${topicPrompt} の最新ニュースを${limit}件検索してください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル（日本語）","summary":"2-3文の日本語要約。英語の記事や論文も必ず日本語で要約する。何が重要なのか、どう使えるかを含める","url":"記事URL","source":"ソース名","topic":"トピック","date":"YYYY-MM-DD"}]\n最終回答はJSON配列のみ返してください。説明文は不要です。`,
+        system_prompt: 'あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。titleとsummaryは必ず日本語で書いてください。英語の記事や論文も日本語に翻訳して要約します。',
         model: 'gpt-5-mini',
         max_tokens: 2000,
       }),
@@ -64,7 +65,7 @@ export async function collectNews(options?: {
     validItems.map((n) =>
       supabase.from('news_items').insert({
         title: n.title.substring(0, 200),
-        summary: (n.summary || '').substring(0, 300),
+        summary: (n.summary || '').substring(0, 500),
         url: n.url || null,
         source: (n.source || '').substring(0, 50),
         topic: (n.topic || '').substring(0, 30),
@@ -87,7 +88,7 @@ export async function collectNews(options?: {
 export async function loadNews(limit = 5): Promise<NewsItem[]> {
   const { data } = await supabase
     .from('news_items')
-    .select('id,title,summary,url,source,topic')
+    .select('id,title,summary,url,source,topic,published_date,collected_at')
     .order('collected_at', { ascending: false })
     .limit(limit)
   return (data as NewsItem[]) || []

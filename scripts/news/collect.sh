@@ -18,8 +18,8 @@ SSE_RAW=$(curl -s "${SUPABASE_URL}/functions/v1/ai-agent" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
   -d "{
-  \"message\": \"web_searchツールを使って、${TOPICS} の最新ニュースを${LIMIT}件検索してください。各ニュースは以下のJSON配列で返してください:\\n[{\\\"title\\\":\\\"タイトル\\\",\\\"summary\\\":\\\"1行要約\\\",\\\"url\\\":\\\"記事URL\\\",\\\"source\\\":\\\"ソース名\\\",\\\"topic\\\":\\\"トピック\\\",\\\"date\\\":\\\"YYYY-MM-DD\\\"}]\\n最終回答はJSON配列のみ返してください。説明文は不要です。\",
-  \"system_prompt\": \"あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。\",
+  \"message\": \"web_searchツールを使って、${TOPICS} の最新ニュースを${LIMIT}件検索してください。各ニュースは以下のJSON配列で返してください:\\n[{\\\"title\\\":\\\"タイトル（日本語）\\\",\\\"summary\\\":\\\"2-3文の日本語要約。英語の記事や論文も必ず日本語で要約する。何が重要なのか、どう使えるかを含める\\\",\\\"url\\\":\\\"記事URL\\\",\\\"source\\\":\\\"ソース名\\\",\\\"topic\\\":\\\"トピック\\\",\\\"date\\\":\\\"YYYY-MM-DD\\\"}]\\n最終回答はJSON配列のみ返してください。説明文は不要です。\",
+  \"system_prompt\": \"あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。titleとsummaryは必ず日本語で書いてください。英語の記事や論文も日本語に翻訳して要約します。\",
   \"model\": \"gpt-5-mini\",
   \"max_tokens\": 2000
 }")
