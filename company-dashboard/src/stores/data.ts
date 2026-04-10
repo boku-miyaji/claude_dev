@@ -45,7 +45,7 @@ interface DataStore {
   addGoal: (goal: Record<string, unknown>) => Promise<Goal | null>
   updateGoal: (id: string, data: Record<string, unknown>) => Promise<void>
   deleteGoal: (id: string) => Promise<void>
-  addTask: (task: { title: string; priority?: string; due_date?: string | null }) => Promise<Task | null>
+  addTask: (task: { title: string; priority?: string; due_date?: string | null; scheduled_at?: string | null; deadline_at?: string | null; estimated_minutes?: number | null; time_slot?: string | null }) => Promise<Task | null>
   updateTask: (id: string, data: Partial<Task>) => Promise<void>
   addHabit: (habit: Partial<Habit>) => Promise<Habit | null>
   updateHabit: (id: number, data: Partial<Habit>) => Promise<void>
@@ -325,7 +325,16 @@ export const useDataStore = create<DataStore>((set, get) => ({
   addTask: async (task) => {
     const { data, error } = await supabase
       .from('tasks')
-      .insert({ title: task.title, priority: task.priority ?? 'normal', due_date: task.due_date ?? null, status: 'open' })
+      .insert({
+        title: task.title,
+        priority: task.priority ?? 'normal',
+        due_date: task.due_date ?? null,
+        scheduled_at: task.scheduled_at ?? null,
+        deadline_at: task.deadline_at ?? null,
+        estimated_minutes: task.estimated_minutes ?? null,
+        time_slot: task.time_slot ?? null,
+        status: 'open',
+      })
       .select('*, companies(name)')
       .single()
     if (error || !data) return null

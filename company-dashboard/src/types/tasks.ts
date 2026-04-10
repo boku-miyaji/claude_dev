@@ -1,3 +1,5 @@
+export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'anytime'
+
 export interface Task {
   id: string
   title: string
@@ -8,6 +10,11 @@ export interface Task {
   priority: 'high' | 'normal' | 'low'
   status: 'open' | 'in_progress' | 'done' | 'cancelled'
   due_date: string | null
+  scheduled_at: string | null
+  deadline_at: string | null
+  estimated_minutes: number | null
+  time_slot: TimeSlot | null
+  google_task_id: string | null
   completed_at: string | null
   created_at: string
   tags: string[]

@@ -12,6 +12,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_CALENDAR_BASE = "https://www.googleapis.com/calendar/v3";
+const GOOGLE_TASKS_BASE = "https://tasks.googleapis.com/tasks/v1";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -315,6 +316,144 @@ async function handleCheckAuth(userId: string): Promise<Response> {
 }
 
 // ============================================================
+// Google Tasks API helpers
+// ============================================================
+
+async function tasksFetch(
+  accessToken: string,
+  path: string,
+  options: RequestInit = {},
+): Promise<Response> {
+  return fetch(`${GOOGLE_TASKS_BASE}${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+}
+
+// ============================================================
+// Google Tasks route handlers
+// ============================================================
+
+async function handleGetTaskLists(userId: string): Promise<Response> {
+  const accessToken = await getAccessToken(userId);
+  const res = await tasksFetch(accessToken, "/users/@me/lists");
+  if (!res.ok) {
+    const err = await res.text();
+    return new Response(JSON.stringify({ error: err }), {
+      status: res.status,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
+  const data = await res.json();
+  return new Response(JSON.stringify(data), {
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
+
+async function handleGetTasks(req: Request, userId: string): Promise<Response> {
+  const url = new URL(req.url);
+  const taskListId = url.searchParams.get("task_list_id") || "@default";
+  const dueMin = url.searchParams.get("due_min") || "";
+  const dueMax = url.searchParams.get("due_max") || "";
+  const showCompleted = url.searchParams.get("show_completed") || "true";
+  const maxResults = url.searchParams.get("max_results") || "100";
+
+  const accessToken = await getAccessToken(userId);
+
+  const params = new URLSearchParams({
+    maxResults,
+    showCompleted,
+    showHidden: "false",
+  });
+  if (dueMin) params.set("dueMin", dueMin);
+  if (dueMax) params.set("dueMax", dueMax);
+
+  const res = await tasksFetch(
+    accessToken,
+    `/lists/${encodeURIComponent(taskListId)}/tasks?${params}`,
+  );
+
+  if (!res.ok) {
+    const err = await res.text();
+    return new Response(JSON.stringify({ error: err }), {
+      status: res.status,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
+
+  const data = await res.json();
+  const tasks = (data.items || []).map((t: Record<string, unknown>) => ({
+    id: t.id,
+    title: t.title,
+    notes: t.notes || null,
+    due: t.due || null,
+    status: t.status, // "needsAction" | "completed"
+    completed: t.completed || null,
+    updated: t.updated,
+    position: t.position,
+    parent: t.parent || null,
+  }));
+
+  return new Response(JSON.stringify({ tasks }), {
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
+
+async function handleCreateTask(req: Request, userId: string): Promise<Response> {
+  const { task_list_id, task } = await req.json();
+  const listId = task_list_id || "@default";
+  const accessToken = await getAccessToken(userId);
+
+  const res = await tasksFetch(
+    accessToken,
+    `/lists/${encodeURIComponent(listId)}/tasks`,
+    { method: "POST", body: JSON.stringify(task) },
+  );
+  const data = await res.json();
+  return new Response(JSON.stringify(data), {
+    status: res.status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
+
+async function handleUpdateTask(req: Request, userId: string): Promise<Response> {
+  const { task_list_id, task_id, patch } = await req.json();
+  const listId = task_list_id || "@default";
+  const accessToken = await getAccessToken(userId);
+
+  const res = await tasksFetch(
+    accessToken,
+    `/lists/${encodeURIComponent(listId)}/tasks/${encodeURIComponent(task_id)}`,
+    { method: "PATCH", body: JSON.stringify(patch) },
+  );
+  const data = await res.json();
+  return new Response(JSON.stringify(data), {
+    status: res.status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
+
+async function handleDeleteTask(req: Request, userId: string): Promise<Response> {
+  const { task_list_id, task_id } = await req.json();
+  const listId = task_list_id || "@default";
+  const accessToken = await getAccessToken(userId);
+
+  const res = await tasksFetch(
+    accessToken,
+    `/lists/${encodeURIComponent(listId)}/tasks/${encodeURIComponent(task_id)}`,
+    { method: "DELETE" },
+  );
+  return new Response(JSON.stringify({ ok: res.ok }), {
+    status: res.ok ? 200 : res.status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
+
+// ============================================================
 // Main handler
 // ============================================================
 
@@ -363,6 +502,23 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "DELETE" && path === "/events") {
       return await handleDeleteEvent(req, user.id);
+    }
+
+    // Google Tasks routes
+    if (req.method === "GET" && path === "/tasks/lists") {
+      return await handleGetTaskLists(user.id);
+    }
+    if (req.method === "GET" && path === "/tasks") {
+      return await handleGetTasks(req, user.id);
+    }
+    if (req.method === "POST" && path === "/tasks") {
+      return await handleCreateTask(req, user.id);
+    }
+    if (req.method === "PATCH" && path === "/tasks") {
+      return await handleUpdateTask(req, user.id);
+    }
+    if (req.method === "DELETE" && path === "/tasks") {
+      return await handleDeleteTask(req, user.id);
     }
 
     return new Response(JSON.stringify({ error: "Not found" }), {

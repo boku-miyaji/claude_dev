@@ -6,7 +6,7 @@ const PROXY_BASE = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/google-cal
 
 // Google OAuth authorization code flow URL
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
-const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events'
+const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks'
 
 /** Get the Google Client ID from env or constants fallback */
 function getClientId(): string {

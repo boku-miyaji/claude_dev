@@ -2,7 +2,7 @@ import type { GcalCalendar } from '@/types/calendar'
 import type { NavItem } from '@/types/common'
 
 export const GCAL_CLIENT_ID = '855851839827-hfijpvgal6m3hgrjgus6bdf8it8ibr9h.apps.googleusercontent.com'
-export const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events'
+export const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks'
 
 export const GCAL_CALENDARS: GcalCalendar[] = [
   { id: 'yumzzz.my6223@gmail.com', label: 'yumzzz.my6223', type: 'primary' },
