@@ -10,6 +10,13 @@ export interface EmotionSummary {
   wbi: number
 }
 
+export interface NarrativeContext {
+  identity?: string       // 人生テーマ（「意味を問う人」等）
+  currentArc?: string     // 今のフェーズの解釈文
+  emotionalDNA?: string   // 感情的特徴
+  aspirations?: string    // 夢・志向性の要約
+}
+
 export interface PartnerContext {
   recentDiary?: string
   recentEmotions?: EmotionSummary
@@ -17,6 +24,7 @@ export interface PartnerContext {
   openTasks?: { title: string; due_date?: string }[]
   streak?: number
   timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night'
+  narrative?: NarrativeContext
 }
 
 const BASE_SYSTEM_PROMPT = `あなたは「パートナー」です。ユーザーの人生を豊かにするAI相棒です。
@@ -72,6 +80,19 @@ export function buildPartnerSystemPrompt(context: PartnerContext): string {
   if (context.openTasks && context.openTasks.length > 0) {
     const taskList = context.openTasks.map((t) => `  - ${t.title}${t.due_date ? ` (期限: ${t.due_date})` : ''}`).join('\n')
     parts.push(`- 今日のタスク:\n${taskList}`)
+  }
+
+  // Narrative Memory — 物語文脈として自然に注入
+  if (context.narrative) {
+    const n = context.narrative
+    const narrativeParts: string[] = []
+    if (n.identity) narrativeParts.push(`この人のテーマ: ${n.identity}`)
+    if (n.currentArc) narrativeParts.push(`今の状態: ${n.currentArc}`)
+    if (n.emotionalDNA) narrativeParts.push(`感情的な特徴: ${n.emotionalDNA}`)
+    if (n.aspirations) narrativeParts.push(`志向: ${n.aspirations}`)
+    if (narrativeParts.length > 0) {
+      parts.push(`\n## この人の物語（直接言及せず、理解を深めるために使う）\n${narrativeParts.join('\n')}`)
+    }
   }
 
   return parts.join('\n')

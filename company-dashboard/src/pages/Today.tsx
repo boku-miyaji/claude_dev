@@ -9,6 +9,7 @@ import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
+import { StoryArcCard } from '@/components/StoryArcCard'
 import { useDataStore } from '@/stores/data'
 import { useBriefingStore } from '@/stores/briefing'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
@@ -749,6 +750,7 @@ export function Today() {
       ) : (
         <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>{briefingMessage || '今日も穏やかに過ごせますように。'}</div>
       )}
+      <StoryArcCard />
     </Card>
   )
 
