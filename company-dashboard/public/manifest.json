@@ -1,6 +1,6 @@
 {
-  "name": "Self-Focus",
-  "short_name": "Self-Focus",
+  "name": "focus you",
+  "short_name": "focus you",
   "description": "あなたの物語を見ているAI — 日記・感情・夢から人生の物語を読み解く",
   "start_url": "/",
   "display": "standalone",

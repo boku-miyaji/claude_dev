@@ -362,9 +362,33 @@ export const useDataStore = create<DataStore>((set, get) => ({
       .update(updates)
       .eq('id', id)
     if (!error) {
+      const prev = get().tasks.find((t) => t.id === id)
+      const merged = prev ? { ...prev, ...updates } as Task : null
       set((s) => ({
         tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...updates } as Task : t)),
       }))
+
+      // Sync to Google Tasks (async, non-blocking)
+      if (merged?.google_task_id) {
+        if (updates.status === 'done') {
+          syncTaskComplete(merged.google_task_id)
+        } else if (updates.status === 'open' && prev?.status === 'done') {
+          syncTaskReopen(merged.google_task_id)
+        } else if (updates.title || updates.due_date || updates.scheduled_at || updates.deadline_at) {
+          syncTaskToGoogle(merged)
+        }
+      } else if (merged && !merged.google_task_id && (updates.due_date || updates.scheduled_at || updates.deadline_at)) {
+        // Task just got a date — create in Google Tasks
+        syncTaskToGoogle(merged).then((googleTaskId) => {
+          if (googleTaskId) {
+            supabase.from('tasks').update({ google_task_id: googleTaskId }).eq('id', id).then(() => {
+              set((s) => ({
+                tasks: s.tasks.map((t) => t.id === id ? { ...t, google_task_id: googleTaskId } : t),
+              }))
+            })
+          }
+        })
+      }
     }
   },
 

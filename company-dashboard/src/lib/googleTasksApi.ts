@@ -150,19 +150,15 @@ export async function syncTaskToGoogle(task: {
     const due = buildGoogleDue(task)
     if (!due) return null // No date → don't sync to Google
 
-    const googlePayload: Record<string, string> = { title: task.title }
-    if (due) googlePayload.due = due
-    if (task.description) googlePayload.notes = task.description
-    if (task.status === 'done') googlePayload.status = 'completed'
-    else googlePayload.status = 'needsAction'
+    const title = task.title
+    const notes = task.description || undefined
+    const status = task.status === 'done' ? 'completed' : 'needsAction'
 
     if (task.google_task_id) {
-      // Update existing Google Task
-      await updateGoogleTask(task.google_task_id, googlePayload)
+      await updateGoogleTask(task.google_task_id, { title, notes, due, status })
       return task.google_task_id
     } else {
-      // Create new Google Task
-      const created = await createGoogleTask(googlePayload)
+      const created = await createGoogleTask({ title, notes, due })
       return created.id
     }
   } catch {
