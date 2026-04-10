@@ -1,0 +1,25 @@
+name: News Collection
+
+on:
+  schedule:
+    # 06:00 JST = 21:00 UTC (前日)
+    - cron: '0 21 * * *'
+    # 18:00 JST = 09:00 UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch: # 手動実行も可能
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+
+      - name: Collect news
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: bash scripts/news/collect.sh 5
