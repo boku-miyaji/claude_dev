@@ -1101,6 +1101,8 @@ Step 3 [直列]: システム開発(実装) → QA(テスト)
           ['src/hooks/useDreamDetection.ts', 'AI Features タブ（3. 夢進捗検出カード）'],
           ['src/lib/fileExtract.ts', 'AI Features タブ（ファイル抽出対応形式）'],
           ['supabase-migration-*.sql', 'AI Features タブ（データ構造テーブル一覧）'],
+          ['src/hooks/useTodayTimeline.ts', 'Design Philosophy タブ（統合タイムライン）+ Overview タブ（更新連鎖マップ）'],
+          ['src/lib/googleTasksApi.ts', 'Overview タブ（Google Tasks同期フロー）+ Design Philosophy タブ（GCal Tasks同期）'],
         ]} />
         <Principle title="教訓: 2026-04-06 useSelfAnalysis.ts 改修時" body="ハイブリッド分析方式を実装したが、対応表に useSelfAnalysis.ts がなかったため Hook が発火せず、社長に指摘されるまで Blueprint が古いまま残った。対応表を7→14ファイルに拡充。新しいAI機能フックを追加したら必ずこの表にも追加すること。" color="var(--amber)" />
         <P>この Hook はハーネスエンジニアリングの「決定論的制御」にあたる。CLAUDE.md に「ドキュメントを更新して」と書いても無視される可能性があるが、Hook は確実に発火する。</P>
@@ -1415,7 +1417,7 @@ function TabAiFeatures() {
           ['diary_analysis', 'period_type(weekly/monthly), ai_insights, highlights(JSONB)', 'ナレッジ（週次/月次の中間分析結果。3層分析のL2/L3出力）'],
           ['growth_events', 'what_happened, root_cause, countermeasure', 'ナレッジ（事例パターン）'],
           ['prompt_log', 'prompt, context, tags, created_at', 'データ（生ログ）'],
-          ['tasks', 'title, status, priority, completed_at', 'データ（行動記録）'],
+          ['tasks', 'title, status, priority, due_date, scheduled_at, deadline_at, estimated_minutes, time_slot, google_task_id, completed_at', 'データ（行動記録）。日付あり→Google Tasks同期。3ゾーン: タイムライン(時刻付き)/今日やること(日付のみ)/バックログ(日付なし)'],
           ['dreams', 'title, category, status, priority', 'ナレッジ（暗黙知の言語化）'],
           ['goals', 'title, level, progress, dream_id', 'ナレッジ（夢の形式化）'],
           ['conversations / messages', 'role, content, tool_calls', 'データ（対話ログ）'],
