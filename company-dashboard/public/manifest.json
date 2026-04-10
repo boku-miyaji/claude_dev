@@ -1,6 +1,6 @@
 {
-  "name": "focus you",
-  "short_name": "focus you",
+  "name": "Focus You",
+  "short_name": "Focus You",
   "description": "あなたの物語を見ているAI — 日記・感情・夢から人生の物語を読み解く",
   "start_url": "/",
   "display": "standalone",

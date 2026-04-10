@@ -120,8 +120,8 @@ export function Sidebar() {
     <nav className={`sidebar${sidebarHidden ? ' collapsed' : ''}`}>
       <div className="logo" style={{ justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/icon.svg" alt="focus you" width={28} height={28} style={{ borderRadius: 7 }} />
-          focus you
+          <img src="/icon.svg" alt="Focus You" width={28} height={28} style={{ borderRadius: 7 }} />
+          Focus You
         </div>
         <button
           onClick={() => setSidebarHidden(true)}
