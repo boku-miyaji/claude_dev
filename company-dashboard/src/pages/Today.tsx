@@ -441,6 +441,17 @@ export function Today() {
     )
   }, [])
 
+  // Timeline hooks — must be before any conditional return (Rules of Hooks)
+  const nowMarkerTime = useMemo(() => {
+    const d = new Date()
+    return `${String(d.getHours()).padStart(2, '0')}:${d.getMinutes() < 30 ? '00' : '30'}`
+  }, [])
+
+  const filteredSlots = useMemo(() => {
+    if (timeMode === 'afternoon') return timelineSlots.filter((s) => s.items.some((i) => !i.isPast))
+    return timelineSlots
+  }, [timelineSlots, timeMode])
+
   const isLoading = loading.diary || loading.tasks || loading.dreams
   if (isLoading && fragments.length === 0) {
     return (
@@ -617,16 +628,6 @@ export function Today() {
   )
 
   /* ── [2] Timeline — unified 30-min slot view ── */
-
-  const nowMarkerTime = useMemo(() => {
-    const d = new Date()
-    return `${String(d.getHours()).padStart(2, '0')}:${d.getMinutes() < 30 ? '00' : '30'}`
-  }, [])
-
-  const filteredSlots = useMemo(() => {
-    if (timeMode === 'afternoon') return timelineSlots.filter((s) => s.items.some((i) => !i.isPast))
-    return timelineSlots
-  }, [timelineSlots, timeMode])
 
   const TimelineSection = filteredSlots.length > 0 ? (
     <div className="section">
