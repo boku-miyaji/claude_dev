@@ -159,7 +159,8 @@
       "mcp__claude_ai_Google_Calendar__gcal_list_calendars",
       "Bash(/workspace/.claude/hooks/dept-eval-trigger.sh)",
       "Bash(mkdir -p _drafts)",
-      "Bash(mv review_wrapup_20260409.md evaluation_framework_20260409.md final_platform_comparison_20260409.md pptx_slide_drafts_20260409.md _drafts/)"
+      "Bash(mv review_wrapup_20260409.md evaluation_framework_20260409.md final_platform_comparison_20260409.md pptx_slide_drafts_20260409.md _drafts/)",
+      "WebFetch(domain:timbr.ai)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -417,6 +418,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
