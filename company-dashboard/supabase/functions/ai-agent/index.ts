@@ -243,6 +243,27 @@ const TOOLS: ToolDef[] = [
     },
   },
   {
+    name: "diary_search",
+    description: "Search user's diary entries. Supports keyword search (Japanese) and emotion similarity search. Use this to find past entries related to current conversation topics, emotions, or themes.",
+    input_schema: {
+      type: "object",
+      properties: {
+        keyword: { type: "string", description: "Keyword to search in diary text (Japanese OK, uses PGroonga full-text search)" },
+        emotion: {
+          type: "object",
+          description: "Emotion vector for similarity search (Plutchik 8 dimensions, 0-100). Find diary entries with similar emotional patterns.",
+          properties: {
+            joy: { type: "number" }, trust: { type: "number" }, fear: { type: "number" },
+            surprise: { type: "number" }, sadness: { type: "number" }, disgust: { type: "number" },
+            anger: { type: "number" }, anticipation: { type: "number" },
+          },
+        },
+        days: { type: "integer", default: 90, description: "Search within last N days" },
+        limit: { type: "integer", default: 10 },
+      },
+    },
+  },
+  {
     name: "web_search",
     description: "Search the web for latest information, documentation, or news.",
     input_schema: {
@@ -352,6 +373,103 @@ async function executeTool(name: string, input: Record<string, unknown>, userJwt
         .eq("type", "intelligence_report").order("created_at", { ascending: false }).limit((input.limit as number) || 3);
       if (error) return `Error: ${error.message}`;
       return JSON.stringify((data || []).map(r => ({ ...r, body: r.body?.substring(0, MAX_TOOL_RESULT_CHARS) })), null, 2);
+    }
+    case "diary_search": {
+      const sbAdmin = getServiceSupabase();
+      const results: { id: number; body: string; entry_date: string; wbi: number | null; source: string }[] = [];
+      const limit = (input.limit as number) || 10;
+      const days = (input.days as number) || 90;
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      const sinceStr = since.toISOString();
+
+      // 1. Keyword search (PGroonga)
+      if (input.keyword) {
+        const { data } = await sbAdmin.rpc("search_diary", {
+          search_query: input.keyword as string,
+          max_results: limit,
+        });
+        for (const d of data || []) {
+          results.push({ id: d.id, body: d.body?.substring(0, 300), entry_date: d.entry_date, wbi: d.wbi, source: "keyword" });
+        }
+      }
+
+      // 2. Emotion similarity search (pgvector)
+      if (input.emotion && typeof input.emotion === "object") {
+        const e = input.emotion as Record<string, number>;
+        const vec = `[${e.joy || 0},${e.trust || 0},${e.fear || 0},${e.surprise || 0},${e.sadness || 0},${e.disgust || 0},${e.anger || 0},${e.anticipation || 0}]`;
+        const { data } = await sbAdmin.rpc("match_similar_emotions", {
+          query_vector: vec,
+          match_threshold: 0.6,
+          match_count: limit,
+        });
+        if (data) {
+          // Fetch diary bodies for matched entries
+          const entryIds = data.map((r: { diary_entry_id: string }) => r.diary_entry_id).filter(Boolean);
+          if (entryIds.length > 0) {
+            const { data: diaries } = await sbAdmin.from("diary_entries")
+              .select("id, body, entry_date, wbi")
+              .in("id", entryIds);
+            for (const d of diaries || []) {
+              if (!results.find(r => r.id === d.id)) {
+                results.push({ id: d.id, body: d.body?.substring(0, 300), entry_date: d.entry_date, wbi: d.wbi, source: "emotion" });
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Fallback: recent diaries if no specific search
+      if (!input.keyword && !input.emotion) {
+        const { data } = await sbAdmin.from("diary_entries")
+          .select("id, body, entry_date, wbi")
+          .gte("created_at", sinceStr)
+          .order("created_at", { ascending: false })
+          .limit(limit);
+        for (const d of data || []) {
+          results.push({ id: d.id, body: d.body?.substring(0, 300), entry_date: d.entry_date, wbi: d.wbi, source: "recent" });
+        }
+      }
+
+      // 4. gpt-nano reranking (if we have a conversation context and multiple results)
+      if (results.length > 3) {
+        try {
+          const rerankPrompt = `Rank these diary entries by relevance to the conversation. Return JSON array of indices sorted by relevance, most relevant first: [0, 3, 1, ...]
+
+Entries:
+${results.map((r, i) => `[${i}] ${r.entry_date}: ${r.body?.substring(0, 150)}`).join("\n")}`;
+
+          const rerankRes = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
+            body: JSON.stringify({
+              model: "gpt-5-nano",
+              messages: [{ role: "user", content: rerankPrompt }],
+              temperature: 0,
+              max_tokens: 100,
+              response_format: { type: "json_object" },
+            }),
+          });
+          if (rerankRes.ok) {
+            const rerankData = await rerankRes.json();
+            const content = rerankData.choices?.[0]?.message?.content;
+            if (content) {
+              const parsed = JSON.parse(content);
+              const indices: number[] = Array.isArray(parsed) ? parsed : parsed.ranking || parsed.indices || [];
+              if (indices.length > 0) {
+                const reranked = indices
+                  .filter((i: number) => i >= 0 && i < results.length)
+                  .map((i: number) => results[i]);
+                return JSON.stringify(reranked.slice(0, limit), null, 2);
+              }
+            }
+          }
+        } catch {
+          // Reranking failed, return as-is
+        }
+      }
+
+      return JSON.stringify(results.slice(0, limit), null, 2);
     }
     case "web_search": {
       const q = encodeURIComponent(input.query as string);

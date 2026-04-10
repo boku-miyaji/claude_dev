@@ -1189,6 +1189,27 @@ function TabAiFeatures() {
         ]} />
       </Section>
 
+      <Section title="AI Chat ツール一覧（Edge Function: ai-agent）">
+        <P>AI チャットの LLM が自律的に呼び出せるツール群。Supabase クエリまたは安全な HTTP fetch のみ。シェル実行なし。</P>
+        <Tbl headers={['ツール名', '機能', '検索方式', '用途']} rows={[
+          ['tasks_search', 'タスク検索', 'Supabase filter (status/company/keyword)', 'タスク状況の確認・一覧表示'],
+          ['tasks_create', 'タスク作成', '—', '会話からタスクを直接作成'],
+          ['diary_search', '日記検索（Hybrid）', 'PGroonga キーワード + pgvector 感情類似 + gpt-nano reranking', '関連する過去の日記を発見しLLMコンテキストに注入'],
+          ['artifacts_read', '成果物読み取り', 'Supabase (id/path)', '保存された成果物の内容取得'],
+          ['artifacts_list', '成果物一覧', 'Supabase filter', '成果物の一覧表示'],
+          ['knowledge_search', 'ナレッジ検索', 'Supabase filter (category/scope)', 'ルール・ガイドライン・学習の検索'],
+          ['company_info', 'PJ会社情報', 'Supabase query', '会社情報・部署構成の取得'],
+          ['prompt_history', 'プロンプト履歴', 'Supabase filter', '最近の作業内容の把握'],
+          ['insights_read', 'CEOインサイト', 'Supabase filter (category)', '行動パターン・傾向・仕事リズムの参照'],
+          ['activity_search', 'アクティビティ検索', 'Supabase filter', '最近の操作・イベントの検索'],
+          ['intelligence_read', '情報レポート', 'Supabase query', '最新の情報収集レポート取得'],
+          ['web_search', 'Web検索', 'DuckDuckGo HTML', '最新情報・ドキュメントの検索'],
+        ]} />
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8, lineHeight: 1.6 }}>
+          diary_search のパイプライン: PGroonga キーワード検索 → pgvector 感情ベクトル cosine 類似検索 → 結果マージ・重複排除 → gpt-nano でリランキング → 上位K件をメイン LLM に注入
+        </div>
+      </Section>
+
       <Section title="AI機能一覧（7機能）">
         <AiFeatureCard
           name="1. 感情分析"

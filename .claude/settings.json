@@ -164,7 +164,10 @@
       "WebFetch(domain:seemoredata.io)",
       "Bash(awk '/return [^\\(]/{print \">>> RETURN: \" NR \" \" $0; next} /use[A-Z]/{print \"    HOOK: \" NR \" \" $0}')",
       "WebFetch(domain:docs.anthropic.com)",
-      "WebFetch(domain:claude.com)"
+      "WebFetch(domain:claude.com)",
+      "WebFetch(domain:blog.google)",
+      "WebFetch(domain:deepmind.google)",
+      "WebFetch(domain:ai.meta.com)"
     ],
     "deny": [
       "Read(**/.env)",
