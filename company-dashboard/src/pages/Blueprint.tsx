@@ -920,11 +920,12 @@ function TabDesignPhilosophy() {
       <Section title="体験設計">
         <Principle title="Today = コマンドセンター" body="Todayページから一歩も出ずに日常の全操作が完結する設計。タスク完了/追加/編集、習慣チェック/追加、日記記録がすべてインライン。別ページへの遷移=離脱。" color="var(--accent)" />
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="統合タイムライン" body="GCalイベント + 時刻付きタスク(scheduled_at/deadline_at)を30分スロットにマージ。3ゾーン構成: タイムライン(時刻付き) / 今日やること(時刻なし) / 近日の締切(7日以内)。useTodayTimeline hook。" />
           <MiniCard title="統合Actionsブロック" body="タスクと習慣を1つのブロックに統合。プログレスバーで合算達成度を可視化。「今日やるべきこと」がひと目でわかる。" />
           <MiniCard title="時間帯適応型UI" body="朝=全件フラット / 午後=未完了を上に+「あとX件」 / 夜=やり残し表示+明日の予定。同じ画面を24時間出さない。" />
           <MiniCard title="インラインCRUD" body="タスク: チェック→完了(取り消し線で残る、再クリックで戻す)。+ →即追加(期限=今日)。タイトルクリック→編集。習慣: + →即追加。" />
           <MiniCard title="期限ソート" body="超過(赤) → 今日(赤) → 明日(amber) → 日付順(gray) → 期限なし。同日内は優先度順。期限が最も重要なソート軸。" />
-          <MiniCard title="ブランクページ問題" body="白紙のテキストエリアは書けない。時間帯+カレンダーから文脈プロンプトを動的生成。" />
+          <MiniCard title="GCal Tasks同期" body="Supabase tasks(scheduled_at/deadline_at付き)をGoogle Tasks APIへ一方向同期。OAuthスコープ: calendar.events + tasks。Edge Function google-calendar-proxy経由。" />
           <MiniCard title="ナビゲーション整理" body="20タブ→8+More構成。毎日使うもの(Today/Journal/Tasks/Chat)だけトップ。月1回以下はMore(折りたたみ)に退避。" />
         </div>
       </Section>
