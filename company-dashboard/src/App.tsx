@@ -28,6 +28,28 @@ import { WeeklyNarrative } from '@/pages/WeeklyNarrative'
 import { GoogleAuthCallback } from '@/pages/GoogleAuthCallback'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { ShortcutHelp } from '@/components/ShortcutHelp'
+import { Component, type ReactNode, type ErrorInfo } from 'react'
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[ErrorBoundary]', error.message, info.componentStack)
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: 40, fontFamily: 'monospace', background: '#1a1a2e', color: '#ff6b6b', minHeight: '100vh' }}>
+          <h2 style={{ color: '#fff', marginBottom: 12 }}>Focus You — Runtime Error</h2>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.6 }}>{this.state.error.message}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 11, color: '#888', marginTop: 16 }}>{this.state.error.stack}</pre>
+          <button onClick={() => { this.setState({ error: null }); window.location.reload() }} style={{ marginTop: 20, padding: '8px 16px', background: '#5046e5', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Reload</button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 export function App() {
   useAuth()
@@ -52,6 +74,7 @@ export function App() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="app">
       <Sidebar />
       <div className="main">
@@ -92,5 +115,6 @@ export function App() {
       <div id="modal-root" />
       {showHelp && <ShortcutHelp onClose={() => setShowHelp(false)} />}
     </div>
+    </ErrorBoundary>
   )
 }

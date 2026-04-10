@@ -161,7 +161,8 @@
       "Bash(mkdir -p _drafts)",
       "Bash(mv review_wrapup_20260409.md evaluation_framework_20260409.md final_platform_comparison_20260409.md pptx_slide_drafts_20260409.md _drafts/)",
       "WebFetch(domain:timbr.ai)",
-      "WebFetch(domain:seemoredata.io)"
+      "WebFetch(domain:seemoredata.io)",
+      "Bash(awk '/return [^\\(]/{print \">>> RETURN: \" NR \" \" $0; next} /use[A-Z]/{print \"    HOOK: \" NR \" \" $0}')"
     ],
     "deny": [
       "Read(**/.env)",

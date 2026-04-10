@@ -83,15 +83,15 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
   // Fetch calendar events
   useEffect(() => {
     async function load() {
-      const { authenticated } = await checkCalendarAuth()
-      if (!authenticated) { setLoading(false); return }
-
-      const todayStart = new Date(now)
-      todayStart.setHours(0, 0, 0, 0)
-      const tomorrowEnd = new Date(todayStart)
-      tomorrowEnd.setDate(tomorrowEnd.getDate() + 2)
-
       try {
+        const { authenticated } = await checkCalendarAuth()
+        if (!authenticated) { setLoading(false); return }
+
+        const todayStart = new Date(now)
+        todayStart.setHours(0, 0, 0, 0)
+        const tomorrowEnd = new Date(todayStart)
+        tomorrowEnd.setDate(tomorrowEnd.getDate() + 2)
+
         const events = await fetchCalendarEvents({
           timeMin: todayStart.toISOString(),
           timeMax: tomorrowEnd.toISOString(),
@@ -126,7 +126,7 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
         const pastEvents = mapped.filter((e) => e.startTime.startsWith(todayStr) && e.isPast)
         setRecentEventName(pastEvents.length > 0 ? pastEvents[pastEvents.length - 1].title : null)
       } catch {
-        // Calendar not available
+        // Calendar auth check or event fetch failed — silently skip
       }
       setLoading(false)
     }
