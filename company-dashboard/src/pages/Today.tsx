@@ -586,7 +586,7 @@ export function Today() {
           {(timeMode === 'morning' ? todayHabits : [...todayHabits].sort((a, b) => Number(a.completed) - Number(b.completed))).map((h) => (
             <div
               key={h.id}
-              style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', opacity: (h.completed && !h.doneToday) ? 0.4 : 1 }}
+              style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
               onClick={() => toggleHabitLog(h, todayStr)}
             >
               <span style={{
@@ -598,8 +598,9 @@ export function Today() {
               }}>
                 {h.doneToday ? '✓' : ''}
               </span>
-              <span style={{ color: (h.doneToday || h.completed) ? 'var(--text3)' : 'var(--text)', textDecoration: (h.doneToday || h.completed) ? 'line-through' : 'none', fontWeight: 500, flex: 1 }}>
+              <span style={{ color: 'var(--text)', fontWeight: 500, flex: 1 }}>
                 {h.icon} {h.title}
+                {h.completed && <span style={{ fontSize: 9, color: 'var(--green)', marginLeft: 4, fontWeight: 600 }}>達成</span>}
               </span>
               {/* Period badge: shown for weekly/monthly habits */}
               {h.frequency !== 'daily' && (

@@ -621,13 +621,14 @@ export function Habits() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
                           fontSize: 13, fontWeight: 500,
-                          color: completed ? 'var(--text3)' : 'var(--text)',
-                          textDecoration: completed ? 'line-through' : 'none',
+                          color: 'var(--text)',
                         }}>
                           {habit.icon} {habit.title}
+                          {completed && <span style={{ fontSize: 10, color: 'var(--green)', marginLeft: 6, fontWeight: 600 }}>達成</span>}
                         </div>
-                        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 1 }}>
+                        <div style={{ fontSize: 10, color: completed ? 'var(--green)' : 'var(--text3)', marginTop: 1 }}>
                           {periodCount}/{habit.target_count}
+                          {periodCount > habit.target_count && <span style={{ marginLeft: 4, color: 'var(--accent)' }}>+{periodCount - habit.target_count}</span>}
                         </div>
                       </div>
 

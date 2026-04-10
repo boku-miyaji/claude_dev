@@ -62,16 +62,31 @@ WHERE action IN ('intelligence_like', 'intelligence_click')
 GROUP BY cat ORDER BY cnt DESC LIMIT 10
 ```
 
-### 1. キーワード検索（固定・sources.yaml）
+### 1. 公式ブログ・リリースノート（最優先・WebFetch）
+**以下は毎回必ずチェックする。漏れ厳禁。**
+- `claude.com/blog` — Claude Code, Managed Agents, Advisor Strategy 等
+- `anthropic.com/engineering` — ハーネス設計, エージェント評価, セキュリティ
+- `anthropic.com/research` — 安全性・解釈可能性の論文
+- `anthropic.com/news` — 公式アナウンス
+- その他 sources.yaml の web_sources をWebFetchで巡回
+
+### 2. 学術論文（arXiv・研究機関）
+- sources.yaml の `academic_papers` セクションのキーワードでarXivを検索
+- WebSearch: `site:arxiv.org {keyword} 2026` で直近の論文を発見
+- **発見した論文は arxiv.org/abs/{ID} を WebFetch で概要取得**
+- Google DeepMind, Stanford, Anthropic, Meta FAIR の新規論文を優先
+- レポートに `## 📄 注目論文` セクションを設ける
+
+### 3. キーワード検索（固定・sources.yaml）
 - 指定キーワードの検索結果上位5件を収集
 - 新しいトレンドや重要な変化を検出
 
-### 2. X アカウント監視（DuckDuckGo site:x.com 検索）
+### 4. X アカウント監視（DuckDuckGo site:x.com 検索）
 - 指定アカウントの最新ポストを収集
 - 重要な発表・アップデートをピックアップ
 
-### 3. Web サイト監視（将来拡張）
-- sources.yaml の web_sources に URL を追加
+### 5. Web サイト監視
+- sources.yaml の web_sources, tech_articles をWebFetch/WebSearchで巡回
 
 ## ファイル構成
 

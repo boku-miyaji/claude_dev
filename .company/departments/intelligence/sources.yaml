@@ -1,5 +1,5 @@
 # 情報収集部 - 監視対象設定
-# 更新日: 2026-03-24
+# 更新日: 2026-04-10
 
 # ============================================================
 # X アカウント（WebSearch site:x.com 経由で取得）
@@ -70,6 +70,25 @@ web_sources:
     category: "AI"
     name: "Anthropic Blog"
     frequency: daily
+    priority: high
+  - url: "https://www.anthropic.com/engineering"
+    category: "AI"
+    name: "Anthropic Engineering Blog"
+    note: "ハーネス設計、エージェント評価、セキュリティ等の技術深掘り"
+    frequency: daily
+    priority: high
+  - url: "https://claude.com/blog"
+    category: "AI"
+    name: "Claude Blog"
+    note: "Claude Code, Managed Agents, Advisor Strategy 等のプロダクト発表"
+    frequency: daily
+    priority: high
+  - url: "https://www.anthropic.com/research"
+    category: "AI research"
+    name: "Anthropic Research"
+    note: "安全性、解釈可能性、エージェント信頼性の論文"
+    frequency: weekly
+    priority: high
   - url: "https://openai.com/news/"
     category: "AI"
     name: "OpenAI Blog"
@@ -77,6 +96,11 @@ web_sources:
   - url: "https://blog.google/technology/ai/"
     category: "AI"
     name: "Google AI Blog"
+    frequency: daily
+  - url: "https://deepmind.google/discover/blog/"
+    category: "AI research"
+    name: "Google DeepMind Blog"
+    note: "研究論文・技術発表"
     frequency: daily
 
   # --- ツール公式 ---
@@ -150,6 +174,54 @@ tech_articles:
     note: "日本のエンジニア向け技術情報共有"
     keywords: ["Claude Code", "MCP", "AIエージェント", "Cursor"]
     frequency: daily
+
+# ============================================================
+# 学術論文（arXiv / 主要研究機関）
+# ============================================================
+academic_papers:
+  # arXiv カテゴリ × キーワード検索
+  # 検索URL: https://arxiv.org/search/?searchtype=all&query={keyword}
+  arxiv:
+    categories: ["cs.AI", "cs.CL", "cs.LG", "cs.MA", "cs.SE"]
+    keywords:
+      - term: "LLM agent"
+        note: "エージェントアーキテクチャ全般"
+        frequency: daily
+      - term: "code generation LLM"
+        note: "コード生成・自動プログラミング"
+        frequency: daily
+      - term: "multi-agent system LLM"
+        note: "マルチエージェント協調"
+        frequency: daily
+      - term: "memory augmented LLM"
+        note: "記憶拡張・長期記憶"
+        frequency: daily
+      - term: "agentic coding"
+        note: "エージェント的コーディング"
+        frequency: daily
+      - term: "tool use LLM"
+        note: "ツール使用・関数呼び出し"
+        frequency: weekly
+      - term: "self-improvement LLM"
+        note: "自己改善・自己進化"
+        frequency: weekly
+      - term: "knowledge management AI"
+        note: "ナレッジマネジメント・暗黙知"
+        frequency: weekly
+      - term: "personal AI assistant"
+        note: "パーソナルAI・自己理解"
+        frequency: weekly
+
+  # 注目研究機関（著者名・所属で追跡）
+  research_groups:
+    - name: "Google DeepMind"
+      note: "Gemini, AlphaCode, PaperOrchestra等"
+    - name: "Stanford NLP"
+      note: "エージェント評価、マルチエージェント研究"
+    - name: "Anthropic"
+      note: "安全性、解釈可能性"
+    - name: "Meta FAIR"
+      note: "オープンモデル、Llama"
 
 # ============================================================
 # セキュリティ（サプライチェーン攻撃・脆弱性動向）
