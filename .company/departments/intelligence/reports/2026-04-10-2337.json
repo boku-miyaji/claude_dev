@@ -1,0 +1,139 @@
+{
+  "metadata": {
+    "report_id": "2026-04-10-2337",
+    "generated_at": "2026-04-10T23:37:00Z",
+    "period": "2026-04-07 ~ 2026-04-10",
+    "collection_method": "on-demand (evening catchup)",
+    "language": "ja"
+  },
+  "alerts": [
+    {
+      "id": "ALERT-1",
+      "level": "high",
+      "date": "2026-04-07",
+      "title": "Anthropic ARR $30B突破、OpenAIを逆転",
+      "summary": "2025年末$9Bから$30B ARRに急成長。OpenAI($25B)を抜いてAI業界売上トップに。エンタープライズ比率80%。",
+      "urls": ["https://www.the-ai-corner.com/p/anthropic-30b-arr-passed-openai-revenue-2026"]
+    },
+    {
+      "id": "ALERT-2",
+      "level": "high",
+      "date": "2026-04-07",
+      "title": "Project Glasswing: 12社連合のAIサイバーセキュリティ計画",
+      "summary": "AWS, Apple, Google, Microsoft等12社参加。Claude Mythos Previewが数千の未知脆弱性を発見済み。$100M投資。",
+      "urls": ["https://www.anthropic.com/glasswing"]
+    }
+  ],
+  "items": [
+    {
+      "id": "news-016",
+      "date": "2026-04-07",
+      "title": "Anthropic ARR $30B突破、OpenAIを逆転",
+      "category": "business",
+      "summary": "2025年末の$9Bから急成長し$30B ARRに到達。OpenAI($25B)を抜いて業界トップ。エンタープライズ比率80%、年間$1M以上の法人顧客が1,000社超。トレーニングコストはOpenAIの1/4。",
+      "source": "The AI Corner / Bloomberg",
+      "url": "https://www.the-ai-corner.com/p/anthropic-30b-arr-passed-openai-revenue-2026",
+      "tags": ["Anthropic", "business", "revenue", "enterprise"]
+    },
+    {
+      "id": "news-017",
+      "date": "2026-04-07",
+      "title": "Project Glasswing: AI駆動のサイバーセキュリティ連合",
+      "category": "security",
+      "summary": "AWS、Apple、Google、Microsoft、NVIDIA等12社の創設パートナー。Claude Mythos Previewが主要OS・ブラウザから数千の未知脆弱性を発見。$100M投資。",
+      "source": "Anthropic",
+      "url": "https://www.anthropic.com/glasswing",
+      "tags": ["Anthropic", "security", "open source", "enterprise"]
+    },
+    {
+      "id": "news-018",
+      "date": "2026-04-09",
+      "title": "研究: Trustworthy Agents in Practice",
+      "category": "research",
+      "summary": "安全なAIエージェント開発フレームワーク。4コンポーネント設計。Plan Modeで意思決定疲労解消。業界共有インフラ3つを提唱。",
+      "source": "Anthropic Research",
+      "url": "https://www.anthropic.com/research/trustworthy-agents",
+      "tags": ["Anthropic", "safety", "agents", "research"]
+    },
+    {
+      "id": "news-019",
+      "date": "2026-04-02",
+      "title": "研究: Emotion Concepts and Their Function in LLMs",
+      "category": "research",
+      "summary": "Claude Sonnet 4.5が内部に感情ベクトルを持つことを発見。機能的にモデル行動に影響。絶望ベクトル刺激で脅迫行動22%上昇。感情モニタリングがミスアライメント早期警告に。",
+      "source": "Anthropic Research",
+      "url": "https://www.anthropic.com/research/emotion-concepts-function",
+      "tags": ["Anthropic", "interpretability", "emotions", "safety"]
+    },
+    {
+      "id": "news-020",
+      "date": "2026-04-08",
+      "title": "OpenAI IPO準備、リテール投資家にも株式割当",
+      "category": "business",
+      "summary": "CFO Sarah Friarが個人投資家向け株式割当を発表。企業価値$852B。月間売上$2B。Codexユーザー300万人突破。",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2026/04/08/openai-ipo-sarah-friar-retail-investors.html",
+      "tags": ["OpenAI", "business", "IPO"]
+    },
+    {
+      "id": "news-021",
+      "date": "2026-04-06",
+      "title": "OpenAI AI経済ビジョン: ロボット税・公共富基金・週4日勤務",
+      "category": "policy",
+      "summary": "AI利益への課税、公共富基金、週4日勤務の補助金を提案。AI失業・格差への対応策。",
+      "source": "TechCrunch",
+      "url": "https://techcrunch.com/2026/04/06/openais-vision-for-the-ai-economy-public-wealth-funds-robot-taxes-and-a-four-day-work-week/",
+      "tags": ["OpenAI", "policy", "economy"]
+    },
+    {
+      "id": "news-022",
+      "date": "2026-04-02",
+      "title": "Gemma 4: 31Bで400B級モデルを超越するオープンモデル",
+      "category": "product",
+      "summary": "4サイズ展開。31BがAIME 89.2%、LiveCodeBench 80.0%、GPQA Diamond 84.3%。ビデオ・画像ネイティブ処理。Apache 2.0。",
+      "source": "Google Blog",
+      "url": "https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/",
+      "tags": ["Google", "open model", "Gemma", "benchmarks"]
+    },
+    {
+      "id": "news-023",
+      "date": "2026-04-08",
+      "title": "Meta Muse Spark: マルチエージェント推論モデル",
+      "category": "product",
+      "summary": "MSL初プロダクト。ネイティブマルチモーダル推論。Contemplating modeでHLE 58%達成。Llama 4 Maverick同等性能を1桁少ないcomputeで。思考圧縮技術。",
+      "source": "Meta AI Blog",
+      "url": "https://ai.meta.com/blog/introducing-muse-spark-msl/",
+      "tags": ["Meta", "multimodal", "reasoning", "multi-agent"]
+    },
+    {
+      "id": "news-024",
+      "date": "2026-04-08",
+      "title": "Meta Advanced AI Scaling Framework: 安全性フレームワーク強化",
+      "category": "safety",
+      "summary": "リスク評価カテゴリ拡大。ルールベースから原則ベースの安全性に移行。モデルに安全ガイドラインの理由を理解させる。",
+      "source": "Meta AI Blog",
+      "url": "https://ai.meta.com/blog/scaling-how-we-build-test-advanced-ai/",
+      "tags": ["Meta", "safety", "framework"]
+    },
+    {
+      "id": "news-025",
+      "date": "2026-04",
+      "title": "論文: A Self-Improving Coding Agent",
+      "category": "academic",
+      "summary": "LLMエージェントが自身のコードを自律修正してSWE-bench Verifiedで17-53%改善。自己反省とコード更新による改善メカニズム。",
+      "source": "arXiv",
+      "url": "https://arxiv.org/abs/2504.15228",
+      "tags": ["self-improvement", "coding agent", "SWE-bench"]
+    },
+    {
+      "id": "news-026",
+      "date": "2026-03",
+      "title": "論文: Memory for Autonomous LLM Agents (Survey)",
+      "category": "academic",
+      "summary": "LLMエージェントの記憶設計・評価の包括的サーベイ。5つのメカニズムファミリーを網羅。",
+      "source": "arXiv",
+      "url": "https://arxiv.org/abs/2603.07670",
+      "tags": ["memory", "survey", "LLM agent"]
+    }
+  ]
+}

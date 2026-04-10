@@ -51,8 +51,8 @@ export async function collectNews(options?: {
     throw new Error(`Edge Function error: ${res.status}`)
   }
 
-  const data = await res.json()
-  const text: string = data.content || ''
+  // Response is SSE stream — assemble delta tokens into full text
+  const text = await parseSSEResponse(res)
 
   // Parse JSON array from response (may be wrapped in markdown code block)
   const items = parseNewsResponse(text)
@@ -107,6 +107,20 @@ async function buildTopicPrompt(): Promise<string> {
     return DEFAULT_TOPICS + '、' + topTopics.join('、')
   }
   return DEFAULT_TOPICS
+}
+
+/** Parse SSE streaming response from ai-agent Edge Function, assembling delta tokens into text */
+async function parseSSEResponse(res: Response): Promise<string> {
+  const raw = await res.text()
+  let assembled = ''
+  for (const line of raw.split('\n')) {
+    if (!line.startsWith('data: ')) continue
+    try {
+      const obj = JSON.parse(line.slice(6))
+      if (obj.type === 'delta' && obj.content) assembled += obj.content
+    } catch { /* skip non-JSON lines */ }
+  }
+  return assembled
 }
 
 /** Parse AI response into news items array, with line-based fallback */

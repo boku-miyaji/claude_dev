@@ -1,0 +1,191 @@
+{
+  "metadata": {
+    "report_id": "2026-04-10-1320",
+    "generated_at": "2026-04-10T13:21:16Z",
+    "period": "2026-04-08 ~ 2026-04-10",
+    "collection_method": "on-demand (CEO request)",
+    "topic": "Claude Code latest docs, product development best practices, agent SDK",
+    "language": "ja"
+  },
+  "alerts": [
+    {
+      "id": "ALERT-1",
+      "level": "critical",
+      "date": "2026-04-01",
+      "title": "Claude Code source code leaked on npm (512K lines)",
+      "summary": "Anthropic accidentally exposed 512,000 lines of Claude Code TypeScript source, including hidden feature flags and undocumented modes (Undercover mode detected). Security implications are limited but internal architecture details are now public.",
+      "urls": [
+        "https://github.com/anthropics/claude-code",
+        "https://www.bloomberg.com/news/articles/2026-04-01/anthropic-scrambles-to-address-leak-of-claude-code-source-code"
+      ],
+      "ceo_insight": "Internal stack details are now competitive intelligence for others. Review audit logs for any exposure of proprietary patterns in your custom hooks/skills."
+    }
+  ],
+  "items": [
+    {
+      "id": "news-001",
+      "date": "2026-04-10",
+      "title": "Claude Code Official Changelog - v2.1.98+ updates (April 2026)",
+      "category": "product",
+      "summary": "Major updates include: Google Vertex AI integration wizard, PowerShell tool for Windows, flicker-free rendering, new slash commands (/loop, /powerup), and significant performance improvements (60% faster large-file edits, linear SSE processing). Security hardening against permission bypass attempts. Opus 4.6 default context window: 1M tokens, max output tokens: 64K.",
+      "source": "code.claude.com/docs/en/changelog",
+      "url": "https://code.claude.com/docs/en/changelog",
+      "tags": ["Claude Code", "product updates", "performance", "security"]
+    },
+    {
+      "id": "news-002",
+      "date": "2026-04-08",
+      "title": "Anthropic launches Claude Managed Agents (public beta)",
+      "category": "product",
+      "summary": "Fully managed infrastructure for running autonomous agents without building underlying technical layers. Decouples session (append-only log), harness (event loop), and sandbox (execution environment). Simplifies production deployment for enterprise customers.",
+      "source": "Anthropic Engineering Blog + SiliconANGLE",
+      "url": "https://www.anthropic.com/engineering/managed-agents",
+      "tags": ["agent", "managed service", "enterprise", "infrastructure"]
+    },
+    {
+      "id": "news-003",
+      "date": "2026-04-08",
+      "title": "Scaling Managed Agents: Decoupling the brain from the hands",
+      "category": "architecture",
+      "summary": "Anthropic's engineering approach: session (append-only transaction log of events), harness (loop coordinating model + tool calls), sandbox (isolated execution). This abstraction enables parallel multi-agent orchestration and shared resource pools. Key insight: agent control > LLM intelligence.",
+      "source": "Anthropic Engineering Blog",
+      "url": "https://www.anthropic.com/engineering/managed-agents",
+      "tags": ["agent architecture", "parallel agents", "infrastructure design"]
+    },
+    {
+      "id": "news-004",
+      "date": "2026-04-09",
+      "title": "Claude Code Advanced Patterns: Subagents, MCP, and Scaling - Anthropic Webinar",
+      "category": "educational",
+      "summary": "Official Anthropic webinar covering advanced Claude Code patterns: subagent coordination, MCP server design, handling large codebases. Emphasizes permission management, task isolation, and model routing (Opus for reasoning, Sonnet for implementation, Haiku for lookups).",
+      "source": "Anthropic Webinars",
+      "url": "https://www.anthropic.com/webinars/claude-code-advanced-patterns",
+      "tags": ["webinar", "agent patterns", "best practices", "MCP"]
+    },
+    {
+      "id": "news-005",
+      "date": "2026-04-05",
+      "title": "Agent Skills: Equipping agents for the real world",
+      "category": "product",
+      "summary": "Agent Skills framework allows building specialized agents via organized folders of instructions, scripts, and resources. Agents discover and load skills dynamically at runtime. Universal SKILL.md format adopted across ecosystem (Anthropic + third-party + community).",
+      "source": "Anthropic Engineering Blog",
+      "url": "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+      "tags": ["skills", "extensibility", "ecosystem", "SKILL.md"]
+    },
+    {
+      "id": "news-006",
+      "date": "2026-04-03",
+      "title": "Claude Code Auto Mode: safer permission handling via classifier",
+      "category": "security",
+      "summary": "Auto Mode delegates permission approvals to model-based classifiers instead of manual review. Balances safety and usability. 93% of permission prompts are already auto-approved by existing logic. Gradual rollout expected by mid-April 2026.",
+      "source": "Anthropic Engineering Blog",
+      "url": "https://www.anthropic.com/engineering/claude-code-auto-mode",
+      "tags": ["security", "permissions", "automation", "UX"]
+    },
+    {
+      "id": "news-007",
+      "date": "2026-04-07",
+      "title": "Hooks reference - Claude Code Docs",
+      "category": "technical",
+      "summary": "Claude Code hooks enable automation at lifecycle points: SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop, PreCompact, PostCompact. Two types: prompt-based (LLM evaluation) and agent-based (agentic verifier with tool access). Widely used for permission control, formatting, env setup.",
+      "source": "code.claude.com/docs/en/hooks",
+      "url": "https://code.claude.com/docs/en/hooks",
+      "tags": ["hooks", "automation", "extensibility", "technical reference"]
+    },
+    {
+      "id": "news-008",
+      "date": "2026-04-09",
+      "title": "Best Practices for Claude Code - Official Docs",
+      "category": "best practices",
+      "summary": "Key recommendations: (1) Context management critical — keep window <60% capacity, use /compact between unrelated tasks. (2) Autonomous workflow: describe goal and let Claude figure out implementation. (3) Plan before execution: request strategy outline first. (4) Validate security-critical code. (5) Keep PRs small, commit frequently.",
+      "source": "code.claude.com/docs/en/best-practices",
+      "url": "https://code.claude.com/docs/en/best-practices",
+      "tags": ["best practices", "workflow", "context management"]
+    },
+    {
+      "id": "news-009",
+      "date": "2026-04-08",
+      "title": "DEV.to: Claude Code Best Practices - 15 Tips from 6 Projects (2026)",
+      "category": "best practices",
+      "summary": "Community insights: (1) CLAUDE.md is highest-impact setup (10 min saves hours). (2) Most useful MCP servers: Figma, Playwright, Vercel, PostgreSQL, GitHub. (3) Review quality > speed — teams with tight guardrails ship better code. (4) Hooks guarantee deterministic actions (formatting, protected file blocking, notifications, context reinjection).",
+      "source": "dev.to",
+      "url": "https://dev.to/lukaszfryc/claude-code-best-practices-15-tips-from-running-6-projects-2026-9eb",
+      "tags": ["best practices", "CLAUDE.md", "MCP", "hooks", "community"]
+    },
+    {
+      "id": "news-010",
+      "date": "2026-04-07",
+      "title": "DEV.to: How to Structure Claude Code for Production - MCP, Subagents, CLAUDE.md",
+      "category": "architecture",
+      "summary": "Production patterns: (1) CLAUDE.md governs session behavior (policies, rules, tool access). (2) MCP servers provide external integrations. (3) Subagents for isolated task delegation. (4) Model routing: Opus (reasoning), Sonnet (implementation), Haiku (lookups). (5) Session isolation via worktrees.",
+      "source": "dev.to",
+      "url": "https://dev.to/lizechengnet/how-to-structure-claude-code-for-production-mcp-servers-subagents-and-claudemd-2026-guide-4gjn",
+      "tags": ["production architecture", "CLAUDE.md", "MCP", "subagents", "model routing"]
+    },
+    {
+      "id": "news-011",
+      "date": "2026-04-09",
+      "title": "Medium: Claude Code Subagents - Complete Guide to AI Agent Delegation",
+      "category": "architecture",
+      "summary": "Delegation patterns: Explore-Plan-Execute for complex tasks. Permission hygiene critical to prevent unintended actions. Subagents operate independently with specific roles; main agent coordinates hub-and-spoke. Alternative: Agent Teams with shared task lists and direct coordination.",
+      "source": "medium.com",
+      "url": "https://medium.com/@sathishkraju/claude-code-subagents-the-complete-guide-to-ai-agent-delegation-d0a9aba419d0",
+      "tags": ["subagents", "delegation", "coordination", "permissions"]
+    },
+    {
+      "id": "news-012",
+      "date": "2026-04-08",
+      "title": "Medium: Agent Harness - 12 Agentic Patterns from Claude Code",
+      "category": "architecture",
+      "summary": "Advanced harness patterns: Control layer is more important than LLM intelligence. 12 patterns cover session management, error recovery, permission orchestration, cost optimization, and resource pooling. Emphasis: what separates demo from production is the harness, not the model.",
+      "source": "medium.com",
+      "url": "https://medium.com/@simranjeetsingh1497/agent-harness-12-agentic-harness-patterns-from-claude-code-5505b7c239c4",
+      "tags": ["agent harness", "patterns", "control layer", "production systems"]
+    },
+    {
+      "id": "news-013",
+      "date": "2026-04-06",
+      "title": "Medium: Claude Code Agent Teams - Multiple Claudes Working Together",
+      "category": "architecture",
+      "summary": "Agent Teams pattern: Instead of sequential execution, spin up independent Claude instances coordinating via shared task list and direct messaging. Different from subagents (isolated workers within single session). Enables true parallelization and specialized role distribution.",
+      "source": "medium.com",
+      "url": "https://medium.com/@richardhightower/claude-code-agent-teams-ca3ec5f2d26a",
+      "tags": ["agent teams", "parallelization", "coordination", "architecture"]
+    },
+    {
+      "id": "news-014",
+      "date": "2026-04-02",
+      "title": "GitHub: Claude Code Ultimate Guide - FlorianBruniaux",
+      "category": "documentation",
+      "summary": "Comprehensive guide covering Claude Code from beginner to power user. Includes production-ready templates, agentic workflows, quizzes, and cheatsheet. Open-source documentation resource gaining traction in community.",
+      "source": "github.com",
+      "url": "https://github.com/FlorianBruniaux/claude-code-ultimate-guide",
+      "tags": ["guide", "documentation", "templates", "community resource"]
+    },
+    {
+      "id": "news-015",
+      "date": "2026-04-10",
+      "title": "Anthropic blogs on agent infrastructure & Claude Code adoption",
+      "category": "thought leadership",
+      "summary": "Anthropic's majority code now written by Claude Code. Engineers focus on architecture, product thinking, continuous multi-agent orchestration. Signals: (1) Tool maturity reached production-grade. (2) Internal dogfooding validates reliability. (3) Shift from 'assistant' to 'agent team orchestration' culture.",
+      "source": "Anthropic.com",
+      "url": "https://www.anthropic.com/news",
+      "tags": ["internal adoption", "infrastructure", "culture shift"]
+    }
+  ],
+  "summary": {
+    "key_themes": [
+      "Claude Code as production-grade agent orchestration platform",
+      "Multi-agent patterns now standardized (subagents, teams, harnesses)",
+      "Security hardening accelerating (Auto Mode, permission classifiers, hooks)",
+      "Agent Skills ecosystem maturing (universal SKILL.md, third-party integration)",
+      "CLAUDE.md + MCP as foundational architectures for scaling"
+    ],
+    "competitive_implications": [
+      "Source leak reveals internal architecture details, but community finds value in transparency",
+      "Managed Agents removes barrier to enterprise adoption (infrastructure no longer customer problem)",
+      "Model routing pattern (Opus/Sonnet/Haiku) emerging as best practice for cost optimization",
+      "Anthropic's heavy internal use signals confidence in tool reliability"
+    ]
+  }
+}
