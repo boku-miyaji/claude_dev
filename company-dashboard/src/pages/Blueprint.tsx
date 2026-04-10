@@ -309,15 +309,16 @@ function TabOverview() {
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--accent)' }}>ユーザー操作トリガー</div>
         <Tbl headers={['データ', '更新タイミング', 'トリガー', '連鎖先']} rows={[
           ['diary_entries', 'Today画面で「記録する」', 'ユーザー入力', '→ emotion_analysis → AI Partner → 夢検出（3つが自動連鎖）'],
-          ['tasks (完了)', 'Today画面でチェックボックス', 'インラインCRUD', 'status=done + 取り消し線表示。再クリックで戻す'],
-          ['tasks (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', 'due_date=今日で即追加。期限ソート（超過→今日→明日→日付順）'],
-          ['tasks (編集)', 'Today画面でタイトルクリック', 'インライン編集', 'タイトル・期限・優先度をその場で変更'],
+          ['tasks (完了)', 'Today画面でチェックボックス', 'インラインCRUD', 'status=done + 取り消し線。→ Google Tasks同期(completed)。再クリックで戻す(needsAction)'],
+          ['tasks (追加)', 'Today画面の + ボタン / 秘書(自然言語)', 'インラインCRUD', 'due_date/scheduled_at/deadline_at で3ゾーン振り分け。日付あり→Google Tasks自動作成(google_task_id保存)'],
+          ['tasks (編集)', 'Today画面でタイトルクリック', 'インライン編集', 'タイトル・期限・優先度変更。google_task_idあれば→Google Tasks自動更新'],
           ['habits (完了)', 'Today画面でチェック', 'ユーザータップ', '→ 統合プログレスバーに即反映'],
           ['habits (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', '即追加。Habitsページで詳細編集'],
           ['weekly_narratives', 'Weeklyページで「生成」ボタン', 'ユーザー操作', 'DB保存。過去の週は再生成可能'],
           ['self_analysis', 'Self Analysisで再分析ボタン', 'ユーザー操作', 'ハイブリッド方式: 初回=全データ分析→analysis_context保存、更新=前回context+差分データで効率的更新。統合まとめタブで全分析結果を一覧'],
           ['news_items', 'Today/Reportsで「収集」ボタン', 'ユーザー操作', 'lib/newsCollect.ts（共通モジュール）経由で収集'],
-          ['calendar_events', 'Calendar/Todayページ', 'Edge Function proxy', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。lib/calendarApi.ts（共通モジュール）'],
+          ['calendar_events', 'Calendar/Todayページ', 'Edge Function proxy', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。lib/calendarApi.ts（共通モジュール）。Todayではタスクと統合タイムライン(useTodayTimeline)表示'],
+          ['google_tasks', 'タスク作成/更新/完了時', 'data.ts → syncTaskToGoogle', 'Supabase tasks→Google Tasks一方向同期。日付ありタスクのみ。google_task_idでリンク。lib/googleTasksApi.ts'],
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
         ]} />
 
@@ -364,8 +365,15 @@ function TabOverview() {
 
 Today画面でタスク操作
   ├→ チェックボックス → status=done + 取り消し線（再クリックで戻す）
-  ├→ + ボタン → テキスト入力 → Enter → tasks INSERT（due_date=今日）
-  └→ タイトルクリック → インライン編集（タイトル/期限/優先度）→ Save
+  │    └→ google_task_idあり → Google Tasks API PATCH (completed)
+  ├→ + ボタン → テキスト入力 → Enter → tasks INSERT
+  │    └→ 日付あり → Google Tasks API POST → google_task_id保存
+  ├→ タイトルクリック → インライン編集（タイトル/期限/優先度）→ Save
+  │    └→ google_task_idあり → Google Tasks API PATCH (更新)
+  └→ 統合タイムライン振り分け:
+       ├→ scheduled_at/deadline_at(時刻付き) → 30分スロット表示
+       ├→ due_date(日付のみ) → 「今日やること」ゾーン
+       └→ due_date(未来7日) → 「近日の締切」ゾーン
 
 Today画面で習慣操作
   ├→ チェックボックス → habit_logs INSERT/DELETE（トグル）
