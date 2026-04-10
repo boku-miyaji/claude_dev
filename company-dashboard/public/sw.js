@@ -1,4 +1,4 @@
-const CACHE_NAME = 'self-focus-v2'
+const CACHE_NAME = 'focus-you-v3'
 const PRECACHE_URLS = ['/', '/index.html']
 
 self.addEventListener('install', (event) => {
