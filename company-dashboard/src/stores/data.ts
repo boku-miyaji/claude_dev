@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import type { DiaryEntry, EmotionAnalysis } from '@/types/diary'
 import type { Task } from '@/types/tasks'
+import { syncTaskToGoogle, syncTaskComplete, syncTaskReopen } from '@/lib/googleTasksApi'
 import type { Dream } from '@/types/dreams'
 import type { Goal } from '@/types/goals'
 import type { Habit, HabitLog } from '@/types/habits'
@@ -340,6 +341,18 @@ export const useDataStore = create<DataStore>((set, get) => ({
     if (error || !data) return null
     const newTask = data as Task
     set((s) => ({ tasks: [newTask, ...s.tasks] }))
+
+    // Sync to Google Tasks (async, non-blocking)
+    syncTaskToGoogle(newTask).then((googleTaskId) => {
+      if (googleTaskId && !newTask.google_task_id) {
+        supabase.from('tasks').update({ google_task_id: googleTaskId }).eq('id', newTask.id).then(() => {
+          set((s) => ({
+            tasks: s.tasks.map((t) => t.id === newTask.id ? { ...t, google_task_id: googleTaskId } : t),
+          }))
+        })
+      }
+    })
+
     return newTask
   },
 

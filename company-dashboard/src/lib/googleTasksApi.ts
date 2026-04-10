@@ -113,3 +113,85 @@ export async function deleteGoogleTask(taskId: string, taskListId?: string): Pro
   })
   if (!res.ok) throw new Error(`Delete task failed: ${res.status}`)
 }
+
+// ============================================================
+// Sync helpers: Supabase task → Google Task (one-way)
+// ============================================================
+
+/** Build Google Tasks due field from Supabase task fields */
+function buildGoogleDue(task: {
+  scheduled_at?: string | null
+  deadline_at?: string | null
+  due_date?: string | null
+}): string | undefined {
+  // Prefer scheduled_at (exact time), then deadline_at, then due_date (date only)
+  if (task.scheduled_at) return new Date(task.scheduled_at).toISOString()
+  if (task.deadline_at) return new Date(task.deadline_at).toISOString()
+  if (task.due_date) return new Date(task.due_date + 'T00:00:00+09:00').toISOString()
+  return undefined
+}
+
+/**
+ * Sync a Supabase task to Google Tasks.
+ * Creates or updates the corresponding Google Task.
+ * Returns the google_task_id (for storing back in Supabase).
+ * Fails silently — sync is best-effort, shouldn't block task operations.
+ */
+export async function syncTaskToGoogle(task: {
+  title: string
+  description?: string | null
+  scheduled_at?: string | null
+  deadline_at?: string | null
+  due_date?: string | null
+  status?: string
+  google_task_id?: string | null
+}): Promise<string | null> {
+  try {
+    const due = buildGoogleDue(task)
+    if (!due) return null // No date → don't sync to Google
+
+    const googlePayload: Record<string, string> = { title: task.title }
+    if (due) googlePayload.due = due
+    if (task.description) googlePayload.notes = task.description
+    if (task.status === 'done') googlePayload.status = 'completed'
+    else googlePayload.status = 'needsAction'
+
+    if (task.google_task_id) {
+      // Update existing Google Task
+      await updateGoogleTask(task.google_task_id, googlePayload)
+      return task.google_task_id
+    } else {
+      // Create new Google Task
+      const created = await createGoogleTask(googlePayload)
+      return created.id
+    }
+  } catch {
+    // Sync is best-effort — don't break the app if Google Tasks fails
+    console.warn('Google Tasks sync failed (non-blocking)')
+    return null
+  }
+}
+
+/**
+ * Mark a Google Task as completed.
+ * Fails silently.
+ */
+export async function syncTaskComplete(googleTaskId: string): Promise<void> {
+  try {
+    await updateGoogleTask(googleTaskId, { status: 'completed' })
+  } catch {
+    console.warn('Google Tasks complete sync failed (non-blocking)')
+  }
+}
+
+/**
+ * Mark a Google Task as incomplete (reopen).
+ * Fails silently.
+ */
+export async function syncTaskReopen(googleTaskId: string): Promise<void> {
+  try {
+    await updateGoogleTask(googleTaskId, { status: 'needsAction' })
+  } catch {
+    console.warn('Google Tasks reopen sync failed (non-blocking)')
+  }
+}
