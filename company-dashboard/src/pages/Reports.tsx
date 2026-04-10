@@ -6,6 +6,7 @@ import { marked } from 'marked'
 interface Report {
   id: number
   title: string
+  description: string | null
   file_path: string
   file_type: string
   content: string | null
@@ -107,7 +108,7 @@ function ResearchReports() {
   const load = useCallback(() => {
     supabase
       .from('artifacts')
-      .select('id,title,file_path,file_type,company_id,tags,status,created_at,updated_at')
+      .select('id,title,description,file_path,file_type,company_id,tags,status,created_at,updated_at')
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         setReports((data as Report[]) || [])
@@ -194,12 +195,31 @@ function ResearchReports() {
   )
 }
 
+/** Extract a brief summary from markdown content */
+function extractSummary(content: string | null, maxLen = 120): string | null {
+  if (!content) return null
+  const lines = content.split('\n')
+  for (const line of lines) {
+    const trimmed = line.trim()
+    // Skip headings, empty lines, metadata, separators
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('---') || trimmed.startsWith('|') || trimmed.startsWith('対象期間') || trimmed.startsWith('収集方法')) continue
+    // Skip lines that are just formatting
+    if (/^[*_\-=]+$/.test(trimmed)) continue
+    // Clean markdown formatting
+    const clean = trimmed.replace(/\*\*/g, '').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/^[-*]\s*/, '')
+    if (clean.length > 10) return clean.length > maxLen ? clean.substring(0, maxLen) + '...' : clean
+  }
+  return null
+}
+
 function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }: {
   r: Report; expanded: boolean; onToggle: () => void
   onArchive?: (e: React.MouseEvent) => void
   onRestore?: (e: React.MouseEvent) => void
   isArchived?: boolean
 }) {
+  const summary = !expanded ? (r.description || extractSummary(r.content)) : null
+
   return (
     <div className="card" style={{ marginBottom: 12, cursor: 'pointer', opacity: isArchived ? 0.6 : 1 }} onClick={onToggle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -212,16 +232,16 @@ function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }:
               </span>
             )}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', marginBottom: 4 }}>
-            {r.file_path}
-            <span style={{ marginLeft: 8, fontSize: 10, padding: '1px 5px', borderRadius: 3, background: 'var(--surface2)', color: 'var(--text3)', textTransform: 'uppercase', fontWeight: 600 }}>
-              {r.file_type}
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {summary && (
+            <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 4, lineHeight: 1.5 }}>
+              {summary}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
             {r.tags.map((t) => (
               <span key={t} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--surface2)', color: 'var(--text3)' }}>{t}</span>
             ))}
+            <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{r.file_type}</span>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
