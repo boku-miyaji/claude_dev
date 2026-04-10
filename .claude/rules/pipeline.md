@@ -98,6 +98,71 @@ DAG（有向非巡回グラフ）を組む：
 
 不足があれば部署に差し戻す。
 
+## Managed Agents パターン（セッション永続化）
+
+> Anthropic Engineering の Managed Agents 設計に基づく。Session = append-only 外部ログ、Harness = ステートレス。
+
+### Session Log（agent_sessions テーブル）
+
+中〜大規模パイプライン実行時、以下のイベントを `agent_sessions` に記録する:
+
+| event_type | タイミング | payload |
+|---|---|---|
+| `pipeline_start` | パイプライン開始 | `{name, dag, task_summary}` |
+| `dept_dispatch` | 部署起動 | `{description, model}` — Hook が自動記録 |
+| `dept_complete` | 部署完了 | `{artifacts, handoff}` |
+| `dept_error` | 部署エラー | `{error, retry_count}` |
+| `handoff` | 部署間ハンドオフ | `{from, to, context}` |
+| `checkpoint` | 社長承認ポイント | `{decision, reason}` |
+| `pipeline_complete` | パイプライン完了 | `{summary, artifacts}` |
+
+**`session_id` は環境変数 `CLAUDE_SESSION_ID` を使う。なければ日付ベース。**
+
+### Pipeline State（pipeline_state テーブル）
+
+中〜大規模パイプラインでは `pipeline_state` に DAG と進捗を保存:
+
+```json
+{
+  "session_id": "20260410",
+  "pipeline_name": "narrator-implementation",
+  "dag": [
+    {"step": "research", "dept": "リサーチ部", "status": "completed"},
+    {"step": "design", "dept": "UXデザイン部", "status": "completed"},
+    {"step": "implement", "dept": "システム開発部", "status": "running"},
+    {"step": "test", "dept": "QA", "status": "pending"}
+  ],
+  "current_step": "implement",
+  "status": "running"
+}
+```
+
+### セッション復旧
+
+セッション開始時に `pipeline_state` で `status='running'` or `status='paused'` のレコードを検出したら:
+
+1. `agent_sessions` から該当 session_id のイベントを取得
+2. 最後に完了した step を特定
+3. 社長に「前回のパイプラインが途中です。続行しますか？」と確認
+4. 続行する場合、未完了の step から再開
+
+### 部署 Input 標準化
+
+部署を Agent で起動する際、以下の構造で prompt を渡す:
+
+```
+## Task
+{具体的な作業指示}
+
+## Context Events（前工程の成果）
+{agent_sessions から取得した関連イベントの要約}
+
+## Constraints
+{制約条件: 時間、コスト、依存関係}
+```
+
+**Context Events は session_id でフィルタし、直近の dept_complete イベントの payload を渡す。**
+
 ## `/company` との役割分担
 
 | 機能 | pipeline.md（常時） | `/company`（明示起動） |

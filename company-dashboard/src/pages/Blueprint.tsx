@@ -300,6 +300,12 @@ function TabOverview() {
           ['危険コマンド監査', 'Bash実行前', 'Hook (PreToolUse)', 'ブロック時に blocked-commands.jsonl に記録'],
           ['部署稼働ログ', 'Agent起動時', 'Hook (PostToolUse) — Supabase activity_log INSERT', 'dept_dispatch + metadata.dept で集計可能'],
           ['部署評価リマインド', 'セッション開始', 'Hook (SessionStart) — 14日超で警告', '評価サイクルの自動維持'],
+          ['Session Log (Managed Agents)', 'Agent起動時', 'Hook (PostToolUse) → agent_sessions INSERT', 'append-only イベントログ。パイプライン復旧の基盤'],
+          ['Pipeline State', 'パイプライン開始/完了時', 'pipeline_state テーブル更新', 'DAG進捗の永続化。セッション復旧可能に'],
+          ['パイプライン復旧検出', 'セッション開始', 'Hook (SessionStart) — pipeline_state チェック', '中断パイプラインを自動検出・復旧提案'],
+          ['感情ベクトル検索', '日記投稿後', 'pgvector + emotion_vector(8) on emotion_analysis', '類似感情パターンの自動発見'],
+          ['日本語全文検索', '検索実行時', 'PGroonga on diary_entries.body', '日記キーワード検索（形態素解析対応）'],
+          ['Hybrid Search + Reranking', '検索実行時', 'emotion vector + PGroonga → gpt-nano rerank', '関連日記をスコア付きでLLMコンテキストに注入'],
           ['emotion_analysis', '日記投稿直後', 'useEmotionAnalysis (自動)', 'diary_entries.wbi更新 → Journal可視化 → AI Partner再生成'],
           ['AI Partnerコメント', '日記投稿後 + 時間帯変更 + リロード', 'useMorningBriefing (invalidate)', '表示のみ（DB保存なし）'],
           ['夢進捗検出', '日記投稿後', 'useDreamDetection (自動)', 'toast通知のみ'],
@@ -1538,6 +1544,22 @@ function TabHarness() {
           ['情報収集部', '高（スコアリング）', '明確', 'キーワード抽出スクリプト未実装'],
           ['マーケティング部', '低（3柱）', '曖昧', '分類ゲートなし'],
           ['運営改善部', '高（メタ観察）', '明確', '閾値未定義'],
+        ]} />
+      </Section>
+
+      <Section title="Managed Agents パターン（Anthropic Engineering 2026）">
+        <P>OS仮想化に着想を得た3層分離アーキテクチャ。Session（append-only log）+ Harness（stateless brain）+ Sandbox（disposable hands）。focus-youではパイプラインの永続化と復旧に適用。</P>
+        <Tbl headers={['層', '役割', 'focus-you 実装']} rows={[
+          ['Session (append-only log)', '全イベントの永続記録。クラッシュ復旧の基盤', 'agent_sessions テーブル（event_type + payload JSONB）'],
+          ['Harness (stateless brain)', 'ステートレスなオーケストレーション', 'pipeline_state テーブル（DAG + 進捗状態）'],
+          ['Sandbox (disposable hands)', '使い捨ての実行環境', 'Agent tool のサブエージェント（元から対応済み）'],
+        ]} />
+        <Tbl headers={['機能', '実装状態', '技術']} rows={[
+          ['Session Log 記録', '実装済み', 'PostToolUse Hook → agent_sessions INSERT'],
+          ['Pipeline State 永続化', '実装済み', 'pipeline_state テーブル（DAG + status）'],
+          ['セッション復旧検出', '実装済み', 'SessionStart Hook → pipeline_state チェック'],
+          ['部署 Input 標準化', '実装済み', 'prompt に {task, context_events[], constraints} 構造'],
+          ['Hybrid Search', '実装済み', 'pgvector + PGroonga + gpt-nano reranking → LLMコンテキスト注入'],
         ]} />
       </Section>
 
