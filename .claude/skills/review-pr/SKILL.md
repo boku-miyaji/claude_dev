@@ -1,22 +1,13 @@
 ---
-allowed-tools: >
-  Bash(gh:*),
-  Bash(git:*),
-  Bash(cat:*),
-  Bash(echo:*),
-  Bash(date:*),
-  Bash(mkdir:*),
-  Bash(ls:*),
-  Bash(cd:*),
-  Read(*),
-  Write(*),
-  Glob(*),
-  Grep(*),
-  Task(*)
-description: |
+name: review-pr
+description: >
   PR番号を指定して、内容把握の要約とコードレビューを実施する。
-  コード・ドキュメント・プロンプトの変更を網羅的にレビューし、Markdownレポートとして出力する。
+  コード・ドキュメント・プロンプトの変更を網羅的にレビューし、
+  重要度分類（Critical/High/Medium/Low）付きのMarkdownレポートとして出力する。
+trigger: /review-pr
+category: review
 ---
+
 
 ## 引数
 
