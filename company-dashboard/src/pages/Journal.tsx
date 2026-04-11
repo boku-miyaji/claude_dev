@@ -45,7 +45,7 @@ function getDominantEmotion(e: EmotionAnalysis): { key: string; color: string } 
 function buildCalendarDays(
   entries: { id: string; created_at: string }[],
   emotionMap: Map<string, EmotionAnalysis>,
-): { date: string; hasEntry: boolean; emotionColor: string | null }[] {
+): { date: string; hasEntry: boolean; emotionColor: string | null; emotionLabel: string | null }[] {
   const dateEntryMap = new Map<string, string[]>()
   for (const e of entries) {
     const d = e.created_at.substring(0, 10)
@@ -53,7 +53,7 @@ function buildCalendarDays(
     dateEntryMap.get(d)!.push(e.id)
   }
 
-  const days: { date: string; hasEntry: boolean; emotionColor: string | null }[] = []
+  const days: { date: string; hasEntry: boolean; emotionColor: string | null; emotionLabel: string | null }[] = []
   const today = new Date()
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today)
@@ -61,6 +61,7 @@ function buildCalendarDays(
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const entryIds = dateEntryMap.get(key) || []
     let emotionColor: string | null = null
+    let emotionLabel: string | null = null
 
     if (entryIds.length > 0) {
       for (const eid of entryIds) {
@@ -69,13 +70,14 @@ function buildCalendarDays(
           const dominant = getDominantEmotion(ea)
           if (dominant) {
             emotionColor = dominant.color
+            emotionLabel = PLUTCHIK.find((p) => p.key === dominant.key)?.label || null
             break
           }
         }
       }
       if (!emotionColor) emotionColor = 'var(--accent2)'
     }
-    days.push({ date: key, hasEntry: entryIds.length > 0, emotionColor })
+    days.push({ date: key, hasEntry: entryIds.length > 0, emotionColor, emotionLabel })
   }
   return days
 }
@@ -291,7 +293,7 @@ export function Journal() {
             {calendarDays.map((day) => (
               <div
                 key={day.date}
-                title={day.date}
+                title={day.emotionLabel ? `${day.date.substring(5)} ${day.emotionLabel}` : day.date.substring(5)}
                 style={{
                   width: 28,
                   height: 28,
@@ -300,8 +302,18 @@ export function Journal() {
                   opacity: day.hasEntry ? 1 : 0.4,
                   margin: '0 auto',
                   transition: 'all .2s',
+                  cursor: day.hasEntry ? 'pointer' : 'default',
                 }}
               />
+            ))}
+          </div>
+          {/* Legend */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+            {PLUTCHIK.map((p) => (
+              <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
+                <span style={{ fontSize: 9, color: 'var(--text3)' }}>{p.label}</span>
+              </div>
             ))}
           </div>
         </Card>

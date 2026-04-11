@@ -180,7 +180,12 @@
       "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/pptx-rikyu.md)",
       "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/pptx-aces-rikyu.md)",
       "Skill(update-config)",
-      "Skill(update-config:*)"
+      "Skill(update-config:*)",
+      "Bash(awk 'NR==5355,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk 'NR==6146,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk 'NR==1399,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk 'NR==7581,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk '/renderDiary/,/renderGrowth/')"
     ],
     "deny": [
       "Read(**/.env)",
@@ -454,6 +459,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
