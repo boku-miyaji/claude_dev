@@ -322,7 +322,7 @@ function TabOverview() {
           ['habits (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', '即追加。Habitsページで詳細編集'],
           ['weekly_narratives', 'Weeklyページで「生成」ボタン', 'ユーザー操作', 'DB保存。過去の週は再生成可能'],
           ['self_analysis', 'Self Analysisで再分析ボタン', 'ユーザー操作', 'ハイブリッド方式: 初回=全データ分析→analysis_context保存、更新=前回context+差分データで効率的更新。統合まとめタブで全分析結果を一覧'],
-          ['news_items', 'Today/Reportsで「収集」ボタン', 'ユーザー操作', 'lib/newsCollect.ts（共通モジュール）経由で収集'],
+          ['news_items', 'Today/Reportsで「収集」ボタン', 'Edge Function news-collect（4ソース並列）', 'Google News RSS + arXiv API + Hacker News API + 公式ブログRSS → DB保存 + クリック追跡'],
           ['calendar_events', 'Calendar/Todayページ', 'Edge Function proxy', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。lib/calendarApi.ts（共通モジュール）。Todayではタスクと統合タイムライン(useTodayTimeline)表示'],
           ['google_tasks', 'タスク作成/更新/完了時', 'data.ts → syncTaskToGoogle', 'Supabase tasks→Google Tasks一方向同期。日付ありタスクのみ。google_task_idでリンク。lib/googleTasksApi.ts'],
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],

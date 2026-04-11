@@ -433,7 +433,7 @@ export function Today() {
   const todayQuestions = useMemo(() => getTodayQuestions(todayStr), [todayStr])
 
   // News state — must be before any conditional return to satisfy Rules of Hooks
-  const [newsItems, setNewsItems] = useState<Array<{ id?: string; title: string; summary: string; url: string | null; source: string; topic: string; published_date?: string | null }>>([])
+  const [newsItems, setNewsItems] = useState<Array<{ id?: string; title: string; summary: string; url: string | null; source: string; source_type?: string | null; topic: string; published_date?: string | null }>>([])
   const [newsCollecting, setNewsCollecting] = useState(false)
 
   useEffect(() => {
@@ -789,15 +789,26 @@ export function Today() {
           <div key={n.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {n.url ? (
-                <a href={n.url} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 500, color: 'var(--text)', textDecoration: 'none' }}>{n.title}</a>
+                <a href={n.url} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 500, color: 'var(--text)', textDecoration: 'none' }}
+                  onClick={() => { if (n.id) import('@/lib/newsCollect').then(({ recordClick }) => recordClick(n.id!)) }}
+                >{n.title}</a>
               ) : (
                 <span style={{ fontWeight: 500 }}>{n.title}</span>
               )}
             </div>
             {n.summary && <div style={{ color: 'var(--text3)', marginTop: 2, fontSize: 11 }}>{n.summary}</div>}
-            <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+            <div style={{ display: 'flex', gap: 6, marginTop: 2, flexWrap: 'wrap', alignItems: 'center' }}>
               {n.published_date && <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{n.published_date.substring(5)}</span>}
               {n.source && <span style={{ fontSize: 10, color: 'var(--text3)' }}>{n.source}</span>}
+              {n.source_type && (
+                <span style={{
+                  fontSize: 9, padding: '1px 4px', borderRadius: 3, fontWeight: 600, fontFamily: 'var(--mono)',
+                  color: n.source_type === 'arxiv' ? '#b91c1c' : n.source_type === 'hackernews' ? '#ea580c' : n.source_type === 'rss_feed' ? 'var(--green)' : 'var(--accent)',
+                  background: n.source_type === 'arxiv' ? '#fef2f2' : n.source_type === 'hackernews' ? '#fff7ed' : n.source_type === 'rss_feed' ? 'var(--green-bg)' : 'var(--accent-bg)',
+                }}>
+                  {n.source_type === 'google_news' ? 'NEWS' : n.source_type === 'arxiv' ? 'PAPER' : n.source_type === 'hackernews' ? 'HN' : n.source_type === 'rss_feed' ? 'BLOG' : n.source_type}
+                </span>
+              )}
               {n.topic && <span style={{ fontSize: 10, color: 'var(--accent2)' }}>{n.topic}</span>}
             </div>
           </div>
