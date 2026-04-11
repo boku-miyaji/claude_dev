@@ -6587,7 +6587,10 @@ async function renderIntelligence(root) {
 
   root.appendChild(tabBar);
   root.appendChild(contentArea);
-  renderTab('reports');
+
+  // Check hash to auto-select tab
+  var initialTab = window.location.hash === '#sources' ? 'sources' : 'reports';
+  renderTab(initialTab);
 }
 
 // --- Sources Tab ---

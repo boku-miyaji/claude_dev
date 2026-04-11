@@ -814,9 +814,12 @@ export function Today() {
           </div>
         ))
       )}
-      <div style={{ marginTop: 8 }}>
+      <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
         <button className="btn btn-g btn-sm" style={{ fontSize: 10 }} onClick={() => navigate('/news')}>
           もっと見る →
+        </button>
+        <button className="btn btn-g btn-sm" style={{ fontSize: 10 }} onClick={() => navigate('/news#sources')}>
+          ソース設定
         </button>
       </div>
     </Card>
