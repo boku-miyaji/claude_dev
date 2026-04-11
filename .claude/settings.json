@@ -167,7 +167,11 @@
       "WebFetch(domain:claude.com)",
       "WebFetch(domain:blog.google)",
       "WebFetch(domain:deepmind.google)",
-      "WebFetch(domain:ai.meta.com)"
+      "WebFetch(domain:ai.meta.com)",
+      "WebFetch(domain:www.t.u-tokyo.ac.jp)",
+      "WebFetch(domain:doi.org)",
+      "WebFetch(domain:pubs.rsc.org)",
+      "WebFetch(domain:pmc.ncbi.nlm.nih.gov)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -194,8 +198,7 @@
       "/home/node/.claude",
       "/workspace/.claude/agents",
       "/workspace/.company/departments/research",
-      "/workspace/.company/departments",
-      "/workspace/company-dashboard/supabase/functions"
+      "/workspace/.company/departments"
     ]
   },
   "hooks": {
