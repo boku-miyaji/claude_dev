@@ -173,7 +173,8 @@
       "WebFetch(domain:pubs.rsc.org)",
       "WebFetch(domain:pmc.ncbi.nlm.nih.gov)",
       "WebFetch(domain:phys.org)",
-      "WebFetch(domain:www.dighyd.org)"
+      "WebFetch(domain:www.dighyd.org)",
+      "Edit(/.claude/skills/supabase-preflight/**)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -446,6 +447,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
