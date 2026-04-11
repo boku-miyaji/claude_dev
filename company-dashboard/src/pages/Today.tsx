@@ -157,7 +157,7 @@ function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
             style={{ flex: 1, fontSize: 13, padding: '5px 8px' }}
           />
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
           <input
             type="date"
             value={editDue}
@@ -173,7 +173,7 @@ function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
             <option value="normal">通常</option>
             <option value="high">高</option>
           </select>
-          <div style={{ flex: 1 }} />
+          <div style={{ flex: 1, minWidth: 0 }} />
           <button className="btn btn-g btn-sm" style={{ fontSize: 11, padding: '3px 8px' }} onClick={() => setEditing(false)}>Cancel</button>
           <button className="btn btn-p btn-sm" style={{ fontSize: 11, padding: '3px 8px' }} onClick={save}>Save</button>
         </div>

@@ -7515,7 +7515,7 @@ async function renderChat(root) {
   var layout = el('div', {className: 'chat-layout'});
 
   // --- Sidebar ---
-  var chatSidebar = el('div', {className: 'chat-sidebar'});
+  var chatSidebar = el('div', {className: 'chat-sidebar' + (isMobile ? ' collapsed' : '')});
   var sidebarHeader = el('div', {className: 'chat-sidebar-header'});
   // Back to main nav
   var backBtn = el('button', {style: 'background:none;border:none;cursor:pointer;font-size:12px;color:var(--text3);font-family:var(--font);padding:4px 0;margin-bottom:8px;display:flex;align-items:center;gap:4px;transition:color .15s'});
@@ -7535,7 +7535,8 @@ async function renderChat(root) {
   var chatMain = el('div', {className: 'chat-main'});
 
   // Toggle button
-  var toggleBtn = el('button', {style: 'position:absolute;top:12px;left:272px;z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3);transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.06)'});
+  var isMobile = window.innerWidth <= 768;
+  var toggleBtn = el('button', {style: 'position:absolute;top:12px;left:' + (isMobile ? '12px' : '272px') + ';z-index:10;background:var(--surface);border:1px solid var(--border);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3);transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.06)'});
   toggleBtn.textContent = '\u2630';
   toggleBtn.title = 'Toggle sidebar';
   toggleBtn.onmouseenter = function() { toggleBtn.style.background = 'var(--surface2)'; toggleBtn.style.color = 'var(--text)'; };
