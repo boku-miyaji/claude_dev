@@ -221,12 +221,23 @@ if [ -f "$EVAL_LAST_FILE" ]; then
 fi
 
 if [ "$EVAL_SKIP" = "false" ]; then
-  # Collect recent activity
+  # Collect recent activity (dept is inside metadata jsonb, not a top-level column)
   RECENT_ACTIVITY=$(curl -4 -s \
-    "${SUPABASE_URL}/rest/v1/activity_log?select=action,dept,created_at&order=created_at.desc&limit=50" \
+    "${SUPABASE_URL}/rest/v1/activity_log?select=action,metadata,created_at&order=created_at.desc&limit=50" \
     -H "apikey: ${SUPABASE_ANON_KEY}" \
     -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-    --max-time 10 2>/dev/null | jq -c '.' 2>/dev/null || echo "[]")
+    --max-time 10 2>/dev/null | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    result = []
+    for r in data:
+        dept = (r.get('metadata') or {}).get('dept', '')
+        result.append({'action': r.get('action',''), 'dept': dept, 'created_at': r.get('created_at','')})
+    print(json.dumps(result))
+except:
+    print('[]')
+" 2>/dev/null || echo "[]")
 
   RECENT_GROWTH=$(curl -4 -s \
     "${SUPABASE_URL}/rest/v1/growth_events?select=title,category,status&order=event_date.desc&limit=20" \
