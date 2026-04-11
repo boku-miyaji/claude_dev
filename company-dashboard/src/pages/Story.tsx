@@ -3,24 +3,13 @@ import { Card, PageHeader } from '@/components/ui'
 import { useDataStore } from '@/stores/data'
 import { useArcReader } from '@/hooks/useArcReader'
 import { useThemeFinder } from '@/hooks/useThemeFinder'
-import { useForesight } from '@/hooks/useForesight'
 import { aiCompletion } from '@/lib/edgeAi'
 import { supabase } from '@/lib/supabase'
-import type { ArcPhase } from '@/types/narrator'
-
-const PHASE_META: Record<ArcPhase, { label: string; icon: string; color: string; description: string }> = {
-  exploration: { label: '探索', icon: '🔍', color: 'var(--accent)', description: '新しいことを探っている時期' },
-  immersion: { label: '没頭', icon: '🌊', color: 'var(--blue)', description: '何かに深く入り込んでいる時期' },
-  reflection: { label: '内省', icon: '🪞', color: 'var(--green)', description: '立ち止まって自分を見つめている時期' },
-  reconstruction: { label: '再構築', icon: '🔄', color: 'var(--amber)', description: '価値観や方向性を再定義している時期' },
-  leap: { label: '飛躍', icon: '🚀', color: 'var(--red)', description: '突破と成長の時期' },
-}
 
 export function Story() {
   const { emotionAnalyses, fetchEmotions, loading } = useDataStore()
   const { arc, loading: arcLoading } = useArcReader()
   const { theme, loading: themeLoading, unlocked } = useThemeFinder()
-  const { foresight } = useForesight()
 
   useEffect(() => {
     fetchEmotions({ days: 90 })
@@ -63,42 +52,12 @@ export function Story() {
       <PageHeader title="Story" description="日記から見える自分の流れ" />
 
       {/* Current Arc */}
-      {arc && (() => {
-        const phase = arc.phase as ArcPhase
-        const meta = PHASE_META[phase] || PHASE_META.exploration
-        return (
-          <div className="section">
-            <div className="section-title">今の章</div>
-            <Card>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <span style={{ fontSize: 24 }}>{meta.icon}</span>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: meta.color }}>
-                    {meta.label}のフェーズ
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>
-                    {meta.description}
-                  </div>
-                </div>
-              </div>
-              <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, paddingLeft: 12, borderLeft: `2px solid ${meta.color}` }}>
-                {arc.narrative}
-              </div>
-            </Card>
-          </div>
-        )
-      })()}
-
-      {/* Foresight */}
-      {foresight && (
+      {arc && (
         <div className="section">
-          <div className="section-title">予感</div>
+          <div className="section-title">最近の変化</div>
           <Card>
-            <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 6 }}>
-              {foresight.insight}
-            </div>
-            <div style={{ fontSize: 10, color: 'var(--text3)' }}>
-              {foresight.basis}
+            <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.8 }}>
+              {arc.narrative}
             </div>
           </Card>
         </div>
