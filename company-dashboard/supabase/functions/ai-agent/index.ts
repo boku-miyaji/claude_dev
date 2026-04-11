@@ -765,9 +765,10 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
   let diarySection = "";
   if (p.chat_diary_enabled !== false) {
     const since = new Date(Date.now() - 14 * 86400000).toISOString();
-    const { data: diary } = await sb.from("secretary_notes").select("title,body,note_date").eq("type", "diary").gte("created_at", since).order("note_date", { ascending: false }).limit(5);
+    // Primary: diary_entries table (actual diary fragments)
+    const { data: diary } = await sb.from("diary_entries").select("body,entry_date,wbi").gte("created_at", since).order("created_at", { ascending: false }).limit(8);
     if (diary && diary.length > 0) {
-      diarySection = "\n## Recent Diary Entries (for context, do not mention unless asked)\n" + diary.map(d => `### ${d.note_date}\n${(d.body || "").substring(0, 300)}`).join("\n") + "\n";
+      diarySection = "\n## Recent Diary Entries (for context, do not mention unless asked)\n" + diary.map(d => `### ${d.entry_date}\n${(d.body || "").substring(0, 300)}`).join("\n") + "\n";
       report.diary_entries = diary.length;
     }
   }

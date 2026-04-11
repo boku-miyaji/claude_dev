@@ -56,7 +56,7 @@ export function Story() {
 
   return (
     <div className="page">
-      <PageHeader title="Story" description="あなたの物語" />
+      <PageHeader title="Story" description="日記から見える自分の流れ" />
 
       {/* Current Arc */}
       {arc && (() => {
