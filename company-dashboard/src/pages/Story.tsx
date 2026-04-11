@@ -1,9 +1,11 @@
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Card, PageHeader } from '@/components/ui'
 import { useDataStore } from '@/stores/data'
 import { useArcReader } from '@/hooks/useArcReader'
 import { useThemeFinder } from '@/hooks/useThemeFinder'
 import { useForesight } from '@/hooks/useForesight'
+import { aiCompletion } from '@/lib/edgeAi'
+import { supabase } from '@/lib/supabase'
 import type { ArcPhase } from '@/types/narrator'
 
 const PHASE_META: Record<ArcPhase, { label: string; icon: string; color: string; description: string }> = {
@@ -192,11 +194,179 @@ export function Story() {
         </div>
       )}
 
+      {/* Long-term Trend (#49) */}
+      {wbiTimeline.length > 10 && (
+        <div className="section">
+          <div className="section-title">長期トレンド</div>
+          <Card>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, textAlign: 'center', marginBottom: 12 }}>
+              {(() => {
+                const wbis = wbiTimeline.map((d) => d.wbi).filter((w) => w > 0)
+                const avg = wbis.length > 0 ? wbis.reduce((a, b) => a + b, 0) / wbis.length : 0
+                const recent = wbis.slice(-7)
+                const recentAvg = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0
+                const trend = recentAvg - avg
+                return (
+                  <>
+                    <div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--accent)' }}>{avg.toFixed(1)}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text3)' }}>全期間 WBI</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: recentAvg > avg ? 'var(--green)' : 'var(--red)' }}>{recentAvg.toFixed(1)}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text3)' }}>直近7日</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: trend > 0 ? 'var(--green)' : trend < -0.5 ? 'var(--red)' : 'var(--text3)' }}>
+                        {trend > 0 ? '+' : ''}{trend.toFixed(1)}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--text3)' }}>変化</div>
+                    </div>
+                  </>
+                )
+              })()}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+              {wbiTimeline.length}件のデータ（{wbiTimeline[0]?.date} 〜 {wbiTimeline[wbiTimeline.length - 1]?.date}）
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Growth Story (#68 + #50) */}
+      <GrowthStorySection diaryCount={wbiTimeline.length} />
+
       {isLoading && wbiTimeline.length === 0 && !arc && (
         <Card style={{ textAlign: 'center', padding: 40 }}>
           <div style={{ color: 'var(--text3)' }}>Loading...</div>
         </Card>
       )}
+    </div>
+  )
+}
+
+/** Growth Story: generates a narrative covering all available data */
+function GrowthStorySection({ diaryCount }: { diaryCount: number }) {
+  const [story, setStory] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
+
+  // Load cached story
+  useEffect(() => {
+    supabase
+      .from('story_memory')
+      .select('narrative_text, updated_at')
+      .eq('memory_type', 'chapter')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+      .then(({ data }) => {
+        if (data?.narrative_text) setStory(data.narrative_text)
+      })
+  }, [])
+
+  const generate = useCallback(async () => {
+    setGenerating(true)
+    try {
+      // Fetch ALL diary entries (max 100)
+      const { data: diaries } = await supabase
+        .from('diary_entries')
+        .select('body, entry_date, wbi')
+        .order('created_at', { ascending: true })
+        .limit(100)
+
+      const { data: moments } = await supabase
+        .from('story_moments')
+        .select('moment_type, title, description, detected_at')
+        .order('detected_at', { ascending: true })
+
+      const { data: arc } = await supabase
+        .from('story_memory')
+        .select('narrative_text')
+        .eq('memory_type', 'current_arc')
+        .limit(1)
+        .single()
+
+      const { data: identity } = await supabase
+        .from('story_memory')
+        .select('narrative_text')
+        .eq('memory_type', 'identity')
+        .limit(1)
+        .single()
+
+      const diaryText = (diaries || [])
+        .map((d) => `[${d.entry_date}] ${d.body.substring(0, 100)}`)
+        .join('\n')
+
+      const momentsText = (moments || [])
+        .map((m) => `[${m.moment_type}] ${m.title}: ${m.description || ''}`)
+        .join('\n')
+
+      const dateRange = diaries && diaries.length > 0
+        ? `${diaries[0].entry_date} 〜 ${diaries[diaries.length - 1].entry_date}`
+        : '不明'
+
+      const result = await aiCompletion(
+        `## 期間: ${dateRange}\n## テーマ: ${identity?.narrative_text || '不明'}\n## 今のフェーズ: ${arc?.narrative_text || '不明'}\n\n## 日記 (${(diaries || []).length}件)\n${diaryText}\n\n## 転機\n${momentsText || 'なし'}`,
+        {
+          systemPrompt: `あなたはこの人の人生の物語を書く存在。日記・転機・テーマから、この期間の成長物語を書く。
+
+## ルール
+- 3人称ではなく2人称（「あなたは〜」）で書く
+- 時系列に沿って、感情の流れを追う
+- 転機がある場合はそこを物語のターニングポイントにする
+- スピリチュアルにならない。友達が語りかける温度感
+- 400-600字で
+- 最後に「今、あなたは〜」で現在地を締める`,
+          temperature: 0.7,
+          maxTokens: 800,
+          source: 'growth_story',
+        },
+      )
+
+      const text = result.content.trim()
+      setStory(text)
+
+      // Save as chapter
+      await supabase.from('story_memory').insert({
+        memory_type: 'chapter',
+        content: { type: 'growth_story', date_range: dateRange, diary_count: (diaries || []).length },
+        narrative_text: text,
+      })
+    } catch (err) {
+      console.error('[Growth Story]', err)
+    } finally {
+      setGenerating(false)
+    }
+  }, [])
+
+  return (
+    <div className="section">
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>あなたの物語</span>
+        <button
+          className="btn btn-g btn-sm"
+          style={{ fontSize: 10 }}
+          onClick={generate}
+          disabled={generating || diaryCount < 5}
+        >
+          {generating ? '生成中...' : story ? '再生成' : '物語を生成'}
+        </button>
+      </div>
+      <Card>
+        {story ? (
+          <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+            {story}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: 24 }}>
+            <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 8 }}>
+              {diaryCount < 5
+                ? `日記が${diaryCount}件。あと${5 - diaryCount}件書くと物語が生成できます`
+                : '「物語を生成」を押すと、あなたの全期間の成長物語が作られます'}
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

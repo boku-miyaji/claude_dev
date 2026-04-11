@@ -7686,18 +7686,30 @@ async function renderChat(root) {
   var res = await sb.from('conversations').select('id,title,model,company_id,updated_at').eq('archived', false).order('updated_at', {ascending: false}).limit(50);
   chatState.conversations = (res.data || []);
 
+  var convSearchQuery = '';
   function renderConvList() {
     while (convListEl.firstChild) convListEl.removeChild(convListEl.firstChild);
+
+    // Search bar
+    var searchInput = el('input', {className: 'input', placeholder: '検索...', value: convSearchQuery, style: 'font-size:12px;padding:6px 10px;margin-bottom:8px;width:100%;box-sizing:border-box'});
+    searchInput.oninput = function() { convSearchQuery = searchInput.value; renderConvList(); searchInput.focus(); };
+    convListEl.appendChild(searchInput);
+
+    // Filter conversations
+    var filtered = chatState.conversations;
+    if (convSearchQuery) {
+      var q = convSearchQuery.toLowerCase();
+      filtered = filtered.filter(function(c) { return (c.title || '').toLowerCase().includes(q); });
+    }
+
     // Group: Today, Yesterday, This Week, This Month, Older
     var now = new Date(); var today = now.toISOString().substring(0,10);
     var yesterday = new Date(now.getTime() - 86400000).toISOString().substring(0,10);
-    // Start of this week (Monday)
     var weekStart = new Date(now); weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7)); weekStart.setHours(0,0,0,0);
     var weekStartStr = weekStart.toISOString().substring(0,10);
-    // Start of this month
     var monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().substring(0,10);
     var groups = {today:[], yesterday:[], thisWeek:[], thisMonth:[], older:[]};
-    chatState.conversations.forEach(function(c) {
+    filtered.forEach(function(c) {
       var d = (c.updated_at||'').substring(0,10);
       if (d === today) groups.today.push(c);
       else if (d === yesterday) groups.yesterday.push(c);
@@ -7709,9 +7721,23 @@ async function renderChat(root) {
       if (items.length === 0) return;
       convListEl.appendChild(el('div', {className: 'chat-group-label', textContent: label}));
       items.forEach(function(c) {
-        var item = el('div', {className: 'chat-conv-item' + (c.id === chatState.conversationId ? ' active' : '')});
-        var titleSpan = el('span', {className: 'chat-conv-title', textContent: c.title || 'Untitled'});
+        var item = el('div', {className: 'chat-conv-item' + (c.id === chatState.conversationId ? ' active' : ''), style: 'display:flex;align-items:center;gap:4px'});
+        var titleSpan = el('span', {className: 'chat-conv-title', textContent: c.title || 'Untitled', style: 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'});
         item.appendChild(titleSpan);
+        // Archive button
+        var archBtn = el('button', {style: 'background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);padding:2px 4px;opacity:0;transition:opacity .2s', textContent: '✕', title: 'アーカイブ'});
+        item.onmouseenter = function() { archBtn.style.opacity = '1'; };
+        item.onmouseleave = function() { archBtn.style.opacity = '0'; };
+        archBtn.onclick = function(e) {
+          e.stopPropagation();
+          sb.from('conversations').update({archived: true}).eq('id', c.id).then(function() {
+            chatState.conversations = chatState.conversations.filter(function(x) { return x.id !== c.id; });
+            if (chatState.conversationId === c.id) { chatState.conversationId = null; renderChatMain(chatMain, edgeFnUrl, renderConvList); }
+            renderConvList();
+            toast('アーカイブしました');
+          });
+        };
+        item.appendChild(archBtn);
         item.onclick = function() { chatState.conversationId = c.id; renderConvList(); renderChatMain(chatMain, edgeFnUrl, renderConvList); };
         convListEl.appendChild(item);
       });
@@ -7721,6 +7747,10 @@ async function renderChat(root) {
     addGroup('This Week', groups.thisWeek);
     addGroup('This Month', groups.thisMonth);
     addGroup('Older', groups.older);
+
+    if (filtered.length === 0 && convSearchQuery) {
+      convListEl.appendChild(el('div', {style: 'padding:12px;font-size:11px;color:var(--text3);text-align:center', textContent: '該当なし'}));
+    }
   }
   renderConvList();
 
