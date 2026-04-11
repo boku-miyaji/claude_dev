@@ -7,9 +7,11 @@ export interface NewsItem {
   summary: string
   url: string | null
   source: string
+  source_type?: string | null
   topic: string
   published_date?: string | null
   collected_at?: string | null
+  click_count?: number
 }
 
 const DEFAULT_TOPICS = 'AI/LLM、データプラットフォーム、Claude、OpenAI'
