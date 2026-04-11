@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/stores/auth'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -8,11 +8,12 @@ import { AuthPage } from '@/pages/AuthPage'
 import {
   renderDashboard, renderCalendar,
   renderOrgChart, renderFinance, renderPrompts,
-  renderDiary, renderArtifacts, renderChat,
-  renderApiCosts, renderGrowth,
+  renderArtifacts, renderChat,
+  renderApiCosts,
   renderSettings, renderCareer, renderPortfolio,
 } from '@/lib/legacy'
 import { Insights } from '@/pages/Insights'
+import { Growth } from '@/pages/Growth'
 import { Blueprint } from '@/pages/Blueprint'
 import { SlashCommands } from '@/pages/SlashCommands'
 import { Knowledge } from '@/pages/Knowledge'
@@ -99,11 +100,11 @@ export function App() {
           <Route path="/prompts" element={<LegacyPage renderer={renderPrompts} />} />
           <Route path="/intelligence" element={<Reports />} />
           <Route path="/news" element={<Reports />} />
-          <Route path="/diary" element={<LegacyPage renderer={renderDiary} />} />
+          <Route path="/diary" element={<Navigate to="/journal" replace />} />
           <Route path="/artifacts/*" element={<LegacyPage renderer={renderArtifacts} />} />
           <Route path="/chat/*" element={<LegacyPage renderer={renderChat} />} />
           <Route path="/api-costs" element={<LegacyPage renderer={renderApiCosts} />} />
-          <Route path="/growth" element={<LegacyPage renderer={renderGrowth} />} />
+          <Route path="/growth" element={<Growth />} />
           <Route path="/blueprint" element={<Blueprint />} />
           <Route path="/commands" element={<SlashCommands />} />
           <Route path="/settings" element={<LegacyPage renderer={renderSettings} />} />
