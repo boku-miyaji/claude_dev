@@ -280,6 +280,7 @@ PROMO_CANDIDATES=$(curl -4 -s \
   "${SUPABASE_URL}/rest/v1/knowledge_base?confidence=gte.3&status=eq.active&select=id,rule,category,confidence" \
   -H "apikey: ${SUPABASE_ANON_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
   --max-time 10 2>/dev/null)
 
 PROMO_COUNT=$(echo "$PROMO_CANDIDATES" | jq 'length' 2>/dev/null || echo 0)

@@ -52,13 +52,28 @@ export async function recordClick(newsId: string): Promise<void> {
   await supabase.rpc('record_news_click', { news_id: parseInt(newsId, 10) })
 }
 
+/** Record impressions for displayed news items */
+export async function recordImpressions(newsIds: string[]): Promise<void> {
+  if (newsIds.length === 0) return
+  for (const id of newsIds) {
+    supabase.from('news_items')
+      .update({ impression_count: supabase.rpc ? undefined : 1 }) // handled by RPC below
+      .eq('id', parseInt(id, 10))
+      .then(() => {})
+  }
+  // Batch increment via RPC is cleaner, but simple update works for now
+  for (const id of newsIds) {
+    supabase.rpc('increment_impression', { news_id: parseInt(id, 10) }).then(() => {})
+  }
+}
+
 /** Load saved news items from news_items table (today only by default) */
 export async function loadNews(limit = 10): Promise<NewsItem[]> {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const { data } = await supabase
     .from('news_items')
-    .select('id,title,summary,url,source,topic,published_date,collected_at')
+    .select('id,title,summary,url,source,source_type,topic,published_date,collected_at')
     .gte('collected_at', today.toISOString())
     .order('collected_at', { ascending: false })
     .limit(limit)

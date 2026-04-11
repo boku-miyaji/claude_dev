@@ -298,6 +298,11 @@
             "type": "command",
             "command": "/workspace/.claude/hooks/pipeline-resume.sh",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/daily-analysis-batch.sh",
+            "async": true
           }
         ]
       }
