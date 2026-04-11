@@ -6,12 +6,13 @@ import { MobileNav } from '@/components/layout/MobileNav'
 import { LegacyPage } from '@/components/legacy/LegacyPage'
 import { AuthPage } from '@/pages/AuthPage'
 import {
-  renderDashboard, renderCalendar,
+  renderDashboard,
   renderOrgChart, renderFinance, renderPrompts,
   renderArtifacts, renderChat,
   renderApiCosts,
   renderCareer, renderPortfolio,
 } from '@/lib/legacy'
+import { Calendar } from '@/pages/Calendar'
 import { Insights } from '@/pages/Insights'
 import { Growth } from '@/pages/Growth'
 import { Settings } from '@/pages/Settings'
@@ -92,7 +93,7 @@ export function App() {
           <Route path="/weekly" element={<WeeklyNarrative />} />
           <Route path="/story" element={<Story />} />
           <Route path="/dashboard-legacy" element={<LegacyPage renderer={renderDashboard} />} />
-          <Route path="/calendar" element={<LegacyPage renderer={renderCalendar} />} />
+          <Route path="/calendar" element={<Calendar />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/companies" element={<Companies />} />
           <Route path="/orgchart" element={<LegacyPage renderer={renderOrgChart} />} />
