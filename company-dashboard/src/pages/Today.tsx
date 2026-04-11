@@ -88,14 +88,14 @@ function getTodayQuestions(todayStr: string): string[] {
 /* ── Constants ── */
 
 const PLUTCHIK_LABELS: Record<string, { label: string; color: string }> = {
-  joy: { label: 'Joy', color: '#FFD700' },
-  trust: { label: 'Trust', color: '#98FB98' },
-  fear: { label: 'Fear', color: '#228B22' },
-  surprise: { label: 'Surprise', color: '#00CED1' },
-  sadness: { label: 'Sadness', color: '#4169E1' },
-  disgust: { label: 'Disgust', color: '#9370DB' },
-  anger: { label: 'Anger', color: '#FF4500' },
-  anticipation: { label: 'Anticipation', color: '#FFA500' },
+  joy: { label: '喜び', color: '#FFD700' },
+  trust: { label: '信頼', color: '#98FB98' },
+  fear: { label: '不安', color: '#228B22' },
+  surprise: { label: '驚き', color: '#00CED1' },
+  sadness: { label: '悲しみ', color: '#4169E1' },
+  disgust: { label: '嫌悪', color: '#9370DB' },
+  anger: { label: '怒り', color: '#FF4500' },
+  anticipation: { label: '期待', color: '#FFA500' },
 }
 
 interface EmotionBadge { key: string; label: string; color: string; value: number }

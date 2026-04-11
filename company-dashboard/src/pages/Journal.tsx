@@ -6,23 +6,23 @@ import type { EmotionAnalysis } from '@/types/diary'
 
 /** Plutchik 8 emotions with standard colors */
 const PLUTCHIK = [
-  { key: 'joy', label: 'Joy', color: '#FFD700' },
-  { key: 'trust', label: 'Trust', color: '#98FB98' },
-  { key: 'fear', label: 'Fear', color: '#228B22' },
-  { key: 'surprise', label: 'Surprise', color: '#00CED1' },
-  { key: 'sadness', label: 'Sadness', color: '#4169E1' },
-  { key: 'disgust', label: 'Disgust', color: '#9370DB' },
-  { key: 'anger', label: 'Anger', color: '#FF4500' },
-  { key: 'anticipation', label: 'Anticipation', color: '#FFA500' },
+  { key: 'joy', label: '喜び', color: '#FFD700' },
+  { key: 'trust', label: '信頼', color: '#98FB98' },
+  { key: 'fear', label: '不安', color: '#228B22' },
+  { key: 'surprise', label: '驚き', color: '#00CED1' },
+  { key: 'sadness', label: '悲しみ', color: '#4169E1' },
+  { key: 'disgust', label: '嫌悪', color: '#9370DB' },
+  { key: 'anger', label: '怒り', color: '#FF4500' },
+  { key: 'anticipation', label: '期待', color: '#FFA500' },
 ] as const
 
 const PERMA_V = [
-  { key: 'perma_p', label: 'Positive Emotion', short: 'P', color: 'var(--accent)' },
-  { key: 'perma_e', label: 'Engagement', short: 'E', color: 'var(--blue)' },
-  { key: 'perma_r', label: 'Relationships', short: 'R', color: 'var(--green)' },
-  { key: 'perma_m', label: 'Meaning', short: 'M', color: 'var(--amber)' },
-  { key: 'perma_a', label: 'Accomplishment', short: 'A', color: 'var(--red)' },
-  { key: 'perma_v', label: 'Vitality', short: 'V', color: '#00CED1' },
+  { key: 'perma_p', label: 'ポジティブ感情', short: 'P', color: 'var(--accent)' },
+  { key: 'perma_e', label: '没頭', short: 'E', color: 'var(--blue)' },
+  { key: 'perma_r', label: '人間関係', short: 'R', color: 'var(--green)' },
+  { key: 'perma_m', label: '意味', short: 'M', color: 'var(--amber)' },
+  { key: 'perma_a', label: '達成', short: 'A', color: 'var(--red)' },
+  { key: 'perma_v', label: '活力', short: 'V', color: '#00CED1' },
 ] as const
 
 /** Find dominant emotion from an EmotionAnalysis record */
