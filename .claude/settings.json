@@ -201,7 +201,8 @@
       "/home/node/.claude",
       "/workspace/.claude/agents",
       "/workspace/.company/departments/research",
-      "/workspace/.company/departments"
+      "/workspace/.company/departments",
+      "/workspace/.claude/skills"
     ]
   },
   "hooks": {
