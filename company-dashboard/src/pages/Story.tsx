@@ -59,27 +59,31 @@ export function Story() {
       <PageHeader title="Story" description="あなたの物語" />
 
       {/* Current Arc */}
-      {arc && (
-        <div className="section">
-          <div className="section-title">今の章</div>
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={{ fontSize: 24 }}>{PHASE_META[arc.phase]?.icon}</span>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: PHASE_META[arc.phase]?.color }}>
-                  {PHASE_META[arc.phase]?.label}のフェーズ
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text3)' }}>
-                  {PHASE_META[arc.phase]?.description}
+      {arc && (() => {
+        const phase = arc.phase as ArcPhase
+        const meta = PHASE_META[phase] || PHASE_META.exploration
+        return (
+          <div className="section">
+            <div className="section-title">今の章</div>
+            <Card>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 24 }}>{meta.icon}</span>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: meta.color }}>
+                    {meta.label}のフェーズ
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+                    {meta.description}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, paddingLeft: 12, borderLeft: `2px solid ${PHASE_META[arc.phase]?.color || 'var(--border)'}` }}>
-              {arc.narrative}
-            </div>
-          </Card>
-        </div>
-      )}
+              <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, paddingLeft: 12, borderLeft: `2px solid ${meta.color}` }}>
+                {arc.narrative}
+              </div>
+            </Card>
+          </div>
+        )
+      })()}
 
       {/* Theme / Identity */}
       {theme && (
@@ -99,7 +103,7 @@ export function Story() {
                 <div style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
                   喜びのトリガー
                 </div>
-                {theme.emotionalDNA.joyTriggers.map((t, i) => (
+                {theme.emotionalDNA.joyTriggers.map((t: string, i: number) => (
                   <div key={i} style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 2 }}>
                     {t}
                   </div>
@@ -109,7 +113,7 @@ export function Story() {
                 <div style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
                   エネルギー源
                 </div>
-                {theme.emotionalDNA.energySources.map((s, i) => (
+                {theme.emotionalDNA.energySources.map((s: string, i: number) => (
                   <div key={i} style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 2 }}>
                     {s}
                   </div>

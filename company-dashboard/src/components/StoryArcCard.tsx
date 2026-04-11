@@ -18,7 +18,8 @@ export function StoryArcCard() {
 
   if (loading || !arc) return null
 
-  const meta = PHASE_META[arc.phase] || PHASE_META.exploration
+  const phase = arc.phase as ArcPhase
+  const meta = PHASE_META[phase] || PHASE_META.exploration
 
   return (
     <div style={{
