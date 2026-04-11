@@ -174,7 +174,11 @@
       "WebFetch(domain:pmc.ncbi.nlm.nih.gov)",
       "WebFetch(domain:phys.org)",
       "WebFetch(domain:www.dighyd.org)",
-      "Edit(/.claude/skills/supabase-preflight/**)"
+      "Edit(/.claude/skills/supabase-preflight/**)",
+      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/devil-advocate.md)",
+      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/review-pr.md)",
+      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/pptx-rikyu.md)",
+      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/pptx-aces-rikyu.md)"
     ],
     "deny": [
       "Read(**/.env)",
