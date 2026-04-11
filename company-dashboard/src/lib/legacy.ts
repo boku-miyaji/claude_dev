@@ -3380,6 +3380,90 @@ async function renderInsights(root) {
     root.appendChild(rhythmCard);
   }
 
+  // --- Diary Rhythm Chart (from diary_entries timestamps via Edge Function) ---
+  try {
+    var diarySession = await sb.auth.getSession();
+    var diaryToken = diarySession.data.session && diarySession.data.session.access_token || '';
+    var diaryRhythmRes = await fetch(SUPABASE_URL + '/functions/v1/diary-rhythm?days=30', {
+      headers: { 'Authorization': 'Bearer ' + diaryToken, 'apikey': SUPABASE_ANON_KEY }
+    });
+    if (diaryRhythmRes.ok) {
+      var diaryRhythm = await diaryRhythmRes.json();
+      if (diaryRhythm.hourly && diaryRhythm.stats && diaryRhythm.stats.total_entries >= 3) {
+        root.appendChild(el('div', {className: 'section-title', textContent: '📝 日記リズム'}));
+        var diaryCard = el('div', {className: 'card', style: 'margin-bottom:24px'});
+
+        // Hour chart
+        var dMaxHour = Math.max.apply(null, diaryRhythm.hourly.map(function(h) { return h.count; })) || 1;
+        diaryCard.appendChild(el('div', {textContent: '時間帯別', style: 'font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text2)'}));
+        var dHourBar = el('div', {style: 'display:flex;align-items:flex-end;gap:2px;height:50px;margin-bottom:16px'});
+        for (var dh = 0; dh < 24; dh++) {
+          var dhCount = diaryRhythm.hourly[dh] ? diaryRhythm.hourly[dh].count : 0;
+          var dhPct = Math.round(dhCount / dMaxHour * 100);
+          var dhIsLate = dh >= 22 || dh < 6;
+          dHourBar.appendChild(el('div', {
+            title: dh + ':00 — ' + dhCount + '件',
+            style: 'flex:1;min-width:0;background:' + (dhIsLate ? 'var(--accent2)' : 'var(--green)') + ';opacity:' + (dhPct > 0 ? Math.max(0.3, dhPct/100) : 0.05) + ';height:' + Math.max(2, dhPct) + '%;border-radius:2px 2px 0 0;cursor:default'
+          }));
+        }
+        diaryCard.appendChild(dHourBar);
+        var dHourLabels = el('div', {style: 'display:flex;gap:2px;font-size:9px;color:var(--text3);font-family:var(--mono)'});
+        for (var dh2 = 0; dh2 < 24; dh2++) {
+          dHourLabels.appendChild(el('div', {style: 'flex:1;min-width:0;text-align:center', textContent: dh2 % 3 === 0 ? dh2+'' : ''}));
+        }
+        diaryCard.appendChild(dHourLabels);
+
+        // Day of week chart
+        var dMaxDow = Math.max.apply(null, diaryRhythm.daily.map(function(d) { return d.count; })) || 1;
+        diaryCard.appendChild(el('div', {textContent: '曜日別', style: 'font-size:12px;font-weight:600;margin:20px 0 8px;color:var(--text2)'}));
+        var dDowBar = el('div', {style: 'display:flex;gap:4px;height:35px;align-items:flex-end'});
+        for (var ddw = 0; ddw < 7; ddw++) {
+          var ddCount = diaryRhythm.daily[ddw] ? diaryRhythm.daily[ddw].count : 0;
+          var ddPct = Math.round(ddCount / dMaxDow * 100);
+          var ddIsWeekend = ddw === 0 || ddw === 6;
+          dDowBar.appendChild(el('div', {
+            title: diaryRhythm.daily[ddw].dow_label + ' — ' + ddCount + '件',
+            style: 'flex:1;min-width:0;background:' + (ddIsWeekend ? 'var(--accent2)' : 'var(--green)') + ';opacity:' + (ddPct > 0 ? Math.max(0.3, ddPct/100) : 0.1) + ';height:' + Math.max(2, ddPct) + '%;border-radius:3px 3px 0 0;cursor:default'
+          }));
+        }
+        diaryCard.appendChild(dDowBar);
+        var dDowLabelsRow = el('div', {style: 'display:flex;gap:4px;font-size:10px;color:var(--text3)'});
+        var dDowNames = ['日','月','火','水','木','金','土'];
+        for (var ddw2 = 0; ddw2 < 7; ddw2++) {
+          dDowLabelsRow.appendChild(el('div', {style: 'flex:1;min-width:0;text-align:center', textContent: dDowNames[ddw2]}));
+        }
+        diaryCard.appendChild(dDowLabelsRow);
+
+        // Stats
+        var ds = diaryRhythm.stats;
+        diaryCard.appendChild(el('div', {style: 'display:flex;gap:16px;margin-top:16px;font-size:12px;color:var(--text2);flex-wrap:wrap'}, [
+          el('span', {}, [el('span', {textContent: '記入ピーク: ', style: 'color:var(--text3)'}), el('span', {textContent: ds.peak_hour+':00', style: 'font-weight:600'})]),
+          el('span', {}, [el('span', {textContent: '最多曜日: ', style: 'color:var(--text3)'}), el('span', {textContent: ds.peak_dow_label, style: 'font-weight:600'})]),
+          el('span', {}, [el('span', {textContent: '連続: ', style: 'color:var(--text3)'}), el('span', {textContent: ds.streak_current+'日', style: 'font-weight:600;color:' + (ds.streak_current >= 3 ? 'var(--green)' : 'var(--text)')})]),
+          el('span', {}, [el('span', {textContent: '最長: ', style: 'color:var(--text3)'}), el('span', {textContent: ds.streak_max+'日', style: 'font-weight:600'})])
+        ]));
+
+        // Suggestions from Edge Function
+        if (diaryRhythm.suggestions && diaryRhythm.suggestions.length > 0) {
+          var dInsightBox = el('div', {style: 'margin-top:16px;padding:12px 14px;background:var(--bg2);border-radius:8px;display:flex;flex-direction:column;gap:8px'});
+          dInsightBox.appendChild(el('div', {textContent: '示唆', style: 'font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.5px'}));
+          var dTypeColors = {positive: 'var(--green)', neutral: 'var(--accent2)', warning: 'var(--amber)'};
+          diaryRhythm.suggestions.forEach(function(sug) {
+            dInsightBox.appendChild(el('div', {style: 'font-size:12px;color:var(--text2);display:flex;align-items:baseline;gap:8px'}, [
+              el('span', {style: 'width:6px;height:6px;min-width:6px;border-radius:50%;background:' + (dTypeColors[sug.type] || 'var(--text3)') + ';display:inline-block;position:relative;top:0px'}),
+              el('span', {textContent: sug.text})
+            ]));
+          });
+          diaryCard.appendChild(dInsightBox);
+        }
+
+        root.appendChild(diaryCard);
+      }
+    }
+  } catch (e) {
+    // Edge Function未デプロイ時はスキップ
+  }
+
   var catConfig = {
     // Diary-based (inner state)
     mood_cycle: {label: '気分の波', icon: '〜', color: 'var(--accent2)'},
