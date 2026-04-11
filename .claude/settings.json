@@ -186,7 +186,8 @@
       "Bash(awk 'NR==1399,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
       "Bash(awk 'NR==7581,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
       "Bash(awk '/renderDiary/,/renderGrowth/')",
-      "Bash(awk 'NR>=8870,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)"
+      "Bash(awk 'NR>=8870,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk ':*)"
     ],
     "deny": [
       "Read(**/.env)",
