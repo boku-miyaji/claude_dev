@@ -28,17 +28,18 @@ interface ReportNewsItem {
   collected_at: string | null
 }
 
-type Tab = 'research' | 'news'
+type Tab = 'research' | 'news' | 'sources'
 
 export function Reports() {
-  const [tab, setTab] = useState<Tab>('research')
+  const initialTab = window.location.hash === '#sources' ? 'sources' : 'research'
+  const [tab, setTab] = useState<Tab>(initialTab)
 
   return (
     <div className="page">
       <PageHeader title="Reports" description="調査レポート・ニュース" />
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', paddingBottom: 0 }}>
-        {([['research', '調査レポート'], ['news', 'ニュース']] as const).map(([id, label]) => (
+        {([['research', '調査レポート'], ['news', 'ニュース'], ['sources', 'ソース設定']] as const).map(([id, label]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
@@ -55,7 +56,7 @@ export function Reports() {
         ))}
       </div>
 
-      {tab === 'research' ? <ResearchReports /> : <NewsFeed />}
+      {tab === 'research' ? <ResearchReports /> : tab === 'news' ? <NewsFeed /> : <SourceSettings />}
     </div>
   )
 }
@@ -389,6 +390,175 @@ function NewsFeed() {
           })}
         </div>
       )}
+    </div>
+  )
+}
+
+// ============================================================
+// Source Settings
+// ============================================================
+
+interface IntelligenceSource {
+  id: number
+  name: string
+  source_type: string
+  enabled: boolean
+  priority: string
+  config: Record<string, unknown>
+}
+
+const SOURCE_TYPE_LABELS: Record<string, string> = {
+  keyword: 'キーワード検索',
+  web_source: '公式ブログ / ニュース',
+  tech_article: '技術記事プラットフォーム',
+  github_release: 'GitHub Releases',
+  hacker_news: 'Hacker News',
+  x_account: 'X アカウント',
+}
+
+function SourceSettings() {
+  const [sources, setSources] = useState<IntelligenceSource[]>([])
+  const [loading, setLoading] = useState(true)
+  const [adding, setAdding] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newType, setNewType] = useState('keyword')
+  const [newConfig, setNewConfig] = useState('')
+  const [newPriority, setNewPriority] = useState('normal')
+
+  useEffect(() => {
+    supabase
+      .from('intelligence_sources')
+      .select('*')
+      .order('source_type')
+      .order('priority')
+      .then(({ data }) => {
+        setSources((data as IntelligenceSource[]) || [])
+        setLoading(false)
+      })
+  }, [])
+
+  const toggleSource = async (id: number, enabled: boolean) => {
+    await supabase.from('intelligence_sources').update({ enabled: !enabled }).eq('id', id)
+    setSources((prev) => prev.map((s) => s.id === id ? { ...s, enabled: !enabled } : s))
+  }
+
+  const deleteSource = async (id: number) => {
+    await supabase.from('intelligence_sources').delete().eq('id', id)
+    setSources((prev) => prev.filter((s) => s.id !== id))
+  }
+
+  const addSource = async () => {
+    if (!newName.trim()) return
+    let config: Record<string, unknown> = {}
+    if (newType === 'keyword') config = { term: newConfig || newName }
+    else if (newType === 'web_source') config = { url: newConfig }
+    else if (newType === 'tech_article') config = { site: newConfig, keywords: [] }
+    else if (newType === 'github_release') config = { repo: newConfig }
+    else if (newType === 'hacker_news') config = { keywords: newConfig.split(',').map((s: string) => s.trim()), min_score: 10 }
+
+    const { data } = await supabase
+      .from('intelligence_sources')
+      .insert({ name: newName.trim(), source_type: newType, config, priority: newPriority, enabled: true })
+      .select()
+      .single()
+
+    if (data) {
+      setSources((prev) => [...prev, data as IntelligenceSource])
+      setNewName('')
+      setNewConfig('')
+      setAdding(false)
+    }
+  }
+
+  if (loading) return <SkeletonRows count={5} />
+
+  // Group by source_type
+  const groups: Record<string, IntelligenceSource[]> = {}
+  for (const s of sources) {
+    if (!groups[s.source_type]) groups[s.source_type] = []
+    groups[s.source_type].push(s)
+  }
+
+  const enabledCount = sources.filter((s) => s.enabled).length
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: 'var(--text3)' }}>
+          {sources.length} ソース（有効: {enabledCount}）
+        </div>
+        <button className="btn btn-p btn-sm" onClick={() => setAdding(true)}>+ ソース追加</button>
+      </div>
+
+      {adding && (
+        <div className="card" style={{ padding: 16, marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <input className="input" placeholder="ソース名" value={newName} onChange={(e) => setNewName(e.target.value)} autoFocus />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <select className="input" value={newType} onChange={(e) => setNewType(e.target.value)} style={{ flex: 1 }}>
+                {Object.entries(SOURCE_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+              <select className="input" value={newPriority} onChange={(e) => setNewPriority(e.target.value)} style={{ width: 100 }}>
+                <option value="high">高</option>
+                <option value="normal">通常</option>
+                <option value="low">低</option>
+              </select>
+            </div>
+            <input className="input" placeholder={newType === 'keyword' ? '検索語' : newType === 'web_source' ? 'URL' : newType === 'github_release' ? 'owner/repo' : newType === 'hacker_news' ? 'キーワード（カンマ区切り）' : 'site ドメイン'} value={newConfig} onChange={(e) => setNewConfig(e.target.value)} />
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn btn-g btn-sm" onClick={() => setAdding(false)}>キャンセル</button>
+              <button className="btn btn-p btn-sm" onClick={addSource} disabled={!newName.trim()}>追加</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {Object.entries(SOURCE_TYPE_LABELS).map(([type, label]) => {
+        const items = groups[type]
+        if (!items || items.length === 0) return null
+        return (
+          <div key={type} style={{ marginBottom: 20 }}>
+            <div className="section-title">{label} ({items.length})</div>
+            <div className="card">
+              {items.map((src) => {
+                const cfg = src.config || {}
+                let detail = ''
+                if (src.source_type === 'keyword') detail = `検索語: "${cfg.term || ''}"`
+                else if (src.source_type === 'web_source') detail = (cfg.url as string) || ''
+                else if (src.source_type === 'tech_article') detail = `site:${cfg.site || ''} | ${((cfg.keywords as string[]) || []).join(', ')}`
+                else if (src.source_type === 'github_release') detail = (cfg.repo as string) || ''
+                else if (src.source_type === 'hacker_news') detail = `キーワード: ${((cfg.keywords as string[]) || []).join(', ')} (min: ${cfg.min_score || 0}pt)`
+
+                return (
+                  <div key={src.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, fontSize: 12 }}>
+                    <button
+                      className="btn btn-g btn-sm"
+                      style={{ fontSize: 10, padding: '2px 8px', minWidth: 36, color: src.enabled ? 'var(--green)' : 'var(--red)' }}
+                      onClick={() => toggleSource(src.id, src.enabled)}
+                    >
+                      {src.enabled ? 'ON' : 'OFF'}
+                    </button>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 500 }}>{src.name}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 1 }}>{detail}</div>
+                    </div>
+                    <span style={{
+                      fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3,
+                      color: src.priority === 'high' ? 'var(--red)' : src.priority === 'low' ? 'var(--text3)' : 'var(--blue)',
+                      background: src.priority === 'high' ? 'var(--red-bg)' : 'var(--surface2)',
+                    }}>
+                      {src.priority}
+                    </span>
+                    <button className="btn btn-g btn-sm" style={{ fontSize: 10, padding: '2px 6px', color: 'var(--red)' }} onClick={() => deleteSource(src.id)}>
+                      削除
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
