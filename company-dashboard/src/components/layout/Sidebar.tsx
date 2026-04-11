@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/auth'
+import { supabase } from '@/lib/supabase'
 
 interface NavEntry {
   type: 'item' | 'label' | 'collapsible-start'
@@ -8,34 +9,39 @@ interface NavEntry {
   icon?: string
   label: string
   groupKey?: string
+  cli?: boolean // true = CLI専用（Claude Code依存）
 }
 
-const NAV: NavEntry[] = [
+// Product tabs: diary中心、一般ユーザー向け
+const PRODUCT_NAV: NavEntry[] = [
   { type: 'item', page: '', icon: '◉', label: 'Home' },
+  { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
   { type: 'item', page: 'chat', icon: '💬', label: 'AI Chat' },
   { type: 'item', page: 'tasks', icon: '☐', label: 'Tasks' },
-  // Plan & Track
+  // Plan
   { type: 'label', label: 'Plan' },
   { type: 'item', page: 'dreams', icon: '🌟', label: 'Dreams & Goals' },
   { type: 'item', page: 'habits', icon: '🌱', label: 'Habits' },
   { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
-  { type: 'item', page: 'finance', icon: '¥', label: 'Finance' },
   // Understand
   { type: 'label', label: 'Understand' },
   { type: 'item', page: 'story', icon: '📖', label: 'Story' },
-  { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
   { type: 'item', page: 'insights', icon: '📊', label: 'Insights' },
   { type: 'item', page: 'me', icon: '🧬', label: 'Self-Analysis' },
   { type: 'item', page: 'intelligence', icon: '📄', label: 'News' },
   { type: 'item', page: 'growth', icon: '↗', label: 'Growth' },
-  // Data
-  { type: 'label', label: 'Data' },
-  { type: 'item', page: 'companies', icon: '◫', label: 'Organization' },
-  { type: 'item', page: 'knowledge', icon: '◈', label: 'Knowledge' },
-  { type: 'item', page: 'artifacts', icon: '📄', label: 'Artifacts' },
-  { type: 'item', page: 'prompts', icon: '▷', label: 'Prompts' },
-  { type: 'item', page: 'commands', icon: '⌘', label: 'Commands' },
-  { type: 'item', page: 'blueprint', icon: '◇', label: 'Blueprint' },
+]
+
+// CLI-only tabs: Claude Code 依存
+const CLI_NAV: NavEntry[] = [
+  { type: 'label', label: 'Claude Code' },
+  { type: 'item', page: 'companies', icon: '◫', label: 'Organization', cli: true },
+  { type: 'item', page: 'finance', icon: '¥', label: 'Finance', cli: true },
+  { type: 'item', page: 'prompts', icon: '▷', label: 'Prompts', cli: true },
+  { type: 'item', page: 'knowledge', icon: '◈', label: 'Knowledge', cli: true },
+  { type: 'item', page: 'artifacts', icon: '📄', label: 'Artifacts', cli: true },
+  { type: 'item', page: 'commands', icon: '⌘', label: 'Commands', cli: true },
+  { type: 'item', page: 'blueprint', icon: '◇', label: 'Blueprint', cli: true },
 ]
 
 /** Group NAV entries into sections for collapsible rendering */
@@ -76,8 +82,16 @@ export function Sidebar() {
   const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [isCliMode, setIsCliMode] = useState(false)
   const currentPage = location.pathname.replace('/', '') || ''
   const isChat = currentPage.startsWith('chat')
+
+  // CLI mode detection: claude_settings にデータがあればCLIタブを表示
+  useEffect(() => {
+    supabase.from('claude_settings').select('id').limit(1).then(({ data }) => {
+      setIsCliMode(Boolean(data && data.length > 0))
+    })
+  }, [])
 
   // Auto-hide main sidebar on chat page (chat has its own sidebar)
   const [manualHidden, setManualHidden] = useState(false)
@@ -91,6 +105,7 @@ export function Sidebar() {
     return () => window.removeEventListener('shortcut:toggle-sidebar', handler)
   }, [])
 
+  const NAV = isCliMode ? [...PRODUCT_NAV, ...CLI_NAV] : PRODUCT_NAV
   const sections = buildSections(NAV)
 
   const toggleGroup = (key: string) => {
