@@ -4,10 +4,10 @@ import { Card, PageHeader } from '@/components/ui'
 import { useSelfAnalysis, type AnalysisType, type AnalysisRecord } from '@/hooks/useSelfAnalysis'
 import { useDataStore } from '@/stores/data'
 
-type TabType = 'summary' | 'mbti' | 'big5' | 'strengths_finder' | 'values'
+type TabType = 'summary' | 'mbti' | 'big5' | 'strengths_finder' | 'values' | 'stress_resilience' | 'communication_style'
 
 /** Analysis types that are actually run via LLM */
-const ALL_TYPES: AnalysisType[] = ['mbti', 'big5', 'strengths_finder', 'values']
+const ALL_TYPES: AnalysisType[] = ['mbti', 'big5', 'strengths_finder', 'values', 'stress_resilience', 'communication_style']
 
 const TAB_META: Record<TabType, { label: string; title: string }> = {
   summary: { label: 'まとめ', title: '統合分析' },
@@ -15,9 +15,11 @@ const TAB_META: Record<TabType, { label: string; title: string }> = {
   big5: { label: 'Big5', title: 'Big5' },
   strengths_finder: { label: 'SF', title: 'StrengthsFinder' },
   values: { label: 'Values', title: 'Values' },
+  stress_resilience: { label: 'Stress', title: 'ストレス耐性' },
+  communication_style: { label: 'Comm', title: 'コミュニケーション' },
 }
 
-const ALL_TABS: TabType[] = ['summary', 'mbti', 'big5', 'strengths_finder', 'values']
+const ALL_TABS: TabType[] = ['summary', 'mbti', 'big5', 'strengths_finder', 'values', 'stress_resilience', 'communication_style']
 
 // ---------------------------------------------------------------------------
 // SVG Pentagon Radar Chart for Big5

@@ -178,7 +178,9 @@
       "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/devil-advocate.md)",
       "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/review-pr.md)",
       "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/pptx-rikyu.md)",
-      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/pptx-aces-rikyu.md)"
+      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/pptx-aces-rikyu.md)",
+      "Skill(update-config)",
+      "Skill(update-config:*)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -452,5 +454,6 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false
+  "skipDangerousModePermissionPrompt": false,
+  "effortLevel": "high"
 }

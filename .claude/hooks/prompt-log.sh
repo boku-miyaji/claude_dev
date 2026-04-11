@@ -92,16 +92,51 @@ fi
 PROMPT_SHORT=$(echo "$PROMPT" | head -c 500)
 
 # Intent detection (keyword-based, no LLM)
-if echo "$PROMPT_SHORT" | grep -qiP '作って|実装して|追加して|新機能'; then
+if echo "$PROMPT_SHORT" | grep -qiP '作って|実装して|追加して|新機能|追加'; then
   TAG_LIST+=("intent:implement")
-elif echo "$PROMPT_SHORT" | grep -qiP '直して|修正|バグ|エラー|fix'; then
+elif echo "$PROMPT_SHORT" | grep -qiP '直して|修正|バグ|エラー|fix|壊れ|動かない'; then
   TAG_LIST+=("intent:fix")
-elif echo "$PROMPT_SHORT" | grep -qiP '調べて|調査|比較|分析'; then
+elif echo "$PROMPT_SHORT" | grep -qiP '調べて|調査|比較|分析|確認して|教えて'; then
   TAG_LIST+=("intent:investigate")
-elif echo "$PROMPT_SHORT" | grep -qiP '資料|プレゼン|提案書|まとめて'; then
+elif echo "$PROMPT_SHORT" | grep -qiP '資料|プレゼン|提案書|まとめて|pptx'; then
   TAG_LIST+=("intent:document")
-elif echo "$PROMPT_SHORT" | grep -qiP '設計|アーキ|design'; then
+elif echo "$PROMPT_SHORT" | grep -qiP '設計|アーキ|design|blueprint'; then
   TAG_LIST+=("intent:design")
+elif echo "$PROMPT_SHORT" | grep -qiP 'リファクタ|整理|cleanup|simplify'; then
+  TAG_LIST+=("intent:refactor")
+elif echo "$PROMPT_SHORT" | grep -qiP 'デプロイ|push|deploy|リリース'; then
+  TAG_LIST+=("intent:deploy")
+fi
+
+# Scope detection (what area of the system)
+if echo "$PROMPT_SHORT" | grep -qiP 'dashboard|ダッシュボード|Today|Journal|Story|Habits|Focus You'; then
+  TAG_LIST+=("scope:dashboard")
+fi
+if echo "$PROMPT_SHORT" | grep -qiP 'narrator|物語|章|Arc|Theme|Moment'; then
+  TAG_LIST+=("scope:narrator")
+fi
+if echo "$PROMPT_SHORT" | grep -qiP 'hook|rules|pipeline|ops|設定|config|settings'; then
+  TAG_LIST+=("scope:ops")
+fi
+if echo "$PROMPT_SHORT" | grep -qiP 'news|ニュース|情報収集|intelligence'; then
+  TAG_LIST+=("scope:news")
+fi
+if echo "$PROMPT_SHORT" | grep -qiP 'search|検索|vector|pgvector|PGroonga'; then
+  TAG_LIST+=("scope:search")
+fi
+if echo "$PROMPT_SHORT" | grep -qiP 'Edge Function|supabase.*function|ai-agent'; then
+  TAG_LIST+=("scope:edge-function")
+fi
+
+# Department detection
+if echo "$PROMPT_SHORT" | grep -qiP 'リサーチ|調査部|research'; then
+  TAG_LIST+=("dept:research")
+fi
+if echo "$PROMPT_SHORT" | grep -qiP 'UX|デザイン|UI|ux'; then
+  TAG_LIST+=("dept:ux")
+fi
+if echo "$PROMPT_SHORT" | grep -qiP '/company'; then
+  TAG_LIST+=("dept:secretary")
 fi
 
 if [ ${#TAG_LIST[@]} -gt 0 ]; then

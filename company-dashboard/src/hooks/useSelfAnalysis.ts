@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { aiCompletion } from '@/lib/edgeAi'
 
-export type AnalysisType = 'mbti' | 'big5' | 'strengths_finder' | 'emotion_triggers' | 'values'
+export type AnalysisType = 'mbti' | 'big5' | 'strengths_finder' | 'emotion_triggers' | 'values' | 'stress_resilience' | 'communication_style'
 
 export interface AnalysisContext {
   key_evidence: string[]              // 核心的な引用 3-5件
@@ -287,12 +287,42 @@ JSON以外は返さないでください。`
   return base
 }
 
+function stressResiliencePrompt(_prev: Record<string, unknown> | null): string {
+  return `日記データから、この人のストレス耐性プロファイルを分析してください。
+
+## 出力（JSON）
+{
+  "stress_triggers": ["ストレスの引き金になるパターン3-4つ"],
+  "coping_strategies": ["実際に使っている対処法3-4つ（日記から読み取れるもの）"],
+  "recovery_pattern": "回復パターンの説明（1-2文）",
+  "resilience_score": 1-10,
+  "burnout_risk": "low" | "medium" | "high",
+  "profile_narrative": "この人のストレス耐性を2-3文で描写"
+}`
+}
+
+function communicationStylePrompt(_prev: Record<string, unknown> | null): string {
+  return `日記データから、この人のコミュニケーションスタイルを分析してください。
+
+## 出力（JSON）
+{
+  "primary_style": "analytical" | "driver" | "expressive" | "amiable",
+  "communication_preferences": ["好むコミュニケーション方法3つ"],
+  "conflict_approach": "対立時の傾向（1文）",
+  "listening_style": "聞き方の傾向（1文）",
+  "team_role": "チームでの自然な役割（1文）",
+  "profile_narrative": "この人のコミュニケーションスタイルを2-3文で描写"
+}`
+}
+
 const PROMPT_BUILDERS: Record<AnalysisType, (prev: Record<string, unknown> | null) => string> = {
   mbti: mbtiPrompt,
   big5: big5Prompt,
   strengths_finder: strengthsFinderPrompt,
   emotion_triggers: emotionTriggersPrompt,
   values: valuesPrompt,
+  stress_resilience: stressResiliencePrompt,
+  communication_style: communicationStylePrompt,
 }
 
 // ---------------------------------------------------------------------------

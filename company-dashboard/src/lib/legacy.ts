@@ -7202,7 +7202,7 @@ async function renderApiCosts(root) {
     var byModel = {};
     var byDay = {};
     var bySource = {};
-    var sourceLabels = {ai_chat:'AIチャット',self_analysis:'自己分析',emotion_analysis:'感情分析',ai_partner:'AIパートナー',dream_classify:'夢/目標分類',dream_detection:'夢達成検出',weekly_narrative:'週次レポート',news_collect:'ニュース収集',other:'その他'};
+    var sourceLabels = {ai_chat:'AIチャット',self_analysis:'自己分析',emotion_analysis:'感情分析',ai_partner:'AIパートナー',dream_classify:'夢/目標分類',dream_detection:'夢達成検出',weekly_narrative:'週次レポート',news_collect:'ニュース収集',arc_reader:'Arc Reader',theme_finder:'Theme Finder',moment_detector:'転機検出',emotion_insights:'感情示唆',search_rerank:'検索リランク',narrator_update:'Narrator更新',news_learn:'ニュース学習',other:'その他'};
 
     msgs.forEach(function(m) {
       var cost = parseFloat(m.cost_usd) || 0;
@@ -7300,7 +7300,7 @@ async function renderApiCosts(root) {
 
       // Stacked bar
       var srcBar = el('div', {style: 'display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:12px'});
-      var srcColors = {ai_chat:'#5046e5',self_analysis:'#0d9f6e',emotion_analysis:'#2563eb',ai_partner:'#d97706',dream_classify:'#8b5cf6',dream_detection:'#06b6d4',weekly_narrative:'#ec4899',news_collect:'#f59e0b',other:'#6b7280'};
+      var srcColors = {ai_chat:'#5046e5',self_analysis:'#0d9f6e',emotion_analysis:'#2563eb',ai_partner:'#d97706',dream_classify:'#8b5cf6',dream_detection:'#06b6d4',weekly_narrative:'#ec4899',news_collect:'#f59e0b',arc_reader:'#7c3aed',theme_finder:'#059669',moment_detector:'#dc2626',emotion_insights:'#4f46e5',search_rerank:'#0891b2',narrator_update:'#7c3aed',news_learn:'#ca8a04',other:'#6b7280'};
       sourceKeys.forEach(function(src) {
         var pct = totalCost > 0 ? Math.round(bySource[src].cost / totalCost * 100) : 0;
         if (pct < 1) return;

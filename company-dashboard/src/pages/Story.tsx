@@ -3,6 +3,7 @@ import { Card, PageHeader } from '@/components/ui'
 import { useDataStore } from '@/stores/data'
 import { useArcReader } from '@/hooks/useArcReader'
 import { useThemeFinder } from '@/hooks/useThemeFinder'
+import { useForesight } from '@/hooks/useForesight'
 import type { ArcPhase } from '@/types/narrator'
 
 const PHASE_META: Record<ArcPhase, { label: string; icon: string; color: string; description: string }> = {
@@ -17,6 +18,7 @@ export function Story() {
   const { emotionAnalyses, fetchEmotions, loading } = useDataStore()
   const { arc, loading: arcLoading } = useArcReader()
   const { theme, loading: themeLoading, unlocked } = useThemeFinder()
+  const { foresight } = useForesight()
 
   useEffect(() => {
     fetchEmotions({ days: 90 })
@@ -84,6 +86,21 @@ export function Story() {
           </div>
         )
       })()}
+
+      {/* Foresight */}
+      {foresight && (
+        <div className="section">
+          <div className="section-title">予感</div>
+          <Card>
+            <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 6 }}>
+              {foresight.insight}
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text3)' }}>
+              {foresight.basis}
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Theme / Identity */}
       {theme && (
