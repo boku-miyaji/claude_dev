@@ -222,49 +222,58 @@ if [ -f "$EVAL_LAST_FILE" ]; then
 fi
 
 if [ "$EVAL_SKIP" = "false" ]; then
-  # Collect recent activity (dept is inside metadata jsonb, not a top-level column)
-  RECENT_ACTIVITY=$(curl -4 -s \
-    "${SUPABASE_URL}/rest/v1/activity_log?select=action,metadata,created_at&order=created_at.desc&limit=50" \
+  # Use Management API + file-based IO to avoid shell encoding issues with Japanese
+  MGMT_API="https://api.supabase.com/v1/projects/akycymnahqypmtsfqhtr/database/query"
+
+  curl -4 -s -X POST "$MGMT_API" \
+    -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d '{"query": "SELECT (metadata->>'\''dept'\'')::text as dept, count(*) as cnt FROM activity_log WHERE action = '\''dept_dispatch'\'' GROUP BY dept ORDER BY cnt DESC LIMIT 15"}' \
+    -o /tmp/eval_depts.json --max-time 15 2>/dev/null
+
+  curl -4 -s \
+    "${SUPABASE_URL}/rest/v1/growth_events?select=title,category,status&order=event_date.desc&limit=10" \
     -H "apikey: ${SUPABASE_ANON_KEY}" \
     -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-    --max-time 10 2>/dev/null | python3 -c "
-import sys, json
-try:
-    data = json.load(sys.stdin)
-    result = []
-    for r in data:
-        dept = (r.get('metadata') or {}).get('dept', '')
-        result.append({'action': r.get('action',''), 'dept': dept, 'created_at': r.get('created_at','')})
-    print(json.dumps(result))
-except:
-    print('[]')
-" 2>/dev/null || echo "[]")
+    -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
+    -o /tmp/eval_growth.json --max-time 10 2>/dev/null
 
-  RECENT_GROWTH=$(curl -4 -s \
-    "${SUPABASE_URL}/rest/v1/growth_events?select=title,category,status&order=event_date.desc&limit=20" \
-    -H "apikey: ${SUPABASE_ANON_KEY}" \
-    -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-    --max-time 10 2>/dev/null | jq -c '.' 2>/dev/null || echo "[]")
+  # Build prompt in file to avoid shell variable encoding issues
+  python3 -c "
+import json
+depts = json.load(open('/tmp/eval_depts.json'))
+growth = json.load(open('/tmp/eval_growth.json'))
+prompt = f'''Evaluate HD organization departments. Reply ONLY valid JSON, no explanations.
 
-  EVAL_RESULT=$(echo "Evaluate the HD organization departments based on this recent data.
+Department dispatch counts: {json.dumps(depts)}
+Recent growth events: {json.dumps(growth)}
 
-Activity log (last 50): ${RECENT_ACTIVITY}
-Growth events (last 20): ${RECENT_GROWTH}
+JSON format:
+{{\"date\": \"$(date +%Y-%m-%d)\", \"departments\": [{{\"name\": \"dept-name\", \"autonomy\": \"B\", \"first_pass\": \"A\", \"collaboration\": \"B\", \"goal_alignment\": \"A\", \"utilization\": \"C\", \"note\": \"brief\"}}], \"overall\": \"summary\", \"proposals\": [\"suggestion\"]}}
 
-Rate each active department on 5 axes (A/B/C/D):
-- autonomy: completed without extra instructions
-- first_pass: no rework needed
-- collaboration: smooth handoffs
-- goal_alignment: contributes to CEO goals
-- utilization: actively used
+Active departments: Explore, UX, AI-dev, sys-dev, research, intelligence, investigation, materials, pm, security, ops, marketing.
+Rate each on A(excellent)/B(good)/C(needs work)/D(failing). Use dispatch counts for utilization. JSON ONLY.'''
+open('/tmp/eval_prompt.txt', 'w').write(prompt)
+" 2>/dev/null
 
-Reply ONLY valid JSON:
-{\"date\": \"$(date +%Y-%m-%d)\", \"departments\": [{\"name\": \"dept-name\", \"autonomy\": \"B\", \"first_pass\": \"A\", \"collaboration\": \"B\", \"goal_alignment\": \"A\", \"utilization\": \"C\", \"note\": \"brief comment\"}], \"overall\": \"overall assessment\", \"proposals\": [\"improvement suggestion\"]}" | claude --print --model opus 2>/dev/null)
+  claude --print --model haiku < /tmp/eval_prompt.txt > /tmp/eval_result.txt 2>/dev/null
 
-  # Save evaluation
+  # Extract JSON and save
   EVAL_DIR="/workspace/.company/hr/evaluations"
   mkdir -p "$EVAL_DIR" 2>/dev/null || true
-  echo "$EVAL_RESULT" > "$EVAL_DIR/$(date +%Y-%m-%d)-auto.md"
+  python3 -c "
+import json, re
+text = open('/tmp/eval_result.txt').read()
+m = re.search(r'\{.*\}', text, re.DOTALL)
+if m:
+    data = json.loads(m.group())
+    formatted = json.dumps(data, indent=2, ensure_ascii=False)
+    with open('$EVAL_DIR/$(date +%Y-%m-%d)-auto.md', 'w') as f:
+        f.write('\`\`\`json\n' + formatted + '\n\`\`\`\n')
+    print('  Evaluation saved (' + str(len(data.get('departments',[]))) + ' depts)')
+else:
+    print('  Evaluation: no valid JSON returned')
+" 2>/dev/null
   date -Iseconds > "$EVAL_LAST_FILE"
   echo "  Evaluation saved"
 else
