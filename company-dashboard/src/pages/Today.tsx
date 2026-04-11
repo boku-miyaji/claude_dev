@@ -437,8 +437,15 @@ export function Today() {
   const [newsCollecting, setNewsCollecting] = useState(false)
 
   useEffect(() => {
-    import('@/lib/newsCollect').then(({ loadNews }) =>
-      loadNews().then((items) => { if (items.length) setNewsItems(items) })
+    import('@/lib/newsCollect').then(({ loadNews, recordImpressions }) =>
+      loadNews().then((items) => {
+        if (items.length) {
+          setNewsItems(items)
+          // Record impressions for displayed items (async, non-blocking)
+          const ids = items.filter((n) => n.id).map((n) => n.id!)
+          recordImpressions(ids)
+        }
+      })
     )
   }, [])
 
