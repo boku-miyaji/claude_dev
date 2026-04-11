@@ -5,11 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { LegacyPage } from '@/components/legacy/LegacyPage'
 import { AuthPage } from '@/pages/AuthPage'
-import {
-  renderFinance, renderPrompts,
-  renderArtifacts, renderChat,
-  renderApiCosts, renderCareer,
-} from '@/lib/legacy'
+import { renderChat } from '@/lib/legacy'
 import { Calendar } from '@/pages/Calendar'
 import { Insights } from '@/pages/Insights'
 import { Growth } from '@/pages/Growth'
@@ -21,6 +17,11 @@ import { Tasks } from '@/pages/Tasks'
 import { Companies } from '@/pages/Companies'
 import { Reports } from '@/pages/Reports'
 import { Today } from '@/pages/Today'
+import { Finance } from '@/pages/Finance'
+import { Prompts } from '@/pages/Prompts'
+import { Artifacts } from '@/pages/Artifacts'
+import { ApiCosts } from '@/pages/ApiCosts'
+import { Career } from '@/pages/Career'
 import { Journal } from '@/pages/Journal'
 import { Dreams } from '@/pages/Dreams'
 import { SelfAnalysis } from '@/pages/SelfAnalysis'
@@ -100,13 +101,12 @@ export function App() {
           <Route path="/blueprint" element={<Blueprint />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/knowledge" element={<Knowledge />} />
-          {/* CLI-only pages (legacy bridge) */}
-          <Route path="/finance" element={<LegacyPage renderer={renderFinance} />} />
-          <Route path="/prompts" element={<LegacyPage renderer={renderPrompts} />} />
-          <Route path="/artifacts/*" element={<LegacyPage renderer={renderArtifacts} />} />
+          <Route path="/finance" element={<Finance />} />
+          <Route path="/prompts" element={<Prompts />} />
+          <Route path="/artifacts/*" element={<Artifacts />} />
           <Route path="/chat/*" element={<LegacyPage renderer={renderChat} />} />
-          <Route path="/api-costs" element={<LegacyPage renderer={renderApiCosts} />} />
-          <Route path="/career" element={<LegacyPage renderer={renderCareer} />} />
+          <Route path="/api-costs" element={<ApiCosts />} />
+          <Route path="/career" element={<Career />} />
           <Route path="/commands" element={<SlashCommands />} />
           {/* Redirects */}
           <Route path="/diary" element={<Navigate to="/journal" replace />} />
