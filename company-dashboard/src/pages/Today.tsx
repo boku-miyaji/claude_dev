@@ -433,7 +433,7 @@ export function Today() {
   const todayQuestions = useMemo(() => getTodayQuestions(todayStr), [todayStr])
 
   // News state — must be before any conditional return to satisfy Rules of Hooks
-  const [newsItems, setNewsItems] = useState<Array<{ id?: string; title: string; summary: string; url: string | null; source: string; topic: string }>>([])
+  const [newsItems, setNewsItems] = useState<Array<{ id?: string; title: string; summary: string; url: string | null; source: string; topic: string; published_date?: string | null }>>([])
   const [newsCollecting, setNewsCollecting] = useState(false)
 
   useEffect(() => {
@@ -796,6 +796,7 @@ export function Today() {
             </div>
             {n.summary && <div style={{ color: 'var(--text3)', marginTop: 2, fontSize: 11 }}>{n.summary}</div>}
             <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+              {n.published_date && <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{n.published_date.substring(5)}</span>}
               {n.source && <span style={{ fontSize: 10, color: 'var(--text3)' }}>{n.source}</span>}
               {n.topic && <span style={{ fontSize: 10, color: 'var(--accent2)' }}>{n.topic}</span>}
             </div>

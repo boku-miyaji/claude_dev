@@ -40,8 +40,8 @@ export async function collectNews(options?: {
         'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
       },
       body: JSON.stringify({
-        message: `web_searchツールを使って、${topicPrompt} の最新ニュースを${limit}件検索してください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル（日本語）","summary":"2-3文の日本語要約。英語の記事や論文も必ず日本語で要約する。何が重要なのか、どう使えるかを含める","url":"記事URL","source":"ソース名","topic":"トピック","date":"YYYY-MM-DD"}]\n最終回答はJSON配列のみ返してください。説明文は不要です。`,
-        system_prompt: 'あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。titleとsummaryは必ず日本語で書いてください。英語の記事や論文も日本語に翻訳して要約します。',
+        message: `web_searchツールを使って、${topicPrompt} の**今日（${new Date().toISOString().substring(0, 10)}）発表された最新ニュース**を${limit}件検索してください。1週間以上前の記事は絶対に含めないでください。各ニュースは以下のJSON配列で返してください:\n[{"title":"タイトル（日本語）","summary":"2-3文の日本語要約。英語の記事や論文も必ず日本語で要約する。何が重要なのか、どう使えるかを含める","url":"記事URL","source":"ソース名","topic":"トピック","date":"YYYY-MM-DD"}]\n最終回答はJSON配列のみ返してください。説明文は不要です。`,
+        system_prompt: `あなたはニュース収集エージェントです。web_searchツールで最新ニュースを検索し、結果をJSON配列形式で返してください。titleとsummaryは必ず日本語で書いてください。英語の記事や論文も日本語に翻訳して要約します。重要: 今日は${new Date().toISOString().substring(0, 10)}です。過去1-2日以内に公開された記事のみ返してください。古い記事は除外してください。`,
         model: 'gpt-5-mini',
         max_tokens: 2000,
       }),
@@ -59,8 +59,18 @@ export async function collectNews(options?: {
   const items = parseNewsResponse(text)
   if (items.length === 0) return { count: 0, items: [] }
 
+  // Filter out old articles (older than 7 days)
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const sevenDaysStr = sevenDaysAgo.toISOString().substring(0, 10)
+
   // Save to news_items table (parallel inserts)
-  const validItems = items.filter((n) => n.title?.length > 5)
+  const validItems = items.filter((n) => {
+    if (!n.title || n.title.length <= 5) return false
+    // Skip articles older than 7 days
+    if (n.date && n.date < sevenDaysStr) return false
+    return true
+  })
   await Promise.all(
     validItems.map((n) =>
       supabase.from('news_items').insert({
@@ -84,11 +94,14 @@ export async function collectNews(options?: {
   return { count: validItems.length, items: (fresh as NewsItem[]) || [] }
 }
 
-/** Load saved news items from news_items table */
-export async function loadNews(limit = 5): Promise<NewsItem[]> {
+/** Load saved news items from news_items table (today only by default) */
+export async function loadNews(limit = 10): Promise<NewsItem[]> {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
   const { data } = await supabase
     .from('news_items')
     .select('id,title,summary,url,source,topic,published_date,collected_at')
+    .gte('collected_at', today.toISOString())
     .order('collected_at', { ascending: false })
     .limit(limit)
   return (data as NewsItem[]) || []
