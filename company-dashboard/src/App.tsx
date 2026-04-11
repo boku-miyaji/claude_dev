@@ -10,10 +10,11 @@ import {
   renderOrgChart, renderFinance, renderPrompts,
   renderArtifacts, renderChat,
   renderApiCosts,
-  renderSettings, renderCareer, renderPortfolio,
+  renderCareer, renderPortfolio,
 } from '@/lib/legacy'
 import { Insights } from '@/pages/Insights'
 import { Growth } from '@/pages/Growth'
+import { Settings } from '@/pages/Settings'
 import { Blueprint } from '@/pages/Blueprint'
 import { SlashCommands } from '@/pages/SlashCommands'
 import { Knowledge } from '@/pages/Knowledge'
@@ -107,7 +108,7 @@ export function App() {
           <Route path="/growth" element={<Growth />} />
           <Route path="/blueprint" element={<Blueprint />} />
           <Route path="/commands" element={<SlashCommands />} />
-          <Route path="/settings" element={<LegacyPage renderer={renderSettings} />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/career" element={<LegacyPage renderer={renderCareer} />} />
           <Route path="/knowledge" element={<Knowledge />} />
           <Route path="/portfolio" element={<LegacyPage renderer={renderPortfolio} />} />
