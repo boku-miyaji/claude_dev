@@ -27,12 +27,26 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 // Auth
 // ============================================================
 
-/** Check if user has stored Google Calendar credentials */
+/** Check if user has stored Google Calendar credentials (cached for 5 min) */
+let _authCache: { result: boolean; ts: number } | null = null
 export async function checkCalendarAuth(): Promise<{ authenticated: boolean }> {
+  // Cache auth check for 5 minutes to reduce requests
+  if (_authCache && Date.now() - _authCache.ts < 300_000) {
+    return { authenticated: _authCache.result }
+  }
   const headers = await getAuthHeaders()
   const res = await fetch(`${PROXY_BASE}/auth/check`, { headers })
-  if (!res.ok) return { authenticated: false }
-  return res.json()
+  if (!res.ok) {
+    _authCache = { result: false, ts: Date.now() }
+    return { authenticated: false }
+  }
+  const data = await res.json()
+  _authCache = { result: data.authenticated, ts: Date.now() }
+  return data
+}
+/** Invalidate auth cache (call after OAuth flow completes) */
+export function invalidateCalendarAuthCache(): void {
+  _authCache = null
 }
 
 /**

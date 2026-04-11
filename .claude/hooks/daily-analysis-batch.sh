@@ -169,15 +169,15 @@ if m:
         print(json.dumps({
             'event_date': '$(date +%Y-%m-%d)',
             'event_type': 'failure',
-            'category': 'ops',
+            'category': 'process',
             'severity': 'medium',
-            'phase': 8,
+            'phase': 'resolve',
             'title': c.get('title','session failure')[:200],
             'what_happened': c.get('what_happened','')[:500],
             'root_cause': c.get('root_cause','')[:500],
             'countermeasure': c.get('countermeasure','')[:500],
             'tags': ['auto-detected', 'daily-batch'],
-            'status': 'new'
+            'status': 'active'
         }))
     except: pass
 " 2>/dev/null)
@@ -187,6 +187,7 @@ if m:
           -X POST "${SUPABASE_URL}/rest/v1/growth_events" \
           -H "apikey: ${SUPABASE_ANON_KEY}" \
           -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+          -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
           -H "Content-Type: application/json" \
           -H "Prefer: return=minimal" \
           -d "$GROWTH_JSON" \
