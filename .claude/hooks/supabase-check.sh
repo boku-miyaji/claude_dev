@@ -22,16 +22,30 @@ if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
   return 0 2>/dev/null || exit 0
 fi
 
-# Quick connectivity test (1s timeout, just check HTTP response)
-HTTP_CODE=$(curl -4 -s -o /dev/null -w "%{http_code}" \
-  "${SUPABASE_URL}/rest/v1/" \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  --connect-timeout 2 \
-  --max-time 3 \
-  2>/dev/null) || HTTP_CODE="000"
+# Quick connectivity test with retry (SessionStart で async hook が同時多発するため)
+MAX_RETRIES=3
+RETRY_DELAY=2
+HTTP_CODE="000"
+
+for i in $(seq 1 $MAX_RETRIES); do
+  HTTP_CODE=$(curl -4 -s -o /dev/null -w "%{http_code}" \
+    "${SUPABASE_URL}/rest/v1/" \
+    -H "apikey: ${SUPABASE_ANON_KEY}" \
+    --connect-timeout 3 \
+    --max-time 5 \
+    2>/dev/null) || HTTP_CODE="000"
+
+  if [ "$HTTP_CODE" != "000" ]; then
+    break
+  fi
+
+  if [ "$i" -lt "$MAX_RETRIES" ]; then
+    sleep "$RETRY_DELAY"
+  fi
+done
 
 if [ "$HTTP_CODE" = "000" ]; then
-  SUPABASE_MISSING_REASON="Supabase unreachable (network error)"
+  SUPABASE_MISSING_REASON="Supabase unreachable after ${MAX_RETRIES} retries (network error)"
   return 0 2>/dev/null || exit 0
 fi
 
