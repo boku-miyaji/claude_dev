@@ -56,13 +56,6 @@ export async function recordClick(newsId: string): Promise<void> {
 export async function recordImpressions(newsIds: string[]): Promise<void> {
   if (newsIds.length === 0) return
   for (const id of newsIds) {
-    supabase.from('news_items')
-      .update({ impression_count: supabase.rpc ? undefined : 1 }) // handled by RPC below
-      .eq('id', parseInt(id, 10))
-      .then(() => {})
-  }
-  // Batch increment via RPC is cleaner, but simple update works for now
-  for (const id of newsIds) {
     supabase.rpc('increment_impression', { news_id: parseInt(id, 10) }).then(() => {})
   }
 }
