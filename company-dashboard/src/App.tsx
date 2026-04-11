@@ -7,11 +7,12 @@ import { LegacyPage } from '@/components/legacy/LegacyPage'
 import { AuthPage } from '@/pages/AuthPage'
 import {
   renderDashboard, renderCalendar,
-  renderOrgChart, renderFinance, renderInsights, renderPrompts,
+  renderOrgChart, renderFinance, renderPrompts,
   renderDiary, renderArtifacts, renderChat,
   renderApiCosts, renderGrowth,
   renderSettings, renderCareer, renderPortfolio,
 } from '@/lib/legacy'
+import { Insights } from '@/pages/Insights'
 import { Blueprint } from '@/pages/Blueprint'
 import { SlashCommands } from '@/pages/SlashCommands'
 import { Knowledge } from '@/pages/Knowledge'
@@ -94,7 +95,7 @@ export function App() {
           <Route path="/companies" element={<Companies />} />
           <Route path="/orgchart" element={<LegacyPage renderer={renderOrgChart} />} />
           <Route path="/finance" element={<LegacyPage renderer={renderFinance} />} />
-          <Route path="/insights" element={<LegacyPage renderer={renderInsights} />} />
+          <Route path="/insights" element={<Insights />} />
           <Route path="/prompts" element={<LegacyPage renderer={renderPrompts} />} />
           <Route path="/intelligence" element={<Reports />} />
           <Route path="/news" element={<Reports />} />
