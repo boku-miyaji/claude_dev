@@ -67,10 +67,10 @@ export async function collectNews(options?: {
         title: n.title.substring(0, 200),
         summary: (n.summary || '').substring(0, 500),
         url: n.url || null,
-        source: (n.source || '').substring(0, 50),
-        topic: (n.topic || '').substring(0, 30),
-        published_date: n.date || null,
-      }),
+        source: (n.source || '').substring(0, 50) as string,
+        topic: (n.topic || '').substring(0, 30) as string,
+        published_date: (n.date || null) as string | null,
+      } as Record<string, unknown>),
     ),
   )
 

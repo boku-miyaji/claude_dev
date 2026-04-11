@@ -1059,7 +1059,7 @@ export function Habits() {
           </div>
 
           <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target / {{ daily: 'day', weekly: 'week', monthly: 'month' }[formFrequency]}</label>
+            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target / {{ daily: 'day', weekdays: 'weekday', weekly: 'week', monthly: 'month' }[formFrequency]}</label>
             <input
               className="input"
               type="number"
