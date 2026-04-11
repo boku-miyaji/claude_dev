@@ -171,7 +171,9 @@
       "WebFetch(domain:www.t.u-tokyo.ac.jp)",
       "WebFetch(domain:doi.org)",
       "WebFetch(domain:pubs.rsc.org)",
-      "WebFetch(domain:pmc.ncbi.nlm.nih.gov)"
+      "WebFetch(domain:pmc.ncbi.nlm.nih.gov)",
+      "WebFetch(domain:phys.org)",
+      "WebFetch(domain:www.dighyd.org)"
     ],
     "deny": [
       "Read(**/.env)",
