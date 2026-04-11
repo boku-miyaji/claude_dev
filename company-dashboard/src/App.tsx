@@ -6,11 +6,9 @@ import { MobileNav } from '@/components/layout/MobileNav'
 import { LegacyPage } from '@/components/legacy/LegacyPage'
 import { AuthPage } from '@/pages/AuthPage'
 import {
-  renderDashboard,
-  renderOrgChart, renderFinance, renderPrompts,
+  renderFinance, renderPrompts,
   renderArtifacts, renderChat,
-  renderApiCosts,
-  renderCareer, renderPortfolio,
+  renderApiCosts, renderCareer,
 } from '@/lib/legacy'
 import { Calendar } from '@/pages/Calendar'
 import { Insights } from '@/pages/Insights'
@@ -92,27 +90,29 @@ export function App() {
           <Route path="/habits" element={<Habits />} />
           <Route path="/weekly" element={<WeeklyNarrative />} />
           <Route path="/story" element={<Story />} />
-          <Route path="/dashboard-legacy" element={<LegacyPage renderer={renderDashboard} />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/companies" element={<Companies />} />
-          <Route path="/orgchart" element={<LegacyPage renderer={renderOrgChart} />} />
-          <Route path="/finance" element={<LegacyPage renderer={renderFinance} />} />
           <Route path="/insights" element={<Insights />} />
-          <Route path="/prompts" element={<LegacyPage renderer={renderPrompts} />} />
           <Route path="/intelligence" element={<Reports />} />
           <Route path="/news" element={<Reports />} />
-          <Route path="/diary" element={<Navigate to="/journal" replace />} />
+          <Route path="/growth" element={<Growth />} />
+          <Route path="/blueprint" element={<Blueprint />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/knowledge" element={<Knowledge />} />
+          {/* CLI-only pages (legacy bridge) */}
+          <Route path="/finance" element={<LegacyPage renderer={renderFinance} />} />
+          <Route path="/prompts" element={<LegacyPage renderer={renderPrompts} />} />
           <Route path="/artifacts/*" element={<LegacyPage renderer={renderArtifacts} />} />
           <Route path="/chat/*" element={<LegacyPage renderer={renderChat} />} />
           <Route path="/api-costs" element={<LegacyPage renderer={renderApiCosts} />} />
-          <Route path="/growth" element={<Growth />} />
-          <Route path="/blueprint" element={<Blueprint />} />
-          <Route path="/commands" element={<SlashCommands />} />
-          <Route path="/settings" element={<Settings />} />
           <Route path="/career" element={<LegacyPage renderer={renderCareer} />} />
-          <Route path="/knowledge" element={<Knowledge />} />
-          <Route path="/portfolio" element={<LegacyPage renderer={renderPortfolio} />} />
+          <Route path="/commands" element={<SlashCommands />} />
+          {/* Redirects */}
+          <Route path="/diary" element={<Navigate to="/journal" replace />} />
+          <Route path="/orgchart" element={<Navigate to="/companies" replace />} />
+          <Route path="/portfolio" element={<Navigate to="/career" replace />} />
+          <Route path="/dashboard-legacy" element={<Navigate to="/" replace />} />
           <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
         </Routes>
       </div>
