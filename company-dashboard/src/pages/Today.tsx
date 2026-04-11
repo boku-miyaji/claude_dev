@@ -5,6 +5,7 @@ import { Card } from '@/components/ui'
 import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis'
 import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { useDreamDetection } from '@/hooks/useDreamDetection'
+import { useMomentDetector } from '@/hooks/useMomentDetector'
 import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
@@ -226,6 +227,7 @@ export function Today() {
   const [emotionBadges, setEmotionBadges] = useState<Map<string, EmotionBadge[]>>(new Map())
   const { analyze, analyzing, error: emotionError } = useEmotionAnalysis()
   const { detect } = useDreamDetection()
+  const { detect: detectMoment } = useMomentDetector()
   const weather = useTodayWeather()
 
   const timeMode: TimeMode = useMemo(() => getTimeMode(), [])
@@ -424,6 +426,7 @@ export function Today() {
         setEmotionBadges((prev) => { const next = new Map(prev); next.set(inserted.id, scores.filter((s) => s.value > 20).slice(0, 2)); return next })
       }
       detect(content.trim()).then((detections) => { for (const d of detections) toast(`夢『${d.dream_title}』に近づいているかもしれません！`) })
+      detectMoment(inserted.id, content.trim()).then((r) => { if (r.detected && r.moment) toast(`転機を検出: ${r.moment.title}`) })
       // Re-generate AI comment with new diary context
       invalidateBriefing()
     }
