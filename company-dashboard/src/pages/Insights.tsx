@@ -202,8 +202,13 @@ function DiaryRhythmSection() {
         if (res.ok) {
           const d = await res.json()
           if (d.hourly && d.stats?.total_entries >= 3) setData(d)
+          else console.warn('[diary-rhythm] insufficient data:', d)
+        } else {
+          console.warn('[diary-rhythm] HTTP error:', res.status)
         }
-      } catch { /* Edge Function未デプロイ時はスキップ */ }
+      } catch (e) {
+        console.warn('[diary-rhythm] fetch failed:', e)
+      }
     })()
   }, [])
 
