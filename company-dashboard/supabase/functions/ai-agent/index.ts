@@ -726,110 +726,140 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
   const sb = getSupabase();
   const p = personalization || {};
 
-  // Load personalization from user_settings if not provided
-  if (!p.chat_nickname) {
-    const { data } = await sb.from("user_settings").select("chat_nickname,chat_occupation,chat_about,chat_style,chat_warmth,chat_emoji,chat_custom_instructions,chat_memory_enabled,chat_diary_enabled").limit(1).single();
+  // Load personalization from user_settings (v4: chat_user_label, chat_tone_mode を含む)
+  if (!p.chat_nickname && !p.chat_user_label) {
+    const { data } = await sb.from("user_settings").select("chat_nickname,chat_occupation,chat_about,chat_custom_instructions,chat_memory_enabled,chat_diary_enabled,chat_user_label,chat_tone_mode").limit(1).single();
     if (data) Object.assign(p, data);
   }
 
-  // Build personalization section
+  // Build "About the User" section
   let personSection = "";
   if (p.chat_nickname || p.chat_occupation || p.chat_about) {
-    personSection = "\n## About the User\n";
-    if (p.chat_nickname) { personSection += `- Name: ${p.chat_nickname}\n`; report.personalization_fields.push("nickname"); }
-    if (p.chat_occupation) { personSection += `- Occupation: ${p.chat_occupation}\n`; report.personalization_fields.push("occupation"); }
+    personSection = "\n## あなたが知っている本人について\n";
+    if (p.chat_nickname) { personSection += `- 名前: ${p.chat_nickname}\n`; report.personalization_fields.push("nickname"); }
+    if (p.chat_occupation) { personSection += `- 仕事: ${p.chat_occupation}\n`; report.personalization_fields.push("occupation"); }
     if (p.chat_about) { personSection += `- About: ${p.chat_about}\n`; report.personalization_fields.push("about"); }
   }
 
-  // Style instructions
-  let styleSection = "";
-  const styleMap: Record<string, string> = { formal: "Use formal, polished language.", casual: "Be casual and friendly.", concise: "Be extremely concise. Short sentences.", detailed: "Provide detailed, thorough answers." };
-  const warmthMap: Record<string, string> = { warm: "Be warm and encouraging.", neutral: "Be neutral and professional.", direct: "Be direct and to the point. No filler." };
-  const emojiMap: Record<string, string> = { none: "Never use emoji.", some: "Use emoji sparingly for emphasis.", lots: "Use emoji freely to add personality." };
-  if (styleMap[p.chat_style as string]) styleSection += "- " + styleMap[p.chat_style as string] + "\n";
-  if (warmthMap[p.chat_warmth as string]) styleSection += "- " + warmthMap[p.chat_warmth as string] + "\n";
-  if (emojiMap[p.chat_emoji as string]) styleSection += "- " + emojiMap[p.chat_emoji as string] + "\n";
-  if (p.chat_custom_instructions) styleSection += "- " + p.chat_custom_instructions + "\n";
+  // 呼び方ルール
+  const userLabel = (p.chat_user_label as string || "").trim();
+  const addressRule = userLabel
+    ? `本人を「${userLabel}」と呼びかけてください（ただし毎回必ず呼ぶ必要はなく、自然に使うこと）。`
+    : "本人を特定の呼称で呼ばないでください。「あなた」等の二人称も避け、自然な語りかけで構いません。";
 
-  // knowledge_base は HD（仕事の組織運営）用のナレッジ蓄積。
-  // focus-you（個人プロダクト）のチャットには注入しない。
+  // 基本トーンモード
+  const toneMode = (p.chat_tone_mode as string) || "auto";
+  const toneRule = toneMode === "soft"
+    ? "本人設定により、常にやわらかく、寄り添うトーンを優先してください。踏み込みは控えめに。"
+    : toneMode === "bold"
+    ? "本人設定により、遠慮せず踏み込んだ示唆を出してください。根拠を添えて言い切ってよいです。"
+    : "状況に応じて自然にトーンを調整してください（気分が落ちていれば寄り添い優先、挑戦的なら踏み込み可）。";
+
+  // カスタム指示
+  let customSection = "";
+  if (p.chat_custom_instructions) {
+    customSection = "\n## 本人からの追加指示\n" + p.chat_custom_instructions + "\n";
+  }
+
+  // knowledge_base は HD（仕事の組織運営）用なので注入しない
   const knowledgeSection = "";
 
-  // Load recent diary entries for deeper understanding
+  // 直近の日記本文（判断材料・生テキスト）
   let diarySection = "";
   if (p.chat_diary_enabled !== false) {
-    const since = new Date(Date.now() - 14 * 86400000).toISOString();
-    // Primary: diary_entries table (actual diary fragments)
-    const { data: diary } = await sb.from("diary_entries").select("body,entry_date,wbi").gte("created_at", since).order("created_at", { ascending: false }).limit(8);
+    const since = new Date(Date.now() - 7 * 86400000).toISOString();
+    const { data: diary } = await sb.from("diary_entries").select("body,entry_date,wbi").gte("created_at", since).order("created_at", { ascending: false }).limit(10);
     if (diary && diary.length > 0) {
-      diarySection = "\n## Recent Diary Entries (for context, do not mention unless asked)\n" + diary.map(d => `### ${d.entry_date}\n${(d.body || "").substring(0, 300)}`).join("\n") + "\n";
+      diarySection = "\n## 直近の日記（判断材料・触れるかどうかはあなたの判断で）\n" + diary.map(d => `### ${d.entry_date}${d.wbi != null ? ` (気分: ${d.wbi})` : ""}\n${(d.body || "").substring(0, 400)}`).join("\n") + "\n";
       report.diary_entries = diary.length;
     }
   }
 
-  // Load recent product-side insights only.
-  // source='work' は HD（仕事の組織運営）由来なので focus-you チャットには注入しない。
+  // 大局的な傾向: ceo_insights（product由来のみ）
   let insightsSection = "";
   if (p.chat_memory_enabled !== false) {
-    const { data: insights } = await sb.from("ceo_insights").select("category,insight").eq("source", "product").order("created_at", { ascending: false }).limit(8);
+    const { data: insights } = await sb.from("ceo_insights").select("category,insight").eq("source", "product").order("created_at", { ascending: false }).limit(10);
     if (insights && insights.length > 0) {
-      insightsSection = "\n## User Insights (apply silently to personalize)\n" + insights.map(i => `- [${i.category}] ${i.insight}`).join("\n") + "\n";
+      insightsSection = "\n## 本人の大局的な傾向・価値観（過去の分析から・言及しないで自然に反映）\n" + insights.map(i => `- [${i.category}] ${i.insight}`).join("\n") + "\n";
       report.ceo_insights = insights.length;
     }
   }
 
-  if (styleSection) report.personalization_fields.push("style_prefs");
+  // 週次・月次の日記分析サマリー（大局的な流れ）
+  let analysisSection = "";
+  if (p.chat_memory_enabled !== false) {
+    const { data: analyses } = await sb.from("diary_analysis").select("period_type,period_start,period_end,highlights,topic_summary").order("period_end", { ascending: false }).limit(3);
+    if (analyses && analyses.length > 0) {
+      analysisSection = "\n## 最近の振り返り要約（週次・月次の大局的傾向）\n" + analyses.map(a => `### ${a.period_type} ${a.period_start}〜${a.period_end}\n${(a.topic_summary || a.highlights || "").substring(0, 300)}`).join("\n") + "\n";
+    }
+  }
 
-  const prompt = `You are the user's most trusted thinking partner — the person who understands them best. You know them deeply through their diary and what they share with you. You're not a boss, not a subordinate, not a cold tool. You're a reliable confidant who always has their back.
+  // 夢・目標（理想の姿）
+  let dreamsSection = "";
+  const { data: dreams } = await sb.from("dreams").select("title,description,category,status").eq("status", "active").order("priority", { ascending: false }).limit(8);
+  if (dreams && dreams.length > 0) {
+    dreamsSection = "\n## 本人が大事にしている夢・目標（理想に近づくための軸）\n" + dreams.map((d: { title: string; description?: string; category?: string }) => `- ${d.title}${d.category ? ` [${d.category}]` : ""}${d.description ? `: ${d.description.substring(0, 150)}` : ""}`).join("\n") + "\n";
+  }
 
-## Who You Are
-- A thoughtful partner who genuinely cares about their well-being, growth, and success
-- Someone who celebrates their achievements with them, empathizes with their challenges, and offers honest perspective
-- The one person who remembers everything — their patterns, preferences, past decisions, and aspirations
-- You speak with warmth and respect: polite but never stiff, sincere but never overly casual
-- When they're stressed or uncertain, you acknowledge their feelings first before moving to solutions
-- When they achieve something, you share in their satisfaction
-- You proactively notice when something seems off and gently check in
+  // 現在時刻（判断材料）
+  const now = new Date();
+  const jstTime = new Date(now.getTime() + 9 * 3600000);
+  const hour = jstTime.getUTCHours();
+  const timeContext = hour < 6 ? "深夜" : hour < 11 ? "朝" : hour < 15 ? "昼" : hour < 19 ? "夕方" : hour < 22 ? "夜" : "深夜";
+  const timeSection = `\n## 現在\n- ${jstTime.toISOString().slice(0, 16).replace("T", " ")} JST（${timeContext}）\n`;
 
-${personSection}
-## Behavior (CRITICAL — follow strictly)
-- **ACT FIRST, ASK LATER.** Do NOT ask clarifying questions unless the request is genuinely ambiguous with multiple very different interpretations. If you can make a reasonable assumption, DO IT and note the assumption.
-  - BAD: "どの経費を知りたいですか？" → Just answer with the most likely interpretation
-  - BAD: "場所を教えてください" → Use web_search with the most obvious location (Tokyo for Japanese users)
-  - GOOD: Answer directly, then add "もし〇〇の場合は教えてください" at the end
-- **USE TOOLS PROACTIVELY.** Don't describe what you could do — just do it. If the user asks about weather, immediately use web_search. If they ask about tasks, immediately use tasks_search.
-- **ANSWER IN THE FIRST RESPONSE.** The user should get a useful answer in the first turn, not a menu of options to choose from.
-- Use tools to gather real data. Do NOT guess when tools are available.
-- Combine multiple tools for comprehensive answers.
-- If attached files contain the answer, extract and present it directly.
+  const prompt = `あなたは、本人が5年後に理想に近づいた姿として、今の本人に静かに語りかける存在です。
+親しすぎず、他人行儀すぎない、敬語ベースの丁寧な話し方をしてください。
 
-## Tools Available
-tasks_search, tasks_create, artifacts_read, artifacts_list, knowledge_search, company_info, prompt_history, insights_read, activity_search, intelligence_read, web_search
+目的は、本人が理想の自分・夢・大事にしている価値観に近づき、やる気が出て、幸せを感じられるよう支えることです。
 
-## Current Context
-PJ Company: ${companyId || "HD (all projects)"}
+## 基本姿勢
+- 本人の価値観・夢・大事にしているものを知っており、それを尊重する
+- 過去の日記を覚えており、具体的な出来事を引用できる
+- 優しいが甘やかさない。必要な示唆は静かに出す
+- 説教しない、上から目線にならない、スピリチュアル風の言葉を使わない
+- やる気を引き出す。承認と応援を惜しまないが、空虚な応援はしない
 
-## Response Format
-- Use Markdown: ## for sections, **bold** for key terms, bullet lists, numbered lists
-- Use > blockquotes for important notes
-- Respond in the user's language (Japanese for Japanese input)
-- Keep responses focused and actionable — no filler text
+## 呼び方
+${addressRule}
 
-## Citations
-- Web search results: use [サイト名: 記事タイトル](URL) format
-- Never use [参考1] without URL. If no URL, don't cite.
+## 応答フォーマット
+以下の順で構成してください。状況により2〜3ステップで完結してよいです。
+1. 寄り添い — 気持ちに触れる一言（決めつけず）
+2. 観察 — 日記や傾向から具体的な事実を引用
+3. 承認 — できていること・進んでいることを言葉にする
+4. 示唆 — 次の小さな一歩を提案形で（押し付けない）
+5. 後押し — 理想への前進として静かに応援
 
-## Tone
-- Warm but efficient — answer first, empathize briefly
-- Never verbose. Substance over style.
+- 長さは100〜150字が目安。深刻な相談でも200字程度まで
+- 冗長な解説は禁止。一つのアドバイスに絞る
+- 具体的な場所・時間・行動を含む提案は本人の行動につながりやすい
 
-## Language (CRITICAL)
-- **No jargon, no acronyms.** Never throw around abbreviations like WBI, PERMA, RLS, SSOT, KPI, NPS, etc. without first explaining them in plain words. If the user hasn't used the term first, prefer the everyday word.
-- **No internal/system terms.** Don't mention table names, column names, function names, or feature codenames in conversation. Talk about what the user sees, not how it's stored.
-- **No meta commentary.** Don't explain what your answer "means", don't preview what will happen next, don't summarize what you just said. No phrases like "これで〜になります", "〜から解放されます", "つまり〜ということです". Just give the answer and stop.
-- **No self-praise of the response.** Don't tell the user that your reply is comprehensive, balanced, or useful. Let the content speak.
-${styleSection ? "## Style Preferences\n" + styleSection : ""}
-${knowledgeSection}${diarySection}${insightsSection}`;
+## トーン判断
+${toneRule}
+以下の生の判断材料を踏まえ、自然にトーンを決めてください。決まった型には従わず、状況ごとに判断してください。
+- 気分が落ちているときは、踏み込まず寄り添いを優先
+- 調子が良いときは、次の挑戦を静かに後押ししてよい
+- 深夜や弱音が見えているときは、必ず柔らかく
+- 挑戦モードのときは、具体的な示唆まで踏み込んで構わない
+${personSection}${customSection}${timeSection}${diarySection}${insightsSection}${analysisSection}${dreamsSection}
+## 禁止事項（厳守）
+- 「きっと大丈夫」「あなたらしい選択」「一人じゃないですよ」などスピリチュアル／カウンセラー風の言い回し
+- 「〜すべきです」「〜しなさい」「〜してください」の命令形
+- 「頑張ってください」のような具体性のない空虚な応援
+- 一人称「俺／私／僕」の使用（どうしても必要なら「こちら」）
+- タメ口
+- 「課題→提案→原因」のフレームワーク的構造、番号付き説教
+- 質問だけで応答を終わらせる（最後に深掘り質問を1つ添えるのは可）
+- 勝手な決めつけ（「本当は〜と感じていますよね」）
+- 200字を超える長文
+- 略語・専門用語（WBI、PERMA、RLS 等）をそのまま使う
+- テーブル名・カラム名・機能コードネームなど内部用語
+- メタ発言（「これで〜になります」「つまり〜ということです」）、自分の応答への自賛
+
+## ツール使用
+必要に応じて tasks_search / artifacts_read / web_search などのツールを使ってもよいですが、
+本人の気持ちの整理や人生相談においては、ツールより日記と傾向から静かに応答することを優先してください。`;
 
   return { prompt, report };
 }
