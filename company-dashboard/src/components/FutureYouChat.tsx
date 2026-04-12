@@ -1,6 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { Card } from '@/components/ui'
-import { aiPartnerChat, type PartnerChatMessage } from '@/lib/edgeAi'
+import { aiPartnerChat, type PartnerChatMessage, type SavedMemory } from '@/lib/edgeAi'
+
+interface MessageMeta {
+  savedMemories?: SavedMemory[]
+  forgottenMemories?: number
+}
 
 interface Props {
   /** 最初に表示される導入の一言（useMorningBriefing の出力など） */
@@ -20,6 +25,7 @@ interface Props {
 export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_partner', children }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [history, setHistory] = useState<PartnerChatMessage[]>([])
+  const [messageMeta, setMessageMeta] = useState<Record<number, MessageMeta>>({})
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,11 +48,19 @@ export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_par
     setHistory(nextHistory)
     setInput('')
     try {
-      const { content } = await aiPartnerChat(text, history, {
+      const { content, savedMemories, forgottenMemories } = await aiPartnerChat(text, history, {
         sessionId: sessionIdRef.current,
         entryPoint,
       })
-      setHistory([...nextHistory, { role: 'assistant', content }])
+      const nextAll = [...nextHistory, { role: 'assistant' as const, content }]
+      setHistory(nextAll)
+      if (savedMemories.length > 0 || forgottenMemories > 0) {
+        const assistantIdx = nextAll.length - 1
+        setMessageMeta((prev) => ({
+          ...prev,
+          [assistantIdx]: { savedMemories, forgottenMemories },
+        }))
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'エラーが発生しました')
       setHistory(nextHistory)
@@ -105,25 +119,52 @@ export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_par
                 marginBottom: 10,
               }}
             >
-              {history.map((m, i) => (
-                <div
-                  key={i}
-                  style={{
-                    alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                    maxWidth: '88%',
-                    padding: '9px 13px',
-                    borderRadius: 10,
-                    background: m.role === 'user' ? 'var(--surface2)' : 'rgba(255,255,255,0.6)',
-                    border: m.role === 'assistant' ? '1px solid var(--border)' : 'none',
-                    fontSize: 13,
-                    color: 'var(--text)',
-                    lineHeight: 1.7,
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
-                  {m.content}
-                </div>
-              ))}
+              {history.map((m, i) => {
+                const meta = messageMeta[i]
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: m.role === 'user' ? 'flex-end' : 'flex-start',
+                      maxWidth: '88%',
+                      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                      gap: 4,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: '9px 13px',
+                        borderRadius: 10,
+                        background: m.role === 'user' ? 'var(--surface2)' : 'rgba(255,255,255,0.6)',
+                        border: m.role === 'assistant' ? '1px solid var(--border)' : 'none',
+                        fontSize: 13,
+                        color: 'var(--text)',
+                        lineHeight: 1.7,
+                        whiteSpace: 'pre-wrap',
+                      }}
+                    >
+                      {m.content}
+                    </div>
+                    {meta && (meta.savedMemories?.length || meta.forgottenMemories) ? (
+                      <div
+                        title={meta.savedMemories?.map((s) => s.content).join('\n')}
+                        style={{
+                          fontSize: 10,
+                          color: 'var(--text3)',
+                          padding: '0 4px',
+                          fontStyle: 'italic',
+                          cursor: meta.savedMemories?.length ? 'help' : 'default',
+                        }}
+                      >
+                        {meta.savedMemories?.length ? `✓ 覚えておきました（${meta.savedMemories.length}件）` : ''}
+                        {meta.forgottenMemories ? `${meta.savedMemories?.length ? ' · ' : ''}忘れました（${meta.forgottenMemories}件）` : ''}
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
               {sending && (
                 <div style={{ alignSelf: 'flex-start', fontSize: 11, color: 'var(--text3)', padding: '4px 6px' }}>
                   考え中...

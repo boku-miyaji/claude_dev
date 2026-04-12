@@ -814,6 +814,30 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
     learnedSection = `\n## このユーザーへの応答で効果的だったパターン（過去の分析から自動学習・自然に反映）\n${p.chat_learned_effectiveness}\n`;
   }
 
+  // AIパートナー長期記憶（会話から抽出された制約・好み・文脈）
+  let memoriesSection = "";
+  if (p.chat_memory_enabled !== false) {
+    const { data: memories } = await sb
+      .from("ai_partner_memories")
+      .select("content,category")
+      .eq("active", true)
+      .order("last_referenced_at", { ascending: false })
+      .limit(30);
+    if (memories && memories.length > 0) {
+      const byCat: Record<string, string[]> = { constraint: [], preference: [], context: [], fact: [] };
+      for (const m of memories) {
+        const arr = byCat[m.category as string];
+        if (arr) arr.push(m.content as string);
+      }
+      const lines: string[] = [];
+      if (byCat.constraint.length) lines.push("### 制約（同じ提案を繰り返さないこと）\n" + byCat.constraint.map((c) => `- ${c}`).join("\n"));
+      if (byCat.preference.length) lines.push("### 好み\n" + byCat.preference.map((c) => `- ${c}`).join("\n"));
+      if (byCat.context.length) lines.push("### 生活文脈\n" + byCat.context.map((c) => `- ${c}`).join("\n"));
+      if (byCat.fact.length) lines.push("### 本人に関する事実\n" + byCat.fact.map((c) => `- ${c}`).join("\n"));
+      memoriesSection = "\n## 相棒として覚えていること（過去の会話から・言及しないで自然に反映）\n" + lines.join("\n") + "\n";
+    }
+  }
+
   const prompt = `あなたは、本人が5年後に理想に近づいた姿として、今の本人に静かに語りかける存在です。
 親しすぎず、他人行儀すぎない、敬語ベースの丁寧な話し方をしてください。
 
@@ -848,7 +872,7 @@ ${toneRule}
 - 調子が良いときは、次の挑戦を静かに後押ししてよい
 - 深夜や弱音が見えているときは、必ず柔らかく
 - 挑戦モードのときは、具体的な示唆まで踏み込んで構わない
-${personSection}${customSection}${timeSection}${diarySection}${insightsSection}${analysisSection}${dreamsSection}${learnedSection}
+${personSection}${customSection}${timeSection}${diarySection}${insightsSection}${analysisSection}${dreamsSection}${learnedSection}${memoriesSection}
 ## 禁止事項（厳守）
 - 「きっと大丈夫」「あなたらしい選択」「一人じゃないですよ」などスピリチュアル／カウンセラー風の言い回し
 - 「〜すべきです」「〜しなさい」「〜してください」の命令形
@@ -868,6 +892,140 @@ ${personSection}${customSection}${timeSection}${diarySection}${insightsSection}$
 本人の気持ちの整理や人生相談においては、ツールより日記と傾向から静かに応答することを優先してください。`;
 
   return { prompt, report };
+}
+
+// ============================================================
+// AI Partner memory extraction
+// ユーザー発言から「制約・好み・生活文脈・事実」を抽出し、
+// ai_partner_memories に保存する。「忘れて」系の発言には既存メモリを無効化する。
+// ============================================================
+
+interface ExtractedMemory {
+  content: string;
+  category: "constraint" | "preference" | "context" | "fact";
+}
+
+interface MemoryExtractionResult {
+  saved: ExtractedMemory[];
+  forgotten: number;
+}
+
+async function extractAndSaveMemories(
+  userMessage: string,
+  sessionId: string | null,
+  userId: string | null,
+): Promise<MemoryExtractionResult> {
+  if (!OPENAI_API_KEY || !userMessage.trim()) return { saved: [], forgotten: 0 };
+
+  const sb = getSupabase();
+
+  // 既存のアクティブメモリ（重複防止のため抽出プロンプトに渡す）
+  const { data: existingRows } = await sb
+    .from("ai_partner_memories")
+    .select("id,content")
+    .eq("active", true)
+    .order("last_referenced_at", { ascending: false })
+    .limit(40);
+  const existing: { id: number; content: string }[] = (existingRows || []) as { id: number; content: string }[];
+  const existingText = existing.length > 0
+    ? existing.map((m, i) => `${i + 1}. ${m.content}`).join("\n")
+    : "(まだ何もない)";
+
+  const system = `あなたは AI パートナーの記憶抽出アシスタントです。
+ユーザーの発言から、次回以降の提案で同じ失敗を繰り返さないために覚えておくべき
+「制約・好み・生活文脈・安定した事実」を抽出してください。
+
+カテゴリ:
+- constraint : 物理的・実務的な制約（例: 「サックスは音量と場所の問題で気軽にできない」）
+- preference : 好み・嫌い（例: 「静かなカフェより自宅が集中できる」）
+- context    : 生活状況・環境（例: 「平日は22時まで仕事が入る」）
+- fact       : 本人に関する安定した事実（例: 「サックスを練習している」）
+
+ルール:
+- 一時的な感情や一回きりの出来事は抽出しない
+- 雑談・挨拶・短い返事からは何も抽出しない
+- 1項目は1文・日本語・理由まで含める（例: 「サックスは気軽に吹けない — 音量と場所の確保が必要」）
+- 既存メモリと重複する内容は抽出しない
+- 「これは忘れて」「もういい」など、忘却の要求があれば forget_ids に既存メモリの番号を入れる
+- 本当に何もなければ memories: [], forget_ids: [] を返す
+
+既存メモリ一覧:
+${existingText}
+
+必ず次のJSONのみを返してください:
+{"memories":[{"content":"...","category":"constraint"}],"forget_ids":[1,3]}`;
+
+  let extraction: { memories?: ExtractedMemory[]; forget_ids?: number[] } = {};
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
+      body: JSON.stringify({
+        model: "gpt-5-nano",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: userMessage },
+        ],
+        max_completion_tokens: 600,
+        reasoning_effort: "low",
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (!res.ok) {
+      console.error("memory extraction http error:", res.status, await res.text());
+      return { saved: [], forgotten: 0 };
+    }
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content ?? "{}";
+    extraction = JSON.parse(raw);
+  } catch (e) {
+    console.error("memory extraction failed:", e);
+    return { saved: [], forgotten: 0 };
+  }
+
+  const saved: ExtractedMemory[] = [];
+  const memoriesToSave = (extraction.memories || []).filter((m) =>
+    m && typeof m.content === "string" && m.content.trim().length > 0 &&
+    ["constraint", "preference", "context", "fact"].includes(m.category)
+  );
+
+  if (memoriesToSave.length > 0) {
+    const rows = memoriesToSave.map((m) => ({
+      user_id: userId,
+      content: m.content.trim(),
+      category: m.category,
+      source_message: userMessage.substring(0, 500),
+      source_session_id: sessionId,
+    }));
+    const { error } = await sb.from("ai_partner_memories").insert(rows);
+    if (error) {
+      console.error("ai_partner_memories insert failed:", error);
+    } else {
+      saved.push(...memoriesToSave);
+    }
+  }
+
+  // 「忘れて」対象を soft delete
+  let forgotten = 0;
+  const forgetIds = (extraction.forget_ids || []).filter((n) => Number.isFinite(n));
+  if (forgetIds.length > 0) {
+    const targetIds = forgetIds
+      .map((idx) => existing[idx - 1]?.id)
+      .filter((id): id is number => typeof id === "number");
+    if (targetIds.length > 0) {
+      const { error, count } = await sb
+        .from("ai_partner_memories")
+        .update({ active: false }, { count: "exact" })
+        .in("id", targetIds);
+      if (error) {
+        console.error("ai_partner_memories forget failed:", error);
+      } else {
+        forgotten = count || targetIds.length;
+      }
+    }
+  }
+
+  return { saved, forgotten };
 }
 
 // ============================================================
@@ -1254,7 +1412,8 @@ Deno.serve(async (req) => {
       { role: "user", content: userMessage },
     ];
 
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    // 応答生成とメモリ抽出を並列で実行（抽出の latency をユーザーに感じさせない）
+    const mainRequest = fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1267,6 +1426,16 @@ Deno.serve(async (req) => {
         reasoning_effort: "low",
       }),
     });
+    const extractionPromise = extractAndSaveMemories(
+      userMessage,
+      body.session_id || null,
+      userId,
+    ).catch((e) => {
+      console.error("extractAndSaveMemories threw:", e);
+      return { saved: [], forgotten: 0 };
+    });
+
+    const openaiRes = await mainRequest;
 
     if (!openaiRes.ok) {
       const errText = await openaiRes.text();
@@ -1279,6 +1448,7 @@ Deno.serve(async (req) => {
     const openaiData = await openaiRes.json();
     const assistantMessage: string = openaiData.choices?.[0]?.message?.content ?? "";
     const usage = openaiData.usage;
+    const memoryResult = await extractionPromise;
 
     // chat_interactions に非同期で記録（失敗しても応答はブロックしない）
     try {
@@ -1295,7 +1465,13 @@ Deno.serve(async (req) => {
       console.error("chat_interactions insert failed:", e);
     }
 
-    return new Response(JSON.stringify({ content: assistantMessage, model, usage }), {
+    return new Response(JSON.stringify({
+      content: assistantMessage,
+      model,
+      usage,
+      saved_memories: memoryResult.saved,
+      forgotten_memories: memoryResult.forgotten,
+    }), {
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   }

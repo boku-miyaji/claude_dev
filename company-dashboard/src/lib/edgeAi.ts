@@ -81,16 +81,29 @@ export interface PartnerChatMessage {
   content: string
 }
 
+export interface SavedMemory {
+  content: string
+  category: 'constraint' | 'preference' | 'context' | 'fact'
+}
+
+export interface PartnerChatResult {
+  content: string
+  model: string
+  savedMemories: SavedMemory[]
+  forgottenMemories: number
+}
+
 /**
  * Call the ai-agent Edge Function in partner_chat mode.
  * 未来のあなた v4 チャット専用。v4 のシステムプロンプト（日記・大局的傾向・夢）を
  * サーバー側で自動注入して応答する。chat_interactions に自動記録される。
+ * レスポンスには LLM が抽出した新しいメモリ（saved_memories）も含まれる。
  */
 export async function aiPartnerChat(
   message: string,
   history: PartnerChatMessage[] = [],
   options: { sessionId?: string; entryPoint?: string } = {},
-): Promise<{ content: string; model: string }> {
+): Promise<PartnerChatResult> {
   const { data: { session } } = await supabase.auth.getSession()
   const token = session?.access_token || ''
 
@@ -119,5 +132,10 @@ export async function aiPartnerChat(
   }
 
   const data = await res.json()
-  return { content: data.content || '', model: data.model || 'unknown' }
+  return {
+    content: data.content || '',
+    model: data.model || 'unknown',
+    savedMemories: Array.isArray(data.saved_memories) ? data.saved_memories : [],
+    forgottenMemories: typeof data.forgotten_memories === 'number' ? data.forgotten_memories : 0,
+  }
 }
