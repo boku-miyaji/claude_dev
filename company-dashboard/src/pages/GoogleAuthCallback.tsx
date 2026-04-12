@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { completeCalendarAuth } from '@/lib/calendarApi'
+import { supabase } from '@/lib/supabase'
+import { completeCalendarAuth, invalidateCalendarAuthCache } from '@/lib/calendarApi'
 
 /**
  * Google OAuth callback page.
@@ -27,14 +28,37 @@ export function GoogleAuthCallback() {
       return
     }
 
-    completeCalendarAuth(code).then((result) => {
-      if (result.ok) {
-        // Clear the URL params and redirect to calendar
-        navigate('/calendar', { replace: true })
-      } else {
-        setError(result.error || 'Failed to complete authentication')
+    let completed = false
+
+    function doComplete() {
+      if (completed) return
+      completed = true
+      completeCalendarAuth(code!).then((result) => {
+        if (result.ok) {
+          invalidateCalendarAuthCache()
+          navigate('/calendar', { replace: true })
+        } else {
+          setError(result.error || 'Failed to complete authentication')
+        }
+      })
+    }
+
+    // Wait for Supabase session to be restored after page redirect
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) return
+      subscription.unsubscribe()
+      doComplete()
+    })
+
+    // Also try immediately in case session is already restored
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        subscription.unsubscribe()
+        doComplete()
       }
     })
+
+    return () => { subscription.unsubscribe() }
   }, [navigate])
 
   if (error) {
