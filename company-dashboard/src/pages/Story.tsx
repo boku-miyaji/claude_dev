@@ -258,12 +258,43 @@ interface EmotionEntry {
   created_at: string
 }
 
+interface DiaryRow {
+  entry_date: string
+  body: string | null
+  ai_summary: string | null
+  calendar_events: Array<{ summary?: string; start?: string }> | null
+}
+
 function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
-  // Personal baseline (all-period average)
-  const baseline = useMemo(() => {
+  const [diaryByDate, setDiaryByDate] = useState<Record<string, DiaryRow>>({})
+  const [selectedCell, setSelectedCell] = useState<{ dow: number; slot: number } | null>(null)
+
+  // Personal baseline + stddev (for adaptive color scaling)
+  const { baseline, stddev } = useMemo(() => {
     const valid = entries.filter(e => e.wbi_score > 0)
-    if (valid.length === 0) return 5
-    return valid.reduce((s, e) => s + e.wbi_score, 0) / valid.length
+    if (valid.length === 0) return { baseline: 5, stddev: 1 }
+    const avg = valid.reduce((s, e) => s + e.wbi_score, 0) / valid.length
+    const variance = valid.reduce((s, e) => s + (e.wbi_score - avg) ** 2, 0) / valid.length
+    const sd = Math.max(0.3, Math.sqrt(variance))
+    return { baseline: avg, stddev: sd }
+  }, [entries])
+
+  // Fetch diary entries for all dates in emotion range (lazy, once on mount)
+  useEffect(() => {
+    if (entries.length === 0) return
+    const dates = Array.from(new Set(entries.map(e => e.created_at.substring(0, 10)))).sort()
+    const earliest = dates[0]
+    const latest = dates[dates.length - 1]
+    supabase
+      .from('diary_entries')
+      .select('entry_date,body,ai_summary,calendar_events')
+      .gte('entry_date', earliest)
+      .lte('entry_date', latest)
+      .then(({ data }) => {
+        const map: Record<string, DiaryRow> = {}
+        ;(data || []).forEach((r: DiaryRow) => { map[r.entry_date] = r })
+        setDiaryByDate(map)
+      })
   }, [entries])
 
   // ============================================================
@@ -290,17 +321,16 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
     return buckets.map(row => row.map(b => b.count > 0 ? b.sum / b.count : null))
   }, [entries])
 
-  // Deviation-based color: negative (red) vs positive (green) from baseline
+  // Deviation-based color using stddev-adaptive threshold
+  // ±1σ → intensity ~0.67, ±1.5σ → saturates
   const colorForDev = (avg: number | null) => {
     if (avg === null) return { bg: 'var(--surface2)', text: 'var(--text3)' }
-    const dev = avg - baseline // -5 to +5 typically
-    const intensity = Math.min(1, Math.abs(dev) / 1.5) // saturate at ±1.5
+    const dev = avg - baseline
+    const intensity = Math.min(1, Math.abs(dev) / (stddev * 1.5))
     if (dev >= 0) {
-      // Green: higher than personal average
-      return { bg: `rgba(34, 197, 94, ${0.15 + intensity * 0.45})`, text: '#fff' }
+      return { bg: `rgba(34, 197, 94, ${0.12 + intensity * 0.5})`, text: '#fff' }
     } else {
-      // Red: lower than personal average
-      return { bg: `rgba(239, 68, 68, ${0.15 + intensity * 0.45})`, text: '#fff' }
+      return { bg: `rgba(239, 68, 68, ${0.12 + intensity * 0.5})`, text: '#fff' }
     }
   }
 
@@ -393,9 +423,11 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
               {row.map((avg, si) => {
                 const c = colorForDev(avg)
                 const dev = avg !== null ? avg - baseline : 0
+                const clickable = avg !== null
                 return (
                   <div key={si}
-                    title={avg !== null ? `${DOW_LABELS[di]} ${SLOT_LABELS[si]}: ${avg.toFixed(1)} (${dev >= 0 ? '+' : ''}${dev.toFixed(1)})` : 'データなし'}
+                    title={avg !== null ? `${DOW_LABELS[di]} ${SLOT_LABELS[si]}: ${avg.toFixed(1)} (${dev >= 0 ? '+' : ''}${dev.toFixed(1)}) — クリックで詳細` : 'データなし'}
+                    onClick={() => { if (clickable) setSelectedCell({ dow: di, slot: si }) }}
                     style={{
                       background: c.bg,
                       borderRadius: 4,
@@ -407,7 +439,11 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
                       fontWeight: 600,
                       color: avg !== null ? c.text : 'var(--text3)',
                       fontFamily: 'var(--mono)',
-                    }}>
+                      cursor: clickable ? 'pointer' : 'default',
+                      transition: 'transform .1s',
+                    }}
+                    onMouseEnter={e => { if (clickable) e.currentTarget.style.transform = 'scale(1.05)' }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}>
                     {avg !== null ? (dev >= 0 ? '+' : '') + dev.toFixed(1) : '–'}
                   </div>
                 )
