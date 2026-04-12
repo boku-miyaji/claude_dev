@@ -60,22 +60,40 @@ export async function recordImpressions(newsIds: string[]): Promise<void> {
   }
 }
 
-/** Load saved news items from news_items table (直近3日分).
+/** Load saved news items from news_items table.
  *
- * 過去は「今日収集されたもの」だけに絞っていたが、定期収集が
- * 1日に動かなかった日は空になり「ニュースはまだありません」と
- * 表示されてしまうため、直近3日分を表示する。
+ * ソート順は published_date 降順が主、collected_at 降順が補助。
+ * これにより一番「新しい」ニュースが必ず最上位に来る。
+ * collected_at 順だと、古い記事を再取得したときに最上位に来てしまい
+ * 一覧が古く見える問題があった。
+ *
+ * URL / title の重複は取得後に排除する。
  */
 export async function loadNews(limit = 10): Promise<NewsItem[]> {
   const threshold = new Date()
-  threshold.setDate(threshold.getDate() - 3)
+  threshold.setDate(threshold.getDate() - 7)
   threshold.setHours(0, 0, 0, 0)
+
   const { data } = await supabase
     .from('news_items')
     .select('id,title,summary,url,source,source_type,topic,published_date,collected_at')
     .gte('collected_at', threshold.toISOString())
+    .order('published_date', { ascending: false, nullsFirst: false })
     .order('collected_at', { ascending: false })
-    .limit(limit)
-  return (data as NewsItem[]) || []
+    .limit(limit * 3) // dedupe 後に limit 件残るよう多めに取る
+
+  const rows = (data as NewsItem[]) || []
+
+  // URL と title で重複排除（published_date が新しい方を残す）
+  const seen = new Set<string>()
+  const deduped: NewsItem[] = []
+  for (const item of rows) {
+    const key = item.url || item.title
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    deduped.push(item)
+    if (deduped.length >= limit) break
+  }
+  return deduped
 }
 
