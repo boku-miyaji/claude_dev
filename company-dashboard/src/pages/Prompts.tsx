@@ -209,9 +209,7 @@ export function Prompts() {
                           <div style={{ padding: '8px 0 4px 0' }}>
                             {!sessPrompts ? (
                               <div style={{ padding: '8px 14px', fontSize: 12, color: 'var(--text3)' }}>Loading...</div>
-                            ) : sessPrompts.length === 0 ? (
-                              <div style={{ padding: '8px 14px', fontSize: 12, color: 'var(--text3)' }}>No prompts found</div>
-                            ) : (
+                            ) : sessPrompts.length === 0 ? null : (
                               <div style={{ padding: '0 14px' }}>
                                 {sessPrompts.map(p => <PromptRow key={p.id} p={p} />)}
                               </div>
