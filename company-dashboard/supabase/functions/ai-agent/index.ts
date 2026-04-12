@@ -265,12 +265,17 @@ const TOOLS: ToolDef[] = [
   },
   {
     name: "web_search",
-    description: "Search the web for latest information, documentation, or news.",
+    description: "Search the web for latest information, documentation, or news. Use time_range when searching for recent/fresh news to avoid stale results.",
     input_schema: {
       type: "object",
       properties: {
         query: { type: "string", description: "Search query" },
         max_results: { type: "integer", default: 5 },
+        time_range: {
+          type: "string",
+          enum: ["day", "week", "month", "year"],
+          description: "Filter results to a recency window. 'day' = last 24h, 'week' = last 7 days, 'month' = last 30 days, 'year' = last 365 days. Omit for no time filter. Use this when you want fresh news.",
+        },
       },
       required: ["query"],
     },
@@ -474,8 +479,12 @@ ${results.map((r, i) => `[${i}] ${r.entry_date}: ${r.body?.substring(0, 150)}`).
     case "web_search": {
       const q = encodeURIComponent(input.query as string);
       const maxResults = (input.max_results as number) || 5;
+      // DuckDuckGo の時間範囲パラメータ df=d/w/m/y（1日/1週/1月/1年）
+      const timeMap: Record<string, string> = { day: "d", week: "w", month: "m", year: "y" };
+      const tr = input.time_range as string | undefined;
+      const df = tr && timeMap[tr] ? `&df=${timeMap[tr]}` : "";
       // Use DuckDuckGo HTML search (no API key needed, safe HTTP fetch)
-      const res = await fetch(`https://html.duckduckgo.com/html/?q=${q}`, {
+      const res = await fetch(`https://html.duckduckgo.com/html/?q=${q}${df}`, {
         headers: { "User-Agent": "Mozilla/5.0 (compatible; DashboardAgent/1.0)" },
       });
       const html = await res.text();
