@@ -68,6 +68,9 @@ tasks*
 # company - local repo map (server-specific, auto-generated)
 .company/repo-map.md
 
+# company - design mockups (壁打ち用、管理不要)
+.company/design/
+
 # secrets & tokens (NEVER commit)
 .config/google/credentials.json
 token.json

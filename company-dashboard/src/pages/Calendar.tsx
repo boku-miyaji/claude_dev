@@ -685,6 +685,7 @@ export function Calendar() {
     const { data } = await supabase
       .from('tasks')
       .select('id,title,status,priority,due_date,scheduled_at,estimated_minutes,completed_at')
+      .eq('type', 'task')
       .or(`and(due_date.gte.${startStr},due_date.lte.${endStr}),and(scheduled_at.gte.${startIso},scheduled_at.lte.${endIso})`)
       .order('sort_order', { ascending: true })
     setTasks((data || []) as Task[])
