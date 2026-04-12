@@ -26,25 +26,6 @@ export function Story() {
     }))
   }, [emotionAnalyses])
 
-  // Simple sparkline renderer
-  const renderSparkline = (data: number[], color: string, height = 48) => {
-    if (data.length < 2) return null
-    const min = Math.min(...data)
-    const max = Math.max(...data)
-    const range = max - min || 1
-    const w = 100
-    const points = data.map((v, i) => {
-      const x = (i / (data.length - 1)) * w
-      const y = height - ((v - min) / range) * (height - 4) - 2
-      return `${x},${y}`
-    }).join(' ')
-    return (
-      <svg viewBox={`0 0 ${w} ${height}`} style={{ width: '100%', height }} preserveAspectRatio="none">
-        <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    )
-  }
-
   const isLoading = loading.emotions || arcLoading || themeLoading
 
   return (
@@ -121,81 +102,9 @@ export function Story() {
         </div>
       )}
 
-      {/* Emotion Arc (WBI Timeline) */}
-      {wbiTimeline.length > 2 && (
-        <div className="section">
-          <div className="section-title">感情の軌跡（WBI）</div>
-          <Card>
-            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>
-              日記から算出したウェルビーイング指数（0〜10）。高いほど心の状態が良い。
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              {renderSparkline(wbiTimeline.map((d) => d.wbi), 'var(--accent)', 64)}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
-              <span>{wbiTimeline[0].date}</span>
-              <span>{wbiTimeline[wbiTimeline.length - 1].date}</span>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Valence Timeline */}
-      {wbiTimeline.length > 2 && (
-        <div className="section">
-          <div className="section-title">感情価の推移</div>
-          <Card>
-            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>
-              日記の感情がポジティブかネガティブか。上に行くほどポジティブ。
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              {renderSparkline(wbiTimeline.map((d) => d.valence), 'var(--green)', 48)}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)' }}>
-              <span>ネガティブ ←</span>
-              <span>→ ポジティブ</span>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Long-term Trend (#49) */}
-      {wbiTimeline.length > 10 && (
-        <div className="section">
-          <div className="section-title">長期トレンド</div>
-          <Card>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, textAlign: 'center', marginBottom: 12 }}>
-              {(() => {
-                const wbis = wbiTimeline.map((d) => d.wbi).filter((w) => w > 0)
-                const avg = wbis.length > 0 ? wbis.reduce((a, b) => a + b, 0) / wbis.length : 0
-                const recent = wbis.slice(-7)
-                const recentAvg = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0
-                const trend = recentAvg - avg
-                return (
-                  <>
-                    <div>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--accent)' }}>{avg.toFixed(1)}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text3)' }}>全期間 WBI</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: recentAvg > avg ? 'var(--green)' : 'var(--red)' }}>{recentAvg.toFixed(1)}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text3)' }}>直近7日</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: trend > 0 ? 'var(--green)' : trend < -0.5 ? 'var(--red)' : 'var(--text3)' }}>
-                        {trend > 0 ? '+' : ''}{trend.toFixed(1)}
-                      </div>
-                      <div style={{ fontSize: 10, color: 'var(--text3)' }}>変化</div>
-                    </div>
-                  </>
-                )
-              })()}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text3)' }}>
-              {wbiTimeline.length}件のデータ（{wbiTimeline[0]?.date} 〜 {wbiTimeline[wbiTimeline.length - 1]?.date}）
-            </div>
-          </Card>
-        </div>
+      {/* Emotion Insights: 3 cards replacing the old line charts */}
+      {emotionAnalyses.length > 2 && (
+        <EmotionInsights entries={emotionAnalyses} />
       )}
 
       {/* Growth Story (#68 + #50) */}
@@ -335,3 +244,267 @@ function GrowthStorySection({ diaryCount }: { diaryCount: number }) {
     </div>
   )
 }
+
+// ============================================================
+// Emotion Insights — 3 focused cards
+// 1. 曜日×時間帯ヒートマップ（個人平均からの偏差）
+// 2. 7日移動平均 vs 90日ベースライン
+// 3. 今週の最低/最高点 + 当日コンテキスト
+// ============================================================
+
+interface EmotionEntry {
+  wbi_score: number
+  valence: number
+  created_at: string
+}
+
+function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
+  // Personal baseline (all-period average)
+  const baseline = useMemo(() => {
+    const valid = entries.filter(e => e.wbi_score > 0)
+    if (valid.length === 0) return 5
+    return valid.reduce((s, e) => s + e.wbi_score, 0) / valid.length
+  }, [entries])
+
+  // ============================================================
+  // Card 1: 曜日 × 時間帯 ヒートマップ（偏差）
+  // ============================================================
+  const heatmap = useMemo(() => {
+    // [day-of-week 0=Sun..6=Sat][slot 0=朝/1=昼/2=夕/3=夜]
+    const buckets: { sum: number; count: number }[][] = Array.from({ length: 7 }, () =>
+      Array.from({ length: 4 }, () => ({ sum: 0, count: 0 }))
+    )
+    entries.forEach(e => {
+      if (e.wbi_score <= 0) return
+      const d = new Date(e.created_at)
+      const dow = d.getDay()
+      const h = d.getHours()
+      let slot = 0
+      if (h >= 5 && h < 11) slot = 0       // 朝 5-11
+      else if (h >= 11 && h < 16) slot = 1 // 昼 11-16
+      else if (h >= 16 && h < 20) slot = 2 // 夕 16-20
+      else slot = 3                         // 夜 20-5
+      buckets[dow][slot].sum += e.wbi_score
+      buckets[dow][slot].count += 1
+    })
+    return buckets.map(row => row.map(b => b.count > 0 ? b.sum / b.count : null))
+  }, [entries])
+
+  // Deviation-based color: negative (red) vs positive (green) from baseline
+  const colorForDev = (avg: number | null) => {
+    if (avg === null) return { bg: 'var(--surface2)', text: 'var(--text3)' }
+    const dev = avg - baseline // -5 to +5 typically
+    const intensity = Math.min(1, Math.abs(dev) / 1.5) // saturate at ±1.5
+    if (dev >= 0) {
+      // Green: higher than personal average
+      return { bg: `rgba(34, 197, 94, ${0.15 + intensity * 0.45})`, text: '#fff' }
+    } else {
+      // Red: lower than personal average
+      return { bg: `rgba(239, 68, 68, ${0.15 + intensity * 0.45})`, text: '#fff' }
+    }
+  }
+
+  const DOW_LABELS = ['日', '月', '火', '水', '木', '金', '土']
+  const SLOT_LABELS = ['朝', '昼', '夕', '夜']
+
+  // ============================================================
+  // Card 2: 7日移動平均 vs 90日ベースライン
+  // ============================================================
+  const trendData = useMemo(() => {
+    // Aggregate by day
+    const byDay: Record<string, { sum: number; count: number }> = {}
+    entries.forEach(e => {
+      if (e.wbi_score <= 0) return
+      const day = e.created_at.substring(0, 10)
+      if (!byDay[day]) byDay[day] = { sum: 0, count: 0 }
+      byDay[day].sum += e.wbi_score
+      byDay[day].count += 1
+    })
+    const dayAverages = Object.entries(byDay)
+      .map(([day, { sum, count }]) => ({ day, wbi: sum / count }))
+      .sort((a, b) => a.day.localeCompare(b.day))
+
+    // 7-day rolling average
+    const rolling = dayAverages.map((_, i) => {
+      const window = dayAverages.slice(Math.max(0, i - 6), i + 1)
+      const avg = window.reduce((s, d) => s + d.wbi, 0) / window.length
+      return { day: dayAverages[i].day, wbi: dayAverages[i].wbi, avg7: avg }
+    })
+    return rolling
+  }, [entries])
+
+  // ============================================================
+  // Card 3: Recent outliers (lowest + highest of last 14 days)
+  // ============================================================
+  const outliers = useMemo(() => {
+    const recent = entries
+      .filter(e => e.wbi_score > 0)
+      .filter(e => {
+        const d = new Date(e.created_at)
+        const cutoff = new Date()
+        cutoff.setDate(cutoff.getDate() - 14)
+        return d >= cutoff
+      })
+      .sort((a, b) => a.wbi_score - b.wbi_score)
+    return {
+      low: recent[0] || null,
+      high: recent[recent.length - 1] || null,
+    }
+  }, [entries])
+
+  const fmtJpDate = (iso: string) => {
+    const d = new Date(iso)
+    const dow = DOW_LABELS[d.getDay()]
+    return `${d.getMonth() + 1}/${d.getDate()}(${dow}) ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  }
+
+  // ============================================================
+  // Render
+  // ============================================================
+  const maxTrend = Math.max(...trendData.map(d => Math.max(d.wbi, d.avg7)), 10)
+  const minTrend = Math.min(...trendData.map(d => Math.min(d.wbi, d.avg7)), 0)
+  const trendRange = maxTrend - minTrend || 1
+
+  return (
+    <div className="section">
+      <div className="section-title">感情のパターン</div>
+
+      {/* Card 1: Heatmap */}
+      <Card style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+          曜日 × 時間帯 — 普段との差
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12 }}>
+          <span style={{ color: '#22c55e' }}>緑</span>: 普段より良い　
+          <span style={{ color: '#ef4444' }}>赤</span>: 普段より悪い　
+          <span style={{ color: 'var(--text3)' }}>個人平均 {baseline.toFixed(1)} からの偏差</span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '32px repeat(4, 1fr)', gap: 4 }}>
+          <div />
+          {SLOT_LABELS.map(s => (
+            <div key={s} style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', paddingBottom: 4 }}>{s}</div>
+          ))}
+          {heatmap.map((row, di) => (
+            <React.Fragment key={di}>
+              <div style={{ fontSize: 11, color: di === 0 ? '#ef4444' : di === 6 ? '#3b82f6' : 'var(--text3)', display: 'flex', alignItems: 'center', fontWeight: 500 }}>
+                {DOW_LABELS[di]}
+              </div>
+              {row.map((avg, si) => {
+                const c = colorForDev(avg)
+                const dev = avg !== null ? avg - baseline : 0
+                return (
+                  <div key={si}
+                    title={avg !== null ? `${DOW_LABELS[di]} ${SLOT_LABELS[si]}: ${avg.toFixed(1)} (${dev >= 0 ? '+' : ''}${dev.toFixed(1)})` : 'データなし'}
+                    style={{
+                      background: c.bg,
+                      borderRadius: 4,
+                      height: 36,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: avg !== null ? c.text : 'var(--text3)',
+                      fontFamily: 'var(--mono)',
+                    }}>
+                    {avg !== null ? (dev >= 0 ? '+' : '') + dev.toFixed(1) : '–'}
+                  </div>
+                )
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+      </Card>
+
+      {/* Card 2: Trend vs baseline */}
+      <Card style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+          最近の流れ — 7日移動平均 vs 個人ベースライン
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12 }}>
+          点線下 = 普段より落ち込んでる期間。青線 = 7日平均、点線 = 個人平均 ({baseline.toFixed(1)})
+        </div>
+
+        <svg viewBox="0 0 400 120" style={{ width: '100%', height: 120 }} preserveAspectRatio="none">
+          {/* Baseline horizontal line */}
+          <line
+            x1={0} x2={400}
+            y1={120 - ((baseline - minTrend) / trendRange) * 110 - 5}
+            y2={120 - ((baseline - minTrend) / trendRange) * 110 - 5}
+            stroke="var(--text3)" strokeWidth="1" strokeDasharray="4 3" opacity="0.5"
+          />
+
+          {/* 7-day rolling average line */}
+          {trendData.length > 1 && (
+            <polyline
+              points={trendData.map((d, i) => {
+                const x = (i / (trendData.length - 1)) * 400
+                const y = 120 - ((d.avg7 - minTrend) / trendRange) * 110 - 5
+                return `${x},${y}`
+              }).join(' ')}
+              fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            />
+          )}
+
+          {/* Fill for "below baseline" regions */}
+          {trendData.length > 1 && trendData.map((d, i) => {
+            if (d.avg7 >= baseline) return null
+            const x = (i / (trendData.length - 1)) * 400
+            return (
+              <circle key={i} cx={x}
+                cy={120 - ((d.avg7 - minTrend) / trendRange) * 110 - 5}
+                r="3" fill="#ef4444" opacity="0.8" />
+            )
+          })}
+        </svg>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 4, fontFamily: 'var(--mono)' }}>
+          <span>{trendData[0]?.day}</span>
+          <span>{trendData[trendData.length - 1]?.day}</span>
+        </div>
+      </Card>
+
+      {/* Card 3: Outliers */}
+      <Card>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+          直近2週間の最低 / 最高
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12 }}>
+          平均じゃなく外れ値を見る。その日に何があったかが手がかり
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {outliers.low && (
+            <div style={{ background: 'rgba(239, 68, 68, 0.08)', borderLeft: '3px solid #ef4444', padding: '12px 14px', borderRadius: 6 }}>
+              <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 600, letterSpacing: '.5px', marginBottom: 4 }}>🔻 最低</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#ef4444', fontFamily: 'var(--mono)' }}>{outliers.low.wbi_score.toFixed(1)}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{fmtJpDate(outliers.low.created_at)}</div>
+              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
+                個人平均より <span style={{ color: '#ef4444', fontWeight: 600 }}>{(outliers.low.wbi_score - baseline).toFixed(1)}</span>
+              </div>
+            </div>
+          )}
+          {outliers.high && (
+            <div style={{ background: 'rgba(34, 197, 94, 0.08)', borderLeft: '3px solid #22c55e', padding: '12px 14px', borderRadius: 6 }}>
+              <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 600, letterSpacing: '.5px', marginBottom: 4 }}>🔺 最高</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#22c55e', fontFamily: 'var(--mono)' }}>{outliers.high.wbi_score.toFixed(1)}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{fmtJpDate(outliers.high.created_at)}</div>
+              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
+                個人平均より <span style={{ color: '#22c55e', fontWeight: 600 }}>+{(outliers.high.wbi_score - baseline).toFixed(1)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+        {(!outliers.low || !outliers.high) && (
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8, textAlign: 'center' }}>
+            直近2週間のデータが不足しています
+          </div>
+        )}
+      </Card>
+    </div>
+  )
+}
+
+// React.Fragment import
+import React from 'react'
