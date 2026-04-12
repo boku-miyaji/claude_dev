@@ -841,13 +841,10 @@ export function Calendar() {
           date={quickAdd.date}
           hour={quickAdd.hour}
           onClose={() => setQuickAdd(null)}
-          onCreated={() => { setQuickAdd(null); fetchTasks(); refetch() }}
-          onEventFallback={() => {
-            setModalDate(quickAdd.date)
-            setModalHour(quickAdd.hour)
-            setEditingEvent(null)
+          onCreatedTask={() => { setQuickAdd(null); fetchTasks() }}
+          onCreateEvent={async (form) => {
+            await handleSave(form)
             setQuickAdd(null)
-            setModalOpen(true)
           }}
         />
       )}
@@ -864,16 +861,21 @@ export function Calendar() {
 }
 
 // ============================================================
-// Quick Add Popover — simple task creator
+// Quick Add Popover — unified task/event creator with toggle
 // ============================================================
 
-function QuickAddPopover({ date, hour, onClose, onCreated, onEventFallback }: {
+function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: {
   date: string; hour?: number
   onClose: () => void
-  onCreated: () => void
-  onEventFallback: () => void
+  onCreatedTask: () => void
+  onCreateEvent: (form: { summary: string; date: string; startTime: string; endTime: string }) => Promise<void>
 }) {
+  const [kind, setKind] = useState<'task' | 'event'>('task')
   const [title, setTitle] = useState('')
+  const defaultStart = hour !== undefined ? `${String(hour).padStart(2, '0')}:00` : '10:00'
+  const defaultEnd = hour !== undefined ? `${String(hour + 1).padStart(2, '0')}:00` : '11:00'
+  const [startTime, setStartTime] = useState(defaultStart)
+  const [endTime, setEndTime] = useState(defaultEnd)
   const [saving, setSaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -883,53 +885,100 @@ function QuickAddPopover({ date, hour, onClose, onCreated, onEventFallback }: {
     const t = title.trim()
     if (!t || saving) return
     setSaving(true)
-    const payload: Record<string, unknown> = { title: t, status: 'open', priority: 'normal', type: 'task' }
-    if (hour !== undefined) {
-      // Time-boxed: build JST ISO
-      payload.scheduled_at = `${date}T${String(hour).padStart(2, '0')}:00:00+09:00`
-      payload.estimated_minutes = 60
-      payload.due_date = date
+    if (kind === 'task') {
+      const payload: Record<string, unknown> = { title: t, status: 'open', priority: 'normal', type: 'task' }
+      if (hour !== undefined) {
+        payload.scheduled_at = `${date}T${String(hour).padStart(2, '0')}:00:00+09:00`
+        payload.estimated_minutes = 60
+        payload.due_date = date
+      } else {
+        payload.due_date = date
+      }
+      const { error } = await supabase.from('tasks').insert(payload)
+      setSaving(false)
+      if (error) { toast(`追加失敗: ${error.message}`); return }
+      toast('タスクを追加しました')
+      onCreatedTask()
     } else {
-      payload.due_date = date
+      await onCreateEvent({ summary: t, date, startTime, endTime })
+      setSaving(false)
     }
-    const { error } = await supabase.from('tasks').insert(payload)
-    setSaving(false)
-    if (error) { toast(`追加失敗: ${error.message}`); return }
-    toast('タスクを追加しました')
-    onCreated()
   }
+
+  const pillStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1,
+    padding: '6px 12px',
+    fontSize: 12,
+    fontWeight: 600,
+    border: 'none',
+    cursor: 'pointer',
+    background: active ? 'var(--accent)' : 'transparent',
+    color: active ? '#fff' : 'var(--text3)',
+    borderRadius: 6,
+    transition: 'all .15s',
+    fontFamily: 'var(--font)',
+  })
+
+  const isAllDay = hour === undefined
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: 'rgba(0,0,0,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={{ background: 'var(--surface)', borderRadius: 12, padding: 20, width: 380, boxShadow: '0 20px 60px rgba(0,0,0,.4)', border: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>新規タスク</span>
-          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-            {hour !== undefined ? `${date}  ${String(hour).padStart(2, '0')}:00〜` : `${date}  終日`}
-          </span>
+      <div style={{ background: 'var(--surface)', borderRadius: 12, padding: 20, width: 400, boxShadow: '0 20px 60px rgba(0,0,0,.4)', border: '1px solid var(--border)' }}>
+
+        {/* Type toggle */}
+        <div style={{ display: 'flex', gap: 4, padding: 3, background: 'var(--surface2)', borderRadius: 8, marginBottom: 14 }}>
+          <button style={pillStyle(kind === 'task')} onClick={() => setKind('task')}>
+            ☐ タスク
+          </button>
+          <button style={pillStyle(kind === 'event')} onClick={() => setKind('event')}>
+            ■ イベント
+          </button>
         </div>
+
+        {/* Context label */}
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 10 }}>
+          {isAllDay ? `${date}  終日` : `${date}  ${String(hour).padStart(2, '0')}:00〜`}
+        </div>
+
+        {/* Title input */}
         <input
           ref={inputRef}
           className="input"
           style={{ width: '100%', marginBottom: 12, fontSize: 14 }}
-          placeholder="何をしますか？ (Enter で作成)"
+          placeholder={kind === 'task' ? '何をしますか？ (Enter で作成)' : 'イベント名 (Enter で作成)'}
           value={title}
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => {
             if (e.key === 'Enter') { e.preventDefault(); create() }
             if (e.key === 'Escape') onClose()
+            // Tab with Shift toggles kind for keyboard flow
+            if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); setKind(k => k === 'task' ? 'event' : 'task') }
           }}
         />
+
+        {/* Event-only: time inputs */}
+        {kind === 'event' && !isAllDay && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>開始</label>
+              <input className="input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>終了</label>
+              <input className="input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button className="btn btn-primary" disabled={!title.trim() || saving} onClick={create}>
-            {saving ? '作成中...' : '+ タスク追加'}
+            {saving ? '作成中...' : `+ ${kind === 'task' ? 'タスク' : 'イベント'}追加`}
           </button>
-          <button className="btn btn-ghost" onClick={onEventFallback} title="代わりにGoogleカレンダーのイベントとして作成">
-            イベントとして…
-          </button>
+          <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
           <div style={{ flex: 1 }} />
-          <button className="btn btn-ghost" onClick={onClose} style={{ fontSize: 11 }}>Esc</button>
+          <span style={{ fontSize: 10, color: 'var(--text3)' }}>Tab で切替 · Esc で閉じる</span>
         </div>
       </div>
     </div>

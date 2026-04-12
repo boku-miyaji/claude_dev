@@ -25,11 +25,12 @@ interface Company {
 
 type TabType = 'task' | 'request'
 
-export function Tasks() {
+export function Tasks({ mode }: { mode?: TabType } = {}) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabType>('task')
+  const [activeTab, setActiveTab] = useState<TabType>(mode || 'task')
+  const lockedMode = !!mode
   const [filters, setFilters] = useState({ status: 'open', company: '', priority: '' })
   const [showAdd, setShowAdd] = useState(false)
 
@@ -200,8 +201,8 @@ export function Tasks() {
   return (
     <div className="page">
       <PageHeader
-        title="Tasks"
-        description="タスクと依頼を一元管理。ドラッグで優先順を変更"
+        title={lockedMode ? (mode === 'request' ? 'Requests' : 'Tasks') : 'Tasks'}
+        description={lockedMode && mode === 'request' ? 'プロダクト改善のリクエスト（CLIで使用）' : 'タスクと依頼を一元管理。ドラッグで優先順を変更'}
         actions={
           <button className="btn btn-p btn-sm" onClick={() => setShowAdd(!showAdd)}>
             {showAdd ? '閉じる' : `+ ${activeTab === 'task' ? 'タスク' : 'リクエスト'}追加`}
@@ -209,23 +210,25 @@ export function Tasks() {
         }
       />
 
-      {/* Tabs */}
-      <div className="tasks-tabs">
-        <button
-          className={`tasks-tab${activeTab === 'task' ? ' active' : ''}`}
-          onClick={() => { setActiveTab('task'); setShowAdd(false) }}
-        >
-          Tasks
-          {counts.task > 0 && <span className="tasks-tab-count">{counts.task}</span>}
-        </button>
-        <button
-          className={`tasks-tab${activeTab === 'request' ? ' active' : ''}`}
-          onClick={() => { setActiveTab('request'); setShowAdd(false) }}
-        >
-          Requests
-          {counts.request > 0 && <span className="tasks-tab-count tasks-tab-count--req">{counts.request}</span>}
-        </button>
-      </div>
+      {/* Tabs — hidden when mode is locked */}
+      {!lockedMode && (
+        <div className="tasks-tabs">
+          <button
+            className={`tasks-tab${activeTab === 'task' ? ' active' : ''}`}
+            onClick={() => { setActiveTab('task'); setShowAdd(false) }}
+          >
+            Tasks
+            {counts.task > 0 && <span className="tasks-tab-count">{counts.task}</span>}
+          </button>
+          <button
+            className={`tasks-tab${activeTab === 'request' ? ' active' : ''}`}
+            onClick={() => { setActiveTab('request'); setShowAdd(false) }}
+          >
+            Requests
+            {counts.request > 0 && <span className="tasks-tab-count tasks-tab-count--req">{counts.request}</span>}
+          </button>
+        </div>
+      )}
 
       {/* Add form */}
       {showAdd && (

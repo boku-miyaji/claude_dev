@@ -96,7 +96,8 @@ export function App() {
           <Route path="/weekly" element={<WeeklyNarrative />} />
           <Route path="/story" element={<Story />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/tasks" element={<Navigate to="/calendar" replace />} />
+          <Route path="/requests" element={<Tasks mode="request" />} />
           <Route path="/companies" element={<Companies />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/intelligence" element={<Reports />} />

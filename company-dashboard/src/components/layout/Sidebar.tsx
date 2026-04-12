@@ -41,6 +41,7 @@ const CLI_NAV: NavEntry[] = [
   { type: 'item', page: 'artifacts', icon: '📄', label: 'Artifacts', cli: true },
   { type: 'item', page: 'api-costs', icon: '$', label: 'API Costs', cli: true },
   { type: 'item', page: 'career', icon: '☆', label: 'Career', cli: true },
+  { type: 'item', page: 'requests', icon: '↗', label: 'Requests', cli: true },
   { type: 'item', page: 'commands', icon: '⌘', label: 'Commands', cli: true },
   { type: 'item', page: 'blueprint', icon: '◇', label: 'Blueprint', cli: true },
 ]
