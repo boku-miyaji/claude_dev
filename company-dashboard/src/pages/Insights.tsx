@@ -157,6 +157,32 @@ function WorkRhythmSection() {
     insights.push({ color: 'var(--text3)', text: `${DOW_LABELS[minDow]}曜日の稼働が極端に少ない（${dowCounts[minDow]}件）。MTG集中日 or 意図的なオフ？` })
   }
 
+  // Weekend work insight
+  if (weekendRate < 5 && total >= 20) {
+    insights.push({ color: 'var(--green)', text: '週末はほぼ稼働なし。オン/オフの切り替えが明確' })
+  }
+
+  // Concentration vs spread (CV calculation)
+  const activeDays = dowCounts.filter((c) => c > 0).length
+  const dowMean = total / 7
+  const dowVariance = dowCounts.reduce((sum, c) => sum + Math.pow(c - dowMean, 2), 0) / 7
+  const dowStdDev = Math.sqrt(dowVariance)
+  const dowCv = dowMean > 0 ? dowStdDev / dowMean : 0
+
+  if (activeDays <= 3 && total >= 20) {
+    insights.push({ color: 'var(--accent2)', text: `稼働が週${activeDays}日に集中。短期集中型` })
+  } else if (dowCv < 0.3 && total >= 20) {
+    insights.push({ color: 'var(--blue)', text: '曜日ごとの稼働量が均一' })
+  } else if (dowCv > 0.7 && total >= 20) {
+    insights.push({ color: 'var(--amber)', text: '曜日による稼働のばらつきが大きい' })
+  }
+
+  // Peak hour insight (13-15 range, only if not already added)
+  const hasPeakHourInsight = insights.some((i) => i.text.includes('ピーク'))
+  if (!hasPeakHourInsight && peakH >= 13 && peakH <= 15) {
+    insights.push({ color: 'var(--accent)', text: '午後にピーク。午前はMTGや情報収集、午後に集中作業というパターンか' })
+  }
+
   const hourLabels = Array.from({ length: 24 }, (_, i) => i % 3 === 0 ? String(i) : '')
 
   return (

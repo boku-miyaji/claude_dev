@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Card, PageHeader, EmptyState, KpiCard } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 
@@ -101,6 +101,187 @@ function Detail({ label, text, children }: { label: string; text?: string; child
   )
 }
 
+interface TooltipState {
+  x: number; y: number; date: string; prompts: number; evts: number; visible: boolean
+}
+
+function WorkIntensityChart() {
+  const [promptCounts, setPromptCounts] = useState<Record<string, number> | null>(null)
+  const [evtCounts, setEvtCounts] = useState<Record<string, number>>({})
+  const [tooltip, setTooltip] = useState<TooltipState>({ x: 0, y: 0, date: '', prompts: 0, evts: 0, visible: false })
+  const svgRef = useRef<SVGSVGElement>(null)
+
+  useEffect(() => {
+    const today = new Date()
+    const since = new Date(today)
+    since.setDate(today.getDate() - 29)
+    const sinceStr = since.toISOString().slice(0, 10)
+
+    Promise.all([
+      supabase
+        .from('prompt_log')
+        .select('created_at')
+        .gte('created_at', sinceStr),
+      supabase
+        .from('growth_events')
+        .select('event_date')
+        .gte('event_date', sinceStr),
+    ]).then(([{ data: pData }, { data: eData }]) => {
+      // Aggregate prompt_log by day
+      const pc: Record<string, number> = {}
+      for (const row of pData || []) {
+        const day = (row.created_at as string).slice(0, 10)
+        pc[day] = (pc[day] || 0) + 1
+      }
+      setPromptCounts(pc)
+
+      // Aggregate growth_events by day
+      const ec: Record<string, number> = {}
+      for (const row of eData || []) {
+        const day = (row.event_date as string).slice(0, 10)
+        ec[day] = (ec[day] || 0) + 1
+      }
+      setEvtCounts(ec)
+    })
+  }, [])
+
+  // Not yet loaded
+  if (promptCounts === null) return null
+  // No prompt data → hide section
+  if (Object.keys(promptCounts).length === 0) return null
+
+  // Build 30-day date list
+  const days: string[] = []
+  const today = new Date()
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    days.push(d.toISOString().slice(0, 10))
+  }
+
+  const svgW = 700
+  const svgH = 120
+  const padL = 32
+  const padR = 8
+  const padT = 8
+  const padB = 24
+  const chartW = svgW - padL - padR
+  const chartH = svgH - padT - padB
+  const barSlot = chartW / days.length
+  const barW = Math.max(2, barSlot - 2)
+  const maxPrompts = Math.max(...days.map((d) => promptCounts[d] || 0), 1)
+
+  const formatDate = (iso: string) => {
+    const [, m, dd] = iso.split('-')
+    return `${m}/${dd}`
+  }
+
+  return (
+    <>
+      <div className="section-title" style={{ marginBottom: 8 }}>Work Intensity</div>
+      <Card style={{ padding: '14px 18px', marginBottom: 20, overflow: 'hidden' }}>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, display: 'flex', gap: 16 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--accent)', borderRadius: 2 }} />
+            Prompts / day
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--green)', borderRadius: '50%' }} />
+            Growth events
+          </span>
+        </div>
+        <div style={{ position: 'relative' }}>
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${svgW} ${svgH}`}
+            style={{ width: '100%', height: svgH, display: 'block' }}
+            onMouseLeave={() => setTooltip((t) => ({ ...t, visible: false }))}
+          >
+            {/* Y-axis max label */}
+            <text x={padL - 4} y={padT + 6} textAnchor="end" fontSize={9} fill="var(--text3)">{maxPrompts}</text>
+            <text x={padL - 4} y={padT + chartH} textAnchor="end" fontSize={9} fill="var(--text3)">0</text>
+
+            {/* Grid line top */}
+            <line x1={padL} y1={padT} x2={padL + chartW} y2={padT} stroke="var(--border)" strokeWidth={0.5} />
+            {/* Grid line bottom */}
+            <line x1={padL} y1={padT + chartH} x2={padL + chartW} y2={padT + chartH} stroke="var(--border)" strokeWidth={0.5} />
+
+            {days.map((day, i) => {
+              const x = padL + i * barSlot + (barSlot - barW) / 2
+              const pCount = promptCounts[day] || 0
+              const eCount = evtCounts[day] || 0
+              const barH = pCount > 0 ? Math.max(2, (pCount / maxPrompts) * chartH) : 0
+              const barY = padT + chartH - barH
+
+              return (
+                <g key={day}>
+                  {/* Prompt bar */}
+                  {barH > 0 && (
+                    <rect
+                      x={x} y={barY} width={barW} height={barH}
+                      fill="var(--accent)" fillOpacity={0.75} rx={1}
+                    />
+                  )}
+                  {/* Growth event dot */}
+                  {eCount > 0 && (
+                    <circle
+                      cx={x + barW / 2}
+                      cy={barY > padT + 6 ? barY - 4 : padT + 4}
+                      r={3}
+                      fill="var(--green)"
+                    />
+                  )}
+                  {/* X-axis label — show every 5th day */}
+                  {i % 5 === 0 && (
+                    <text
+                      x={x + barW / 2} y={svgH - 4}
+                      textAnchor="middle" fontSize={8} fill="var(--text3)"
+                    >{formatDate(day)}</text>
+                  )}
+                  {/* Invisible hover target */}
+                  <rect
+                    x={padL + i * barSlot} y={padT} width={barSlot} height={chartH + padB}
+                    fill="transparent"
+                    onMouseEnter={() => {
+                      const svg = svgRef.current
+                      if (!svg) return
+                      const rect = svg.getBoundingClientRect()
+                      const scaleX = rect.width / svgW
+                      setTooltip({
+                        x: (padL + i * barSlot + barSlot / 2) * scaleX,
+                        y: 0,
+                        date: day,
+                        prompts: pCount,
+                        evts: eCount,
+                        visible: true,
+                      })
+                    }}
+                  />
+                </g>
+              )
+            })}
+          </svg>
+          {/* Tooltip */}
+          {tooltip.visible && (
+            <div style={{
+              position: 'absolute', top: 4, left: tooltip.x,
+              transform: 'translateX(-50%)',
+              background: 'var(--bg2)', border: '1px solid var(--border)',
+              borderRadius: 6, padding: '6px 10px', fontSize: 11,
+              pointerEvents: 'none', whiteSpace: 'nowrap', zIndex: 10,
+              boxShadow: '0 2px 8px rgba(0,0,0,.2)',
+            }}>
+              <div style={{ fontFamily: 'var(--mono)', color: 'var(--text3)', marginBottom: 3 }}>{tooltip.date}</div>
+              <div style={{ color: 'var(--accent)' }}>{tooltip.prompts} prompts</div>
+              {tooltip.evts > 0 && <div style={{ color: 'var(--green)' }}>{tooltip.evts} growth events</div>}
+            </div>
+          )}
+        </div>
+      </Card>
+    </>
+  )
+}
+
 function CategoryProgress({ events }: { events: GrowthEvent[] }) {
   const cats = ['security', 'architecture', 'devops', 'automation', 'tooling', 'organization', 'process']
   const catData = cats.map((cat) => {
@@ -176,6 +357,8 @@ export function Growth() {
         <KpiCard value={countermeasures.length} label="Countermeasures" />
         <KpiCard value={milestones.length} label="Milestones" status="good" />
       </div>
+
+      <WorkIntensityChart />
 
       <CategoryProgress events={events} />
 
