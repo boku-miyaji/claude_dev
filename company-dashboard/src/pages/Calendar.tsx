@@ -1,32 +1,20 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { Card, PageHeader, Modal, toast } from '@/components/ui'
-import { GCAL_CLIENT_ID, GCAL_SCOPES, GCAL_CALENDARS } from '@/lib/constants'
-import type { ViewMode, CalendarType } from '@/types/calendar'
-
-// ============================================================
-// Types & Constants
-// ============================================================
-
-interface CalEvent {
-  id: string; calendar_id: string; calendar_type: CalendarType
-  summary: string; start_time: string; end_time: string; all_day: boolean
-}
+import { useGoogleCalendar } from '@/hooks/useGoogleCalendar'
+import { startCalendarAuth } from '@/lib/calendarApi'
+import type { ViewMode, CalendarEvent } from '@/types/calendar'
 
 const DOW = ['日', '月', '火', '水', '木', '金', '土']
 const VIEW_LABELS: Record<ViewMode, string> = { day: '日', week: '週', month: '月' }
 const CAL_COLORS: Record<string, string> = { primary: 'var(--accent)', secondary: 'var(--accent2)', work: 'var(--blue)' }
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7)
 
-declare const google: { accounts: { oauth2: { initTokenClient: (config: Record<string, unknown>) => { requestAccessToken: () => void } } } }
-
 function toJSTDateStr(d: Date): string {
   return new Date(d.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }
-
 function fmtTime(iso: string): string {
   return new Date(iso).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo' })
 }
-
 function dateLabel(date: Date, mode: ViewMode): string {
   const y = date.getFullYear(), m = date.getMonth() + 1
   if (mode === 'day') return `${y}年${m}月${date.getDate()}日`
@@ -35,76 +23,12 @@ function dateLabel(date: Date, mode: ViewMode): string {
 }
 
 // ============================================================
-// GIS Auth + Google Calendar API (legacy approach)
-// ============================================================
-
-function getStoredToken(): string | null {
-  const token = localStorage.getItem('gcal_token')
-  const time = parseInt(localStorage.getItem('gcal_token_time') || '0')
-  if (token && Date.now() - time < 3500_000) return token // ~58 min expiry
-  return null
-}
-
-function requestToken(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (typeof google === 'undefined' || !google.accounts) {
-      reject(new Error('Google Identity Services not loaded'))
-      return
-    }
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: GCAL_CLIENT_ID,
-      scope: GCAL_SCOPES,
-      prompt: '',
-      callback: (resp: { error?: string; access_token?: string }) => {
-        if (resp.error || !resp.access_token) { reject(new Error(resp.error || 'No token')); return }
-        localStorage.setItem('gcal_token', resp.access_token)
-        localStorage.setItem('gcal_token_time', String(Date.now()))
-        resolve(resp.access_token)
-      },
-    })
-    client.requestAccessToken()
-  })
-}
-
-async function fetchEvents(token: string, timeMin: Date, timeMax: Date): Promise<CalEvent[]> {
-  const calMap = new Map(GCAL_CALENDARS.map(c => [c.id, c.type]))
-  const results: CalEvent[] = []
-
-  for (const cal of GCAL_CALENDARS) {
-    try {
-      const params = new URLSearchParams({
-        timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString(),
-        singleEvents: 'true', orderBy: 'startTime', maxResults: '100',
-      })
-      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) continue
-      const data = await res.json()
-      for (const item of data.items || []) {
-        results.push({
-          id: item.id,
-          calendar_id: cal.id,
-          calendar_type: calMap.get(cal.id) || 'primary',
-          summary: item.summary || '(no title)',
-          start_time: item.start?.dateTime || item.start?.date || '',
-          end_time: item.end?.dateTime || item.end?.date || '',
-          all_day: !item.start?.dateTime,
-        })
-      }
-    } catch { /* skip failed calendar */ }
-  }
-
-  return results.sort((a, b) => a.start_time.localeCompare(b.start_time))
-}
-
-// ============================================================
 // Event Modal
 // ============================================================
 
 function EventModal({ open, onClose, initialDate, editEvent, onSave, onDelete }: {
   open: boolean; onClose: () => void; initialDate?: string
-  editEvent?: CalEvent | null
+  editEvent?: CalendarEvent | null
   onSave: (form: { summary: string; date: string; startTime: string; endTime: string }) => Promise<void>
   onDelete?: () => Promise<void>
 }) {
@@ -155,11 +79,10 @@ function EventModal({ open, onClose, initialDate, editEvent, onSave, onDelete }:
 // ============================================================
 
 function TimeGrid({ events, days, today, onCellClick, onEventClick }: {
-  events: CalEvent[]; days: Date[]; today: string
-  onCellClick: (date: string) => void; onEventClick: (evt: CalEvent) => void
+  events: CalendarEvent[]; days: Date[]; today: string
+  onCellClick: (date: string) => void; onEventClick: (evt: CalendarEvent) => void
 }) {
   const eventsFor = (ds: string) => events.filter(e => toJSTDateStr(new Date(e.start_time)) === ds)
-
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: `56px repeat(${days.length}, 1fr)`, borderBottom: '1px solid var(--border)' }}>
@@ -209,8 +132,8 @@ function TimeGrid({ events, days, today, onCellClick, onEventClick }: {
 // ============================================================
 
 function MonthGrid({ events, date, today, onCellClick, onEventClick }: {
-  events: CalEvent[]; date: Date; today: string
-  onCellClick: (date: string) => void; onEventClick: (evt: CalEvent) => void
+  events: CalendarEvent[]; date: Date; today: string
+  onCellClick: (date: string) => void; onEventClick: (evt: CalendarEvent) => void
 }) {
   const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0)
@@ -218,7 +141,6 @@ function MonthGrid({ events, date, today, onCellClick, onEventClick }: {
   for (let i = 0; i < firstDay.getDay(); i++) cells.push(null)
   for (let d = 1; d <= lastDay.getDate(); d++) cells.push(new Date(date.getFullYear(), date.getMonth(), d))
   while (cells.length % 7 !== 0) cells.push(null)
-
   const eventsFor = (ds: string) => events.filter(e => toJSTDateStr(new Date(e.start_time)) === ds)
 
   return (
@@ -252,22 +174,22 @@ function MonthGrid({ events, date, today, onCellClick, onEventClick }: {
 export function Calendar() {
   const [viewMode, setViewMode] = useState<ViewMode>('week')
   const [viewDate, setViewDate] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()) })
-  const [token, setToken] = useState<string | null>(getStoredToken)
-  const [events, setEvents] = useState<CalEvent[]>([])
-  const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalDate, setModalDate] = useState('')
-  const [editingEvent, setEditingEvent] = useState<CalEvent | null>(null)
-  const loadingRef = useRef(false)
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
 
+  const { events, loading, authenticated, refetch, createEvent, updateEvent, deleteEvent } = useGoogleCalendar(viewDate, viewMode)
   const today = toJSTDateStr(new Date())
 
-  // Compute date range
-  const range = useMemo((): [Date, Date] => {
-    if (viewMode === 'day') { const e = new Date(viewDate); e.setDate(e.getDate() + 1); return [viewDate, e] }
-    if (viewMode === 'week') { const e = new Date(viewDate); e.setDate(e.getDate() + 7); return [viewDate, e] }
-    return [new Date(viewDate.getFullYear(), viewDate.getMonth(), 1), new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1)]
-  }, [viewDate, viewMode])
+  const nav = useCallback((dir: number) => {
+    setViewDate(prev => {
+      const d = new Date(prev)
+      if (viewMode === 'day') d.setDate(d.getDate() + dir)
+      else if (viewMode === 'week') d.setDate(d.getDate() + 7 * dir)
+      else { d.setMonth(d.getMonth() + dir); d.setDate(1) }
+      return d
+    })
+  }, [viewMode])
 
   const days = useMemo(() => {
     if (viewMode === 'day') return [new Date(viewDate)]
@@ -275,84 +197,47 @@ export function Calendar() {
     return []
   }, [viewDate, viewMode])
 
-  // Load events
-  const loadEvents = useCallback(async (t: string) => {
-    if (loadingRef.current) return
-    loadingRef.current = true; setLoading(true)
-    try {
-      const evts = await fetchEvents(t, range[0], range[1])
-      setEvents(evts)
-    } catch {
-      // Token might be expired
-      localStorage.removeItem('gcal_token')
-      setToken(null)
-    }
-    setLoading(false); loadingRef.current = false
-  }, [range])
-
-  useEffect(() => { if (token) loadEvents(token) }, [token, loadEvents])
-
-  const handleSignIn = async () => {
-    try {
-      const t = await requestToken()
-      setToken(t)
-    } catch (e) {
-      toast('Google認証に失敗しました')
-      console.error(e)
-    }
-  }
-
-  const nav = (dir: number) => {
-    const d = new Date(viewDate)
-    if (viewMode === 'day') d.setDate(d.getDate() + dir)
-    else if (viewMode === 'week') d.setDate(d.getDate() + 7 * dir)
-    else { d.setMonth(d.getMonth() + dir); d.setDate(1) }
-    setViewDate(d)
-  }
-
-  // CRUD
   const handleSave = async (form: { summary: string; date: string; startTime: string; endTime: string }) => {
-    if (!token) return
-    const start = `${form.date}T${form.startTime}:00+09:00`
-    const end = `${form.date}T${form.endTime}:00+09:00`
-    const body = { summary: form.summary, start: { dateTime: start, timeZone: 'Asia/Tokyo' }, end: { dateTime: end, timeZone: 'Asia/Tokyo' } }
-
+    const start = { dateTime: `${form.date}T${form.startTime}:00+09:00`, timeZone: 'Asia/Tokyo' }
+    const end = { dateTime: `${form.date}T${form.endTime}:00+09:00`, timeZone: 'Asia/Tokyo' }
     try {
       if (editingEvent) {
-        await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(editingEvent.calendar_id)}/events/${editingEvent.id}`, {
-          method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-        })
+        await updateEvent(editingEvent.calendar_id, editingEvent.id, { summary: form.summary, start, end })
         toast('更新しました')
       } else {
-        await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events`, {
-          method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-        })
+        await createEvent('primary', { summary: form.summary, start, end })
         toast('追加しました')
       }
-      loadEvents(token)
+      refetch()
     } catch { toast('保存に失敗しました') }
   }
 
   const handleDelete = async () => {
-    if (!token || !editingEvent) return
+    if (!editingEvent) return
     try {
-      await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(editingEvent.calendar_id)}/events/${editingEvent.id}`, {
-        method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-      })
+      await deleteEvent(editingEvent.calendar_id, editingEvent.id)
       toast('削除しました')
-      loadEvents(token)
+      refetch()
     } catch { toast('削除に失敗しました') }
   }
 
+  // Loading auth
+  if (authenticated === null) {
+    return <div className="page"><PageHeader title="Calendar" /><div className="skeleton-card" style={{ height: 300 }} /></div>
+  }
+
   // Not authenticated
-  if (!token) {
+  if (authenticated === false) {
     return (
       <div className="page">
         <PageHeader title="Calendar" />
         <Card style={{ textAlign: 'center', padding: 40 }}>
           <div style={{ fontSize: 36, marginBottom: 16 }}>📅</div>
           <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>Google Calendar と連携</div>
-          <button className="btn btn-primary" style={{ fontSize: 14, padding: '12px 32px' }} onClick={handleSignIn}>
+          <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 16 }}>
+            認証後、同じタブでカレンダーが表示されます
+          </p>
+          <button className="btn btn-primary" style={{ fontSize: 14, padding: '12px 32px' }} onClick={startCalendarAuth}>
             Sign in with Google
           </button>
         </Card>
@@ -376,7 +261,7 @@ export function Calendar() {
             }}>{VIEW_LABELS[v]}</button>
           ))}
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={() => token && loadEvents(token)} style={{ fontSize: 11 }}>↻</button>
+        <button className="btn btn-ghost btn-sm" onClick={refetch} style={{ fontSize: 11 }}>↻</button>
       </div>
 
       {loading && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>Loading...</div>}
