@@ -72,6 +72,8 @@ function PersonalizationSection({ settings, userId }: { settings: UserSettings |
           options={[['default', 'Default'], ['formal', 'Formal'], ['casual', 'Casual'], ['concise', 'Concise'], ['detailed', 'Detailed']]} />
         <SelectField label="Warmth" value={form.chat_warmth} onChange={(v) => update('chat_warmth', v)}
           options={[['default', 'Default'], ['warm', 'Warm'], ['neutral', 'Neutral'], ['direct', 'Direct']]} />
+        <SelectField label="Emoji" value={form.chat_emoji} onChange={(v) => update('chat_emoji', v)}
+          options={[['default', 'Default'], ['none', 'None'], ['some', 'Some'], ['lots', 'Lots']]} />
 
         <div style={{ display: 'flex', gap: 24, marginBottom: 14 }}>
           <Toggle label="Use Knowledge & Insights" checked={form.chat_memory_enabled} onChange={(v) => update('chat_memory_enabled', v)} />
