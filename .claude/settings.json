@@ -189,7 +189,8 @@
       "Bash(awk 'NR>=8870,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
       "Bash(awk ':*)",
       "Bash(awk 'NR>=541' /workspace/company-dashboard/src/pages/Finance.tsx)",
-      "Bash(ps -p 2840420 -o pid,etime,state)"
+      "Bash(ps -p 2840420 -o pid,etime,state)",
+      "Bash(supabase functions:*)"
     ],
     "deny": [
       "Read(**/.env)",
