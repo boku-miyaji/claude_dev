@@ -3,9 +3,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/stores/auth'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileNav } from '@/components/layout/MobileNav'
-import { LegacyPage } from '@/components/legacy/LegacyPage'
 import { AuthPage } from '@/pages/AuthPage'
-import { renderChat } from '@/lib/legacy'
+import { Chat } from '@/pages/Chat'
 import { Calendar } from '@/pages/Calendar'
 import { Insights } from '@/pages/Insights'
 import { Growth } from '@/pages/Growth'
@@ -109,7 +108,7 @@ export function App() {
           <Route path="/finance" element={<Finance />} />
           <Route path="/prompts" element={<Prompts />} />
           <Route path="/artifacts/*" element={<Artifacts />} />
-          <Route path="/chat/*" element={<LegacyPage renderer={renderChat} />} />
+          <Route path="/chat/*" element={<Chat />} />
           <Route path="/api-costs" element={<ApiCosts />} />
           <Route path="/career" element={<Career />} />
           <Route path="/commands" element={<SlashCommands />} />
