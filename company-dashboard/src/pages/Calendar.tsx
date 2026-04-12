@@ -5,6 +5,37 @@ import { startCalendarAuth } from '@/lib/calendarApi'
 import { GCAL_CALENDARS } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import type { ViewMode, CalendarEvent, CalendarType } from '@/types/calendar'
+import { useCalendarLayers, moodLevel, moodBgColor, moodEmoji, type CalendarLayerMap } from '@/hooks/useCalendarLayers'
+import { DayDetailDrawer } from '@/components/DayDetailDrawer'
+
+/* ── Calendar layer toggles ── */
+
+type LayerKey = 'mood' | 'habits' | 'diary' | 'events' | 'tasks'
+
+const DEFAULT_LAYERS: Record<LayerKey, boolean> = {
+  mood: true,
+  habits: true,
+  diary: true,
+  events: true,
+  tasks: false,
+}
+
+const LAYER_META: { key: LayerKey; label: string; swatch: string }[] = [
+  { key: 'mood', label: '気分', swatch: '#84cc16' },
+  { key: 'habits', label: 'ハビッツ', swatch: '#16a34a' },
+  { key: 'diary', label: '日記', swatch: '#3b82f6' },
+  { key: 'events', label: '予定', swatch: '#1a7f37' },
+  { key: 'tasks', label: 'タスク', swatch: '#8b5cf6' },
+]
+
+function loadLayers(): Record<LayerKey, boolean> {
+  try {
+    const raw = localStorage.getItem('calendar-layers')
+    if (!raw) return { ...DEFAULT_LAYERS }
+    const parsed = JSON.parse(raw)
+    return { ...DEFAULT_LAYERS, ...parsed }
+  } catch { return { ...DEFAULT_LAYERS } }
+}
 
 // ============================================================
 // Task types
@@ -561,11 +592,100 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onCellClick, on
 import React from 'react'
 
 // ============================================================
+// Wellbeing Strip (週ビュー下)
+// ============================================================
+
+function WellbeingStrip({ days, layerMap, layers, today, onCellClick }: {
+  days: Date[]
+  layerMap: CalendarLayerMap
+  layers: Record<LayerKey, boolean>
+  today: string
+  onCellClick: (dateStr: string) => void
+}) {
+  // Only show if any relevant layer is on
+  if (!layers.mood && !layers.habits && !layers.diary) return null
+
+  const dowLabels = ['日', '月', '火', '水', '木', '金', '土']
+
+  return (
+    <div style={{
+      marginTop: 10,
+      padding: '14px 16px',
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--r)',
+    }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)', marginBottom: 10 }}>
+        Wellbeing
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+        {days.map((d) => {
+          const ds = toJSTDateStr(d)
+          const layer = layerMap.get(ds)
+          const level = moodLevel(layer?.mood ?? null)
+          const bg = layers.mood ? moodBgColor(level) : undefined
+          const isToday = ds === today
+          const hasDiary = (layer?.diaryEntries.length || 0) > 0
+          return (
+            <div
+              key={ds}
+              onClick={() => onCellClick(ds)}
+              style={{
+                background: bg || 'var(--surface2)',
+                padding: '10px 8px',
+                borderRadius: 6,
+                textAlign: 'center',
+                cursor: 'pointer',
+                border: isToday ? '1px solid var(--accent)' : '1px solid var(--border)',
+                position: 'relative',
+              }}
+            >
+              <div style={{ fontSize: 10, color: isToday ? 'var(--accent)' : 'var(--text3)', fontWeight: isToday ? 700 : 500 }}>
+                {dowLabels[d.getDay()]} {d.getDate()}
+              </div>
+              {layers.mood && (
+                <div style={{ fontSize: 18, margin: '4px 0 4px', lineHeight: 1 }}>
+                  {moodEmoji(level)}
+                </div>
+              )}
+              {layers.habits && layer && layer.habitTotals.total > 0 && (
+                <div style={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', marginTop: 2 }}>
+                  {layer.habitLogs.slice(0, 8).map((h, k) => (
+                    <span
+                      key={k}
+                      title={h.habitTitle}
+                      style={{
+                        width: 5, height: 5, borderRadius: '50%',
+                        background: h.done ? '#16a34a' : 'rgba(161, 161, 170, 0.4)',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+              {hasDiary && layers.diary && (
+                <span style={{
+                  position: 'absolute', top: 6, right: 6,
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: '#3b82f6',
+                }} />
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
 // Month Grid
 // ============================================================
 
-function MonthGrid({ events, date, today, hiddenCalendars, onCellClick, onEventClick }: {
+function MonthGrid({ events, date, today, hiddenCalendars, layerMap, layers, tasks, onCellClick, onEventClick }: {
   events: CalendarEvent[]; date: Date; today: string; hiddenCalendars: Set<CalendarType>
+  layerMap: CalendarLayerMap
+  layers: Record<LayerKey, boolean>
+  tasks: Task[]
   onCellClick: (date: string) => void; onEventClick: (evt: CalendarEvent) => void
 }) {
   const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
@@ -580,6 +700,7 @@ function MonthGrid({ events, date, today, hiddenCalendars, onCellClick, onEventC
     [events, hiddenCalendars]
   )
   const eventsFor = (ds: string) => filtered.filter(e => toJSTDateStr(new Date(e.start_time)) === ds)
+  const tasksFor = (ds: string) => tasks.filter(t => t.due_date === ds)
 
   return (
     <div>
@@ -590,22 +711,81 @@ function MonthGrid({ events, date, today, hiddenCalendars, onCellClick, onEventC
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px' }}>
         {cells.map((d, i) => {
-          if (!d) return <div key={i} style={{ minHeight: 90, background: 'var(--surface2)', borderRadius: 4, opacity: 0.3 }} />
+          if (!d) return <div key={i} style={{ minHeight: 96, background: 'var(--surface2)', borderRadius: 4, opacity: 0.3 }} />
           const ds = toJSTDateStr(d), isToday = ds === today, dayEvts = eventsFor(ds)
+          const layer = layerMap.get(ds)
+          const level = moodLevel(layer?.mood ?? null)
+          const moodBg = layers.mood ? moodBgColor(level) : undefined
+          const hasDiary = layers.diary && layer && layer.diaryEntries.length > 0
+          const showHabits = layers.habits && layer && layer.habitTotals.total > 0
+          const dayTasks = layers.tasks ? tasksFor(ds) : []
+          const background = isToday
+            ? 'var(--accent-bg)'
+            : moodBg || 'var(--surface)'
           return (
-            <div key={i} className="cal-day" style={{ minHeight: 90, padding: 8, background: isToday ? 'var(--accent-bg)' : undefined, cursor: 'pointer', borderRadius: 4 }}
-              onClick={() => onCellClick(ds)}>
+            <div
+              key={i}
+              className="cal-day"
+              style={{
+                minHeight: 96, padding: 8,
+                background, cursor: 'pointer', borderRadius: 4,
+                position: 'relative',
+                border: isToday ? '1px solid var(--accent)' : undefined,
+              }}
+              onClick={() => onCellClick(ds)}
+            >
+              {/* Diary marker */}
+              {hasDiary && (
+                <span style={{
+                  position: 'absolute', top: 6, right: 6,
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: '#3b82f6',
+                  boxShadow: '0 0 0 2px var(--surface)',
+                }} />
+              )}
+
               <div className="cal-day-hdr" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 12, fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent)' : 'var(--text2)' }}>{d.getDate()}</span>
               </div>
-              {dayEvts.slice(0, 3).map(evt => (
+
+              {/* Habit dots */}
+              {showHabits && layer && (
+                <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', marginTop: 2, marginBottom: 2 }}>
+                  {layer.habitLogs.slice(0, 10).map((h, k) => (
+                    <span
+                      key={k}
+                      title={h.habitTitle}
+                      style={{
+                        width: 6, height: 6, borderRadius: '50%',
+                        background: h.done ? '#16a34a' : 'rgba(161, 161, 170, 0.4)',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Events */}
+              {layers.events && dayEvts.slice(0, 2).map(evt => (
                 <div key={evt.id} className={`cal-evt cal-${evt.calendar_type}`}
                   style={{ fontSize: 10, padding: '2px 5px', marginBottom: 2, borderRadius: 3, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }}
                   onClick={e => { e.stopPropagation(); onEventClick(evt) }}>
                   <span className="cal-evt-title" style={{ fontSize: 10 }}>{evt.summary.substring(0, 15)}</span>
                 </div>
               ))}
-              {dayEvts.length > 3 && <div style={{ fontSize: 9, color: 'var(--text3)' }}>+{dayEvts.length - 3}</div>}
+              {layers.events && dayEvts.length > 2 && <div style={{ fontSize: 9, color: 'var(--text3)' }}>+{dayEvts.length - 2}</div>}
+
+              {/* Tasks (optional layer) */}
+              {dayTasks.slice(0, 2).map(t => (
+                <div key={t.id} style={{
+                  fontSize: 9, padding: '1px 5px', marginBottom: 2, borderRadius: 3,
+                  background: 'rgba(139, 92, 246, 0.15)',
+                  color: t.status === 'done' ? 'var(--text3)' : '#7c3aed',
+                  textDecoration: t.status === 'done' ? 'line-through' : 'none',
+                  overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+                }}>
+                  {t.title.substring(0, 14)}
+                </div>
+              ))}
             </div>
           )
         })}
@@ -662,16 +842,44 @@ export function Calendar() {
   const [viewMode, setViewMode] = useState<ViewMode>('week')
   const [viewDate, setViewDate] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()) })
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalDate, setModalDate] = useState('')
-  const [modalHour, setModalHour] = useState<number | undefined>(undefined)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [hiddenCalendars, setHiddenCalendars] = useState<Set<CalendarType>>(new Set())
   const [tasks, setTasks] = useState<Task[]>([])
   const [quickAdd, setQuickAdd] = useState<{ date: string; hour?: number } | null>(null)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() => loadLayers())
+  const [drawerDate, setDrawerDate] = useState<string | null>(null)
 
   const { events, loading, authenticated, refetch, createEvent, updateEvent, deleteEvent } = useGoogleCalendar(viewDate, viewMode)
   const today = toJSTDateStr(new Date())
+
+  // Persist layer toggles
+  useEffect(() => {
+    try { localStorage.setItem('calendar-layers', JSON.stringify(layers)) } catch { /* ignore */ }
+  }, [layers])
+
+  const toggleLayer = useCallback((key: LayerKey) => {
+    setLayers((prev) => ({ ...prev, [key]: !prev[key] }))
+  }, [])
+
+  // Layer data (diary / habits / mood)
+  const layerRange = useMemo(() => {
+    if (viewMode === 'month') {
+      const start = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1)
+      const end = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0)
+      start.setDate(start.getDate() - start.getDay())
+      while ((end.getDay() + 1) % 7 !== 0) end.setDate(end.getDate() + 1)
+      return { start, end }
+    }
+    if (viewMode === 'week') {
+      const start = new Date(viewDate)
+      const end = new Date(viewDate); end.setDate(end.getDate() + 6)
+      return { start, end }
+    }
+    return { start: new Date(viewDate), end: new Date(viewDate) }
+  }, [viewDate, viewMode])
+
+  const { data: layerMap } = useCalendarLayers(layerRange.start, layerRange.end)
 
   // Fetch tasks in the visible range
   const fetchTasks = useCallback(async () => {
@@ -812,12 +1020,43 @@ export function Calendar() {
         <button className="btn btn-ghost btn-sm" onClick={refetch} style={{ fontSize: 11 }}>↻</button>
       </div>
 
+      {/* Layer toggles */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.08em', marginRight: 4 }}>
+          レイヤー
+        </span>
+        {LAYER_META.map(({ key, label, swatch }) => {
+          const active = layers[key]
+          return (
+            <button
+              key={key}
+              onClick={() => toggleLayer(key)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '4px 10px',
+                fontSize: 11,
+                border: '1px solid var(--border)',
+                borderRadius: 20,
+                background: active ? 'var(--text)' : 'var(--surface)',
+                color: active ? 'var(--surface)' : 'var(--text3)',
+                cursor: 'pointer',
+                transition: 'all .15s',
+              }}
+            >
+              <span style={{ width: 9, height: 9, borderRadius: '50%', background: swatch }} />
+              {label}
+            </button>
+          )
+        })}
+      </div>
+
       {loading && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>Loading...</div>}
 
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {viewMode === 'month'
           ? <MonthGrid events={events} date={viewDate} today={today} hiddenCalendars={hiddenCalendars}
-              onCellClick={ds => { setModalDate(ds); setModalHour(undefined); setEditingEvent(null); setModalOpen(true) }}
+              layerMap={layerMap} layers={layers} tasks={tasks}
+              onCellClick={ds => setDrawerDate(ds)}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }} />
           : <TimeGrid events={events} tasks={tasks} days={days} today={today} hiddenCalendars={hiddenCalendars}
               onCellClick={(ds, hour) => setQuickAdd({ date: ds, hour })}
@@ -829,12 +1068,17 @@ export function Calendar() {
         }
       </Card>
 
+      {/* Wellbeing Strip (週ビュー下) */}
+      {viewMode === 'week' && (
+        <WellbeingStrip days={days} layerMap={layerMap} layers={layers} today={today} onCellClick={setDrawerDate} />
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>{events.length} events</div>
         <CalendarLegend hiddenCalendars={hiddenCalendars} onToggle={toggleCalendar} />
       </div>
 
-      <EventModal open={modalOpen} onClose={() => setModalOpen(false)} initialDate={modalDate} initialHour={modalHour}
+      <EventModal open={modalOpen} onClose={() => setModalOpen(false)}
         editEvent={editingEvent} onSave={handleSave} onDelete={editingEvent ? handleDelete : undefined} />
 
       {quickAdd && (
@@ -857,6 +1101,14 @@ export function Calendar() {
           onSaved={() => { setEditingTask(null); fetchTasks() }}
         />
       )}
+
+      <DayDetailDrawer
+        dateStr={drawerDate}
+        layer={drawerDate ? (layerMap.get(drawerDate) || null) : null}
+        events={drawerDate ? events.filter(e => toJSTDateStr(new Date(e.start_time)) === drawerDate && !hiddenCalendars.has(e.calendar_type)) : []}
+        tasks={drawerDate ? tasks.filter(t => t.due_date === drawerDate) : []}
+        onClose={() => setDrawerDate(null)}
+      />
     </div>
   )
 }

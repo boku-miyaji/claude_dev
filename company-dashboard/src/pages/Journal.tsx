@@ -25,63 +25,6 @@ const PERMA_V = [
   { key: 'perma_v', label: '活力', short: 'V', color: '#00CED1' },
 ] as const
 
-/** Find dominant emotion from an EmotionAnalysis record */
-function getDominantEmotion(e: EmotionAnalysis): { key: string; color: string } | null {
-  let maxKey = ''
-  let maxVal = 0
-  for (const p of PLUTCHIK) {
-    const val = e[p.key as keyof EmotionAnalysis] as number
-    if (val > maxVal) {
-      maxVal = val
-      maxKey = p.key
-    }
-  }
-  if (!maxKey) return null
-  const match = PLUTCHIK.find((p) => p.key === maxKey)
-  return match ? { key: match.key, color: match.color } : null
-}
-
-/** Generate calendar grid for last 30 days */
-function buildCalendarDays(
-  entries: { id: string; created_at: string }[],
-  emotionMap: Map<string, EmotionAnalysis>,
-): { date: string; hasEntry: boolean; emotionColor: string | null; emotionLabel: string | null }[] {
-  const dateEntryMap = new Map<string, string[]>()
-  for (const e of entries) {
-    const d = e.created_at.substring(0, 10)
-    if (!dateEntryMap.has(d)) dateEntryMap.set(d, [])
-    dateEntryMap.get(d)!.push(e.id)
-  }
-
-  const days: { date: string; hasEntry: boolean; emotionColor: string | null; emotionLabel: string | null }[] = []
-  const today = new Date()
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(d.getDate() - i)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-    const entryIds = dateEntryMap.get(key) || []
-    let emotionColor: string | null = null
-    let emotionLabel: string | null = null
-
-    if (entryIds.length > 0) {
-      for (const eid of entryIds) {
-        const ea = emotionMap.get(eid)
-        if (ea) {
-          const dominant = getDominantEmotion(ea)
-          if (dominant) {
-            emotionColor = dominant.color
-            emotionLabel = PLUTCHIK.find((p) => p.key === dominant.key)?.label || null
-            break
-          }
-        }
-      }
-      if (!emotionColor) emotionColor = 'var(--accent2)'
-    }
-    days.push({ date: key, hasEntry: entryIds.length > 0, emotionColor, emotionLabel })
-  }
-  return days
-}
-
 /** Aggregate Plutchik from emotion_analysis records */
 function aggregatePlutchik(analyses: EmotionAnalysis[]): Record<string, number> {
   if (analyses.length === 0) return {}
@@ -157,11 +100,6 @@ export function Journal() {
       emotion: emotionMap.get(e.id),
     }))
   }, [diaryEntries, emotionMap])
-
-  const calendarDays = useMemo(
-    () => buildCalendarDays(diaryEntries, emotionMap),
-    [diaryEntries, emotionMap],
-  )
 
   // Week entries for Plutchik and PERMA
   const weekAnalyses = useMemo(() => {
@@ -277,47 +215,7 @@ export function Journal() {
     <div className="page">
       <PageHeader title="Journal" description="感情の可視化と振り返り" />
 
-      {/* Emotion Calendar Heatmap */}
-      <div className="section">
-        <div className="section-title">感情カレンダー (過去30日)</div>
-        <Card>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
-            gap: 6,
-            maxWidth: 280,
-          }}>
-            {['月', '火', '水', '木', '金', '土', '日'].map((d) => (
-              <div key={d} style={{ fontSize: 9, color: 'var(--text3)', textAlign: 'center', fontWeight: 600 }}>{d}</div>
-            ))}
-            {calendarDays.map((day) => (
-              <div
-                key={day.date}
-                title={day.emotionLabel ? `${day.date.substring(5)} ${day.emotionLabel}` : day.date.substring(5)}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  background: day.emotionColor || (day.hasEntry ? 'var(--accent-bg)' : 'var(--surface2)'),
-                  opacity: day.hasEntry ? 1 : 0.4,
-                  margin: '0 auto',
-                  transition: 'all .2s',
-                  cursor: day.hasEntry ? 'pointer' : 'default',
-                }}
-              />
-            ))}
-          </div>
-          {/* Legend */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-            {PLUTCHIK.map((p) => (
-              <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
-                <span style={{ fontSize: 9, color: 'var(--text3)' }}>{p.label}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+      {/* 感情カレンダーは Calendar タブ（気分レイヤー）に統合されました */}
 
       {/* Plutchik 8 emotions (this week) */}
       <div className="section">
