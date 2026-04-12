@@ -20,9 +20,20 @@ function getDaysInRange(start: Date, count: number): string[] {
 }
 
 /** Check if a habit is applicable on a given date based on its frequency */
-function isHabitApplicable(frequency: string, _dateStr: string): boolean {
-  // daily / weekly / monthly — all applicable any day (user picks when)
-  return frequency === 'daily' || frequency === 'weekly' || frequency === 'monthly'
+function isHabitApplicable(frequency: string, dateStr: string): boolean {
+  if (frequency === 'daily') return true
+  if (frequency === 'weekly') {
+    // weekly は週の最終日（日曜）のみ applicable（週1回カウント）
+    const d = new Date(dateStr + 'T00:00:00')
+    return d.getDay() === 0 // Sunday = end of week
+  }
+  if (frequency === 'monthly') {
+    // monthly は月末日のみ applicable
+    const d = new Date(dateStr + 'T00:00:00')
+    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
+    return d.getDate() === lastDay
+  }
+  return true
 }
 
 /** Get the start date of the current period for a given frequency */
@@ -326,14 +337,27 @@ export function Habits() {
     const calcWeekRate = (days: string[]) => {
       let totalApplicable = 0
       let totalDone = 0
+      // Daily habits: count per day
+      const dailyHabits = habits.filter((h) => h.frequency === 'daily')
       for (const day of days) {
-        const applicable = habits.filter((h) => isHabitApplicable(h.frequency, day))
-        totalApplicable += applicable.length
+        totalApplicable += dailyHabits.length
         const doneIds = new Set(
           habitLogs.filter((l) => l.completed_at.substring(0, 10) === day).map((l) => l.habit_id),
         )
-        totalDone += applicable.filter((h) => doneIds.has(h.id)).length
+        totalDone += dailyHabits.filter((h) => doneIds.has(h.id)).length
       }
+      // Weekly habits: 1 per week (done if any day in range has a log)
+      const weeklyHabits = habits.filter((h) => h.frequency === 'weekly')
+      const allDoneIds = new Set(
+        habitLogs.filter((l) => days.includes(l.completed_at.substring(0, 10))).map((l) => l.habit_id),
+      )
+      totalApplicable += weeklyHabits.length
+      totalDone += weeklyHabits.filter((h) => allDoneIds.has(h.id)).length
+      // Monthly habits: 1 per month
+      const monthlyHabits = habits.filter((h) => h.frequency === 'monthly')
+      totalApplicable += monthlyHabits.length
+      totalDone += monthlyHabits.filter((h) => allDoneIds.has(h.id)).length
+
       return totalApplicable > 0 ? Math.round((totalDone / totalApplicable) * 100) : 0
     }
 

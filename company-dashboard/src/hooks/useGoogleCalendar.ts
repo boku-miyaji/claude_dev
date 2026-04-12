@@ -85,6 +85,7 @@ export function useGoogleCalendar(viewDate: Date, viewMode: ViewMode) {
     events,
     loading,
     error,
+    authenticated,
     token: authenticated ? 'proxy' : null,  // Backwards compat: truthy when authenticated
     requestAuth,
     refetch: fetchEvents,

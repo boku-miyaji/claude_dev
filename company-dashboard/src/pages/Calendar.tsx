@@ -292,7 +292,7 @@ export function Calendar() {
   const [modalDate, setModalDate] = useState<string>('')
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
 
-  const { events, loading, error, token, requestAuth, refetch, createEvent, updateEvent, deleteEvent } = useGoogleCalendar(viewDate, viewMode)
+  const { events, loading, error, authenticated, requestAuth, refetch, createEvent, updateEvent, deleteEvent } = useGoogleCalendar(viewDate, viewMode)
   const today = toJSTDate(new Date())
 
   const handleCellClick = (dateStr: string, _hour = 10) => {
@@ -347,8 +347,18 @@ export function Calendar() {
     return [] // month uses its own grid
   }, [viewDate, viewMode])
 
+  // Loading auth status
+  if (authenticated === null) {
+    return (
+      <div className="page">
+        <PageHeader title="Calendar" />
+        <div className="skeleton-card" style={{ height: 300 }} />
+      </div>
+    )
+  }
+
   // Not authenticated
-  if (token === null) {
+  if (authenticated === false) {
     return (
       <div className="page">
         <PageHeader title="Calendar" />
