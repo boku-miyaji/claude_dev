@@ -7,6 +7,11 @@ import type { ViewMode, CalendarEvent, CalendarType } from '@/types/calendar'
 
 const DOW = ['日', '月', '火', '水', '木', '金', '土']
 const VIEW_LABELS: Record<ViewMode, string> = { day: '日', week: '週', month: '月' }
+const CAL_BG_COLORS: Record<CalendarType, string> = {
+  primary: '#5b5fc7',
+  secondary: '#b45309',
+  work: '#1a7f37',
+}
 const HOUR_H = 48
 const START_H = 8
 const END_H = 22
@@ -128,6 +133,7 @@ function TimeGrid({ events, days, today, hiddenCalendars, onCellClick, onEventCl
   const bodyRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const [, setDragRender] = useState(0) // force re-render during drag
+  const [hoverCell, setHoverCell] = useState<{ dayIndex: number; hour: number } | null>(null)
   const now = useMemo(() => new Date(), [])
   const nowH = now.getHours() + now.getMinutes() / 60
   const todayDayIndex = days.findIndex(d => toJSTDateStr(d) === today)
@@ -276,17 +282,44 @@ function TimeGrid({ events, days, today, hiddenCalendars, onCellClick, onEventCl
       </div>
 
       {/* Time grid body */}
-      <div ref={bodyRef} className="cal-tg-body" style={{ gridTemplateColumns: `56px repeat(${days.length}, 1fr)` }}>
+      <div ref={bodyRef} className="cal-tg-body" style={{ gridTemplateColumns: `56px repeat(${days.length}, 1fr)` }}
+        onMouseLeave={() => setHoverCell(null)}>
         {/* Grid cells */}
         {HOURS.map(h => (
           <React.Fragment key={h}>
             <div className="cal-tg-time">{h > START_H ? `${String(h).padStart(2, '0')}:00` : ''}</div>
             {days.map((d, di) => (
               <div key={di} className="cal-tg-cell" data-day={di} data-hour={h} style={{ position: 'relative' }}
+                onMouseEnter={() => setHoverCell({ dayIndex: di, hour: h })}
                 onClick={() => { if (!dragRef.current) onCellClick(toJSTDateStr(d), h) }} />
             ))}
           </React.Fragment>
         ))}
+
+        {/* Hover preview ghost (where the new event will be added) */}
+        {hoverCell && !drag && (
+          <div style={{
+            position: 'absolute',
+            top: (hoverCell.hour - START_H) * HOUR_H,
+            left: `calc(56px + ${hoverCell.dayIndex} * (100% - 56px) / ${days.length} + 2px)`,
+            width: `calc((100% - 56px) / ${days.length} - 4px)`,
+            height: HOUR_H - 2,
+            background: 'var(--accent)',
+            opacity: 0.15,
+            borderLeft: '3px solid var(--accent)',
+            borderRadius: 4,
+            pointerEvents: 'none',
+            zIndex: 1,
+            display: 'flex',
+            alignItems: 'flex-start',
+            padding: '4px 6px',
+            fontSize: 10,
+            fontWeight: 600,
+            color: 'var(--accent)',
+          }}>
+            + {String(hoverCell.hour).padStart(2, '0')}:00
+          </div>
+        )}
 
         {/* Events (absolutely positioned) */}
         {days.map((_d, di) => {
@@ -323,13 +356,24 @@ function TimeGrid({ events, days, today, hiddenCalendars, onCellClick, onEventCl
 
                 const isPast = toJSTDateStr(new Date(evt.start_time)) === today && new Date(evt.end_time) < now
 
+                const calLabel = GCAL_CALENDARS.find(c => c.type === evt.calendar_type)?.label || evt.calendar_type
+                const bg = CAL_BG_COLORS[evt.calendar_type] || '#5b5fc7'
                 return (
                   <div key={evt.id}
                     className={`cal-tg-ev cal-${evt.calendar_type}${isPast ? ' cal-past' : ''}${isDragging ? ' dragging' : ''}`}
-                    style={{ top, height: height - 2, cursor: evt.all_day ? 'default' : 'grab', pointerEvents: 'auto' }}
+                    title={`${fmtTime(evt.start_time)}–${fmtTime(evt.end_time)}  ${evt.summary}\n📅 ${calLabel}`}
+                    style={{
+                      top, height: height - 2,
+                      cursor: evt.all_day ? 'default' : 'grab',
+                      pointerEvents: 'auto',
+                      background: bg,
+                      color: '#fff',
+                      borderLeft: `3px solid ${bg}`,
+                      filter: 'brightness(1)',
+                      paddingLeft: 6,
+                    }}
                     onMouseDown={e => { if (!e.defaultPrevented) onEventMouseDown(evt, e) }}>
-                    <span className="cal-tg-ev-time" />
-                    <span className="cal-tg-ev-title">{evt.summary}</span>
+                    <span className="cal-tg-ev-title" style={{ display: 'block', fontWeight: 600, fontSize: 11, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{evt.summary}</span>
                     {!evt.all_day && (
                       <div className="cal-tg-resize"
                         onMouseDown={e => { e.stopPropagation(); onMouseDown(evt, 'resize', e) }} />
@@ -431,14 +475,30 @@ function CalendarLegend({ hiddenCalendars, onToggle }: {
   hiddenCalendars: Set<CalendarType>; onToggle: (type: CalendarType) => void
 }) {
   return (
-    <div className="cal-legend" style={{ marginTop: 8 }}>
+    <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
       {GCAL_CALENDARS.map(c => {
         const hidden = hiddenCalendars.has(c.type)
-        const dotClass = c.type === 'primary' ? 'p' : c.type === 'work' ? 'w' : 's'
         return (
-          <div key={c.id} className="cal-legend-item" style={{ cursor: 'pointer', opacity: hidden ? 0.35 : 1 }}
+          <div key={c.id}
+            style={{
+              cursor: 'pointer',
+              opacity: hidden ? 0.4 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 12,
+              color: 'var(--text2)',
+              padding: '4px 10px',
+              borderRadius: 6,
+              background: hidden ? 'transparent' : 'var(--surface2)',
+              border: '1px solid var(--border)',
+              transition: 'all .15s',
+              userSelect: 'none',
+              textDecoration: hidden ? 'line-through' : 'none',
+            }}
+            title={hidden ? 'クリックで表示' : 'クリックで非表示'}
             onClick={() => onToggle(c.type)}>
-            <div className={`cal-legend-dot ${dotClass}`} />
+            <span style={{ display: 'inline-block', width: 14, height: 14, borderRadius: 3, background: CAL_BG_COLORS[c.type], flexShrink: 0 }} />
             {c.label}
           </div>
         )
