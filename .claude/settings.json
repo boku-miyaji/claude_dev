@@ -216,7 +216,8 @@
       "/workspace/.claude/agents",
       "/workspace/.company/departments/research",
       "/workspace/.company/departments",
-      "/workspace/.claude/skills"
+      "/workspace/.claude/skills",
+      "/workspace/company-dashboard/docs"
     ]
   },
   "hooks": {
