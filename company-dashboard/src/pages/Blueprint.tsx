@@ -176,6 +176,15 @@ function TabVision() {
           ['Layer 2: 言語化', 'パターンが「腑に落ちる言葉」になる', 'コーチング'],
           ['Layer 3: 行動', '言語化を使って自己制御・前向きさに繋げる', 'このアプリが目指す場所'],
         ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>各層の機能実装</div>
+        <Tbl headers={['層', '実装機能', '狙い']} rows={[
+          ['Layer 1: 観察', '良問いライブラリ（diaryPrompts.ts 7軸構造化）', 'コーチの良問いを日記プロンプトとして毎日浴びる。価値観・幸せ・失敗パターンの生データを意図的に集める'],
+          ['Layer 1→2: 橋渡し', '過去の自分カード（useSimilarPastEntry）', 'ユーザーが忘れた範囲の過去の自分を提示。embedding検索、LLM不要、14日以上前のエントリのみ'],
+          ['Layer 2: 言語化', 'Theme Finder（識別）→ 自分の取扱説明書の種カード', '数ヶ月分の日記から「この人の核心」を言語化。腑に落ちる言葉を提案'],
+          ['Layer 2→3: 橋渡し', '自分の取扱説明書の手編集（Manual ページ）', 'AI の言葉を自分の言葉に書き換えるプロセスがないと行動は変わらない。編集した瞬間にそれが「自分のもの」になる'],
+          ['Layer 3: 行動', '取扱説明書を日々参照する（設計中）', '判断・選択・自己制御の土台として手元に置く'],
+        ]} />
       </Section>
 
       <Section title="「動けてない日」を責めない設計（必須原則）">
@@ -1318,6 +1327,28 @@ function TabAiFeatures() {
           output="[{title, summary, url, source, topic, date}] の配列"
           storage="news_items テーブル（Single Source of Truth）"
           hook="lib/newsCollect.ts（共通モジュール）← Today.tsx / Reports.tsx から呼び出し"
+        />
+
+        <AiFeatureCard
+          name="8. 過去の自分カード（類似検索）"
+          trigger="Today画面の日記入力欄で20字以上タイプ後、1.5秒後に自動検索"
+          input="今入力中の日記テキスト"
+          model="text-embedding-3-small (1536次元)"
+          pipeline="入力テキスト → Edge Function diary-embed → OpenAI embedding → Supabase RPC match_similar_diary_entries (pgvector cosine) → 14日以上前のエントリから上位2件 → UI表示"
+          output="過去の似た日記2件（date + body抜粋）"
+          storage="diary_entries.embedding列（vector(1536)、ivfflat index）。新規エントリ書き込み時に自動 persist"
+          hook="useSimilarPastEntry.ts / Edge Function: diary-embed"
+        />
+
+        <AiFeatureCard
+          name="9. 自分の取扱説明書（種カード生成）"
+          trigger="Manual ページで「日記から生成する」押下"
+          input="直近3ヶ月の日記60件 + story_memory（Theme Finder 既存結果）"
+          model="gpt-5-nano (completion mode, jsonMode)"
+          pipeline="日記+story_memory → system: 取扱説明書の種を生成（identity / values / joy_trigger / energy_source / failure_pattern / recovery_style / aspiration） → JSON → user_edited_at=null の既存種だけ削除して挿入"
+          output="カテゴリ別カード（各1〜2件）。本文 + evidence（日記引用）"
+          storage="user_manual_cards テーブル。user_edited_at がセットされたカードは AI が上書きしない"
+          hook="useUserManual.ts / src/pages/Manual.tsx"
         />
       </Section>
 

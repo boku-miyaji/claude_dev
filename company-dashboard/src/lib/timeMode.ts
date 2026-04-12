@@ -22,26 +22,6 @@ export function formatToday(): string {
   return `${d.getMonth() + 1}月${d.getDate()}日（${dow}）`
 }
 
-/** Diary input prompt based on time and context */
-export function getDiaryPrompt(
-  mode: TimeMode,
-  recentEventName?: string,
-): string {
-  if (mode === 'afternoon' && recentEventName) {
-    return `${recentEventName}の後、何か思ったことは?`
-  }
-  switch (mode) {
-    case 'morning': return '今日やりたいことは?'
-    case 'afternoon': return '今、頭に浮かんでいることは?'
-    case 'evening': {
-      const prompts = [
-        '今日一番印象に残ったことは何ですか?',
-        '今日の自分に点数をつけるなら?',
-        '今日「ありがとう」と思った瞬間は?',
-        '明日の自分に一言伝えるなら?',
-        '今日学んだことは?',
-      ]
-      return prompts[new Date().getDate() % prompts.length]
-    }
-  }
-}
+// getDiaryPrompt / getTodayQuestions は src/lib/diaryPrompts.ts に移動
+// 良問いライブラリ化（価値観・幸せ・失敗パターン等 7軸構造化）のため
+export { getDiaryPrompt, getTodayQuestions } from './diaryPrompts'

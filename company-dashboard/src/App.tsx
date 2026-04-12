@@ -24,6 +24,7 @@ import { Career } from '@/pages/Career'
 import { Journal } from '@/pages/Journal'
 import { Dreams } from '@/pages/Dreams'
 import { SelfAnalysis } from '@/pages/SelfAnalysis'
+import { Manual } from '@/pages/Manual'
 import { Goals } from '@/pages/Goals'
 import { Habits } from '@/pages/Habits'
 import { WeeklyNarrative } from '@/pages/WeeklyNarrative'
@@ -92,6 +93,7 @@ export function App() {
           <Route path="/dreams" element={<Dreams />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/me" element={<SelfAnalysis />} />
+          <Route path="/manual" element={<Manual />} />
           <Route path="/habits" element={<Habits />} />
           <Route path="/weekly" element={<WeeklyNarrative />} />
           <Route path="/story" element={<Story />} />

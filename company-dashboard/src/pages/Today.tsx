@@ -18,73 +18,11 @@ import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/tim
 import type { TimeMode } from '@/lib/timeMode'
 import type { DiaryEntry } from '@/types/diary'
 
-/* ── Analysis Questions for Self-Analysis Precision ── */
-
-// カテゴリは「分析タイプ」ではなく「日記で不足しがちな情報」の軸で設計
-// 日記テキストから検出しにくいデータを自然に引き出す
-const ANALYSIS_QUESTIONS: Record<string, string[]> = {
-  // 人間関係（日記で最も見落とされやすい領域）
-  relationships: [
-    '今日、誰と話した？どんな気持ちだった？',
-    '最近、誰かを元気づけたり励ましたことは？',
-    '1対1で深く話せた相手は最近いる？',
-    '今日、誰かのために何かした？',
-    '最近、友達や仲間との関係で嬉しかったことは？',
-    '誰かと意見が合わなかった時、どう対応した？',
-    '最近会った人の中で、印象に残った人は？なぜ？',
-  ],
-  // ポジティブ面（日記はネガティブに偏りやすい）
-  positive: [
-    '今日の小さな幸せは何だった？',
-    '最近、笑った瞬間は？何がおかしかった？',
-    '今日うまくいったことは？',
-    '最近、場の雰囲気を明るくした場面はあった？',
-    '感謝したいことは？',
-    '今日、楽しみにしていることは？',
-  ],
-  // 行動パターン（思考ではなく実際の行動を記録）
-  actions: [
-    '今日、一番時間を使ったことは？',
-    '計画通りにできたこと、できなかったことは？',
-    '今日、自分から始めたことはある？',
-    '最近、誰かに頼まれて動いたことは？',
-    '後回しにしていることはある？なぜ？',
-    '今日、新しく試したことはある？',
-  ],
-  // 意思決定・価値観（判断基準を引き出す）
-  decisions: [
-    '今日、迷って決めたことは？何が決め手だった？',
-    '最近「これは譲れない」と思ったことは？',
-    '自分のやり方を変えた場面はあった？',
-    '今の生活で一番大事にしていることは？',
-    '最近、直感で決めたことと論理で決めたこと、どちらが多い？',
-  ],
-  // 内面・感情（従来の感情質問を維持）
-  inner: [
-    '今の気持ちを一言で表すと？',
-    '最近、一人の時間で何をしていた？',
-    'エネルギーが湧いてきた瞬間は？逆に消耗した瞬間は？',
-    '最近、自分の成長を感じたことは？',
-    '今、一番気になっていることは？',
-  ],
-}
-
-/** Get today's analysis questions based on date rotation */
-function getTodayQuestions(todayStr: string): string[] {
-  const categories = Object.keys(ANALYSIS_QUESTIONS)
-  // Use date string to create a deterministic seed
-  const seed = todayStr.split('-').reduce((acc, n) => acc + parseInt(n, 10), 0)
-  // Pick 2 categories based on date
-  const cat1 = categories[seed % categories.length]
-  const cat2 = categories[(seed + 3) % categories.length]
-  // Pick 1 question from each category
-  const q1 = ANALYSIS_QUESTIONS[cat1][seed % ANALYSIS_QUESTIONS[cat1].length]
-  const q2Arr = ANALYSIS_QUESTIONS[cat2]
-  const q2 = q2Arr[(seed + 2) % q2Arr.length]
-  // Avoid duplicates
-  if (q1 === q2) return [q1]
-  return [q1, q2]
-}
+// Analysis questions for diary input — src/lib/diaryPrompts.ts に良問いライブラリとして集約済み
+// 価値観・幸せ・失敗パターン・行動・人間関係・意思決定・内面・ポジティブ の 7軸構造
+import { getTodayQuestions } from '@/lib/diaryPrompts'
+import { useSimilarPastEntry } from '@/hooks/useSimilarPastEntry'
+import { supabase } from '@/lib/supabase'
 
 /* ── Constants ── */
 
@@ -427,12 +365,20 @@ export function Today() {
       }
       detect(content.trim()).then((detections) => { for (const d of detections) toast(`夢『${d.dream_title}』に近づいているかもしれません！`) })
       detectMoment(typeof inserted.id === 'number' ? inserted.id : parseInt(inserted.id, 10), content.trim()).then((r) => { if (r.detected && r.moment) toast(`転機を検出: ${r.moment.title}`) })
+      // Persist embedding (fire-and-forget; 過去の自分カード検索用)
+      const numericId = typeof inserted.id === 'number' ? inserted.id : parseInt(inserted.id, 10)
+      if (!Number.isNaN(numericId)) {
+        supabase.functions.invoke('diary-embed', { body: { id: numericId, text: content.trim() } })
+          .catch((err) => console.error('[Today] diary-embed failed', err))
+      }
       // Re-generate AI comment with new diary context
       invalidateBriefing()
     }
   }, [addDiaryEntry, analyze, detect, todayStr, invalidateBriefing])
 
   const diaryPrompt = useMemo(() => getDiaryPrompt(timeMode, recentEventName ?? undefined), [timeMode, recentEventName])
+  // 「過去の自分カード」— 今書いている内容と意味が近い 14日より前の日記を返す
+  const { entries: similarPast } = useSimilarPastEntry(text)
   const todayQuestions = useMemo(() => getTodayQuestions(todayStr), [todayStr])
 
   // News state — must be before any conditional return to satisfy Rules of Hooks
@@ -847,7 +793,8 @@ export function Today() {
         {todayQuestions.map((q, i) => (
           <div
             key={i}
-            onClick={() => setText((prev) => prev ? `${prev}\n${q} ` : `${q} `)}
+            title={`${q.axis} / ${q.depth}`}
+            onClick={() => setText((prev) => prev ? `${prev}\n${q.text} ` : `${q.text} `)}
             style={{
               fontSize: 11,
               color: 'var(--text3)',
@@ -859,10 +806,39 @@ export function Today() {
             onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text2)' }}
             onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text3)' }}
           >
-            {q}
+            {q.text}
           </div>
         ))}
       </div>
+      {/* 過去の自分カード — 忘れていた似た日記を1〜2件 */}
+      {similarPast.length > 0 && (
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+          <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 6, letterSpacing: 0.3 }}>
+            ◇ 過去の自分 — 似たことを書いていた日
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {similarPast.map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  fontSize: 11,
+                  color: 'var(--text2)',
+                  padding: '6px 8px',
+                  background: 'var(--surface)',
+                  borderRadius: 4,
+                  borderLeft: '2px solid var(--accent)',
+                  lineHeight: 1.5,
+                }}
+              >
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 2, fontFamily: 'var(--mono)' }}>
+                  {p.entry_date}
+                </div>
+                <div>{p.body.length > 120 ? p.body.substring(0, 120) + '…' : p.body}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </Card>
   )
 
