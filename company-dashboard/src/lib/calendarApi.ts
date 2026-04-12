@@ -72,7 +72,17 @@ export function startCalendarAuth(): void {
  * Called from the callback page after Google redirects back.
  */
 export async function completeCalendarAuth(code: string): Promise<{ ok: boolean; error?: string }> {
-  const headers = await getAuthHeaders()
+  // Wait for Supabase session to be restored after page redirect (max 5s)
+  let headers = await getAuthHeaders()
+  if (!headers.Authorization || headers.Authorization === 'Bearer ') {
+    await new Promise<void>((resolve) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session) { subscription.unsubscribe(); resolve() }
+      })
+      setTimeout(() => { subscription.unsubscribe(); resolve() }, 5000)
+    })
+    headers = await getAuthHeaders()
+  }
   const redirectUri = window.location.origin + '/auth/google/callback'
   const res = await fetch(`${PROXY_BASE}/auth/callback`, {
     method: 'POST',

@@ -173,7 +173,16 @@ async function handleAuthCallback(req: Request, userId: string): Promise<Respons
     });
   }
 
-  const tokens = await exchangeCode(code, redirect_uri);
+  let tokens: TokenResponse;
+  try {
+    tokens = await exchangeCode(code, redirect_uri);
+  } catch (e) {
+    console.error("exchangeCode failed:", e, "redirect_uri:", redirect_uri, "client_id:", GOOGLE_CLIENT_ID?.substring(0, 20));
+    return new Response(
+      JSON.stringify({ error: String(e) }),
+      { status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } },
+    );
+  }
 
   if (!tokens.refresh_token) {
     return new Response(
