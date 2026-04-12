@@ -512,24 +512,22 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {outliers.low && (
-            <div style={{ background: 'rgba(239, 68, 68, 0.08)', borderLeft: '3px solid #ef4444', padding: '12px 14px', borderRadius: 6 }}>
-              <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 600, letterSpacing: '.5px', marginBottom: 4 }}>🔻 最低</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: '#ef4444', fontFamily: 'var(--mono)' }}>{outliers.low.wbi_score.toFixed(1)}</div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{fmtJpDate(outliers.low.created_at)}</div>
-              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
-                個人平均より <span style={{ color: '#ef4444', fontWeight: 600 }}>{(outliers.low.wbi_score - baseline).toFixed(1)}</span>
-              </div>
-            </div>
+            <OutlierCard
+              entry={outliers.low}
+              diary={diaryByDate[outliers.low.created_at.substring(0, 10)]}
+              baseline={baseline}
+              kind="low"
+              fmtJpDate={fmtJpDate}
+            />
           )}
           {outliers.high && (
-            <div style={{ background: 'rgba(34, 197, 94, 0.08)', borderLeft: '3px solid #22c55e', padding: '12px 14px', borderRadius: 6 }}>
-              <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 600, letterSpacing: '.5px', marginBottom: 4 }}>🔺 最高</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: '#22c55e', fontFamily: 'var(--mono)' }}>{outliers.high.wbi_score.toFixed(1)}</div>
-              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{fmtJpDate(outliers.high.created_at)}</div>
-              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
-                個人平均より <span style={{ color: '#22c55e', fontWeight: 600 }}>+{(outliers.high.wbi_score - baseline).toFixed(1)}</span>
-              </div>
-            </div>
+            <OutlierCard
+              entry={outliers.high}
+              diary={diaryByDate[outliers.high.created_at.substring(0, 10)]}
+              baseline={baseline}
+              kind="high"
+              fmtJpDate={fmtJpDate}
+            />
           )}
         </div>
         {(!outliers.low || !outliers.high) && (
@@ -538,6 +536,182 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
           </div>
         )}
       </Card>
+
+      {/* Heatmap cell detail modal */}
+      {selectedCell && (
+        <HeatmapCellModal
+          cell={selectedCell}
+          entries={entries}
+          diaryByDate={diaryByDate}
+          baseline={baseline}
+          onClose={() => setSelectedCell(null)}
+          dowLabels={DOW_LABELS}
+          slotLabels={SLOT_LABELS}
+        />
+      )}
+    </div>
+  )
+}
+
+// ============================================================
+// OutlierCard — Card 3 sub-component with diary context
+// ============================================================
+
+function OutlierCard({ entry, diary, baseline, kind, fmtJpDate }: {
+  entry: EmotionEntry
+  diary: DiaryRow | undefined
+  baseline: number
+  kind: 'low' | 'high'
+  fmtJpDate: (iso: string) => string
+}) {
+  const color = kind === 'low' ? '#ef4444' : '#22c55e'
+  const bgAlpha = kind === 'low' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(34, 197, 94, 0.08)'
+  const icon = kind === 'low' ? '🔻 最低' : '🔺 最高'
+  const dev = entry.wbi_score - baseline
+  const snippet = diary?.ai_summary || diary?.body?.substring(0, 120) || null
+  const events = (diary?.calendar_events || []).slice(0, 3)
+
+  return (
+    <div style={{ background: bgAlpha, borderLeft: `3px solid ${color}`, padding: '12px 14px', borderRadius: 6 }}>
+      <div style={{ fontSize: 10, color, fontWeight: 600, letterSpacing: '.5px', marginBottom: 4 }}>{icon}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color, fontFamily: 'var(--mono)' }}>{entry.wbi_score.toFixed(1)}</div>
+      <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{fmtJpDate(entry.created_at)}</div>
+      <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
+        個人平均より <span style={{ color, fontWeight: 600 }}>{dev >= 0 ? '+' : ''}{dev.toFixed(1)}</span>
+      </div>
+
+      {/* Calendar context */}
+      {events.length > 0 && (
+        <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
+          <div style={{ fontSize: 9, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>当日の予定</div>
+          {events.map((ev, i) => (
+            <div key={i} style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.4 }}>· {ev.summary || '—'}</div>
+          ))}
+        </div>
+      )}
+
+      {/* Diary snippet */}
+      {snippet && (
+        <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed var(--border)' }}>
+          <div style={{ fontSize: 9, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>日記から</div>
+          <div style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.5, fontStyle: 'italic' }}>
+            「{snippet}{snippet.length >= 120 ? '…' : ''}」
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================
+// HeatmapCellModal — detail list for a specific dow × slot cell
+// ============================================================
+
+function HeatmapCellModal({ cell, entries, diaryByDate, baseline, onClose, dowLabels, slotLabels }: {
+  cell: { dow: number; slot: number }
+  entries: EmotionEntry[]
+  diaryByDate: Record<string, DiaryRow>
+  baseline: number
+  onClose: () => void
+  dowLabels: string[]
+  slotLabels: string[]
+}) {
+  // Filter entries matching the cell
+  const matching = useMemo(() => {
+    return entries.filter(e => {
+      if (e.wbi_score <= 0) return false
+      const d = new Date(e.created_at)
+      if (d.getDay() !== cell.dow) return false
+      const h = d.getHours()
+      let slot = 0
+      if (h >= 5 && h < 11) slot = 0
+      else if (h >= 11 && h < 16) slot = 1
+      else if (h >= 16 && h < 20) slot = 2
+      else slot = 3
+      return slot === cell.slot
+    }).sort((a, b) => b.created_at.localeCompare(a.created_at))
+  }, [entries, cell])
+
+  const cellAvg = matching.length > 0
+    ? matching.reduce((s, e) => s + e.wbi_score, 0) / matching.length
+    : 0
+  const dev = cellAvg - baseline
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(0,0,0,.5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{
+        background: 'var(--surface)', borderRadius: 12, width: '90%', maxWidth: 560,
+        maxHeight: '80vh', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        border: '1px solid var(--border)',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
+                {dowLabels[cell.dow]}曜日 × {slotLabels[cell.slot]}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>
+                {matching.length}件の記録 · 平均 <span style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>{cellAvg.toFixed(1)}</span>
+                {' '}(個人平均より <span style={{ fontFamily: 'var(--mono)', fontWeight: 600, color: dev >= 0 ? '#22c55e' : '#ef4444' }}>
+                  {dev >= 0 ? '+' : ''}{dev.toFixed(1)}
+                </span>)
+              </div>
+            </div>
+            <button onClick={onClose} style={{
+              background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer',
+              fontSize: 20, padding: 0, lineHeight: 1,
+            }}>×</button>
+          </div>
+        </div>
+
+        {/* List */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 20px' }}>
+          {matching.length === 0 && (
+            <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', padding: 24 }}>
+              データがありません
+            </div>
+          )}
+          {matching.map((e, i) => {
+            const day = e.created_at.substring(0, 10)
+            const diary = diaryByDate[day]
+            const d = new Date(e.created_at)
+            const md = `${d.getMonth() + 1}/${d.getDate()}`
+            const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+            const entryDev = e.wbi_score - baseline
+            const entryColor = entryDev >= 0 ? '#22c55e' : '#ef4444'
+            const snippet = diary?.ai_summary || diary?.body?.substring(0, 100)
+            return (
+              <div key={i} style={{
+                padding: '10px 0',
+                borderBottom: i < matching.length - 1 ? '1px solid var(--border)' : 'none',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', minWidth: 55 }}>
+                    {md} {hm}
+                  </span>
+                  <span style={{
+                    fontSize: 13, fontWeight: 700, color: entryColor, fontFamily: 'var(--mono)', minWidth: 32,
+                  }}>
+                    {e.wbi_score.toFixed(1)}
+                  </span>
+                  <span style={{ fontSize: 10, color: entryColor }}>
+                    ({entryDev >= 0 ? '+' : ''}{entryDev.toFixed(1)})
+                  </span>
+                </div>
+                {snippet && (
+                  <div style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.5, paddingLeft: 65 }}>
+                    {snippet}{snippet.length >= 100 ? '…' : ''}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
