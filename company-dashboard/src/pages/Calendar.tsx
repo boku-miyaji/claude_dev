@@ -595,16 +595,12 @@ import React from 'react'
 // Wellbeing Strip (週ビュー下)
 // ============================================================
 
-function WellbeingStrip({ days, layerMap, layers, today, onCellClick }: {
+function WellbeingStrip({ days, layerMap, today, onCellClick }: {
   days: Date[]
   layerMap: CalendarLayerMap
-  layers: Record<LayerKey, boolean>
   today: string
   onCellClick: (dateStr: string) => void
 }) {
-  // Only show if any relevant layer is on
-  if (!layers.mood && !layers.habits && !layers.diary) return null
-
   const dowLabels = ['日', '月', '火', '水', '木', '金', '土']
 
   return (
@@ -623,7 +619,7 @@ function WellbeingStrip({ days, layerMap, layers, today, onCellClick }: {
           const ds = toJSTDateStr(d)
           const layer = layerMap.get(ds)
           const level = moodLevel(layer?.mood ?? null)
-          const bg = layers.mood ? moodBgColor(level) : undefined
+          const bg = moodBgColor(level)
           const isToday = ds === today
           const hasDiary = (layer?.diaryEntries.length || 0) > 0
           return (
@@ -643,12 +639,10 @@ function WellbeingStrip({ days, layerMap, layers, today, onCellClick }: {
               <div style={{ fontSize: 10, color: isToday ? 'var(--accent)' : 'var(--text3)', fontWeight: isToday ? 700 : 500 }}>
                 {dowLabels[d.getDay()]} {d.getDate()}
               </div>
-              {layers.mood && (
-                <div style={{ fontSize: 18, margin: '4px 0 4px', lineHeight: 1 }}>
-                  {moodEmoji(level)}
-                </div>
-              )}
-              {layers.habits && layer && layer.habitTotals.total > 0 && (
+              <div style={{ fontSize: 18, margin: '4px 0 4px', lineHeight: 1 }}>
+                {moodEmoji(level)}
+              </div>
+              {layer && layer.habitTotals.total > 0 && (
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', marginTop: 2 }}>
                   {layer.habitLogs.slice(0, 8).map((h, k) => (
                     <span
@@ -662,7 +656,7 @@ function WellbeingStrip({ days, layerMap, layers, today, onCellClick }: {
                   ))}
                 </div>
               )}
-              {hasDiary && layers.diary && (
+              {hasDiary && (
                 <span style={{
                   position: 'absolute', top: 6, right: 6,
                   width: 6, height: 6, borderRadius: '50%',
@@ -1020,35 +1014,37 @@ export function Calendar() {
         <button className="btn btn-ghost btn-sm" onClick={refetch} style={{ fontSize: 11 }}>↻</button>
       </div>
 
-      {/* Layer toggles */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.08em', marginRight: 4 }}>
-          レイヤー
-        </span>
-        {LAYER_META.map(({ key, label, swatch }) => {
-          const active = layers[key]
-          return (
-            <button
-              key={key}
-              onClick={() => toggleLayer(key)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '4px 10px',
-                fontSize: 11,
-                border: '1px solid var(--border)',
-                borderRadius: 20,
-                background: active ? 'var(--text)' : 'var(--surface)',
-                color: active ? 'var(--surface)' : 'var(--text3)',
-                cursor: 'pointer',
-                transition: 'all .15s',
-              }}
-            >
-              <span style={{ width: 9, height: 9, borderRadius: '50%', background: swatch }} />
-              {label}
-            </button>
-          )
-        })}
-      </div>
+      {/* Layer toggles — 月ビューのセル表示の切替用なので月のみに表示 */}
+      {viewMode === 'month' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.08em', marginRight: 4 }}>
+            レイヤー
+          </span>
+          {LAYER_META.map(({ key, label, swatch }) => {
+            const active = layers[key]
+            return (
+              <button
+                key={key}
+                onClick={() => toggleLayer(key)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '4px 10px',
+                  fontSize: 11,
+                  border: '1px solid var(--border)',
+                  borderRadius: 20,
+                  background: active ? 'var(--text)' : 'var(--surface)',
+                  color: active ? 'var(--surface)' : 'var(--text3)',
+                  cursor: 'pointer',
+                  transition: 'all .15s',
+                }}
+              >
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: swatch }} />
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {loading && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>Loading...</div>}
 
@@ -1070,7 +1066,7 @@ export function Calendar() {
 
       {/* Wellbeing Strip (週ビュー下) */}
       {viewMode === 'week' && (
-        <WellbeingStrip days={days} layerMap={layerMap} layers={layers} today={today} onCellClick={setDrawerDate} />
+        <WellbeingStrip days={days} layerMap={layerMap} today={today} onCellClick={setDrawerDate} />
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
