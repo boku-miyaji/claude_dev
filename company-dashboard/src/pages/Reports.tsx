@@ -20,6 +20,7 @@ interface Report {
 interface ReportNewsItem {
   id: string
   title: string
+  title_ja: string | null
   summary: string
   url: string | null
   source: string
@@ -368,7 +369,7 @@ function NewsFeed() {
                     </span>
                   )}
                   <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', flex: 1 }}>
-                    {item.title}
+                    {item.title_ja || item.title}
                   </span>
                 </div>
 

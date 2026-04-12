@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 export interface NewsItem {
   id?: string
   title: string
+  title_ja?: string | null
   summary: string
   url: string | null
   source: string
@@ -76,7 +77,7 @@ export async function loadNews(limit = 10): Promise<NewsItem[]> {
 
   const { data } = await supabase
     .from('news_items')
-    .select('id,title,summary,url,source,source_type,topic,published_date,collected_at')
+    .select('id,title,title_ja,summary,url,source,source_type,topic,published_date,collected_at')
     .gte('collected_at', threshold.toISOString())
     .order('published_date', { ascending: false, nullsFirst: false })
     .order('collected_at', { ascending: false })

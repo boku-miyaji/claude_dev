@@ -382,7 +382,7 @@ export function Today() {
   const todayQuestions = useMemo(() => getTodayQuestions(todayStr), [todayStr])
 
   // News state — must be before any conditional return to satisfy Rules of Hooks
-  const [newsItems, setNewsItems] = useState<Array<{ id?: string; title: string; summary: string; url: string | null; source: string; source_type?: string | null; topic: string; published_date?: string | null }>>([])
+  const [newsItems, setNewsItems] = useState<Array<{ id?: string; title: string; title_ja?: string | null; summary: string; url: string | null; source: string; source_type?: string | null; topic: string; published_date?: string | null }>>([])
   const [newsCollecting, setNewsCollecting] = useState(false)
 
   useEffect(() => {
@@ -733,9 +733,9 @@ export function Today() {
               {n.url ? (
                 <a href={n.url} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 500, color: 'var(--text)', textDecoration: 'none' }}
                   onClick={() => { if (n.id) import('@/lib/newsCollect').then(({ recordClick }) => recordClick(n.id!)) }}
-                >{n.title}</a>
+                >{n.title_ja || n.title}</a>
               ) : (
-                <span style={{ fontWeight: 500 }}>{n.title}</span>
+                <span style={{ fontWeight: 500 }}>{n.title_ja || n.title}</span>
               )}
             </div>
             {n.summary && <div style={{ color: 'var(--text3)', marginTop: 2, fontSize: 11 }}>{n.summary}</div>}
