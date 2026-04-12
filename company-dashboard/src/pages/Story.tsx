@@ -126,6 +126,9 @@ export function Story() {
         <div className="section">
           <div className="section-title">感情の軌跡（WBI）</div>
           <Card>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>
+              日記から算出したウェルビーイング指数（0〜10）。高いほど心の状態が良い。
+            </div>
             <div style={{ marginBottom: 8 }}>
               {renderSparkline(wbiTimeline.map((d) => d.wbi), 'var(--accent)', 64)}
             </div>
@@ -142,6 +145,9 @@ export function Story() {
         <div className="section">
           <div className="section-title">感情価の推移</div>
           <Card>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>
+              日記の感情がポジティブかネガティブか。上に行くほどポジティブ。
+            </div>
             <div style={{ marginBottom: 8 }}>
               {renderSparkline(wbiTimeline.map((d) => d.valence), 'var(--green)', 48)}
             </div>

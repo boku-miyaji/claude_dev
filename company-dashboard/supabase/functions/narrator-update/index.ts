@@ -64,7 +64,10 @@ async function runArcReader(): Promise<{ updated: boolean; phase?: string }> {
     body: JSON.stringify({
       model: "gpt-5-nano",
       messages: [
-        { role: "system", content: `感情データの時系列から現在のフェーズを判定。出力JSON: {"phase":"exploration|immersion|reflection|reconstruction|leap","narrative":"1-2文","confidence":0.0-1.0}` },
+        { role: "system", content: `感情データと日記の内容から、この人が今どんな時期にいるかを判定する。
+narrativeは友達が「最近どう？」と聞かれて答えるくらいの自然な日本語で、具体的な出来事や気持ちに触れて1-2文で書く。
+抽象的・詩的な表現は禁止（×「大きな扉を開けた」「キラリと見えてきた」）。日記の内容に基づいた具体的な事実を述べる。
+出力JSON: {"phase":"exploration|immersion|reflection|reconstruction|leap","narrative":"1-2文の具体的な説明","confidence":0.0-1.0}` },
         { role: "user", content: `感情:\n${JSON.stringify(timeline)}\n\n日記:\n${diaryText}` },
       ],
       temperature: 0.5,
