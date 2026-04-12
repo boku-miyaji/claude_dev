@@ -754,7 +754,7 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
   // Load knowledge rules (active, high confidence)
   let knowledgeSection = "";
   if (p.chat_memory_enabled !== false) {
-    const { data: rules } = await sb.from("knowledge_base").select("rule,category").eq("status", "active").gte("confidence", 2).order("confidence", { ascending: false }).limit(15);
+    const { data: rules } = await sb.from("knowledge_base").select("rule,category").eq("status", "active").gte("confidence", 2).not("category", "eq", "documentation").order("confidence", { ascending: false }).limit(15);
     if (rules && rules.length > 0) {
       knowledgeSection = "\n## Accumulated Knowledge (apply silently)\n" + rules.map(r => `- [${r.category}] ${r.rule}`).join("\n") + "\n";
       report.knowledge_rules = rules.length;

@@ -237,7 +237,6 @@ export function Today() {
     fetchDiary, fetchTasks, fetchDreams, fetchHabits, fetchHabitLogs, fetchEmotions,
     addDiaryEntry, toggleHabitLog,
     addTask, updateTask, addHabit,
-    loading,
   } = useDataStore()
 
   // Inline add states
@@ -463,15 +462,6 @@ export function Today() {
     return timelineSlots
   }, [timelineSlots, timeMode])
 
-  const isLoading = loading.diary || loading.tasks || loading.dreams
-  if (isLoading && fragments.length === 0) {
-    return (
-      <div className="page">
-        <div className="page-title">{getGreeting(timeMode)}</div>
-        <div style={{ color: 'var(--text3)', marginTop: 12 }}>Loading...</div>
-      </div>
-    )
-  }
 
   /* ════════════════════════════════════════════
      SECTION BUILDERS
