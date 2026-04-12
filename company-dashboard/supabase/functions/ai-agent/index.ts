@@ -751,15 +751,9 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
   if (emojiMap[p.chat_emoji as string]) styleSection += "- " + emojiMap[p.chat_emoji as string] + "\n";
   if (p.chat_custom_instructions) styleSection += "- " + p.chat_custom_instructions + "\n";
 
-  // Load knowledge rules (active, high confidence)
-  let knowledgeSection = "";
-  if (p.chat_memory_enabled !== false) {
-    const { data: rules } = await sb.from("knowledge_base").select("rule,category").eq("status", "active").gte("confidence", 2).not("category", "eq", "documentation").order("confidence", { ascending: false }).limit(15);
-    if (rules && rules.length > 0) {
-      knowledgeSection = "\n## Accumulated Knowledge (apply silently)\n" + rules.map(r => `- [${r.category}] ${r.rule}`).join("\n") + "\n";
-      report.knowledge_rules = rules.length;
-    }
-  }
+  // knowledge_base は HD（仕事の組織運営）用のナレッジ蓄積。
+  // focus-you（個人プロダクト）のチャットには注入しない。
+  const knowledgeSection = "";
 
   // Load recent diary entries for deeper understanding
   let diarySection = "";
@@ -785,7 +779,7 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
 
   if (styleSection) report.personalization_fields.push("style_prefs");
 
-  const prompt = `You are the user's most trusted thinking partner — the person who understands them best. You know them deeply through their diary, knowledge base, behavior insights, and work history. You're not a boss, not a subordinate, not a cold tool. You're a reliable confidant who always has their back.
+  const prompt = `You are the user's most trusted thinking partner — the person who understands them best. You know them deeply through their diary and what they share with you. You're not a boss, not a subordinate, not a cold tool. You're a reliable confidant who always has their back.
 
 ## Who You Are
 - A thoughtful partner who genuinely cares about their well-being, growth, and success
