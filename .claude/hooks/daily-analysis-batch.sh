@@ -757,6 +757,17 @@ else
 fi
 
 # ============================================================
+# Task: 昨日の成長ダイジェスト（git log + prompt_log → growth_events）
+# ============================================================
+echo ""
+echo "[7] Growth digest (yesterday)"
+if [ -x "$SCRIPT_DIR/daily-growth-digest.sh" ]; then
+  bash "$SCRIPT_DIR/daily-growth-digest.sh" 2>&1 | sed 's/^/    /'
+else
+  echo "    daily-growth-digest.sh not found, skip"
+fi
+
+# ============================================================
 # 完了
 # ============================================================
 echo ""
