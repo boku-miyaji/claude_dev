@@ -5,6 +5,8 @@ import { useArcReader } from '@/hooks/useArcReader'
 import { useThemeFinder } from '@/hooks/useThemeFinder'
 import { aiCompletion } from '@/lib/edgeAi'
 import { supabase } from '@/lib/supabase'
+import { fetchCalendarEvents } from '@/lib/calendarApi'
+import type { CalendarEvent } from '@/types/calendar'
 
 export function Story() {
   const { emotionAnalyses, fetchEmotions, loading } = useDataStore()
@@ -267,6 +269,7 @@ interface DiaryRow {
 
 function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
   const [diaryByDate, setDiaryByDate] = useState<Record<string, DiaryRow>>({})
+  const [eventsByDate, setEventsByDate] = useState<Record<string, CalendarEvent[]>>({})
   const [selectedCell, setSelectedCell] = useState<{ dow: number; slot: number } | null>(null)
 
   // Personal baseline + stddev (for adaptive color scaling)
@@ -279,12 +282,14 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
     return { baseline: avg, stddev: sd }
   }, [entries])
 
-  // Fetch diary entries for all dates in emotion range (lazy, once on mount)
+  // Fetch diary entries + Google Calendar events for emotion range
   useEffect(() => {
     if (entries.length === 0) return
     const dates = Array.from(new Set(entries.map(e => e.created_at.substring(0, 10)))).sort()
     const earliest = dates[0]
     const latest = dates[dates.length - 1]
+
+    // 1. Diary entries (body / summary for Card 3 snippet)
     supabase
       .from('diary_entries')
       .select('entry_date,body,ai_summary,calendar_events')
@@ -294,6 +299,24 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
         const map: Record<string, DiaryRow> = {}
         ;(data || []).forEach((r: DiaryRow) => { map[r.entry_date] = r })
         setDiaryByDate(map)
+      })
+
+    // 2. Google Calendar events (for event correlation — Card 4)
+    // Gracefully fail if user isn't authed with Google Calendar
+    const timeMin = new Date(earliest + 'T00:00:00+09:00').toISOString()
+    const timeMax = new Date(latest + 'T23:59:59+09:00').toISOString()
+    fetchCalendarEvents({ timeMin, timeMax, maxResults: 500 })
+      .then(events => {
+        const map: Record<string, CalendarEvent[]> = {}
+        events.forEach(ev => {
+          const day = new Date(ev.start_time).toISOString().substring(0, 10)
+          if (!map[day]) map[day] = []
+          map[day].push(ev)
+        })
+        setEventsByDate(map)
+      })
+      .catch(() => {
+        // Silent fail — Card 4 will just not show if no events
       })
   }, [entries])
 
@@ -432,15 +455,14 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
       prevWbis: number[]
     }> = {}
 
-    Object.entries(diaryByDate).forEach(([day, diary]) => {
+    // Iterate days that have both a WBI score AND calendar events
+    Object.entries(eventsByDate).forEach(([day, events]) => {
       const wbi = dayWbi[day]
       if (wbi === undefined) return
-      const list = diary.calendar_events || []
-      if (!Array.isArray(list)) return
 
       // Dedupe tags per day (one event might match multiple keywords, but per day we count once)
       const seenTagsToday = new Set<string>()
-      list.forEach(ev => {
+      events.forEach(ev => {
         const summary = ev?.summary
         if (!summary || typeof summary !== 'string') return
         extractTags(summary).forEach(tag => {
@@ -482,7 +504,7 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
       negative: results.filter(r => r.dayDev < 0 || (r.prevDev !== null && r.prevDev < -stddev * SIGNIFICANCE)).slice(0, 8),
       positive: results.filter(r => r.dayDev > 0 && !(r.prevDev !== null && r.prevDev < -stddev * SIGNIFICANCE)).slice(0, 8),
     }
-  }, [diaryByDate, dayWbi, baseline, stddev])
+  }, [eventsByDate, dayWbi, baseline, stddev])
 
   // Keep cell count map for displaying sample size
   const cellCounts = useMemo(() => {
@@ -725,6 +747,7 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
             <OutlierCard
               entry={outliers.low}
               diary={diaryByDate[outliers.low.created_at.substring(0, 10)]}
+              events={eventsByDate[outliers.low.created_at.substring(0, 10)]}
               baseline={baseline}
               kind="low"
               fmtJpDate={fmtJpDate}
@@ -734,6 +757,7 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
             <OutlierCard
               entry={outliers.high}
               diary={diaryByDate[outliers.high.created_at.substring(0, 10)]}
+              events={eventsByDate[outliers.high.created_at.substring(0, 10)]}
               baseline={baseline}
               kind="high"
               fmtJpDate={fmtJpDate}
@@ -801,9 +825,10 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
 // OutlierCard — Card 3 sub-component with diary context
 // ============================================================
 
-function OutlierCard({ entry, diary, baseline, kind, fmtJpDate }: {
+function OutlierCard({ entry, diary, events: dayEvents, baseline, kind, fmtJpDate }: {
   entry: EmotionEntry
   diary: DiaryRow | undefined
+  events: CalendarEvent[] | undefined
   baseline: number
   kind: 'low' | 'high'
   fmtJpDate: (iso: string) => string
@@ -813,7 +838,7 @@ function OutlierCard({ entry, diary, baseline, kind, fmtJpDate }: {
   const icon = kind === 'low' ? '🔻 最低' : '🔺 最高'
   const dev = entry.wbi_score - baseline
   const snippet = diary?.ai_summary || diary?.body?.substring(0, 120) || null
-  const events = (diary?.calendar_events || []).slice(0, 3)
+  const events = (dayEvents || []).slice(0, 3)
 
   return (
     <div style={{ background: bgAlpha, borderLeft: `3px solid ${color}`, padding: '12px 14px', borderRadius: 6 }}>
