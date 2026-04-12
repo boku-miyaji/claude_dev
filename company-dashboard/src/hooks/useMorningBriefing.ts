@@ -8,6 +8,18 @@ import type { TimeMode } from '@/lib/timeMode'
 /** Plutchik keys */
 const PLUTCHIK_KEYS = ['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation'] as const
 
+/** Plutchik → 日本語ラベル（応答に内部英語名が漏れるのを防ぐ） */
+const PLUTCHIK_JP: Record<string, string> = {
+  joy: '楽しさ',
+  trust: '安心感',
+  fear: '不安',
+  surprise: '驚き',
+  sadness: '寂しさ',
+  disgust: 'いらだち',
+  anger: '怒り',
+  anticipation: '期待',
+}
+
 /**
  * Deep-personalized AI comment for Today screen.
  * Injects diary emotions, WBI trends, CEO insights, work rhythm,
@@ -66,17 +78,15 @@ export function useMorningBriefing(
         calculateStreak(),
       ])
 
-      // Build emotion context
+      // Build emotion context（内部英語名は一切使わない。日本語ラベルのみ）
       let emotionContext = ''
       if (emotionRes.data && emotionRes.data.length > 0) {
         const avg: Record<string, number> = {}
-        let totalWbi = 0
         const count = emotionRes.data.length
         for (const e of emotionRes.data) {
           for (const key of PLUTCHIK_KEYS) {
             avg[key] = (avg[key] ?? 0) + ((e as Record<string, number>)[key] ?? 0)
           }
-          totalWbi += (e as Record<string, number>).wbi_score ?? 0
         }
         let dominant = 'joy'
         let maxVal = 0
@@ -84,19 +94,19 @@ export function useMorningBriefing(
           avg[key] = avg[key] / count
           if (avg[key] > maxVal) { maxVal = avg[key]; dominant = key }
         }
-        const avgWbi = totalWbi / count
-        emotionContext = `直近の感情傾向(${count}件): 主要感情=${dominant}(${Math.round(maxVal)}), WBI平均=${avgWbi.toFixed(1)}`
+        emotionContext = `直近の気持ちの傾向: ${PLUTCHIK_JP[dominant]}が強め`
       }
 
-      // WBI trend (last 7 days)
-      let wbiTrend = ''
+      // 気分の流れ（直近7日）。数値や指標名は出さず、方向だけ伝える
+      let moodTrend = ''
       if (diaryRes.data && diaryRes.data.length >= 2) {
         const wbis = diaryRes.data.filter((d) => d.wbi != null).map((d) => d.wbi as number)
         if (wbis.length >= 2) {
           const recent = wbis[0]
           const prev = wbis.slice(1).reduce((a, b) => a + b, 0) / (wbis.length - 1)
           const diff = recent - prev
-          wbiTrend = `WBI推移: 最新${recent.toFixed(1)} / 過去平均${prev.toFixed(1)} (${diff > 0 ? '+' : ''}${diff.toFixed(1)})`
+          const direction = diff > 0.5 ? '上向き' : diff < -0.5 ? '下がり気味' : '落ち着いている'
+          moodTrend = `気分の流れ: ${direction}`
         }
       }
 
@@ -127,7 +137,7 @@ export function useMorningBriefing(
       // ① Primary: diary (what the user is feeling / thinking)
       if (recentDiary) contextParts.push(`【日記（最重要）】\n${recentDiary}`)
       if (emotionContext) contextParts.push(emotionContext)
-      if (wbiTrend) contextParts.push(wbiTrend)
+      if (moodTrend) contextParts.push(moodTrend)
 
       // ② Atmosphere: weather, time
       const atmosphereParts: string[] = [`時刻: ${currentTime}`]
@@ -156,36 +166,45 @@ export function useMorningBriefing(
         evening: `夜。今日一日を踏まえた、労いや共感の一言。`,
       }
 
-      const systemPrompt = `あなたは信頼できるカウンセラーのように、日記の内容から気づきを静かに差し出す存在。
+      const systemPrompt = `あなたは日記の内容から静かに気づきを差し出す、少し離れた位置の伴走者です。
 
 ## 原則
 - 日記に書かれた事実をベースにする。事実がない推測はしない
 - 「あなたは〜ですね」ではなく、気づきを差し出す形で
-- 丁寧だけど堅くない。です・ます調
-- 1-2文、80字以内
+- 丁寧だけど堅くない、です・ます調
+- 1〜2文、80字以内
 
 ## 良い例
 日記に「新しいPJの初回MTGだった」「緊張したけどうまくいった」とあった場合:
-→ 「新しい場に飛び込んだ日の翌日って、意外とエネルギー高いことが多いですよね。今日もその流れがありそうです。」
+→ 「新しい場に飛び込んだ日の翌日って、意外とエネルギー高いことが多いですよね。」
 
 日記に「疲れた」「やることが多い」が続いている場合:
-→ 「ここ数日、詰まってる感じが日記に出てますね。こういう時期、あなたは人と話すと切り替わる傾向があります。」
+→ 「ここ数日、詰まってる感じが日記に出ていますね。」
 
 日記に「考えがまとまってきた」「方針が見えた」とあった場合:
-→ 「迷ってた時期を抜けて、手を動かす方に変わってきてますね。3月の日記と比べると明らかに違います。」
+→ 「迷っていた時期を抜けて、手を動かす方に変わってきていますね。」
 
 ## 悪い例（絶対やらない）
-- 「素敵な一日を」「無理せず」「頑張りましょう」（汎用的で中身がない）
-- 「WBIが4.8です」「期待が+20」（数字を見せても意味がない）
-- 「何かあったんですか？」（質問形式はうざい）
-- 「飛躍のフェーズですね」「探索の時期です」（抽象ラベルは空虚）
-- 「〜するといいかもしれません」（行動の指示・提案）
+- 「素敵な一日を」「無理せず」「頑張りましょう」（汎用的）
+- 「WBI」「Joy」「joy」「trust」「valence」「arousal」「PERMA」など内部の指標名・英単語を出す
+- 「今日のJoyは多い」「WBIが下がり気味」のような、内部データをそのまま読み上げる文
+- 数字を見せる（「+20」「4.8」等）
+- 「何かあったんですか？」のような質問形式
+- 「飛躍のフェーズですね」「探索の時期です」のような抽象ラベル
+- 「〜するといいかもしれません」「〜した方がいいかもしれません」などの行動提案・アドバイス
+- 「短い休憩を挟むと」「散歩してみては」のような指示
 - 予定やタスクを読み上げる（画面に書いてある）
+
+## ことば選び
+- 入力に「楽しさが強め」「気分の流れ: 下がり気味」のようなラベルが入っていても、
+  そのラベルを応答に直接出さない。日記の文脈から自然な日本語で言い換える
+- 「Joy」「WBI」など英語や略語は絶対に応答に混ぜない
+- 提案や指示はしない。観察と共感だけで止める
 
 ## 時間帯
 ${modeInstructions[timeMode]}
 
-テキストのみ返してください。`
+テキストのみ、1〜2文で返してください。`
 
       const userMessage = contextParts.length > 0
         ? contextParts.join('\n\n')
