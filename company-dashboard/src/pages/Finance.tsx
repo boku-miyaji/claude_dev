@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageHeader } from '@/components/ui'
+import { PageHeader, Modal } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 
 // ============================================================
@@ -197,9 +197,52 @@ function FinOverview() {
 // Invoices Tab
 // ============================================================
 
+function InvoiceForm({ onSave, onClose }: { onSave: () => void; onClose: () => void }) {
+  const [clientName, setClientName] = useState('')
+  const [amount, setAmount] = useState('')
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().substring(0, 10))
+  const [status, setStatus] = useState('unpaid')
+  const [saving, setSaving] = useState(false)
+
+  const save = async () => {
+    if (!clientName.trim() || !amount) return
+    setSaving(true)
+    await supabase.from('invoices').insert({ client_name: clientName.trim(), amount: parseInt(amount), invoice_date: invoiceDate, status })
+    setSaving(false)
+    onSave()
+    onClose()
+  }
+
+  return (
+    <Modal open onClose={onClose} title="請求書を追加"
+      footer={
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-primary" disabled={saving || !clientName.trim() || !amount} onClick={save}>{saving ? '保存中...' : '追加'}</button>
+          <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
+        </div>
+      }
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {[
+          { label: '請求先', el: <input className="input" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="クライアント名" autoFocus /> },
+          { label: '金額（税込）', el: <input className="input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" /> },
+          { label: '請求日', el: <input className="input" type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} /> },
+          { label: 'ステータス', el: <select className="input" value={status} onChange={e => setStatus(e.target.value)}><option value="unpaid">未入金</option><option value="paid">入金済み</option><option value="overdue">支払遅延</option></select> },
+        ].map(({ label, el }) => (
+          <div key={label}>
+            <label style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4, display: 'block' }}>{label}</label>
+            {el}
+          </div>
+        ))}
+      </div>
+    </Modal>
+  )
+}
+
 function FinInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
 
   const load = async () => {
     const res = await supabase.from('invoices').select('*').order('invoice_date', { ascending: false })
@@ -211,27 +254,35 @@ function FinInvoices() {
 
   if (loading) return <div className="skeleton-card" style={{ height: 150 }} />
 
-  if (invoices.length === 0) return <div style={{ color: 'var(--text3)', padding: '40px 0', textAlign: 'center' }}>請求書が未登録です。/invoice コマンドでPDFをアップロードしてください。</div>
-
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-      <thead>
-        <tr>
-          {['日付', '請求先', '金額', '入金日', 'PJ'].map(h => <th key={h} style={{ textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text3)', fontWeight: 500 }}>{h}</th>)}
-        </tr>
-      </thead>
-      <tbody>
-        {invoices.map(inv => (
-          <tr key={inv.id} style={{ borderBottom: '1px solid var(--border)' }}>
-            <td style={{ padding: '8px 12px' }}>{fmtDate(inv.invoice_date)}</td>
-            <td style={{ padding: '8px 12px' }}>{inv.client_name}</td>
-            <td style={{ padding: '8px 12px', fontWeight: 600 }}>{fmtYen(inv.amount)}</td>
-            <td style={{ padding: '8px 12px', color: 'var(--text3)' }}>{inv.paid_date ? fmtDate(inv.paid_date) : '-'}</td>
-            <td style={{ padding: '8px 12px', color: 'var(--text3)', fontSize: 11 }}>{inv.company_id || '-'}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div>
+      <button className="btn btn-p btn-sm" style={{ marginBottom: 16 }} onClick={() => setShowForm(true)}>+ 請求書追加</button>
+
+      {invoices.length === 0 ? (
+        <div style={{ color: 'var(--text3)', padding: '40px 0', textAlign: 'center' }}>請求書が未登録です。/invoice コマンドでPDFをアップロードしてください。</div>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr>
+              {['日付', '請求先', '金額', '入金日', 'ステータス'].map(h => <th key={h} style={{ textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text3)', fontWeight: 500 }}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {invoices.map(inv => (
+              <tr key={inv.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: '8px 12px' }}>{fmtDate(inv.invoice_date)}</td>
+                <td style={{ padding: '8px 12px' }}>{inv.client_name}</td>
+                <td style={{ padding: '8px 12px', fontWeight: 600 }}>{fmtYen(inv.amount)}</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text3)' }}>{inv.paid_date ? fmtDate(inv.paid_date) : '-'}</td>
+                <td style={{ padding: '8px 12px', color: 'var(--text3)', fontSize: 11 }}>{inv.status || '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {showForm && <InvoiceForm onSave={load} onClose={() => setShowForm(false)} />}
+    </div>
   )
 }
 
@@ -245,16 +296,62 @@ const CAT_LABELS: Record<string, string> = {
   subscription: 'サブスク', education: '研修', entertainment: '交際費', other: '他'
 }
 
+function ExpenseForm({ onSave, onClose }: { onSave: () => void; onClose: () => void }) {
+  const [description, setDescription] = useState('')
+  const [amount, setAmount] = useState('')
+  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().substring(0, 10))
+  const [category, setCategory] = useState('other')
+  const [saving, setSaving] = useState(false)
+
+  const save = async () => {
+    if (!description.trim() || !amount) return
+    setSaving(true)
+    await supabase.from('expenses').insert({ description: description.trim(), amount: parseInt(amount), expense_date: expenseDate, category, is_deductible: true })
+    setSaving(false)
+    onSave()
+    onClose()
+  }
+
+  return (
+    <Modal open onClose={onClose} title="経費を追加"
+      footer={
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-primary" disabled={saving || !description.trim() || !amount} onClick={save}>{saving ? '保存中...' : '追加'}</button>
+          <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
+        </div>
+      }
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {[
+          { label: '内容', el: <input className="input" value={description} onChange={e => setDescription(e.target.value)} placeholder="経費の内容" autoFocus /> },
+          { label: '金額（税込）', el: <input className="input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" /> },
+          { label: '支払日', el: <input className="input" type="date" value={expenseDate} onChange={e => setExpenseDate(e.target.value)} /> },
+          { label: 'カテゴリ', el: <select className="input" value={category} onChange={e => setCategory(e.target.value)}>{Object.entries(CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select> },
+        ].map(({ label, el }) => (
+          <div key={label}>
+            <label style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4, display: 'block' }}>{label}</label>
+            {el}
+          </div>
+        ))}
+      </div>
+    </Modal>
+  )
+}
+
 function FinExpenses() {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
 
-  useEffect(() => {
-    supabase.from('expenses').select('*').order('expense_date', { ascending: false }).then(({ data }) => { setExpenses(data || []); setLoading(false) })
-  }, [])
+  const load = async () => {
+    const res = await supabase.from('expenses').select('*').order('expense_date', { ascending: false })
+    setExpenses(res.data || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
 
   if (loading) return <div className="skeleton-card" style={{ height: 150 }} />
-  if (expenses.length === 0) return <div style={{ color: 'var(--text3)', padding: '40px 0', textAlign: 'center' }}>経費が未登録です。/invoice expense で追加してください。</div>
 
   const monthTotal = expenses.reduce((s, e) => s + e.amount, 0)
   const byCat: Record<string, number> = {}
@@ -262,29 +359,39 @@ function FinExpenses() {
 
   return (
     <div>
-      <div style={{ marginBottom: 20, fontSize: 14 }}>
-        <span style={{ color: 'var(--text3)' }}>合計: </span>
-        <span style={{ fontWeight: 600, fontSize: 18 }}>{fmtYen(monthTotal)}</span>
-      </div>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-        {Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]).map(cat => (
-          <div key={cat} style={{ fontSize: 12, color: 'var(--text3)' }}>
-            {CAT_LABELS[cat] || cat} <span style={{ fontWeight: 500, color: 'var(--text)' }}>{fmtYen(byCat[cat])} ({monthTotal > 0 ? Math.round(byCat[cat] / monthTotal * 100) : 0}%)</span>
+      <button className="btn btn-p btn-sm" style={{ marginBottom: 16 }} onClick={() => setShowForm(true)}>+ 経費追加</button>
+
+      {expenses.length === 0 ? (
+        <div style={{ color: 'var(--text3)', padding: '40px 0', textAlign: 'center' }}>経費が未登録です。/invoice expense で追加してください。</div>
+      ) : (
+        <>
+          <div style={{ marginBottom: 20, fontSize: 14 }}>
+            <span style={{ color: 'var(--text3)' }}>合計: </span>
+            <span style={{ fontWeight: 600, fontSize: 18 }}>{fmtYen(monthTotal)}</span>
           </div>
-        ))}
-      </div>
-      {expenses.map(e => (
-        <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-          <div>
-            <span>{e.description}</span>
-            <span style={{ color: 'var(--text3)' }}> · {CAT_LABELS[e.category] || e.category}</span>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+            {Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]).map(cat => (
+              <div key={cat} style={{ fontSize: 12, color: 'var(--text3)' }}>
+                {CAT_LABELS[cat] || cat} <span style={{ fontWeight: 500, color: 'var(--text)' }}>{fmtYen(byCat[cat])} ({monthTotal > 0 ? Math.round(byCat[cat] / monthTotal * 100) : 0}%)</span>
+              </div>
+            ))}
           </div>
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <span style={{ color: 'var(--text3)', fontSize: 12 }}>{fmtDate(e.expense_date)}</span>
-            <span style={{ fontWeight: 600 }}>{fmtYen(e.amount)}</span>
-          </div>
-        </div>
-      ))}
+          {expenses.map(e => (
+            <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
+              <div>
+                <span>{e.description}</span>
+                <span style={{ color: 'var(--text3)' }}> · {CAT_LABELS[e.category] || e.category}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                <span style={{ color: 'var(--text3)', fontSize: 12 }}>{fmtDate(e.expense_date)}</span>
+                <span style={{ fontWeight: 600 }}>{fmtYen(e.amount)}</span>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {showForm && <ExpenseForm onSave={load} onClose={() => setShowForm(false)} />}
     </div>
   )
 }
@@ -423,73 +530,6 @@ function SubsForm({ existing, onSave, onClose, onDelete }: { existing: Expense |
           {existing && <button className="btn" style={{ color: 'var(--red)', marginLeft: 'auto' }} onClick={() => { if (confirm('削除しますか？')) onDelete(existing.id) }}>削除</button>}
         </div>
       </div>
-    </div>
-  )
-}
-
-// ============================================================
-// Time Tab
-// ============================================================
-
-function FinTime() {
-  const [entries, setEntries] = useState<TimeEntry[]>([])
-  const [projMap, setProjMap] = useState<Record<string, Project>>({})
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    Promise.all([
-      supabase.from('time_entries').select('*').order('work_date', { ascending: false }).limit(100),
-      supabase.from('projects').select('*'),
-    ]).then(([eRes, pRes]) => {
-      setEntries(eRes.data || [])
-      const pm: Record<string, Project> = {}
-      ;(pRes.data || []).forEach((p: Project) => { pm[p.id] = p })
-      setProjMap(pm)
-      setLoading(false)
-    })
-  }, [])
-
-  if (loading) return <div className="skeleton-card" style={{ height: 150 }} />
-  if (entries.length === 0) return <div style={{ color: 'var(--text3)', padding: '40px 0', textAlign: 'center' }}>稼働記録がありません。/invoice sync でカレンダーから同期してください。</div>
-
-  const totalHrs = entries.reduce((s, e) => s + parseFloat(e.hours), 0)
-  const byDate: Record<string, TimeEntry[]> = {}
-  entries.forEach(e => { if (!byDate[e.work_date]) byDate[e.work_date] = []; byDate[e.work_date].push(e) })
-
-  return (
-    <div>
-      <div style={{ marginBottom: 20, fontSize: 14 }}>
-        <span style={{ color: 'var(--text3)' }}>合計: </span>
-        <span style={{ fontWeight: 600, fontSize: 18 }}>{totalHrs.toFixed(1)}h</span>
-        <span style={{ color: 'var(--text3)', marginLeft: 8 }}>({entries.length}件)</span>
-      </div>
-      {Object.keys(byDate).sort().reverse().map(date => {
-        const dayEntries = byDate[date]
-        const dayTotal = dayEntries.reduce((s, e) => s + parseFloat(e.hours), 0)
-        return (
-          <div key={date}>
-            <div style={{ marginTop: 16, marginBottom: 8, display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600 }}>
-              <span>{fmtDate(date)}</span>
-              <span style={{ color: 'var(--accent)' }}>{dayTotal.toFixed(1)}h</span>
-            </div>
-            {dayEntries.map(e => {
-              const proj = projMap[e.project_id || '']
-              return (
-                <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0 6px 16px', borderLeft: '2px solid var(--border)', fontSize: 13, color: 'var(--text2)' }}>
-                  <div>
-                    {proj && <span style={{ color: 'var(--text)' }}>{proj.name} </span>}
-                    <span style={{ color: 'var(--text3)' }}>{e.description || ''}</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <span>{parseFloat(e.hours).toFixed(1)}h</span>
-                    <span style={{ fontSize: 11 }}>{e.source === 'calendar' ? '📅' : '✏️'}</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )
-      })}
     </div>
   )
 }
@@ -896,9 +936,9 @@ import { ApiCosts } from './ApiCosts'
 // Main Finance Component
 // ============================================================
 
-const TABS = ['overview', 'subscriptions', 'wishlist', 'api-costs', 'projects', 'invoices', 'expenses', 'time', 'tax'] as const
+const TABS = ['overview', 'subscriptions', 'wishlist', 'api-costs', 'projects', 'invoices', 'expenses', 'tax'] as const
 type TabId = typeof TABS[number]
-const TAB_LABELS: Record<TabId, string> = { overview: '概要', subscriptions: '固定費', wishlist: 'ほしい物', 'api-costs': 'APIコスト', projects: '案件', invoices: '請求書', expenses: '経費', time: '稼働時間', tax: '税金' }
+const TAB_LABELS: Record<TabId, string> = { overview: '概要', subscriptions: '固定費', wishlist: 'ほしい物', 'api-costs': 'APIコスト', projects: '案件', invoices: '請求書', expenses: '経費', tax: '税金' }
 
 export function Finance() {
   const [activeTab, setActiveTab] = useState<TabId>('overview')
@@ -912,7 +952,6 @@ export function Finance() {
       case 'projects': return <FinProjects />
       case 'invoices': return <FinInvoices />
       case 'expenses': return <FinExpenses />
-      case 'time': return <FinTime />
       case 'tax': return <FinTax />
     }
   }

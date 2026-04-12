@@ -85,6 +85,7 @@ function ArtifactDetail({ artifact: initialArtifact, onBack }: { artifact: Artif
   const [reloading, setReloading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editBody, setEditBody] = useState('')
+  const [fullscreen, setFullscreen] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   const loadComments = async () => {
@@ -160,14 +161,26 @@ function ArtifactDetail({ artifact: initialArtifact, onBack }: { artifact: Artif
     if (artifact.file_type === 'md') {
       return <pre style={{ fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{artifact.content}</pre>
     }
-    return <pre style={{ fontSize: 12, overflow: 'auto', maxHeight: 'calc(100vh - 280px)' }}>{artifact.content}</pre>
+    return <pre style={{ fontSize: 12, overflow: 'auto', maxHeight: 'calc(100vh - 280px)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{artifact.content}</pre>
   }
 
   return (
     <div>
+      {/* Fullscreen overlay */}
+      {fullscreen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'var(--bg)', overflow: 'auto', padding: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <span style={{ fontWeight: 600, fontSize: 15 }}>{artifact.title}</span>
+            <button className="btn" style={{ fontSize: 12 }} onClick={() => setFullscreen(false)}>✕ 閉じる</button>
+          </div>
+          {renderContent()}
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <button className="btn" style={{ fontSize: 12 }} onClick={onBack}>← 一覧に戻る</button>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn" style={{ fontSize: 12 }} onClick={() => setFullscreen(true)}>全画面</button>
           <button className="btn" style={{ fontSize: 12 }} disabled={reloading} onClick={reload}>{reloading ? '更新中...' : '↻ 更新'}</button>
           <button className="btn" style={{ fontSize: 12, color: 'var(--red)' }} onClick={archive}>アーカイブ（追跡停止）</button>
         </div>

@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Card, PageHeader } from '@/components/ui'
+import { useState, useMemo, useEffect } from 'react'
+import { Card, PageHeader, Modal, toast } from '@/components/ui'
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar'
 import type { ViewMode, CalendarEvent } from '@/types/calendar'
 
@@ -36,10 +36,126 @@ function dateLabel(date: Date, mode: ViewMode): string {
 }
 
 // ============================================================
+// Event Modal
+// ============================================================
+
+interface EventFormState {
+  summary: string
+  date: string
+  startTime: string
+  endTime: string
+}
+
+function EventModal({
+  open,
+  onClose,
+  initialDate,
+  editEvent,
+  onSave,
+  onDelete,
+}: {
+  open: boolean
+  onClose: () => void
+  initialDate?: string
+  editEvent?: CalendarEvent | null
+  onSave: (form: EventFormState) => Promise<void>
+  onDelete?: () => Promise<void>
+}) {
+  const defaultDate = initialDate || toJSTDate(new Date())
+  const [summary, setSummary] = useState(editEvent?.summary || '')
+  const [date, setDate] = useState(editEvent ? toJSTDate(new Date(editEvent.start_time)) : defaultDate)
+  const [startTime, setStartTime] = useState(editEvent ? formatTime(editEvent.start_time) : '10:00')
+  const [endTime, setEndTime] = useState(editEvent ? formatTime(editEvent.end_time) : '11:00')
+  const [saving, setSaving] = useState(false)
+
+  // Reset when modal opens
+  useEffect(() => {
+    if (open) {
+      setSummary(editEvent?.summary || '')
+      setDate(editEvent ? toJSTDate(new Date(editEvent.start_time)) : defaultDate)
+      setStartTime(editEvent ? formatTime(editEvent.start_time) : '10:00')
+      setEndTime(editEvent ? formatTime(editEvent.end_time) : '11:00')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  const handleSave = async () => {
+    if (!summary.trim()) return
+    setSaving(true)
+    await onSave({ summary, date, startTime, endTime })
+    setSaving(false)
+    onClose()
+  }
+
+  const handleDelete = async () => {
+    if (!onDelete) return
+    if (!confirm('このイベントを削除しますか？')) return
+    setSaving(true)
+    await onDelete()
+    setSaving(false)
+    onClose()
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={editEvent ? 'イベントを編集' : 'イベントを追加'}
+      footer={
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="btn btn-primary" disabled={saving || !summary.trim()} onClick={handleSave}>
+            {saving ? '保存中...' : '保存'}
+          </button>
+          <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
+          {editEvent && onDelete && (
+            <button className="btn" style={{ color: 'var(--red)', marginLeft: 'auto' }} disabled={saving} onClick={handleDelete}>
+              削除
+            </button>
+          )}
+        </div>
+      }
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div>
+          <label style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4, display: 'block' }}>タイトル</label>
+          <input className="input" value={summary} onChange={e => setSummary(e.target.value)} placeholder="イベント名" autoFocus />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4, display: 'block' }}>日付</label>
+          <input className="input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4, display: 'block' }}>開始時刻</label>
+            <input className="input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4, display: 'block' }}>終了時刻</label>
+            <input className="input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+// ============================================================
 // Time Grid (Day/Week view)
 // ============================================================
 
-function TimeGrid({ events, days, today }: { events: CalendarEvent[]; days: Date[]; today: string }) {
+function TimeGrid({
+  events,
+  days,
+  today,
+  onCellClick,
+  onEventClick,
+}: {
+  events: CalendarEvent[]
+  days: Date[]
+  today: string
+  onCellClick: (date: string, hour: number) => void
+  onEventClick: (evt: CalendarEvent) => void
+}) {
   const eventsForDay = (dateStr: string) => events.filter((e) => toJSTDate(new Date(e.start_time)) === dateStr)
 
   return (
@@ -70,20 +186,29 @@ function TimeGrid({ events, days, today }: { events: CalendarEvent[]; days: Date
               {h > 7 ? `${String(h).padStart(2, '0')}:00` : ''}
             </div>
             {days.map((d, di) => (
-              <div key={di} style={{ borderLeft: '1px solid var(--border)', borderBottom: '1px solid var(--border)', minHeight: 48, position: 'relative', padding: 2 }}>
+              <div
+                key={di}
+                style={{ borderLeft: '1px solid var(--border)', borderBottom: '1px solid var(--border)', minHeight: 48, position: 'relative', padding: 2, cursor: 'pointer' }}
+                onClick={() => onCellClick(toJSTDate(d), h)}
+              >
                 {h === HOURS[0] && eventsForDay(toJSTDate(d)).map((evt) => {
                   const startH = new Date(evt.start_time).getHours() + new Date(evt.start_time).getMinutes() / 60
                   const endH = new Date(evt.end_time).getHours() + new Date(evt.end_time).getMinutes() / 60
                   const top = Math.max(0, (startH - 7) * 48)
                   const height = Math.max(20, (endH - startH) * 48)
                   return (
-                    <div key={evt.id} title={`${formatTime(evt.start_time)} ${evt.summary}`} style={{
-                      position: 'absolute', top, left: 2, right: 2, height, zIndex: 1,
-                      background: `${CAL_COLORS[evt.calendar_type] || 'var(--accent)'}20`,
-                      borderLeft: `3px solid ${CAL_COLORS[evt.calendar_type] || 'var(--accent)'}`,
-                      borderRadius: 4, padding: '2px 6px', overflow: 'hidden', cursor: 'default',
-                      fontSize: 11, lineHeight: '1.3',
-                    }}>
+                    <div
+                      key={evt.id}
+                      title={`${formatTime(evt.start_time)} ${evt.summary}`}
+                      style={{
+                        position: 'absolute', top, left: 2, right: 2, height, zIndex: 1,
+                        background: `${CAL_COLORS[evt.calendar_type] || 'var(--accent)'}20`,
+                        borderLeft: `3px solid ${CAL_COLORS[evt.calendar_type] || 'var(--accent)'}`,
+                        borderRadius: 4, padding: '2px 6px', overflow: 'hidden', cursor: 'pointer',
+                        fontSize: 11, lineHeight: '1.3',
+                      }}
+                      onClick={e => { e.stopPropagation(); onEventClick(evt) }}
+                    >
                       <div style={{ fontWeight: 600, fontSize: 10, color: 'var(--text3)' }}>{evt.all_day ? '終日' : formatTime(evt.start_time)}</div>
                       <div style={{ fontWeight: 500, color: 'var(--text)' }}>{evt.summary}</div>
                     </div>
@@ -102,7 +227,19 @@ function TimeGrid({ events, days, today }: { events: CalendarEvent[]; days: Date
 // Month Grid
 // ============================================================
 
-function MonthGrid({ events, date, today }: { events: CalendarEvent[]; date: Date; today: string }) {
+function MonthGrid({
+  events,
+  date,
+  today,
+  onCellClick,
+  onEventClick,
+}: {
+  events: CalendarEvent[]
+  date: Date
+  today: string
+  onCellClick: (dateStr: string) => void
+  onEventClick: (evt: CalendarEvent) => void
+}) {
   const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0)
   const startDow = firstDay.getDay()
@@ -126,10 +263,10 @@ function MonthGrid({ events, date, today }: { events: CalendarEvent[]; date: Dat
           const isToday = ds === today
           const dayEvents = eventsForDay(ds)
           return (
-            <div key={i} style={{ minHeight: 80, padding: 4, borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', background: isToday ? 'var(--accent-bg)' : undefined }}>
+            <div key={i} style={{ minHeight: 80, padding: 4, borderBottom: '1px solid var(--border)', borderRight: '1px solid var(--border)', background: isToday ? 'var(--accent-bg)' : undefined, cursor: 'pointer' }} onClick={() => onCellClick(ds)}>
               <div style={{ fontSize: 12, fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent)' : 'var(--text2)', marginBottom: 4 }}>{d.getDate()}</div>
               {dayEvents.slice(0, 3).map((evt) => (
-                <div key={evt.id} style={{ fontSize: 10, padding: '1px 4px', marginBottom: 2, borderRadius: 3, background: `${CAL_COLORS[evt.calendar_type] || 'var(--accent)'}15`, color: 'var(--text2)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                <div key={evt.id} style={{ fontSize: 10, padding: '1px 4px', marginBottom: 2, borderRadius: 3, background: `${CAL_COLORS[evt.calendar_type] || 'var(--accent)'}15`, color: 'var(--text2)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', cursor: 'pointer' }} onClick={e => { e.stopPropagation(); onEventClick(evt) }}>
                   {evt.summary.substring(0, 12)}
                 </div>
               ))}
@@ -151,9 +288,58 @@ export function Calendar() {
   const [viewDate, setViewDate] = useState(() => {
     const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate())
   })
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalDate, setModalDate] = useState<string>('')
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
 
-  const { events, loading, error, token, requestAuth, refetch } = useGoogleCalendar(viewDate, viewMode)
+  const { events, loading, error, token, requestAuth, refetch, createEvent, updateEvent, deleteEvent } = useGoogleCalendar(viewDate, viewMode)
   const today = toJSTDate(new Date())
+
+  const handleCellClick = (dateStr: string, _hour = 10) => {
+    setModalDate(dateStr)
+    setEditingEvent(null)
+    setModalOpen(true)
+  }
+
+  const handleEventClick = (evt: CalendarEvent) => {
+    setEditingEvent(evt)
+    setModalOpen(true)
+  }
+
+  const handleSave = async (form: EventFormState) => {
+    const [sh, sm] = form.startTime.split(':').map(Number)
+    const [eh, em] = form.endTime.split(':').map(Number)
+    const startDt = new Date(`${form.date}T${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}:00+09:00`)
+    const endDt = new Date(`${form.date}T${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}:00+09:00`)
+    const body = {
+      summary: form.summary,
+      start: { dateTime: startDt.toISOString(), timeZone: 'Asia/Tokyo' },
+      end: { dateTime: endDt.toISOString(), timeZone: 'Asia/Tokyo' },
+    }
+    try {
+      if (editingEvent) {
+        await updateEvent('primary', editingEvent.id, body)
+        toast('イベントを更新しました')
+      } else {
+        await createEvent('primary', body)
+        toast('イベントを追加しました')
+      }
+      refetch()
+    } catch {
+      toast('保存に失敗しました')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!editingEvent) return
+    try {
+      await deleteEvent('primary', editingEvent.id)
+      toast('イベントを削除しました')
+      refetch()
+    } catch {
+      toast('削除に失敗しました')
+    }
+  }
 
   const days = useMemo(() => {
     if (viewMode === 'day') return [new Date(viewDate)]
@@ -206,8 +392,8 @@ export function Calendar() {
       {/* Calendar view */}
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {viewMode === 'month'
-          ? <MonthGrid events={events} date={viewDate} today={today} />
-          : <TimeGrid events={events} days={days} today={today} />
+          ? <MonthGrid events={events} date={viewDate} today={today} onCellClick={handleCellClick} onEventClick={handleEventClick} />
+          : <TimeGrid events={events} days={days} today={today} onCellClick={handleCellClick} onEventClick={handleEventClick} />
         }
       </Card>
 
@@ -215,6 +401,16 @@ export function Calendar() {
       <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>
         {events.length} events
       </div>
+
+      {/* Event Modal */}
+      <EventModal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setEditingEvent(null) }}
+        initialDate={modalDate || (editingEvent ? toJSTDate(new Date(editingEvent.start_time)) : today)}
+        editEvent={editingEvent}
+        onSave={handleSave}
+        onDelete={editingEvent ? handleDelete : undefined}
+      />
     </div>
   )
 }
