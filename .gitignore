@@ -68,8 +68,9 @@ tasks*
 # company - local repo map (server-specific, auto-generated)
 .company/repo-map.md
 
-# company - design mockups (壁打ち用、管理不要)
-.company/design/
+# scratch - モックアップ・壁打ち資料・試作品の置き場（恒久的に管理外）
+# 詳細ルールは .claude/rules/scratch-workspace.md
+scratch/
 
 # secrets & tokens (NEVER commit)
 .config/google/credentials.json
