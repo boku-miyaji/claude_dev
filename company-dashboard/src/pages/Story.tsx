@@ -350,6 +350,74 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
     }
   }
 
+  // Day-averaged WBI (shared by heatmap and event correlation)
+  const dayWbi = useMemo(() => {
+    const byDay: Record<string, { sum: number; count: number }> = {}
+    entries.forEach(e => {
+      if (e.wbi_score <= 0) return
+      const day = e.created_at.substring(0, 10)
+      if (!byDay[day]) byDay[day] = { sum: 0, count: 0 }
+      byDay[day].sum += e.wbi_score
+      byDay[day].count += 1
+    })
+    const result: Record<string, number> = {}
+    Object.entries(byDay).forEach(([day, { sum, count }]) => { result[day] = sum / count })
+    return result
+  }, [entries])
+
+  // Event correlation: find events where day-WBI or prev-day-WBI deviates from baseline
+  const eventPatterns = useMemo(() => {
+    const normalize = (s: string) => s.trim().toLowerCase()
+      .replace(/\s+/g, ' ')
+      .replace(/\s*\(\d+\)\s*$/, '')
+      .replace(/^\[.*?\]\s*/, '')
+
+    const evs: Record<string, { display: string; dayWbis: number[]; prevWbis: number[] }> = {}
+
+    Object.entries(diaryByDate).forEach(([day, diary]) => {
+      const wbi = dayWbi[day]
+      if (wbi === undefined) return
+      const list = diary.calendar_events || []
+      if (!Array.isArray(list)) return
+      list.forEach(ev => {
+        const summary = ev?.summary
+        if (!summary || typeof summary !== 'string') return
+        const key = normalize(summary)
+        if (!key || key.length < 2) return
+        if (!evs[key]) evs[key] = { display: summary, dayWbis: [], prevWbis: [] }
+        evs[key].dayWbis.push(wbi)
+        // Previous day
+        const prev = new Date(day)
+        prev.setDate(prev.getDate() - 1)
+        const prevKey = prev.toISOString().substring(0, 10)
+        if (dayWbi[prevKey] !== undefined) evs[key].prevWbis.push(dayWbi[prevKey])
+      })
+    })
+
+    const MIN_OCCURRENCES = 3
+    const SIGNIFICANCE = 0.5 // z-score threshold (0.5 σ)
+
+    const results = Object.values(evs)
+      .filter(e => e.dayWbis.length >= MIN_OCCURRENCES)
+      .map(e => {
+        const avgDay = e.dayWbis.reduce((s, w) => s + w, 0) / e.dayWbis.length
+        const avgPrev = e.prevWbis.length >= 2
+          ? e.prevWbis.reduce((s, w) => s + w, 0) / e.prevWbis.length
+          : null
+        const dayDev = avgDay - baseline
+        const prevDev = avgPrev !== null ? avgPrev - baseline : null
+        const maxAbsDev = Math.max(Math.abs(dayDev), prevDev !== null ? Math.abs(prevDev) : 0)
+        return { display: e.display, count: e.dayWbis.length, avgDay, avgPrev, dayDev, prevDev, maxAbsDev }
+      })
+      .filter(r => r.maxAbsDev >= SIGNIFICANCE * stddev)
+      .sort((a, b) => b.maxAbsDev - a.maxAbsDev)
+
+    return {
+      negative: results.filter(r => r.dayDev < 0 || (r.prevDev !== null && r.prevDev < -stddev * SIGNIFICANCE)).slice(0, 5),
+      positive: results.filter(r => r.dayDev > 0 && !(r.prevDev !== null && r.prevDev < -stddev * SIGNIFICANCE)).slice(0, 5),
+    }
+  }, [diaryByDate, dayWbi, baseline, stddev])
+
   // Keep cell count map for displaying sample size
   const cellCounts = useMemo(() => {
     const buckets: number[][] = Array.from({ length: 7 }, () => Array.from({ length: 4 }, () => 0))
@@ -613,6 +681,40 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
         )}
       </Card>
 
+      {/* Card 4: Event correlation */}
+      {(eventPatterns.negative.length > 0 || eventPatterns.positive.length > 0) && (
+        <Card style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+            予定との紐付き — 繰り返し現れるパターン
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12 }}>
+            3回以上記録がある予定のうち、気分が普段と明確にズレているものだけ。前日の気分（予期的反応）もチェック。
+          </div>
+
+          {eventPatterns.negative.length > 0 && (
+            <div style={{ marginBottom: eventPatterns.positive.length > 0 ? 16 : 0 }}>
+              <div style={{ fontSize: 11, color: '#ef4444', fontWeight: 600, marginBottom: 8, letterSpacing: '.5px' }}>
+                😰 気分が落ちやすい予定
+              </div>
+              {eventPatterns.negative.map((p, i) => (
+                <EventPatternRow key={'n' + i} pattern={p} stddev={stddev} />
+              ))}
+            </div>
+          )}
+
+          {eventPatterns.positive.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, color: '#22c55e', fontWeight: 600, marginBottom: 8, letterSpacing: '.5px' }}>
+                😊 気分が上がりやすい予定
+              </div>
+              {eventPatterns.positive.map((p, i) => (
+                <EventPatternRow key={'p' + i} pattern={p} stddev={stddev} />
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Heatmap cell detail modal */}
       {selectedCell && (
         <HeatmapCellModal
@@ -788,6 +890,83 @@ function HeatmapCellModal({ cell, entries, diaryByDate, baseline, onClose, dowLa
           })}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ============================================================
+// EventPatternRow — single row in Card 4
+// ============================================================
+
+interface EventPattern {
+  display: string
+  count: number
+  avgDay: number
+  avgPrev: number | null
+  dayDev: number
+  prevDev: number | null
+}
+
+function EventPatternRow({ pattern, stddev }: { pattern: EventPattern; stddev: number }) {
+  const p = pattern
+  const dayColor = p.dayDev < 0 ? '#ef4444' : '#22c55e'
+  const prevSignificant = p.prevDev !== null && Math.abs(p.prevDev) >= 0.5 * stddev
+  const prevColor = p.prevDev !== null && p.prevDev < 0 ? '#ef4444' : '#22c55e'
+
+  // Semantic label
+  const zDay = p.dayDev / stddev
+  const dayLabel = Math.abs(zDay) >= 1.5 ? (zDay > 0 ? 'とても良い' : 'とても悪い')
+    : Math.abs(zDay) >= 1.0 ? (zDay > 0 ? '良い' : '悪い')
+    : (zDay > 0 ? 'やや良い' : 'やや悪い')
+
+  return (
+    <div style={{
+      padding: '10px 12px',
+      marginBottom: 6,
+      background: p.dayDev < 0 ? 'rgba(239, 68, 68, 0.06)' : 'rgba(34, 197, 94, 0.06)',
+      borderLeft: `3px solid ${dayColor}`,
+      borderRadius: 5,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {p.display}
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>
+            {p.count}回のパターン
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: dayColor }}>
+            当日 {dayLabel}
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+            WBI {p.avgDay.toFixed(1)} ({p.dayDev >= 0 ? '+' : ''}{p.dayDev.toFixed(1)})
+          </div>
+        </div>
+      </div>
+
+      {prevSignificant && p.prevDev !== null && p.avgPrev !== null && (
+        <div style={{
+          marginTop: 6,
+          paddingTop: 6,
+          borderTop: '1px dashed var(--border)',
+          fontSize: 10,
+          color: 'var(--text3)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}>
+          <span style={{ color: prevColor, fontWeight: 600 }}>↳ 前日から</span>
+          <span>気分が</span>
+          <span style={{ color: prevColor, fontWeight: 600 }}>
+            {p.prevDev < 0 ? '既に落ち込んでいる' : '上向いている'}
+          </span>
+          <span style={{ fontFamily: 'var(--mono)', marginLeft: 'auto' }}>
+            前日WBI {p.avgPrev.toFixed(1)} ({p.prevDev >= 0 ? '+' : ''}{p.prevDev.toFixed(1)})
+          </span>
+        </div>
+      )}
     </div>
   )
 }
