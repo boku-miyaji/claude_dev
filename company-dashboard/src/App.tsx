@@ -60,6 +60,15 @@ export function App() {
   const { loading, appReady, user } = useAuthStore()
   const { showHelp, setShowHelp } = useKeyboardShortcuts()
 
+  // Google OAuth callback は認証状態に関わらず処理する（リダイレクト直後で session 復元中の場合がある）
+  if (window.location.pathname === '/auth/google/callback') {
+    return (
+      <Routes>
+        <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
+      </Routes>
+    )
+  }
+
   // loading中 or ユーザーはいるがappReady待ち → ローディング表示（AuthPageを見せない）
   if (loading || (user && !appReady)) {
     return (

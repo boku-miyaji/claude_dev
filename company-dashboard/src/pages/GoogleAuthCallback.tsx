@@ -33,13 +33,22 @@ export function GoogleAuthCallback() {
     function doComplete() {
       if (completed) return
       completed = true
+      console.log('[gcal-callback] Completing auth with code:', code!.substring(0, 10) + '...')
       completeCalendarAuth(code!).then((result) => {
+        console.log('[gcal-callback] Auth result:', result)
+        invalidateCalendarAuthCache()
         if (result.ok) {
-          invalidateCalendarAuthCache()
           navigate('/calendar', { replace: true })
         } else {
+          console.error('[gcal-callback] Auth failed:', result.error)
+          // Even on error, go back to calendar (user can retry)
           setError(result.error || 'Failed to complete authentication')
+          setTimeout(() => navigate('/calendar', { replace: true }), 3000)
         }
+      }).catch((err) => {
+        console.error('[gcal-callback] Exception:', err)
+        setError(String(err))
+        setTimeout(() => navigate('/calendar', { replace: true }), 3000)
       })
     }
 
