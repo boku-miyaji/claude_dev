@@ -1274,7 +1274,7 @@ function TabAiFeatures() {
           pipeline="SSEストリーミング。while(tool_call)ループ: LLM応答→ツール実行→結果をLLMに返す→繰り返し。中間assistant(tool_calls)もDB保存"
           output="ストリーミングテキスト + ツール実行結果（タスク検索/作成, ナレッジ検索, Web検索 等）"
           storage="conversations + messages テーブル。cost_tracking でトークン消費記録"
-          hook="legacy.ts (renderChat) → ai-agent Edge Function (agentLoop)"
+          hook="pages/Chat.tsx (React) → ai-agent Edge Function (agentLoop)"
         />
 
         <AiFeatureCard
@@ -1285,7 +1285,7 @@ function TabAiFeatures() {
           pipeline="関心度高いトピック抽出 → agent mode で web_search 実行 → JSON配列パース → news_items テーブルに保存"
           output="[{title, summary, url, source, topic, date}] の配列"
           storage="news_items テーブル（Single Source of Truth）"
-          hook="lib/newsCollect.ts（共通モジュール）← Today.tsx / Reports.tsx / legacy.ts から呼び出し"
+          hook="lib/newsCollect.ts（共通モジュール）← Today.tsx / Reports.tsx から呼び出し"
         />
       </Section>
 

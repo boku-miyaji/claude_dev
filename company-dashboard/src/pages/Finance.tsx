@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageHeader, Modal } from '@/components/ui'
+import { PageHeader, Modal, toast } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 
 // ============================================================
@@ -201,14 +201,16 @@ function InvoiceForm({ onSave, onClose }: { onSave: () => void; onClose: () => v
   const [clientName, setClientName] = useState('')
   const [amount, setAmount] = useState('')
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().substring(0, 10))
-  const [status, setStatus] = useState('unpaid')
+  const [status, setStatus] = useState('sent')
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
     if (!clientName.trim() || !amount) return
     setSaving(true)
-    await supabase.from('invoices').insert({ client_name: clientName.trim(), amount: parseInt(amount), invoice_date: invoiceDate, status })
+    const { error } = await supabase.from('invoices').insert({ client_name: clientName.trim(), amount: parseInt(amount), invoice_date: invoiceDate, status })
     setSaving(false)
+    if (error) { toast(`保存に失敗: ${error.message}`); return }
+    toast('追加しました')
     onSave()
     onClose()
   }
@@ -227,7 +229,7 @@ function InvoiceForm({ onSave, onClose }: { onSave: () => void; onClose: () => v
           { label: '請求先', el: <input className="input" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="クライアント名" autoFocus /> },
           { label: '金額（税込）', el: <input className="input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" /> },
           { label: '請求日', el: <input className="input" type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} /> },
-          { label: 'ステータス', el: <select className="input" value={status} onChange={e => setStatus(e.target.value)}><option value="unpaid">未入金</option><option value="paid">入金済み</option><option value="overdue">支払遅延</option></select> },
+          { label: 'ステータス', el: <select className="input" value={status} onChange={e => setStatus(e.target.value)}><option value="sent">送付済み</option><option value="paid">入金済み</option><option value="overdue">支払遅延</option><option value="draft">下書き</option><option value="cancelled">キャンセル</option></select> },
         ].map(({ label, el }) => (
           <div key={label}>
             <label style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4, display: 'block' }}>{label}</label>
@@ -306,8 +308,10 @@ function ExpenseForm({ onSave, onClose }: { onSave: () => void; onClose: () => v
   const save = async () => {
     if (!description.trim() || !amount) return
     setSaving(true)
-    await supabase.from('expenses').insert({ description: description.trim(), amount: parseInt(amount), expense_date: expenseDate, category, is_deductible: true })
+    const { error } = await supabase.from('expenses').insert({ description: description.trim(), amount: parseInt(amount), expense_date: expenseDate, category, is_deductible: true })
     setSaving(false)
+    if (error) { toast(`保存に失敗: ${error.message}`); return }
+    toast('追加しました')
     onSave()
     onClose()
   }
@@ -608,7 +612,9 @@ function FinWishlist() {
       if (payload.status === 'purchased' && editItem.status !== 'purchased') payload.purchased_at = new Date().toISOString()
       await supabase.from('wishlist').update(payload).eq('id', editItem.id)
     } else {
-      await supabase.from('wishlist').insert(payload)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { toast('ログインが必要です'); return }
+      await supabase.from('wishlist').insert({ ...payload, owner_id: user.id })
     }
     setShowForm(false); setEditItem(null); load()
   }

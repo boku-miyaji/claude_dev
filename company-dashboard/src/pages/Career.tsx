@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PageHeader, EmptyState } from '@/components/ui'
+import { PageHeader, EmptyState, toast } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 
 // ============================================================
@@ -72,12 +72,12 @@ function CareerModal({
       description: form.description.trim() || null,
       tags: tags.length > 0 ? tags : null,
     }
-    if (isEdit) {
-      await supabase.from('career_history').update(data).eq('id', item!.id!)
-    } else {
-      await supabase.from('career_history').insert(data)
-    }
+    const { error: dbError } = isEdit
+      ? await supabase.from('career_history').update(data).eq('id', item!.id!)
+      : await supabase.from('career_history').insert(data)
     setSaving(false)
+    if (dbError) { setError(`保存に失敗しました: ${dbError.message}`); toast('保存に失敗しました'); return }
+    toast(isEdit ? '更新しました' : '追加しました')
     onClose()
     onSaved()
   }
@@ -164,8 +164,10 @@ export function Career() {
   const handleDelete = async (item: CareerItem) => {
     if (!confirm(`"${item.title}" を削除しますか？`)) return
     setDeletingId(item.id)
-    await supabase.from('career_history').delete().eq('id', item.id)
+    const { error: dbError } = await supabase.from('career_history').delete().eq('id', item.id)
     setDeletingId(null)
+    if (dbError) { toast('削除に失敗しました'); return }
+    toast('削除しました')
     load()
   }
 
