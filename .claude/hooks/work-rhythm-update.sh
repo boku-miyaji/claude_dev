@@ -129,8 +129,8 @@ TODAY=$(date +%Y-%m-%d)
 
 cat > /tmp/work_rhythm_upsert.sql << EOSQL
 DELETE FROM ceo_insights WHERE category = 'work_rhythm';
-INSERT INTO ceo_insights (category, insight, evidence, confidence)
-VALUES ('work_rhythm', '${ESC_INSIGHT}', 'prompt_log 直近30日の時間帯・曜日分布から自動算出 (${TODAY})', 'high');
+INSERT INTO ceo_insights (category, insight, evidence, confidence, source)
+VALUES ('work_rhythm', '${ESC_INSIGHT}', 'prompt_log 直近30日の時間帯・曜日分布から自動算出 (${TODAY})', 'high', 'work');
 EOSQL
 
 run_sql_file /tmp/work_rhythm_upsert.sql > /dev/null

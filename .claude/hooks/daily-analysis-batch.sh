@@ -356,15 +356,18 @@ open('/tmp/llm_request.json', 'w').write(payload)
 }
 
 # Helper: ceo_insights に INSERT（重複チェック付き）
+# このバッチは focus-you（個人プロダクト）の diary + ai_chat 由来の分析を行う。
+# よって INSERT する insight の source は 'product' を既定とする。
 insert_insight() {
   local CATEGORY="$1"
   local INSIGHT="$2"
   local EVIDENCE="$3"
   local CONFIDENCE="${4:-medium}"
+  local SOURCE="${5:-product}"
   # Escape single quotes for SQL
   local ESC_INSIGHT=$(echo "$INSIGHT" | sed "s/'/''/g")
   local ESC_EVIDENCE=$(echo "$EVIDENCE" | sed "s/'/''/g")
-  run_sql "INSERT INTO ceo_insights (category, insight, evidence, confidence) SELECT '${CATEGORY}', '${ESC_INSIGHT}', '${ESC_EVIDENCE}', '${CONFIDENCE}' WHERE NOT EXISTS (SELECT 1 FROM ceo_insights WHERE category='${CATEGORY}' AND insight='${ESC_INSIGHT}');" > /dev/null
+  run_sql "INSERT INTO ceo_insights (category, insight, evidence, confidence, source) SELECT '${CATEGORY}', '${ESC_INSIGHT}', '${ESC_EVIDENCE}', '${CONFIDENCE}', '${SOURCE}' WHERE NOT EXISTS (SELECT 1 FROM ceo_insights WHERE category='${CATEGORY}' AND insight='${ESC_INSIGHT}');" > /dev/null
 }
 
 # ------------------------------------------------------------------
@@ -432,8 +435,8 @@ if [ "$DAYS_SINCE_WEEKLY" -ge 7 ]; then
   # 今週の日記（生テキスト全件）via Management API
   run_sql "SELECT entry_date, body, wbi FROM diary_entries WHERE entry_date >= '${WEEK_START}' AND body IS NOT NULL ORDER BY entry_date, created_at;" /tmp/week_diaries.json
 
-  # 今週のprompt_log
-  run_sql "SELECT substring(prompt from 1 for 100) as prompt, tags, created_at::date as date FROM prompt_log WHERE created_at >= '${WEEK_START}' ORDER BY created_at DESC LIMIT 50;" /tmp/week_prompts.json
+  # 今週のprompt_log（focus-you の AIチャット由来のみ。仕事系 claude_code は除外）
+  run_sql "SELECT substring(prompt from 1 for 100) as prompt, tags, created_at::date as date FROM prompt_log WHERE created_at >= '${WEEK_START}' AND source = 'ai_chat' ORDER BY created_at DESC LIMIT 50;" /tmp/week_prompts.json
 
   # 前回の週次分析
   PREV_WEEKLY=$(run_sql_jq "SELECT highlights, topic_summary, ai_insights FROM diary_analysis WHERE period_type='weekly' ORDER BY period_end DESC LIMIT 1;" | jq -r '.[0] // {}' 2>/dev/null)
@@ -556,7 +559,7 @@ if [ "$DAYS_SINCE_MONTHLY" -ge 30 ]; then
   # Fetch all data to files
   run_sql "SELECT entry_date, body, wbi FROM diary_entries WHERE entry_date >= '${MONTH_START}' AND body IS NOT NULL ORDER BY entry_date, created_at;" /tmp/month_diaries.json
   run_sql "SELECT period_start, period_end, ai_insights, highlights FROM diary_analysis WHERE period_type='weekly' AND period_start >= '${MONTH_START}' ORDER BY period_start;" /tmp/month_weekly_summaries.json
-  run_sql "SELECT substring(prompt from 1 for 80) as prompt, tags, created_at::date as date FROM prompt_log WHERE created_at >= '${MONTH_START}' ORDER BY created_at DESC LIMIT 100;" /tmp/month_prompts.json
+  run_sql "SELECT substring(prompt from 1 for 80) as prompt, tags, created_at::date as date FROM prompt_log WHERE created_at >= '${MONTH_START}' AND source = 'ai_chat' ORDER BY created_at DESC LIMIT 100;" /tmp/month_prompts.json
   PREV_MONTHLY=$(run_sql_jq "SELECT ai_insights, highlights, topic_summary FROM diary_analysis WHERE period_type='monthly' ORDER BY period_end DESC LIMIT 1;" | jq -r '.[0] // {}' 2>/dev/null)
   EXISTING_INSIGHTS_M=$(run_sql_jq "SELECT category, insight FROM ceo_insights ORDER BY updated_at DESC LIMIT 30;")
 
