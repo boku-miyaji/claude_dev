@@ -767,10 +767,11 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
     }
   }
 
-  // Load recent CEO insights
+  // Load recent product-side insights only.
+  // source='work' は HD（仕事の組織運営）由来なので focus-you チャットには注入しない。
   let insightsSection = "";
   if (p.chat_memory_enabled !== false) {
-    const { data: insights } = await sb.from("ceo_insights").select("category,insight").order("created_at", { ascending: false }).limit(8);
+    const { data: insights } = await sb.from("ceo_insights").select("category,insight").eq("source", "product").order("created_at", { ascending: false }).limit(8);
     if (insights && insights.length > 0) {
       insightsSection = "\n## User Insights (apply silently to personalize)\n" + insights.map(i => `- [${i.category}] ${i.insight}`).join("\n") + "\n";
       report.ceo_insights = insights.length;
