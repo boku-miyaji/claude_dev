@@ -75,26 +75,38 @@ export async function loadNews(limit = 10): Promise<NewsItem[]> {
   threshold.setDate(threshold.getDate() - 7)
   threshold.setHours(0, 0, 0, 0)
 
-  const { data } = await supabase
-    .from('news_items')
-    .select('id,title,title_ja,summary,url,source,source_type,topic,published_date,collected_at')
-    .gte('collected_at', threshold.toISOString())
-    .order('published_date', { ascending: false, nullsFirst: false })
-    .order('collected_at', { ascending: false })
-    .limit(limit * 3) // dedupe 後に limit 件残るよう多めに取る
+  try {
+    // 注: order を2回チェインして nullsFirst オプションを使うと
+    // supabase-js の一部バージョンで URL 組み立てが壊れることがあるため、
+    // シンプルに published_date 降順のみにする。
+    const { data, error } = await supabase
+      .from('news_items')
+      .select('id,title,title_ja,summary,url,source,source_type,topic,published_date,collected_at')
+      .gte('collected_at', threshold.toISOString())
+      .order('published_date', { ascending: false })
+      .limit(limit * 3) // dedupe 後に limit 件残るよう多めに取る
 
-  const rows = (data as NewsItem[]) || []
+    if (error) {
+      console.error('[loadNews] query error:', error)
+      return []
+    }
 
-  // URL と title で重複排除（published_date が新しい方を残す）
-  const seen = new Set<string>()
-  const deduped: NewsItem[] = []
-  for (const item of rows) {
-    const key = item.url || item.title
-    if (!key || seen.has(key)) continue
-    seen.add(key)
-    deduped.push(item)
-    if (deduped.length >= limit) break
+    const rows = (data as NewsItem[]) || []
+
+    // URL と title で重複排除（published_date が新しい方を残す）
+    const seen = new Set<string>()
+    const deduped: NewsItem[] = []
+    for (const item of rows) {
+      const key = item.url || item.title
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      deduped.push(item)
+      if (deduped.length >= limit) break
+    }
+    return deduped
+  } catch (e) {
+    console.error('[loadNews] exception:', e)
+    return []
   }
-  return deduped
 }
 

@@ -314,10 +314,16 @@ function NewsFeed() {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    const { loadNews } = await import('@/lib/newsCollect')
-    const news = await loadNews(30)
-    setItems(news as ReportNewsItem[])
-    setLoading(false)
+    try {
+      const { loadNews } = await import('@/lib/newsCollect')
+      const news = await loadNews(30)
+      setItems(news as ReportNewsItem[])
+    } catch (e) {
+      console.error('[NewsFeed] load error:', e)
+      setItems([])
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { load() }, [load])

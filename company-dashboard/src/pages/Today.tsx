@@ -394,8 +394,12 @@ export function Today() {
           const ids = items.filter((n) => n.id).map((n) => n.id!)
           recordImpressions(ids)
         }
+      }).catch((e) => {
+        console.error('[Today] news load error:', e)
       })
-    )
+    ).catch((e) => {
+      console.error('[Today] news module import error:', e)
+    })
   }, [])
 
   // Timeline hooks — must be before any conditional return (Rules of Hooks)
