@@ -7,7 +7,7 @@ interface GrowthEvent {
   category: string; severity?: string; status?: string; phase?: string
   what_happened?: string; root_cause?: string; countermeasure?: string
   result?: string; related_commits?: string[]; related_migrations?: string[]
-  tags?: string[]
+  tags?: string[]; source?: string
 }
 
 const TYPE_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
@@ -320,6 +320,7 @@ function CategoryProgress({ events }: { events: GrowthEvent[] }) {
 export function Growth() {
   const [events, setEvents] = useState<GrowthEvent[]>([])
   const [filter, setFilter] = useState('all')
+  const [sourceFilter, setSourceFilter] = useState<string>('all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -336,7 +337,16 @@ export function Growth() {
   const countermeasures = events.filter((e) => e.event_type === 'countermeasure')
   const milestones = events.filter((e) => e.event_type === 'milestone')
 
-  const filtered = filter === 'all' ? events : events.filter((e) => e.event_type === filter || e.category === filter)
+  const filtered = events
+    .filter(e => filter === 'all' || e.event_type === filter || e.category === filter)
+    .filter(e => sourceFilter === 'all' || (e.source || 'manual') === sourceFilter)
+
+  // Source counts for filter buttons
+  const sourceCounts: Record<string, number> = { all: events.length }
+  events.forEach(e => {
+    const s = e.source || 'manual'
+    sourceCounts[s] = (sourceCounts[s] || 0) + 1
+  })
 
   // Group by phase
   const phases: { name: string; items: GrowthEvent[] }[] = []
@@ -362,11 +372,43 @@ export function Growth() {
 
       <CategoryProgress events={events} />
 
-      <div className="growth-filters" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 16 }}>
+      <div className="growth-filters" style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
         {FILTERS.map((f) => (
           <button key={f.key} className={`growth-filter-btn${filter === f.key ? ' active' : ''}`}
             onClick={() => setFilter(f.key)}>{f.label}</button>
         ))}
+      </div>
+
+      {/* Source filter */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16, fontSize: 11 }}>
+        <span style={{ color: 'var(--text3)', alignSelf: 'center', marginRight: 4 }}>記録元:</span>
+        {[
+          { key: 'all', label: 'すべて' },
+          { key: 'manual', label: '手動' },
+          { key: 'daily-digest', label: '日次ダイジェスト' },
+          { key: 'backfill', label: '過去backfill' },
+          { key: 'detector', label: '検知' },
+        ].map(f => {
+          const count = sourceCounts[f.key] || 0
+          const active = sourceFilter === f.key
+          if (f.key !== 'all' && count === 0) return null
+          return (
+            <button key={f.key}
+              onClick={() => setSourceFilter(f.key)}
+              style={{
+                padding: '3px 10px',
+                borderRadius: 4,
+                border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                background: active ? 'var(--accent)' : 'transparent',
+                color: active ? '#fff' : 'var(--text3)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font)',
+                fontSize: 11,
+              }}>
+              {f.label} ({count})
+            </button>
+          )
+        })}
       </div>
 
       {phases.map(({ name, items }) => (
