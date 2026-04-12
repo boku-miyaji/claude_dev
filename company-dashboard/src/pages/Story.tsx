@@ -321,18 +321,52 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
     return buckets.map(row => row.map(b => b.count > 0 ? b.sum / b.count : null))
   }, [entries])
 
-  // Deviation-based color using stddev-adaptive threshold
-  // ±1σ → intensity ~0.67, ±1.5σ → saturates
-  const colorForDev = (avg: number | null) => {
-    if (avg === null) return { bg: 'var(--surface2)', text: 'var(--text3)' }
-    const dev = avg - baseline
-    const intensity = Math.min(1, Math.abs(dev) / (stddev * 1.5))
-    if (dev >= 0) {
-      return { bg: `rgba(34, 197, 94, ${0.12 + intensity * 0.5})`, text: '#fff' }
+  // Z-score based semantic labels (normalized by personal stddev)
+  // More meaningful than raw numbers — answers "普段と比べてどう？"
+  const labelFor = (avg: number | null): { label: string; level: number; color: string; bg: string } => {
+    if (avg === null) return { label: '記録なし', level: 0, color: 'var(--text3)', bg: 'var(--surface2)' }
+    const z = (avg - baseline) / stddev
+    const absZ = Math.abs(z)
+
+    // Choose semantic label
+    let label: string
+    if (absZ < 0.5) label = '普段通り'
+    else if (absZ < 1.0) label = z > 0 ? 'やや良い' : 'やや悪い'
+    else if (absZ < 1.5) label = z > 0 ? '良い' : '悪い'
+    else label = z > 0 ? 'とても良い' : 'とても悪い'
+
+    // Neutral band → subtle gray
+    if (absZ < 0.5) {
+      return { label, level: 0, color: 'var(--text2)', bg: 'var(--surface2)' }
+    }
+
+    // Colored bands
+    const intensity = Math.min(1, absZ / 1.8)
+    const alpha = 0.35 + intensity * 0.5  // 0.35 → 0.85
+    if (z > 0) {
+      return { label, level: Math.ceil(absZ), color: '#fff', bg: `rgba(34, 197, 94, ${alpha})` }
     } else {
-      return { bg: `rgba(239, 68, 68, ${0.12 + intensity * 0.5})`, text: '#fff' }
+      return { label, level: -Math.ceil(absZ), color: '#fff', bg: `rgba(239, 68, 68, ${alpha})` }
     }
   }
+
+  // Keep cell count map for displaying sample size
+  const cellCounts = useMemo(() => {
+    const buckets: number[][] = Array.from({ length: 7 }, () => Array.from({ length: 4 }, () => 0))
+    entries.forEach(e => {
+      if (e.wbi_score <= 0) return
+      const d = new Date(e.created_at)
+      const dow = d.getDay()
+      const h = d.getHours()
+      let slot = 0
+      if (h >= 5 && h < 11) slot = 0
+      else if (h >= 11 && h < 16) slot = 1
+      else if (h >= 16 && h < 20) slot = 2
+      else slot = 3
+      buckets[dow][slot] += 1
+    })
+    return buckets
+  }, [entries])
 
   const DOW_LABELS = ['日', '月', '火', '水', '木', '金', '土']
   const SLOT_LABELS = ['朝', '昼', '夕', '夜']
@@ -389,10 +423,14 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
   }
 
   // ============================================================
-  // Render
+  // Render — auto-zoom Y axis to actual data range (not 0-10)
   // ============================================================
-  const maxTrend = Math.max(...trendData.map(d => Math.max(d.wbi, d.avg7)), 10)
-  const minTrend = Math.min(...trendData.map(d => Math.min(d.wbi, d.avg7)), 0)
+  const trendValues = trendData.flatMap(d => [d.wbi, d.avg7]).concat([baseline])
+  const dataMax = trendValues.length > 0 ? Math.max(...trendValues) : 10
+  const dataMin = trendValues.length > 0 ? Math.min(...trendValues) : 0
+  const pad = Math.max(0.5, (dataMax - dataMin) * 0.15)
+  const maxTrend = Math.min(10, dataMax + pad)
+  const minTrend = Math.max(0, dataMin - pad)
   const trendRange = maxTrend - minTrend || 1
 
   return (
@@ -404,10 +442,12 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
           曜日 × 時間帯 — 普段との差
         </div>
-        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12 }}>
-          <span style={{ color: '#22c55e' }}>緑</span>: 普段より良い　
-          <span style={{ color: '#ef4444' }}>赤</span>: 普段より悪い　
-          <span style={{ color: 'var(--text3)' }}>個人平均 {baseline.toFixed(1)} からの偏差</span>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, lineHeight: 1.6 }}>
+          あなたの普段 (WBI {baseline.toFixed(1)} ± {stddev.toFixed(1)}) との比較。
+          <span style={{ color: '#22c55e' }}> 緑</span>=良い
+          <span style={{ color: '#ef4444' }}>赤</span>=悪い
+          <span style={{ color: 'var(--text3)' }}>グレー=普段通り</span>
+          ・ セルをクリックで詳細
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '32px repeat(4, 1fr)', gap: 4 }}>
@@ -421,30 +461,38 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
                 {DOW_LABELS[di]}
               </div>
               {row.map((avg, si) => {
-                const c = colorForDev(avg)
-                const dev = avg !== null ? avg - baseline : 0
+                const info = labelFor(avg)
+                const count = cellCounts[di][si]
                 const clickable = avg !== null
+                const tooltipText = avg !== null
+                  ? `${DOW_LABELS[di]}${SLOT_LABELS[si]}: ${info.label} (WBI ${avg.toFixed(1)}, ${count}件)`
+                  : 'データなし'
                 return (
                   <div key={si}
-                    title={avg !== null ? `${DOW_LABELS[di]} ${SLOT_LABELS[si]}: ${avg.toFixed(1)} (${dev >= 0 ? '+' : ''}${dev.toFixed(1)}) — クリックで詳細` : 'データなし'}
+                    title={tooltipText}
                     onClick={() => { if (clickable) setSelectedCell({ dow: di, slot: si }) }}
                     style={{
-                      background: c.bg,
-                      borderRadius: 4,
-                      height: 36,
+                      background: info.bg,
+                      borderRadius: 5,
+                      minHeight: 50,
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: avg !== null ? c.text : 'var(--text3)',
-                      fontFamily: 'var(--mono)',
+                      gap: 2,
+                      padding: '4px 2px',
+                      color: info.color,
                       cursor: clickable ? 'pointer' : 'default',
                       transition: 'transform .1s',
                     }}
-                    onMouseEnter={e => { if (clickable) e.currentTarget.style.transform = 'scale(1.05)' }}
+                    onMouseEnter={e => { if (clickable) e.currentTarget.style.transform = 'scale(1.03)' }}
                     onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}>
-                    {avg !== null ? (dev >= 0 ? '+' : '') + dev.toFixed(1) : '–'}
+                    <div style={{ fontSize: 11, fontWeight: 700, lineHeight: 1 }}>{info.label}</div>
+                    {count > 0 && (
+                      <div style={{ fontSize: 9, opacity: 0.75, lineHeight: 1, fontFamily: 'var(--mono)' }}>
+                        {count}件
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -462,40 +510,68 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
           点線下 = 普段より落ち込んでる期間。青線 = 7日平均、点線 = 個人平均 ({baseline.toFixed(1)})
         </div>
 
-        <svg viewBox="0 0 400 120" style={{ width: '100%', height: 120 }} preserveAspectRatio="none">
-          {/* Baseline horizontal line */}
-          <line
-            x1={0} x2={400}
-            y1={120 - ((baseline - minTrend) / trendRange) * 110 - 5}
-            y2={120 - ((baseline - minTrend) / trendRange) * 110 - 5}
-            stroke="var(--text3)" strokeWidth="1" strokeDasharray="4 3" opacity="0.5"
-          />
+        <div style={{ display: 'flex', gap: 4, alignItems: 'stretch' }}>
+          {/* Y-axis labels */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)', paddingRight: 4, textAlign: 'right', minWidth: 24, height: 140 }}>
+            <span>{maxTrend.toFixed(1)}</span>
+            <span style={{ color: 'var(--accent)' }}>{baseline.toFixed(1)}</span>
+            <span>{minTrend.toFixed(1)}</span>
+          </div>
 
-          {/* 7-day rolling average line */}
-          {trendData.length > 1 && (
-            <polyline
-              points={trendData.map((d, i) => {
-                const x = (i / (trendData.length - 1)) * 400
-                const y = 120 - ((d.avg7 - minTrend) / trendRange) * 110 - 5
-                return `${x},${y}`
-              }).join(' ')}
-              fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          <svg viewBox="0 0 400 140" style={{ flex: 1, height: 140 }} preserveAspectRatio="none">
+            {/* Baseline horizontal line */}
+            <line
+              x1={0} x2={400}
+              y1={140 - ((baseline - minTrend) / trendRange) * 130 - 5}
+              y2={140 - ((baseline - minTrend) / trendRange) * 130 - 5}
+              stroke="var(--accent)" strokeWidth="1" strokeDasharray="4 3" opacity="0.5"
             />
-          )}
 
-          {/* Fill for "below baseline" regions */}
-          {trendData.length > 1 && trendData.map((d, i) => {
-            if (d.avg7 >= baseline) return null
-            const x = (i / (trendData.length - 1)) * 400
-            return (
-              <circle key={i} cx={x}
-                cy={120 - ((d.avg7 - minTrend) / trendRange) * 110 - 5}
-                r="3" fill="#ef4444" opacity="0.8" />
-            )
-          })}
-        </svg>
+            {/* Shaded band for "below baseline" */}
+            {trendData.length > 1 && (
+              <path
+                d={(() => {
+                  const pts = trendData.map((d, i) => {
+                    const x = (i / (trendData.length - 1)) * 400
+                    const y = 140 - ((d.avg7 - minTrend) / trendRange) * 130 - 5
+                    return [x, y] as [number, number]
+                  })
+                  const baseY = 140 - ((baseline - minTrend) / trendRange) * 130 - 5
+                  // Build a path that fills only below-baseline regions
+                  let d = ''
+                  pts.forEach(([x, y], i) => {
+                    if (y > baseY) {
+                      if (i === 0 || pts[i - 1][1] <= baseY) {
+                        d += `M ${x} ${baseY} L ${x} ${y} `
+                      } else {
+                        d += `L ${x} ${y} `
+                      }
+                      if (i === pts.length - 1 || pts[i + 1][1] <= baseY) {
+                        d += `L ${x} ${baseY} Z `
+                      }
+                    }
+                  })
+                  return d
+                })()}
+                fill="rgba(239, 68, 68, 0.18)"
+              />
+            )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 4, fontFamily: 'var(--mono)' }}>
+            {/* 7-day rolling average line */}
+            {trendData.length > 1 && (
+              <polyline
+                points={trendData.map((d, i) => {
+                  const x = (i / (trendData.length - 1)) * 400
+                  const y = 140 - ((d.avg7 - minTrend) / trendRange) * 130 - 5
+                  return `${x},${y}`
+                }).join(' ')}
+                fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              />
+            )}
+          </svg>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 4, marginLeft: 28, fontFamily: 'var(--mono)' }}>
           <span>{trendData[0]?.day}</span>
           <span>{trendData[trendData.length - 1]?.day}</span>
         </div>
