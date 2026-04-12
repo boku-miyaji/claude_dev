@@ -285,11 +285,25 @@ function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }:
 }
 
 function formatNewsDate(item: ReportNewsItem): string {
-  const dateStr = item.published_date || item.collected_at
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return ''
-  return `${d.getMonth() + 1}/${d.getDate()}`
+  // published_date は YYYY-MM-DD の文字列。Date オブジェクト経由だと
+  // タイムゾーン事故（UTC解釈でローカル時刻にずれる）が起きるので、
+  // 文字列のまま直接パースする。
+  const pub = item.published_date
+  if (pub && /^\d{4}-\d{2}-\d{2}/.test(pub)) {
+    const m = parseInt(pub.slice(5, 7), 10)
+    const d = parseInt(pub.slice(8, 10), 10)
+    return `${m}/${d}`
+  }
+  // collected_at は ISO datetime。こちらは JST に変換して表示
+  const col = item.collected_at
+  if (col) {
+    const dt = new Date(col)
+    if (!isNaN(dt.getTime())) {
+      const jst = new Date(dt.getTime() + 9 * 60 * 60 * 1000)
+      return `${jst.getUTCMonth() + 1}/${jst.getUTCDate()}`
+    }
+  }
+  return ''
 }
 
 function NewsFeed() {

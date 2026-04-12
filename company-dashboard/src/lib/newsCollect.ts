@@ -60,14 +60,20 @@ export async function recordImpressions(newsIds: string[]): Promise<void> {
   }
 }
 
-/** Load saved news items from news_items table (today only by default) */
+/** Load saved news items from news_items table (直近3日分).
+ *
+ * 過去は「今日収集されたもの」だけに絞っていたが、定期収集が
+ * 1日に動かなかった日は空になり「ニュースはまだありません」と
+ * 表示されてしまうため、直近3日分を表示する。
+ */
 export async function loadNews(limit = 10): Promise<NewsItem[]> {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const threshold = new Date()
+  threshold.setDate(threshold.getDate() - 3)
+  threshold.setHours(0, 0, 0, 0)
   const { data } = await supabase
     .from('news_items')
     .select('id,title,summary,url,source,source_type,topic,published_date,collected_at')
-    .gte('collected_at', today.toISOString())
+    .gte('collected_at', threshold.toISOString())
     .order('collected_at', { ascending: false })
     .limit(limit)
   return (data as NewsItem[]) || []
