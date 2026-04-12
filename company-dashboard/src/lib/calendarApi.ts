@@ -72,17 +72,34 @@ export function startCalendarAuth(): void {
  * Called from the callback page after Google redirects back.
  */
 export async function completeCalendarAuth(code: string): Promise<{ ok: boolean; error?: string }> {
-  // Wait for Supabase session to be restored after page redirect (max 5s)
-  let headers = await getAuthHeaders()
-  if (!headers.Authorization || headers.Authorization === 'Bearer ') {
+  // Try to get session, but don't block if not available (Edge Function accepts user_id fallback)
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token || ''
+  const userId = session?.user?.id || ''
+
+  // If no session yet, wait briefly for restoration
+  let finalToken = token
+  let finalUserId = userId
+  if (!token) {
     await new Promise<void>((resolve) => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session) { subscription.unsubscribe(); resolve() }
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
+        if (sess) {
+          finalToken = sess.access_token
+          finalUserId = sess.user.id
+          subscription.unsubscribe()
+          resolve()
+        }
       })
-      setTimeout(() => { subscription.unsubscribe(); resolve() }, 5000)
+      setTimeout(() => { subscription.unsubscribe(); resolve() }, 3000)
     })
-    headers = await getAuthHeaders()
   }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+  }
+  if (finalToken) headers['Authorization'] = `Bearer ${finalToken}`
+
   const redirectUri = window.location.origin + '/auth/google/callback'
   const res = await fetch(`${PROXY_BASE}/auth/callback`, {
     method: 'POST',
@@ -91,11 +108,12 @@ export async function completeCalendarAuth(code: string): Promise<{ ok: boolean;
       code,
       redirect_uri: redirectUri,
       calendar_ids: GCAL_CALENDARS.map((c) => c.id),
+      user_id: finalUserId, // Fallback for when JWT is not available
     }),
   })
   if (!res.ok) {
-    const data = await res.json().catch(() => ({ error: 'Unknown error' }))
-    return { ok: false, error: data.error }
+    const text = await res.text().catch(() => '')
+    try { return { ok: false, error: JSON.parse(text).error || text } } catch { return { ok: false, error: text || `HTTP ${res.status}` } }
   }
   return { ok: true }
 }

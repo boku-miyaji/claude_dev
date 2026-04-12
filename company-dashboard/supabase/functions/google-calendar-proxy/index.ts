@@ -472,9 +472,34 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // Authenticate user via Supabase JWT
+    const url = new URL(req.url);
+    const path = url.pathname.replace(/^\/google-calendar-proxy/, "");
+
+    // Auth callback: accept user_id in request body (session may not be restored after redirect)
+    if (req.method === "POST" && path === "/auth/callback") {
+      // Try JWT auth first, fall back to user_id in body
+      let userId = "";
+      const authHeader = req.headers.get("authorization") || "";
+      const jwt = authHeader.replace("Bearer ", "").trim();
+      if (jwt) {
+        const sb = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY") || "");
+        const { data: { user } } = await sb.auth.getUser(jwt);
+        if (user) userId = user.id;
+      }
+      // Fall back: get user_id from request body
+      const body = await req.clone().json().catch(() => ({}));
+      if (!userId && body.user_id) userId = body.user_id;
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "No valid auth or user_id" }), {
+          status: 401, headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        });
+      }
+      return await handleAuthCallback(req, userId);
+    }
+
+    // All other routes require JWT auth
     const authHeader = req.headers.get("authorization") || "";
-    const jwt = authHeader.replace("Bearer ", "");
+    const jwt = authHeader.replace("Bearer ", "").trim();
     if (!jwt) {
       return new Response(JSON.stringify({ error: "Missing authorization" }), {
         status: 401,
@@ -489,13 +514,6 @@ Deno.serve(async (req: Request) => {
         status: 401,
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
       });
-    }
-
-    const url = new URL(req.url);
-    const path = url.pathname.replace(/^\/google-calendar-proxy/, "");
-
-    if (req.method === "POST" && path === "/auth/callback") {
-      return await handleAuthCallback(req, user.id);
     }
     if (req.method === "GET" && path === "/auth/check") {
       return await handleCheckAuth(user.id);
