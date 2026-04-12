@@ -3,7 +3,25 @@ import { Card, Modal, toast } from '@/components/ui'
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar'
 import { startCalendarAuth } from '@/lib/calendarApi'
 import { GCAL_CALENDARS } from '@/lib/constants'
+import { supabase } from '@/lib/supabase'
 import type { ViewMode, CalendarEvent, CalendarType } from '@/types/calendar'
+
+// ============================================================
+// Task types
+// ============================================================
+
+interface Task {
+  id: number
+  title: string
+  status: string
+  priority: string
+  due_date: string | null
+  scheduled_at: string | null
+  estimated_minutes: number | null
+  completed_at: string | null
+}
+
+const TASK_COLOR = '#8b5cf6'
 
 const DOW = ['日', '月', '火', '水', '木', '金', '土']
 const VIEW_LABELS: Record<ViewMode, string> = { day: '日', week: '週', month: '月' }
@@ -124,11 +142,14 @@ interface DragState {
 // Time Grid (Day / Week view)
 // ============================================================
 
-function TimeGrid({ events, days, today, hiddenCalendars, onCellClick, onEventClick, onDragUpdate }: {
-  events: CalendarEvent[]; days: Date[]; today: string; hiddenCalendars: Set<CalendarType>
+function TimeGrid({ events, tasks, days, today, hiddenCalendars, onCellClick, onEventClick, onDragUpdate, onTaskToggle, onTaskClick, onAllDayAdd }: {
+  events: CalendarEvent[]; tasks: Task[]; days: Date[]; today: string; hiddenCalendars: Set<CalendarType>
   onCellClick: (date: string, hour: number) => void
   onEventClick: (evt: CalendarEvent) => void
   onDragUpdate: (ev: CalendarEvent, newStartH: number, newEndH: number, newDayIndex: number) => Promise<void>
+  onTaskToggle: (task: Task) => void
+  onTaskClick: (task: Task) => void
+  onAllDayAdd: (date: string) => void
 }) {
   const bodyRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -154,6 +175,24 @@ function TimeGrid({ events, days, today, hiddenCalendars, onCellClick, onEventCl
     })
     return map
   }, [filteredEvents, days])
+
+  // Group tasks by day. Time-boxed tasks (scheduled_at) go to time grid; others to all-day row (by due_date)
+  const { allDayTasksByDay, timedTasksByDay } = useMemo(() => {
+    const allDay = new Map<number, Task[]>()
+    const timed = new Map<number, Task[]>()
+    for (let i = 0; i < days.length; i++) { allDay.set(i, []); timed.set(i, []) }
+    tasks.forEach(t => {
+      if (t.scheduled_at) {
+        const ds = toJSTDateStr(new Date(t.scheduled_at))
+        const di = days.findIndex(d => toJSTDateStr(d) === ds)
+        if (di >= 0) timed.get(di)!.push(t)
+      } else if (t.due_date) {
+        const di = days.findIndex(d => toJSTDateStr(d) === t.due_date)
+        if (di >= 0) allDay.get(di)!.push(t)
+      }
+    })
+    return { allDayTasksByDay: allDay, timedTasksByDay: timed }
+  }, [tasks, days])
 
   // Compute column geometry from CSS grid
   const getColumnGeometry = useCallback(() => {
@@ -281,6 +320,61 @@ function TimeGrid({ events, days, today, hiddenCalendars, onCellClick, onEventCl
         })}
       </div>
 
+      {/* All-day row (time-undefined tasks) */}
+      <div style={{ display: 'grid', gridTemplateColumns: `56px repeat(${days.length}, 1fr)`, borderBottom: '2px solid var(--border)', background: 'var(--surface2)', minHeight: 44 }}>
+        <div style={{ fontSize: 9, color: 'var(--text3)', textAlign: 'right', padding: '6px 8px 0', lineHeight: 1.2 }}>終日<br /><span style={{ color: TASK_COLOR, fontSize: 9 }}>タスク</span></div>
+        {days.map((d, di) => {
+          const ds = toJSTDateStr(d)
+          const dayTasks = allDayTasksByDay.get(di) || []
+          return (
+            <div key={di} style={{ borderLeft: '1px solid var(--border)', padding: 3, display: 'flex', flexDirection: 'column', gap: 2, position: 'relative', cursor: 'pointer' }}
+              onClick={e => { if ((e.target as HTMLElement).dataset.role !== 'chk' && (e.target as HTMLElement).dataset.role !== 'pill') onAllDayAdd(ds) }}
+              title="クリックでタスク追加">
+              {dayTasks.map(t => {
+                const done = t.status === 'done'
+                return (
+                  <div key={t.id} data-role="pill"
+                    onClick={e => { e.stopPropagation(); if ((e.target as HTMLElement).dataset.role !== 'chk') onTaskClick(t) }}
+                    style={{
+                      background: 'rgba(139,92,246,.15)',
+                      border: `1px dashed ${TASK_COLOR}`,
+                      color: TASK_COLOR,
+                      borderRadius: 3,
+                      padding: '2px 6px 2px 22px',
+                      fontSize: 10,
+                      fontWeight: 500,
+                      position: 'relative',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      opacity: done ? 0.45 : 1,
+                      textDecoration: done ? 'line-through' : 'none',
+                    }}>
+                    <span data-role="chk"
+                      onClick={e => { e.stopPropagation(); onTaskToggle(t) }}
+                      style={{
+                        position: 'absolute',
+                        left: 5, top: '50%', transform: 'translateY(-50%)',
+                        width: 12, height: 12,
+                        border: `1.5px solid ${TASK_COLOR}`,
+                        borderRadius: 2,
+                        background: done ? TASK_COLOR : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#fff', fontSize: 9, fontWeight: 700,
+                        cursor: 'pointer',
+                      }}>{done ? '✓' : ''}</span>
+                    {t.title}
+                  </div>
+                )
+              })}
+              {dayTasks.length === 0 && (
+                <div style={{ fontSize: 9, color: 'var(--text3)', opacity: 0.5, padding: '4px 6px', textAlign: 'center' }}>+</div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
       {/* Time grid body */}
       <div ref={bodyRef} className="cal-tg-body" style={{ gridTemplateColumns: `56px repeat(${days.length}, 1fr)` }}
         onMouseLeave={() => setHoverCell(null)}>
@@ -321,9 +415,10 @@ function TimeGrid({ events, days, today, hiddenCalendars, onCellClick, onEventCl
           </div>
         )}
 
-        {/* Events (absolutely positioned) */}
+        {/* Events + time-boxed tasks (absolutely positioned) */}
         {days.map((_d, di) => {
           const dayEvts = eventsByDay.get(di) || []
+          const dayTimedTasks = timedTasksByDay.get(di) || []
           const colStyle = {
             position: 'absolute' as const,
             top: 0,
@@ -378,6 +473,58 @@ function TimeGrid({ events, days, today, hiddenCalendars, onCellClick, onEventCl
                       <div className="cal-tg-resize"
                         onMouseDown={e => { e.stopPropagation(); onMouseDown(evt, 'resize', e) }} />
                     )}
+                  </div>
+                )
+              })}
+
+              {/* Time-boxed tasks */}
+              {dayTimedTasks.map(t => {
+                if (!t.scheduled_at) return null
+                const sH = getJSTHours(t.scheduled_at)
+                const durH = (t.estimated_minutes || 30) / 60
+                const eH = sH + durH
+                const top = (sH - START_H) * HOUR_H
+                const height = Math.max((eH - sH) * HOUR_H, 28)
+                const done = t.status === 'done'
+                return (
+                  <div key={`task-${t.id}`}
+                    title={`${fmtTime(t.scheduled_at)} ${t.title}\n☐ タスク`}
+                    style={{
+                      position: 'absolute',
+                      top,
+                      left: 2, right: 2,
+                      height: height - 2,
+                      background: 'rgba(139,92,246,.12)',
+                      border: `1.5px dashed ${TASK_COLOR}`,
+                      color: TASK_COLOR,
+                      borderRadius: 4,
+                      padding: '4px 6px 4px 24px',
+                      fontSize: 11,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      pointerEvents: 'auto',
+                      overflow: 'hidden',
+                      opacity: done ? 0.45 : 1,
+                      textDecoration: done ? 'line-through' : 'none',
+                      zIndex: 2,
+                    }}
+                    onClick={e => {
+                      if ((e.target as HTMLElement).dataset.role !== 'chk') onTaskClick(t)
+                    }}>
+                    <span data-role="chk"
+                      onClick={e => { e.stopPropagation(); onTaskToggle(t) }}
+                      style={{
+                        position: 'absolute',
+                        left: 5, top: 5,
+                        width: 14, height: 14,
+                        border: `1.5px solid ${TASK_COLOR}`,
+                        borderRadius: 3,
+                        background: done ? TASK_COLOR : 'transparent',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#fff', fontSize: 10, fontWeight: 700,
+                        cursor: 'pointer',
+                      }}>{done ? '✓' : ''}</span>
+                    {t.title}
                   </div>
                 )
               })}
@@ -519,9 +666,47 @@ export function Calendar() {
   const [modalHour, setModalHour] = useState<number | undefined>(undefined)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [hiddenCalendars, setHiddenCalendars] = useState<Set<CalendarType>>(new Set())
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [quickAdd, setQuickAdd] = useState<{ date: string; hour?: number } | null>(null)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   const { events, loading, authenticated, refetch, createEvent, updateEvent, deleteEvent } = useGoogleCalendar(viewDate, viewMode)
   const today = toJSTDateStr(new Date())
+
+  // Fetch tasks in the visible range
+  const fetchTasks = useCallback(async () => {
+    const range = viewMode === 'day' ? 1 : viewMode === 'week' ? 7 : 35
+    const start = new Date(viewDate); start.setDate(start.getDate() - 1)
+    const end = new Date(viewDate); end.setDate(end.getDate() + range + 1)
+    const startStr = toJSTDateStr(start)
+    const endStr = toJSTDateStr(end)
+    const startIso = new Date(start).toISOString()
+    const endIso = new Date(end).toISOString()
+    const { data } = await supabase
+      .from('tasks')
+      .select('id,title,status,priority,due_date,scheduled_at,estimated_minutes,completed_at')
+      .or(`and(due_date.gte.${startStr},due_date.lte.${endStr}),and(scheduled_at.gte.${startIso},scheduled_at.lte.${endIso})`)
+      .order('sort_order', { ascending: true })
+    setTasks((data || []) as Task[])
+  }, [viewDate, viewMode])
+
+  useEffect(() => { fetchTasks() }, [fetchTasks])
+
+  const handleTaskToggle = useCallback(async (task: Task) => {
+    const nextStatus = task.status === 'done' ? 'open' : 'done'
+    const patch = nextStatus === 'done' ? { status: 'done', completed_at: new Date().toISOString() } : { status: 'open', completed_at: null }
+    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...patch } : t))
+    const { error } = await supabase.from('tasks').update(patch).eq('id', task.id)
+    if (error) { toast('更新に失敗しました'); fetchTasks() }
+  }, [fetchTasks])
+
+  const handleTaskClick = useCallback((task: Task) => {
+    setEditingTask(task)
+  }, [])
+
+  const handleAllDayAdd = useCallback((date: string) => {
+    setQuickAdd({ date, hour: undefined })
+  }, [])
 
   const nav = useCallback((dir: number) => {
     setViewDate(prev => {
@@ -633,10 +818,13 @@ export function Calendar() {
           ? <MonthGrid events={events} date={viewDate} today={today} hiddenCalendars={hiddenCalendars}
               onCellClick={ds => { setModalDate(ds); setModalHour(undefined); setEditingEvent(null); setModalOpen(true) }}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }} />
-          : <TimeGrid events={events} days={days} today={today} hiddenCalendars={hiddenCalendars}
-              onCellClick={(ds, hour) => { setModalDate(ds); setModalHour(hour); setEditingEvent(null); setModalOpen(true) }}
+          : <TimeGrid events={events} tasks={tasks} days={days} today={today} hiddenCalendars={hiddenCalendars}
+              onCellClick={(ds, hour) => setQuickAdd({ date: ds, hour })}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }}
-              onDragUpdate={handleDragUpdate} />
+              onDragUpdate={handleDragUpdate}
+              onTaskToggle={handleTaskToggle}
+              onTaskClick={handleTaskClick}
+              onAllDayAdd={handleAllDayAdd} />
         }
       </Card>
 
@@ -647,6 +835,168 @@ export function Calendar() {
 
       <EventModal open={modalOpen} onClose={() => setModalOpen(false)} initialDate={modalDate} initialHour={modalHour}
         editEvent={editingEvent} onSave={handleSave} onDelete={editingEvent ? handleDelete : undefined} />
+
+      {quickAdd && (
+        <QuickAddPopover
+          date={quickAdd.date}
+          hour={quickAdd.hour}
+          onClose={() => setQuickAdd(null)}
+          onCreated={() => { setQuickAdd(null); fetchTasks(); refetch() }}
+          onEventFallback={() => {
+            setModalDate(quickAdd.date)
+            setModalHour(quickAdd.hour)
+            setEditingEvent(null)
+            setQuickAdd(null)
+            setModalOpen(true)
+          }}
+        />
+      )}
+
+      {editingTask && (
+        <TaskEditModal
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onSaved={() => { setEditingTask(null); fetchTasks() }}
+        />
+      )}
     </div>
+  )
+}
+
+// ============================================================
+// Quick Add Popover — simple task creator
+// ============================================================
+
+function QuickAddPopover({ date, hour, onClose, onCreated, onEventFallback }: {
+  date: string; hour?: number
+  onClose: () => void
+  onCreated: () => void
+  onEventFallback: () => void
+}) {
+  const [title, setTitle] = useState('')
+  const [saving, setSaving] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { inputRef.current?.focus() }, [])
+
+  const create = async () => {
+    const t = title.trim()
+    if (!t || saving) return
+    setSaving(true)
+    const payload: Record<string, unknown> = { title: t, status: 'open', priority: 'normal', type: 'task' }
+    if (hour !== undefined) {
+      // Time-boxed: build JST ISO
+      payload.scheduled_at = `${date}T${String(hour).padStart(2, '0')}:00:00+09:00`
+      payload.estimated_minutes = 60
+      payload.due_date = date
+    } else {
+      payload.due_date = date
+    }
+    const { error } = await supabase.from('tasks').insert(payload)
+    setSaving(false)
+    if (error) { toast(`追加失敗: ${error.message}`); return }
+    toast('タスクを追加しました')
+    onCreated()
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: 'rgba(0,0,0,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 12, padding: 20, width: 380, boxShadow: '0 20px 60px rgba(0,0,0,.4)', border: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>新規タスク</span>
+          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
+            {hour !== undefined ? `${date}  ${String(hour).padStart(2, '0')}:00〜` : `${date}  終日`}
+          </span>
+        </div>
+        <input
+          ref={inputRef}
+          className="input"
+          style={{ width: '100%', marginBottom: 12, fontSize: 14 }}
+          placeholder="何をしますか？ (Enter で作成)"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') { e.preventDefault(); create() }
+            if (e.key === 'Escape') onClose()
+          }}
+        />
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button className="btn btn-primary" disabled={!title.trim() || saving} onClick={create}>
+            {saving ? '作成中...' : '+ タスク追加'}
+          </button>
+          <button className="btn btn-ghost" onClick={onEventFallback} title="代わりにGoogleカレンダーのイベントとして作成">
+            イベントとして…
+          </button>
+          <div style={{ flex: 1 }} />
+          <button className="btn btn-ghost" onClick={onClose} style={{ fontSize: 11 }}>Esc</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// Task Edit Modal — edit or delete a task
+// ============================================================
+
+function TaskEditModal({ task, onClose, onSaved }: { task: Task; onClose: () => void; onSaved: () => void }) {
+  const [title, setTitle] = useState(task.title)
+  const [dueDate, setDueDate] = useState(task.due_date || '')
+  const [hasTime, setHasTime] = useState(!!task.scheduled_at)
+  const [startTime, setStartTime] = useState(task.scheduled_at ? fmtTime(task.scheduled_at) : '10:00')
+  const [minutes, setMinutes] = useState(String(task.estimated_minutes || 60))
+  const [saving, setSaving] = useState(false)
+
+  const save = async () => {
+    setSaving(true)
+    const patch: Record<string, unknown> = { title: title.trim(), due_date: dueDate || null }
+    if (hasTime && dueDate) {
+      patch.scheduled_at = `${dueDate}T${startTime}:00+09:00`
+      patch.estimated_minutes = parseInt(minutes) || 60
+    } else {
+      patch.scheduled_at = null
+    }
+    const { error } = await supabase.from('tasks').update(patch).eq('id', task.id)
+    setSaving(false)
+    if (error) { toast('保存に失敗しました'); return }
+    toast('更新しました')
+    onSaved()
+  }
+
+  const del = async () => {
+    if (!confirm('このタスクを削除しますか？')) return
+    const { error } = await supabase.from('tasks').delete().eq('id', task.id)
+    if (error) { toast('削除に失敗しました'); return }
+    toast('削除しました')
+    onSaved()
+  }
+
+  return (
+    <Modal open onClose={onClose} title="タスクを編集"
+      footer={<div style={{ display: 'flex', gap: 8, width: '100%' }}>
+        <button className="btn btn-primary" disabled={saving || !title.trim()} onClick={save}>{saving ? '保存中...' : '保存'}</button>
+        <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
+        <button className="btn" style={{ color: 'var(--red)', marginLeft: 'auto' }} onClick={del}>削除</button>
+      </div>}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>タイトル</label>
+          <input className="input" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></div>
+        <div><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>日付</label>
+          <input className="input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} /></div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+          <input type="checkbox" checked={hasTime} onChange={e => setHasTime(e.target.checked)} />
+          時間を指定する
+        </label>
+        {hasTime && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ flex: 1 }}><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>開始</label>
+              <input className="input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} /></div>
+            <div style={{ flex: 1 }}><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>所要（分）</label>
+              <input className="input" type="number" value={minutes} onChange={e => setMinutes(e.target.value)} /></div>
+          </div>
+        )}
+      </div>
+    </Modal>
   )
 }

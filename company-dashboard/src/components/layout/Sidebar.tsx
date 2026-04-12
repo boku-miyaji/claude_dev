@@ -17,7 +17,6 @@ const PRODUCT_NAV: NavEntry[] = [
   { type: 'item', page: '', icon: '◉', label: 'Home' },
   { type: 'item', page: 'journal', icon: '📔', label: 'Journal' },
   { type: 'item', page: 'chat', icon: '💬', label: 'AI Chat' },
-  { type: 'item', page: 'tasks', icon: '☐', label: 'Tasks' },
   // Plan
   { type: 'label', label: 'Plan' },
   { type: 'item', page: 'dreams', icon: '🌟', label: 'Dreams & Goals' },
