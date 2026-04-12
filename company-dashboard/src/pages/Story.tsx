@@ -365,41 +365,106 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
     return result
   }, [entries])
 
-  // Event correlation: find events where day-WBI or prev-day-WBI deviates from baseline
+  // Event correlation: tag-based + exact-name matching
   const eventPatterns = useMemo(() => {
-    const normalize = (s: string) => s.trim().toLowerCase()
-      .replace(/\s+/g, ' ')
-      .replace(/\s*\(\d+\)\s*$/, '')
-      .replace(/^\[.*?\]\s*/, '')
+    // Extract multiple tags from one event summary.
+    // Each tag represents a dimension: category / type / specific.
+    // Tags have prefixes for display: category | type | event
+    const extractTags = (summary: string): { key: string; display: string; kind: 'category' | 'type' | 'event' }[] => {
+      const tags: { key: string; display: string; kind: 'category' | 'type' | 'event' }[] = []
+      const s = summary.trim()
 
-    const evs: Record<string, { display: string; dayWbis: number[]; prevWbis: number[] }> = {}
+      // 1. Bracket prefix: [In], [Ex], [External] etc
+      const bracketMatch = s.match(/^\[([^\]]{1,12})\]/)
+      if (bracketMatch) {
+        const raw = bracketMatch[1].trim()
+        // Normalize common aliases
+        let norm = raw.toLowerCase()
+        if (norm === 'in' || norm === 'internal' || norm === '社内') norm = 'In'
+        else if (norm === 'ex' || norm === 'external' || norm === '社外') norm = 'Ex'
+        else norm = raw
+        tags.push({ key: `cat:${norm.toLowerCase()}`, display: `[${norm}]`, kind: 'category' })
+      }
+
+      // 2. Meeting type keywords
+      const keywords: { match: RegExp; display: string }[] = [
+        { match: /定例/, display: '定例' },
+        { match: /レビュー|review/i, display: 'レビュー' },
+        { match: /1on1|1:1|1-on-1/i, display: '1on1' },
+        { match: /面談|interview/i, display: '面談' },
+        { match: /会食|dinner/i, display: '会食' },
+        { match: /ランチ|lunch/i, display: 'ランチ' },
+        { match: /飲み会/, display: '飲み会' },
+        { match: /打ち合わせ|打合せ|打合|mtg|meeting/i, display: 'MTG' },
+        { match: /勉強会|study/i, display: '勉強会' },
+        { match: /朝会|standup/i, display: '朝会' },
+        { match: /夕会/, display: '夕会' },
+        { match: /デモ|demo/i, display: 'デモ' },
+        { match: /sync/i, display: 'Sync' },
+        { match: /振り返り|retro/i, display: '振り返り' },
+        { match: /提案|pitch/i, display: '提案' },
+        { match: /作業|もくもく/, display: '作業' },
+      ]
+      keywords.forEach(k => {
+        if (k.match.test(s)) {
+          tags.push({ key: `type:${k.display}`, display: k.display, kind: 'type' })
+        }
+      })
+
+      // 3. Exact normalized name (specific recurring event)
+      const normalized = s.toLowerCase()
+        .replace(/\s+/g, ' ')
+        .replace(/\s*\(\d+\)\s*$/, '')
+        .replace(/^\[.*?\]\s*/, '')
+      if (normalized && normalized.length >= 2) {
+        // Use cleaned display (keep original case but strip prefix)
+        const displayClean = s.replace(/^\[.*?\]\s*/, '').replace(/\s*\(\d+\)\s*$/, '').trim()
+        tags.push({ key: `event:${normalized}`, display: displayClean, kind: 'event' })
+      }
+
+      return tags
+    }
+
+    const evs: Record<string, {
+      display: string
+      kind: 'category' | 'type' | 'event'
+      dayWbis: number[]
+      prevWbis: number[]
+    }> = {}
 
     Object.entries(diaryByDate).forEach(([day, diary]) => {
       const wbi = dayWbi[day]
       if (wbi === undefined) return
       const list = diary.calendar_events || []
       if (!Array.isArray(list)) return
+
+      // Dedupe tags per day (one event might match multiple keywords, but per day we count once)
+      const seenTagsToday = new Set<string>()
       list.forEach(ev => {
         const summary = ev?.summary
         if (!summary || typeof summary !== 'string') return
-        const key = normalize(summary)
-        if (!key || key.length < 2) return
-        if (!evs[key]) evs[key] = { display: summary, dayWbis: [], prevWbis: [] }
-        evs[key].dayWbis.push(wbi)
-        // Previous day
-        const prev = new Date(day)
-        prev.setDate(prev.getDate() - 1)
-        const prevKey = prev.toISOString().substring(0, 10)
-        if (dayWbi[prevKey] !== undefined) evs[key].prevWbis.push(dayWbi[prevKey])
+        extractTags(summary).forEach(tag => {
+          if (seenTagsToday.has(tag.key)) return
+          seenTagsToday.add(tag.key)
+          if (!evs[tag.key]) evs[tag.key] = { display: tag.display, kind: tag.kind, dayWbis: [], prevWbis: [] }
+          evs[tag.key].dayWbis.push(wbi)
+          // Previous day
+          const prev = new Date(day)
+          prev.setDate(prev.getDate() - 1)
+          const prevKey = prev.toISOString().substring(0, 10)
+          if (dayWbi[prevKey] !== undefined) evs[tag.key].prevWbis.push(dayWbi[prevKey])
+        })
       })
     })
 
-    const MIN_OCCURRENCES = 3
-    const SIGNIFICANCE = 0.5 // z-score threshold (0.5 σ)
+    // Different minimum thresholds by kind
+    // category (In/Ex) → 5回以上, type → 3回以上, event → 3回以上
+    const minOccurrences = (kind: string) => kind === 'category' ? 5 : 3
+    const SIGNIFICANCE = 0.5
 
-    const results = Object.values(evs)
-      .filter(e => e.dayWbis.length >= MIN_OCCURRENCES)
-      .map(e => {
+    const results = Object.entries(evs)
+      .filter(([, e]) => e.dayWbis.length >= minOccurrences(e.kind))
+      .map(([key, e]) => {
         const avgDay = e.dayWbis.reduce((s, w) => s + w, 0) / e.dayWbis.length
         const avgPrev = e.prevWbis.length >= 2
           ? e.prevWbis.reduce((s, w) => s + w, 0) / e.prevWbis.length
@@ -407,14 +472,15 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
         const dayDev = avgDay - baseline
         const prevDev = avgPrev !== null ? avgPrev - baseline : null
         const maxAbsDev = Math.max(Math.abs(dayDev), prevDev !== null ? Math.abs(prevDev) : 0)
-        return { display: e.display, count: e.dayWbis.length, avgDay, avgPrev, dayDev, prevDev, maxAbsDev }
+        return { key, display: e.display, kind: e.kind, count: e.dayWbis.length, avgDay, avgPrev, dayDev, prevDev, maxAbsDev }
       })
       .filter(r => r.maxAbsDev >= SIGNIFICANCE * stddev)
       .sort((a, b) => b.maxAbsDev - a.maxAbsDev)
 
+    // Split into negative/positive. Separate by kind so user sees category/type/specific levels
     return {
-      negative: results.filter(r => r.dayDev < 0 || (r.prevDev !== null && r.prevDev < -stddev * SIGNIFICANCE)).slice(0, 5),
-      positive: results.filter(r => r.dayDev > 0 && !(r.prevDev !== null && r.prevDev < -stddev * SIGNIFICANCE)).slice(0, 5),
+      negative: results.filter(r => r.dayDev < 0 || (r.prevDev !== null && r.prevDev < -stddev * SIGNIFICANCE)).slice(0, 8),
+      positive: results.filter(r => r.dayDev > 0 && !(r.prevDev !== null && r.prevDev < -stddev * SIGNIFICANCE)).slice(0, 8),
     }
   }, [diaryByDate, dayWbi, baseline, stddev])
 
@@ -900,6 +966,7 @@ function HeatmapCellModal({ cell, entries, diaryByDate, baseline, onClose, dowLa
 
 interface EventPattern {
   display: string
+  kind: 'category' | 'type' | 'event'
   count: number
   avgDay: number
   avgPrev: number | null
@@ -907,11 +974,18 @@ interface EventPattern {
   prevDev: number | null
 }
 
+const KIND_BADGE: Record<EventPattern['kind'], { label: string; color: string; bg: string }> = {
+  category: { label: 'カテゴリ', color: '#a78bfa', bg: 'rgba(167, 139, 250, 0.15)' },
+  type:     { label: '種類',     color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' },
+  event:    { label: '個別',     color: 'var(--text3)', bg: 'var(--surface2)' },
+}
+
 function EventPatternRow({ pattern, stddev }: { pattern: EventPattern; stddev: number }) {
   const p = pattern
   const dayColor = p.dayDev < 0 ? '#ef4444' : '#22c55e'
   const prevSignificant = p.prevDev !== null && Math.abs(p.prevDev) >= 0.5 * stddev
   const prevColor = p.prevDev !== null && p.prevDev < 0 ? '#ef4444' : '#22c55e'
+  const badge = KIND_BADGE[p.kind]
 
   // Semantic label
   const zDay = p.dayDev / stddev
@@ -929,10 +1003,22 @@ function EventPatternRow({ pattern, stddev }: { pattern: EventPattern; stddev: n
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {p.display}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <span style={{
+              fontSize: 9,
+              fontWeight: 600,
+              padding: '1px 6px',
+              borderRadius: 3,
+              background: badge.bg,
+              color: badge.color,
+              letterSpacing: '.3px',
+              flexShrink: 0,
+            }}>{badge.label}</span>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {p.display}
+            </div>
           </div>
-          <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>
+          <div style={{ fontSize: 10, color: 'var(--text3)' }}>
             {p.count}回のパターン
           </div>
         </div>
