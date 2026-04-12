@@ -11,6 +11,7 @@ import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
 import { StoryArcCard } from '@/components/StoryArcCard'
+import { FutureYouChat } from '@/components/FutureYouChat'
 import { useDataStore } from '@/stores/data'
 import { useBriefingStore } from '@/stores/briefing'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
@@ -737,21 +738,16 @@ export function Today() {
     </div>
   ) : null
 
-  /* ── [3] AI Briefing ── */
+  /* ── [3] 未来のあなたから（クリックで対話展開） ── */
 
   const Briefing = (
-    <Card style={{ marginBottom: 16, background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
-      <div style={{ fontSize: 11, color: 'var(--accent2)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em' }}>AI Partner</div>
-      {briefingLoading ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent2)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
-          <span style={{ fontSize: 12, color: 'var(--text3)' }}>考え中...</span>
-        </div>
-      ) : (
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>{briefingMessage || '今日も穏やかに過ごせますように。'}</div>
-      )}
+    <FutureYouChat
+      openingMessage={briefingMessage || ''}
+      loading={briefingLoading}
+      entryPoint="today_partner"
+    >
       <StoryArcCard />
-    </Card>
+    </FutureYouChat>
   )
 
   /* ── [News] ── */

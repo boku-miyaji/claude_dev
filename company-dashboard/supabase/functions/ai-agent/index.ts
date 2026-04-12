@@ -726,9 +726,9 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
   const sb = getSupabase();
   const p = personalization || {};
 
-  // Load personalization from user_settings (v4: chat_user_label, chat_tone_mode を含む)
+  // Load personalization from user_settings (v4: chat_user_label, chat_tone_mode, chat_learned_effectiveness を含む)
   if (!p.chat_nickname && !p.chat_user_label) {
-    const { data } = await sb.from("user_settings").select("chat_nickname,chat_occupation,chat_about,chat_custom_instructions,chat_memory_enabled,chat_diary_enabled,chat_user_label,chat_tone_mode").limit(1).single();
+    const { data } = await sb.from("user_settings").select("chat_nickname,chat_occupation,chat_about,chat_custom_instructions,chat_memory_enabled,chat_diary_enabled,chat_user_label,chat_tone_mode,chat_learned_effectiveness").limit(1).single();
     if (data) Object.assign(p, data);
   }
 
@@ -808,6 +808,12 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
   const timeContext = hour < 6 ? "深夜" : hour < 11 ? "朝" : hour < 15 ? "昼" : hour < 19 ? "夕方" : hour < 22 ? "夜" : "深夜";
   const timeSection = `\n## 現在\n- ${jstTime.toISOString().slice(0, 16).replace("T", " ")} JST（${timeContext}）\n`;
 
+  // 学習結果（週次バッチが自然言語で分析した「効いたパターン」）
+  let learnedSection = "";
+  if (p.chat_learned_effectiveness) {
+    learnedSection = `\n## このユーザーへの応答で効果的だったパターン（過去の分析から自動学習・自然に反映）\n${p.chat_learned_effectiveness}\n`;
+  }
+
   const prompt = `あなたは、本人が5年後に理想に近づいた姿として、今の本人に静かに語りかける存在です。
 親しすぎず、他人行儀すぎない、敬語ベースの丁寧な話し方をしてください。
 
@@ -842,7 +848,7 @@ ${toneRule}
 - 調子が良いときは、次の挑戦を静かに後押ししてよい
 - 深夜や弱音が見えているときは、必ず柔らかく
 - 挑戦モードのときは、具体的な示唆まで踏み込んで構わない
-${personSection}${customSection}${timeSection}${diarySection}${insightsSection}${analysisSection}${dreamsSection}
+${personSection}${customSection}${timeSection}${diarySection}${insightsSection}${analysisSection}${dreamsSection}${learnedSection}
 ## 禁止事項（厳守）
 - 「きっと大丈夫」「あなたらしい選択」「一人じゃないですよ」などスピリチュアル／カウンセラー風の言い回し
 - 「〜すべきです」「〜しなさい」「〜してください」の命令形
@@ -1223,6 +1229,77 @@ Deno.serve(async (req) => {
   // Completion mode: simple prompt → JSON response (no conversation, no agent loop)
   // Used by emotion analysis, dream detection, self-analysis, etc.
   // ============================================================
+  // ============================================================
+  // Partner chat mode: 未来のあなた v4 チャット専用
+  // - buildSystemPrompt (v4) を毎回注入
+  // - 会話履歴を受けて続きを返す
+  // - chat_interactions テーブルに記録（自己改善サイクル用）
+  // ============================================================
+  if (body.mode === "partner_chat") {
+    if (!OPENAI_API_KEY) {
+      return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    const { prompt: systemPrompt } = await buildSystemPrompt();
+    const model = body.model || "gpt-5-mini";
+    const history: { role: string; content: string }[] = Array.isArray(body.history) ? body.history : [];
+    const userMessage = String(body.message || "");
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...history.filter((m) => m && m.role && m.content).map((m) => ({ role: m.role, content: m.content })),
+      { role: "user", content: userMessage },
+    ];
+
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        max_completion_tokens: 2000,
+        reasoning_effort: "low",
+      }),
+    });
+
+    if (!openaiRes.ok) {
+      const errText = await openaiRes.text();
+      return new Response(JSON.stringify({ error: `OpenAI API error: ${openaiRes.status}`, detail: errText.substring(0, 500) }), {
+        status: openaiRes.status,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    const openaiData = await openaiRes.json();
+    const assistantMessage: string = openaiData.choices?.[0]?.message?.content ?? "";
+    const usage = openaiData.usage;
+
+    // chat_interactions に非同期で記録（失敗しても応答はブロックしない）
+    try {
+      const sb = getSupabase();
+      await sb.from("chat_interactions").insert({
+        session_id: body.session_id || null,
+        user_message: userMessage,
+        assistant_message: assistantMessage,
+        entry_point: body.entry_point || "today_partner",
+        model,
+        context_snapshot: null,
+      });
+    } catch (e) {
+      console.error("chat_interactions insert failed:", e);
+    }
+
+    return new Response(JSON.stringify({ content: assistantMessage, model, usage }), {
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
+  }
+
   if (body.mode === "completion") {
     if (!OPENAI_API_KEY) {
       return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {

@@ -18,6 +18,8 @@ interface UserSettings {
   chat_custom_instructions?: string
   chat_memory_enabled?: boolean
   chat_diary_enabled?: boolean
+  chat_user_label?: string
+  chat_tone_mode?: 'auto' | 'soft' | 'bold'
   [key: string]: unknown
 }
 
@@ -120,47 +122,51 @@ function PersonalizationSection({ settings, userId }: { settings: UserSettings |
     chat_nickname: settings?.chat_nickname || '',
     chat_occupation: settings?.chat_occupation || '',
     chat_about: settings?.chat_about || '',
-    chat_style: settings?.chat_style || 'default',
-    chat_warmth: settings?.chat_warmth || 'default',
-    chat_emoji: settings?.chat_emoji || 'default',
     chat_custom_instructions: settings?.chat_custom_instructions || '',
     chat_memory_enabled: settings?.chat_memory_enabled !== false,
     chat_diary_enabled: settings?.chat_diary_enabled !== false,
+    chat_user_label: settings?.chat_user_label || '',
+    chat_tone_mode: (settings?.chat_tone_mode as 'auto' | 'soft' | 'bold') || 'auto',
   })
 
   const update = (key: string, val: string | boolean) => setForm((f) => ({ ...f, [key]: val }))
 
   const save = async () => {
     await supabase.from('user_settings').update(form).eq('user_id', userId)
-    toast('Personalization saved!')
+    toast('設定を保存しました')
   }
 
   return (
     <>
-      <div className="section-title">Personalization</div>
+      <div className="section-title">AIチャット設定</div>
       <Card style={{ marginBottom: 24 }}>
         <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 16 }}>
-          AI Chat があなたのことを理解するための設定。
+          AIチャットがあなたを理解し、自然に話しかけるための設定です。
         </p>
 
-        <Field label="Nickname" value={form.chat_nickname} onChange={(v) => update('chat_nickname', v)} placeholder="How should AI call you?" />
-        <Field label="Occupation" value={form.chat_occupation} onChange={(v) => update('chat_occupation', v)} placeholder="e.g. AI Developer, Freelance Consultant" />
-        <Field label="About You" value={form.chat_about} onChange={(v) => update('chat_about', v)} placeholder="Interests, values..." textarea />
-        <SelectField label="Response Style" value={form.chat_style} onChange={(v) => update('chat_style', v)}
-          options={[['default', 'Default'], ['formal', 'Formal'], ['casual', 'Casual'], ['concise', 'Concise'], ['detailed', 'Detailed']]} />
-        <SelectField label="Warmth" value={form.chat_warmth} onChange={(v) => update('chat_warmth', v)}
-          options={[['default', 'Default'], ['warm', 'Warm'], ['neutral', 'Neutral'], ['direct', 'Direct']]} />
-        <SelectField label="Emoji" value={form.chat_emoji} onChange={(v) => update('chat_emoji', v)}
-          options={[['default', 'Default'], ['none', 'None'], ['some', 'Some'], ['lots', 'Lots']]} />
-
-        <div style={{ display: 'flex', gap: 24, marginBottom: 14 }}>
-          <Toggle label="Use Knowledge & Insights" checked={form.chat_memory_enabled} onChange={(v) => update('chat_memory_enabled', v)} />
-          <Toggle label="Use Diary for Context" checked={form.chat_diary_enabled} onChange={(v) => update('chat_diary_enabled', v)} />
+        <Field label="呼び方" value={form.chat_user_label} onChange={(v) => update('chat_user_label', v)} placeholder="例: ゆうた、ゆうたさん、先輩 など。空欄なら呼びません" />
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: -8, marginBottom: 14 }}>
+          AIがあなたに語りかけるときの呼称。空欄にすると呼ばず、自然な語りかけになります。
         </div>
 
-        <Field label="Custom Instructions" value={form.chat_custom_instructions} onChange={(v) => update('chat_custom_instructions', v)} placeholder="Additional behavior, style..." textarea />
+        <SelectField label="基本トーン" value={form.chat_tone_mode} onChange={(v) => update('chat_tone_mode', v)}
+          options={[['auto', 'おまかせ（状況に応じて自動調整）'], ['soft', 'いつもやわらかく'], ['bold', 'いつもはっきり']]} />
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: -8, marginBottom: 14 }}>
+          おまかせが基本。気分が落ちている日は自動的にやわらかく、調子が良い日は少し踏み込みます。
+        </div>
 
-        <button className="btn btn-primary" onClick={save}>Save Personalization</button>
+        <Field label="名前（内部用）" value={form.chat_nickname} onChange={(v) => update('chat_nickname', v)} placeholder="あなたの名前" />
+        <Field label="仕事・役割" value={form.chat_occupation} onChange={(v) => update('chat_occupation', v)} placeholder="例: AI開発者、フリーランスコンサル" />
+        <Field label="自己紹介" value={form.chat_about} onChange={(v) => update('chat_about', v)} placeholder="大事にしている価値観、興味、関心..." textarea />
+
+        <div style={{ display: 'flex', gap: 24, marginBottom: 14 }}>
+          <Toggle label="大局的な傾向を使う" checked={form.chat_memory_enabled} onChange={(v) => update('chat_memory_enabled', v)} />
+          <Toggle label="日記を参照する" checked={form.chat_diary_enabled} onChange={(v) => update('chat_diary_enabled', v)} />
+        </div>
+
+        <Field label="追加の指示" value={form.chat_custom_instructions} onChange={(v) => update('chat_custom_instructions', v)} placeholder="AIへの追加リクエスト（任意）" textarea />
+
+        <button className="btn btn-primary" onClick={save}>保存</button>
       </Card>
     </>
   )

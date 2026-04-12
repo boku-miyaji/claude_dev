@@ -75,3 +75,49 @@ export async function aiCompletion(
 
   return result
 }
+
+export interface PartnerChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+/**
+ * Call the ai-agent Edge Function in partner_chat mode.
+ * 未来のあなた v4 チャット専用。v4 のシステムプロンプト（日記・大局的傾向・夢）を
+ * サーバー側で自動注入して応答する。chat_interactions に自動記録される。
+ */
+export async function aiPartnerChat(
+  message: string,
+  history: PartnerChatMessage[] = [],
+  options: { sessionId?: string; entryPoint?: string } = {},
+): Promise<{ content: string; model: string }> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token || ''
+
+  const res = await fetch(
+    import.meta.env.VITE_SUPABASE_URL + '/functions/v1/ai-agent',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        mode: 'partner_chat',
+        message,
+        history,
+        session_id: options.sessionId,
+        entry_point: options.entryPoint || 'today_partner',
+      }),
+    },
+  )
+
+  if (!res.ok) {
+    const errBody = await res.text()
+    throw new Error(`Edge Function error: ${res.status} ${errBody.substring(0, 200)}`)
+  }
+
+  const data = await res.json()
+  return { content: data.content || '', model: data.model || 'unknown' }
+}
