@@ -19,7 +19,6 @@ const fmtDate = (s: string) => {
 
 interface Invoice { id: string; client_name: string; amount: number; invoice_date: string; paid_date?: string; due_date?: string; status: string; company_id?: string; file_url?: string; notes?: string; project_id?: string }
 interface Expense { id: string; description: string; amount: number; expense_date: string; category: string; is_recurring?: boolean; recurring_status?: string; recurring_interval?: string; service_name?: string; is_deductible?: boolean }
-interface TimeEntry { id: string; work_date: string; hours: string; description?: string; project_id?: string; source?: string }
 interface Project { id: string; name: string; client_name: string; status: string; contract_type: string; default_rate?: number; budget?: number; start_date?: string; end_date?: string }
 interface WishlistItem { id: string; title: string; amount: number; status: string; category?: string; priority?: string; url?: string; description?: string; purchased_at?: string }
 interface TaxPayment { id: string; tax_type: string; due_date: string; amount: number; status: string }
@@ -60,13 +59,16 @@ function calcTax(revenue: number, expense: number): TaxResult {
 // Overview Tab
 // ============================================================
 
+const PROJ_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6']
+
 function FinOverview() {
-  const [data, setData] = useState<{ invoices: Invoice[]; expenses: Expense[]; entries: TimeEntry[]; projects: Project[]; allInv: Invoice[]; allExp: Expense[]; allTime: TimeEntry[]; recurSubs: Expense[]; wishItems: WishlistItem[]; apiCostTotal: number } | null>(null)
+  // viewDate represents the month being viewed (always day=1)
+  const [viewDate, setViewDate] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) })
+  const [data, setData] = useState<{ invoices: Invoice[]; expenses: Expense[]; projects: Project[]; allInv: Invoice[]; allExp: Expense[]; recurSubs: Expense[]; wishItems: WishlistItem[]; apiCostTotal: number } | null>(null)
 
   useEffect(() => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = now.getMonth() + 1
+    const year = viewDate.getFullYear()
+    const month = viewDate.getMonth() + 1
     const ym = `${year}-${String(month).padStart(2, '0')}`
     const startOfMonth = `${ym}-01`
     const lastDay = new Date(year, month, 0).getDate()
@@ -74,49 +76,45 @@ function FinOverview() {
     const startOfYear = `${year}-01-01`
     const endOfYear = `${year}-12-31`
 
+    setData(null)
     Promise.all([
       supabase.from('invoices').select('*').gte('invoice_date', startOfMonth).lte('invoice_date', endOfMonth),
       supabase.from('expenses').select('*').gte('expense_date', startOfMonth).lte('expense_date', endOfMonth),
-      supabase.from('time_entries').select('*').gte('work_date', startOfMonth).lte('work_date', endOfMonth),
-      supabase.from('projects').select('*').eq('status', 'active'),
+      supabase.from('projects').select('*'),
       supabase.from('invoices').select('*').gte('invoice_date', startOfYear).lte('invoice_date', endOfYear),
       supabase.from('expenses').select('*').gte('expense_date', startOfYear).lte('expense_date', endOfYear),
-      supabase.from('time_entries').select('*').gte('work_date', startOfYear).lte('work_date', endOfYear),
       supabase.from('expenses').select('*').eq('is_recurring', true).eq('recurring_status', 'active'),
       supabase.from('wishlist').select('*').in('status', ['want', 'considering']),
-      supabase.from('messages').select('cost_usd').eq('role', 'assistant').gte('created_at', startOfMonth).not('cost_usd', 'is', null),
-    ]).then(([invM, expM, timeM, proj, invY, expY, timeY, recur, wish, api]) => {
+      supabase.from('messages').select('cost_usd').eq('role', 'assistant').gte('created_at', startOfMonth).lte('created_at', endOfMonth + 'T23:59:59').not('cost_usd', 'is', null),
+    ]).then(([invM, expM, proj, invY, expY, recur, wish, api]) => {
       const apiTotal = (api.data || []).reduce((s: number, m: { cost_usd: string }) => s + parseFloat(m.cost_usd || '0'), 0)
       setData({
         invoices: invM.data || [],
-        expenses: expM.data || [],
-        entries: timeM.data || [],
+        expenses: (expM.data || []).filter(e => e.is_deductible !== false),
         projects: proj.data || [],
         allInv: invY.data || [],
-        allExp: expY.data || [],
-        allTime: timeY.data || [],
+        allExp: (expY.data || []).filter(e => e.is_deductible !== false),
         recurSubs: recur.data || [],
         wishItems: wish.data || [],
         apiCostTotal: apiTotal,
       })
     })
-  }, [])
+  }, [viewDate])
 
   if (!data) return <div className="skeleton-card" style={{ height: 200 }} />
 
-  const { invoices, expenses, entries, allInv, allExp, allTime, recurSubs, wishItems, apiCostTotal } = data
+  const { invoices, expenses, projects, allInv, allExp, recurSubs, wishItems, apiCostTotal } = data
+  const year = viewDate.getFullYear()
+  const month = viewDate.getMonth() + 1
   const now = new Date()
-  const year = now.getFullYear()
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1
 
   const totalRev = invoices.reduce((s, i) => s + i.amount, 0)
   const totalExp = expenses.reduce((s, e) => s + e.amount, 0)
-  const totalHrs = entries.reduce((s, t) => s + parseFloat(t.hours), 0)
   const grossProfit = totalRev - totalExp
-  const hourlyRate = totalHrs > 0 ? Math.round(totalRev / totalHrs) : 0
   const yearRev = allInv.reduce((s, i) => s + i.amount, 0)
   const yearExp = allExp.reduce((s, e) => s + e.amount, 0)
-  const yearHrs = allTime.reduce((s, t) => s + parseFloat(t.hours), 0)
-  const monthlyFixed = recurSubs.reduce((sum, s) => {
+  const monthlyFixed = recurSubs.filter(s => s.is_deductible !== false).reduce((sum, s) => {
     if (s.recurring_interval === 'yearly') return sum + Math.round(s.amount / 12)
     if (s.recurring_interval === 'quarterly') return sum + Math.round(s.amount / 3)
     return sum + s.amount
@@ -127,27 +125,49 @@ function FinOverview() {
     { l: '売上', v: fmtYen(totalRev), c: 'var(--accent)', sub: `年計 ${fmtYen(yearRev)}` },
     { l: '経費', v: fmtYen(totalExp), c: 'var(--text3)', sub: `年計 ${fmtYen(yearExp)}` },
     { l: '粗利', v: fmtYen(grossProfit), c: grossProfit >= 0 ? '#22c55e' : '#ef4444', sub: `${totalRev > 0 ? Math.round(grossProfit / totalRev * 100) : 0}%` },
-    { l: '稼働', v: `${totalHrs.toFixed(1)}h`, c: 'var(--text)', sub: `年計 ${yearHrs.toFixed(1)}h` },
-    { l: '固定費', v: fmtYen(monthlyFixed), c: 'var(--amber)', sub: `${recurSubs.length}件 / 年${fmtYen(monthlyFixed * 12)}` },
-    { l: '実質時給', v: fmtYen(hourlyRate), c: 'var(--accent2)', sub: yearHrs > 0 ? `年平均 ${fmtYen(Math.round(yearRev / yearHrs))}` : '-' },
+    { l: '固定費(経費分)', v: fmtYen(monthlyFixed), c: 'var(--amber)', sub: `年${fmtYen(monthlyFixed * 12)}` },
     { l: 'ほしい物', v: fmtYen(wishTotal), c: 'var(--blue)', sub: `${wishItems.length}件` },
-    { l: 'APIコスト', v: `$${apiCostTotal.toFixed(2)}`, c: 'var(--amber)', sub: `今月 (${Math.round(apiCostTotal * 150)}円)` },
+    { l: 'APIコスト', v: `$${apiCostTotal.toFixed(2)}`, c: 'var(--amber)', sub: `${Math.round(apiCostTotal * 150)}円` },
   ]
 
-  // Monthly revenue bar chart
-  const monthlyByClient: Record<number, number> = {}
-  for (let m = 1; m <= 12; m++) monthlyByClient[m] = 0
-  allInv.forEach(inv => { const mon = parseInt(inv.invoice_date.substring(5, 7)); monthlyByClient[mon] = (monthlyByClient[mon] || 0) + inv.amount })
-  const maxMonthly = Math.max(...Object.values(monthlyByClient)) || 1
-  const ovMonthSet: Record<string, boolean> = {}
-  allInv.forEach(i => { ovMonthSet[i.invoice_date.substring(0, 7)] = true })
-  const dataMonths = Math.max(Object.keys(ovMonthSet).length, 1)
+  // Build project map for client-name resolution
+  const projMap = new Map(projects.map(p => [p.id, p]))
+
+  // Build stacked bar data: monthly revenue by client
+  const clientNameOf = (inv: Invoice) => (inv.project_id && projMap.get(inv.project_id)?.client_name) || inv.client_name || '未割当'
+  const clientSet = new Set<string>()
+  allInv.forEach(inv => clientSet.add(clientNameOf(inv)))
+  const clientKeys = Array.from(clientSet)
+
+  const monthlyByClient: Record<number, { total: number; clients: Record<string, number> }> = {}
+  for (let m = 1; m <= 12; m++) {
+    monthlyByClient[m] = { total: 0, clients: {} }
+    clientKeys.forEach(ck => { monthlyByClient[m].clients[ck] = 0 })
+  }
+  allInv.forEach(inv => {
+    const mon = parseInt(inv.invoice_date.substring(5, 7))
+    const name = clientNameOf(inv)
+    monthlyByClient[mon].clients[name] += inv.amount
+    monthlyByClient[mon].total += inv.amount
+  })
+
+  const maxMonthly = Math.max(...Object.values(monthlyByClient).map(d => d.total)) || 1
+  const ovMonthSet = new Set(allInv.map(i => i.invoice_date.substring(0, 7)))
+  const dataMonths = Math.max(ovMonthSet.size, 1)
   const avgRev = yearRev / dataMonths
-  const curMonth = now.getMonth() + 1
+  const fmtAxis = (v: number) => v >= 10000 ? `${Math.round(v / 10000)}万` : fmtYen(v)
+
+  const navMonth = (dir: number) => setViewDate(d => new Date(d.getFullYear(), d.getMonth() + dir, 1))
 
   return (
     <div>
-      <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>{year}年{now.getMonth() + 1}月</h3>
+      {/* Month navigation */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 16px' }}>
+        <button className="btn btn-ghost btn-sm" onClick={() => navMonth(-1)}>◀</button>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, minWidth: 120 }}>{year}年{month}月{!isCurrentMonth && <span style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 8, fontWeight: 400 }}>(過去)</span>}</h3>
+        <button className="btn btn-ghost btn-sm" onClick={() => navMonth(1)} disabled={isCurrentMonth} style={{ opacity: isCurrentMonth ? 0.3 : 1 }}>▶</button>
+        {!isCurrentMonth && <button className="btn btn-ghost btn-sm" onClick={() => setViewDate(new Date(now.getFullYear(), now.getMonth(), 1))}>今月へ</button>}
+      </div>
 
       {/* KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 24 }}>
@@ -160,33 +180,70 @@ function FinOverview() {
         ))}
       </div>
 
-      {/* Monthly chart */}
+      {/* Monthly stacked chart by client */}
       <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20, marginBottom: 24 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)', marginBottom: 16 }}>{year}年 月別売上推移</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 160, borderBottom: '1px solid var(--border)', borderLeft: '1px solid var(--border)', padding: '0 2px', position: 'relative' }}>
-          <div style={{ position: 'absolute', bottom: `${avgRev / maxMonthly * 100}%`, left: 0, right: 0, borderTop: '1px dashed var(--text3)', opacity: .3, pointerEvents: 'none' }} />
-          {Array.from({ length: 12 }, (_, i) => i + 1).map(mi => {
-            const amount = monthlyByClient[mi] || 0
-            const isFuture = mi > curMonth
-            const barH = Math.max(0, amount / maxMonthly * 150)
-            const isCurrentMonth = mi === curMonth
-            return (
-              <div key={mi} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }} title={`${mi}月: ${fmtYen(amount)}`}>
-                {amount > 0 && !isFuture && <div style={{ fontSize: 8, color: 'var(--text3)', marginBottom: 1, whiteSpace: 'nowrap' }}>{amount >= 1000000 ? `${Math.round(amount / 10000)}万` : `${Math.round(amount / 1000)}K`}</div>}
-                <div style={{ width: '80%', maxWidth: 28, height: barH, background: isCurrentMonth ? 'var(--accent)' : '#6366f1', borderRadius: '2px 2px 0 0', opacity: isFuture ? .15 : 1 }} />
-              </div>
-            )
-          })}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>{year}年 月別売上推移（クライアント別）</div>
+          <div style={{ display: 'flex', gap: 10, fontSize: 10, color: 'var(--text3)', flexWrap: 'wrap' }}>
+            {clientKeys.map((ck, i) => (
+              <span key={ck} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: PROJ_COLORS[i % PROJ_COLORS.length] }} />
+                {ck}
+              </span>
+            ))}
+          </div>
         </div>
-        <div style={{ display: 'flex', marginTop: 4 }}>
+
+        <div style={{ display: 'flex', gap: 4 }}>
+          {/* Y-axis */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', paddingRight: 6, height: 160, fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+            <span>{fmtAxis(maxMonthly)}</span>
+            <span>{fmtAxis(Math.round(maxMonthly / 2))}</span>
+            <span>0</span>
+          </div>
+          {/* Bars */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: 3, height: 160, borderBottom: '1px solid var(--border)', borderLeft: '1px solid var(--border)', padding: '0 2px', position: 'relative' }}>
+            <div style={{ position: 'absolute', bottom: `${avgRev / maxMonthly * 100}%`, left: 0, right: 0, borderTop: '1px dashed var(--text3)', opacity: 0.3, pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: `calc(${avgRev / maxMonthly * 100}% + 2px)`, right: 2, fontSize: 8, color: 'var(--text3)', opacity: 0.5, pointerEvents: 'none' }}>平均</div>
+            {Array.from({ length: 12 }, (_, i) => i + 1).map(mi => {
+              const md = monthlyByClient[mi]
+              const isViewing = mi === month
+              const isFutureRel = year === now.getFullYear() && mi > now.getMonth() + 1
+              const tipParts = [`${mi}月: 合計${fmtYen(md.total)}`]
+              clientKeys.forEach(ck => { if (md.clients[ck]) tipParts.push(`${ck}: ${fmtYen(md.clients[ck])}`) })
+
+              return (
+                <div key={mi} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }} title={tipParts.join('\n')}
+                  onClick={() => setViewDate(new Date(year, mi - 1, 1))}>
+                  {md.total > 0 && !isFutureRel && (
+                    <div style={{ fontSize: 8, color: 'var(--text3)', marginBottom: 1, whiteSpace: 'nowrap' }}>
+                      {md.total >= 1000000 ? `${Math.round(md.total / 10000)}万` : `${Math.round(md.total / 1000)}K`}
+                    </div>
+                  )}
+                  <div style={{ width: '80%', maxWidth: 28, display: 'flex', flexDirection: 'column-reverse', height: 150, opacity: isFutureRel ? 0.15 : 1, outline: isViewing ? '2px solid var(--accent)' : 'none', outlineOffset: 1, borderRadius: 2 }}>
+                    {clientKeys.map((ck, ci) => {
+                      const val = md.clients[ck] || 0
+                      if (val <= 0) return null
+                      const segH = val / maxMonthly * 150
+                      return <div key={ck} style={{ width: '100%', height: segH, background: PROJ_COLORS[ci % PROJ_COLORS.length], minHeight: 2 }} />
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Month labels */}
+        <div style={{ display: 'flex', marginLeft: 40, marginTop: 4 }}>
           {Array.from({ length: 12 }, (_, i) => i + 1).map(ml => (
-            <div key={ml} style={{ flex: 1, textAlign: 'center', fontSize: 9, color: ml === curMonth ? 'var(--accent)' : 'var(--text3)', fontWeight: ml === curMonth ? 600 : 400 }}>{ml}月</div>
+            <div key={ml} style={{ flex: 1, textAlign: 'center', fontSize: 9, color: ml === month ? 'var(--accent)' : 'var(--text3)', fontWeight: ml === month ? 600 : 400 }}>{ml}月</div>
           ))}
         </div>
+
         <div style={{ display: 'flex', gap: 16, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text3)', flexWrap: 'wrap', justifyContent: 'center' }}>
           <span>月平均売上: <span style={{ fontWeight: 600, color: 'var(--text2)' }}>{fmtYen(Math.round(avgRev))}</span></span>
           <span>年間予測: <span style={{ fontWeight: 600, color: 'var(--text2)' }}>{fmtYen(Math.round(avgRev * 12))}</span></span>
-          <span>月平均稼働: <span style={{ fontWeight: 600, color: 'var(--text2)' }}>{(yearHrs / dataMonths).toFixed(1)}h</span></span>
         </div>
       </div>
     </div>
@@ -426,11 +483,10 @@ function FinSubscriptions() {
   const catColors: Record<string, string> = { subscription: '#5046e5', communication: '#2563eb', equipment: '#0d9f6e', office: '#d97706', outsourcing: '#dc2626', education: '#8b5cf6', insurance: '#06b6d4', other: '#6b7280', supplies: '#f59e0b', entertainment: '#ec4899', tax_payment: '#64748b', transportation: '#14b8a6' }
 
   const active = subs.filter(s => s.recurring_status === 'active')
-  const monthlyTotal = active.reduce((sum, s) => {
-    if (s.recurring_interval === 'yearly') return sum + Math.round(s.amount / 12)
-    if (s.recurring_interval === 'quarterly') return sum + Math.round(s.amount / 3)
-    return sum + s.amount
-  }, 0)
+  const toMonthly = (s: Expense) => s.recurring_interval === 'yearly' ? Math.round(s.amount / 12) : s.recurring_interval === 'quarterly' ? Math.round(s.amount / 3) : s.amount
+  const monthlyTotal = active.reduce((sum, s) => sum + toMonthly(s), 0)
+  const monthlyDeductible = active.filter(s => s.is_deductible !== false).reduce((sum, s) => sum + toMonthly(s), 0)
+  const monthlyPrivate = monthlyTotal - monthlyDeductible
 
   const getMonthly = (s: Expense) => s.recurring_interval === 'yearly' ? Math.round(s.amount / 12) : s.recurring_interval === 'quarterly' ? Math.round(s.amount / 3) : s.amount
   const maxMonthly = Math.max(...subs.filter(s => s.recurring_status === 'active').map(getMonthly), 1)
@@ -439,7 +495,7 @@ function FinSubscriptions() {
     if (editItem) {
       await supabase.from('expenses').update(payload).eq('id', editItem.id)
     } else {
-      await supabase.from('expenses').insert({ ...payload, expense_date: new Date().toISOString().substring(0, 10), is_deductible: true, is_recurring: true })
+      await supabase.from('expenses').insert({ ...payload, expense_date: new Date().toISOString().substring(0, 10), is_recurring: true })
     }
     setShowForm(false); setEditItem(null); load()
   }
@@ -448,7 +504,7 @@ function FinSubscriptions() {
     <div>
       {/* KPI */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 24 }}>
-        {[{ l: '月額合計', v: fmtYen(monthlyTotal), c: 'var(--accent)' }, { l: '年額合計', v: fmtYen(monthlyTotal * 12), c: 'var(--text)' }, { l: '契約数', v: `${active.length}件`, c: 'var(--green)' }, { l: '解約済み', v: `${subs.filter(s => s.recurring_status === 'cancelled').length}件`, c: 'var(--text3)' }].map(d => (
+        {[{ l: '月額合計', v: fmtYen(monthlyTotal), c: 'var(--accent)' }, { l: '内 経費', v: fmtYen(monthlyDeductible), c: 'var(--green)' }, { l: '内 プライベート', v: fmtYen(monthlyPrivate), c: 'var(--text3)' }, { l: '年額合計', v: fmtYen(monthlyTotal * 12), c: 'var(--text)' }, { l: '契約数', v: `${active.length}件`, c: 'var(--text2)' }].map(d => (
           <div key={d.l} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
             <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 4 }}>{d.l}</div>
             <div style={{ fontSize: 20, fontWeight: 600, color: d.c }}>{d.v}</div>
@@ -471,6 +527,7 @@ function FinSubscriptions() {
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusColors[s.recurring_status || ''] || 'var(--text3)', flexShrink: 0 }} />
                 <span style={{ fontWeight: 500 }}>{s.service_name || s.description}</span>
                 <span style={{ fontSize: 10, color: 'var(--text3)', background: 'var(--surface2)', padding: '1px 6px', borderRadius: 3 }}>{CAT_LABELS[s.category] || s.category}</span>
+                {s.is_deductible === false && <span style={{ fontSize: 10, color: 'var(--text3)', background: 'var(--surface2)', padding: '1px 6px', borderRadius: 3, border: '1px dashed var(--border)' }}>プライベート</span>}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', fontSize: 14 }}>{fmtYen(monthlyAmt)}/月</span>
@@ -506,10 +563,11 @@ function SubsForm({ existing, onSave, onClose, onDelete }: { existing: Expense |
   const [interval, setInterval] = useState(existing?.recurring_interval || 'monthly')
   const [category, setCategory] = useState(existing?.category || 'subscription')
   const [status, setStatus] = useState(existing?.recurring_status || 'active')
+  const [isDeductible, setIsDeductible] = useState(existing?.is_deductible !== false)
 
   const save = () => {
     if (!name || !amount) return
-    onSave({ service_name: name, description: name, amount: parseInt(amount), category, is_recurring: true, recurring_interval: interval, recurring_status: status })
+    onSave({ service_name: name, description: name, amount: parseInt(amount), category, is_recurring: true, recurring_interval: interval, recurring_status: status, is_deductible: isDeductible })
   }
 
   return (
@@ -522,6 +580,7 @@ function SubsForm({ existing, onSave, onClose, onDelete }: { existing: Expense |
           { label: '支払い間隔', el: <select className="input" value={interval} onChange={e => setInterval(e.target.value)}><option value="monthly">月額</option><option value="quarterly">四半期</option><option value="yearly">年額</option></select> },
           { label: 'カテゴリ', el: <select className="input" value={category} onChange={e => setCategory(e.target.value)}>{Object.entries(CAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select> },
           { label: 'ステータス', el: <select className="input" value={status} onChange={e => setStatus(e.target.value)}><option value="active">契約中</option><option value="paused">一時停止</option><option value="cancelled">解約済み</option></select> },
+          { label: '経費として計上', el: <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, padding: '6px 0' }}><input type="checkbox" checked={isDeductible} onChange={e => setIsDeductible(e.target.checked)} />{isDeductible ? '経費（確定申告で控除）' : 'プライベート支出'}</label> },
         ].map(({ label, el }) => (
           <div key={label} style={{ marginBottom: 10 }}>
             <label style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 2, display: 'block' }}>{label}</label>
