@@ -224,7 +224,7 @@ export function Today() {
 
   // Timeline: merges calendar events + time-bound tasks into 30-min slots
   const timeline = useTodayTimeline(allOpenTasks, completedToday)
-  const { slots: timelineSlots, todayTasks: timelineTodayTasks, upcomingTasks, tomorrowEvents, recentEventName } = timeline
+  const { slots: timelineSlots, todayTasks: timelineTodayTasks, upcomingTasks, tomorrowEvents, recentEventName, loading: timelineLoading } = timeline
 
   // Briefing text from timeline data
   const todayEventsText = useMemo(() => {
@@ -243,7 +243,9 @@ export function Today() {
   }, [tomorrowEvents])
 
   const weatherText = weather ? `今日の天気: ${weather.today.icon} ${weather.today.tempMax}℃/${weather.today.tempMin}℃、明日: ${weather.tomorrow.icon} ${weather.tomorrow.tempMax}℃/${weather.tomorrow.tempMin}℃` : undefined
-  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing(timeMode, todayEventsText, tomorrowEventsText, weatherText)
+  // Wait until calendar events have loaded before generating the briefing — otherwise
+  // the AI sees an empty schedule and incorrectly tells the user "今日はフリーですね".
+  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing(timeMode, todayEventsText, tomorrowEventsText, weatherText, !timelineLoading)
 
   const priorityWeight = { high: 0, normal: 1, low: 2 } as const
 
@@ -408,10 +410,8 @@ export function Today() {
     return `${String(d.getHours()).padStart(2, '0')}:${d.getMinutes() < 30 ? '00' : '30'}`
   }, [])
 
-  const filteredSlots = useMemo(() => {
-    if (timeMode === 'afternoon') return timelineSlots.filter((s) => s.items.some((i) => !i.isPast))
-    return timelineSlots
-  }, [timelineSlots, timeMode])
+  // Show all today's slots (past events stay visible but dimmed via item.isPast styling)
+  const filteredSlots = timelineSlots
 
 
   /* ════════════════════════════════════════════
@@ -582,13 +582,28 @@ export function Today() {
 
   /* ── [2] Timeline — unified 30-min slot view ── */
 
-  const TimelineSection = filteredSlots.length > 0 ? (
+  const TimelineSection = (
     <div className="section">
       <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{timeMode === 'afternoon' ? 'この後の予定' : 'タイムライン'}</span>
+        <span>今日の予定</span>
         <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/calendar')}>カレンダー</button>
       </div>
-      <Card>
+      {timelineLoading ? (
+        <Card>
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderBottom: i < 2 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
+              <div className="skeleton" style={{ width: 42, height: 12, minHeight: 12 }} />
+              <div className="skeleton" style={{ flex: 1, height: 12, minHeight: 12 }} />
+            </div>
+          ))}
+          <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 6 }}>予定を読み込み中…</div>
+        </Card>
+      ) : filteredSlots.length === 0 ? (
+        <Card>
+          <div style={{ fontSize: 13, color: 'var(--text3)', padding: 4 }}>今日はフリーです</div>
+        </Card>
+      ) : (
+        <Card>
         {filteredSlots.map((slot, si) => {
           const isCurrentSlot = slot.time === nowMarkerTime
           return (
@@ -644,8 +659,9 @@ export function Today() {
           )
         })}
       </Card>
+      )}
     </div>
-  ) : null
+  )
 
   /* ── [2b] Upcoming deadlines ── */
 
@@ -693,7 +709,7 @@ export function Today() {
   const Briefing = (
     <FutureYouChat
       openingMessage={briefingMessage || ''}
-      loading={briefingLoading}
+      loading={briefingLoading || (timelineLoading && !briefingMessage)}
       entryPoint="today_partner"
     >
       <StoryArcCard />
@@ -890,7 +906,7 @@ export function Today() {
 
   /* ── [7] Backlog (other open tasks, shown only if relevant) ── */
 
-  const Backlog = otherOpenTasks.length > 0 && timeMode !== 'morning' ? (
+  const Backlog = otherOpenTasks.length > 0 ? (
     <div className="section">
       <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>バックログ</span>
@@ -909,57 +925,22 @@ export function Today() {
   ) : null
 
   /* ════════════════════════════════════════════
-     TIME-ADAPTIVE LAYOUT
-
-     All modes share the same structure:
-       Greeting → Actions → Schedule → Context → Reflect
-
-     The difference is emphasis and detail level.
+     UNIFIED LAYOUT — same order regardless of time of day.
+     Only the greeting text and briefing tone differ by timeMode.
+     Diary stays high so it can be reached without scrolling.
      ════════════════════════════════════════════ */
 
-  if (timeMode === 'morning') {
-    return (
-      <div className="page">
-        {Greeting}
-        {Briefing}
-        {TimelineSection}
-        {ActionsSection}
-        {UpcomingSection}
-        {NewsSection}
-        {Diary}
-        {StatusBar}
-        {Fragments}
-      </div>
-    )
-  }
-
-  if (timeMode === 'afternoon') {
-    return (
-      <div className="page">
-        {Greeting}
-        {Briefing}
-        {Diary}
-        {TimelineSection}
-        {ActionsSection}
-        {UpcomingSection}
-        {NewsSection}
-        {Backlog}
-        {Fragments}
-      </div>
-    )
-  }
-
-  // Evening
   return (
     <div className="page">
       {Greeting}
       {Briefing}
-      {ActionsSection}
       {Diary}
+      {TimelineSection}
+      {ActionsSection}
       {UpcomingSection}
-      {Backlog}
       {Tomorrow}
       {NewsSection}
+      {Backlog}
       {StatusBar}
       {Fragments}
     </div>

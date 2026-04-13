@@ -30,6 +30,7 @@ export function useMorningBriefing(
   todayEventsText?: string,
   tomorrowEventsText?: string,
   weatherText?: string,
+  ready: boolean = true,
 ) {
   const { message, loading, lastFetched, setMessage, setLoading, setLastFetched } = useBriefingStore()
 
@@ -38,6 +39,7 @@ export function useMorningBriefing(
 
   const generate = useCallback(async () => {
     if (isCached) return
+    if (!ready) return
     setLoading(true)
 
     try {
@@ -276,7 +278,7 @@ ${modeInstructions[timeMode]}
     } finally {
       setLoading(false)
     }
-  }, [isCached, cacheKey, timeMode, todayEventsText, tomorrowEventsText, weatherText, setMessage, setLoading, setLastFetched])
+  }, [isCached, ready, cacheKey, timeMode, todayEventsText, tomorrowEventsText, weatherText, setMessage, setLoading, setLastFetched])
 
   useEffect(() => {
     generate()
