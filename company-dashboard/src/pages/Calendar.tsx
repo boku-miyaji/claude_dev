@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import type { ViewMode, CalendarEvent, CalendarType } from '@/types/calendar'
 import { useCalendarLayers, moodLevel, moodBgColor, moodEmoji, type CalendarLayerMap } from '@/hooks/useCalendarLayers'
 import { DayDetailDrawer } from '@/components/DayDetailDrawer'
+import { useDataStore } from '@/stores/data'
 
 /* ── Calendar layer toggles ── */
 
@@ -838,7 +839,11 @@ export function Calendar() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [hiddenCalendars, setHiddenCalendars] = useState<Set<CalendarType>>(new Set())
-  const [tasks, setTasks] = useState<Task[]>([])
+  const allStoreTasks = useDataStore((s) => s.tasks)
+  const fetchAllTasks = useDataStore((s) => s.fetchTasks)
+  const storeUpdateTask = useDataStore((s) => s.updateTask)
+  const storeAddTask = useDataStore((s) => s.addTask)
+  const storeDeleteTask = useDataStore((s) => s.deleteTask)
   const [quickAdd, setQuickAdd] = useState<{ date: string; hour?: number } | null>(null)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() => loadLayers())
@@ -875,33 +880,39 @@ export function Calendar() {
 
   const { data: layerMap } = useCalendarLayers(layerRange.start, layerRange.end)
 
-  // Fetch tasks in the visible range
-  const fetchTasks = useCallback(async () => {
+  // Derive visible tasks from the store (single source of truth) and filter
+  // to the current view's date range in memory. The store cache covers all
+  // user tasks so no date-range query is needed here.
+  const tasks = useMemo(() => {
     const range = viewMode === 'day' ? 1 : viewMode === 'week' ? 7 : 35
     const start = new Date(viewDate); start.setDate(start.getDate() - 1)
     const end = new Date(viewDate); end.setDate(end.getDate() + range + 1)
     const startStr = toJSTDateStr(start)
     const endStr = toJSTDateStr(end)
-    const startIso = new Date(start).toISOString()
-    const endIso = new Date(end).toISOString()
-    const { data } = await supabase
-      .from('tasks')
-      .select('id,title,status,priority,due_date,scheduled_at,estimated_minutes,completed_at')
-      .eq('type', 'task')
-      .or(`and(due_date.gte.${startStr},due_date.lte.${endStr}),and(scheduled_at.gte.${startIso},scheduled_at.lte.${endIso})`)
-      .order('sort_order', { ascending: true })
-    setTasks((data || []) as Task[])
-  }, [viewDate, viewMode])
+    return allStoreTasks
+      .filter((t) => t.type !== 'request')
+      .filter((t) => {
+        if (t.due_date && t.due_date >= startStr && t.due_date <= endStr) return true
+        if (t.scheduled_at) {
+          const s = t.scheduled_at
+          return s >= start.toISOString() && s <= end.toISOString()
+        }
+        return false
+      })
+      .sort((a, b) => a.sort_order - b.sort_order)
+  }, [allStoreTasks, viewDate, viewMode])
 
-  useEffect(() => { fetchTasks() }, [fetchTasks])
+  useEffect(() => { fetchAllTasks() }, [fetchAllTasks])
+
+  const refreshTasks = useCallback(() => fetchAllTasks({ forceRefresh: true }), [fetchAllTasks])
 
   const handleTaskToggle = useCallback(async (task: Task) => {
     const nextStatus = task.status === 'done' ? 'open' : 'done'
-    const patch = nextStatus === 'done' ? { status: 'done', completed_at: new Date().toISOString() } : { status: 'open', completed_at: null }
-    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...patch } : t))
-    const { error } = await supabase.from('tasks').update(patch).eq('id', task.id)
-    if (error) { toast('更新に失敗しました'); fetchTasks() }
-  }, [fetchTasks])
+    const patch = nextStatus === 'done'
+      ? { status: 'done' as const, completed_at: new Date().toISOString() }
+      : { status: 'open' as const, completed_at: null }
+    await storeUpdateTask(task.id, patch)
+  }, [storeUpdateTask])
 
   const handleTaskClick = useCallback((task: Task) => {
     setEditingTask(task)
