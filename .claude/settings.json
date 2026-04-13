@@ -191,7 +191,9 @@
       "Bash(awk 'NR>=541' /workspace/company-dashboard/src/pages/Finance.tsx)",
       "Bash(ps -p 2840420 -o pid,etime,state)",
       "Bash(supabase functions:*)",
-      "Bash(./node_modules/.bin/vite build:*)"
+      "Bash(./node_modules/.bin/vite build:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(node_modules/.bin/vite build:*)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -467,6 +469,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
