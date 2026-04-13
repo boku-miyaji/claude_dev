@@ -18,7 +18,7 @@
         "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T12:54:54.553Z",
-        "lastUpdated": "2026-04-13T10:04:19.130Z"
+        "lastUpdated": "2026-04-13T10:06:17.842Z"
       }
     ],
     "context7@claude-plugins-official": [
@@ -28,7 +28,7 @@
         "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/context7/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T12:58:36.018Z",
-        "lastUpdated": "2026-04-13T10:04:19.128Z"
+        "lastUpdated": "2026-04-13T10:06:17.842Z"
       }
     ],
     "serena@claude-plugins-official": [
@@ -38,7 +38,7 @@
         "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/serena/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T13:00:59.145Z",
-        "lastUpdated": "2026-04-13T10:04:19.131Z"
+        "lastUpdated": "2026-04-13T10:06:17.845Z"
       }
     ],
     "pr-review-toolkit@claude-plugins-official": [
@@ -48,7 +48,7 @@
         "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T13:01:18.329Z",
-        "lastUpdated": "2026-04-13T10:04:19.129Z"
+        "lastUpdated": "2026-04-13T10:06:17.843Z"
       }
     ],
     "github@claude-plugins-official": [
@@ -58,7 +58,7 @@
         "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/github/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T13:01:28.812Z",
-        "lastUpdated": "2026-04-13T10:04:19.130Z"
+        "lastUpdated": "2026-04-13T10:06:17.843Z"
       }
     ],
     "code-review@claude-plugins-official": [
@@ -68,7 +68,7 @@
         "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/code-review/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T13:01:39.462Z",
-        "lastUpdated": "2026-04-13T10:04:19.132Z"
+        "lastUpdated": "2026-04-13T10:06:17.844Z"
       }
     ],
     "security-guidance@claude-plugins-official": [
@@ -78,7 +78,7 @@
         "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/security-guidance/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T13:01:48.792Z",
-        "lastUpdated": "2026-04-13T10:04:19.132Z"
+        "lastUpdated": "2026-04-13T10:06:17.846Z"
       }
     ],
     "supabase@claude-plugins-official": [
@@ -88,7 +88,7 @@
         "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/supabase/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T13:01:55.514Z",
-        "lastUpdated": "2026-04-13T10:04:19.133Z"
+        "lastUpdated": "2026-04-13T10:06:17.845Z"
       }
     ],
     "commit-commands@claude-plugins-official": [
@@ -98,7 +98,7 @@
         "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/commit-commands/unknown",
         "version": "unknown",
         "installedAt": "2026-01-07T13:02:05.228Z",
-        "lastUpdated": "2026-04-13T10:04:19.134Z"
+        "lastUpdated": "2026-04-13T10:06:17.846Z"
       }
     ],
     "company@ai-company": [
