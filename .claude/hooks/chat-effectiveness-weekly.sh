@@ -7,13 +7,30 @@
 # 目的: 何が効いたか（やる気・幸せ指標の改善）を LLM が自然言語で分析し、
 # 次週以降の応答に反映される自己改善サイクルを回す。
 #
-# 実行頻度: 週1回（crontab または GitHub Actions で）
+# 実行場所: SessionStart hook から呼ばれる。--force 以外は 7 日に1回しか動かない
 # 依存: claude CLI（API課金を避けるため）、supabase.env
 
-set -euo pipefail
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/supabase.env"
+
+# Supabase 接続確認（未設定なら静かに skip）
+[ -f "${SCRIPT_DIR}/supabase.env" ] || exit 0
+source "${SCRIPT_DIR}/supabase.env" 2>/dev/null || exit 0
+
+LAST_RUN_FILE="${SCRIPT_DIR}/.chat-effectiveness-last-run"
+
+# --- 7日チェック（--force で強制実行） ---
+if [ "${1:-}" != "--force" ] && [ -f "$LAST_RUN_FILE" ]; then
+  LAST_EPOCH=$(date -d "$(cat "$LAST_RUN_FILE")" +%s 2>/dev/null || echo 0)
+  NOW_EPOCH=$(date +%s)
+  ELAPSED=$(( NOW_EPOCH - LAST_EPOCH ))
+  if [ "$ELAPSED" -lt $((7 * 86400)) ]; then
+    DAYS_AGO=$(( ELAPSED / 86400 ))
+    echo "chat-effectiveness: last run ${DAYS_AGO}d ago (< 7d). Skip."
+    exit 0
+  fi
+fi
 
 PROJECT_ID="akycymnahqypmtsfqhtr"
 WEEK_AGO=$(date -d "7 days ago" +%Y-%m-%d 2>/dev/null || date -v-7d +%Y-%m-%d)
@@ -137,3 +154,6 @@ END
 
 echo "=== Done. Analysis saved. ==="
 echo "$ANALYSIS_RESULT" | head -20
+
+# 成功したので last-run をマーク
+date '+%Y-%m-%d' > "$LAST_RUN_FILE"
