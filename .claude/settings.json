@@ -223,7 +223,8 @@
       "/workspace/.company/departments",
       "/workspace/.claude/skills",
       "/workspace/company-dashboard/docs",
-      "/workspace/.company"
+      "/workspace/.company",
+      "/workspace/scratch/design"
     ]
   },
   "hooks": {
