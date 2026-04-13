@@ -1093,7 +1093,7 @@ export function Calendar() {
           date={quickAdd.date}
           hour={quickAdd.hour}
           onClose={() => setQuickAdd(null)}
-          onCreatedTask={() => { setQuickAdd(null); fetchTasks() }}
+          onCreatedTask={() => { setQuickAdd(null); refreshTasks() }}
           onCreateEvent={async (form) => {
             await handleSave(form)
             setQuickAdd(null)
@@ -1105,7 +1105,7 @@ export function Calendar() {
         <TaskEditModal
           task={editingTask}
           onClose={() => setEditingTask(null)}
-          onSaved={() => { setEditingTask(null); fetchTasks() }}
+          onSaved={() => { setEditingTask(null); refreshTasks() }}
         />
       )}
 
@@ -1144,19 +1144,23 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
 
   useEffect(() => { inputRef.current?.focus() }, [])
 
+  const addTaskToStore = useDataStore((s) => s.addTask)
+
   const create = async () => {
     const t = title.trim()
     if (!t || saving) return
     setSaving(true)
     if (kind === 'task') {
-      const payload: Record<string, unknown> = { title: t, status: 'open', priority: 'normal', type: 'task', due_date: date }
-      if (taskHasTime) {
-        payload.scheduled_at = `${date}T${startTime}:00+09:00`
-        payload.estimated_minutes = taskMinutes
-      }
-      const { error } = await supabase.from('tasks').insert(payload)
+      const created = await addTaskToStore({
+        title: t,
+        type: 'task',
+        priority: 'normal',
+        due_date: date,
+        scheduled_at: taskHasTime ? `${date}T${startTime}:00+09:00` : null,
+        estimated_minutes: taskHasTime ? taskMinutes : null,
+      })
       setSaving(false)
-      if (error) { toast(`追加失敗: ${error.message}`); return }
+      if (!created) { toast('追加に失敗しました'); return }
       toast('タスクを追加しました')
       onCreatedTask()
     } else {
@@ -1278,27 +1282,27 @@ function TaskEditModal({ task, onClose, onSaved }: { task: Task; onClose: () => 
   const [startTime, setStartTime] = useState(task.scheduled_at ? fmtTime(task.scheduled_at) : '10:00')
   const [minutes, setMinutes] = useState(String(task.estimated_minutes || 60))
   const [saving, setSaving] = useState(false)
+  const updateTaskInStore = useDataStore((s) => s.updateTask)
+  const deleteTaskInStore = useDataStore((s) => s.deleteTask)
 
   const save = async () => {
     setSaving(true)
-    const patch: Record<string, unknown> = { title: title.trim(), due_date: dueDate || null }
+    const patch: Partial<Task> = { title: title.trim(), due_date: dueDate || null }
     if (hasTime && dueDate) {
       patch.scheduled_at = `${dueDate}T${startTime}:00+09:00`
       patch.estimated_minutes = parseInt(minutes) || 60
     } else {
       patch.scheduled_at = null
     }
-    const { error } = await supabase.from('tasks').update(patch).eq('id', task.id)
+    await updateTaskInStore(task.id, patch)
     setSaving(false)
-    if (error) { toast('保存に失敗しました'); return }
     toast('更新しました')
     onSaved()
   }
 
   const del = async () => {
     if (!confirm('このタスクを削除しますか？')) return
-    const { error } = await supabase.from('tasks').delete().eq('id', task.id)
-    if (error) { toast('削除に失敗しました'); return }
+    await deleteTaskInStore(task.id)
     toast('削除しました')
     onSaved()
   }
