@@ -3,8 +3,8 @@ import { Card, Modal, toast } from '@/components/ui'
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar'
 import { startCalendarAuth } from '@/lib/calendarApi'
 import { GCAL_CALENDARS } from '@/lib/constants'
-import { supabase } from '@/lib/supabase'
 import type { ViewMode, CalendarEvent, CalendarType } from '@/types/calendar'
+import type { Task } from '@/types/tasks'
 import { useCalendarLayers, moodLevel, moodBgColor, moodEmoji, type CalendarLayerMap } from '@/hooks/useCalendarLayers'
 import { DayDetailDrawer } from '@/components/DayDetailDrawer'
 import { useDataStore } from '@/stores/data'
@@ -842,8 +842,6 @@ export function Calendar() {
   const allStoreTasks = useDataStore((s) => s.tasks)
   const fetchAllTasks = useDataStore((s) => s.fetchTasks)
   const storeUpdateTask = useDataStore((s) => s.updateTask)
-  const storeAddTask = useDataStore((s) => s.addTask)
-  const storeDeleteTask = useDataStore((s) => s.deleteTask)
   const [quickAdd, setQuickAdd] = useState<{ date: string; hour?: number } | null>(null)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() => loadLayers())
