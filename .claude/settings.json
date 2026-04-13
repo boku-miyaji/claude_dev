@@ -339,6 +339,11 @@
             "type": "command",
             "command": "/workspace/.claude/hooks/chat-effectiveness-weekly.sh",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/weekly-insights.sh",
+            "async": true
           }
         ]
       }
