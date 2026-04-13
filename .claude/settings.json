@@ -193,7 +193,9 @@
       "Bash(supabase functions:*)",
       "Bash(./node_modules/.bin/vite build:*)",
       "Bash(bunx tsc:*)",
-      "Bash(node_modules/.bin/vite build:*)"
+      "Bash(node_modules/.bin/vite build:*)",
+      "Bash(ls components/ui/)",
+      "Bash(ls components/)"
     ],
     "deny": [
       "Read(**/.env)",
