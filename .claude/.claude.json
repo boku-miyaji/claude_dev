@@ -669,7 +669,7 @@
   "groveConfigCache": {
     "0e3bd740-e45a-41f7-9a8e-dea96899ee97": {
       "grove_enabled": true,
-      "timestamp": 1775915535508
+      "timestamp": 1776040428239
     }
   },
   "overageCreditGrantCache": {
@@ -696,8 +696,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 41,
-      "lastUsedAt": 1776001480113
+      "usageCount": 42,
+      "lastUsedAt": 1776040449979
     },
     "register": {
       "usageCount": 5,
