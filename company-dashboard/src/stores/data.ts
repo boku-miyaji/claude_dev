@@ -46,8 +46,21 @@ interface DataStore {
   addGoal: (goal: Record<string, unknown>) => Promise<Goal | null>
   updateGoal: (id: string, data: Record<string, unknown>) => Promise<void>
   deleteGoal: (id: string) => Promise<void>
-  addTask: (task: { title: string; priority?: string; due_date?: string | null; scheduled_at?: string | null; deadline_at?: string | null; estimated_minutes?: number | null; time_slot?: string | null }) => Promise<Task | null>
+  addTask: (task: {
+    title: string
+    description?: string | null
+    type?: string | null
+    priority?: string
+    company_id?: string | null
+    due_date?: string | null
+    scheduled_at?: string | null
+    deadline_at?: string | null
+    estimated_minutes?: number | null
+    time_slot?: string | null
+    sort_order?: number
+  }) => Promise<Task | null>
   updateTask: (id: string, data: Partial<Task>) => Promise<void>
+  deleteTask: (id: string) => Promise<void>
   addHabit: (habit: Partial<Habit>) => Promise<Habit | null>
   updateHabit: (id: number, data: Partial<Habit>) => Promise<void>
   deleteHabit: (id: number) => Promise<void>
