@@ -1125,6 +1125,9 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
   const defaultEnd = hour !== undefined ? `${String(hour + 1).padStart(2, '0')}:00` : '11:00'
   const [startTime, setStartTime] = useState(defaultStart)
   const [endTime, setEndTime] = useState(defaultEnd)
+  // Tasks: time is opt-in for all-day slots, auto-on for time-grid slots.
+  const [taskHasTime, setTaskHasTime] = useState(hour !== undefined)
+  const [taskMinutes, setTaskMinutes] = useState(60)
   const [saving, setSaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -1135,13 +1138,10 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
     if (!t || saving) return
     setSaving(true)
     if (kind === 'task') {
-      const payload: Record<string, unknown> = { title: t, status: 'open', priority: 'normal', type: 'task' }
-      if (hour !== undefined) {
-        payload.scheduled_at = `${date}T${String(hour).padStart(2, '0')}:00:00+09:00`
-        payload.estimated_minutes = 60
-        payload.due_date = date
-      } else {
-        payload.due_date = date
+      const payload: Record<string, unknown> = { title: t, status: 'open', priority: 'normal', type: 'task', due_date: date }
+      if (taskHasTime) {
+        payload.scheduled_at = `${date}T${startTime}:00+09:00`
+        payload.estimated_minutes = taskMinutes
       }
       const { error } = await supabase.from('tasks').insert(payload)
       setSaving(false)
@@ -1206,7 +1206,7 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
           }}
         />
 
-        {/* Event-only: time inputs */}
+        {/* Event time inputs */}
         {kind === 'event' && !isAllDay && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             <div style={{ flex: 1 }}>
@@ -1217,6 +1217,28 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
               <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>終了</label>
               <input className="input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
             </div>
+          </div>
+        )}
+
+        {/* Task time inputs — optional */}
+        {kind === 'task' && (
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: taskHasTime ? 6 : 0, cursor: 'pointer' }}>
+              <input type="checkbox" checked={taskHasTime} onChange={e => setTaskHasTime(e.target.checked)} />
+              時間を指定
+            </label>
+            {taskHasTime && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>開始</label>
+                  <input className="input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>所要(分)</label>
+                  <input className="input" type="number" min={5} step={5} value={taskMinutes} onChange={e => setTaskMinutes(parseInt(e.target.value) || 60)} />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
