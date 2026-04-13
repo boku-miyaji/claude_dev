@@ -2002,7 +2002,7 @@ function TabRoadmap() {
         <P>このダッシュボードを「Focus You」として商用プロダクト化する。日記×感情分析×ナラティブ知性で「記録を物語に変える」AIライフパートナー。</P>
         <Principle title="キラーフレーズ" body="毎日30分、他人のストーリーを見ている。その30分で、自分のストーリーを見つけませんか。" color="var(--accent)" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, margin: '12px 0' }}>
-          <MiniCard title="ターゲット" body="20-30代、SNSで外に目が向きがち。もっと自分にフォーカスして高めたい層" />
+          <MiniCard title="ターゲット" body="セルフリフレクション型: 言語化が得意で情報は足りてる。他人に相談しづらい／日記・メモ習慣がある／決断は自分でしたい人" />
           <MiniCard title="市場" body="日本語ファースト → すぐにグローバル展開。AIジャーナリング市場 CAGR 11.5%、感情AI市場 CAGR 22-27%" />
           <MiniCard title="形態" body="PWA対応 Web SaaS（Phase 1）→ React Native モバイルアプリ（Phase 2）" />
           <MiniCard title="収益" body="日数制限トライアル + 機能制限Free + 有料プラン（$9.99-14.99/月帯）" />
