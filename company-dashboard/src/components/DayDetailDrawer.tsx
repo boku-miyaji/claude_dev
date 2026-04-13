@@ -2,16 +2,7 @@ import { useEffect } from 'react'
 import type { DayLayerData } from '@/hooks/useCalendarLayers'
 import { moodLevel, moodBgColor, moodEmoji } from '@/hooks/useCalendarLayers'
 import type { CalendarEvent } from '@/types/calendar'
-
-interface Task {
-  id: number
-  title: string
-  status: string
-  priority: string
-  due_date: string | null
-  scheduled_at: string | null
-  completed_at: string | null
-}
+import type { Task } from '@/types/tasks'
 
 interface Props {
   dateStr: string | null

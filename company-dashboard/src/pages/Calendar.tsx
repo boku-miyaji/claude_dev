@@ -39,19 +39,8 @@ function loadLayers(): Record<LayerKey, boolean> {
 }
 
 // ============================================================
-// Task types
+// Task types — canonical Task is imported from @/types/tasks
 // ============================================================
-
-interface Task {
-  id: number
-  title: string
-  status: string
-  priority: string
-  due_date: string | null
-  scheduled_at: string | null
-  estimated_minutes: number | null
-  completed_at: string | null
-}
 
 const TASK_COLOR = '#8b5cf6'
 
