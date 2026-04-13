@@ -23,7 +23,9 @@ export interface NewsItem {
  */
 export async function collectNews(): Promise<{ count: number; items: NewsItem[] }> {
   const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token || ''
+  // Fall back to the anon key when no mobile session exists — the edge function
+  // runs with the service role internally, any valid Supabase JWT is accepted.
+  const token = session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY
 
   const res = await fetch(
     import.meta.env.VITE_SUPABASE_URL + '/functions/v1/news-collect',
@@ -38,7 +40,8 @@ export async function collectNews(): Promise<{ count: number; items: NewsItem[] 
   )
 
   if (!res.ok) {
-    throw new Error(`news-collect error: ${res.status}`)
+    const body = await res.text().catch(() => '')
+    throw new Error(`news-collect ${res.status}: ${body.slice(0, 200)}`)
   }
 
   const result = await res.json()
