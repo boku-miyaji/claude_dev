@@ -1,10 +1,18 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { PageHeader, EmptyState } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
+import { renderMarkdownSafe } from '@/lib/markdown'
 
 // ============================================================
 // Types
 // ============================================================
+
+// Markdown body: sanitized by renderMarkdownSafe which strips script tags and on* handlers
+function MarkdownBody({ text }: { text: string }) {
+  const html = useMemo(() => renderMarkdownSafe(text), [text])
+  // eslint-disable-next-line react/no-danger -- sanitized by renderMarkdownSafe
+  return <div className="md-body" style={{ fontSize: 14, lineHeight: 1.7, overflow: 'auto', maxHeight: 'calc(100vh - 280px)', padding: '0 4px' }} dangerouslySetInnerHTML={{ __html: html }} />
+}
 
 interface Company { id: string; name: string }
 
@@ -159,7 +167,7 @@ function ArtifactDetail({ artifact: initialArtifact, onBack }: { artifact: Artif
       return <iframe ref={iframeRef} style={{ width: '100%', height: 'calc(100vh - 200px)', minHeight: 400, border: 'none', background: '#fff', borderRadius: 8 }} />
     }
     if (artifact.file_type === 'md') {
-      return <pre style={{ fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{artifact.content}</pre>
+      return <MarkdownBody text={artifact.content} />
     }
     return <pre style={{ fontSize: 12, overflow: 'auto', maxHeight: 'calc(100vh - 280px)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{artifact.content}</pre>
   }
