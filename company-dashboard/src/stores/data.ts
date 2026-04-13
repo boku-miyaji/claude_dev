@@ -341,12 +341,16 @@ export const useDataStore = create<DataStore>((set, get) => ({
       .from('tasks')
       .insert({
         title: task.title,
+        description: task.description ?? null,
+        type: task.type ?? 'task',
         priority: task.priority ?? 'normal',
+        company_id: task.company_id ?? null,
         due_date: task.due_date ?? null,
         scheduled_at: task.scheduled_at ?? null,
         deadline_at: task.deadline_at ?? null,
         estimated_minutes: task.estimated_minutes ?? null,
         time_slot: task.time_slot ?? null,
+        sort_order: task.sort_order ?? 0,
         status: 'open',
       })
       .select('*, companies(name)')
@@ -402,6 +406,13 @@ export const useDataStore = create<DataStore>((set, get) => ({
           }
         })
       }
+    }
+  },
+
+  deleteTask: async (id) => {
+    const { error } = await supabase.from('tasks').delete().eq('id', id)
+    if (!error) {
+      set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }))
     }
   },
 
