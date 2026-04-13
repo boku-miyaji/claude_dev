@@ -35,3 +35,21 @@ jobs:
             -H "apikey: ${SUPABASE_ANON_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
             --max-time 180
+
+      - name: Verify rows were inserted (fail if zero)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -e
+          # 直近15分以内に INSERT された件数を確認
+          FIFTEEN_MIN_AGO=$(date -u -d '15 minutes ago' -Iseconds 2>/dev/null || date -u -v-15M +%Y-%m-%dT%H:%M:%SZ)
+          COUNT=$(curl -sS -I "${SUPABASE_URL}/rest/v1/news_items?select=id&collected_at=gte.${FIFTEEN_MIN_AGO}" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "Prefer: count=exact" 2>/dev/null | grep -i '^content-range' | sed 's/.*\///' | tr -d '\r\n ')
+          echo "Rows inserted in last 15 min: ${COUNT:-unknown}"
+          if [ -z "${COUNT}" ] || [ "${COUNT}" = "0" ]; then
+            echo "::error::news-collect finished but no rows were inserted. The LLM response, feed fetch, or INSERT likely failed."
+            exit 1
+          fi

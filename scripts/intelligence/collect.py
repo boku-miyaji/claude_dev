@@ -273,6 +273,7 @@ def main():
         try:
             import requests as req
 
+            # 1) レポート全体を secretary_notes に保存（既存の挙動）
             resp = req.post(
                 f"{supabase_url}/rest/v1/secretary_notes",
                 headers={
@@ -292,9 +293,65 @@ def main():
                 timeout=10,
             )
             if resp.status_code in (200, 201):
-                print("  Supabase 保存: OK")
+                print("  secretary_notes: OK")
             else:
-                print(f"  Supabase 保存: エラー ({resp.status_code})")
+                print(f"  secretary_notes: エラー ({resp.status_code})")
+
+            # 2) 各アイテムを news_items にも INSERT してニュースタブに表示させる
+            news_saved = 0
+            news_dup = 0
+            news_err = 0
+            today_str = now.strftime("%Y-%m-%d")
+            for coll in data["collections"]:
+                ctype = coll.get("type", "")
+                if ctype == "keyword":
+                    src_type = "keyword_search"
+                    src_name = f"DuckDuckGo: {coll.get('term', '')}"[:50]
+                    topic = coll.get("category", "general")[:30]
+                elif ctype == "x_account":
+                    src_type = "x_account"
+                    src_name = coll.get("handle", "")[:50]
+                    topic = coll.get("category", "general")[:30]
+                else:
+                    continue
+                for r in coll.get("results", []):
+                    url = r.get("url") or ""
+                    title = (r.get("title") or "").strip()
+                    if not url or len(title) < 5:
+                        continue
+                    payload = {
+                        "title": title[:200],
+                        "summary": (r.get("snippet") or "")[:500],
+                        "url": url,
+                        "source": src_name,
+                        "source_type": src_type,
+                        "topic": topic,
+                        "published_date": today_str,
+                        "collected_at": now.isoformat(),
+                    }
+                    try:
+                        r2 = req.post(
+                            f"{supabase_url}/rest/v1/news_items",
+                            headers={
+                                "apikey": supabase_key,
+                                "Authorization": f"Bearer {supabase_key}",
+                                "Content-Type": "application/json",
+                                "Prefer": "return=minimal",
+                                "x-ingest-key": ingest_key,
+                            },
+                            json=payload,
+                            timeout=10,
+                        )
+                        if r2.status_code in (200, 201):
+                            news_saved += 1
+                        elif r2.status_code == 409 or (r2.text and "23505" in r2.text):
+                            # duplicate url (partial unique index) — not an error
+                            news_dup += 1
+                        else:
+                            news_err += 1
+                    except Exception:
+                        news_err += 1
+            print(f"  news_items: saved={news_saved} duplicates={news_dup} errors={news_err}")
         except Exception as e:
             print(f"  Supabase 保存: スキップ ({e})")
     else:
