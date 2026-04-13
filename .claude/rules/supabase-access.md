@@ -35,13 +35,18 @@ curl -s -X POST "${SUPABASE_URL}/rest/v1/tasks" \
 ```
 
 ### データ読み取り（Management API — RLS付きテーブル）
-以下のテーブルは RLS が有効で、anon key では空配列が返る。**必ず Management API を使うこと。**
-- `diary_entries` — 日記
-- `emotion_analysis` — 感情分析
-- `secretary_notes` (type=diary) — 秘書ノート
-- `ceo_insights` — CEOインサイト
 
-**anon key で空配列が返ったら「データがない」と判断してはいけない。まず Management API で件数を確認する。**
+**原則: anon key で `[]` が返ってきたら「データなし」と判断するのは禁止。** 必ず Management API で再確認する。
+ほぼ全ての業務テーブルに RLS が掛かっており、anon key では空配列になる。**列挙して覚えるな。デフォルトで Management API を使え。**
+
+確認済み RLS 対象（参考、これに限らない）:
+- `tasks` — タスク・TODO
+- `knowledge_base` — ナレッジ
+- `diary_entries`, `emotion_analysis`, `secretary_notes`, `ceo_insights` — 日記・分析系
+- `growth_events`, `agent_sessions`, `pipeline_runs`, `comments` — ログ・セッション系
+
+**`/company` ブリーフィング・分析・集計は最初から Management API を使う。** anon key を試して空だったから Management API、ではなく、最初からこちら。
+anon key + REST は「ダッシュボードからの認証付きクライアント」を想定したパスで、CLI/Hook からは原則使わない（書き込みで `x-ingest-key` を付ける場合を除く）。
 
 ### SQL実行（Management API + access token）
 RLS変更、マイグレーション適用、RLS付きテーブルの読み取りに使う。
