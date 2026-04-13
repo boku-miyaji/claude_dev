@@ -12,7 +12,7 @@ import { Settings } from '@/pages/Settings'
 import { Blueprint } from '@/pages/Blueprint'
 import { SlashCommands } from '@/pages/SlashCommands'
 import { Knowledge } from '@/pages/Knowledge'
-import { Tasks } from '@/pages/Tasks'
+import { Requests } from '@/pages/Requests'
 import { Companies } from '@/pages/Companies'
 import { Reports } from '@/pages/Reports'
 import { Today } from '@/pages/Today'
@@ -98,8 +98,7 @@ export function App() {
           <Route path="/weekly" element={<WeeklyNarrative />} />
           <Route path="/story" element={<Story />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/tasks" element={<Tasks mode="task" />} />
-          <Route path="/requests" element={<Tasks mode="request" />} />
+          <Route path="/requests" element={<Requests />} />
           <Route path="/companies" element={<Companies />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/intelligence" element={<Reports />} />

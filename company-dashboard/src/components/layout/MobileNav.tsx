@@ -17,7 +17,6 @@ const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
   {
     label: 'Core',
     items: [
-      { page: 'tasks', icon: '☐', label: 'Tasks' },
       { page: 'dreams', icon: '🌟', label: 'Dreams' },
       { page: 'habits', icon: '🌱', label: 'Habits' },
       { page: 'insights', icon: '📊', label: 'Insights' },

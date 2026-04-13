@@ -459,9 +459,11 @@ export function Today() {
           <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)' }}>Tasks</span>
           <div style={{ display: 'flex', gap: 4 }}>
             <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => setShowAddTask((v) => !v)}>+</button>
-            <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/tasks')}>
-              {allOpenTasks.length > todayTasks.length ? `他${allOpenTasks.length - todayTasks.length}件` : '一覧'}
-            </button>
+            {allOpenTasks.length > todayTasks.length && (
+              <span style={{ fontSize: 10, color: 'var(--text3)', alignSelf: 'center' }}>
+                他{allOpenTasks.length - todayTasks.length}件はバックログ
+              </span>
+            )}
           </div>
         </div>
         {/* Inline add task */}
@@ -908,10 +910,7 @@ export function Today() {
 
   const Backlog = otherOpenTasks.length > 0 ? (
     <div className="section">
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>バックログ</span>
-        <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }} onClick={() => navigate('/tasks')}>すべて見る</button>
-      </div>
+      <div className="section-title">バックログ</div>
       <Card>
         {otherOpenTasks.slice(0, 3).map((t) => (
           <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text2)' }}>

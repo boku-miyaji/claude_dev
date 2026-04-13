@@ -17,7 +17,7 @@ export interface Shortcut {
 export const NAV_SHORTCUTS: string[] = [
   '/',            // 1 = Home (Today)
   '/chat',        // 2 = AI Chat
-  '/tasks',       // 3 = Tasks
+  '/requests',    // 3 = Requests
   '/journal',     // 4 = Journal
   '/calendar',    // 5 = Calendar
   '/dreams',      // 6 = Dreams & Goals
@@ -38,7 +38,7 @@ export const ALL_SHORTCUTS: Shortcut[] = [
     key: String(i + 1),
     meta: true,
     label: `Cmd+${i + 1}`,
-    description: `${['Home', 'AI Chat', 'Tasks', 'Journal', 'Calendar', 'Dreams', 'Habits', 'Insights', 'News'][i]} に移動`,
+    description: `${['Home', 'AI Chat', 'Requests', 'Journal', 'Calendar', 'Dreams', 'Habits', 'Insights', 'News'][i]} に移動`,
     scope: 'global' as const,
   })),
 
