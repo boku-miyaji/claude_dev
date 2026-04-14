@@ -514,11 +514,11 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/google-calendar-proxy/, "");
 
-    // Backfill endpoint: service role authenticated, fetch & upsert past events
+    // Backfill endpoint: BACKFILL_SECRET 認証、過去の予定を calendar_events に一括同期
     if (req.method === "POST" && path === "/backfill") {
-      const authHeader = req.headers.get("authorization") || "";
-      const token = authHeader.replace("Bearer ", "").trim();
-      if (token !== SUPABASE_SERVICE_ROLE_KEY) {
+      const backfillSecret = Deno.env.get("BACKFILL_SECRET") || "";
+      const provided = req.headers.get("x-backfill-secret") || "";
+      if (!backfillSecret || provided !== backfillSecret) {
         return new Response(JSON.stringify({ error: "Forbidden" }), {
           status: 403, headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
         });

@@ -4,6 +4,11 @@ import { aiCompletion } from '@/lib/edgeAi'
 import { calculateStreak } from '@/lib/streak'
 import { useBriefingStore } from '@/stores/briefing'
 import type { TimeMode } from '@/lib/timeMode'
+import {
+  fetchBalancedFeedback,
+  fetchActivePromptRules,
+  buildFewShotBlock,
+} from '@/lib/partnerFeedback'
 
 /** Plutchik keys */
 const PLUTCHIK_KEYS = ['joy', 'trust', 'fear', 'surprise', 'sadness', 'disgust', 'anger', 'anticipation'] as const
@@ -289,14 +294,24 @@ export function useMorningBriefing(
 - 一番親身に思ってるパートナーとして、遠慮はしない。でもアドバイス癖は出さない
 
 ## 時間帯
-${modeInstructions[timeMode]}`
+${modeInstructions[timeMode]}
+{{FEEDBACK_BLOCK}}`
 
       const userMessage = contextParts.length > 0
         ? contextParts.join('\n\n')
         : '（特にデータなし。穏やかな一言を）'
 
+      // Inject balanced few-shot (corrections + good examples) + promoted rules
+      // to break out of local-optimum bias while still honoring user feedback.
+      const [feedbackRows, promptRules] = await Promise.all([
+        fetchBalancedFeedback(3, 7),
+        fetchActivePromptRules(),
+      ])
+      const feedbackBlock = buildFewShotBlock(feedbackRows, promptRules)
+      const finalSystemPrompt = systemPrompt.replace('{{FEEDBACK_BLOCK}}', feedbackBlock)
+
       const result = await aiCompletion(userMessage, { source: 'ai_partner',
-        systemPrompt,
+        systemPrompt: finalSystemPrompt,
         model: 'gpt-5.4-mini',
         maxTokens: 200,
       })
@@ -304,7 +319,12 @@ ${modeInstructions[timeMode]}`
       console.log('[AI Partner] Result:', result)
 
       if (briefingMessage) {
-        setMessage(briefingMessage)
+        const snapshot = {
+          time_mode: timeMode,
+          diary: diaryRes.data?.[0]?.body ?? null,
+          generated_at: new Date().toISOString(),
+        }
+        setMessage(briefingMessage, snapshot)
         setLastFetched(cacheKey)
       } else {
         // Don't cache fallback — retry on next render
