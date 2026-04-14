@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { Card } from '@/components/ui'
 import { aiPartnerChat, type PartnerChatMessage, type SavedMemory } from '@/lib/edgeAi'
+import { useBriefingStore } from '@/stores/briefing'
+import { PartnerFeedbackControls } from '@/components/PartnerFeedbackControls'
 
 interface MessageMeta {
   savedMemories?: SavedMemory[]
@@ -24,6 +26,7 @@ interface Props {
  */
 export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_partner', children }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const contextSnapshot = useBriefingStore((s) => s.contextSnapshot)
   const [history, setHistory] = useState<PartnerChatMessage[]>([])
   const [messageMeta, setMessageMeta] = useState<Record<number, MessageMeta>>({})
   const [input, setInput] = useState('')
@@ -91,6 +94,13 @@ export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_par
         <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
           {openingMessage || '今日はどんな一日ですか。'}
         </div>
+      )}
+
+      {!loading && openingMessage && (
+        <PartnerFeedbackControls
+          actualOutput={openingMessage}
+          contextSnapshot={contextSnapshot as Record<string, unknown> | null}
+        />
       )}
 
       {!expanded && !loading && (

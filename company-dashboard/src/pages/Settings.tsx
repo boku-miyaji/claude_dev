@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Card, PageHeader, toast } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
+import { PartnerFeedbackSettings } from '@/components/PartnerFeedbackSettings'
 
 // ============================================================
 // Types
@@ -376,6 +377,7 @@ export function Settings() {
     <div className="page">
       <PageHeader title="Settings" description="ユーザー設定" />
       <PersonalizationSection settings={userSettings} userId={userId} />
+      <PartnerFeedbackSettings />
       <ApiKeysSection settings={userSettings} userId={userId} />
       {isCliMode && <ClaudeCodeSection settings={claudeSettings} />}
     </div>
