@@ -261,11 +261,25 @@ function ArtifactDetail({ artifact: initialArtifact, onBack }: { artifact: Artif
 // Artifact List
 // ============================================================
 
-function ArtifactCard({ artifact, commentCount, onSelect }: { artifact: Artifact; commentCount: number; onSelect: () => void }) {
+function ArtifactCard({ artifact, commentCount, onSelect, onArchive }: { artifact: Artifact; commentCount: number; onSelect: () => void; onArchive: () => void }) {
   const [showPopover, setShowPopover] = useState(false)
+  const [archiving, setArchiving] = useState(false)
   const badgeRef = useRef<HTMLSpanElement>(null)
   const coName = artifact.companies ? (Array.isArray(artifact.companies) ? artifact.companies[0]?.name : artifact.companies.name) ?? 'HD' : 'HD'
   const synced = artifact.last_synced_at ? new Date(artifact.last_synced_at).toLocaleString('ja-JP') : '未同期'
+
+  const handleArchive = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm(`「${artifact.title}」をアーカイブしますか？\n（追跡停止。ダッシュボード一覧から非表示になります）`)) return
+    setArchiving(true)
+    const { error } = await supabase.from('artifacts').update({ status: 'archived' }).eq('id', artifact.id)
+    if (error) {
+      alert(`アーカイブに失敗しました: ${error.message}`)
+      setArchiving(false)
+      return
+    }
+    onArchive()
+  }
 
   useEffect(() => {
     if (!showPopover) return
@@ -296,6 +310,15 @@ function ArtifactCard({ artifact, commentCount, onSelect }: { artifact: Artifact
               {commentCount > 0 ? `${commentCount} コメント` : 'コメントなし'}
               {showPopover && <CommentPopover artifact={artifact} onClose={() => setShowPopover(false)} />}
             </span>
+            <button
+              className="btn"
+              title="アーカイブ（追跡停止）"
+              disabled={archiving}
+              onClick={handleArchive}
+              style={{ fontSize: 11, padding: '2px 8px', color: 'var(--text3)', opacity: archiving ? 0.5 : 0.7 }}
+            >
+              {archiving ? '...' : '🗄 アーカイブ'}
+            </button>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text3)' }}>同期: {synced}</div>
         </div>
@@ -411,7 +434,13 @@ export function Artifacts() {
       ) : (
         <>
           {artifacts.map(art => (
-            <ArtifactCard key={art.id} artifact={art} commentCount={commentCounts[art.id] || 0} onSelect={() => handleSelect(art)} />
+            <ArtifactCard
+              key={art.id}
+              artifact={art}
+              commentCount={commentCounts[art.id] || 0}
+              onSelect={() => handleSelect(art)}
+              onArchive={() => setArtifacts(prev => prev.filter(a => a.id !== art.id))}
+            />
           ))}
           {hasMore && (
             <button className="btn" style={{ width: '100%', marginTop: 8, padding: 10 }} disabled={loadingMore} onClick={loadMore}>
