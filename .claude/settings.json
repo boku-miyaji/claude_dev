@@ -197,7 +197,8 @@
       "Bash(ls components/ui/)",
       "Bash(ls components/)",
       "mcp__plugin_serena_serena__initial_instructions",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(command -v supabase)"
     ],
     "deny": [
       "Read(**/.env)",
