@@ -47,6 +47,12 @@ export interface TodayTimeline {
   /** Most recently ended event name */
   recentEventName: string | null
   loading: boolean
+  /**
+   * Google Calendar auth status.
+   * `null` = still checking, `true` = authenticated, `false` = needs sign-in.
+   * Consumers should prompt sign-in instead of showing "free" when this is false.
+   */
+  calendarAuthenticated: boolean | null
 }
 
 // ── Helpers ──
@@ -76,6 +82,7 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
   const [tomorrowEvents, setTomorrowEvents] = useState<TimelineEvent[]>([])
   const [recentEventName, setRecentEventName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [calendarAuthenticated, setCalendarAuthenticated] = useState<boolean | null>(null)
 
   const now = useMemo(() => new Date(), [])
   const todayStr = useMemo(() => toJSTDateStr(now), [now])
@@ -85,6 +92,7 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
     async function load() {
       try {
         const { authenticated } = await checkCalendarAuth()
+        setCalendarAuthenticated(authenticated)
         if (!authenticated) { setLoading(false); return }
 
         const todayStart = new Date(now)
@@ -126,7 +134,9 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
         const pastEvents = mapped.filter((e) => e.startTime.startsWith(todayStr) && e.isPast)
         setRecentEventName(pastEvents.length > 0 ? pastEvents[pastEvents.length - 1].title : null)
       } catch {
-        // Calendar auth check or event fetch failed — silently skip
+        // Calendar auth check or event fetch failed — treat as unauthenticated
+        // so the UI can prompt sign-in rather than silently showing "free".
+        setCalendarAuthenticated(false)
       }
       setLoading(false)
     }
@@ -215,6 +225,6 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
         }),
       }))
 
-    return { slots, todayTasks, upcomingTasks, tomorrowEvents, recentEventName, loading }
-  }, [calEvents, allTasks, completedToday, tomorrowEvents, recentEventName, loading, now, todayStr])
+    return { slots, todayTasks, upcomingTasks, tomorrowEvents, recentEventName, loading, calendarAuthenticated }
+  }, [calEvents, allTasks, completedToday, tomorrowEvents, recentEventName, loading, calendarAuthenticated, now, todayStr])
 }
