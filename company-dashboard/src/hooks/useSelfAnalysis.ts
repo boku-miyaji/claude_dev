@@ -701,7 +701,7 @@ changes_from_previous フィールドに、前回からの変化を具体的に�
           result,
           summary,
           data_count: count,
-          model_used: 'gpt-5-nano',
+          model_used: 'gpt-5.4-mini',
           analysis_context: analysisContext,
         })
         .select()

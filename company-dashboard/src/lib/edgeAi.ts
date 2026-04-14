@@ -42,7 +42,7 @@ export async function aiCompletion(
         mode: 'completion',
         message,
         system_prompt: options.systemPrompt,
-        model: options.model || 'gpt-5-nano',
+        model: options.model || 'gpt-5.4-nano',
         temperature: options.temperature ?? 0.3,
         max_tokens: options.maxTokens ?? 1000,
         response_format: options.jsonMode ? { type: 'json_object' } : undefined,
@@ -61,11 +61,11 @@ export async function aiCompletion(
   if (result.usage || result.model) {
     const tokIn = result.usage?.prompt_tokens || 0
     const tokOut = result.usage?.completion_tokens || 0
-    // Estimate cost if not provided (GPT-5-nano ~$0.10/1M in, $0.40/1M out)
-    const costUsd = (tokIn * 0.0000001) + (tokOut * 0.0000004)
+    // Estimate cost if not provided (GPT-5.4 nano ~$0.05/1M in, $0.40/1M out)
+    const costUsd = (tokIn * 0.00000005) + (tokOut * 0.0000004)
     supabase.from('api_cost_log').insert({
       source: options.source || 'other',
-      model: result.model || options.model || 'gpt-5-nano',
+      model: result.model || options.model || 'gpt-5.4-nano',
       tokens_input: tokIn,
       tokens_output: tokOut,
       cost_usd: costUsd,
