@@ -10,7 +10,7 @@ interface MobileNavItem {
 const MAIN_TABS: MobileNavItem[] = [
   { page: '', icon: '◉', label: 'Home' },
   { page: 'requests', icon: '→', label: 'Requests' },
-  { page: 'chat', icon: '💬', label: 'AI' },
+  { page: 'dreams', icon: '🌟', label: 'Dreams' },
 ]
 
 const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
