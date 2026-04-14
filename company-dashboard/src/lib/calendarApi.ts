@@ -13,14 +13,53 @@ function getClientId(): string {
   return import.meta.env.VITE_GOOGLE_CLIENT_ID || '855851839827-hfijpvgal6m3hgrjgus6bdf8it8ibr9h.apps.googleusercontent.com'
 }
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
+/**
+ * Get a Supabase access_token that is guaranteed fresh.
+ * If the cached session is within 60s of expiry (or already expired),
+ * refresh it first. Returns an empty string only if the user has no
+ * session at all (unauthenticated).
+ */
+async function getFreshAccessToken(): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token || ''
+  if (!session) return ''
+  const expiresAt = session.expires_at ? session.expires_at * 1000 : 0
+  const needsRefresh = expiresAt - Date.now() < 60_000
+  if (needsRefresh) {
+    const { data, error } = await supabase.auth.refreshSession()
+    if (error || !data.session) return ''
+    return data.session.access_token
+  }
+  return session.access_token
+}
+
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const token = await getFreshAccessToken()
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
     'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
   }
+}
+
+/**
+ * Fetch wrapper that refreshes the Supabase session and retries once
+ * on 401. This covers the case where the token expired between the
+ * last getSession() call and the actual request landing on the server.
+ */
+export async function authedFetch(input: string, init: RequestInit = {}): Promise<Response> {
+  const headers = { ...(init.headers as Record<string, string> | undefined), ...(await getAuthHeaders()) }
+  const res = await fetch(input, { ...init, headers })
+  if (res.status !== 401) return res
+  // One-shot retry after forcing a refresh
+  const { data, error } = await supabase.auth.refreshSession()
+  if (error || !data.session) return res
+  const retryHeaders = {
+    ...(init.headers as Record<string, string> | undefined),
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${data.session.access_token}`,
+    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+  }
+  return fetch(input, { ...init, headers: retryHeaders })
 }
 
 // ============================================================
