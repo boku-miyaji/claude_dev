@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { aiCompletion } from '@/lib/edgeAi'
 
 /**
  * AI Partner feedback loop.
@@ -65,6 +66,7 @@ export async function saveGoodFeedback(args: {
     category: args.category ?? null,
   })
   if (error) console.error('[partnerFeedback] saveGood failed', error)
+  if (!error) maybeDistillInBackground()
   return !error
 }
 
@@ -90,6 +92,7 @@ export async function saveCorrectionFeedback(args: {
     context_snapshot: args.contextSnapshot ?? null,
   })
   if (error) console.error('[partnerFeedback] saveCorrection failed', error)
+  if (!error) maybeDistillInBackground()
   return !error
 }
 
