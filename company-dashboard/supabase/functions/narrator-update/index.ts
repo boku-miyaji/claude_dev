@@ -62,7 +62,7 @@ async function runArcReader(): Promise<{ updated: boolean; phase?: string }> {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
     body: JSON.stringify({
-      model: "gpt-5.4-nano",
+      model: "gpt-5.4-mini",
       messages: [
         { role: "system", content: `感情データと日記の内容から、この人が今どんな時期にいるかを判定する。
 narrativeは友達が「最近どう？」と聞かれて答えるくらいの自然な日本語で、具体的な出来事や気持ちに触れて1-2文で書く。
@@ -127,7 +127,7 @@ async function runThemeFinder(): Promise<{ updated: boolean; identity?: string }
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
     body: JSON.stringify({
-      model: "gpt-5.4-nano",
+      model: "gpt-5.4-mini",
       messages: [
         { role: "system", content: `長期の日記から人生テーマを発見。出力JSON: {"identity":"テーマ","emotionalDNA":{"joyTriggers":["3つ"],"energySources":["2-3つ"],"recoveryStyle":"傾向"},"aspirations":"志向1-2文"}` },
         { role: "user", content: `日記(${(diaryRes.data || []).length}件):\n${diaryText}\n\n夢: ${dreamsText || "なし"}` },
@@ -200,7 +200,7 @@ async function runChapterGenerator(): Promise<{ created: boolean; title?: string
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
     body: JSON.stringify({
-      model: "gpt-5.4-nano",
+      model: "gpt-5.4-mini",
       messages: [
         { role: "system", content: `四半期の日記と転機から「章」を生成。出力JSON: {"title":"章タイトル(5語以内)","summary":"この期間の要約(3-4文)","emotional_journey":"感情の旅路(2文)","learnings":"学んだこと(2文)"}` },
         { role: "user", content: `日記(${(diaryRes.data || []).length}件):\n${diaryText}\n\n転機:\n${momentsText || "なし"}` },
