@@ -230,6 +230,7 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
 
   const accessToken = await getAccessToken(userId);
   const allEvents: Record<string, unknown>[] = [];
+  const dbRows: Record<string, unknown>[] = [];
 
   for (const calId of calendarIds) {
     const params = new URLSearchParams({
@@ -246,21 +247,59 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
     const data = await res.json();
     for (const ev of data.items || []) {
       if (ev.status === "cancelled") continue;
-      allEvents.push({
+      const startTime = ev.start?.dateTime || ev.start?.date || "";
+      const endTime = ev.end?.dateTime || ev.end?.date || "";
+      const allDay = !ev.start?.dateTime;
+      const eventRow = {
         id: ev.id,
         calendar_id: calId,
         summary: ev.summary || "(No title)",
-        start_time: ev.start?.dateTime || ev.start?.date || "",
-        end_time: ev.end?.dateTime || ev.end?.date || "",
-        all_day: !ev.start?.dateTime,
+        start_time: startTime,
+        end_time: endTime,
+        all_day: allDay,
         status: ev.status,
         location: ev.location || null,
         hangoutLink: ev.hangoutLink || null,
+      };
+      allEvents.push(eventRow);
+
+      // 分析バッチで使うために calendar_events テーブルにも upsert 用の行を用意
+      // （calendar_type は仕事/プライベート判定。summary の接頭辞で簡易判定）
+      const summary = ev.summary || "";
+      let calendarType: string = "private";
+      if (calId.includes("acesinc") || /^\[仕事\]|^\[Ex|^\[In|^\[in\]/i.test(summary)) {
+        calendarType = "work";
+      } else if (calId === "primary") {
+        calendarType = "primary";
+      }
+      dbRows.push({
+        id: ev.id,
+        calendar_id: calId,
+        summary: eventRow.summary,
+        start_time: startTime,
+        end_time: endTime,
+        all_day: allDay,
+        location: ev.location || null,
+        description: ev.description || null,
+        status: ev.status,
+        response_status: (ev.attendees || []).find((a: { self?: boolean; responseStatus?: string }) => a.self)?.responseStatus || null,
+        calendar_type: calendarType,
+        synced_at: new Date().toISOString(),
       });
     }
   }
 
   allEvents.sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
+
+  // 非同期で calendar_events テーブルに upsert（応答をブロックしない）
+  if (dbRows.length > 0) {
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    sb.from("calendar_events")
+      .upsert(dbRows, { onConflict: "id,calendar_id" })
+      .then(({ error }) => {
+        if (error) console.error("calendar_events upsert failed:", error.message);
+      });
+  }
 
   return new Response(JSON.stringify({ events: allEvents }), {
     headers: { ...CORS_HEADERS, "Content-Type": "application/json" },

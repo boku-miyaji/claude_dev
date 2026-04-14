@@ -23,7 +23,6 @@ export const NAV_ITEMS: NavItem[] = [
   { page: 'knowledge', icon: '\u25C8', label: 'Knowledge', group: 'Analytics' },
   { page: 'diary', icon: '\u270E', label: 'Diary', group: 'Personal', pinned: true },
   { page: 'artifacts', icon: '\uD83D\uDCC4', label: 'Artifacts', group: 'Personal', pinned: true },
-  { page: 'chat', icon: '\uD83D\uDCAC', label: 'AI Chat', group: 'Personal', pinned: true },
   { page: 'growth', icon: '\u2197', label: 'Growth', group: 'Analytics' },
   { page: 'api-costs', icon: '$', label: 'Costs', group: 'Tools' },
   { page: 'commands', icon: '\u2318', label: 'Commands', group: 'Tools' },

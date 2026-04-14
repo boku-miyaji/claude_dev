@@ -6,7 +6,6 @@ interface Props {
 
 const SCOPE_LABELS: Record<string, string> = {
   global: 'Global',
-  chat: 'AI Chat',
   today: 'Today',
   calendar: 'Calendar',
 }

@@ -4,8 +4,7 @@ import { NAV_SHORTCUTS, isTyping } from '@/lib/shortcuts'
 
 /**
  * Global keyboard shortcuts — mounted once at App level.
- * Handles navigation (Cmd+1〜9), new chat (Cmd+Shift+O),
- * sidebar toggle (Cmd+Shift+S), and shortcut help (Cmd+/).
+ * Handles navigation (Cmd+1〜9), sidebar toggle (Cmd+Shift+S), and shortcut help (Cmd+/).
  */
 export function useKeyboardShortcuts() {
   const navigate = useNavigate()
@@ -28,15 +27,6 @@ export function useKeyboardShortcuts() {
       return
     }
 
-    // ── Cmd+Shift+O → New Chat ──
-    if (meta && e.shiftKey && e.key.toLowerCase() === 'o') {
-      e.preventDefault()
-      navigate('/chat')
-      // Dispatch custom event so chat page can reset state
-      window.dispatchEvent(new CustomEvent('shortcut:new-chat'))
-      return
-    }
-
     // ── Cmd+Shift+S → Toggle sidebar ──
     if (meta && e.shiftKey && e.key.toLowerCase() === 's') {
       e.preventDefault()
@@ -55,30 +45,6 @@ export function useKeyboardShortcuts() {
     }
 
     // ── Page-specific shortcuts via custom events ──
-    // Chat: Cmd+Shift+C, Cmd+Shift+Backspace, Cmd+Shift+↑↓
-    if (meta && e.shiftKey && location.pathname.startsWith('/chat')) {
-      if (e.key.toLowerCase() === 'c') {
-        e.preventDefault()
-        window.dispatchEvent(new CustomEvent('shortcut:copy-last-response'))
-        return
-      }
-      if (e.key === 'Backspace') {
-        e.preventDefault()
-        window.dispatchEvent(new CustomEvent('shortcut:delete-chat'))
-        return
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        window.dispatchEvent(new CustomEvent('shortcut:prev-chat'))
-        return
-      }
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        window.dispatchEvent(new CustomEvent('shortcut:next-chat'))
-        return
-      }
-    }
-
     // Today: Cmd+Shift+T (add task), Cmd+Shift+D (diary focus)
     if (meta && e.shiftKey && location.pathname === '/') {
       if (e.key.toLowerCase() === 't') {

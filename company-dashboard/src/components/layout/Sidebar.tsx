@@ -86,7 +86,6 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [isCliMode, setIsCliMode] = useState(false)
   const currentPage = location.pathname.replace('/', '') || ''
-  const isChat = currentPage.startsWith('chat')
 
   // CLI mode detection: claude_settings にデータがあればCLIタブを表示
   useEffect(() => {
@@ -95,9 +94,8 @@ export function Sidebar() {
     })
   }, [])
 
-  // Auto-hide main sidebar on chat page (chat has its own sidebar)
   const [manualHidden, setManualHidden] = useState(false)
-  const sidebarHidden = isChat || manualHidden
+  const sidebarHidden = manualHidden
   const setSidebarHidden = setManualHidden
 
   // Listen for Cmd+Shift+S shortcut
@@ -126,7 +124,7 @@ export function Sidebar() {
 
   return (
     <>
-    {sidebarHidden && !isChat && (
+    {sidebarHidden && (
       <button
         className="sidebar-toggle"
         onClick={() => setSidebarHidden(false)}

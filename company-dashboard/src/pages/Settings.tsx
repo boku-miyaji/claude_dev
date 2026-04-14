@@ -39,84 +39,6 @@ interface ClaudeSettings {
 // Sub-components
 // ============================================================
 
-function AiChatSetupSection() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('hd-chat-api-key') || '')
-  const [pingStatus, setPingStatus] = useState<'idle' | 'ok' | 'error'>('idle')
-
-  const testConnection = async () => {
-    setPingStatus('idle')
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token || ''
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-agent`
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ping: true }),
-      })
-      setPingStatus(res.ok ? 'ok' : 'error')
-    } catch {
-      setPingStatus('error')
-    }
-  }
-
-  const saveKey = () => {
-    localStorage.setItem('hd-chat-api-key', apiKey)
-    toast('API Key saved')
-  }
-
-  const clearKey = () => {
-    localStorage.removeItem('hd-chat-api-key')
-    setApiKey('')
-    toast('API Key cleared')
-  }
-
-  return (
-    <>
-      <div className="section-title">AI Chat Setup</div>
-      <Card style={{ marginBottom: 24 }}>
-        <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12 }}>
-          AI Chat 機能を有効にするには以下の手順を実行してください。
-        </p>
-        <ol style={{ fontSize: 12, color: 'var(--text2)', paddingLeft: 20, marginBottom: 16, lineHeight: 1.8 }}>
-          <li>Run migration: <code style={{ fontFamily: 'var(--mono)', background: 'var(--bg2)', padding: '0 4px', borderRadius: 3 }}>supabase-migration-025-ai-chat.sql</code></li>
-          <li>Deploy Edge Function: <code style={{ fontFamily: 'var(--mono)', background: 'var(--bg2)', padding: '0 4px', borderRadius: 3 }}>supabase functions deploy ai-agent</code></li>
-          <li>Set API keys: <code style={{ fontFamily: 'var(--mono)', background: 'var(--bg2)', padding: '0 4px', borderRadius: 3 }}>supabase secrets set OPENAI_API_KEY=sk-...</code></li>
-          <li>Open the Chat tab and send a message!</li>
-        </ol>
-
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>Test Connection</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button className="btn btn-ghost btn-sm" onClick={testConnection}>Ping Edge Function</button>
-            {pingStatus === 'ok' && <span style={{ fontSize: 12, color: 'var(--green)' }}>Connected</span>}
-            {pingStatus === 'error' && <span style={{ fontSize: 12, color: 'var(--red)' }}>Failed — Edge Function が未デプロイか設定ミス</span>}
-          </div>
-        </div>
-
-        <div className="gradient-line" style={{ margin: '16px 0' }} />
-
-        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Direct Mode (Optional)</div>
-        <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>
-          Edge Function を使わずブラウザから直接 API を呼び出す場合のキー。ローカル検証用。
-        </p>
-        <input
-          className="input"
-          type="password"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="sk-..."
-          style={{ fontFamily: 'var(--mono)', fontSize: 12, marginBottom: 8 }}
-        />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-primary btn-sm" onClick={saveKey}>保存</button>
-          <button className="btn btn-ghost btn-sm" onClick={clearKey}>クリア</button>
-        </div>
-      </Card>
-    </>
-  )
-}
-
 function PersonalizationSection({ settings, userId }: { settings: UserSettings | null; userId: string }) {
   const [form, setForm] = useState({
     chat_nickname: settings?.chat_nickname || '',
@@ -453,7 +375,6 @@ export function Settings() {
   return (
     <div className="page">
       <PageHeader title="Settings" description="ユーザー設定" />
-      <AiChatSetupSection />
       <PersonalizationSection settings={userSettings} userId={userId} />
       <ApiKeysSection settings={userSettings} userId={userId} />
       {isCliMode && <ClaudeCodeSection settings={claudeSettings} />}

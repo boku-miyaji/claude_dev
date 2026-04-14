@@ -10,26 +10,25 @@ export interface Shortcut {
   alt?: boolean
   label: string
   description: string
-  scope: 'global' | 'chat' | 'today' | 'calendar'
+  scope: 'global' | 'today' | 'calendar'
 }
 
 /** Cmd+1〜9 navigates to these pages (sidebar order) */
 export const NAV_SHORTCUTS: string[] = [
   '/',            // 1 = Home (Today)
-  '/chat',        // 2 = AI Chat
+  '/journal',     // 2 = Journal
   '/requests',    // 3 = Requests
-  '/journal',     // 4 = Journal
-  '/calendar',    // 5 = Calendar
-  '/dreams',      // 6 = Dreams & Goals
-  '/habits',      // 7 = Habits
-  '/insights',    // 8 = Insights
-  '/intelligence', // 9 = News
+  '/calendar',    // 4 = Calendar
+  '/dreams',      // 5 = Dreams & Goals
+  '/habits',      // 6 = Habits
+  '/insights',    // 7 = Insights
+  '/intelligence', // 8 = News
+  '/story',       // 9 = Story
 ]
 
 export const ALL_SHORTCUTS: Shortcut[] = [
   // ── Global ──
   { key: 'k', meta: true, label: 'Cmd+K', description: 'コマンドパレット', scope: 'global' },
-  { key: 'o', meta: true, shift: true, label: 'Cmd+Shift+O', description: '新しいチャットを開始', scope: 'global' },
   { key: 's', meta: true, shift: true, label: 'Cmd+Shift+S', description: 'サイドバー開閉', scope: 'global' },
   { key: '/', meta: true, label: 'Cmd+/', description: 'ショートカット一覧', scope: 'global' },
   { key: 'Escape', label: 'Esc', description: 'キャンセル / モーダルを閉じる / 生成中断', scope: 'global' },
@@ -38,18 +37,12 @@ export const ALL_SHORTCUTS: Shortcut[] = [
     key: String(i + 1),
     meta: true,
     label: `Cmd+${i + 1}`,
-    description: `${['Home', 'AI Chat', 'Requests', 'Journal', 'Calendar', 'Dreams', 'Habits', 'Insights', 'News'][i]} に移動`,
+    description: `${['Home', 'Journal', 'Requests', 'Calendar', 'Dreams', 'Habits', 'Insights', 'News', 'Story'][i]} に移動`,
     scope: 'global' as const,
   })),
 
   // ── Common input ──
   { key: 'Enter', meta: true, label: 'Cmd+Enter', description: '送信 / 保存', scope: 'global' },
-
-  // ── AI Chat ──
-  { key: 'Backspace', meta: true, shift: true, label: 'Cmd+Shift+Del', description: '現在のチャットを削除', scope: 'chat' },
-  { key: 'c', meta: true, shift: true, label: 'Cmd+Shift+C', description: '最後のAI回答をコピー', scope: 'chat' },
-  { key: 'ArrowUp', meta: true, shift: true, label: 'Cmd+Shift+↑', description: '前の会話に切り替え', scope: 'chat' },
-  { key: 'ArrowDown', meta: true, shift: true, label: 'Cmd+Shift+↓', description: '次の会話に切り替え', scope: 'chat' },
 
   // ── Today ──
   { key: 't', meta: true, shift: true, label: 'Cmd+Shift+T', description: 'タスクを追加', scope: 'today' },

@@ -136,18 +136,27 @@ else
 fi
 
 # ============================================================
-# 2. 予定密度 vs 気分（前日/当日/翌日）
+# 2. 予定密度 vs 気分（前日/当日/翌日 + 総時間・連続性・タイプ別）
 # ============================================================
-echo "--- [2/8] event density vs mood (3-day window) ---"
+echo "--- [2/8] event density vs mood (3-day window, enriched) ---"
 
-# Google Calendar events は DB に無いので、diary_entries.calendar_events の jsonb 件数で代替
+# calendar_events テーブルから密度データを算出:
+# - event_count: 件数
+# - total_minutes: 合計拘束時間
+# - work_count: 仕事系（calendar_type='work'）の件数
+# - longest_block_minutes: 同日内で最長の連続会議ブロック
 run_sql "
-WITH event_days AS (
+WITH daily_events AS (
   SELECT
-    entry_date AS d,
-    COALESCE(jsonb_array_length(calendar_events), 0) AS event_count
-  FROM diary_entries
-  WHERE entry_date >= CURRENT_DATE - 30 AND calendar_events IS NOT NULL
+    DATE(start_time AT TIME ZONE 'Asia/Tokyo') AS d,
+    COUNT(*) AS event_count,
+    COUNT(*) FILTER (WHERE calendar_type = 'work') AS work_count,
+    SUM(EXTRACT(EPOCH FROM (end_time - start_time)) / 60)::int AS total_minutes,
+    MAX(EXTRACT(EPOCH FROM (end_time - start_time)) / 60)::int AS longest_event_minutes
+  FROM calendar_events
+  WHERE start_time >= NOW() - INTERVAL '30 days'
+    AND all_day = false
+  GROUP BY 1
 ),
 mood AS (
   SELECT entry_date AS d, AVG(wbi) AS avg_wbi
@@ -158,10 +167,13 @@ mood AS (
 SELECT
   e.d AS event_day,
   e.event_count,
-  m_prev.avg_wbi AS mood_prev_day,
-  m_same.avg_wbi AS mood_same_day,
-  m_next.avg_wbi AS mood_next_day
-FROM event_days e
+  e.work_count,
+  e.total_minutes,
+  e.longest_event_minutes,
+  ROUND(m_prev.avg_wbi::numeric, 1) AS mood_prev_day,
+  ROUND(m_same.avg_wbi::numeric, 1) AS mood_same_day,
+  ROUND(m_next.avg_wbi::numeric, 1) AS mood_next_day
+FROM daily_events e
 LEFT JOIN mood m_prev ON m_prev.d = e.d - 1
 LEFT JOIN mood m_same ON m_same.d = e.d
 LEFT JOIN mood m_next ON m_next.d = e.d + 1
@@ -171,10 +183,21 @@ LIMIT 30;
 " /tmp/wi_2.json
 
 EVENT_DATA=$(cat /tmp/wi_2.json)
-INSIGHT=$(interpret_with_llm "以下は過去30日の『予定件数と、その前日・当日・翌日の気分平均』データです。予定が多い日の前後で気分がどう動いているか、定性的に日本語1-2文で。前日(anticipatory)、当日、翌日(spillover)のどれが最も強く響いているかが見えればそれを言う。" "$EVENT_DATA")
+INSIGHT=$(interpret_with_llm "以下は過去30日の『予定の日次サマリー』データです。
+各行: 日付, 件数, 仕事系件数, 合計拘束時間(分), 最長1件の時間(分), 前日気分, 当日気分, 翌日気分 (wbi 0-10)
+
+予定の多さ・仕事系の比重・合計時間・長時間会議と、本人の気分がどう連動しているかを読み取ってください。
+特に以下を見てください:
+- 当日の気分への影響（詰まった日はしんどいか）
+- 前日の気分への影響（翌日に予定が多いと予期不安で下がるか）
+- 翌日の気分への影響（前日に疲れて翌日も引きずるか）
+- 件数より時間の方が強く効いていないか
+- 仕事系が多い日と少ない日の差
+
+日本語で2文以内、定性的な洞察を書いてください。数値は出しても1つまで。" "$EVENT_DATA")
 
 if [ -n "$INSIGHT" ]; then
-  save_insight "event_density_mood" "$INSIGHT" "過去30日 calendar_events vs wbi（前日/当日/翌日）" "medium"
+  save_insight "event_density_mood" "$INSIGHT" "過去30日 calendar_events 件数/時間/仕事比率 × 前日/当日/翌日 wbi" "medium"
   echo "  ✓ saved"
 else
   echo "  - LLM unavailable, skip"

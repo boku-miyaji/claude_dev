@@ -195,7 +195,8 @@
       "Bash(bunx tsc:*)",
       "Bash(node_modules/.bin/vite build:*)",
       "Bash(ls components/ui/)",
-      "Bash(ls components/)"
+      "Bash(ls components/)",
+      "mcp__plugin_serena_serena__initial_instructions"
     ],
     "deny": [
       "Read(**/.env)",
@@ -482,6 +483,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
