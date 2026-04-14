@@ -451,7 +451,7 @@ ${results.map((r, i) => `[${i}] ${r.entry_date}: ${r.body?.substring(0, 150)}`).
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
             body: JSON.stringify({
-              model: "gpt-5-nano",
+              model: "gpt-5.4-nano",
               messages: [{ role: "user", content: rerankPrompt }],
               temperature: 0,
               max_tokens: 100,
@@ -701,7 +701,7 @@ async function classifyComplexity(message: string): Promise<string> {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-5-nano", temperature: 0, max_completion_tokens: 5,
+        model: "gpt-5.4-nano", temperature: 0, max_completion_tokens: 5,
         messages: [{ role: "user", content: `Classify this message into exactly one category. Reply with ONE word only.
 
 Categories:
@@ -977,7 +977,7 @@ ${existingText}
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-5-nano",
+        model: "gpt-5.4-nano",
         messages: [
           { role: "system", content: system },
           { role: "user", content: userMessage },
@@ -1218,22 +1218,22 @@ async function agentLoop(
   if (!selectedModel || selectedModel === "auto") {
     send({ type: "routing", status: "classifying" });
     const c = await classifyComplexity(userMessage);
-    selectedModel = MODEL_MAP[c] || "gpt-5-mini";
+    selectedModel = MODEL_MAP[c] || "gpt-5.4-mini";
     if (reasoningEffort === "auto") reasoningEffort = REASONING_MAP[c] || "medium";
     routingReason = `auto: ${c}`;
     send({ type: "routing", status: "done", complexity: c, model: selectedModel, reason: routingReason, reasoning: reasoningEffort });
   } else {
     // Manual model: default reasoning effort if not specified
     if (reasoningEffort === "auto") {
-      if (selectedModel === "gpt-5-nano") reasoningEffort = "none";
-      else if (selectedModel === "gpt-5-mini") reasoningEffort = "low";
+      if (selectedModel === "gpt-5-nano" || selectedModel === "gpt-5.4-nano") reasoningEffort = "none";
+      else if (selectedModel === "gpt-5-mini" || selectedModel === "gpt-5.4-mini") reasoningEffort = "low";
       else reasoningEffort = "medium";
     }
   }
 
   // API key fallback
   if (isAnthropicModel(selectedModel) && !ANTHROPIC_API_KEY) {
-    selectedModel = OPENAI_API_KEY ? "gpt-5-mini" : null as unknown as string;
+    selectedModel = OPENAI_API_KEY ? "gpt-5.4-mini" : null as unknown as string;
     if (!selectedModel) { send({ type: "error", message: "No API keys configured." }); return; }
     routingReason += " (fallback)";
   }
@@ -1250,7 +1250,7 @@ async function agentLoop(
 
   // Precision mode: override model + reasoning
   if (precisionMode) {
-    if (!model || model === "auto") selectedModel = "gpt-5";
+    if (!model || model === "auto") selectedModel = "gpt-5.4";
     reasoningEffort = "high";
     send({ type: "routing", status: "done", complexity: "precision", model: selectedModel, reason: "precision mode", reasoning: "high" });
   }
@@ -1270,7 +1270,7 @@ async function agentLoop(
     totalOut += result.tokensOutput;
 
     // Cost check (precision mode guardrail)
-    const rate = COST_TABLE[selectedModel] || COST_TABLE["gpt-5-mini"];
+    const rate = COST_TABLE[selectedModel] || COST_TABLE["gpt-5.4-mini"];
     const runningCost = totalIn * rate.input + totalOut * rate.output;
     if (precisionMode && runningCost > MAX_COST_PRECISION) {
       send({ type: "error", message: `Cost cap reached ($${runningCost.toFixed(4)} > $${MAX_COST_PRECISION}). Stopping to prevent runaway costs.` });
@@ -1349,7 +1349,7 @@ async function generateTitle(msg: string): Promise<string> {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "gpt-5-nano", max_completion_tokens: 20, temperature: 0.5,
+        model: "gpt-5.4-nano", max_completion_tokens: 20, temperature: 0.5,
         messages: [{ role: "user", content: `Short title (max 6 words, same language as message):\n"${msg.substring(0, 200)}"\nTitle only:` }],
       }),
     });
