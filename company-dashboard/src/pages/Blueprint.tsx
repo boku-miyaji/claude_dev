@@ -199,7 +199,7 @@ function TabVision() {
         <Tbl headers={['プラン', '内容', '価格感']} rows={[
           ['Free', '日記 + 基本感情分析 + 週次ナラティブ', '¥0'],
           ['Plus', '全Narrative Intelligence + Story ページ + プロアクティブ提案', '¥980/月'],
-          ['Pro', '上記 + Courage Board + Growth Story + 優先モデル(gpt-5)', '¥1,980/月'],
+          ['Pro', '上記 + Courage Board + Growth Story + 優先モデル(gpt-5.4)', '¥1,980/月'],
         ]} />
         <P>フリーミアム。日記を書くだけで価値がある → 書くほどAIが賢くなる → 手放せなくなる。</P>
       </Section>
@@ -1357,10 +1357,10 @@ function TabAiFeatures() {
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>4つのエンジン</div>
         <Tbl headers={['エンジン', '役割', 'モデル', '更新頻度']} rows={[
-          ['Arc Reader', '感情の時系列を「物語の弧」として解釈。今のフェーズを読み取る', 'gpt-5', '週次'],
+          ['Arc Reader', '感情の時系列を「物語の弧」として解釈。今のフェーズを読み取る', 'gpt-5.4', '週次'],
           ['Theme Finder', '数ヶ月の日記×夢×行動から人生の通底テーマを発見', 'gpt-5 / claude-sonnet-4-6', '月次'],
           ['Moment Detector', '日記から転機（決断/気づき/突破/挫折）をリアルタイム検出', 'gpt-5.4-mini', '日記書き込み毎'],
-          ['Foresight Engine', '過去のパターンから物語の続きを予感し、提案する', 'gpt-5', '随時'],
+          ['Foresight Engine', '過去のパターンから物語の続きを予感し、提案する', 'gpt-5.4', '随時'],
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Narrative Memory（3層構造）</div>
@@ -1413,7 +1413,7 @@ function TabAiFeatures() {
           ['lookup（検索）', 'gpt-5.4-mini', 'low', '「今日の天気は？」「オープンのタスク何件？」「最新ニュースは？」'],
           ['creative（創作）', 'gpt-5.4-mini', 'low', '「メールの文面を考えて」「この文を要約して」「名前を提案して」'],
           ['analytical（分析）', 'gpt-5.4-mini', 'medium', '「このコードのバグを直して」「AとBの違いは？」「PDFの内容を分析して」'],
-          ['strategic（戦略）', 'gpt-5', 'high', '「事業計画を立てて」「アーキテクチャを設計して」「競合分析して」'],
+          ['strategic（戦略）', 'gpt-5.4', 'high', '「事業計画を立てて」「アーキテクチャを設計して」「競合分析して」'],
         ]} />
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
           <MiniCard title="Precision Mode" body="ONにすると分類を無視して gpt-5 + reasoning: high + 最大20ステップ に固定。コスト上限 $0.50/リクエスト。最高品質だがコストも最大。" />
