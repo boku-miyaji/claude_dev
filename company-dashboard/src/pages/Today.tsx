@@ -353,14 +353,68 @@ export function Today() {
 
   const invalidateBriefing = useBriefingStore((s) => s.invalidate)
 
+  const handleImageSelect = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return
+    const valid: File[] = []
+    const previews: string[] = []
+    for (const f of Array.from(files)) {
+      if (!f.type.startsWith('image/')) continue
+      if (f.size > 10 * 1024 * 1024) {
+        toast(`${f.name}: 10MB超のためスキップ`)
+        continue
+      }
+      valid.push(f)
+      previews.push(URL.createObjectURL(f))
+    }
+    setPendingImages((prev) => [...prev, ...valid])
+    setPendingImagePreviews((prev) => [...prev, ...previews])
+  }, [])
+
+  const removePendingImage = useCallback((idx: number) => {
+    setPendingImagePreviews((prev) => {
+      const toRevoke = prev[idx]
+      if (toRevoke) URL.revokeObjectURL(toRevoke)
+      return prev.filter((_, i) => i !== idx)
+    })
+    setPendingImages((prev) => prev.filter((_, i) => i !== idx))
+  }, [])
+
   const saveEntry = useCallback(async (content: string) => {
-    if (!content.trim()) return
+    if (!content.trim() && pendingImages.length === 0) return
     setSaving(true)
-    const inserted = await addDiaryEntry({ body: content.trim(), entry_type: 'fragment', entry_date: todayStr })
+
+    // Upload images first (if any) so we can store their paths with the entry
+    let imagePaths: string[] | undefined
+    if (pendingImages.length > 0) {
+      setUploadingImages(true)
+      try {
+        const results = await Promise.all(
+          pendingImages.map((file, idx) => uploadDiaryImage(file, idx)),
+        )
+        imagePaths = results.filter((p): p is string => typeof p === 'string')
+      } catch (err) {
+        toast(err instanceof Error ? err.message : '画像アップロードに失敗しました')
+        setSaving(false)
+        setUploadingImages(false)
+        return
+      }
+      setUploadingImages(false)
+    }
+
+    const inserted = await addDiaryEntry({
+      body: content.trim() || '(画像のみ)',
+      entry_type: 'fragment',
+      entry_date: todayStr,
+      image_urls: imagePaths,
+    })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
     setText('')
+    // Clear pending images + revoke object URLs
+    pendingImagePreviews.forEach((u) => URL.revokeObjectURL(u))
+    setPendingImages([])
+    setPendingImagePreviews([])
     if (inserted?.id) {
       const result = await analyze(inserted.id, content.trim())
       if (result) {
@@ -381,7 +435,7 @@ export function Today() {
       // Re-generate AI comment with new diary context
       invalidateBriefing()
     }
-  }, [addDiaryEntry, analyze, detect, todayStr, invalidateBriefing])
+  }, [addDiaryEntry, analyze, detect, detectMoment, todayStr, invalidateBriefing, pendingImages, pendingImagePreviews])
 
   const diaryPrompt = useMemo(() => getDiaryPrompt(timeMode, recentEventName ?? undefined), [timeMode, recentEventName])
   // 「過去の自分カード」— 今書いている内容と意味が近い 14日より前の日記を返す
@@ -803,14 +857,56 @@ export function Today() {
         placeholder={diaryPrompt}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && text.trim() && !saving && !analyzing) { e.preventDefault(); saveEntry(text) } }}
+        onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && (text.trim() || pendingImages.length > 0) && !saving && !analyzing) { e.preventDefault(); saveEntry(text) } }}
         style={{ minHeight: timeMode === 'evening' ? 100 : 44, width: '100%', boxSizing: 'border-box', marginBottom: 8 }}
       />
+      {pendingImagePreviews.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+          {pendingImagePreviews.map((src, i) => (
+            <div key={i} style={{ position: 'relative' }}>
+              <img src={src} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+              <button
+                onClick={() => removePendingImage(i)}
+                aria-label="画像を削除"
+                style={{
+                  position: 'absolute', top: -6, right: -6, width: 20, height: 20,
+                  borderRadius: '50%', background: 'var(--text)', color: 'var(--bg)',
+                  border: 'none', cursor: 'pointer', fontSize: 11, display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1,
+                }}
+              >×</button>
+            </div>
+          ))}
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-          {saving ? '保存中...' : saved ? '保存しました' : analyzing ? '感情分析中...' : ''}
-        </span>
-        <button className="btn btn-p btn-sm" onClick={() => saveEntry(text)} disabled={!text.trim() || saving || analyzing}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <label
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px',
+              fontSize: 11, color: 'var(--text3)', cursor: 'pointer', borderRadius: 'var(--r)',
+              border: '1px solid var(--border)', background: 'var(--bg2)',
+            }}
+            title="画像を添付"
+          >
+            <span style={{ fontSize: 13 }}>📷</span> 画像
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => { handleImageSelect(e.target.files); e.target.value = '' }}
+              style={{ display: 'none' }}
+            />
+          </label>
+          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
+            {saving ? (uploadingImages ? '画像アップロード中...' : '保存中...') : saved ? '保存しました' : analyzing ? '感情分析中...' : ''}
+          </span>
+        </div>
+        <button
+          className="btn btn-p btn-sm"
+          onClick={() => saveEntry(text)}
+          disabled={(!text.trim() && pendingImages.length === 0) || saving || analyzing}
+        >
           {analyzing ? '分析中...' : '記録する'}
         </button>
       </div>
@@ -880,6 +976,13 @@ export function Today() {
           return (
             <Card key={f.id} style={{ padding: 14 }}>
               <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6 }}>{f.body}</div>
+              {f.image_urls && f.image_urls.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                  {f.image_urls.map((path, i) => (
+                    <DiaryImageThumb key={i} path={path} size={80} />
+                  ))}
+                </div>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
                   {new Date(f.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}

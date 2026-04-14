@@ -916,7 +916,7 @@ export function Calendar() {
   const allStoreTasks = useDataStore((s) => s.tasks)
   const fetchAllTasks = useDataStore((s) => s.fetchTasks)
   const storeUpdateTask = useDataStore((s) => s.updateTask)
-  const [quickAdd, setQuickAdd] = useState<{ date: string; hour?: number } | null>(null)
+  const [quickAdd, setQuickAdd] = useState<{ date: string; startHour?: number; endHour?: number } | null>(null)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() => loadLayers())
   const [drawerDate, setDrawerDate] = useState<string | null>(null)
@@ -991,7 +991,7 @@ export function Calendar() {
   }, [])
 
   const handleAllDayAdd = useCallback((date: string) => {
-    setQuickAdd({ date, hour: undefined })
+    setQuickAdd({ date })
   }, [])
 
   const nav = useCallback((dir: number) => {
@@ -1138,7 +1138,7 @@ export function Calendar() {
               onCellClick={ds => setDrawerDate(ds)}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }} />
           : <TimeGrid events={events} tasks={tasks} days={days} today={today} hiddenCalendars={hiddenCalendars}
-              onCellClick={(ds, hour) => setQuickAdd({ date: ds, hour })}
+              onRangeCreate={(ds, startHour, endHour) => setQuickAdd({ date: ds, startHour, endHour })}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }}
               onDragUpdate={handleDragUpdate}
               onTaskToggle={handleTaskToggle}
@@ -1163,7 +1163,8 @@ export function Calendar() {
       {quickAdd && (
         <QuickAddPopover
           date={quickAdd.date}
-          hour={quickAdd.hour}
+          startHour={quickAdd.startHour}
+          endHour={quickAdd.endHour}
           onClose={() => setQuickAdd(null)}
           onCreatedTask={() => { setQuickAdd(null); refreshTasks() }}
           onCreateEvent={async (form) => {
@@ -1196,21 +1197,21 @@ export function Calendar() {
 // Quick Add Popover — unified task/event creator with toggle
 // ============================================================
 
-function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: {
-  date: string; hour?: number
+function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onCreateEvent }: {
+  date: string; startHour?: number; endHour?: number
   onClose: () => void
   onCreatedTask: () => void
   onCreateEvent: (form: { summary: string; date: string; startTime: string; endTime: string }) => Promise<void>
 }) {
   const [kind, setKind] = useState<'task' | 'event'>('task')
   const [title, setTitle] = useState('')
-  const defaultStart = hour !== undefined ? `${String(hour).padStart(2, '0')}:00` : '10:00'
-  const defaultEnd = hour !== undefined ? `${String(hour + 1).padStart(2, '0')}:00` : '11:00'
+  const hasRange = startHour !== undefined && endHour !== undefined
+  const defaultStart = hasRange ? hoursToTimeStr(startHour!) : '10:00'
+  const defaultEnd = hasRange ? hoursToTimeStr(endHour!) : '11:00'
   const [startTime, setStartTime] = useState(defaultStart)
   const [endTime, setEndTime] = useState(defaultEnd)
-  // Tasks: time is opt-in for all-day slots, auto-on for time-grid slots.
-  const [taskHasTime, setTaskHasTime] = useState(hour !== undefined)
-  const [taskMinutes, setTaskMinutes] = useState(60)
+  // Time is opt-in for all-day slots (no drag range), auto-on for time-grid slots.
+  const [hasTime, setHasTime] = useState(hasRange)
   const [saving, setSaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -1223,13 +1224,14 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
     if (!t || saving) return
     setSaving(true)
     if (kind === 'task') {
+      const minutes = hasTime ? Math.max(5, timeStrToMinutes(endTime) - timeStrToMinutes(startTime)) : null
       const created = await addTaskToStore({
         title: t,
         type: 'task',
         priority: 'normal',
         due_date: date,
-        scheduled_at: taskHasTime ? `${date}T${startTime}:00+09:00` : null,
-        estimated_minutes: taskHasTime ? taskMinutes : null,
+        scheduled_at: hasTime ? `${date}T${startTime}:00+09:00` : null,
+        estimated_minutes: minutes,
       })
       setSaving(false)
       if (!created) { toast('追加に失敗しました'); return }
@@ -1255,11 +1257,15 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
     fontFamily: 'var(--font)',
   })
 
-  const isAllDay = hour === undefined
+  const isAllDay = !hasRange
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: 'rgba(0,0,0,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      onKeyDown={e => {
+        if (isSubmitShortcut(e)) { e.preventDefault(); create() }
+        if (e.key === 'Escape') onClose()
+      }}>
       <div style={{ background: 'var(--surface)', borderRadius: 12, padding: 20, width: 400, boxShadow: '0 20px 60px rgba(0,0,0,.4)', border: '1px solid var(--border)' }}>
 
         {/* Type toggle */}
@@ -1268,13 +1274,13 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
             ☐ タスク
           </button>
           <button style={pillStyle(kind === 'event')} onClick={() => setKind('event')}>
-            ■ イベント
+            ■ 予定
           </button>
         </div>
 
         {/* Context label */}
         <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 10 }}>
-          {isAllDay ? `${date}  終日` : `${date}  ${String(hour).padStart(2, '0')}:00〜`}
+          {isAllDay ? `${date}  終日` : `${date}  ${defaultStart}〜${defaultEnd}`}
         </div>
 
         {/* Title input */}
@@ -1282,19 +1288,17 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
           ref={inputRef}
           className="input"
           style={{ width: '100%', marginBottom: 12, fontSize: 14 }}
-          placeholder={kind === 'task' ? '何をしますか？ (Enter で作成)' : 'イベント名 (Enter で作成)'}
+          placeholder={kind === 'task' ? '何をしますか？' : '予定のタイトル'}
           value={title}
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => {
-            if (e.key === 'Enter') { e.preventDefault(); create() }
-            if (e.key === 'Escape') onClose()
-            // Tab with Shift toggles kind for keyboard flow
-            if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); setKind(k => k === 'task' ? 'event' : 'task') }
+            // Enter is NOT a submit shortcut — prevent default form submit-on-Enter only.
+            if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) e.preventDefault()
           }}
         />
 
-        {/* Event time inputs */}
-        {kind === 'event' && !isAllDay && (
+        {/* Time inputs — unified for task and event */}
+        {(!isAllDay || kind === 'event') && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>開始</label>
@@ -1307,22 +1311,22 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
           </div>
         )}
 
-        {/* Task time inputs — optional */}
-        {kind === 'task' && (
+        {/* All-day task: opt-in time range */}
+        {isAllDay && kind === 'task' && (
           <div style={{ marginBottom: 12 }}>
-            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: taskHasTime ? 6 : 0, cursor: 'pointer' }}>
-              <input type="checkbox" checked={taskHasTime} onChange={e => setTaskHasTime(e.target.checked)} />
-              時間を指定
+            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: hasTime ? 6 : 0, cursor: 'pointer' }}>
+              <input type="checkbox" checked={hasTime} onChange={e => setHasTime(e.target.checked)} />
+              時間を指定する
             </label>
-            {taskHasTime && (
+            {hasTime && (
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>開始</label>
                   <input className="input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>所要(分)</label>
-                  <input className="input" type="number" min={5} step={5} value={taskMinutes} onChange={e => setTaskMinutes(parseInt(e.target.value) || 60)} />
+                  <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>終了</label>
+                  <input className="input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
                 </div>
               </div>
             )}
@@ -1332,11 +1336,11 @@ function QuickAddPopover({ date, hour, onClose, onCreatedTask, onCreateEvent }: 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button className="btn btn-primary" disabled={!title.trim() || saving} onClick={create}>
-            {saving ? '作成中...' : `+ ${kind === 'task' ? 'タスク' : 'イベント'}追加`}
+            {saving ? '作成中...' : `+ ${kind === 'task' ? 'タスク' : '予定'}追加`}
           </button>
           <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
           <div style={{ flex: 1 }} />
-          <span style={{ fontSize: 10, color: 'var(--text3)' }}>Tab で切替 · Esc で閉じる</span>
+          <span style={{ fontSize: 10, color: 'var(--text3)' }}>⌘+Enter で確定 · Esc で閉じる</span>
         </div>
       </div>
     </div>
