@@ -174,12 +174,39 @@ export async function fetchActivePromptRules(): Promise<PromptRule[]> {
   return data as PromptRule[]
 }
 
+// ============================================================
+// Distilled lessons — LLM-curated summary of raw feedback
+// ============================================================
+
+export interface DistilledLesson {
+  id: number
+  created_at: string
+  content: string
+  source_count: number
+  active: boolean
+}
+
+/** Fetch the most recent active distilled lesson (if any). */
+export async function fetchLatestDistilledLesson(): Promise<DistilledLesson | null> {
+  const { data, error } = await supabase
+    .from('ai_partner_distilled_lessons')
+    .select('id, created_at, content, source_count, active')
+    .eq('active', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error || !data) return null
+  return data as DistilledLesson
+}
+
 /**
- * Build the few-shot block to append to the system prompt.
- * Returns empty string if no feedback rows are available.
+ * Build the block to append to the system prompt. Uses LLM-distilled
+ * lessons (preferred) plus any promoted permanent rules. Raw feedback is
+ * never injected directly — it's first curated and abstracted by the
+ * distillation step to avoid local-optimum bias and prompt bloat.
  */
 export function buildFewShotBlock(
-  feedback: PartnerFeedback[],
+  distilled: DistilledLesson | null,
   rules: PromptRule[],
 ): string {
   const parts: string[] = []
@@ -191,37 +218,158 @@ export function buildFewShotBlock(
     )
   }
 
-  const goods = feedback.filter((f) => f.feedback_type === 'good')
-  const corrs = feedback.filter((f) => f.feedback_type === 'correction')
-
-  if (goods.length > 0) {
-    const lines = goods.map((g, i) => {
-      const ctx = summarizeContext(g.context_snapshot)
-      return `${i + 1}. 【状況】${ctx}\n  【本人が良しとした応答】${g.actual_output}`
-    })
-    parts.push('## 本人から「これは良かった」と承認された実例\n' + lines.join('\n\n'))
-  }
-
-  if (corrs.length > 0) {
-    const lines = corrs.map((c, i) => {
-      const ctx = summarizeContext(c.context_snapshot)
-      return [
-        `${i + 1}. 【状況】${ctx}`,
-        `  【AIが返してしまった応答（NG）】${c.actual_output}`,
-        `  【本人が本当に欲しかった応答】${c.desired_output ?? '(未記入)'}`,
-        c.reason ? `  【なぜNGか】${c.reason}` : null,
-      ]
-        .filter(Boolean)
-        .join('\n')
-    })
+  if (distilled) {
     parts.push(
-      '## 本人から「これは違う」と指摘された実例（同じ失敗を絶対にしない）\n' +
-        lines.join('\n\n'),
+      `## 本人からのフィードバックから蒸留された学び（${distilled.source_count}件のフィードバックから）\n` +
+        distilled.content,
     )
   }
 
   if (parts.length === 0) return ''
   return '\n\n' + parts.join('\n\n') + '\n'
+}
+
+// ============================================================
+// Distillation — LLM curates raw feedback into abstract lessons
+// ============================================================
+
+const DISTILL_THRESHOLD = 3
+
+const DISTILL_SYSTEM_PROMPT = `あなたは「AI Partner」という機能の学習コーチです。
+ユーザーから集まった「👍 良かった応答」と「違う と指摘された応答 → 望んだ応答」のペアを読み、
+次回の Partner 応答生成に使う **蒸留された学び** を1つのブロックにまとめてください。
+
+## 重要な原則
+- **NGパターンは抽象化する**: 具体的な文言を列挙するのではなく、失敗の構造・型として一般化する
+  - 悪い例: 「『5分だけ筋トレしてみては』と言わない」
+  - 良い例: 「本人が日記で既に決めている行動に対して『やってみては』と提案を返すな。既に決まっている場面では承認か静かな観察で終える」
+- **良い例は原典を残す**: 具体的な応答が教訓になるものは、2〜3個だけそのまま引用する
+- **グループ化**: 似た失敗は1つのルールにまとめる。10個の具体例を3つの抽象ルールに凝縮する
+- **冗長を避ける**: 全体で400字以内を目標に。過去のフィードバックを羅列するのではなく、そこから何を学んだかを書く
+- **局所最適に偏らない**: 「最近は休息モードばかり指摘された」としても、挑戦モードへの応答も同等に考慮する。一方向に偏ったアドバイスを書かない
+
+## 出力フォーマット（Markdown）
+
+### NG: 避けるべきパターン
+（抽象化した失敗の型を3〜5個。各1〜2行）
+
+### OK: 本人が良しとした応答の型
+（抽象化した成功パターンを2〜3個 + 原典引用を1〜2個）
+
+### 補足（任意・あれば）
+（特定の言い回し禁止など、個別ルール）
+
+テキストのみ、400字以内。`
+
+/** Distill all active raw feedback into an LLM-curated lesson block. */
+export async function distillLessons(): Promise<DistilledLesson | null> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: feedback, error } = await supabase
+    .from('ai_partner_feedback')
+    .select('*')
+    .eq('active', true)
+    .order('created_at', { ascending: false })
+    .limit(100)
+  if (error || !feedback || feedback.length === 0) return null
+
+  const rows = feedback as PartnerFeedback[]
+  const goods = rows.filter((r) => r.feedback_type === 'good')
+  const corrs = rows.filter((r) => r.feedback_type === 'correction')
+
+  // Build the corpus the LLM will distill
+  const corpusParts: string[] = []
+  if (goods.length > 0) {
+    corpusParts.push(
+      '## 👍 良かった応答\n' +
+        goods.map((g, i) => {
+          const ctx = summarizeContext(g.context_snapshot)
+          return `${i + 1}. [${ctx}] ${g.actual_output}`
+        }).join('\n'),
+    )
+  }
+  if (corrs.length > 0) {
+    corpusParts.push(
+      '## 違う と指摘された応答\n' +
+        corrs.map((c, i) => {
+          const ctx = summarizeContext(c.context_snapshot)
+          const parts = [
+            `${i + 1}. [${ctx}]`,
+            `  NG: ${c.actual_output}`,
+            `  望まれた応答: ${c.desired_output ?? '(未記入)'}`,
+          ]
+          if (c.reason) parts.push(`  理由: ${c.reason}`)
+          if (c.category) parts.push(`  カテゴリ: ${c.category}`)
+          return parts.join('\n')
+        }).join('\n\n'),
+    )
+  }
+
+  const corpus = corpusParts.join('\n\n')
+  if (!corpus.trim()) return null
+
+  try {
+    const { content } = await aiCompletion(corpus, {
+      source: 'ai_partner_distillation',
+      systemPrompt: DISTILL_SYSTEM_PROMPT,
+      model: 'gpt-5.4-mini',
+      maxTokens: 1000,
+      temperature: 0.3,
+    })
+    const distilled = content?.trim()
+    if (!distilled) return null
+
+    // Deactivate previous distillations (we only keep 1 active)
+    await supabase
+      .from('ai_partner_distilled_lessons')
+      .update({ active: false })
+      .eq('active', true)
+
+    const { data: inserted, error: insertErr } = await supabase
+      .from('ai_partner_distilled_lessons')
+      .insert({
+        user_id: user.id,
+        content: distilled,
+        source_feedback_ids: rows.map((r) => r.id),
+        source_count: rows.length,
+        model_used: 'gpt-5.4-mini',
+        active: true,
+      })
+      .select()
+      .single()
+    if (insertErr || !inserted) {
+      console.error('[partnerFeedback] distill insert failed', insertErr)
+      return null
+    }
+    return inserted as DistilledLesson
+  } catch (e) {
+    console.error('[partnerFeedback] distillation failed', e)
+    return null
+  }
+}
+
+/**
+ * Fire-and-forget background distillation triggered from feedback inserts.
+ * Runs only if enough new feedback has accumulated since the last distillation
+ * (avoids burning API calls on every single feedback click).
+ */
+async function maybeDistillInBackground(): Promise<void> {
+  try {
+    const latest = await fetchLatestDistilledLesson()
+    const { count } = await supabase
+      .from('ai_partner_feedback')
+      .select('*', { count: 'exact', head: true })
+      .eq('active', true)
+      .gt('created_at', latest?.created_at ?? '1970-01-01')
+    const newSince = count ?? 0
+    if (newSince >= DISTILL_THRESHOLD) {
+      // Fire and forget — don't block the UI
+      distillLessons().catch((e) => console.error('[distill bg] failed', e))
+    }
+  } catch (e) {
+    console.error('[distill bg check] failed', e)
+  }
 }
 
 function summarizeContext(ctx: Record<string, unknown> | null): string {

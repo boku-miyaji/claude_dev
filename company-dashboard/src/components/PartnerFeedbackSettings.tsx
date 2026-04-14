@@ -3,8 +3,11 @@ import { Card, toast } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import {
   CATEGORY_LABELS,
+  distillLessons,
+  fetchLatestDistilledLesson,
   type PartnerFeedback,
   type FeedbackCategory,
+  type DistilledLesson,
 } from '@/lib/partnerFeedback'
 
 interface PromptRuleRow {
@@ -20,12 +23,14 @@ const PROMOTION_THRESHOLD = 3
 export function PartnerFeedbackSettings() {
   const [rows, setRows] = useState<PartnerFeedback[]>([])
   const [rules, setRules] = useState<PromptRuleRow[]>([])
+  const [lesson, setLesson] = useState<DistilledLesson | null>(null)
   const [loading, setLoading] = useState(true)
+  const [distilling, setDistilling] = useState(false)
   const [filter, setFilter] = useState<'all' | 'good' | 'correction'>('all')
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [fbRes, rulesRes] = await Promise.all([
+    const [fbRes, rulesRes, lessonRow] = await Promise.all([
       supabase
         .from('ai_partner_feedback')
         .select('*')
@@ -35,11 +40,25 @@ export function PartnerFeedbackSettings() {
         .from('ai_partner_prompt_rules')
         .select('id, category, rule, active, created_at')
         .order('created_at', { ascending: false }),
+      fetchLatestDistilledLesson(),
     ])
     setRows((fbRes.data as PartnerFeedback[]) ?? [])
     setRules((rulesRes.data as PromptRuleRow[]) ?? [])
+    setLesson(lessonRow)
     setLoading(false)
   }, [])
+
+  const handleRedistill = async () => {
+    setDistilling(true)
+    const result = await distillLessons()
+    setDistilling(false)
+    if (result) {
+      toast('再学習しました')
+      load()
+    } else {
+      toast('再学習できませんでした（データが足りない可能性）')
+    }
+  }
 
   useEffect(() => { load() }, [load])
 
@@ -108,8 +127,33 @@ export function PartnerFeedbackSettings() {
       <div className="section-title">AI Partner フィードバック</div>
       <Card style={{ marginBottom: 16 }}>
         <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 10 }}>
-          「👍 いい」「違う」で残したフィードバックの一覧。同じカテゴリで {PROMOTION_THRESHOLD} 件以上 correction が溜まると恒久ルールに昇格できます。
+          「👍 いい」「違う」で残したフィードバックは、LLMが定期的に読んで <strong>蒸留された学び</strong> に変換され、次回の Partner 応答生成に反映されます。同じカテゴリで {PROMOTION_THRESHOLD} 件以上の correction が溜まると恒久ルールに昇格できます。
         </p>
+
+        <div style={{ marginBottom: 16, padding: 12, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+              蒸留された学び {lesson ? `（${lesson.source_count} 件から / ${new Date(lesson.created_at).toLocaleDateString('ja-JP')}）` : ''}
+            </div>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={handleRedistill}
+              disabled={distilling}
+              style={{ fontSize: 11, padding: '4px 10px' }}
+            >
+              {distilling ? '再学習中...' : '再学習'}
+            </button>
+          </div>
+          {lesson ? (
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+              {lesson.content}
+            </div>
+          ) : (
+            <div style={{ fontSize: 12, color: 'var(--text3)' }}>
+              まだ蒸留されていません。フィードバックを 3 件以上残すと自動で蒸留されます。
+            </div>
+          )}
+        </div>
 
         {promotionCandidates.length > 0 && (
           <div style={{ marginBottom: 16, padding: 12, background: 'var(--accent-bg)', borderRadius: 8, border: '1px solid var(--accent-border)' }}>

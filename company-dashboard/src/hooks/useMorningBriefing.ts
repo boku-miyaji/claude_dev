@@ -5,7 +5,7 @@ import { calculateStreak } from '@/lib/streak'
 import { useBriefingStore } from '@/stores/briefing'
 import type { TimeMode } from '@/lib/timeMode'
 import {
-  fetchBalancedFeedback,
+  fetchLatestDistilledLesson,
   fetchActivePromptRules,
   buildFewShotBlock,
 } from '@/lib/partnerFeedback'
@@ -301,13 +301,15 @@ ${modeInstructions[timeMode]}
         ? contextParts.join('\n\n')
         : '（特にデータなし。穏やかな一言を）'
 
-      // Inject balanced few-shot (corrections + good examples) + promoted rules
-      // to break out of local-optimum bias while still honoring user feedback.
-      const [feedbackRows, promptRules] = await Promise.all([
-        fetchBalancedFeedback(3, 7),
+      // Inject LLM-distilled lessons + promoted permanent rules.
+      // Raw feedback is never injected directly — it's curated and abstracted
+      // by a separate distillation step (triggered in background after inserts)
+      // to avoid local-optimum bias and prompt bloat.
+      const [distilled, promptRules] = await Promise.all([
+        fetchLatestDistilledLesson(),
         fetchActivePromptRules(),
       ])
-      const feedbackBlock = buildFewShotBlock(feedbackRows, promptRules)
+      const feedbackBlock = buildFewShotBlock(distilled, promptRules)
       const finalSystemPrompt = systemPrompt.replace('{{FEEDBACK_BLOCK}}', feedbackBlock)
 
       const result = await aiCompletion(userMessage, { source: 'ai_partner',
