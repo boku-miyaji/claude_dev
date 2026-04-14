@@ -514,6 +514,85 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/google-calendar-proxy/, "");
 
+    // Backfill endpoint: service role authenticated, fetch & upsert past events
+    if (req.method === "POST" && path === "/backfill") {
+      const authHeader = req.headers.get("authorization") || "";
+      const token = authHeader.replace("Bearer ", "").trim();
+      if (token !== SUPABASE_SERVICE_ROLE_KEY) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        });
+      }
+      const body = await req.json();
+      const { user_id, time_min, time_max, calendar_ids } = body as {
+        user_id: string; time_min: string; time_max: string; calendar_ids: string[];
+      };
+      if (!user_id || !time_min || !time_max || !calendar_ids?.length) {
+        return new Response(JSON.stringify({ error: "Missing user_id / time_min / time_max / calendar_ids" }), {
+          status: 400, headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        });
+      }
+      try {
+        const accessToken = await getAccessToken(user_id);
+        const dbRows: Record<string, unknown>[] = [];
+        let totalFetched = 0;
+        for (const calId of calendar_ids) {
+          let pageToken = "";
+          for (let page = 0; page < 10; page++) {
+            const params = new URLSearchParams({
+              timeMin: time_min, timeMax: time_max, timeZone: "Asia/Tokyo",
+              singleEvents: "true", maxResults: "250", orderBy: "startTime",
+            });
+            if (pageToken) params.set("pageToken", pageToken);
+            const res = await calendarFetch(accessToken, `/calendars/${encodeURIComponent(calId)}/events?${params}`);
+            if (!res.ok) break;
+            const data = await res.json();
+            for (const ev of data.items || []) {
+              if (ev.status === "cancelled") continue;
+              const startTime = ev.start?.dateTime || ev.start?.date || "";
+              const endTime = ev.end?.dateTime || ev.end?.date || "";
+              const allDay = !ev.start?.dateTime;
+              const summary = ev.summary || "(No title)";
+              let calendarType: string = "private";
+              if (calId.includes("acesinc") || /^\[仕事\]|^\[Ex|^\[In|^\[in\]/i.test(summary)) calendarType = "work";
+              else if (calId === "primary") calendarType = "primary";
+              dbRows.push({
+                id: ev.id, calendar_id: calId, summary, start_time: startTime, end_time: endTime,
+                all_day: allDay, location: ev.location || null, description: ev.description || null,
+                status: ev.status,
+                response_status: (ev.attendees || []).find((a: { self?: boolean; responseStatus?: string }) => a.self)?.responseStatus || null,
+                calendar_type: calendarType, synced_at: new Date().toISOString(),
+              });
+              totalFetched++;
+            }
+            pageToken = data.nextPageToken || "";
+            if (!pageToken) break;
+          }
+        }
+
+        // chunk upsert to avoid huge payloads
+        const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+        let saved = 0;
+        const chunkSize = 100;
+        for (let i = 0; i < dbRows.length; i += chunkSize) {
+          const chunk = dbRows.slice(i, i + chunkSize);
+          const { error } = await sb.from("calendar_events").upsert(chunk, { onConflict: "id,calendar_id" });
+          if (error) {
+            console.error("calendar_events upsert failed:", error.message);
+          } else {
+            saved += chunk.length;
+          }
+        }
+        return new Response(JSON.stringify({ fetched: totalFetched, saved }), {
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: (e as Error).message }), {
+          status: 500, headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Auth callback: accept user_id in request body (session may not be restored after redirect)
     if (req.method === "POST" && path === "/auth/callback") {
       // Try JWT auth first, fall back to user_id in body
