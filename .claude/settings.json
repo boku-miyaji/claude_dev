@@ -196,7 +196,8 @@
       "Bash(node_modules/.bin/vite build:*)",
       "Bash(ls components/ui/)",
       "Bash(ls components/)",
-      "mcp__plugin_serena_serena__initial_instructions"
+      "mcp__plugin_serena_serena__initial_instructions",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": [
       "Read(**/.env)",

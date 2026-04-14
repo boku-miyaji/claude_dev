@@ -23,6 +23,8 @@ import type { DiaryEntry } from '@/types/diary'
 import { getTodayQuestions } from '@/lib/diaryPrompts'
 import { useSimilarPastEntry } from '@/hooks/useSimilarPastEntry'
 import { supabase } from '@/lib/supabase'
+import { uploadDiaryImage } from '@/lib/diaryImages'
+import { DiaryImageThumb } from '@/components/DiaryImageThumb'
 
 /* ── Constants ── */
 
@@ -163,6 +165,9 @@ export function Today() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [streak, setStreak] = useState(0)
+  const [pendingImages, setPendingImages] = useState<File[]>([])
+  const [pendingImagePreviews, setPendingImagePreviews] = useState<string[]>([])
+  const [uploadingImages, setUploadingImages] = useState(false)
   const [emotionBadges, setEmotionBadges] = useState<Map<string, EmotionBadge[]>>(new Map())
   const { analyze, analyzing, error: emotionError } = useEmotionAnalysis()
   const { detect } = useDreamDetection()

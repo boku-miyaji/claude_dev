@@ -82,6 +82,18 @@ function buildJSTDateTime(dateStr: string, hours: number): string {
   const m = Math.round((hours - h) * 60)
   return `${dateStr}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00+09:00`
 }
+function hoursToTimeStr(hours: number): string {
+  const h = Math.floor(hours)
+  const m = Math.round((hours - h) * 60)
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+function timeStrToMinutes(s: string): number {
+  const [h, m] = s.split(':').map(n => parseInt(n, 10))
+  return (h || 0) * 60 + (m || 0)
+}
+function isSubmitShortcut(e: React.KeyboardEvent): boolean {
+  return (e.metaKey || e.ctrlKey) && e.key === 'Enter'
+}
 
 // ============================================================
 // Event Modal
@@ -98,6 +110,14 @@ function EventModal({ open, onClose, initialDate, initialHour, editEvent, onSave
   const [startTime, setStartTime] = useState('10:00')
   const [endTime, setEndTime] = useState('11:00')
   const [saving, setSaving] = useState(false)
+
+  const doSave = useCallback(async () => {
+    if (saving || !summary.trim()) return
+    setSaving(true)
+    await onSave({ summary, date, startTime, endTime })
+    setSaving(false)
+    onClose()
+  }, [saving, summary, date, startTime, endTime, onSave, onClose])
 
   useEffect(() => {
     if (open) {
@@ -117,17 +137,16 @@ function EventModal({ open, onClose, initialDate, initialHour, editEvent, onSave
   return (
     <Modal open={open} onClose={onClose} title={editEvent ? 'イベントを編集' : 'イベントを追加'}
       footer={<div style={{ display: 'flex', gap: 8 }}>
-        <button className="btn btn-primary" disabled={saving || !summary.trim()} onClick={async () => {
-          setSaving(true); await onSave({ summary, date, startTime, endTime }); setSaving(false); onClose()
-        }}>{saving ? '保存中...' : '保存'}</button>
+        <button className="btn btn-primary" disabled={saving || !summary.trim()} onClick={doSave}>{saving ? '保存中...' : '保存 (⌘+Enter)'}</button>
         <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
         {editEvent && onDelete && <button className="btn" style={{ color: 'var(--red)', marginLeft: 'auto' }} disabled={saving} onClick={async () => {
           if (!confirm('削除しますか？')) return; setSaving(true); await onDelete(); setSaving(false); onClose()
         }}>削除</button>}
       </div>}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+        onKeyDown={e => { if (isSubmitShortcut(e)) { e.preventDefault(); doSave() } }}>
         <div><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>タイトル</label>
-          <input className="input" value={summary} onChange={e => setSummary(e.target.value)} placeholder="イベント名" autoFocus /></div>
+          <input className="input" value={summary} onChange={e => setSummary(e.target.value)} placeholder="イベント名 (⌘+Enter で保存)" autoFocus /></div>
         <div><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>日付</label>
           <input className="input" type="date" value={date} onChange={e => setDate(e.target.value)} /></div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -163,9 +182,9 @@ interface DragState {
 // Time Grid (Day / Week view)
 // ============================================================
 
-function TimeGrid({ events, tasks, days, today, hiddenCalendars, onCellClick, onEventClick, onDragUpdate, onTaskToggle, onTaskClick, onAllDayAdd }: {
+function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, onEventClick, onDragUpdate, onTaskToggle, onTaskClick, onAllDayAdd }: {
   events: CalendarEvent[]; tasks: Task[]; days: Date[]; today: string; hiddenCalendars: Set<CalendarType>
-  onCellClick: (date: string, hour: number) => void
+  onRangeCreate: (date: string, startHour: number, endHour: number) => void
   onEventClick: (evt: CalendarEvent) => void
   onDragUpdate: (ev: CalendarEvent, newStartH: number, newEndH: number, newDayIndex: number) => Promise<void>
   onTaskToggle: (task: Task) => void
@@ -176,6 +195,8 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onCellClick, on
   const dragRef = useRef<DragState | null>(null)
   const [, setDragRender] = useState(0) // force re-render during drag
   const [hoverCell, setHoverCell] = useState<{ dayIndex: number; hour: number } | null>(null)
+  const createDragRef = useRef<{ dayIndex: number; startY: number; currentY: number; moved: boolean } | null>(null)
+  const [createDrag, setCreateDrag] = useState<{ dayIndex: number; top: number; height: number } | null>(null)
   const now = useMemo(() => new Date(), [])
   const nowH = now.getHours() + now.getMinutes() / 60
   const todayDayIndex = days.findIndex(d => toJSTDateStr(d) === today)
@@ -301,6 +322,47 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onCellClick, on
     document.addEventListener('mouseup', onUp)
   }, [days, getDayAtX, onDragUpdate])
 
+  // Drag-to-create on empty cell
+  const onCellMouseDown = useCallback((di: number, e: React.MouseEvent) => {
+    if (e.button !== 0 || !bodyRef.current) return
+    e.preventDefault()
+    const bodyRect = bodyRef.current.getBoundingClientRect()
+    const startY = snapY(e.clientY - bodyRect.top)
+    createDragRef.current = { dayIndex: di, startY, currentY: startY, moved: false }
+    setCreateDrag({ dayIndex: di, top: startY, height: SNAP_PX })
+    setHoverCell(null)
+
+    const onMove = (me: MouseEvent) => {
+      const r = createDragRef.current
+      if (!r) return
+      const curY = snapY(Math.max(0, Math.min(me.clientY - bodyRect.top, (END_H - START_H) * HOUR_H)))
+      if (curY !== r.startY) r.moved = true
+      r.currentY = curY
+      const top = Math.min(r.startY, curY)
+      const height = Math.max(SNAP_PX, Math.abs(curY - r.startY))
+      setCreateDrag({ dayIndex: di, top, height })
+    }
+
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+      const r = createDragRef.current
+      createDragRef.current = null
+      setCreateDrag(null)
+      if (!r) return
+      const top = Math.min(r.startY, r.currentY)
+      const bottom = Math.max(r.startY, r.currentY)
+      // Click without drag → default 1 hour
+      const effectiveBottom = r.moved && (bottom - top) >= SNAP_PX ? bottom : top + HOUR_H
+      const startH = yToHours(top)
+      const endH = Math.min(yToHours(effectiveBottom), END_H)
+      onRangeCreate(toJSTDateStr(days[di]), startH, endH)
+    }
+
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [days, onRangeCreate])
+
   // Click-vs-drag distinguisher
   const onEventMouseDown = useCallback((evt: CalendarEvent, e: React.MouseEvent) => {
     if (evt.all_day) { onEventClick(evt); return }
@@ -403,16 +465,39 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onCellClick, on
         {HOURS.map(h => (
           <React.Fragment key={h}>
             <div className="cal-tg-time">{h > START_H ? `${String(h).padStart(2, '0')}:00` : ''}</div>
-            {days.map((d, di) => (
+            {days.map((_d, di) => (
               <div key={di} className="cal-tg-cell" data-day={di} data-hour={h} style={{ position: 'relative' }}
-                onMouseEnter={() => setHoverCell({ dayIndex: di, hour: h })}
-                onClick={() => { if (!dragRef.current) onCellClick(toJSTDateStr(d), h) }} />
+                onMouseEnter={() => { if (!createDragRef.current) setHoverCell({ dayIndex: di, hour: h }) }}
+                onMouseDown={e => { if (!dragRef.current) onCellMouseDown(di, e) }} />
             ))}
           </React.Fragment>
         ))}
 
+        {/* Create drag preview — Google Calendar-style range selection */}
+        {createDrag && (
+          <div style={{
+            position: 'absolute',
+            top: createDrag.top,
+            left: `calc(56px + ${createDrag.dayIndex} * (100% - 56px) / ${days.length} + 2px)`,
+            width: `calc((100% - 56px) / ${days.length} - 4px)`,
+            height: createDrag.height - 2,
+            background: 'var(--accent)',
+            opacity: 0.28,
+            border: '2px solid var(--accent)',
+            borderRadius: 4,
+            pointerEvents: 'none',
+            zIndex: 3,
+            padding: '4px 6px',
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#fff',
+          }}>
+            {hoursToTimeStr(yToHours(createDrag.top))}–{hoursToTimeStr(yToHours(createDrag.top + createDrag.height))}
+          </div>
+        )}
+
         {/* Hover preview ghost (where the new event will be added) */}
-        {hoverCell && !drag && (
+        {hoverCell && !drag && !createDrag && (
           <div style={{
             position: 'absolute',
             top: (hoverCell.hour - START_H) * HOUR_H,

@@ -39,7 +39,7 @@ interface DataStore {
   fetchApiKey: () => Promise<string | null>
 
   // --- Actions: Mutations ---
-  addDiaryEntry: (entry: { body: string; entry_type?: string; entry_date?: string }) => Promise<DiaryEntry | null>
+  addDiaryEntry: (entry: { body: string; entry_type?: string; entry_date?: string; image_urls?: string[] }) => Promise<DiaryEntry | null>
   addDream: (dream: Partial<Dream>) => Promise<Dream | null>
   updateDream: (id: string, data: Partial<Dream>) => Promise<void>
   deleteDream: (id: string) => Promise<void>
@@ -262,6 +262,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
         body: entry.body.trim(),
         entry_type: entry.entry_type ?? 'fragment',
         entry_date: entry.entry_date ?? null,
+        image_urls: entry.image_urls && entry.image_urls.length > 0 ? entry.image_urls : null,
       })
       .select()
       .single()

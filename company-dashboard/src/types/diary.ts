@@ -7,6 +7,7 @@ export interface DiaryEntry {
   wbi: number | null
   emotions: Record<string, unknown> | null
   ai_summary: string | null
+  image_urls: string[] | null
   created_at: string
 }
 
