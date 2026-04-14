@@ -288,7 +288,7 @@ export function Chat() {
           const res = await fetch(EDGE_FN_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token || ''}`, 'apikey': ANON_KEY },
-            body: JSON.stringify({ message: 'ping', model: 'gpt-5-nano', context_mode: 'none' }),
+            body: JSON.stringify({ message: 'ping', model: 'gpt-5.4-nano', context_mode: 'none' }),
           })
           if (!res.ok) directMode = true
         } catch { directMode = true }
@@ -397,7 +397,7 @@ export function Chat() {
       if (settings.directMode && getChatApiKey()) {
         // ========== Direct Mode ==========
         const apiKey = getChatApiKey()
-        const model = settings.model === 'auto' ? 'gpt-5-nano' : settings.model
+        const model = settings.model === 'auto' ? 'gpt-5.4-mini' : settings.model
         metricsModel = model
         setStreamMeta(`Direct · ${model}`)
 
@@ -437,7 +437,7 @@ export function Chat() {
         }
         if (currentConvId) await supabase.from('messages').insert({ conversation_id: currentConvId, role: 'user', content: text, step: 0 })
 
-        const re = settings.reasoningEffort === 'auto' ? (model === 'gpt-5-nano' ? 'none' : model === 'gpt-5-mini' ? 'low' : 'medium') : settings.reasoningEffort
+        const re = settings.reasoningEffort === 'auto' ? ((model === 'gpt-5-nano' || model === 'gpt-5.4-nano') ? 'none' : (model === 'gpt-5-mini' || model === 'gpt-5.4-mini') ? 'low' : 'medium') : settings.reasoningEffort
         const body: Record<string, unknown> = { model, messages: oaiMessages, stream: true, stream_options: { include_usage: true } }
         if (re && re !== 'none') body.reasoning_effort = re
 
@@ -710,7 +710,7 @@ export function Chat() {
             {showOptions && (
               <div className="chat-controls" style={{ display: 'flex' }}>
                 <select value={settings.model} onChange={e => setSettings(s => ({ ...s, model: e.target.value }))}>
-                  <option value="auto">Auto</option><option value="gpt-5-nano">GPT-5 nano</option><option value="gpt-5-mini">GPT-5 mini</option><option value="gpt-5">GPT-5</option>
+                  <option value="auto">Auto</option><option value="gpt-5.4-nano">GPT-5.4 nano</option><option value="gpt-5.4-mini">GPT-5.4 mini</option><option value="gpt-5.4">GPT-5.4</option>
                 </select>
                 <select value={settings.reasoningEffort} onChange={e => setSettings(s => ({ ...s, reasoningEffort: e.target.value }))}>
                   <option value="auto">Thinking: Auto</option><option value="none">Thinking: None</option><option value="low">Thinking: Low</option><option value="medium">Thinking: Med</option><option value="high">Thinking: High</option>
@@ -721,7 +721,7 @@ export function Chat() {
                 <button style={{ fontSize: 11, padding: '4px 10px', borderRadius: 16, border: '1px solid var(--border)', background: settings.precisionMode ? 'var(--accent)' : 'var(--surface)', color: settings.precisionMode ? '#fff' : 'var(--text2)', cursor: 'pointer', fontFamily: 'var(--font)', fontWeight: 600, transition: 'all .15s' }}
                   onClick={() => setSettings(s => {
                     const next = !s.precisionMode
-                    return next ? { ...s, precisionMode: true, model: 'gpt-5', reasoningEffort: 'high', contextMode: 'full' } : { ...s, precisionMode: false }
+                    return next ? { ...s, precisionMode: true, model: 'gpt-5.4', reasoningEffort: 'high', contextMode: 'full' } : { ...s, precisionMode: false }
                   })}>{settings.precisionMode ? 'Precision ON' : 'Precision'}</button>
               </div>
             )}
