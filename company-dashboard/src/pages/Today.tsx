@@ -25,6 +25,7 @@ import { useSimilarPastEntry } from '@/hooks/useSimilarPastEntry'
 import { supabase } from '@/lib/supabase'
 import { uploadDiaryImage } from '@/lib/diaryImages'
 import { DiaryImageThumb } from '@/components/DiaryImageThumb'
+import { startCalendarAuth } from '@/lib/calendarApi'
 
 /* ── Constants ── */
 
@@ -229,7 +230,7 @@ export function Today() {
 
   // Timeline: merges calendar events + time-bound tasks into 30-min slots
   const timeline = useTodayTimeline(allOpenTasks, completedToday)
-  const { slots: timelineSlots, todayTasks: timelineTodayTasks, upcomingTasks, tomorrowEvents, recentEventName, loading: timelineLoading } = timeline
+  const { slots: timelineSlots, todayTasks: timelineTodayTasks, upcomingTasks, tomorrowEvents, recentEventName, loading: timelineLoading, calendarAuthenticated } = timeline
 
   // Briefing text from timeline data
   const todayEventsText = useMemo(() => {
@@ -660,9 +661,29 @@ export function Today() {
           <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 6 }}>予定を読み込み中…</div>
         </Card>
       ) : filteredSlots.length === 0 ? (
-        <Card>
-          <div style={{ fontSize: 13, color: 'var(--text3)', padding: 4 }}>今日はフリーです</div>
-        </Card>
+        calendarAuthenticated === false ? (
+          <Card>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, padding: 6 }}>
+              <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>
+                Google Calendar と連携すると、今日の予定がここに表示されます。
+              </div>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={startCalendarAuth}
+                style={{ fontSize: 12, padding: '6px 14px' }}
+              >
+                Sign in with Google
+              </button>
+              <div style={{ fontSize: 10, color: 'var(--text3)' }}>
+                連携を後回しにする場合は <span style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={() => navigate('/calendar')}>カレンダーページ</span> からも設定できます
+              </div>
+            </div>
+          </Card>
+        ) : (
+          <Card>
+            <div style={{ fontSize: 13, color: 'var(--text3)', padding: 4 }}>今日はフリーです</div>
+          </Card>
+        )
       ) : (
         <Card>
         {filteredSlots.map((slot, si) => {
@@ -761,7 +782,15 @@ export function Today() {
   ) : timeMode === 'evening' ? (
     <div className="section">
       <div className="section-title">明日の予定</div>
-      <Card><div style={{ fontSize: 13, color: 'var(--text3)', padding: 4 }}>明日はフリーです</div></Card>
+      <Card>
+        {calendarAuthenticated === false ? (
+          <div style={{ fontSize: 12, color: 'var(--text3)', padding: 4 }}>
+            Google Calendar 未連携 — <span style={{ color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer' }} onClick={startCalendarAuth}>Sign in</span>
+          </div>
+        ) : (
+          <div style={{ fontSize: 13, color: 'var(--text3)', padding: 4 }}>明日はフリーです</div>
+        )}
+      </Card>
     </div>
   ) : null
 
