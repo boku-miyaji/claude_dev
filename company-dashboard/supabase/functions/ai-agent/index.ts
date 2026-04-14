@@ -1418,7 +1418,7 @@ Deno.serve(async (req) => {
     }
 
     const { prompt: systemPrompt } = await buildSystemPrompt();
-    const model = body.model || "gpt-5-mini";
+    const model = body.model || "gpt-5.4-mini";
     const history: { role: string; content: string }[] = Array.isArray(body.history) ? body.history : [];
     const userMessage = String(body.message || "");
 
@@ -1500,7 +1500,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const model = body.model || "gpt-5-nano";
+    const model = body.model || "gpt-5.4-nano";
     const messages: { role: string; content: string }[] = [];
     if (body.system_prompt) {
       messages.push({ role: "system", content: body.system_prompt });

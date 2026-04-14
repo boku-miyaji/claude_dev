@@ -105,7 +105,7 @@ ${sourceText}`;
         "Authorization": `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-5-nano",
+        model: "gpt-5.4-nano",
         messages: [
           { role: "system", content: "あなたは技術記事の日本語要約アシスタントです。正確で簡潔な日本語で要約します。" },
           { role: "user", content: prompt },

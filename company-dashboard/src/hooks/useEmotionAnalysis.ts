@@ -47,6 +47,7 @@ export function useEmotionAnalysis(): UseEmotionAnalysisReturn {
     try {
       const { content: resultText } = await aiCompletion(content, { source: 'emotion_analysis',
         systemPrompt: EMOTION_ANALYSIS_PROMPT,
+        model: 'gpt-5.4-mini',
         jsonMode: true,
         temperature: 0.3,
       })
@@ -75,7 +76,7 @@ export function useEmotionAnalysis(): UseEmotionAnalysisReturn {
         perma_a: result.perma_v.a ?? 0,
         perma_v: result.perma_v.v ?? 0,
         wbi_score: result.wbi ?? 0,
-        model_used: 'gpt-5-nano',
+        model_used: 'gpt-5.4-mini',
       })
 
       // Update diary_entries.wbi
