@@ -382,7 +382,7 @@ function TabOverview() {
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: '#8b5cf6' }}>日次バッチ分析（daily-analysis-batch.sh）</div>
-        <P>/company 起動時 or セッション開始時に24h経過で自動実行。Task 1-5はClaude CLI、Task 6 (CEOインサイト) はgpt-5-mini (Edge Function)。</P>
+        <P>/company 起動時 or セッション開始時に24h経過で自動実行。Task 1-5はClaude CLI、Task 6 (CEOインサイト) はgpt-5.4-mini (Edge Function)。</P>
         <Tbl headers={['タスク', '内容', '頻度', '出力先']} rows={[
           ['プロンプト分類', '未分類のClaude Codeプロンプトにpj/intent/dept/catタグ付与', '毎日', 'prompt_log.tags'],
           ['失敗シグナル要約', 'キーワード検出した失敗シグナルをLLMで要約', '毎日', 'growth_events'],
@@ -394,9 +394,9 @@ function TabOverview() {
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--text3)' }}>コスト分離の原則</div>
         <Tbl headers={['処理場所', '使用モデル', 'コスト', '用途']} rows={[
-          ['ダッシュボード（リアルタイム）', 'gpt-5-nano (Edge Function)', 'OpenAI API従量課金', '感情分析、朝ブリーフィング、自己分析、夢検出、週次ナラティブ'],
+          ['ダッシュボード（リアルタイム）', 'gpt-5.4-nano (Edge Function)', 'OpenAI API従量課金', '感情分析、朝ブリーフィング、自己分析、夢検出、週次ナラティブ'],
           ['Claude Code（バッチ）', 'Claude CLI opus', 'サブスク内（追加費用なし）', 'プロンプト分類、成長分析、スキル進化、部署評価'],
-          ['Edge Function（バッチ分析）', 'gpt-5-mini', 'OpenAI API（月$0.1以下）', 'CEOインサイト3層分析（日記+prompt_log）'],
+          ['Edge Function（バッチ分析）', 'gpt-5.4-mini', 'OpenAI API（月$0.1以下）', 'CEOインサイト3層分析（日記+prompt_log）'],
           ['Claude Code（Hook）', 'なし（キーワードのみ）', 'ゼロ', 'prompt-log タグ付け、growth-detector シグナル検出'],
         ]} />
       </Section>
@@ -484,7 +484,7 @@ Edge Function (ai-agent/index.ts) を編集
 
 プロンプトを入力
   └→ UserPromptSubmit Hook（3つ並列実行）:
-       ├→ prompt-log.sh: LLM分類（gpt-5-nano）→ pj/intent/dept/cat タグ → prompt_log INSERT
+       ├→ prompt-log.sh: LLM分類（gpt-5.4-nano）→ pj/intent/dept/cat タグ → prompt_log INSERT
        ├→ growth-detector.sh: 失敗シグナル検出（キーワードベース、LLM不要）
        │    └→ bug_report/correction/frustration/missed/repeated をキーワードで検出
        │    └→ ~/.claude/logs/growth-signals.jsonl に永続保存
@@ -499,7 +499,7 @@ Edge Function (ai-agent/index.ts) を編集
        ├→ [3] スキル進化: パターン検出 → skill_candidates 蓄積（Claude CLI）
        ├→ [4] 部署評価: activity_log分析 → evaluations（7日間隔）（Claude CLI）
        ├→ [5] ナレッジ昇格: confidence≥3 検出 → ブリーフィングで提案（Claude CLI）
-       └→ [6] CEOインサイト 3層分析（gpt-5-mini via Edge Function）
+       └→ [6] CEOインサイト 3層分析（gpt-5.4-mini via Edge Function）
             ├→ L1 日次: 未処理日記にtopics/ai_summary付与 → diary_entries UPDATE
             ├→ L2 週次: 日記生テキスト全件+prompt_log → 週次パターン → diary_analysis + ceo_insights
             └→ L3 月次: 全件+週次要約 → 仮説生成 → 過去データで検証 → diary_analysis + ceo_insights`}
@@ -829,13 +829,13 @@ function TabExperienceDesign() {
       <Section title="モデル選定 — 誰が待っているかで決める">
         <Principle title="判断原則" body="ユーザーが画面を見つめて待っている → OpenAI API（速度優先）。誰も待っていない + CLI可能 → Claude CLI（品質優先・無料）。誰も待っていない + pg_cron内 → OpenAI API最安モデル。" color="var(--accent)" />
         <Tbl headers={['機能', 'ユーザーの状態', 'モデル', 'API', '理由']} rows={[
-          ['感情分析', '投稿後、画面を見ている', 'gpt-5-nano', 'OpenAI', '3秒以内。nano精度で十分'],
-          ['AIコメント', 'Today画面を見ている', 'gpt-5-nano', 'OpenAI', '即座のフィードバックが定着の核'],
-          ['Moment Detector', '投稿後、画面を見ている', 'gpt-5-nano', 'OpenAI', '感情分析直後。軽い判定'],
+          ['感情分析', '投稿後、画面を見ている', 'gpt-5.4-nano', 'OpenAI', '3秒以内。nano精度で十分'],
+          ['AIコメント', 'Today画面を見ている', 'gpt-5.4-nano', 'OpenAI', '即座のフィードバックが定着の核'],
+          ['Moment Detector', '投稿後、画面を見ている', 'gpt-5.4-nano', 'OpenAI', '感情分析直後。軽い判定'],
           ['チャット応答', '送信後、待っている', '6段階ルーティング', 'OpenAI', 'SSEストリーミングで体感確保'],
-          ['自己分析', 'ボタン押下後、待っている', 'gpt-5-nano', 'OpenAI', '4500トークン。段階的表示で体感改善'],
-          ['朝ブリーフィング', '誰も待っていない(7:00)', 'gpt-5-nano', 'OpenAI (pg_cron)', 'Supabase内部。CLI不可'],
-          ['ニュース収集', '誰も待っていない(バッチ)', 'gpt-5-mini', 'OpenAI (pg_cron)', 'web_searchにmini必要'],
+          ['自己分析', 'ボタン押下後、待っている', 'gpt-5.4-nano', 'OpenAI', '4500トークン。段階的表示で体感改善'],
+          ['朝ブリーフィング', '誰も待っていない(7:00)', 'gpt-5.4-nano', 'OpenAI (pg_cron)', 'Supabase内部。CLI不可'],
+          ['ニュース収集', '誰も待っていない(バッチ)', 'gpt-5.4-mini', 'OpenAI (pg_cron)', 'web_searchにmini必要'],
           ['Arc Reader', '誰も待っていない(週次)', 'Claude CLI', 'Claude (無料)', '深い分析。品質>速度'],
           ['Theme Finder', '誰も待っていない(月次)', 'Claude CLI', 'Claude (無料)', '最も品質が必要。コストゼロ'],
           ['Foresight Engine', '誰も待っていない(週次)', 'Claude CLI', 'Claude (無料)', 'Arc Reader出力の解釈。深い推論'],
@@ -1218,15 +1218,15 @@ function TabAiFeatures() {
   → aiCompletion() [src/lib/edgeAi.ts]
     → POST /functions/v1/ai-agent  mode=completion
       → Edge Function [supabase/functions/ai-agent/index.ts]
-        → OpenAI API (gpt-5-nano, reasoning_effort=low)
+        → OpenAI API (gpt-5.4-nano, reasoning_effort=low)
           → JSON response
             → ブラウザで処理・表示・DB保存`}
         </div>
         <Tbl headers={['設定', '値', '理由']} rows={[
-          ['モデル', 'gpt-5-nano', 'コスト最小。reasoning model なので分析系に強い'],
+          ['モデル', 'gpt-5.4-nano', 'コスト最小。reasoning model なので分析系に強い'],
           ['reasoning_effort', 'low', 'minimal だと出力が空になるケースがあった'],
           ['max_completion_tokens', '8000', 'reasoning + output の合計。少ないとreasoning に消費されて出力空に'],
-          ['temperature', '(デフォルト1)', 'gpt-5-nano は temperature カスタム非対応'],
+          ['temperature', '(デフォルト1)', 'gpt-5.4-nano は temperature カスタム非対応'],
         ]} />
       </Section>
 
@@ -1256,7 +1256,7 @@ function TabAiFeatures() {
           name="1. 感情分析"
           trigger="日記を投稿したとき（自動）"
           input="日記本文テキスト"
-          model="gpt-5-nano (completion mode)"
+          model="gpt-5.4-nano (completion mode)"
           pipeline="日記テキスト → system: Plutchik 8感情+Russell+PERMA+V の分析指示 → JSON応答 → パース → DB保存"
           output="Plutchik 8感情(0-100), Russell valence/arousal(-1~1), PERMA+V(0-10), WBI(0-10), summary(1文)"
           storage="emotion_analysis テーブル + diary_entries.wbi を更新"
@@ -1267,7 +1267,7 @@ function TabAiFeatures() {
           name="2. AI Partner コメント（日記中心パーソナライズ）"
           trigger="Today画面表示時 + 日記投稿後に自動再生成"
           input="【主役】日記(3件,生テキスト) + 感情傾向 + WBI推移 → 【空気】天気・時刻 → 【補足(直接言及しない)】カレンダー, タスク → 【傾向】CEOインサイト, 夢, 連続記録"
-          model="gpt-5-nano (completion mode)"
+          model="gpt-5.4-nano (completion mode)"
           pipeline="データ並列取得 → 日記を最重要、予定・タスクは補足として構造化 → 時間帯別プロンプト(朝/昼/夜) → AI生成 → 表示"
           output="1-2文、80字以内。「わかってる人がボソッと言う一言」。行動指示・数字・データ読み上げ・汎用語は禁止"
           storage="Zustand in-memory（キャッシュキー: 日付_timeMode、日記投稿で無効化）"
@@ -1278,7 +1278,7 @@ function TabAiFeatures() {
           name="3. 夢進捗検出"
           trigger="日記投稿後（自動、バックグラウンド）"
           input="日記テキスト + アクティブな夢リスト(dreams テーブル)"
-          model="gpt-5-nano (completion mode, jsonMode)"
+          model="gpt-5.4-nano (completion mode, jsonMode)"
           pipeline="日記テキスト+夢リスト → system: 夢との照合指示 → JSON応答 → confidence medium以上をフィルタ → toast通知"
           output='[{dream_id, confidence: "high"|"medium", reason}]'
           storage="表示のみ（toast通知）。DBには保存しない"
@@ -1289,7 +1289,7 @@ function TabAiFeatures() {
           name="4. 週次ナラティブ"
           trigger="Weeklyページで「生成」ボタン押下"
           input="1週間分の日記, 感情分析, 完了タスク, ゴール進捗, 習慣達成率"
-          model="gpt-5-nano (completion mode)"
+          model="gpt-5.4-nano (completion mode)"
           pipeline="週の全データ並列取得 → 統計算出(平均WBI, 優勢感情, 習慣達成率) → AI生成(200-300字ナラティブ) → DB保存"
           output="200-300字の振り返りナラティブ + stats(diary_count, task_count, avg_wbi, dominant_emotion)"
           storage="weekly_narratives テーブル"
@@ -1300,7 +1300,7 @@ function TabAiFeatures() {
           name="5. 自己分析（5種類 + 統合まとめ）"
           trigger="Self Analysisページで再分析ボタン押下（日記20件以上でアンロック）"
           input="ハイブリッド方式: 初回=全データ / 更新=前回結果+核心引用+統計スナップショット+新データのみ。データソース5種（日記=本音, AIチャット=自然な会話, Claude Code指示=関心テーマのみ, タスク/スケジュール, 夢リスト）。各ソースにデータ文脈ガイド付き"
-          model="gpt-5-nano (completion mode, jsonMode)"
+          model="gpt-5.4-nano (completion mode, jsonMode)"
           pipeline="ハイブリッド収集(前回analysis_context+差分データ) → データソース文脈プリアンブル → 初回/更新モード切替 → 構造化プロンプト → JSON応答 → analysis_context生成・保存 → 統合まとめタブ + 個別タブ"
           output="MBTI(core_insight/daily_patterns/strengths_in_action/growth_edges/advice), Big5(profile_narrative/trait_insights/trait_interactions/advice), SF(synergy/blind_spot/action_plan), Values(tension/alignment/life_question) + 統合まとめ"
           storage="self_analysis テーブル(analysis_type, result JSON, summary, data_count, analysis_context JSONB)"
@@ -1322,7 +1322,7 @@ function TabAiFeatures() {
           name="7. ニュース収集"
           trigger="Today画面「最新を取得」ボタン / Reportsページ「手動収集」ボタン"
           input="トピックリスト(AI/LLM, Claude, OpenAI等) + ユーザー関心度(news_preferences.interest_score)"
-          model="gpt-5-mini (agent mode + web_search)"
+          model="gpt-5.4-mini (agent mode + web_search)"
           pipeline="関心度高いトピック抽出 → agent mode で web_search 実行 → JSON配列パース → news_items テーブルに保存"
           output="[{title, summary, url, source, topic, date}] の配列"
           storage="news_items テーブル（Single Source of Truth）"
@@ -1344,7 +1344,7 @@ function TabAiFeatures() {
           name="9. 自分の取扱説明書（種カード生成）"
           trigger="Manual ページで「日記から生成する」押下"
           input="直近3ヶ月の日記60件 + story_memory（Theme Finder 既存結果）"
-          model="gpt-5-nano (completion mode, jsonMode)"
+          model="gpt-5.4-nano (completion mode, jsonMode)"
           pipeline="日記+story_memory → system: 取扱説明書の種を生成（identity / values / joy_trigger / energy_source / failure_pattern / recovery_style / aspiration） → JSON → user_edited_at=null の既存種だけ削除して挿入"
           output="カテゴリ別カード（各1〜2件）。本文 + evidence（日記引用）"
           storage="user_manual_cards テーブル。user_edited_at がセットされたカードは AI が上書きしない"
@@ -1359,7 +1359,7 @@ function TabAiFeatures() {
         <Tbl headers={['エンジン', '役割', 'モデル', '更新頻度']} rows={[
           ['Arc Reader', '感情の時系列を「物語の弧」として解釈。今のフェーズを読み取る', 'gpt-5', '週次'],
           ['Theme Finder', '数ヶ月の日記×夢×行動から人生の通底テーマを発見', 'gpt-5 / claude-sonnet-4-6', '月次'],
-          ['Moment Detector', '日記から転機（決断/気づき/突破/挫折）をリアルタイム検出', 'gpt-5-mini', '日記書き込み毎'],
+          ['Moment Detector', '日記から転機（決断/気づき/突破/挫折）をリアルタイム検出', 'gpt-5.4-mini', '日記書き込み毎'],
           ['Foresight Engine', '過去のパターンから物語の続きを予感し、提案する', 'gpt-5', '随時'],
         ]} />
 
@@ -1406,13 +1406,13 @@ function TabAiFeatures() {
       </Section>
 
       <Section title="AIチャット — 6段階自動ルーティング">
-        <P>ユーザーのメッセージをgpt-5-nanoで分類し、質問の種類に最適なモデルとreasoning effortを自動選択する。</P>
+        <P>ユーザーのメッセージをgpt-5.4-nanoで分類し、質問の種類に最適なモデルとreasoning effortを自動選択する。</P>
         <Tbl headers={['分類', 'モデル', '推論レベル', '質問の例']} rows={[
-          ['casual（雑談）', 'gpt-5-nano', 'none', '「こんにちは」「ありがとう」「はい」'],
-          ['factual（事実）', 'gpt-5-nano', 'none', '「東京タワーの高さは？」「Pythonの最新バージョンは？」'],
-          ['lookup（検索）', 'gpt-5-mini', 'low', '「今日の天気は？」「オープンのタスク何件？」「最新ニュースは？」'],
-          ['creative（創作）', 'gpt-5-mini', 'low', '「メールの文面を考えて」「この文を要約して」「名前を提案して」'],
-          ['analytical（分析）', 'gpt-5-mini', 'medium', '「このコードのバグを直して」「AとBの違いは？」「PDFの内容を分析して」'],
+          ['casual（雑談）', 'gpt-5.4-nano', 'none', '「こんにちは」「ありがとう」「はい」'],
+          ['factual（事実）', 'gpt-5.4-nano', 'none', '「東京タワーの高さは？」「Pythonの最新バージョンは？」'],
+          ['lookup（検索）', 'gpt-5.4-mini', 'low', '「今日の天気は？」「オープンのタスク何件？」「最新ニュースは？」'],
+          ['creative（創作）', 'gpt-5.4-mini', 'low', '「メールの文面を考えて」「この文を要約して」「名前を提案して」'],
+          ['analytical（分析）', 'gpt-5.4-mini', 'medium', '「このコードのバグを直して」「AとBの違いは？」「PDFの内容を分析して」'],
           ['strategic（戦略）', 'gpt-5', 'high', '「事業計画を立てて」「アーキテクチャを設計して」「競合分析して」'],
         ]} />
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
@@ -1587,7 +1587,7 @@ function TabHarness() {
         <Tbl headers={['イベント', 'タイミング', '用途', 'focus-youでの活用']} rows={[
           ['SessionStart', 'セッション開始 / compact後', 'コンテキスト再注入、環境セットアップ', 'auto-pull, config-sync, supabase-status, knowledge-lint(日次)'],
           ['SessionStop', 'セッション終了', 'クリーンアップ、レポート', 'auto-push, session-summary'],
-          ['UserPromptSubmit', 'ユーザー入力時', 'LLM分類+ログ記録', 'prompt-log（gpt-5-nanoでタグ自動分類→Supabase記録）'],
+          ['UserPromptSubmit', 'ユーザー入力時', 'LLM分類+ログ記録', 'prompt-log（gpt-5.4-nanoでタグ自動分類→Supabase記録）'],
           ['PreToolUse', 'ツール実行前', 'ブロック / 入力書き換え / ポリシーガード', 'bash-guard（危険コマンドのブロック+監査ログ）'],
           ['PostToolUse', 'ツール実行後', 'バリデーション、自動デプロイ、ログ', 'docs-sync-guard, edge-function-deploy(即時), agent-activity-log, tool-collector'],
           ['Stop', 'エージェント応答完了', 'タスク完了確認、自動テスト', 'タスク完了時の品質検証（IMP-007）'],
