@@ -73,8 +73,7 @@ export async function checkCalendarAuth(): Promise<{ authenticated: boolean }> {
   if (_authCache && Date.now() - _authCache.ts < 300_000) {
     return { authenticated: _authCache.result }
   }
-  const headers = await getAuthHeaders()
-  const res = await fetch(`${PROXY_BASE}/auth/check`, { headers })
+  const res = await authedFetch(`${PROXY_BASE}/auth/check`)
   if (!res.ok) {
     _authCache = { result: false, ts: Date.now() }
     return { authenticated: false }
@@ -111,43 +110,42 @@ export function startCalendarAuth(): void {
  * Called from the callback page after Google redirects back.
  */
 export async function completeCalendarAuth(code: string): Promise<{ ok: boolean; error?: string }> {
-  // Try to get session, but don't block if not available (Edge Function accepts user_id fallback)
-  const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token || ''
-  const userId = session?.user?.id || ''
-
-  // If no session yet, wait briefly for restoration
-  let finalToken = token
-  let finalUserId = userId
-  if (!token) {
-    await new Promise<void>((resolve) => {
+  // Wait up to 3s for the Supabase session to be restored after the OAuth
+  // redirect (React may still be hydrating when this runs).
+  let { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    session = await new Promise((resolve) => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
-        if (sess) {
-          finalToken = sess.access_token
-          finalUserId = sess.user.id
-          subscription.unsubscribe()
-          resolve()
-        }
+        if (sess) { subscription.unsubscribe(); resolve(sess) }
       })
-      setTimeout(() => { subscription.unsubscribe(); resolve() }, 3000)
+      setTimeout(() => { subscription.unsubscribe(); resolve(null) }, 3000)
     })
   }
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+  if (!session) {
+    return { ok: false, error: 'ログインセッションが見つかりません。ダッシュボードに再ログインしてからもう一度お試しください。' }
   }
-  if (finalToken) headers['Authorization'] = `Bearer ${finalToken}`
+
+  // Force a fresh access_token before calling the Edge Function.
+  // The OAuth consent flow can take long enough for the cached JWT to
+  // expire; refreshing eliminates that race deterministically.
+  const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession()
+  const accessToken = refreshed?.session?.access_token
+  if (refreshError || !accessToken) {
+    return { ok: false, error: 'セッションの更新に失敗しました。再ログインしてください。' }
+  }
 
   const redirectUri = window.location.origin + '/auth/google/callback'
   const res = await fetch(`${PROXY_BASE}/auth/callback`, {
     method: 'POST',
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+    },
     body: JSON.stringify({
       code,
       redirect_uri: redirectUri,
       calendar_ids: GCAL_CALENDARS.map((c) => c.id),
-      user_id: finalUserId, // Fallback for when JWT is not available
     }),
   })
   if (!res.ok) {
@@ -182,7 +180,6 @@ interface ProxyEvent {
 
 /** Fetch events from Google Calendar via Edge Function proxy */
 export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<CalendarEvent[]> {
-  const headers = await getAuthHeaders()
   const calIds = options.calendarIds || GCAL_CALENDARS.map((c) => c.id)
   const params = new URLSearchParams({
     calendar_ids: calIds.join(','),
@@ -191,7 +188,7 @@ export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<
     max_results: String(options.maxResults || 50),
   })
 
-  const res = await fetch(`${PROXY_BASE}/events?${params}`, { headers })
+  const res = await authedFetch(`${PROXY_BASE}/events?${params}`)
 
   if (res.status === 401) {
     const data = await res.json().catch(() => ({}))
@@ -226,10 +223,8 @@ export async function createCalendarEvent(
   calendarId: string,
   event: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const headers = await getAuthHeaders()
-  const res = await fetch(`${PROXY_BASE}/events`, {
+  const res = await authedFetch(`${PROXY_BASE}/events`, {
     method: 'POST',
-    headers,
     body: JSON.stringify({ calendar_id: calendarId, event }),
   })
   if (!res.ok) throw new Error(`Create event failed: ${res.status}`)
@@ -242,10 +237,8 @@ export async function updateCalendarEvent(
   eventId: string,
   patch: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  const headers = await getAuthHeaders()
-  const res = await fetch(`${PROXY_BASE}/events`, {
+  const res = await authedFetch(`${PROXY_BASE}/events`, {
     method: 'PATCH',
-    headers,
     body: JSON.stringify({ calendar_id: calendarId, event_id: eventId, patch }),
   })
   if (!res.ok) throw new Error(`Update event failed: ${res.status}`)
@@ -257,10 +250,8 @@ export async function deleteCalendarEvent(
   calendarId: string,
   eventId: string,
 ): Promise<void> {
-  const headers = await getAuthHeaders()
-  const res = await fetch(`${PROXY_BASE}/events`, {
+  const res = await authedFetch(`${PROXY_BASE}/events`, {
     method: 'DELETE',
-    headers,
     body: JSON.stringify({ calendar_id: calendarId, event_id: eventId }),
   })
   if (!res.ok) throw new Error(`Delete event failed: ${res.status}`)
