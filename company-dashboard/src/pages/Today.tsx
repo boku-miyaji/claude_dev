@@ -391,7 +391,7 @@ export function Today() {
         const results = await Promise.all(
           pendingImages.map((file, idx) => uploadDiaryImage(file, idx)),
         )
-        imagePaths = results.filter((p): p is string => typeof p === 'string')
+        imagePaths = results.filter((p: unknown): p is string => typeof p === 'string')
       } catch (err) {
         toast(err instanceof Error ? err.message : '画像アップロードに失敗しました')
         setSaving(false)
