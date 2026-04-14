@@ -73,12 +73,12 @@ const WRITE_TOOLS = new Set(["tasks_create"]);
 
 // 6-tier model routing: match question type to optimal model + reasoning
 const MODEL_MAP: Record<string, string> = {
-  casual:    "gpt-5-nano",   // 挨拶、雑談、はい/いいえ
-  factual:   "gpt-5-nano",   // 単純な事実質問（東京タワーの高さ等）
-  lookup:    "gpt-5-mini",   // ツール使用が必要（天気、タスク検索、Web検索）
-  creative:  "gpt-5-mini",   // 文章作成、メール、要約
-  analytical:"gpt-5-mini",   // 分析、比較、コード説明、ファイル解析
-  strategic: "gpt-5",        // 設計、戦略、多段推論、複雑な計算
+  casual:    "gpt-5.4-mini",   // 挨拶、雑談、はい/いいえ
+  factual:   "gpt-5.4-mini",   // 単純な事実質問
+  lookup:    "gpt-5.4-mini",   // ツール使用（天気、タスク検索、Web検索）
+  creative:  "gpt-5.4-mini",   // 文章作成、メール、要約
+  analytical:"gpt-5.4-mini",   // 分析、比較、コード説明、ファイル解析
+  strategic: "gpt-5.4-mini",   // 設計、戦略、多段推論
 };
 
 const REASONING_MAP: Record<string, string> = {
@@ -94,6 +94,9 @@ const COST_TABLE: Record<string, { input: number; output: number }> = {
   "gpt-5-nano": { input: 0.05 / 1e6, output: 0.40 / 1e6 },
   "gpt-5-mini": { input: 0.25 / 1e6, output: 2.0 / 1e6 },
   "gpt-5": { input: 1.25 / 1e6, output: 10.0 / 1e6 },
+  "gpt-5.4-nano": { input: 0.05 / 1e6, output: 0.40 / 1e6 },
+  "gpt-5.4-mini": { input: 0.40 / 1e6, output: 1.60 / 1e6 },
+  "gpt-5.4": { input: 2.50 / 1e6, output: 15.0 / 1e6 },
   "gpt-4.1-nano": { input: 0.10 / 1e6, output: 0.40 / 1e6 },
   "gpt-4.1": { input: 2.0 / 1e6, output: 8.0 / 1e6 },
   "o4-mini": { input: 1.10 / 1e6, output: 4.40 / 1e6 },
