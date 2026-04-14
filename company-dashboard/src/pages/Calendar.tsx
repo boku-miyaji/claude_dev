@@ -1355,18 +1355,26 @@ function TaskEditModal({ task, onClose, onSaved }: { task: Task; onClose: () => 
   const [title, setTitle] = useState(task.title)
   const [dueDate, setDueDate] = useState(task.due_date || '')
   const [hasTime, setHasTime] = useState(!!task.scheduled_at)
-  const [startTime, setStartTime] = useState(task.scheduled_at ? fmtTime(task.scheduled_at) : '10:00')
-  const [minutes, setMinutes] = useState(String(task.estimated_minutes || 60))
+  const initialStart = task.scheduled_at ? fmtTime(task.scheduled_at) : '10:00'
+  const initialEnd = (() => {
+    if (!task.scheduled_at) return '11:00'
+    const startMin = timeStrToMinutes(fmtTime(task.scheduled_at))
+    const endMin = startMin + (task.estimated_minutes || 60)
+    return `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`
+  })()
+  const [startTime, setStartTime] = useState(initialStart)
+  const [endTime, setEndTime] = useState(initialEnd)
   const [saving, setSaving] = useState(false)
   const updateTaskInStore = useDataStore((s) => s.updateTask)
   const deleteTaskInStore = useDataStore((s) => s.deleteTask)
 
-  const save = async () => {
+  const save = useCallback(async () => {
+    if (saving || !title.trim()) return
     setSaving(true)
     const patch: Partial<Task> = { title: title.trim(), due_date: dueDate || null }
     if (hasTime && dueDate) {
       patch.scheduled_at = `${dueDate}T${startTime}:00+09:00`
-      patch.estimated_minutes = parseInt(minutes) || 60
+      patch.estimated_minutes = Math.max(5, timeStrToMinutes(endTime) - timeStrToMinutes(startTime))
     } else {
       patch.scheduled_at = null
     }
@@ -1374,7 +1382,7 @@ function TaskEditModal({ task, onClose, onSaved }: { task: Task; onClose: () => 
     setSaving(false)
     toast('更新しました')
     onSaved()
-  }
+  }, [saving, title, dueDate, hasTime, startTime, endTime, task.id, updateTaskInStore, onSaved])
 
   const del = async () => {
     if (!confirm('このタスクを削除しますか？')) return
@@ -1386,11 +1394,12 @@ function TaskEditModal({ task, onClose, onSaved }: { task: Task; onClose: () => 
   return (
     <Modal open onClose={onClose} title="タスクを編集"
       footer={<div style={{ display: 'flex', gap: 8, width: '100%' }}>
-        <button className="btn btn-primary" disabled={saving || !title.trim()} onClick={save}>{saving ? '保存中...' : '保存'}</button>
+        <button className="btn btn-primary" disabled={saving || !title.trim()} onClick={save}>{saving ? '保存中...' : '保存 (⌘+Enter)'}</button>
         <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
         <button className="btn" style={{ color: 'var(--red)', marginLeft: 'auto' }} onClick={del}>削除</button>
       </div>}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+        onKeyDown={e => { if (isSubmitShortcut(e)) { e.preventDefault(); save() } }}>
         <div><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>タイトル</label>
           <input className="input" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></div>
         <div><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>日付</label>
@@ -1403,8 +1412,8 @@ function TaskEditModal({ task, onClose, onSaved }: { task: Task; onClose: () => 
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ flex: 1 }}><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>開始</label>
               <input className="input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} /></div>
-            <div style={{ flex: 1 }}><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>所要（分）</label>
-              <input className="input" type="number" value={minutes} onChange={e => setMinutes(e.target.value)} /></div>
+            <div style={{ flex: 1 }}><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>終了</label>
+              <input className="input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} /></div>
           </div>
         )}
       </div>
