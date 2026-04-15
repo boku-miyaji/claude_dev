@@ -1,4 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { renderMarkdownSafe } from '@/lib/markdown'
 
 export interface DeptTeam { name: string; role: string }
 
@@ -31,6 +33,10 @@ interface Props {
 }
 
 export function DepartmentDetailModal({ dept, recentActivity, onClose }: Props) {
+  const [claudeMd, setClaudeMd] = useState<string | null>(null)
+  const [mdLoading, setMdLoading] = useState(false)
+  const [mdExpanded, setMdExpanded] = useState(false)
+
   useEffect(() => {
     if (!dept) return
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -41,6 +47,26 @@ export function DepartmentDetailModal({ dept, recentActivity, onClose }: Props) 
       document.body.style.overflow = ''
     }
   }, [dept, onClose])
+
+  useEffect(() => {
+    if (!dept) { setClaudeMd(null); setMdExpanded(false); return }
+    let cancelled = false
+    setMdLoading(true)
+    setClaudeMd(null)
+    supabase
+      .from('artifacts')
+      .select('content')
+      .eq('file_path', `.company/departments/${dept.id}/CLAUDE.md`)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return
+        setClaudeMd(data?.content ?? '')
+        setMdLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [dept])
+
+  const claudeMdHtml = useMemo(() => (claudeMd ? renderMarkdownSafe(claudeMd) : ''), [claudeMd])
 
   if (!dept) return null
 
@@ -231,8 +257,54 @@ export function DepartmentDetailModal({ dept, recentActivity, onClose }: Props) 
             </div>
           )}
         </Section>
+
+        {/* CLAUDE.md (source of truth) */}
+        <Section label="CLAUDE.md (部署定義)">
+          {mdLoading ? (
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>読み込み中…</div>
+          ) : claudeMd ? (
+            <div>
+              <button
+                onClick={() => setMdExpanded(v => !v)}
+                style={{
+                  fontSize: 11, fontFamily: 'var(--mono)',
+                  padding: '6px 12px', cursor: 'pointer',
+                  background: 'var(--surface2)', border: '1px solid var(--border)',
+                  borderRadius: 4, color: 'var(--text2)', marginBottom: mdExpanded ? 10 : 0,
+                }}
+              >
+                {mdExpanded ? '▼ 折りたたむ' : '▶ 展開'}　.company/departments/{dept.id}/CLAUDE.md
+              </button>
+              {mdExpanded && (
+                <ClaudeMdView html={claudeMdHtml} />
+              )}
+            </div>
+          ) : (
+            <div style={{ fontSize: 11, color: 'var(--text3)', fontStyle: 'italic' }}>
+              未登録。`/register .company/departments/{dept.id}/CLAUDE.md` で登録できます
+            </div>
+          )}
+        </Section>
       </div>
     </div>
+  )
+}
+
+function ClaudeMdView({ html }: { html: string }) {
+  return (
+    <div
+      className="md-body"
+      style={{
+        fontSize: 12, lineHeight: 1.7,
+        padding: '12px 14px',
+        background: 'var(--surface2)',
+        border: '1px solid var(--border)',
+        borderRadius: 6,
+        maxHeight: 400, overflowY: 'auto',
+      }}
+      // sanitized upstream by renderMarkdownSafe
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   )
 }
 
