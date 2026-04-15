@@ -363,7 +363,7 @@ function TabOverview() {
           ['habits (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', '即追加。Habitsページで詳細編集'],
           ['weekly_narratives', 'Weeklyページで「生成」ボタン', 'ユーザー操作', 'DB保存。過去の週は再生成可能'],
           ['self_analysis', 'Self Analysisで再分析ボタン', 'ユーザー操作', 'ハイブリッド方式: 初回=全データ分析→analysis_context保存、更新=前回context+差分データで効率的更新。統合まとめタブで全分析結果を一覧'],
-          ['news_items', 'Today/Reportsで「収集」ボタン', 'Edge Function news-collect（4ソース並列）', 'Google News RSS + arXiv API + Hacker News API + 公式ブログRSS → DB保存 + クリック追跡'],
+          ['news_items', 'Today/Reportsで「収集」ボタン', 'Edge Function news-collect（4ソース並列）+ news-enrich（LLM日本語要約）', 'Google News RSS + arXiv API + Hacker News API + 公式ブログRSS → DB保存 + クリック追跡。news-enrich は title_ja/summary を gpt-5.4-nano で生成（バッチ + POST{id}で手動再翻訳可、Today/Reports の各記事に「日本語訳」ボタン）'],
           ['calendar_events', 'Calendar/Todayページ', 'Edge Function proxy', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。lib/calendarApi.ts（共通モジュール）。maxResults=250 + nextPageTokenページングで取りこぼし防止、失敗カレンダーは failed_calendars[] + partial フラグで返却しCalendar.tsxで警告バッジ表示。Todayではタスクと統合タイムライン(useTodayTimeline)表示'],
           ['google_tasks', 'タスク作成/更新/完了時', 'data.ts → syncTaskToGoogle', 'Supabase tasks→Google Tasks一方向同期。日付ありタスクのみ。google_task_idでリンク。lib/googleTasksApi.ts'],
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
@@ -975,7 +975,7 @@ function TabDesignPhilosophy() {
       <Section title="体験設計">
         <Principle title="Today = コマンドセンター" body="Todayページから一歩も出ずに日常の全操作が完結する設計。タスク完了/追加/編集、習慣チェック/追加、日記記録がすべてインライン。別ページへの遷移=離脱。" color="var(--accent)" />
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
-          <MiniCard title="今日の予定 = 1画面完結 (2026-04-15)" body="GCalイベント + タスクを全て「今日の予定」に集約。3ブロック構成: 時間指定(時刻付き) / 時間未定(日付のみ) / 近日(明日〜7日以内)。旧「今日やること」「近日の締切」の独立セクションは廃止。重複表示がなくなり1画面で意思決定できる。useTodayTimeline hook。" />
+          <MiniCard title="今日の予定 = 1画面完結 (2026-04-15)" body="GCalイベント + タスクを全て「今日の予定」に集約。3ブロック構成: 時間指定(時刻付き、完了済みも同ブロック内に残る) / 時間未定(日付のみ) / 近日(明日〜7日、明日のGCalイベントも統合)。旧「今日やること」「近日の締切」「明日の予定」の独立セクションは廃止。重複表示がなくなり1画面で意思決定できる。useTodayTimeline hook。" />
           <MiniCard title="今日の習慣" body="Today画面では習慣のみを別セクションで分離。タスクとは情報性質が違う(タスク=1回限りの予定、習慣=反復)ため統合せず並置。習慣全完了時は「All done!」。" />
           <MiniCard title="時間帯適応型UI" body="朝=全件フラット / 午後=未完了を上に+「あとX件」 / 夜=やり残し表示+明日の予定。同じ画面を24時間出さない。" />
           <MiniCard title="インラインCRUD" body="タスク: チェック→完了(取り消し線で残る、再クリックで戻す)。+ →即追加(期限=今日)。タイトルクリック→編集。習慣: + →即追加。" />

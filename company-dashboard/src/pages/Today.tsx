@@ -440,6 +440,22 @@ export function Today() {
   // News state — must be before any conditional return to satisfy Rules of Hooks
   const [newsItems, setNewsItems] = useState<Array<{ id?: string; title: string; title_ja?: string | null; summary: string; url: string | null; source: string; source_type?: string | null; topic: string; published_date?: string | null }>>([])
   const [newsCollecting, setNewsCollecting] = useState(false)
+  const [translatingNewsId, setTranslatingNewsId] = useState<string | null>(null)
+
+  const handleTranslateNews = async (id: string) => {
+    setTranslatingNewsId(id)
+    try {
+      const { translateNewsItem } = await import('@/lib/newsCollect')
+      const updated = await translateNewsItem(id)
+      if (updated) {
+        setNewsItems((prev) => prev.map((n) => (n.id === id ? { ...n, title_ja: updated.title_ja, summary: updated.summary } : n)))
+      }
+    } catch (e) {
+      console.error('[Today] translate news error:', e)
+    } finally {
+      setTranslatingNewsId(null)
+    }
+  }
 
   useEffect(() => {
     import('@/lib/newsCollect').then(({ loadNews, recordImpressions }) =>
@@ -876,6 +892,17 @@ export function Today() {
                 </span>
               )}
               {n.topic && <span style={{ fontSize: 10, color: 'var(--accent2)' }}>{n.topic}</span>}
+              {n.id && (
+                <button
+                  className="btn btn-g btn-sm"
+                  style={{ fontSize: 9, padding: '1px 6px', marginLeft: 'auto' }}
+                  disabled={translatingNewsId === n.id}
+                  onClick={(e) => { e.stopPropagation(); handleTranslateNews(n.id!) }}
+                  title={n.title_ja ? '日本語要約を再生成' : '日本語に翻訳'}
+                >
+                  {translatingNewsId === n.id ? '翻訳中' : n.title_ja ? '再翻訳' : '日本語訳'}
+                </button>
+              )}
             </div>
           </div>
         ))

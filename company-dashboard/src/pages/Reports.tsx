@@ -312,6 +312,22 @@ function NewsFeed() {
   const [loading, setLoading] = useState(true)
   const [collecting, setCollecting] = useState(false)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [translatingId, setTranslatingId] = useState<string | null>(null)
+
+  async function handleTranslate(id: string) {
+    setTranslatingId(id)
+    try {
+      const { translateNewsItem } = await import('@/lib/newsCollect')
+      const updated = await translateNewsItem(id)
+      if (updated) {
+        setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...updated } as ReportNewsItem : it)))
+      }
+    } catch (e) {
+      console.error('[NewsFeed] translate error:', e)
+    } finally {
+      setTranslatingId(null)
+    }
+  }
 
   const load = useCallback(async () => {
     try {
@@ -385,25 +401,37 @@ function NewsFeed() {
                   {item.topic && <span style={{ fontSize: 10, padding: '0 5px', borderRadius: 3, background: 'var(--surface2)', color: 'var(--accent2)' }}>{item.topic}</span>}
                 </div>
 
-                {/* Expanded: summary + link */}
+                {/* Expanded: summary + link + translate action */}
                 {isExpanded && (
                   <div style={{ marginTop: 10, marginLeft: dateLabel ? 44 : 0, padding: 12, background: 'var(--surface)', borderRadius: 6, border: '1px solid var(--border)' }}>
                     {item.summary && (
-                      <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, marginBottom: item.url ? 10 : 0 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 10 }}>
                         {item.summary}
                       </div>
                     )}
-                    {item.url && (
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}
-                      >
-                        記事を読む →
-                      </a>
-                    )}
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                      {item.url && (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}
+                        >
+                          記事を読む →
+                        </a>
+                      )}
+                      {item.id && (
+                        <button
+                          className="btn btn-g btn-sm"
+                          style={{ fontSize: 11, padding: '3px 10px' }}
+                          disabled={translatingId === item.id}
+                          onClick={(e) => { e.stopPropagation(); handleTranslate(item.id!) }}
+                        >
+                          {translatingId === item.id ? '翻訳中…' : item.title_ja ? '日本語を再生成' : '日本語に翻訳'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
