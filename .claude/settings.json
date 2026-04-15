@@ -205,7 +205,8 @@
       "WebFetch(domain:siliconangle.com)",
       "WebFetch(domain:thenewstack.io)",
       "Bash(pdfinfo /workspace/aces-rikyu-sales-proposals-poc/untracked/20260331_最終報告資料v1.0.pdf)",
-      "Bash(tee /tmp/tsc.log)"
+      "Bash(tee /tmp/tsc.log)",
+      "WebFetch(domain:openreview.net)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -492,6 +493,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
