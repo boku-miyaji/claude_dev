@@ -203,7 +203,9 @@
       "WebFetch(domain:fortune.com)",
       "WebFetch(domain:www.ibtimes.com.au)",
       "WebFetch(domain:siliconangle.com)",
-      "WebFetch(domain:thenewstack.io)"
+      "WebFetch(domain:thenewstack.io)",
+      "Bash(pdfinfo /workspace/aces-rikyu-sales-proposals-poc/untracked/20260331_最終報告資料v1.0.pdf)",
+      "Bash(tee /tmp/tsc.log)"
     ],
     "deny": [
       "Read(**/.env)",

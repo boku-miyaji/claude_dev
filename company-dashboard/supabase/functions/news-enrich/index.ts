@@ -142,13 +142,33 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // 未 enrichment の行を取得
-    const { data: rows, error: selErr } = await sb
+    // Optional body: { id } / { ids: [] } でピンポイント翻訳可能（手動トリガー用）
+    let targetIds: number[] | null = null;
+    if (req.method === "POST") {
+      try {
+        const body = await req.json();
+        if (typeof body?.id === "number") targetIds = [body.id];
+        else if (Array.isArray(body?.ids)) {
+          targetIds = (body.ids as unknown[]).filter((n): n is number => typeof n === "number");
+        }
+      } catch { /* body なしは既存バッチ動作 */ }
+    }
+
+    let query = sb
       .from("news_items")
-      .select("id, title, url, summary, source_type")
-      .is("enriched_at", null)
-      .order("collected_at", { ascending: false })
-      .limit(BATCH_LIMIT);
+      .select("id, title, url, summary, source_type");
+
+    if (targetIds && targetIds.length > 0) {
+      // 手動リクエスト: enriched_at に関わらず指定IDを翻訳
+      query = query.in("id", targetIds);
+    } else {
+      query = query
+        .is("enriched_at", null)
+        .order("collected_at", { ascending: false })
+        .limit(BATCH_LIMIT);
+    }
+
+    const { data: rows, error: selErr } = await query;
 
     if (selErr) {
       return new Response(JSON.stringify({ error: selErr.message }), {

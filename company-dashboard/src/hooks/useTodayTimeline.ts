@@ -40,6 +40,8 @@ export interface TodayTimeline {
   slots: TimeSlot[]
   /** Tasks due today but with no specific time */
   todayTasks: Task[]
+  /** Completed-today tasks that had NO scheduled_at/deadline_at today (shown in 時間未定) */
+  completedUntimedToday: Task[]
   /** Tasks with deadline in next 7 days (not today) */
   upcomingTasks: Task[]
   /** Calendar events for tomorrow (kept for briefing) */
@@ -165,6 +167,39 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
     const sevenDaysStr = toJSTDateStr(sevenDaysLater)
 
     const completedIds = new Set(completedToday.map((t) => t.id))
+    const completedUntimedToday: Task[] = []
+
+    // Place completed-today tasks that had a specific time today back into timeline slots,
+    // so ticking a timed task off doesn't demote it into "時間未定".
+    for (const task of completedToday) {
+      const timeField = task.scheduled_at || task.deadline_at
+      if (!timeField) {
+        completedUntimedToday.push(task)
+        continue
+      }
+      if (timeField.substring(0, 10) !== todayStr) {
+        completedUntimedToday.push(task)
+        continue
+      }
+      const hhmm = toJSTHourMin(timeField)
+      if (!hhmm) {
+        completedUntimedToday.push(task)
+        continue
+      }
+      const key = toSlotKey(hhmm)
+      if (!slotMap.has(key)) slotMap.set(key, [])
+      slotMap.get(key)!.push({
+        type: 'task',
+        id: task.id,
+        title: task.title,
+        time: timeField,
+        isDeadline: !!task.deadline_at && !task.scheduled_at,
+        estimatedMinutes: task.estimated_minutes,
+        completed: true,
+        isPast: new Date(timeField) < now,
+        task,
+      })
+    }
 
     for (const task of allTasks) {
       // Task with specific time → timeline slot
@@ -225,6 +260,6 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
         }),
       }))
 
-    return { slots, todayTasks, upcomingTasks, tomorrowEvents, recentEventName, loading, calendarAuthenticated }
+    return { slots, todayTasks, completedUntimedToday, upcomingTasks, tomorrowEvents, recentEventName, loading, calendarAuthenticated }
   }, [calEvents, allTasks, completedToday, tomorrowEvents, recentEventName, loading, calendarAuthenticated, now, todayStr])
 }

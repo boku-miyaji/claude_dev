@@ -230,7 +230,7 @@ export function Today() {
 
   // Timeline: merges calendar events + time-bound tasks into 30-min slots
   const timeline = useTodayTimeline(allOpenTasks, completedToday)
-  const { slots: timelineSlots, todayTasks: timelineTodayTasks, upcomingTasks, tomorrowEvents, recentEventName, loading: timelineLoading, calendarAuthenticated } = timeline
+  const { slots: timelineSlots, todayTasks: timelineTodayTasks, completedUntimedToday, upcomingTasks, tomorrowEvents, recentEventName, loading: timelineLoading, calendarAuthenticated } = timeline
 
   // Briefing text from timeline data
   const todayEventsText = useMemo(() => {
@@ -579,7 +579,8 @@ export function Today() {
     filteredSlots.length > 0 ||
     todayTasks.length > 0 ||
     completedToday.length > 0 ||
-    upcomingTasks.length > 0
+    upcomingTasks.length > 0 ||
+    tomorrowEvents.length > 0
 
   const ScheduledBlockLabel = ({ label }: { label: string }) => (
     <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)', marginTop: 12, marginBottom: 6 }}>
@@ -717,7 +718,7 @@ export function Today() {
         )}
 
         {/* (b) Time-undefined: tasks due today with no specific time */}
-        {(todayTasks.length > 0 || completedToday.length > 0 || showAddTask) && (
+        {(todayTasks.length > 0 || completedUntimedToday.length > 0 || showAddTask) && (
           <>
             <ScheduledBlockLabel label="時間未定" />
             {showAddTask && (
@@ -747,7 +748,7 @@ export function Today() {
             {todayTasks.map((t) => (
               <TaskRow key={t.id} task={t} todayStr={todayStr} done={false} onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
             ))}
-            {completedToday.map((t) => (
+            {completedUntimedToday.map((t) => (
               <TaskRow key={t.id} task={t} todayStr={todayStr} done onToggle={() => { updateTask(t.id, { status: 'open', completed_at: null }); toast('戻しました') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
             ))}
           </>
@@ -760,10 +761,18 @@ export function Today() {
           </div>
         )}
 
-        {/* (c) Upcoming: tasks with deadline in next 7 days (fka 近日の締切) */}
-        {upcomingTasks.length > 0 && (
+        {/* (c) Upcoming: tomorrow's calendar events + tasks with deadline in next 7 days */}
+        {(upcomingTasks.length > 0 || tomorrowEvents.length > 0) && (
           <>
             <ScheduledBlockLabel label="近日（明日〜今週）" />
+            {tomorrowEvents.slice(0, 5).map((e) => (
+              <div key={e.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
+                <span style={{ flex: 1, color: 'var(--text2)' }}>{e.title}</span>
+                <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3, color: 'var(--accent2)', background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', fontFamily: 'var(--mono)' }}>明日 {formatEventTime(e.startTime)}</span>
+              </div>
+            ))}
+            {tomorrowEvents.length > 5 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {tomorrowEvents.length - 5}件（明日）</div>}
             {upcomingTasks.slice(0, 5).map((t) => {
               const due = formatDueDate(t.due_date, todayStr)
               return (
@@ -782,20 +791,9 @@ export function Today() {
     </div>
   )
 
-  const Tomorrow = tomorrowEvents.length > 0 ? (
-    <div className="section">
-      <div className="section-title">明日の予定</div>
-      <Card>
-        {tomorrowEvents.slice(0, 3).map((e) => (
-          <div key={e.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', gap: 10 }}>
-            <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text2)', minWidth: 42 }}>{formatEventTime(e.startTime)}</span>
-            <span>{e.title}</span>
-          </div>
-        ))}
-        {tomorrowEvents.length > 3 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {tomorrowEvents.length - 3}件</div>}
-      </Card>
-    </div>
-  ) : timeMode === 'evening' ? (
+  // Tomorrow events are now merged into the main Timeline card's 近日 section.
+  // This block only renders when tomorrow is empty in evening mode (shows "明日はフリー" or Sign-in prompt).
+  const Tomorrow = tomorrowEvents.length > 0 ? null : timeMode === 'evening' ? (
     <div className="section">
       <div className="section-title">明日の予定</div>
       <Card>

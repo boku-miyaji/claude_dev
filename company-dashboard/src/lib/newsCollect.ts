@@ -51,6 +51,45 @@ export async function collectNews(): Promise<{ count: number; items: NewsItem[] 
   return { count: result.saved || 0, items }
 }
 
+/**
+ * Translate a single news item to Japanese on demand.
+ * Invokes news-enrich with { id } so the edge function fetches URL content,
+ * asks the LLM for a Japanese title + summary, and writes them back to
+ * news_items.title_ja / summary. Returns the refreshed row.
+ */
+export async function translateNewsItem(newsId: string): Promise<NewsItem | null> {
+  const idNum = parseInt(newsId, 10)
+  if (!Number.isFinite(idNum)) return null
+
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY
+
+  const res = await fetch(
+    import.meta.env.VITE_SUPABASE_URL + '/functions/v1/news-enrich',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ id: idNum }),
+    },
+  )
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`news-enrich ${res.status}: ${body.slice(0, 200)}`)
+  }
+
+  const { data, error } = await supabase
+    .from('news_items')
+    .select('id,title,title_ja,summary,url,source,source_type,topic,published_date,collected_at')
+    .eq('id', idNum)
+    .single()
+  if (error || !data) return null
+  return data as NewsItem
+}
+
 /** Record a click on a news item (for interest tracking) */
 export async function recordClick(newsId: string): Promise<void> {
   await supabase.rpc('record_news_click', { news_id: parseInt(newsId, 10) })
