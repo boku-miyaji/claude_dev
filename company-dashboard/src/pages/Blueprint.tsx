@@ -364,7 +364,7 @@ function TabOverview() {
           ['weekly_narratives', 'Weeklyページで「生成」ボタン', 'ユーザー操作', 'DB保存。過去の週は再生成可能'],
           ['self_analysis', 'Self Analysisで再分析ボタン', 'ユーザー操作', 'ハイブリッド方式: 初回=全データ分析→analysis_context保存、更新=前回context+差分データで効率的更新。統合まとめタブで全分析結果を一覧'],
           ['news_items', 'Today/Reportsで「収集」ボタン', 'Edge Function news-collect（4ソース並列）', 'Google News RSS + arXiv API + Hacker News API + 公式ブログRSS → DB保存 + クリック追跡'],
-          ['calendar_events', 'Calendar/Todayページ', 'Edge Function proxy', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。lib/calendarApi.ts（共通モジュール）。Todayではタスクと統合タイムライン(useTodayTimeline)表示'],
+          ['calendar_events', 'Calendar/Todayページ', 'Edge Function proxy', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。lib/calendarApi.ts（共通モジュール）。maxResults=250 + nextPageTokenページングで取りこぼし防止、失敗カレンダーは failed_calendars[] + partial フラグで返却しCalendar.tsxで警告バッジ表示。Todayではタスクと統合タイムライン(useTodayTimeline)表示'],
           ['google_tasks', 'タスク作成/更新/完了時', 'data.ts → syncTaskToGoogle', 'Supabase tasks→Google Tasks一方向同期。日付ありタスクのみ。google_task_idでリンク。lib/googleTasksApi.ts'],
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
         ]} />
@@ -1507,7 +1507,7 @@ function TabAiFeatures() {
           ['diary_analysis', 'period_type(weekly/monthly), ai_insights, highlights(JSONB)', 'ナレッジ（週次/月次の中間分析結果。3層分析のL2/L3出力）'],
           ['growth_events', 'what_happened, root_cause, countermeasure', 'ナレッジ（事例パターン）'],
           ['prompt_log', 'prompt, context, tags, created_at', 'データ（生ログ）'],
-          ['tasks', 'title, status, priority, due_date, scheduled_at, deadline_at, estimated_minutes, time_slot, google_task_id, completed_at', 'データ（行動記録）。日付あり→Google Tasks同期。Today「今日の予定」3ブロック: 時間指定(時刻付き)/時間未定(日付のみ)/近日(未来7日)'],
+          ['tasks', 'title, status, priority, due_date, scheduled_at, deadline_at, estimated_minutes, time_slot, google_task_id, completed_at, attachments(JSONB)', 'データ（行動記録）。日付あり→Google Tasks同期。Today「今日の予定」3ブロック: 時間指定(時刻付き)/時間未定(日付のみ)/近日(未来7日)。attachments は Requests ページの画像添付メタ配列（Storage: request-attachments）'],
           ['dreams', 'title, category, status, priority', 'ナレッジ（暗黙知の言語化）'],
           ['goals', 'title, level, progress, dream_id', 'ナレッジ（夢の形式化）'],
           ['conversations / messages', 'role, content, tool_calls', 'データ（対話ログ）'],
