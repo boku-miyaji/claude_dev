@@ -40,11 +40,74 @@ def load_sources() -> dict:
 
 
 def load_preferences() -> dict:
-    """preferences.yaml を読み込む（なければデフォルト）"""
+    """preferences.yaml とダッシュボードのクリックログを統合して preferences を構築する。
+
+    優先度は preferences.yaml の固定スコアを起点に、直近30日の activity_log の
+    intelligence_click / intelligence_like をカテゴリ単位で加算する。
+    """
+    base: dict = {}
     if PREFERENCES_FILE.exists():
         with open(PREFERENCES_FILE, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
-    return {}
+            base = yaml.safe_load(f) or {}
+
+    merged_scores: dict = dict(base.get("scores", {}))
+    click_scores = aggregate_click_scores()
+    for key, delta in click_scores.items():
+        merged_scores[key] = min(2.0, merged_scores.get(key, 1.0) + delta)
+    base["scores"] = merged_scores
+    return base
+
+
+def aggregate_click_scores() -> dict:
+    """activity_log から直近30日のクリック/いいねをカテゴリ別に集計してスコア増分を返す。
+
+    1 click = +0.1、1 like = +0.2、上限 +1.0（preferences.yaml の基礎値と合わせて最大 2.0）。
+    Supabase Management API 経由で集計するため、RLS の影響を受けない。
+    """
+    access_token = os.environ.get("SUPABASE_ACCESS_TOKEN")
+    project_ref = os.environ.get("SUPABASE_PROJECT_REF", "akycymnahqypmtsfqhtr")
+    if not access_token:
+        return {}
+
+    try:
+        import requests as req
+    except ImportError:
+        return {}
+
+    query = (
+        "SELECT action, metadata->>'category' AS category, count(*) AS cnt "
+        "FROM activity_log "
+        "WHERE action IN ('intelligence_click','intelligence_like') "
+        "AND created_at > now() - interval '30 days' "
+        "AND metadata->>'category' IS NOT NULL "
+        "GROUP BY action, metadata->>'category'"
+    )
+    try:
+        resp = req.post(
+            f"https://api.supabase.com/v1/projects/{project_ref}/database/query",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            json={"query": query},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return {}
+        rows = resp.json() or []
+    except Exception:
+        return {}
+
+    deltas: dict = {}
+    for row in rows:
+        cat = row.get("category")
+        if not cat:
+            continue
+        weight = 0.2 if row.get("action") == "intelligence_like" else 0.1
+        delta = min(1.0, weight * int(row.get("cnt", 0)))
+        key = f"category:{cat}"
+        deltas[key] = max(deltas.get(key, 0), delta)
+    return deltas
 
 
 def get_score(preferences: dict, item_id: str, category: str) -> float:

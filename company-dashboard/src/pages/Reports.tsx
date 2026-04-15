@@ -67,7 +67,13 @@ export function Reports() {
  * Uses marked for parsing, then DOM-based sanitization (strip scripts, on* handlers, dangerous hrefs).
  * Note: innerHTML is used intentionally after sanitization — content is from our own DB (artifacts table).
  */
-function SafeMarkdown({ content }: { content: string }) {
+function SafeMarkdown({
+  content,
+  trackingContext,
+}: {
+  content: string
+  trackingContext?: { artifactId: number; title: string; tags: string[] }
+}) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!ref.current) return
@@ -93,7 +99,49 @@ function SafeMarkdown({ content }: { content: string }) {
     while (ref.current.firstChild) ref.current.removeChild(ref.current.firstChild)
     ref.current.appendChild(frag)
   }, [content])
+
+  useEffect(() => {
+    if (!ref.current || !trackingContext) return
+    const ctx = trackingContext
+    const node = ref.current
+    const handler = (e: Event) => {
+      const target = (e.target as HTMLElement)?.closest('a') as HTMLAnchorElement | null
+      if (!target) return
+      const url = target.getAttribute('href') || ''
+      if (!url || url.startsWith('#')) return
+      supabase.from('activity_log').insert({
+        action: 'intelligence_click',
+        metadata: {
+          artifact_id: ctx.artifactId,
+          title: ctx.title,
+          url,
+          link_text: (target.textContent || '').slice(0, 200),
+          category: inferCategoryFromUrl(url),
+          tags: ctx.tags,
+        },
+      })
+    }
+    node.addEventListener('click', handler)
+    return () => node.removeEventListener('click', handler)
+  }, [trackingContext])
+
   return <div ref={ref} className="md-body" style={{ fontSize: 13, lineHeight: 1.8, color: 'var(--text2)' }} />
+}
+
+function inferCategoryFromUrl(url: string): string {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '')
+    if (host.includes('arxiv.org') || host.includes('openreview.net')) return 'paper'
+    if (host.includes('anthropic.com') || host.includes('claude.com')) return 'anthropic'
+    if (host.includes('openai.com')) return 'openai'
+    if (host.includes('deepmind.google') || host.includes('blog.google')) return 'google'
+    if (host.includes('ai.meta.com')) return 'meta'
+    if (host.includes('x.com') || host.includes('twitter.com')) return 'x_post'
+    if (host.includes('github.com')) return 'github'
+    return host
+  } catch {
+    return 'unknown'
+  }
 }
 
 function logFeedback(artifactId: number, feedback: string, filePath: string, tags: string[]) {
@@ -277,7 +325,10 @@ function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }:
               title={r.title}
             />
           ) : (
-            <SafeMarkdown content={r.content} />
+            <SafeMarkdown
+              content={r.content}
+              trackingContext={{ artifactId: r.id, title: r.title, tags: r.tags }}
+            />
           )}
         </div>
       )}
@@ -415,7 +466,20 @@ function NewsFeed() {
                           href={item.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            supabase.from('activity_log').insert({
+                              action: 'intelligence_click',
+                              metadata: {
+                                news_item_id: item.id,
+                                title: item.title_ja || item.title,
+                                url: item.url,
+                                source: item.source,
+                                topic: item.topic,
+                                category: inferCategoryFromUrl(item.url || ''),
+                              },
+                            })
+                          }}
                           style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}
                         >
                           記事を読む →
