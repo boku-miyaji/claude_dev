@@ -209,7 +209,10 @@
       "WebFetch(domain:openreview.net)",
       "WebFetch(domain:x.com)",
       "WebFetch(domain:research.google)",
-      "Bash(git merge *)"
+      "Bash(git merge *)",
+      "Bash(git grep *)",
+      "Bash(set -e)",
+      "Bash(git ls-files *)"
     ],
     "deny": [
       "Read(**/.env)",
