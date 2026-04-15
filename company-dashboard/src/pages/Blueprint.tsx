@@ -417,10 +417,10 @@ Today画面でタスク操作
   │    └→ 日付あり → Google Tasks API POST → google_task_id保存
   ├→ タイトルクリック → インライン編集（タイトル/期限/優先度）→ Save
   │    └→ google_task_idあり → Google Tasks API PATCH (更新)
-  └→ 統合タイムライン振り分け:
-       ├→ scheduled_at/deadline_at(時刻付き) → 30分スロット表示
-       ├→ due_date(日付のみ) → 「今日やること」ゾーン
-       └→ due_date(未来7日) → 「近日の締切」ゾーン
+  └→ 「今日の予定」内 3ブロック振り分け:
+       ├→ scheduled_at/deadline_at(時刻付き) → 「時間指定」ブロック (30分スロット)
+       ├→ due_date(日付のみ、今日) → 「時間未定」ブロック
+       └→ due_date(未来7日) → 「近日（明日〜今週）」ブロック
 
 Today画面で習慣操作
   ├→ チェックボックス → habit_logs INSERT/DELETE（トグル）
@@ -975,8 +975,8 @@ function TabDesignPhilosophy() {
       <Section title="体験設計">
         <Principle title="Today = コマンドセンター" body="Todayページから一歩も出ずに日常の全操作が完結する設計。タスク完了/追加/編集、習慣チェック/追加、日記記録がすべてインライン。別ページへの遷移=離脱。" color="var(--accent)" />
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
-          <MiniCard title="統合タイムライン" body="GCalイベント + 時刻付きタスク(scheduled_at/deadline_at)を30分スロットにマージ。3ゾーン構成: タイムライン(時刻付き) / 今日やること(時刻なし) / 近日の締切(7日以内)。useTodayTimeline hook。" />
-          <MiniCard title="統合Actionsブロック" body="タスクと習慣を1つのブロックに統合。プログレスバーで合算達成度を可視化。「今日やるべきこと」がひと目でわかる。" />
+          <MiniCard title="今日の予定 = 1画面完結 (2026-04-15)" body="GCalイベント + タスクを全て「今日の予定」に集約。3ブロック構成: 時間指定(時刻付き) / 時間未定(日付のみ) / 近日(明日〜7日以内)。旧「今日やること」「近日の締切」の独立セクションは廃止。重複表示がなくなり1画面で意思決定できる。useTodayTimeline hook。" />
+          <MiniCard title="今日の習慣" body="Today画面では習慣のみを別セクションで分離。タスクとは情報性質が違う(タスク=1回限りの予定、習慣=反復)ため統合せず並置。習慣全完了時は「All done!」。" />
           <MiniCard title="時間帯適応型UI" body="朝=全件フラット / 午後=未完了を上に+「あとX件」 / 夜=やり残し表示+明日の予定。同じ画面を24時間出さない。" />
           <MiniCard title="インラインCRUD" body="タスク: チェック→完了(取り消し線で残る、再クリックで戻す)。+ →即追加(期限=今日)。タイトルクリック→編集。習慣: + →即追加。" />
           <MiniCard title="期限ソート" body="超過(赤) → 今日(赤) → 明日(amber) → 日付順(gray) → 期限なし。同日内は優先度順。期限が最も重要なソート軸。" />
@@ -1507,7 +1507,7 @@ function TabAiFeatures() {
           ['diary_analysis', 'period_type(weekly/monthly), ai_insights, highlights(JSONB)', 'ナレッジ（週次/月次の中間分析結果。3層分析のL2/L3出力）'],
           ['growth_events', 'what_happened, root_cause, countermeasure', 'ナレッジ（事例パターン）'],
           ['prompt_log', 'prompt, context, tags, created_at', 'データ（生ログ）'],
-          ['tasks', 'title, status, priority, due_date, scheduled_at, deadline_at, estimated_minutes, time_slot, google_task_id, completed_at', 'データ（行動記録）。日付あり→Google Tasks同期。3ゾーン: タイムライン(時刻付き)/今日やること(日付のみ)/バックログ(日付なし)'],
+          ['tasks', 'title, status, priority, due_date, scheduled_at, deadline_at, estimated_minutes, time_slot, google_task_id, completed_at', 'データ（行動記録）。日付あり→Google Tasks同期。Today「今日の予定」3ブロック: 時間指定(時刻付き)/時間未定(日付のみ)/近日(未来7日)'],
           ['dreams', 'title, category, status, priority', 'ナレッジ（暗黙知の言語化）'],
           ['goals', 'title, level, progress, dream_id', 'ナレッジ（夢の形式化）'],
           ['conversations / messages', 'role, content, tool_calls', 'データ（対話ログ）'],
