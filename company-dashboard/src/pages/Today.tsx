@@ -315,16 +315,10 @@ export function Today() {
       return { ...habit, todayCount, periodCount: todayCount, completed: todayCount >= habit.target_count, doneToday }
     })
   }, [habits, habitLogs, todayStr, weekStartStr, monthStartStr])
-  // Combined progress — only count tasks due today/overdue and daily habits
-  const todayDueTasks = todayTasks.filter((t) => t.due_date && t.due_date <= todayStr)
+  // Habits progress — only count daily habits for all-done check
   const dailyHabits = todayHabits.filter((h) => h.frequency === 'daily' || h.frequency === 'weekdays')
   const dailyHabitsCompleted = dailyHabits.filter((h) => h.completed).length
-  const totalActions = todayDueTasks.length + dailyHabits.length
-  const doneActions = completedToday.length + dailyHabitsCompleted
-  const actionProgress = totalActions > 0 ? doneActions / (todayTasks.length + todayHabits.length + completedToday.length) : 0
-  // For display: done / (active + done)
-  const totalWithCompleted = todayDueTasks.length + dailyHabits.length + completedToday.length
-  const allDone = totalActions > 0 && todayDueTasks.length === 0 && dailyHabitsCompleted === dailyHabits.length
+  const habitsAllDone = dailyHabits.length > 0 && dailyHabitsCompleted === dailyHabits.length
 
   // Dreams
   const dreamsCount = useMemo(() => dreams.filter((d) => d.status === 'active' || d.status === 'in_progress').length, [dreams])
@@ -491,86 +485,23 @@ export function Today() {
     </div>
   )
 
-  /* ── [1] Today's Actions — unified tasks + habits ── */
+  /* ── [1] Today's Habits ── */
 
-  const ActionsSection = (
+  const HabitsSection = (
     <div className="section">
       <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>
-          {timeMode === 'morning' ? '今日やること' : timeMode === 'afternoon' ? (allDone ? '今日やること — All done!' : `今日やること — あと${todayDueTasks.length + dailyHabits.length - dailyHabitsCompleted}件`) : (allDone ? '今日の達成' : `今日の達成 — ${todayDueTasks.length + dailyHabits.length - dailyHabitsCompleted}件やり残し`)}
-        </span>
-        <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
-          {doneActions}/{totalWithCompleted}
-        </span>
+        <span>{habitsAllDone ? '今日の習慣 — All done!' : '今日の習慣'}</span>
+        {dailyHabits.length > 0 && (
+          <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+            {dailyHabitsCompleted}/{dailyHabits.length}
+          </span>
+        )}
       </div>
 
-      {/* Combined progress bar */}
-      <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden', marginBottom: 14 }}>
-        <div style={{
-          height: '100%', borderRadius: 2, transition: 'width .3s ease',
-          width: `${Math.round(actionProgress * 100)}%`,
-          background: allDone ? 'var(--green)' : 'var(--accent)',
-        }} />
-      </div>
-
-      {/* Tasks */}
-      <Card style={{ marginBottom: todayHabits.length > 0 ? 10 : 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)' }}>Tasks</span>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => setShowAddTask((v) => !v)}>+</button>
-            {allOpenTasks.length > todayTasks.length && (
-              <span style={{ fontSize: 10, color: 'var(--text3)', alignSelf: 'center' }}>
-                他{allOpenTasks.length - todayTasks.length}件はバックログ
-              </span>
-            )}
-          </div>
-        </div>
-        {/* Inline add task */}
-        {showAddTask && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-            <input
-              className="input"
-              placeholder="新しいタスク..."
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              autoFocus
-              style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
-            />
-            <button
-              className="btn btn-p btn-sm"
-              disabled={!newTaskTitle.trim()}
-              onClick={() => {
-                if (newTaskTitle.trim()) {
-                  addTask({ title: newTaskTitle.trim(), due_date: todayStr })
-                  setNewTaskTitle('')
-                  setShowAddTask(false)
-                  toast('タスクを追加しました')
-                }
-              }}
-            >追加</button>
-          </div>
-        )}
-        {todayTasks.map((t) => (
-          <TaskRow key={t.id} task={t} todayStr={todayStr} done={false} onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
-        ))}
-        {/* Completed today — strikethrough, click to undo */}
-        {completedToday.map((t) => (
-          <TaskRow key={t.id} task={t} todayStr={todayStr} done onToggle={() => { updateTask(t.id, { status: 'open', completed_at: null }); toast('戻しました') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
-        ))}
-        {todayTasks.length === 0 && completedToday.length === 0 && !showAddTask && (
-          <div style={{ padding: '6px 0', fontSize: 12, color: 'var(--text3)' }}>タスクなし — + で追加</div>
-        )}
-      </Card>
-
-      {/* Habits */}
       <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)' }}>Habits</span>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => setShowAddHabit((v) => !v)}>+</button>
-            <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/habits')}>詳細</button>
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 8, gap: 4 }}>
+          <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => setShowAddHabit((v) => !v)}>+</button>
+          <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/habits')}>詳細</button>
         </div>
         {/* Inline add habit */}
         {showAddHabit && (
@@ -642,7 +573,19 @@ export function Today() {
     </div>
   )
 
-  /* ── [2] Timeline — unified 30-min slot view ── */
+  /* ── [2] Timeline — 3 blocks: time-bound / time-undefined / upcoming ── */
+
+  const hasAnyTimelineContent =
+    filteredSlots.length > 0 ||
+    todayTasks.length > 0 ||
+    completedToday.length > 0 ||
+    upcomingTasks.length > 0
+
+  const ScheduledBlockLabel = ({ label }: { label: string }) => (
+    <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)', marginTop: 12, marginBottom: 6 }}>
+      {label}
+    </div>
+  )
 
   const TimelineSection = (
     <div className="section">
@@ -660,7 +603,7 @@ export function Today() {
           ))}
           <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 6 }}>予定を読み込み中…</div>
         </Card>
-      ) : filteredSlots.length === 0 ? (
+      ) : !hasAnyTimelineContent ? (
         calendarAuthenticated === false ? (
           <Card>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, padding: 6 }}>
@@ -681,11 +624,41 @@ export function Today() {
           </Card>
         ) : (
           <Card>
-            <div style={{ fontSize: 13, color: 'var(--text3)', padding: 4 }}>今日はフリーです</div>
+            <div style={{ fontSize: 13, color: 'var(--text3)', padding: 4, marginBottom: 8 }}>今日はフリーです — タスクを追加して一日を組み立てましょう</div>
+            {!showAddTask ? (
+              <button className="btn btn-g btn-sm" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => setShowAddTask(true)}>+ タスクを追加</button>
+            ) : (
+              <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                <input
+                  className="input"
+                  placeholder="新しいタスク..."
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  autoFocus
+                  style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
+                />
+                <button
+                  className="btn btn-p btn-sm"
+                  disabled={!newTaskTitle.trim()}
+                  onClick={() => {
+                    if (newTaskTitle.trim()) {
+                      addTask({ title: newTaskTitle.trim(), due_date: todayStr })
+                      setNewTaskTitle('')
+                      setShowAddTask(false)
+                      toast('タスクを追加しました')
+                    }
+                  }}
+                >追加</button>
+              </div>
+            )}
           </Card>
         )
       ) : (
         <Card>
+        {/* (a) Time-bound: calendar events + timed tasks in 30-min slots */}
+        {filteredSlots.length > 0 && (
+          <>
+            <ScheduledBlockLabel label="時間指定" />
         {filteredSlots.map((slot, si) => {
           const isCurrentSlot = slot.time === nowMarkerTime
           return (
@@ -740,31 +713,74 @@ export function Today() {
             </div>
           )
         })}
+          </>
+        )}
+
+        {/* (b) Time-undefined: tasks due today with no specific time */}
+        {(todayTasks.length > 0 || completedToday.length > 0 || showAddTask) && (
+          <>
+            <ScheduledBlockLabel label="時間未定" />
+            {showAddTask && (
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                <input
+                  className="input"
+                  placeholder="新しいタスク..."
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  autoFocus
+                  style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
+                />
+                <button
+                  className="btn btn-p btn-sm"
+                  disabled={!newTaskTitle.trim()}
+                  onClick={() => {
+                    if (newTaskTitle.trim()) {
+                      addTask({ title: newTaskTitle.trim(), due_date: todayStr })
+                      setNewTaskTitle('')
+                      setShowAddTask(false)
+                      toast('タスクを追加しました')
+                    }
+                  }}
+                >追加</button>
+              </div>
+            )}
+            {todayTasks.map((t) => (
+              <TaskRow key={t.id} task={t} todayStr={todayStr} done={false} onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
+            ))}
+            {completedToday.map((t) => (
+              <TaskRow key={t.id} task={t} todayStr={todayStr} done onToggle={() => { updateTask(t.id, { status: 'open', completed_at: null }); toast('戻しました') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
+            ))}
+          </>
+        )}
+
+        {/* Inline "+" when there are events but no time-undefined tasks yet */}
+        {!showAddTask && todayTasks.length === 0 && completedToday.length === 0 && filteredSlots.length > 0 && (
+          <div style={{ marginTop: 10 }}>
+            <button className="btn btn-g btn-sm" style={{ fontSize: 11, padding: '3px 10px' }} onClick={() => setShowAddTask(true)}>+ 時間未定のタスクを追加</button>
+          </div>
+        )}
+
+        {/* (c) Upcoming: tasks with deadline in next 7 days (fka 近日の締切) */}
+        {upcomingTasks.length > 0 && (
+          <>
+            <ScheduledBlockLabel label="近日（明日〜今週）" />
+            {upcomingTasks.slice(0, 5).map((t) => {
+              const due = formatDueDate(t.due_date, todayStr)
+              return (
+                <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text3)', flexShrink: 0 }} />
+                  <span style={{ flex: 1, color: 'var(--text2)' }}>{t.title}</span>
+                  {due && <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3, color: due.color, background: due.bg, border: `1px solid ${due.border}`, fontFamily: 'var(--mono)' }}>{due.label}</span>}
+                </div>
+              )
+            })}
+            {upcomingTasks.length > 5 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {upcomingTasks.length - 5}件</div>}
+          </>
+        )}
       </Card>
       )}
     </div>
   )
-
-  /* ── [2b] Upcoming deadlines ── */
-
-  const UpcomingSection = upcomingTasks.length > 0 ? (
-    <div className="section">
-      <div className="section-title">近日の締切</div>
-      <Card>
-        {upcomingTasks.slice(0, 5).map((t) => {
-          const due = formatDueDate(t.due_date, todayStr)
-          return (
-            <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text3)', flexShrink: 0 }} />
-              <span style={{ flex: 1 }}>{t.title}</span>
-              {due && <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3, color: due.color, background: due.bg, border: `1px solid ${due.border}`, fontFamily: 'var(--mono)' }}>{due.label}</span>}
-            </div>
-          )
-        })}
-        {upcomingTasks.length > 5 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {upcomingTasks.length - 5}件</div>}
-      </Card>
-    </div>
-  ) : null
 
   const Tomorrow = tomorrowEvents.length > 0 ? (
     <div className="section">
@@ -1072,8 +1088,7 @@ export function Today() {
       {Briefing}
       {Diary}
       {TimelineSection}
-      {ActionsSection}
-      {UpcomingSection}
+      {HabitsSection}
       {Tomorrow}
       {NewsSection}
       {Backlog}
