@@ -216,7 +216,10 @@
       "WebFetch(domain:www.itoen.co.jp)",
       "Bash(pipx --version)",
       "Bash(pdfinfo \"d17f3eca-0345-4aee-91fc-47872b0a0b51_MVP_IT企画部向け提案準備.pdf\")",
-      "Bash(pdfinfo \"提案仮説構築_MVP提案書_v1.1_20260414.pdf\")"
+      "Bash(pdfinfo \"提案仮説構築_MVP提案書_v1.1_20260414.pdf\")",
+      "Bash(git ls-tree *)",
+      "Bash(git rev-list *)",
+      "Bash(awk '{print $2}')"
     ],
     "deny": [
       "Read(**/.env)",
@@ -504,6 +507,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
