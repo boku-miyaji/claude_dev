@@ -20,6 +20,7 @@ import random
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+import requests
 import yaml
 
 # ── 定数 ──────────────────────────────────────────────
@@ -69,11 +70,6 @@ def aggregate_click_scores() -> dict:
     if not access_token:
         return {}
 
-    try:
-        import requests as req
-    except ImportError:
-        return {}
-
     query = (
         "SELECT action, metadata->>'category' AS category, count(*) AS cnt "
         "FROM activity_log "
@@ -83,7 +79,7 @@ def aggregate_click_scores() -> dict:
         "GROUP BY action, metadata->>'category'"
     )
     try:
-        resp = req.post(
+        resp = requests.post(
             f"https://api.supabase.com/v1/projects/{project_ref}/database/query",
             headers={
                 "Authorization": f"Bearer {access_token}",
@@ -334,10 +330,8 @@ def main():
     ingest_key = os.environ.get("SUPABASE_INGEST_KEY", "")
     if supabase_url and supabase_key:
         try:
-            import requests as req
-
             # 1) レポート全体を secretary_notes に保存（既存の挙動）
-            resp = req.post(
+            resp = requests.post(
                 f"{supabase_url}/rest/v1/secretary_notes",
                 headers={
                     "apikey": supabase_key,
@@ -393,7 +387,7 @@ def main():
                         "collected_at": now.isoformat(),
                     }
                     try:
-                        r2 = req.post(
+                        r2 = requests.post(
                             f"{supabase_url}/rest/v1/news_items",
                             headers={
                                 "apikey": supabase_key,
