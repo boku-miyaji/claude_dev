@@ -1513,8 +1513,10 @@ Deno.serve(async (req) => {
       max_completion_tokens: 8000,
       reasoning_effort: "low",
     };
-    // gpt-5-nano only supports default temperature (1), so only set for other models
-    if (body.temperature != null && !model.includes("nano")) {
+    // gpt-5 系（nano/mini/その他）は temperature カスタム値を受け付けず
+    // default(1) のみサポートする。gpt-5 を含む model 名は全てスキップ。
+    const supportsCustomTemperature = !/gpt-5/i.test(model);
+    if (body.temperature != null && supportsCustomTemperature) {
       openaiBody.temperature = body.temperature;
     }
     if (body.response_format) {

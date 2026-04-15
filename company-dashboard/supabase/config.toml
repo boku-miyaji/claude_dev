@@ -8,3 +8,16 @@ verify_jwt = false
 # 関数内で sb.auth.getUser(jwt) が /auth/v1/user を叩いて検証するため、
 # ゲートウェイ検証は外して関数内検証に一本化する。
 verify_jwt = false
+
+# news-collect / news-enrich / news-learn も同じ理由でゲートウェイ検証を外す。
+# ブラウザからのユーザー JWT、および GitHub Actions cron からの anon key
+# どちらも新スキームのゲートウェイ検証に弾かれるため、関数側で apikey を
+# 見て判定するか、関数内で sb.auth.getUser(jwt) を使う。
+[functions.news-collect]
+verify_jwt = false
+
+[functions.news-enrich]
+verify_jwt = false
+
+[functions.news-learn]
+verify_jwt = false

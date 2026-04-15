@@ -79,14 +79,15 @@ export async function loadNews(limit = 10): Promise<NewsItem[]> {
   threshold.setHours(0, 0, 0, 0)
 
   try {
-    // 注: order を2回チェインして nullsFirst オプションを使うと
-    // supabase-js の一部バージョンで URL 組み立てが壊れることがあるため、
-    // シンプルに published_date 降順のみにする。
+    // published_date が NULL のレコードが混ざるため、タイブレーカーとして
+    // collected_at も order に含める。これが無いと limit の違いで Today と
+    // News タブの並びがズレる（NULL バケットの並びが非決定的になる）。
     const { data, error } = await supabase
       .from('news_items')
       .select('id,title,title_ja,summary,url,source,source_type,topic,published_date,collected_at')
       .gte('collected_at', threshold.toISOString())
       .order('published_date', { ascending: false })
+      .order('collected_at', { ascending: false })
       .limit(limit * 3) // dedupe 後に limit 件残るよう多めに取る
 
     if (error) {
