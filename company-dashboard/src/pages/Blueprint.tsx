@@ -1350,6 +1350,17 @@ function TabAiFeatures() {
           storage="user_manual_cards テーブル。user_edited_at がセットされたカードは AI が上書きしない"
           hook="useUserManual.ts / src/pages/Manual.tsx"
         />
+
+        <AiFeatureCard
+          name="10. Requests 画像添付（マルチモーダル基盤）"
+          trigger="Requests ページで drag&drop / Cmd+V paste / 編集モーダルから追加"
+          input="画像ファイル（PNG/JPEG/WebP/GIF）→ Supabase Storage: request-attachments バケット（RLS: owner のみ）"
+          model="—（保存・表示のみ。Claude Vision 連携は次フェーズ）"
+          pipeline="アップロード → Storage に保存 → tasks.attachments(JSONB) にメタ配列追記（AttachmentMeta: path, mime, size, width, height, original_name, uploaded_at） → サムネイルプレビュー表示 → 編集モーダルで追加/削除/拡大"
+          output="タスクカード上のサムネイル + 編集モーダルでのフル表示"
+          storage="Supabase Storage: request-attachments（バイナリ）+ tasks.attachments JSONB（メタ）。migration 062 で追加"
+          hook="src/lib/requestAttachments.ts / src/components/RequestAttachmentThumb.tsx / src/pages/Requests.tsx / src/stores/data.ts / src/types/tasks.ts (AttachmentMeta)"
+        />
       </Section>
 
       <Section title="Narrative Intelligence（計画中）">

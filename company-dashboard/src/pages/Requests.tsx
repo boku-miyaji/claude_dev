@@ -8,6 +8,7 @@ import {
   uploadRequestAttachment,
   deleteRequestAttachment,
   getRequestAttachmentUrl,
+  MAX_ATTACHMENT_SIZE,
 } from '@/lib/requestAttachments'
 import { RequestAttachmentThumb } from '@/components/RequestAttachmentThumb'
 
@@ -67,10 +68,20 @@ export function Requests() {
   // --- Attachment helpers (add form) ---
 
   const acceptFiles = useCallback((files: FileList | File[]) => {
-    const imgs = Array.from(files).filter((f) => f.type.startsWith('image/'))
-    if (imgs.length === 0) return
-    const previews = imgs.map((f) => URL.createObjectURL(f))
-    setNewPendingFiles((prev) => [...prev, ...imgs])
+    const arr = Array.from(files)
+    const nonImage = arr.filter((f) => !f.type.startsWith('image/'))
+    if (nonImage.length > 0) {
+      toast(`画像ファイルのみ添付できます (${nonImage.length}件をスキップ)`)
+    }
+    const imgs = arr.filter((f) => f.type.startsWith('image/'))
+    const oversized = imgs.filter((f) => f.size > MAX_ATTACHMENT_SIZE)
+    if (oversized.length > 0) {
+      toast(`5MB超の画像を ${oversized.length}件 スキップしました`)
+    }
+    const ok = imgs.filter((f) => f.size <= MAX_ATTACHMENT_SIZE)
+    if (ok.length === 0) return
+    const previews = ok.map((f) => URL.createObjectURL(f))
+    setNewPendingFiles((prev) => [...prev, ...ok])
     setNewPreviewUrls((prev) => [...prev, ...previews])
   }, [])
 
@@ -184,7 +195,17 @@ export function Requests() {
 
   async function addEditAttachments(files: FileList | File[]) {
     if (!editing) return
-    const imgs = Array.from(files).filter((f) => f.type.startsWith('image/'))
+    const arr = Array.from(files)
+    const nonImage = arr.filter((f) => !f.type.startsWith('image/'))
+    if (nonImage.length > 0) {
+      toast(`画像ファイルのみ添付できます (${nonImage.length}件をスキップ)`)
+    }
+    const imgsAll = arr.filter((f) => f.type.startsWith('image/'))
+    const oversized = imgsAll.filter((f) => f.size > MAX_ATTACHMENT_SIZE)
+    if (oversized.length > 0) {
+      toast(`5MB超の画像を ${oversized.length}件 スキップしました`)
+    }
+    const imgs = imgsAll.filter((f) => f.size <= MAX_ATTACHMENT_SIZE)
     if (imgs.length === 0) return
     const baseIdx = (editing.attachments?.length ?? 0)
     const results = await Promise.all(

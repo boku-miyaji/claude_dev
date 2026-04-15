@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase'
 
 const BUCKET = 'request-attachments'
-const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+export const MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024 // 5MB
 
 export interface AttachmentMeta {
   path: string
@@ -18,7 +18,7 @@ export async function uploadRequestAttachment(file: File, index: number): Promis
   if (!file.type.startsWith('image/')) {
     throw new Error('画像ファイルのみ添付できます')
   }
-  if (file.size > MAX_SIZE) {
+  if (file.size > MAX_ATTACHMENT_SIZE) {
     throw new Error(`画像が大きすぎます (${Math.round(file.size / 1024 / 1024)}MB). 5MB以下にしてください`)
   }
   const { data: { user } } = await supabase.auth.getUser()
