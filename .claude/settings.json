@@ -212,7 +212,9 @@
       "Bash(git merge *)",
       "Bash(git grep *)",
       "Bash(set -e)",
-      "Bash(git ls-files *)"
+      "Bash(git ls-files *)",
+      "WebFetch(domain:www.itoen.co.jp)",
+      "Bash(pipx --version)"
     ],
     "deny": [
       "Read(**/.env)",
