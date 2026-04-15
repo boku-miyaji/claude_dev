@@ -206,7 +206,9 @@
       "WebFetch(domain:thenewstack.io)",
       "Bash(pdfinfo /workspace/aces-rikyu-sales-proposals-poc/untracked/20260331_最終報告資料v1.0.pdf)",
       "Bash(tee /tmp/tsc.log)",
-      "WebFetch(domain:openreview.net)"
+      "WebFetch(domain:openreview.net)",
+      "WebFetch(domain:x.com)",
+      "WebFetch(domain:research.google)"
     ],
     "deny": [
       "Read(**/.env)",
