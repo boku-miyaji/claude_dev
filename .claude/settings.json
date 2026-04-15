@@ -219,7 +219,9 @@
       "Bash(pdfinfo \"提案仮説構築_MVP提案書_v1.1_20260414.pdf\")",
       "Bash(git ls-tree *)",
       "Bash(git rev-list *)",
-      "Bash(awk '{print $2}')"
+      "Bash(awk '{print $2}')",
+      "Bash(pdfinfo \"提案仮説構築AI_最終報告書_v2.pdf\")",
+      "Bash(pdfinfo \"20260331_最終報告資料v1.0.pdf\")"
     ],
     "deny": [
       "Read(**/.env)",
