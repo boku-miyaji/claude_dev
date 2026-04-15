@@ -198,7 +198,12 @@
       "Bash(ls components/)",
       "mcp__plugin_serena_serena__initial_instructions",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(command -v supabase)"
+      "Bash(command -v supabase)",
+      "WebFetch(domain:9to5mac.com)",
+      "WebFetch(domain:fortune.com)",
+      "WebFetch(domain:www.ibtimes.com.au)",
+      "WebFetch(domain:siliconangle.com)",
+      "WebFetch(domain:thenewstack.io)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -485,6 +490,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
