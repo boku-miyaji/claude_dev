@@ -247,7 +247,8 @@
       "/workspace/.claude/skills",
       "/workspace/company-dashboard/docs",
       "/workspace/.company",
-      "/workspace/scratch/design"
+      "/workspace/scratch/design",
+      "/workspace/scratch/research"
     ]
   },
   "hooks": {
