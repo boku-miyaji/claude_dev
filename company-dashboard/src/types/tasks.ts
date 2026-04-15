@@ -1,5 +1,12 @@
 export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'anytime'
 
+export interface AttachmentMeta {
+  path: string
+  type: string
+  size: number
+  name: string
+}
+
 export interface Task {
   id: string
   title: string
@@ -20,6 +27,7 @@ export interface Task {
   tags: string[]
   sort_order: number
   source: string | null
+  attachments?: AttachmentMeta[] | null
   /** Joined field from tasks query with companies */
   companies?: { name: string } | null
 }

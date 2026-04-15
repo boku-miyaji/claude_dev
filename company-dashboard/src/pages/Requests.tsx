@@ -3,7 +3,13 @@ import { supabase } from '@/lib/supabase'
 import { PageHeader, EmptyState, Tag, SkeletonRows } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
 import { useDataStore } from '@/stores/data'
-import type { Task } from '@/types/tasks'
+import type { Task, AttachmentMeta } from '@/types/tasks'
+import {
+  uploadRequestAttachment,
+  deleteRequestAttachment,
+  getRequestAttachmentUrl,
+} from '@/lib/requestAttachments'
+import { RequestAttachmentThumb } from '@/components/RequestAttachmentThumb'
 
 interface Company {
   id: string
@@ -24,7 +30,14 @@ export function Requests() {
   const [newPriority, setNewPriority] = useState('normal')
   const [newDueDate, setNewDueDate] = useState('')
 
+  const [newPendingFiles, setNewPendingFiles] = useState<File[]>([])
+  const [newPreviewUrls, setNewPreviewUrls] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [dragActive, setDragActive] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [editing, setEditing] = useState<Task | null>(null)
+  const editFileInputRef = useRef<HTMLInputElement>(null)
 
   const dragItem = useRef<string | null>(null)
   const dragOverItem = useRef<string | null>(null)
@@ -51,24 +64,94 @@ export function Requests() {
     [requests, filters],
   )
 
-  async function addRequest() {
-    if (!newTitle.trim()) return
-    const minOrder = Math.min(0, ...requests.map((r) => r.sort_order)) - 1
-    const created = await addTask({
-      title: newTitle.trim(),
-      description: newDesc.trim() || null,
-      type: 'request',
-      company_id: newCompany || null,
-      priority: newPriority,
-      due_date: newDueDate || null,
-      sort_order: minOrder,
+  // --- Attachment helpers (add form) ---
+
+  const acceptFiles = useCallback((files: FileList | File[]) => {
+    const imgs = Array.from(files).filter((f) => f.type.startsWith('image/'))
+    if (imgs.length === 0) return
+    const previews = imgs.map((f) => URL.createObjectURL(f))
+    setNewPendingFiles((prev) => [...prev, ...imgs])
+    setNewPreviewUrls((prev) => [...prev, ...previews])
+  }, [])
+
+  function removePendingFile(idx: number) {
+    setNewPendingFiles((prev) => prev.filter((_, i) => i !== idx))
+    setNewPreviewUrls((prev) => {
+      const url = prev[idx]
+      if (url) URL.revokeObjectURL(url)
+      return prev.filter((_, i) => i !== idx)
     })
-    if (!created) { toast('追加に失敗しました'); return }
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    const items = e.clipboardData?.items
+    if (!items) return
+    const files: File[] = []
+    for (const item of Array.from(items)) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const f = item.getAsFile()
+        if (f) files.push(f)
+      }
+    }
+    if (files.length > 0) {
+      e.preventDefault()
+      acceptFiles(files)
+    }
+  }
+
+  function handleDropFiles(e: React.DragEvent) {
+    e.preventDefault()
+    setDragActive(false)
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      acceptFiles(e.dataTransfer.files)
+    }
+  }
+
+  function resetAddForm() {
+    newPreviewUrls.forEach((u) => URL.revokeObjectURL(u))
     setNewTitle('')
     setNewDesc('')
     setNewDueDate('')
+    setNewPendingFiles([])
+    setNewPreviewUrls([])
     setShowAdd(false)
-    toast('追加しました')
+  }
+
+  async function addRequest() {
+    if (!newTitle.trim() || uploading) return
+    setUploading(true)
+    try {
+      let attachments: AttachmentMeta[] = []
+      if (newPendingFiles.length > 0) {
+        const results = await Promise.all(
+          newPendingFiles.map((f, idx) => uploadRequestAttachment(f, idx).catch((err) => {
+            toast(err?.message || 'アップロードに失敗しました')
+            return null
+          })),
+        )
+        attachments = results.filter((r): r is AttachmentMeta => r !== null)
+        if (attachments.length < newPendingFiles.length) {
+          toast(`${newPendingFiles.length - attachments.length}件のアップロードに失敗しました`)
+        }
+      }
+
+      const minOrder = Math.min(0, ...requests.map((r) => r.sort_order)) - 1
+      const created = await addTask({
+        title: newTitle.trim(),
+        description: newDesc.trim() || null,
+        type: 'request',
+        company_id: newCompany || null,
+        priority: newPriority,
+        due_date: newDueDate || null,
+        sort_order: minOrder,
+        attachments,
+      })
+      if (!created) { toast('追加に失敗しました'); return }
+      resetAddForm()
+      toast('追加しました')
+    } finally {
+      setUploading(false)
+    }
   }
 
   async function toggleStatus(r: Task) {
@@ -93,9 +176,41 @@ export function Requests() {
       status: editing.status,
       due_date: editing.due_date || null,
       company_id: editing.company_id || null,
+      attachments: editing.attachments ?? [],
     })
     toast('更新しました')
     setEditing(null)
+  }
+
+  async function addEditAttachments(files: FileList | File[]) {
+    if (!editing) return
+    const imgs = Array.from(files).filter((f) => f.type.startsWith('image/'))
+    if (imgs.length === 0) return
+    const baseIdx = (editing.attachments?.length ?? 0)
+    const results = await Promise.all(
+      imgs.map((f, i) => uploadRequestAttachment(f, baseIdx + i).catch((err) => {
+        toast(err?.message || 'アップロードに失敗しました')
+        return null
+      })),
+    )
+    const added = results.filter((r): r is AttachmentMeta => r !== null)
+    if (added.length === 0) return
+    setEditing({ ...editing, attachments: [...(editing.attachments ?? []), ...added] })
+  }
+
+  async function removeEditAttachment(path: string) {
+    if (!editing) return
+    const ok = await deleteRequestAttachment(path)
+    if (!ok) { toast('削除に失敗しました'); return }
+    setEditing({
+      ...editing,
+      attachments: (editing.attachments ?? []).filter((a) => a.path !== path),
+    })
+  }
+
+  async function openAttachmentInNewTab(path: string) {
+    const url = await getRequestAttachmentUrl(path)
+    if (url) window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   function handleDragStart(id: string) {
@@ -154,10 +269,17 @@ export function Requests() {
       />
 
       {showAdd && (
-        <div className="tasks-add-form card">
+        <div
+          className="tasks-add-form card"
+          onPaste={handlePaste}
+          onDragOver={(e) => { e.preventDefault(); setDragActive(true) }}
+          onDragLeave={() => setDragActive(false)}
+          onDrop={handleDropFiles}
+          style={dragActive ? { outline: '2px dashed var(--accent)', outlineOffset: -4 } : undefined}
+        >
           <input
             className="input tasks-add-title"
-            placeholder="依頼内容"
+            placeholder="依頼内容（Cmd+V でスクショ貼付可）"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             autoFocus
@@ -169,6 +291,49 @@ export function Requests() {
             onChange={(e) => setNewDesc(e.target.value)}
             style={{ minHeight: 48 }}
           />
+
+          {newPreviewUrls.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+              {newPreviewUrls.map((url, idx) => (
+                <div key={idx} style={{ position: 'relative', width: 72, height: 72 }}>
+                  <img
+                    src={url}
+                    alt=""
+                    style={{
+                      width: 72, height: 72, objectFit: 'cover', borderRadius: 6,
+                      border: '1px solid var(--border)',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePendingFile(idx)}
+                    title="削除"
+                    style={{
+                      position: 'absolute', top: -6, right: -6, width: 18, height: 18,
+                      borderRadius: '50%', border: '1px solid var(--border)',
+                      background: 'var(--bg)', color: 'var(--text)', cursor: 'pointer',
+                      fontSize: 11, lineHeight: '16px', padding: 0,
+                    }}
+                  >
+                    &times;
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              if (e.target.files) acceptFiles(e.target.files)
+              e.target.value = ''
+            }}
+          />
+
           <div className="tasks-add-row">
             <select className="input" value={newCompany} onChange={(e) => setNewCompany(e.target.value)}>
               <option value="">HD</option>
@@ -180,7 +345,17 @@ export function Requests() {
               <option value="low">Low</option>
             </select>
             <input className="input" type="date" value={newDueDate} onChange={(e) => setNewDueDate(e.target.value)} />
-            <button className="btn btn-p" onClick={addRequest} disabled={!newTitle.trim()}>追加</button>
+            <button
+              type="button"
+              className="btn btn-g btn-sm"
+              onClick={() => fileInputRef.current?.click()}
+              title="画像を添付（ペースト・ドロップも可）"
+            >
+              画像添付
+            </button>
+            <button className="btn btn-p" onClick={addRequest} disabled={!newTitle.trim() || uploading}>
+              {uploading ? '追加中…' : '追加'}
+            </button>
           </div>
         </div>
       )}
@@ -236,6 +411,20 @@ export function Requests() {
                 <div className="tasks-title-row">
                   <span className={`tasks-title${isDone ? ' done' : ''}`}>{r.title}</span>
                   {isOverdue && <span className="tasks-overdue-badge">overdue</span>}
+                  {r.attachments && r.attachments.length > 0 && (
+                    <span
+                      title={`${r.attachments.length}件の添付`}
+                      style={{
+                        fontSize: 12, color: 'var(--text-dim)',
+                        display: 'inline-flex', alignItems: 'center', gap: 2,
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                      </svg>
+                      {r.attachments.length}
+                    </span>
+                  )}
                 </div>
                 {r.description && <div className="tasks-desc">{r.description.substring(0, 140)}</div>}
                 <div className="tasks-meta">
@@ -299,6 +488,60 @@ export function Requests() {
                 <div style={{ flex: 1 }}>
                   <label className="form-label">期限</label>
                   <input className="input" type="date" value={editing.due_date || ''} onChange={(e) => setEditing({ ...editing, due_date: e.target.value })} style={{ width: '100%' }} />
+                </div>
+              </div>
+
+              <div style={{ marginTop: 18 }}>
+                <label className="form-label">添付画像</label>
+                <div
+                  style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}
+                  onPaste={(e) => {
+                    const items = e.clipboardData?.items
+                    if (!items) return
+                    const files: File[] = []
+                    for (const item of Array.from(items)) {
+                      if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        const f = item.getAsFile()
+                        if (f) files.push(f)
+                      }
+                    }
+                    if (files.length > 0) {
+                      e.preventDefault()
+                      addEditAttachments(files)
+                    }
+                  }}
+                >
+                  {(editing.attachments ?? []).map((a) => (
+                    <RequestAttachmentThumb
+                      key={a.path}
+                      path={a.path}
+                      size={72}
+                      alt={a.name}
+                      onClick={() => openAttachmentInNewTab(a.path)}
+                      onRemove={() => removeEditAttachment(a.path)}
+                    />
+                  ))}
+                  <input
+                    ref={editFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      if (e.target.files) addEditAttachments(e.target.files)
+                      e.target.value = ''
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-g btn-sm"
+                    onClick={() => editFileInputRef.current?.click()}
+                  >
+                    + 追加
+                  </button>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
+                  クリックで拡大 / Cmd+V で貼り付け / 5MB以下の画像
                 </div>
               </div>
             </div>

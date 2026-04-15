@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import type { DiaryEntry, EmotionAnalysis } from '@/types/diary'
-import type { Task } from '@/types/tasks'
+import type { Task, AttachmentMeta } from '@/types/tasks'
 import { syncTaskToGoogle, syncTaskComplete, syncTaskReopen } from '@/lib/googleTasksApi'
 import type { Dream } from '@/types/dreams'
 import type { Goal } from '@/types/goals'
@@ -58,6 +58,7 @@ interface DataStore {
     estimated_minutes?: number | null
     time_slot?: string | null
     sort_order?: number
+    attachments?: AttachmentMeta[] | null
   }) => Promise<Task | null>
   updateTask: (id: string, data: Partial<Task>) => Promise<void>
   deleteTask: (id: string) => Promise<void>
@@ -353,6 +354,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
         time_slot: task.time_slot ?? null,
         sort_order: task.sort_order ?? 0,
         status: 'open',
+        attachments: task.attachments ?? [],
       })
       .select('*, companies(name)')
       .single()
