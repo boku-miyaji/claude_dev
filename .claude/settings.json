@@ -208,7 +208,8 @@
       "Bash(tee /tmp/tsc.log)",
       "WebFetch(domain:openreview.net)",
       "WebFetch(domain:x.com)",
-      "WebFetch(domain:research.google)"
+      "WebFetch(domain:research.google)",
+      "Bash(git merge *)"
     ],
     "deny": [
       "Read(**/.env)",
