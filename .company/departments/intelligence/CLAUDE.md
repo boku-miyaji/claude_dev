@@ -189,6 +189,38 @@ curl -X POST "${SUPABASE_URL}/rest/v1/secretary_notes" \
 
 **ローカルファイル（reports/）への保存も同時に行う。**
 
+### artifacts テーブルへの自動登録（必須）
+
+**レポート生成後、必ず `artifacts` テーブルにも登録する。** ダッシュボードの Artifacts タブで閲覧・コメント可能にするため。
+
+```bash
+source .claude/hooks/supabase.env
+FILE=/workspace/.company/departments/intelligence/reports/YYYY-MM-DD-HHMM.md
+HASH=$(sha256sum "$FILE" | cut -c1-16)
+CONTENT=$(jq -Rs . < "$FILE")
+cat > /tmp/artifact.json <<EOF
+{
+  "title": "情報収集: [主要トピック2-3個]（MM/DD）",
+  "description": "[1行の概要。120文字以内]",
+  "file_path": ".company/departments/intelligence/reports/YYYY-MM-DD-HHMM.md",
+  "file_type": "md",
+  "content": $CONTENT,
+  "content_hash": "$HASH",
+  "company_id": null,
+  "status": "active"
+}
+EOF
+curl -4 -s "${SUPABASE_URL}/rest/v1/artifacts?on_conflict=file_path" \
+  -H "apikey: ${SUPABASE_ANON_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=minimal,resolution=merge-duplicates" \
+  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
+  -d @/tmp/artifact.json
+```
+
+**重要**: title に `$` を含む場合はシェル変数展開を避けるため、jq か heredoc で文字列に埋め込む際はエスケープに注意（`\$` または `'` シングルクォート利用）。
+
 ## レポートのルール
 
 - **日付ファースト**: 各アイテムは日付を先頭に書く。情報の鮮度が最重要。
