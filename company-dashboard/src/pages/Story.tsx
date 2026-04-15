@@ -306,7 +306,7 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
     const timeMin = new Date(earliest + 'T00:00:00+09:00').toISOString()
     const timeMax = new Date(latest + 'T23:59:59+09:00').toISOString()
     fetchCalendarEvents({ timeMin, timeMax, maxResults: 500 })
-      .then(events => {
+      .then(({ events }) => {
         const map: Record<string, CalendarEvent[]> = {}
         events.forEach(ev => {
           const day = new Date(ev.start_time).toISOString().substring(0, 10)

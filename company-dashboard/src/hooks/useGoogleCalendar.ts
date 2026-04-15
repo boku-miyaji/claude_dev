@@ -7,6 +7,7 @@ import {
   updateCalendarEvent,
   deleteCalendarEvent,
 } from '@/lib/calendarApi'
+import type { FailedCalendar } from '@/lib/calendarApi'
 import type { CalendarEvent, ViewMode } from '@/types/calendar'
 
 export function useGoogleCalendar(viewDate: Date, viewMode: ViewMode) {
@@ -14,6 +15,8 @@ export function useGoogleCalendar(viewDate: Date, viewMode: ViewMode) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [authenticated, setAuthenticated] = useState<boolean | null>(null)
+  const [failedCalendars, setFailedCalendars] = useState<FailedCalendar[]>([])
+  const [partial, setPartial] = useState(false)
 
   // Check auth status on mount
   useEffect(() => {
@@ -49,8 +52,10 @@ export function useGoogleCalendar(viewDate: Date, viewMode: ViewMode) {
 
     try {
       const [timeMin, timeMax] = getRange()
-      const items = await fetchCalendarEvents({ timeMin, timeMax })
-      setEvents(items)
+      const result = await fetchCalendarEvents({ timeMin, timeMax })
+      setEvents(result.events)
+      setFailedCalendars(result.failedCalendars)
+      setPartial(result.partial)
     } catch (e) {
       if (e instanceof Error && e.message === 'NEEDS_AUTH') {
         setAuthenticated(false)
@@ -86,6 +91,8 @@ export function useGoogleCalendar(viewDate: Date, viewMode: ViewMode) {
     loading,
     error,
     authenticated,
+    failedCalendars,
+    partial,
     token: authenticated ? 'proxy' : null,  // Backwards compat: truthy when authenticated
     requestAuth,
     refetch: fetchEvents,

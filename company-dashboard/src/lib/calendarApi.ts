@@ -178,14 +178,28 @@ interface ProxyEvent {
   hangoutLink?: string | null
 }
 
+export interface FailedCalendar {
+  calendarId: string
+  error: string
+}
+
+export interface FetchCalendarEventsResult {
+  events: CalendarEvent[]
+  failedCalendars: FailedCalendar[]
+  partial: boolean
+}
+
 /** Fetch events from Google Calendar via Edge Function proxy */
-export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<CalendarEvent[]> {
+export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<FetchCalendarEventsResult> {
   const calIds = options.calendarIds || GCAL_CALENDARS.map((c) => c.id)
   const params = new URLSearchParams({
     calendar_ids: calIds.join(','),
     time_min: options.timeMin,
     time_max: options.timeMax,
-    max_results: String(options.maxResults || 50),
+    // Default aligned with Edge Function (Google Calendar API max = 250).
+    // The server paginates beyond this, but sending 250 per page minimizes
+    // round-trips for typical week/month views.
+    max_results: String(options.maxResults || 250),
   })
 
   const res = await authedFetch(`${PROXY_BASE}/events?${params}`)
@@ -199,12 +213,16 @@ export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<
 
   if (!res.ok) throw new Error(`Calendar API error: ${res.status}`)
 
-  const data: { events: ProxyEvent[] } = await res.json()
+  const data: {
+    events: ProxyEvent[]
+    failed_calendars?: FailedCalendar[]
+    partial?: boolean
+  } = await res.json()
 
   // Map calendar_id to calendar_type
   const calMap = new Map(GCAL_CALENDARS.map((c) => [c.id, c.type]))
 
-  return data.events.map((ev) => ({
+  const events: CalendarEvent[] = data.events.map((ev) => ({
     id: ev.id,
     calendar_id: ev.calendar_id,
     calendar_type: (calMap.get(ev.calendar_id) || 'primary') as CalendarType,
@@ -216,6 +234,12 @@ export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<
     location: ev.location,
     hangoutLink: ev.hangoutLink,
   }))
+
+  return {
+    events,
+    failedCalendars: data.failed_calendars || [],
+    partial: data.partial === true,
+  }
 }
 
 /** Create a new calendar event */

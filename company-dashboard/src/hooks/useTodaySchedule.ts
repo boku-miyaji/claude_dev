@@ -43,7 +43,7 @@ export function useTodaySchedule(): TodaySchedule {
       tomorrowEnd.setDate(tomorrowEnd.getDate() + 2)
 
       try {
-        const events = await fetchCalendarEvents({
+        const { events } = await fetchCalendarEvents({
           timeMin: todayStart.toISOString(),
           timeMax: tomorrowEnd.toISOString(),
           maxResults: 20,

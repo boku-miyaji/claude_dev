@@ -219,7 +219,9 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
   const calendarIds = url.searchParams.get("calendar_ids")?.split(",") || [];
   const timeMin = url.searchParams.get("time_min") || "";
   const timeMax = url.searchParams.get("time_max") || "";
-  const maxResults = url.searchParams.get("max_results") || "50";
+  // Default to 250 (Google Calendar API max) so a single page covers almost
+  // any realistic week/month view. Pagination below handles the rest.
+  const maxResults = url.searchParams.get("max_results") || "250";
 
   if (!calendarIds.length || !timeMin || !timeMax) {
     return new Response(JSON.stringify({ error: "Missing calendar_ids, time_min, or time_max" }), {
@@ -231,61 +233,80 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
   const accessToken = await getAccessToken(userId);
   const allEvents: Record<string, unknown>[] = [];
   const dbRows: Record<string, unknown>[] = [];
+  const failedCalendars: { calendarId: string; error: string }[] = [];
 
   for (const calId of calendarIds) {
-    const params = new URLSearchParams({
-      timeMin,
-      timeMax,
-      timeZone: "Asia/Tokyo",
-      singleEvents: "true",
-      maxResults,
-      orderBy: "startTime",
-    });
+    try {
+      let pageToken = "";
+      // Safety cap: 10 pages * 250 = 2500 events per calendar per request.
+      for (let page = 0; page < 10; page++) {
+        const params = new URLSearchParams({
+          timeMin,
+          timeMax,
+          timeZone: "Asia/Tokyo",
+          singleEvents: "true",
+          maxResults,
+          orderBy: "startTime",
+        });
+        if (pageToken) params.set("pageToken", pageToken);
 
-    const res = await calendarFetch(accessToken, `/calendars/${encodeURIComponent(calId)}/events?${params}`);
-    if (!res.ok) continue;
-    const data = await res.json();
-    for (const ev of data.items || []) {
-      if (ev.status === "cancelled") continue;
-      const startTime = ev.start?.dateTime || ev.start?.date || "";
-      const endTime = ev.end?.dateTime || ev.end?.date || "";
-      const allDay = !ev.start?.dateTime;
-      const eventRow = {
-        id: ev.id,
-        calendar_id: calId,
-        summary: ev.summary || "(No title)",
-        start_time: startTime,
-        end_time: endTime,
-        all_day: allDay,
-        status: ev.status,
-        location: ev.location || null,
-        hangoutLink: ev.hangoutLink || null,
-      };
-      allEvents.push(eventRow);
+        const res = await calendarFetch(accessToken, `/calendars/${encodeURIComponent(calId)}/events?${params}`);
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          console.error(`[google-calendar-proxy] fetch failed for ${calId}: ${res.status} ${errText}`);
+          failedCalendars.push({ calendarId: calId, error: `HTTP ${res.status}: ${errText.slice(0, 200)}` });
+          break;
+        }
+        const data = await res.json();
+        for (const ev of data.items || []) {
+          if (ev.status === "cancelled") continue;
+          const startTime = ev.start?.dateTime || ev.start?.date || "";
+          const endTime = ev.end?.dateTime || ev.end?.date || "";
+          const allDay = !ev.start?.dateTime;
+          const eventRow = {
+            id: ev.id,
+            calendar_id: calId,
+            summary: ev.summary || "(No title)",
+            start_time: startTime,
+            end_time: endTime,
+            all_day: allDay,
+            status: ev.status,
+            location: ev.location || null,
+            hangoutLink: ev.hangoutLink || null,
+          };
+          allEvents.push(eventRow);
 
-      // 分析バッチで使うために calendar_events テーブルにも upsert 用の行を用意
-      // （calendar_type は仕事/プライベート判定。summary の接頭辞で簡易判定）
-      const summary = ev.summary || "";
-      let calendarType: string = "private";
-      if (calId.includes("acesinc") || /^\[仕事\]|^\[Ex|^\[In|^\[in\]/i.test(summary)) {
-        calendarType = "work";
-      } else if (calId === "primary") {
-        calendarType = "primary";
+          // 分析バッチで使うために calendar_events テーブルにも upsert 用の行を用意
+          // （calendar_type は仕事/プライベート判定。summary の接頭辞で簡易判定）
+          const summary = ev.summary || "";
+          let calendarType: string = "private";
+          if (calId.includes("acesinc") || /^\[仕事\]|^\[Ex|^\[In|^\[in\]/i.test(summary)) {
+            calendarType = "work";
+          } else if (calId === "primary") {
+            calendarType = "primary";
+          }
+          dbRows.push({
+            id: ev.id,
+            calendar_id: calId,
+            summary: eventRow.summary,
+            start_time: startTime,
+            end_time: endTime,
+            all_day: allDay,
+            location: ev.location || null,
+            description: ev.description || null,
+            status: ev.status,
+            response_status: (ev.attendees || []).find((a: { self?: boolean; responseStatus?: string }) => a.self)?.responseStatus || null,
+            calendar_type: calendarType,
+            synced_at: new Date().toISOString(),
+          });
+        }
+        pageToken = data.nextPageToken || "";
+        if (!pageToken) break;
       }
-      dbRows.push({
-        id: ev.id,
-        calendar_id: calId,
-        summary: eventRow.summary,
-        start_time: startTime,
-        end_time: endTime,
-        all_day: allDay,
-        location: ev.location || null,
-        description: ev.description || null,
-        status: ev.status,
-        response_status: (ev.attendees || []).find((a: { self?: boolean; responseStatus?: string }) => a.self)?.responseStatus || null,
-        calendar_type: calendarType,
-        synced_at: new Date().toISOString(),
-      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error(`[google-calendar-proxy] exception for ${calId}: ${msg}`);
+      failedCalendars.push({ calendarId: calId, error: msg });
     }
   }
 
@@ -301,7 +322,11 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
       });
   }
 
-  return new Response(JSON.stringify({ events: allEvents }), {
+  return new Response(JSON.stringify({
+    events: allEvents,
+    failed_calendars: failedCalendars,
+    partial: failedCalendars.length > 0,
+  }), {
     headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
   });
 }

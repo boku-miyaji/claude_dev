@@ -54,7 +54,7 @@ const CAL_BG_COLORS: Record<CalendarType, string> = {
 const HOUR_H = 48
 const START_H = 8
 const END_H = 22
-const SNAP_MIN = 15
+const SNAP_MIN = 30
 const SNAP_PX = HOUR_H * SNAP_MIN / 60
 const HOURS = Array.from({ length: END_H - START_H + 1 }, (_, i) => i + START_H)
 
@@ -182,7 +182,7 @@ interface DragState {
 // Time Grid (Day / Week view)
 // ============================================================
 
-function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, onEventClick, onDragUpdate, onTaskToggle, onTaskClick, onAllDayAdd }: {
+function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, onEventClick, onDragUpdate, onTaskToggle, onTaskClick, onAllDayAdd, activeRange, onActiveRangeChange }: {
   events: CalendarEvent[]; tasks: Task[]; days: Date[]; today: string; hiddenCalendars: Set<CalendarType>
   onRangeCreate: (date: string, startHour: number, endHour: number) => void
   onEventClick: (evt: CalendarEvent) => void
@@ -190,13 +190,19 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
   onTaskToggle: (task: Task) => void
   onTaskClick: (task: Task) => void
   onAllDayAdd: (date: string) => void
+  /** Currently pending range (e.g. while QuickAdd popover is open). Renders a persistent preview with a resize handle. */
+  activeRange?: { dayIndex: number; startHour: number; endHour: number } | null
+  onActiveRangeChange?: (startHour: number, endHour: number) => void
 }) {
   const bodyRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const [, setDragRender] = useState(0) // force re-render during drag
-  const [hoverCell, setHoverCell] = useState<{ dayIndex: number; hour: number } | null>(null)
+  // Hover preview position — y-based (snapped) so that the ghost can follow 30-min increments,
+  // not just whole hours. This lets click-to-create align exactly with what the user hovers.
+  const [hoverCell, setHoverCell] = useState<{ dayIndex: number; y: number } | null>(null)
   const createDragRef = useRef<{ dayIndex: number; startY: number; currentY: number; moved: boolean } | null>(null)
   const [createDrag, setCreateDrag] = useState<{ dayIndex: number; top: number; height: number } | null>(null)
+  const activeResizeRef = useRef<{ startY: number; startEndY: number } | null>(null)
   const now = useMemo(() => new Date(), [])
   const nowH = now.getHours() + now.getMinutes() / 60
   const todayDayIndex = days.findIndex(d => toJSTDateStr(d) === today)
@@ -467,7 +473,12 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
             <div className="cal-tg-time">{h > START_H ? `${String(h).padStart(2, '0')}:00` : ''}</div>
             {days.map((_d, di) => (
               <div key={di} className="cal-tg-cell" data-day={di} data-hour={h} style={{ position: 'relative' }}
-                onMouseEnter={() => { if (!createDragRef.current) setHoverCell({ dayIndex: di, hour: h }) }}
+                onMouseMove={e => {
+                  if (createDragRef.current || dragRef.current || activeResizeRef.current || !bodyRef.current) return
+                  const rect = bodyRef.current.getBoundingClientRect()
+                  const y = snapY(Math.max(0, Math.min(e.clientY - rect.top, (END_H - START_H) * HOUR_H - SNAP_PX)))
+                  setHoverCell({ dayIndex: di, y })
+                }}
                 onMouseDown={e => { if (!dragRef.current) onCellMouseDown(di, e) }} />
             ))}
           </React.Fragment>
@@ -496,11 +507,11 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
           </div>
         )}
 
-        {/* Hover preview ghost (where the new event will be added) */}
-        {hoverCell && !drag && !createDrag && (
+        {/* Hover preview ghost — snaps to 30-min increments so the click position matches the created event's start time */}
+        {hoverCell && !drag && !createDrag && !activeRange && (
           <div style={{
             position: 'absolute',
-            top: (hoverCell.hour - START_H) * HOUR_H,
+            top: hoverCell.y,
             left: `calc(56px + ${hoverCell.dayIndex} * (100% - 56px) / ${days.length} + 2px)`,
             width: `calc((100% - 56px) / ${days.length} - 4px)`,
             height: HOUR_H - 2,
@@ -517,9 +528,70 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
             fontWeight: 600,
             color: 'var(--accent)',
           }}>
-            + {String(hoverCell.hour).padStart(2, '0')}:00
+            + {hoursToTimeStr(yToHours(hoverCell.y))}
           </div>
         )}
+
+        {/* Active range preview — shown while QuickAdd popover is open. Bottom edge is draggable to resize end time. */}
+        {activeRange && (() => {
+          const top = (activeRange.startHour - START_H) * HOUR_H
+          const height = Math.max((activeRange.endHour - activeRange.startHour) * HOUR_H, SNAP_PX)
+          const onResizeDown = (e: React.MouseEvent) => {
+            if (!bodyRef.current || !onActiveRangeChange) return
+            e.preventDefault()
+            e.stopPropagation()
+            const rect = bodyRef.current.getBoundingClientRect()
+            activeResizeRef.current = { startY: e.clientY, startEndY: top + height }
+            const onMove = (me: MouseEvent) => {
+              const dy = me.clientY - (activeResizeRef.current?.startY ?? 0)
+              const newEndY = snapY(Math.max(top + SNAP_PX, Math.min((activeResizeRef.current?.startEndY ?? 0) + dy, (END_H - START_H) * HOUR_H)))
+              const newEndH = yToHours(newEndY)
+              onActiveRangeChange(activeRange.startHour, newEndH)
+              // Trigger rerender so the preview follows the drag
+              setDragRender(v => v + 1)
+              void rect // noop
+            }
+            const onUp = () => {
+              document.removeEventListener('mousemove', onMove)
+              document.removeEventListener('mouseup', onUp)
+              activeResizeRef.current = null
+            }
+            document.addEventListener('mousemove', onMove)
+            document.addEventListener('mouseup', onUp)
+          }
+          return (
+            <div style={{
+              position: 'absolute',
+              top,
+              left: `calc(56px + ${activeRange.dayIndex} * (100% - 56px) / ${days.length} + 2px)`,
+              width: `calc((100% - 56px) / ${days.length} - 4px)`,
+              height: height - 2,
+              background: 'var(--accent)',
+              opacity: 0.28,
+              border: '2px solid var(--accent)',
+              borderRadius: 4,
+              zIndex: 3,
+              padding: '4px 6px',
+              fontSize: 11,
+              fontWeight: 600,
+              color: '#fff',
+              pointerEvents: 'none',
+            }}>
+              {hoursToTimeStr(activeRange.startHour)}–{hoursToTimeStr(activeRange.endHour)}
+              <div
+                onMouseDown={onResizeDown}
+                style={{
+                  position: 'absolute',
+                  left: 0, right: 0, bottom: -4,
+                  height: 10,
+                  cursor: 'ns-resize',
+                  pointerEvents: 'auto',
+                }}
+                title="ドラッグで終了時刻を調整"
+              />
+            </div>
+          )
+        })()}
 
         {/* Events + time-boxed tasks (absolutely positioned) */}
         {days.map((_d, di) => {
@@ -921,7 +993,7 @@ export function Calendar() {
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() => loadLayers())
   const [drawerDate, setDrawerDate] = useState<string | null>(null)
 
-  const { events, loading, authenticated, refetch, createEvent, updateEvent, deleteEvent } = useGoogleCalendar(viewDate, viewMode)
+  const { events, loading, authenticated, partial, failedCalendars, refetch, createEvent, updateEvent, deleteEvent } = useGoogleCalendar(viewDate, viewMode)
   const today = toJSTDateStr(new Date())
 
   // Persist layer toggles
@@ -1131,6 +1203,29 @@ export function Calendar() {
 
       {loading && <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>Loading...</div>}
 
+      {partial && failedCalendars.length > 0 && (
+        <div
+          title={failedCalendars.map((f) => `${f.calendarId}: ${f.error}`).join('\n')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 11,
+            color: '#b45309',
+            background: 'color-mix(in srgb, #f59e0b 14%, var(--surface))',
+            border: '1px solid color-mix(in srgb, #f59e0b 35%, transparent)',
+            borderRadius: 6,
+            padding: '3px 8px',
+            marginBottom: 8,
+          }}
+        >
+          <span>⚠</span>
+          <span>
+            一部カレンダーの取得に失敗: {failedCalendars.map((f) => f.calendarId).join(', ')}
+          </span>
+        </div>
+      )}
+
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {viewMode === 'month'
           ? <MonthGrid events={events} date={viewDate} today={today} hiddenCalendars={hiddenCalendars}
@@ -1143,7 +1238,16 @@ export function Calendar() {
               onDragUpdate={handleDragUpdate}
               onTaskToggle={handleTaskToggle}
               onTaskClick={handleTaskClick}
-              onAllDayAdd={handleAllDayAdd} />
+              onAllDayAdd={handleAllDayAdd}
+              activeRange={(() => {
+                if (!quickAdd || quickAdd.startHour === undefined || quickAdd.endHour === undefined) return null
+                const di = days.findIndex(d => toJSTDateStr(d) === quickAdd.date)
+                if (di < 0) return null
+                return { dayIndex: di, startHour: quickAdd.startHour, endHour: quickAdd.endHour }
+              })()}
+              onActiveRangeChange={(startHour, endHour) => {
+                setQuickAdd(q => q ? { ...q, startHour, endHour } : q)
+              }} />
         }
       </Card>
 
@@ -1217,6 +1321,13 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
 
   useEffect(() => { inputRef.current?.focus() }, [])
 
+  // Sync external range updates (e.g. while the user drags the preview's bottom edge on the grid)
+  useEffect(() => {
+    if (!hasRange) return
+    setStartTime(hoursToTimeStr(startHour!))
+    setEndTime(hoursToTimeStr(endHour!))
+  }, [startHour, endHour, hasRange])
+
   const addTaskToStore = useDataStore((s) => s.addTask)
 
   const create = async () => {
@@ -1260,13 +1371,15 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
   const isAllDay = !hasRange
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 250, background: 'rgba(0,0,0,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      onKeyDown={e => {
-        if (isSubmitShortcut(e)) { e.preventDefault(); create() }
-        if (e.key === 'Escape') onClose()
-      }}>
-      <div style={{ background: 'var(--surface)', borderRadius: 12, padding: 20, width: 400, boxShadow: '0 20px 60px rgba(0,0,0,.4)', border: '1px solid var(--border)' }}>
+    // Non-blocking floating popover — overlay is pointer-events: none so the user can still
+    // resize the active range preview on the time grid while the popover is open.
+    <div style={{ position: 'fixed', inset: 0, zIndex: 250, pointerEvents: 'none' }}>
+      <div
+        style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'var(--surface)', borderRadius: 12, padding: 20, width: 400, boxShadow: '0 20px 60px rgba(0,0,0,.4)', border: '1px solid var(--border)', pointerEvents: 'auto' }}
+        onKeyDown={e => {
+          if (isSubmitShortcut(e)) { e.preventDefault(); create() }
+          if (e.key === 'Escape') onClose()
+        }}>
 
         {/* Type toggle */}
         <div style={{ display: 'flex', gap: 4, padding: 3, background: 'var(--surface2)', borderRadius: 8, marginBottom: 14 }}>
@@ -1280,7 +1393,7 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
 
         {/* Context label */}
         <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 10 }}>
-          {isAllDay ? `${date}  終日` : `${date}  ${defaultStart}〜${defaultEnd}`}
+          {isAllDay ? `${date}  終日` : `${date}  ${startTime}〜${endTime}`}
         </div>
 
         {/* Title input */}

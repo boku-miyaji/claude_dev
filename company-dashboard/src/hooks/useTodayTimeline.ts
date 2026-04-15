@@ -100,7 +100,7 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
         const tomorrowEnd = new Date(todayStart)
         tomorrowEnd.setDate(tomorrowEnd.getDate() + 2)
 
-        const events = await fetchCalendarEvents({
+        const { events } = await fetchCalendarEvents({
           timeMin: todayStart.toISOString(),
           timeMax: tomorrowEnd.toISOString(),
           maxResults: 30,
