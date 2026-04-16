@@ -227,7 +227,10 @@
       "Bash(awk 'NR>=180 && NR<=240' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
       "Bash(awk '/itoenCustomerBase|itoenMagenticCustomerBase|itoen.*KeyPerson/,0' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
       "Bash(awk '/id: \"r[1-6]\"/,/axisLv2/' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
-      "Bash(awk '/id: \"r[4-6]\"/,/axisLv2/' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)"
+      "Bash(awk '/id: \"r[4-6]\"/,/axisLv2/' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
+      "WebFetch(domain:blog.mean.ceo)",
+      "WebFetch(domain:red.anthropic.com)",
+      "WebFetch(domain:blog.modelcontextprotocol.io)"
     ],
     "deny": [
       "Read(**/.env)",
