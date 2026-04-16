@@ -76,6 +76,59 @@ function dateLabel(date: Date, mode: ViewMode): string {
   return `${y}年${m}月`
 }
 function snapY(y: number): number { return Math.round(y / SNAP_PX) * SNAP_PX }
+
+/** Compute column layout for overlapping events in a single day */
+function layoutOverlappingEvents(evts: { id: string; startH: number; endH: number }[]): Map<string, { col: number; totalCols: number }> {
+  const result = new Map<string, { col: number; totalCols: number }>()
+  if (evts.length === 0) return result
+
+  // Sort by start time, then by longer duration first
+  const sorted = [...evts].sort((a, b) => a.startH - b.startH || (b.endH - b.startH) - (a.endH - a.startH))
+
+  // Group overlapping events into clusters
+  const clusters: typeof sorted[] = []
+  let cluster = [sorted[0]]
+  let clusterEnd = sorted[0].endH
+
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i].startH < clusterEnd) {
+      cluster.push(sorted[i])
+      clusterEnd = Math.max(clusterEnd, sorted[i].endH)
+    } else {
+      clusters.push(cluster)
+      cluster = [sorted[i]]
+      clusterEnd = sorted[i].endH
+    }
+  }
+  clusters.push(cluster)
+
+  // Assign columns within each cluster
+  for (const group of clusters) {
+    const columns: { endH: number }[] = []
+    for (const evt of group) {
+      let placed = false
+      for (let c = 0; c < columns.length; c++) {
+        if (evt.startH >= columns[c].endH) {
+          columns[c].endH = evt.endH
+          result.set(evt.id, { col: c, totalCols: 0 }) // totalCols set later
+          placed = true
+          break
+        }
+      }
+      if (!placed) {
+        result.set(evt.id, { col: columns.length, totalCols: 0 })
+        columns.push({ endH: evt.endH })
+      }
+    }
+    const total = columns.length
+    for (const evt of group) {
+      const entry = result.get(evt.id)!
+      entry.totalCols = total
+    }
+  }
+
+  return result
+}
 function yToHours(y: number): number { return START_H + y / HOUR_H }
 function buildJSTDateTime(dateStr: string, hours: number): string {
   const h = Math.floor(hours)
@@ -605,6 +658,17 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
             height: '100%',
             pointerEvents: 'none' as const,
           }
+
+          // Compute overlap layout for this day's events
+          const overlapLayout = layoutOverlappingEvents(
+            dayEvts.map(evt => {
+              let sH = getJSTHours(evt.start_time)
+              let eH = getJSTHours(evt.end_time)
+              if (evt.all_day) { sH = START_H; eH = START_H + 0.5 }
+              return { id: evt.id, startH: sH, endH: eH }
+            })
+          )
+
           return (
             <div key={di} style={colStyle}>
               {dayEvts.map(evt => {
@@ -631,12 +695,22 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
 
                 const calLabel = GCAL_CALENDARS.find(c => c.type === evt.calendar_type)?.label || evt.calendar_type
                 const bg = CAL_BG_COLORS[evt.calendar_type] || '#5b5fc7'
+
+                // Column layout for overlapping events
+                const layout = overlapLayout.get(evt.id)
+                const col = layout?.col ?? 0
+                const totalCols = layout?.totalCols ?? 1
+                const leftPct = isDragging ? 0 : (col / totalCols) * 100
+                const widthPct = isDragging ? 100 : (1 / totalCols) * 100
+
                 return (
                   <div key={evt.id}
                     className={`cal-tg-ev cal-${evt.calendar_type}${isPast ? ' cal-past' : ''}${isDragging ? ' dragging' : ''}`}
                     title={`${fmtTime(evt.start_time)}–${fmtTime(evt.end_time)}  ${evt.summary}\n📅 ${calLabel}`}
                     style={{
                       top, height: height - 2,
+                      left: `${leftPct}%`,
+                      width: `calc(${widthPct}% - 2px)`,
                       cursor: evt.all_day ? 'default' : 'grab',
                       pointerEvents: 'auto',
                       background: bg,
@@ -822,12 +896,13 @@ function WellbeingStrip({ days, layerMap, today, onCellClick }: {
 // Month Grid
 // ============================================================
 
-function MonthGrid({ events, date, today, hiddenCalendars, layerMap, layers, tasks, onCellClick, onEventClick }: {
+function MonthGrid({ events, date, today, hiddenCalendars, layerMap, layers, tasks, onCellClick, onEventClick, onAddEvent }: {
   events: CalendarEvent[]; date: Date; today: string; hiddenCalendars: Set<CalendarType>
   layerMap: CalendarLayerMap
   layers: Record<LayerKey, boolean>
   tasks: Task[]
   onCellClick: (date: string) => void; onEventClick: (evt: CalendarEvent) => void
+  onAddEvent: (date: string) => void
 }) {
   const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
   const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0)
@@ -887,6 +962,13 @@ function MonthGrid({ events, date, today, hiddenCalendars, layerMap, layers, tas
 
               <div className="cal-day-hdr" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 12, fontWeight: isToday ? 700 : 400, color: isToday ? 'var(--accent)' : 'var(--text2)' }}>{d.getDate()}</span>
+                <span
+                  onClick={e => { e.stopPropagation(); onAddEvent(ds) }}
+                  style={{ fontSize: 14, color: 'var(--text3)', cursor: 'pointer', opacity: 0.5, lineHeight: 1, padding: '0 2px', transition: 'opacity .15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
+                  title="予定・タスクを追加"
+                >+</span>
               </div>
 
               {/* Habit dots */}
@@ -1082,7 +1164,7 @@ export function Calendar() {
     return []
   }, [viewDate, viewMode])
 
-  const handleSave = async (form: { summary: string; date: string; startTime: string; endTime: string }) => {
+  const handleSave = async (form: { summary: string; date: string; startTime: string; endTime: string; calendarId?: string }) => {
     const start = { dateTime: `${form.date}T${form.startTime}:00+09:00`, timeZone: 'Asia/Tokyo' }
     const end = { dateTime: `${form.date}T${form.endTime}:00+09:00`, timeZone: 'Asia/Tokyo' }
     try {
@@ -1090,7 +1172,8 @@ export function Calendar() {
         await updateEvent(editingEvent.calendar_id, editingEvent.id, { summary: form.summary, start, end })
         toast('更新しました')
       } else {
-        await createEvent('primary', { summary: form.summary, start, end })
+        const calId = form.calendarId || GCAL_CALENDARS.find(c => c.type === 'primary')?.id || 'primary'
+        await createEvent(calId, { summary: form.summary, start, end })
         toast('追加しました')
       }
       refetch()
@@ -1231,7 +1314,8 @@ export function Calendar() {
           ? <MonthGrid events={events} date={viewDate} today={today} hiddenCalendars={hiddenCalendars}
               layerMap={layerMap} layers={layers} tasks={tasks}
               onCellClick={ds => setDrawerDate(ds)}
-              onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }} />
+              onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }}
+              onAddEvent={ds => setQuickAdd({ date: ds })} />
           : <TimeGrid events={events} tasks={tasks} days={days} today={today} hiddenCalendars={hiddenCalendars}
               onRangeCreate={(ds, startHour, endHour) => setQuickAdd({ date: ds, startHour, endHour })}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }}
@@ -1305,7 +1389,7 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
   date: string; startHour?: number; endHour?: number
   onClose: () => void
   onCreatedTask: () => void
-  onCreateEvent: (form: { summary: string; date: string; startTime: string; endTime: string }) => Promise<void>
+  onCreateEvent: (form: { summary: string; date: string; startTime: string; endTime: string; calendarId?: string }) => Promise<void>
 }) {
   const [kind, setKind] = useState<'task' | 'event'>('task')
   const [title, setTitle] = useState('')
@@ -1314,6 +1398,7 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
   const defaultEnd = hasRange ? hoursToTimeStr(endHour!) : '11:00'
   const [startTime, setStartTime] = useState(defaultStart)
   const [endTime, setEndTime] = useState(defaultEnd)
+  const [calendarId, setCalendarId] = useState(GCAL_CALENDARS.find(c => c.type === 'primary')?.id || GCAL_CALENDARS[0]?.id || 'primary')
   // Time is opt-in for all-day slots (no drag range), auto-on for time-grid slots.
   const [hasTime, setHasTime] = useState(hasRange)
   const [saving, setSaving] = useState(false)
@@ -1349,7 +1434,7 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
       toast('タスクを追加しました')
       onCreatedTask()
     } else {
-      await onCreateEvent({ summary: t, date, startTime, endTime })
+      await onCreateEvent({ summary: t, date, startTime, endTime, calendarId })
       setSaving(false)
     }
   }
@@ -1420,6 +1505,34 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>終了</label>
               <input className="input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+            </div>
+          </div>
+        )}
+
+        {/* Calendar selector (event mode only) */}
+        {kind === 'event' && (
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>カレンダー</label>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              {GCAL_CALENDARS.map(c => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCalendarId(c.id)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '5px 10px', fontSize: 11, fontWeight: 500,
+                    border: '1px solid var(--border)', borderRadius: 6,
+                    background: calendarId === c.id ? CAL_BG_COLORS[c.type] : 'transparent',
+                    color: calendarId === c.id ? '#fff' : 'var(--text2)',
+                    cursor: 'pointer', transition: 'all .15s',
+                    fontFamily: 'var(--font)',
+                  }}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: CAL_BG_COLORS[c.type], flexShrink: 0 }} />
+                  {c.label}
+                </button>
+              ))}
             </div>
           </div>
         )}
