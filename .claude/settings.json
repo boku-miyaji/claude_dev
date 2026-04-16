@@ -230,7 +230,8 @@
       "Bash(awk '/id: \"r[4-6]\"/,/axisLv2/' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
       "WebFetch(domain:blog.mean.ceo)",
       "WebFetch(domain:red.anthropic.com)",
-      "WebFetch(domain:blog.modelcontextprotocol.io)"
+      "WebFetch(domain:blog.modelcontextprotocol.io)",
+      "WebFetch(domain:note.com)"
     ],
     "deny": [
       "Read(**/.env)",

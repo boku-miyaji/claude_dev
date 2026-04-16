@@ -73,12 +73,12 @@ const WRITE_TOOLS = new Set(["tasks_create"]);
 
 // 6-tier model routing: match question type to optimal model + reasoning
 const MODEL_MAP: Record<string, string> = {
-  casual:    "gpt-5.4-mini",   // 挨拶、雑談、はい/いいえ
-  factual:   "gpt-5.4-mini",   // 単純な事実質問
-  lookup:    "gpt-5.4-mini",   // ツール使用（天気、タスク検索、Web検索）
-  creative:  "gpt-5.4-mini",   // 文章作成、メール、要約
-  analytical:"gpt-5.4-mini",   // 分析、比較、コード説明、ファイル解析
-  strategic: "gpt-5.4-mini",   // 設計、戦略、多段推論
+  casual:    "gpt-5.4",   // 挨拶、雑談、はい/いいえ
+  factual:   "gpt-5.4",   // 単純な事実質問
+  lookup:    "gpt-5.4",   // ツール使用（天気、タスク検索、Web検索）
+  creative:  "gpt-5.4",   // 文章作成、メール、要約
+  analytical:"gpt-5.4",   // 分析、比較、コード説明、ファイル解析
+  strategic: "gpt-5.4",   // 設計、戦略、多段推論
 };
 
 const REASONING_MAP: Record<string, string> = {
@@ -1218,7 +1218,7 @@ async function agentLoop(
   if (!selectedModel || selectedModel === "auto") {
     send({ type: "routing", status: "classifying" });
     const c = await classifyComplexity(userMessage);
-    selectedModel = MODEL_MAP[c] || "gpt-5.4-mini";
+    selectedModel = MODEL_MAP[c] || "gpt-5.4";
     if (reasoningEffort === "auto") reasoningEffort = REASONING_MAP[c] || "medium";
     routingReason = `auto: ${c}`;
     send({ type: "routing", status: "done", complexity: c, model: selectedModel, reason: routingReason, reasoning: reasoningEffort });
@@ -1233,7 +1233,7 @@ async function agentLoop(
 
   // API key fallback
   if (isAnthropicModel(selectedModel) && !ANTHROPIC_API_KEY) {
-    selectedModel = OPENAI_API_KEY ? "gpt-5.4-mini" : null as unknown as string;
+    selectedModel = OPENAI_API_KEY ? "gpt-5.4" : null as unknown as string;
     if (!selectedModel) { send({ type: "error", message: "No API keys configured." }); return; }
     routingReason += " (fallback)";
   }
@@ -1270,7 +1270,7 @@ async function agentLoop(
     totalOut += result.tokensOutput;
 
     // Cost check (precision mode guardrail)
-    const rate = COST_TABLE[selectedModel] || COST_TABLE["gpt-5.4-mini"];
+    const rate = COST_TABLE[selectedModel] || COST_TABLE["gpt-5.4"];
     const runningCost = totalIn * rate.input + totalOut * rate.output;
     if (precisionMode && runningCost > MAX_COST_PRECISION) {
       send({ type: "error", message: `Cost cap reached ($${runningCost.toFixed(4)} > $${MAX_COST_PRECISION}). Stopping to prevent runaway costs.` });
@@ -1418,7 +1418,7 @@ Deno.serve(async (req) => {
     }
 
     const { prompt: systemPrompt } = await buildSystemPrompt();
-    const model = body.model || "gpt-5.4-mini";
+    const model = body.model || "gpt-5.4";
     const history: { role: string; content: string }[] = Array.isArray(body.history) ? body.history : [];
     const userMessage = String(body.message || "");
 
