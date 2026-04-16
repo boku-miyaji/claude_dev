@@ -231,7 +231,12 @@
       "WebFetch(domain:blog.mean.ceo)",
       "WebFetch(domain:red.anthropic.com)",
       "WebFetch(domain:blog.modelcontextprotocol.io)",
-      "WebFetch(domain:note.com)"
+      "WebFetch(domain:note.com)",
+      "WebFetch(domain:azure.microsoft.com)",
+      "WebFetch(domain:www.helicone.ai)",
+      "WebFetch(domain:sedai.io)",
+      "WebFetch(domain:www.oreateai.com)",
+      "WebFetch(domain:www.pump.co)"
     ],
     "deny": [
       "Read(**/.env)",
