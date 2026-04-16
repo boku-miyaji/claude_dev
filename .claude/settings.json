@@ -225,7 +225,9 @@
       "WebFetch(domain:www.resona-gr.co.jp)",
       "Bash(awk 'NR>=118 && NR<=460' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
       "Bash(awk 'NR>=180 && NR<=240' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
-      "Bash(awk '/itoenCustomerBase|itoenMagenticCustomerBase|itoen.*KeyPerson/,0' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)"
+      "Bash(awk '/itoenCustomerBase|itoenMagenticCustomerBase|itoen.*KeyPerson/,0' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
+      "Bash(awk '/id: \"r[1-6]\"/,/axisLv2/' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
+      "Bash(awk '/id: \"r[4-6]\"/,/axisLv2/' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -513,6 +515,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
