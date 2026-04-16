@@ -15,90 +15,90 @@
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
-        "version": "unknown",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/frontend-design/48aa43517886",
+        "version": "48aa43517886",
         "installedAt": "2026-01-07T12:54:54.553Z",
-        "lastUpdated": "2026-04-15T00:26:53.195Z"
+        "lastUpdated": "2026-04-16T00:47:29.898Z"
       }
     ],
     "context7@claude-plugins-official": [
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/context7/unknown",
-        "version": "unknown",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/context7/48aa43517886",
+        "version": "48aa43517886",
         "installedAt": "2026-01-07T12:58:36.018Z",
-        "lastUpdated": "2026-04-15T00:26:53.194Z"
+        "lastUpdated": "2026-04-16T00:47:29.897Z"
       }
     ],
     "serena@claude-plugins-official": [
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/serena/unknown",
-        "version": "unknown",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/serena/48aa43517886",
+        "version": "48aa43517886",
         "installedAt": "2026-01-07T13:00:59.145Z",
-        "lastUpdated": "2026-04-15T00:26:53.196Z"
+        "lastUpdated": "2026-04-16T00:47:29.899Z"
       }
     ],
     "pr-review-toolkit@claude-plugins-official": [
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown",
-        "version": "unknown",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/48aa43517886",
+        "version": "48aa43517886",
         "installedAt": "2026-01-07T13:01:18.329Z",
-        "lastUpdated": "2026-04-15T00:26:53.195Z"
+        "lastUpdated": "2026-04-16T00:47:29.900Z"
       }
     ],
     "github@claude-plugins-official": [
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/github/unknown",
-        "version": "unknown",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/github/48aa43517886",
+        "version": "48aa43517886",
         "installedAt": "2026-01-07T13:01:28.812Z",
-        "lastUpdated": "2026-04-15T00:26:53.197Z"
+        "lastUpdated": "2026-04-16T00:47:29.900Z"
       }
     ],
     "code-review@claude-plugins-official": [
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/code-review/unknown",
-        "version": "unknown",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/code-review/48aa43517886",
+        "version": "48aa43517886",
         "installedAt": "2026-01-07T13:01:39.462Z",
-        "lastUpdated": "2026-04-15T00:26:53.197Z"
+        "lastUpdated": "2026-04-16T00:47:29.899Z"
       }
     ],
     "security-guidance@claude-plugins-official": [
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/security-guidance/unknown",
-        "version": "unknown",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/security-guidance/48aa43517886",
+        "version": "48aa43517886",
         "installedAt": "2026-01-07T13:01:48.792Z",
-        "lastUpdated": "2026-04-15T00:26:53.198Z"
+        "lastUpdated": "2026-04-16T00:47:29.901Z"
       }
     ],
     "supabase@claude-plugins-official": [
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/supabase/unknown",
-        "version": "unknown",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/supabase/48aa43517886",
+        "version": "48aa43517886",
         "installedAt": "2026-01-07T13:01:55.514Z",
-        "lastUpdated": "2026-04-15T00:26:53.198Z"
+        "lastUpdated": "2026-04-16T00:47:29.902Z"
       }
     ],
     "commit-commands@claude-plugins-official": [
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/commit-commands/unknown",
-        "version": "unknown",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/commit-commands/48aa43517886",
+        "version": "48aa43517886",
         "installedAt": "2026-01-07T13:02:05.228Z",
-        "lastUpdated": "2026-04-15T00:26:53.199Z"
+        "lastUpdated": "2026-04-16T00:47:29.901Z"
       }
     ],
     "company@ai-company": [
