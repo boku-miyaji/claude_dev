@@ -394,9 +394,10 @@ function TabOverview() {
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--text3)' }}>コスト分離の原則</div>
         <Tbl headers={['処理場所', '使用モデル', 'コスト', '用途']} rows={[
-          ['ダッシュボード（リアルタイム）', 'gpt-5.4-nano (Edge Function)', 'OpenAI API従量課金', '感情分析、朝ブリーフィング、自己分析、夢検出、週次ナラティブ'],
+          ['ダッシュボード（リアルタイム）', 'gpt-5.4-nano / gpt-5.4 (Edge Function)', 'OpenAI API従量課金', '感情分析(nano)、AIコメント(5.4)、自己分析(5.4)、夢検出(nano)'],
+          ['Edge Function（バッチ）', 'gpt-5.4', 'OpenAI API従量課金', 'narrator-update（Arc Reader/Theme Finder/Chapter）'],
           ['Claude Code（バッチ）', 'Claude CLI opus', 'サブスク内（追加費用なし）', 'プロンプト分類、成長分析、スキル進化、部署評価'],
-          ['Edge Function（バッチ分析）', 'gpt-5.4-mini', 'OpenAI API（月$0.1以下）', 'CEOインサイト3層分析（日記+prompt_log）'],
+          ['Edge Function（バッチ分析）', 'gpt-5.4-mini', 'OpenAI API（月$0.1以下）', 'CEOインサイト3層分析（日記+prompt_log）、フィードバック蒸留'],
           ['Claude Code（Hook）', 'なし（キーワードのみ）', 'ゼロ', 'prompt-log タグ付け、growth-detector シグナル検出'],
         ]} />
       </Section>
@@ -829,16 +830,15 @@ function TabExperienceDesign() {
       <Section title="モデル選定 — 誰が待っているかで決める">
         <Principle title="判断原則" body="ユーザーが画面を見つめて待っている → OpenAI API（速度優先）。誰も待っていない + CLI可能 → Claude CLI（品質優先・無料）。誰も待っていない + pg_cron内 → OpenAI API最安モデル。" color="var(--accent)" />
         <Tbl headers={['機能', 'ユーザーの状態', 'モデル', 'API', '理由']} rows={[
-          ['感情分析', '投稿後、画面を見ている', 'gpt-5.4-nano', 'OpenAI', '3秒以内。nano精度で十分'],
-          ['AIコメント', 'Today画面を見ている', 'gpt-5.4-nano', 'OpenAI', '即座のフィードバックが定着の核'],
+          ['感情分析', '投稿後、画面を見ている', 'gpt-5.4-mini', 'OpenAI', '3秒以内。mini精度で十分'],
+          ['AIコメント', 'Today画面を見ている', 'gpt-5.4', 'OpenAI', '自然な日本語が必要。品質重視'],
           ['Moment Detector', '投稿後、画面を見ている', 'gpt-5.4-nano', 'OpenAI', '感情分析直後。軽い判定'],
           ['チャット応答', '送信後、待っている', '6段階ルーティング', 'OpenAI', 'SSEストリーミングで体感確保'],
-          ['自己分析', 'ボタン押下後、待っている', 'gpt-5.4-nano', 'OpenAI', '4500トークン。段階的表示で体感改善'],
-          ['朝ブリーフィング', '誰も待っていない(7:00)', 'gpt-5.4-nano', 'OpenAI (pg_cron)', 'Supabase内部。CLI不可'],
+          ['自己分析', 'ボタン押下後、待っている', 'gpt-5.4', 'OpenAI', '深い分析。品質重視'],
           ['ニュース収集', '誰も待っていない(バッチ)', 'gpt-5.4-mini', 'OpenAI (pg_cron)', 'web_searchにmini必要'],
-          ['Arc Reader', '誰も待っていない(週次)', 'Claude CLI', 'Claude (無料)', '深い分析。品質>速度'],
-          ['Theme Finder', '誰も待っていない(月次)', 'Claude CLI', 'Claude (無料)', '最も品質が必要。コストゼロ'],
-          ['Foresight Engine', '誰も待っていない(週次)', 'Claude CLI', 'Claude (無料)', 'Arc Reader出力の解釈。深い推論'],
+          ['Arc Reader', '誰も待っていない(週次)', 'gpt-5.4', 'OpenAI (Edge Function)', '物語解釈。品質重視'],
+          ['Theme Finder', '誰も待っていない(月次)', 'gpt-5.4', 'OpenAI (Edge Function)', '人生テーマ検出。品質重視'],
+          ['Foresight Engine', '誰も待っていない(週次)', 'gpt-5.4', 'OpenAI', 'Arc Reader出力の解釈。深い推論'],
           ['Chapter生成', '誰も待っていない(四半期)', 'Claude CLI', 'Claude (無料)', '最長・最深の分析'],
           ['Weekly Narrative', '誰も待っていない(月曜早朝)', 'Claude CLI', 'Claude (無料)', '物語生成。品質重視'],
           ['WBI集計/ストリーク', '誰も待っていない', 'LLM不要(SQL)', '—', '数値計算にLLMは使わない'],
@@ -1369,8 +1369,8 @@ function TabAiFeatures() {
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>4つのエンジン</div>
         <Tbl headers={['エンジン', '役割', 'モデル', '更新頻度']} rows={[
           ['Arc Reader', '感情の時系列を「物語の弧」として解釈。今のフェーズを読み取る', 'gpt-5.4', '週次'],
-          ['Theme Finder', '数ヶ月の日記×夢×行動から人生の通底テーマを発見', 'gpt-5 / claude-sonnet-4-6', '月次'],
-          ['Moment Detector', '日記から転機（決断/気づき/突破/挫折）をリアルタイム検出', 'gpt-5.4-mini', '日記書き込み毎'],
+          ['Theme Finder', '数ヶ月の日記×夢×行動から人生の通底テーマを発見', 'gpt-5.4', '月次'],
+          ['Moment Detector', '日記から転機（決断/気づき/突破/挫折）をリアルタイム検出', 'gpt-5.4-nano', '日記書き込み毎'],
           ['Foresight Engine', '過去のパターンから物語の続きを予感し、提案する', 'gpt-5.4', '随時'],
         ]} />
 

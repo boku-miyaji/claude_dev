@@ -676,7 +676,7 @@ changes_from_previous フィールドに、前回からの変化を具体的に�
       // Call AI via Edge Function (OpenAI)
       const { content: resultText } = await aiCompletion(userData, { source: 'self_analysis',
         systemPrompt: prompt,
-        model: 'gpt-5.4-mini',
+        model: 'gpt-5.4',
         jsonMode: true,
         temperature: 0.4,
         maxTokens: 4500,
@@ -701,7 +701,7 @@ changes_from_previous フィールドに、前回からの変化を具体的に�
           result,
           summary,
           data_count: count,
-          model_used: 'gpt-5.4-mini',
+          model_used: 'gpt-5.4',
           analysis_context: analysisContext,
         })
         .select()
