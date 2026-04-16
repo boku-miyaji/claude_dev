@@ -236,7 +236,10 @@
       "WebFetch(domain:www.helicone.ai)",
       "WebFetch(domain:sedai.io)",
       "WebFetch(domain:www.oreateai.com)",
-      "WebFetch(domain:www.pump.co)"
+      "WebFetch(domain:www.pump.co)",
+      "WebFetch(domain:www.nature.com)",
+      "WebFetch(domain:alignment.anthropic.com)",
+      "WebFetch(domain:subliminal-learning.com)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -524,6 +527,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
