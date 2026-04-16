@@ -142,14 +142,14 @@ export function useMorningBriefing(
       const contextParts: string[] = []
 
       // ① Primary: diary (what the user is feeling / thinking)
-      if (recentDiary) contextParts.push(`【日記（最重要）】\n${recentDiary}`)
+      if (recentDiary) contextParts.push(`## 日記\n${recentDiary}`)
       if (emotionContext) contextParts.push(emotionContext)
       if (moodTrend) contextParts.push(moodTrend)
 
       // ② Atmosphere: weather, time
       const atmosphereParts: string[] = [`時刻: ${currentTime}`]
       if (weatherText) atmosphereParts.push(weatherText)
-      contextParts.push(`【今日の空気】\n${atmosphereParts.join(' / ')}`)
+      contextParts.push(`## 今日の空気\n${atmosphereParts.join(' / ')}`)
 
       // ③ Supporting context (don't mention directly, use to deepen understanding)
       const supportParts: string[] = []
@@ -159,10 +159,10 @@ export function useMorningBriefing(
         supportParts.push(`抱えてるタスク: ${openTasks.slice(0, 3).map((t) => t.title).join('、')}`)
       }
       if (supportParts.length > 0) {
-        contextParts.push(`【補足（直接言及しなくていい）】\n${supportParts.join('\n')}`)
+        contextParts.push(`## 補足（直接言及しなくていい）\n${supportParts.join('\n')}`)
       }
 
-      if (insightsText) contextParts.push(`【この人の傾向】\n${insightsText}`)
+      if (insightsText) contextParts.push(`## この人の傾向\n${insightsText}`)
       if (dreamsText) contextParts.push(`進行中の夢: ${dreamsText}`)
       if (streakResult > 0) contextParts.push(`連続記録: ${streakResult}日`)
 
@@ -317,7 +317,7 @@ ${modeInstructions[timeMode]}
         model: 'gpt-5.4-mini',
         maxTokens: 200,
       })
-      const briefingMessage = result.content?.trim()
+      const briefingMessage = result.content?.trim()?.replace(/[【】]/g, '')
       console.log('[AI Partner] Result:', result)
 
       if (briefingMessage) {
