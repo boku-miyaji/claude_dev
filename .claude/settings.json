@@ -222,7 +222,9 @@
       "Bash(awk '{print $2}')",
       "Bash(pdfinfo \"提案仮説構築AI_最終報告書_v2.pdf\")",
       "Bash(pdfinfo \"20260331_最終報告資料v1.0.pdf\")",
-      "WebFetch(domain:www.resona-gr.co.jp)"
+      "WebFetch(domain:www.resona-gr.co.jp)",
+      "Bash(awk 'NR>=118 && NR<=460' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)",
+      "Bash(awk 'NR>=180 && NR<=240' /workspace/aces-rikyu-sales-proposals-poc/server/lib/mock-data.ts)"
     ],
     "deny": [
       "Read(**/.env)",
