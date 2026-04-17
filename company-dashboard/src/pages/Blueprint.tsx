@@ -369,6 +369,7 @@ function TabOverview() {
           ['ほしい物の登録', 'Dreams（Wishlist）', '随時', '欲望ログ（現状分析対象外）'],
           ['カレンダー予定の作成/編集', 'Calendar + 予定ボタン / 予定クリック', '随時', '時間帯別メッセージ / Weekly に反映'],
           ['AI Partner の👍/違う', 'Today（briefing直下）', '気になった時', 'Partner精度向上（フィードバック蒸留）'],
+          ['Roots セッション（人生の棚卸し）', 'Roots（Understand配下）', 'Quick 5分 / Medium 20分 / Deep じっくり — いつでも', 'ステージ×軸の埋まり具合をAIが把握し、手薄な領域・深掘り候補から質問。日記では補えない過去・価値観・家庭環境・仕事歴を言語化。再実行するほど未着手エリアを優先'],
         ]} />
         <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, marginTop: 12, fontWeight: 600 }}>C. 初期セットアップ（一度だけ）</div>
         <Tbl headers={['作業', '画面', '内容']} rows={[
@@ -409,6 +410,7 @@ function TabOverview() {
           ['news_items', 'Today/Reportsで「収集」ボタン', 'Edge Function news-collect（4ソース並列）+ news-enrich（LLM日本語要約）', 'Google News RSS + arXiv API + Hacker News API + 公式ブログRSS → DB保存 + クリック追跡。news-enrich は title_ja/summary を gpt-5.4-nano で生成（バッチ + POST{id}で手動再翻訳可、Today/Reports の各記事に「日本語訳」ボタン）'],
           ['calendar_events (読み取り)', 'Calendar/Todayページ', 'Edge Function proxy (GET /events)', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。maxResults=250 + nextPageTokenページングで取りこぼし防止、失敗カレンダーは failed_calendars[] で警告バッジ表示'],
           ['calendar_events (作成/編集/削除)', 'Calendarページ「+ 予定」ボタン or 既存予定クリック', 'Edge Function proxy (POST/PATCH/DELETE /events)', 'focus-you内で完結。Googleカレンダー画面を別で開く必要なし。EventModalでsummary/日付/開始終了/calendarId編集可能。ドラッグ移動も PATCH で Google に反映'],
+          ['life_story_entries', 'Rootsページで質問に答える', 'Edge Function life-story (POST next_question/answer/summarize/coverage)', 'Opus 4.7で過去回答を踏まえて質問生成→ステージ×軸(幼少期/小/中/高/大学/社会人初期/中期/最近 × 価値観/家庭/嬉しかった/苦しかった/転機/仕事/人間関係)のカバレッジをDBに蓄積。再実行ほど手薄エリアを聞く。セッション終了でsummarize→テーマ/言語化/次回候補を返す'],
           ['google_tasks', 'タスク作成/更新/完了時', 'data.ts → syncTaskToGoogle', 'Supabase tasks→Google Tasks一方向同期。日付ありタスクのみ。google_task_idでリンク。lib/googleTasksApi.ts'],
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
         ]} />
