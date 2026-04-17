@@ -43,6 +43,11 @@ git ls-files --others --exclude-standard -z 2>/dev/null | while IFS= read -r -d 
     *secret*|*private*) continue ;;
     *.sqlite|*.sqlite3|*.db) continue ;;
     *.mp4|*.mov|*.zip|*.tar|*.gz|*.tgz|*.7z|*.rar) continue ;;
+    # Office / docs — usually client deliverables or received materials, not source.
+    # Let the user add these explicitly when they are part of the deliverable.
+    *.pptx|*.ppt|*.docx|*.doc|*.xlsx|*.xls|*.pdf) continue ;;
+    # Client-received materials
+    */受領資料/*|*/received/*|*/client-materials/*) continue ;;
   esac
   # Skip files larger than 5MB (large binaries, datasets, model weights)
   size=$(stat -c%s -- "$file" 2>/dev/null || echo 0)
