@@ -259,7 +259,8 @@
       "WebFetch(domain:vercel.com)",
       "WebFetch(domain:developers.cloudflare.com)",
       "WebFetch(domain:www.cloudflare.com)",
-      "WebFetch(domain:blog.cloudflare.com)"
+      "WebFetch(domain:blog.cloudflare.com)",
+      "Bash(BACKEND_PORT=9999 bash -c 'source /workspace/polaris-circuit-diagram/scripts/dev-all.sh --help 2>/dev/null; echo \"env BACKEND_PORT=9999 honored only if no --help triggers exit\"')"
     ],
     "deny": [
       "Read(**/.env)",
