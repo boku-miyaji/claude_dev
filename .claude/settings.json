@@ -260,6 +260,7 @@
       "Read(**/*secret*)",
       "Read(**/*credentials*)"
     ],
+    "defaultMode": "acceptEdits",
     "additionalDirectories": [
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
       "/home/node/.claude/plugins/cache/ai-company/company/1.0.0/.claude-plugin",
