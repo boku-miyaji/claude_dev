@@ -534,5 +534,6 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false
+  "skipDangerousModePermissionPrompt": false,
+  "effortLevel": "max"
 }
