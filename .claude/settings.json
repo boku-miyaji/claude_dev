@@ -241,7 +241,8 @@
       "WebFetch(domain:alignment.anthropic.com)",
       "WebFetch(domain:subliminal-learning.com)",
       "mcp__claude_ai_Google_Calendar__list_events",
-      "mcp__claude_ai_Google_Calendar__list_calendars"
+      "mcp__claude_ai_Google_Calendar__list_calendars",
+      "Bash(.claude/hooks/thinking-level.sh)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -281,6 +282,10 @@
       {
         "matcher": "",
         "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/thinking-level.sh"
+          },
           {
             "type": "command",
             "command": "/workspace/.claude/hooks/prompt-log.sh",
@@ -529,6 +534,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
