@@ -33,6 +33,16 @@ interface CoverageCell {
   maxDepth: number
 }
 
+interface LifeEntry {
+  id: number
+  stage: string
+  axis: string
+  question: string
+  answer: string
+  depth_level: number
+  created_at: string
+}
+
 interface NextQuestionResponse {
   question: string
   stage: string
@@ -77,6 +87,9 @@ export function LifeHistory() {
 
   const [coverage, setCoverage] = useState<CoverageCell[]>([])
   const [totalEntries, setTotalEntries] = useState(0)
+  const [entries, setEntries] = useState<LifeEntry[]>([])
+  const [expandedStage, setExpandedStage] = useState<string | null>(null)
+  const [showHeatmap, setShowHeatmap] = useState(false)
 
   // Session state
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -101,7 +114,16 @@ export function LifeHistory() {
     }
   }, [])
 
-  useEffect(() => { loadCoverage() }, [loadCoverage])
+  const loadEntries = useCallback(async () => {
+    const { data } = await supabase
+      .from('life_story_entries')
+      .select('id, stage, axis, question, answer, depth_level, created_at')
+      .order('created_at', { ascending: false })
+      .limit(500)
+    setEntries((data ?? []) as LifeEntry[])
+  }, [])
+
+  useEffect(() => { loadCoverage(); loadEntries() }, [loadCoverage, loadEntries])
 
   const requestNextQuestion = useCallback(async (sid: string) => {
     setLoading(true)
@@ -138,13 +160,13 @@ export function LifeHistory() {
     try {
       const res = await callLifeStory<Summary>({ action: 'summarize', session_id: sessionId })
       setSummary(res)
-      await loadCoverage()
+      await Promise.all([loadCoverage(), loadEntries()])
     } catch (err) {
       setError((err as Error).message)
     } finally {
       setLoading(false)
     }
-  }, [sessionId, loadCoverage])
+  }, [sessionId, loadCoverage, loadEntries])
 
   const submitAnswer = useCallback(async () => {
     const text = answer.trim()
@@ -193,6 +215,15 @@ export function LifeHistory() {
     for (const c of coverage) map.set(`${c.stage}|${c.axis}`, c)
     return map
   }, [coverage])
+
+  const entriesByStage = useMemo(() => {
+    const map = new Map<string, LifeEntry[]>()
+    for (const e of entries) {
+      if (!map.has(e.stage)) map.set(e.stage, [])
+      map.get(e.stage)!.push(e)
+    }
+    return map
+  }, [entries])
 
   const heatmapCellStyle = (c: CoverageCell | undefined): React.CSSProperties => {
     const count = c?.count ?? 0
@@ -393,45 +424,162 @@ export function LifeHistory() {
         {error && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 8 }}>{error}</div>}
       </Card>
 
-      {/* Coverage heatmap */}
-      <div className="section" style={{ marginTop: 20 }}>
+      {/* Timeline — 人生の軌跡 */}
+      <div className="section" style={{ marginTop: 24 }}>
         <div className="section-title">
-          今までの棚卸しマップ（{totalEntries}件の回答）
+          人生の軌跡（{totalEntries}件の記録）
         </div>
-        <Card>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ borderCollapse: 'separate', borderSpacing: 4, fontSize: 11 }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left', padding: '0 8px 6px 0', color: 'var(--text3)', fontWeight: 400 }}></th>
-                  {AXES.map((a) => (
-                    <th key={a.key} style={{ textAlign: 'center', padding: '0 4px 6px', color: 'var(--text3)', fontWeight: 400, fontSize: 10 }}>{a.label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {STAGES.map((s) => (
-                  <tr key={s.key}>
-                    <td style={{ padding: '2px 10px 2px 0', color: 'var(--text2)', whiteSpace: 'nowrap', fontSize: 10 }}>{s.label}</td>
-                    {AXES.map((a) => {
-                      const c = coverageCell.get(`${s.key}|${a.key}`)
-                      return (
-                        <td key={a.key}>
-                          <div style={heatmapCellStyle(c)} title={`${c?.count ?? 0}件 / 深度${c?.maxDepth ?? 0}`}>
-                            {c?.count ?? 0}
-                          </div>
-                        </td>
-                      )
-                    })}
+        <div style={{ position: 'relative', paddingLeft: 24 }}>
+          {/* vertical line */}
+          <div style={{ position: 'absolute', left: 7, top: 8, bottom: 8, width: 2, background: 'var(--border)' }} />
+          {STAGES.map((s) => {
+            const stageEntries = entriesByStage.get(s.key) ?? []
+            const isExpanded = expandedStage === s.key
+            const isEmpty = stageEntries.length === 0
+            const byAxis = new Map<string, LifeEntry[]>()
+            stageEntries.forEach((e) => {
+              if (!byAxis.has(e.axis)) byAxis.set(e.axis, [])
+              byAxis.get(e.axis)!.push(e)
+            })
+            return (
+              <div key={s.key} style={{ position: 'relative', marginBottom: 14 }}>
+                <div style={{
+                  position: 'absolute', left: -21, top: 14, width: 16, height: 16,
+                  borderRadius: '50%',
+                  background: isEmpty ? 'var(--surface2)' : 'var(--accent)',
+                  border: '2px solid var(--surface)', boxShadow: isEmpty ? 'none' : '0 0 0 2px rgba(99,102,241,0.15)',
+                }} />
+                <Card style={{ opacity: isEmpty ? 0.7 : 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{s.label}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+                      {isEmpty ? '未着手' : `${stageEntries.length}件の記録`}
+                    </div>
+                    <div style={{ flex: 1 }} />
+                    {!isEmpty && (
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        style={{ fontSize: 10, padding: '2px 8px' }}
+                        onClick={() => setExpandedStage(isExpanded ? null : s.key)}
+                      >
+                        {isExpanded ? '閉じる' : '詳細 ▸'}
+                      </button>
+                    )}
+                    <button
+                      className="btn btn-p btn-sm"
+                      style={{ fontSize: 10, padding: '2px 10px' }}
+                      onClick={() => { setFocusStage(s.key); setFocusAxis(''); setMode(isEmpty ? 'quick' : 'medium'); startSession() }}
+                      disabled={loading}
+                    >
+                      {isEmpty ? '始める' : 'ここを掘る'}
+                    </button>
+                  </div>
+
+                  {!isEmpty && (
+                    <>
+                      <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                        {Array.from(byAxis.entries()).map(([axisKey, es]) => {
+                          const axisLabel = AXES.find((a) => a.key === axisKey)?.label ?? axisKey
+                          return (
+                            <span
+                              key={axisKey}
+                              style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: 'var(--surface2)', color: 'var(--text2)' }}
+                            >
+                              {axisLabel}: {es.length}
+                            </span>
+                          )
+                        })}
+                      </div>
+
+                      {!isExpanded && (
+                        <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6, marginTop: 10, fontStyle: 'italic' }}>
+                          「{stageEntries[0].answer.substring(0, 90)}{stageEntries[0].answer.length > 90 ? '…' : ''}」
+                        </div>
+                      )}
+
+                      {isExpanded && (
+                        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          {Array.from(byAxis.entries()).map(([axisKey, es]) => {
+                            const axisLabel = AXES.find((a) => a.key === axisKey)?.label ?? axisKey
+                            return (
+                              <div key={axisKey}>
+                                <div style={{ fontSize: 10, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
+                                  {axisLabel}
+                                </div>
+                                {es.map((e) => (
+                                  <div key={e.id} style={{ marginBottom: 10, paddingLeft: 10, borderLeft: '2px solid var(--border)' }}>
+                                    <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 3 }}>Q: {e.question}</div>
+                                    <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{e.answer}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {isEmpty && (
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>
+                      この時期のことをまだ聞いていません
+                    </div>
+                  )}
+                </Card>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Coverage heatmap — collapsed by default */}
+      <div className="section" style={{ marginTop: 20 }}>
+        <button
+          onClick={() => setShowHeatmap((v) => !v)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase',
+            letterSpacing: '.08em', padding: 0, marginBottom: 8,
+          }}
+        >
+          {showHeatmap ? '▾' : '▸'} カバレッジマップ（ステージ × 軸の埋まり具合）
+        </button>
+        {showHeatmap && (
+          <Card>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ borderCollapse: 'separate', borderSpacing: 4, fontSize: 11 }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '0 8px 6px 0', color: 'var(--text3)', fontWeight: 400 }}></th>
+                    {AXES.map((a) => (
+                      <th key={a.key} style={{ textAlign: 'center', padding: '0 4px 6px', color: 'var(--text3)', fontWeight: 400, fontSize: 10 }}>{a.label}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 10 }}>
-            数字 = そのステージ × 軸で答えた件数。色が濃いほど深く聞けている。枠線付きは深度4以上。
-          </div>
-        </Card>
+                </thead>
+                <tbody>
+                  {STAGES.map((s) => (
+                    <tr key={s.key}>
+                      <td style={{ padding: '2px 10px 2px 0', color: 'var(--text2)', whiteSpace: 'nowrap', fontSize: 10 }}>{s.label}</td>
+                      {AXES.map((a) => {
+                        const c = coverageCell.get(`${s.key}|${a.key}`)
+                        return (
+                          <td key={a.key}>
+                            <div style={heatmapCellStyle(c)} title={`${c?.count ?? 0}件 / 深度${c?.maxDepth ?? 0}`}>
+                              {c?.count ?? 0}
+                            </div>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 10 }}>
+              数字 = そのステージ × 軸で答えた件数。色が濃いほど深く聞けている。枠線付きは深度4以上。
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   )
