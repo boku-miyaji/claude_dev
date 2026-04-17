@@ -5,6 +5,8 @@ import { Card } from '@/components/ui'
 import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis'
 import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { useMomentDetector } from '@/hooks/useMomentDetector'
+import { useDiaryExtraction, type DiaryExtractionResult } from '@/hooks/useDiaryExtraction'
+import { DiaryExtractionResultCard } from '@/components/DiaryExtractionResultCard'
 import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
@@ -170,7 +172,10 @@ export function Today() {
   const [emotionBadges, setEmotionBadges] = useState<Map<string, EmotionBadge[]>>(new Map())
   const { analyze, analyzing, error: emotionError } = useEmotionAnalysis()
   const { detect: detectMoment } = useMomentDetector()
+  const { extract: extractFromDiary } = useDiaryExtraction()
   const weather = useTodayWeather()
+  const [lastExtraction, setLastExtraction] = useState<DiaryExtractionResult | null>(null)
+  const [extractionDismissed, setExtractionDismissed] = useState(false)
 
   const timeMode: TimeMode = useMemo(() => getTimeMode(), [])
 
@@ -422,8 +427,50 @@ export function Today() {
         supabase.functions.invoke('diary-embed', { body: { id: numericId, text: content.trim() } })
           .catch((err) => console.error('[Today] diary-embed failed', err))
       }
+      // Auto-extract tasks/habits from diary. High-confidence done items auto-check,
+      // suggestions show up in the detection card for user confirmation.
+      extractFromDiary(content.trim()).then(async (extraction) => {
+        if (!extraction) return
+        const nowIso = new Date().toISOString()
+        const highDoneTasks = extraction.done_tasks.filter((d) => d.confidence === 'high')
+        const highDoneHabits = extraction.done_habits.filter((d) => d.confidence === 'high')
+
+        await Promise.all([
+          ...highDoneTasks.map((t) =>
+            supabase.from('tasks')
+              .update({ status: 'done', completed_at: nowIso, source: 'auto:diary-extract' })
+              .eq('id', t.task_id)
+              .eq('status', 'open')
+          ),
+          ...highDoneHabits.map(async (h) => {
+            const alreadyLogged = habitLogs.some((l) =>
+              l.habit_id === h.habit_id && l.completed_at.substring(0, 10) === todayStr
+            )
+            if (alreadyLogged) return
+            await supabase.from('habit_logs').insert({
+              habit_id: h.habit_id,
+              completed_at: nowIso,
+              note: '[auto] 日記から検出',
+            })
+          }),
+        ])
+
+        if (highDoneTasks.length > 0 || highDoneHabits.length > 0) {
+          await Promise.all([fetchTasks(), fetchHabitLogs()])
+        }
+
+        const hasAnything =
+          extraction.done_tasks.length > 0 ||
+          extraction.new_tasks.length > 0 ||
+          extraction.done_habits.length > 0 ||
+          extraction.new_habit_suggestions.length > 0
+        if (hasAnything) {
+          setLastExtraction(extraction)
+          setExtractionDismissed(false)
+        }
+      }).catch((err) => console.error('[Today] diary extraction failed', err))
     }
-  }, [addDiaryEntry, analyze, detectMoment, todayStr, pendingImages, pendingImagePreviews])
+  }, [addDiaryEntry, analyze, detectMoment, todayStr, pendingImages, pendingImagePreviews, extractFromDiary, habitLogs, fetchTasks, fetchHabitLogs])
 
   const diaryPrompt = useMemo(() => getDiaryPrompt(timeMode, recentEventName ?? undefined), [timeMode, recentEventName])
   // 「過去の自分カード」— 今書いている内容と意味が近い 14日より前の日記を返す
@@ -974,6 +1021,13 @@ export function Today() {
         </button>
       </div>
       {emotionError && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4 }}>{emotionError}</div>}
+      {lastExtraction && !extractionDismissed && (
+        <DiaryExtractionResultCard
+          result={lastExtraction}
+          onDismiss={() => setExtractionDismissed(true)}
+          onChanged={() => { fetchTasks(); fetchHabitLogs() }}
+        />
+      )}
       {/* Analysis questions - subtle prompts to improve self-analysis precision */}
       <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
         {todayQuestions.map((q, i) => (

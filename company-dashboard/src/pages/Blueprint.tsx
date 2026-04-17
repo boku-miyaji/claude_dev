@@ -347,15 +347,55 @@ function TabOverview() {
           ['感情ベクトル検索', '日記投稿後', 'pgvector + emotion_vector(8) on emotion_analysis', '類似感情パターンの自動発見'],
           ['日本語全文検索', '検索実行時', 'PGroonga on diary_entries.body', '日記キーワード検索（形態素解析対応）'],
           ['Hybrid Search + Reranking', '検索実行時', 'emotion vector + PGroonga → gpt-nano rerank', '関連日記をスコア付きでLLMコンテキストに注入'],
-          ['emotion_analysis', '日記投稿直後', 'useEmotionAnalysis (自動)', 'diary_entries.wbi更新 → Journal可視化 → AI Partner再生成'],
-          ['AI Partnerコメント', '日記投稿後 + 時間帯変更 + リロード', 'useMorningBriefing (invalidate)', '表示のみ（DB保存なし）'],
-          ['夢進捗検出', '日記投稿後', 'useDreamDetection (自動)', 'toast通知のみ'],
+          ['emotion_analysis', '日記投稿直後', 'useEmotionAnalysis (自動)', 'diary_entries.wbi更新 → Journal可視化。AI Partner再生成はしない（同じこと言うリスクを避けるため）'],
+          ['AI Partnerコメント', '時間帯変更(朝/昼/夕/夜) + リロード', 'useMorningBriefing (キャッシュキー time_mode)', '日記投稿では再生成しない。直近3件の出力をプロンプトに注入して表現の重複を避ける'],
+          ['夢進捗検出', '毎朝9時JST（週1スパン）', 'narrator-update runDreamDetection (GitHub Actions cron)', 'activity_log.action=dream_detected に記録 → Dreams画面「最近の気づき」で表示'],
           ['天気', '1時間ごと(TTL)', 'useTodayWeather (localStorage)', 'Today画面表示'],
+        ]} />
+
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--green)' }}>ユーザー作業マップ（何をすべきか・できるか）</div>
+        <P>focus-you は「日記を書く + 最小のチェック」でほぼ全ての分析が回る設計。手動操作は常に残しつつ、日記から自動抽出できる部分は自動化する。精度が低い可能性があるので、自動記録されたものは必ず UI で見える化し、1クリックで戻せる。</P>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, fontWeight: 600 }}>A. 毎日の必須作業</div>
+        <Tbl headers={['作業', '画面', '手間', '効く分析']} rows={[
+          ['日記を書く', 'Today', '主作業（1日1〜2回）', '全分析の主燃料'],
+          ['タスク完了チェック', 'Today（チェックボックス or 日記で言及→自動）', '5秒 or ゼロ', 'Weekly Narrative / Self-Analysis'],
+          ['習慣チェック', 'Today（チェック or 日記で言及→自動）', '5秒 or ゼロ', 'Weekly Narrative（達成率）'],
+        ]} />
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, marginTop: 12, fontWeight: 600 }}>B. 随時の作業（気が向いたら）</div>
+        <Tbl headers={['作業', '画面', '頻度', '効く分析']} rows={[
+          ['新タスク追加', 'Today + ボタン / 日記から提案採用', '随時', 'Weekly'],
+          ['新習慣追加', 'Habits + ボタン', '月1〜', 'Weekly'],
+          ['夢・目標の登録', 'Dreams', '月1〜四半期1', 'Dream検出 / Theme / Chapter'],
+          ['ほしい物の登録', 'Dreams（Wishlist）', '随時', '欲望ログ（現状分析対象外）'],
+          ['カレンダー予定の作成/編集', 'Calendar + 予定ボタン / 予定クリック', '随時', '時間帯別メッセージ / Weekly に反映'],
+          ['AI Partner の👍/違う', 'Today（briefing直下）', '気になった時', 'Partner精度向上（フィードバック蒸留）'],
+        ]} />
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, marginTop: 12, fontWeight: 600 }}>C. 初期セットアップ（一度だけ）</div>
+        <Tbl headers={['作業', '画面', '内容']} rows={[
+          ['Google Calendar 連携', 'Settings', '認証1回 → 以後全予定自動取得。focus-you内でCRUDも可'],
+          ['Google Tasks 連携', 'Settings', '認証1回 → focus-you でタスク作ると Google にも反映'],
+          ['既存の夢・目標の登録', 'Dreams', '初期インベントリ（5-10件あると Dream検出が意味ある結果を返す）'],
+          ['既存の習慣の登録', 'Habits', '走っている習慣（筋トレ・読書等）の登録'],
+        ]} />
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, marginTop: 12, fontWeight: 600 }}>D. 完全自動（ユーザー操作不要）</div>
+        <Tbl headers={['処理', 'タイミング', 'モデル']} rows={[
+          ['感情分析（Plutchik8次元 + PERMA+V）', '日記投稿時（自動）', 'gpt-5.4-mini'],
+          ['日記自動抽出（タスク/習慣 done + 新規提案）', '日記投稿時（自動、結果はUIで要確認）', 'claude-opus-4-7'],
+          ['時間帯別メッセージ', '朝/昼/夕/夜の切替で自動（日記投稿では再生成しない）', 'claude-opus-4-7'],
+          ['過去日記類似検索', '書いてる最中リアルタイム', 'text-embedding-3-small'],
+          ['週間ナラティブ', 'Weeklyページ初回表示で先週分未生成なら自動', 'claude-opus-4-7'],
+          ['Self-Analysis 再分析', 'SelfAnalysisページ表示時にTTL超過タイプを順次自動', 'claude-opus-4-7'],
+          ['Arc / Theme / Chapter', '毎朝9時JST（条件満たせば）', 'claude-opus-4-7'],
+          ['Dream検出', '毎朝9時JST（過去7日スキャン）', 'claude-opus-4-7'],
+          ['カレンダー予定取得', '常時（ページ表示時）', 'なし（proxy経由）'],
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--accent)' }}>ユーザー操作トリガー</div>
         <Tbl headers={['データ', '更新タイミング', 'トリガー', '連鎖先']} rows={[
-          ['diary_entries', 'Today画面で「記録する」', 'ユーザー入力', '→ emotion_analysis → AI Partner → 夢検出（3つが自動連鎖）'],
+          ['diary_entries', 'Today画面で「記録する」', 'ユーザー入力', '→ emotion_analysis → 日記自動抽出(tasks/habits) → embedding → Moment Detector（並列自動連鎖）'],
+          ['tasks (自動完了検出)', '日記投稿時', 'useDiaryExtraction (Opus 4.7)', 'オープンなタスクと日記を照合。confidence=high は自動 status=done + source="auto:diary-extract"、medium は提案表示。誤検出は1クリックで戻せる'],
+          ['habit_logs (自動記録)', '日記投稿時', 'useDiaryExtraction (Opus 4.7)', 'アクティブな習慣と日記を照合。confidence=high は habit_logs に INSERT (note=[auto])、medium は提案表示。重複記録は防止'],
+          ['tasks (新規提案)', '日記投稿時', 'useDiaryExtraction', '日記に「〜しないと」「明日〜する」等の将来アクションを検出。ユーザー「追加」クリックで作成（自動作成はしない）'],
           ['tasks (完了)', 'Today画面でチェックボックス', 'インラインCRUD', 'status=done + 取り消し線。→ Google Tasks同期(completed)。再クリックで戻す(needsAction)'],
           ['tasks (追加)', 'Today画面の + ボタン / 秘書(自然言語)', 'インラインCRUD', 'due_date/scheduled_at/deadline_at で3ゾーン振り分け。日付あり→Google Tasks自動作成(google_task_id保存)'],
           ['tasks (編集)', 'Today画面でタイトルクリック', 'インライン編集', 'タイトル・期限・優先度変更。google_task_idあれば→Google Tasks自動更新'],
@@ -367,7 +407,8 @@ function TabOverview() {
           ['narrator (Arc/Theme/Chapter)', '毎朝9時（週/月/四半期スパンで内部スキップ判定）', 'GitHub Actions → narrator-update Edge Function', 'Arc=週1、Theme=月1、Chapter=四半期1。model=claude-opus-4-7。Storyページで表示'],
           ['ai_partner (時間帯別メッセージ)', '朝/昼/夕/夜の時間帯変化でキャッシュ再生成', 'useMorningBriefing（ページ表示時）', '日記投稿では再生成しない（冗長回避）。model=claude-opus-4-7。過去3件の出力をプロンプト注入して同じ表現を避ける'],
           ['news_items', 'Today/Reportsで「収集」ボタン', 'Edge Function news-collect（4ソース並列）+ news-enrich（LLM日本語要約）', 'Google News RSS + arXiv API + Hacker News API + 公式ブログRSS → DB保存 + クリック追跡。news-enrich は title_ja/summary を gpt-5.4-nano で生成（バッチ + POST{id}で手動再翻訳可、Today/Reports の各記事に「日本語訳」ボタン）'],
-          ['calendar_events', 'Calendar/Todayページ', 'Edge Function proxy', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。lib/calendarApi.ts（共通モジュール）。maxResults=250 + nextPageTokenページングで取りこぼし防止、失敗カレンダーは failed_calendars[] + partial フラグで返却しCalendar.tsxで警告バッジ表示。Todayではタスクと統合タイムライン(useTodayTimeline)表示'],
+          ['calendar_events (読み取り)', 'Calendar/Todayページ', 'Edge Function proxy (GET /events)', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。maxResults=250 + nextPageTokenページングで取りこぼし防止、失敗カレンダーは failed_calendars[] で警告バッジ表示'],
+          ['calendar_events (作成/編集/削除)', 'Calendarページ「+ 予定」ボタン or 既存予定クリック', 'Edge Function proxy (POST/PATCH/DELETE /events)', 'focus-you内で完結。Googleカレンダー画面を別で開く必要なし。EventModalでsummary/日付/開始終了/calendarId編集可能。ドラッグ移動も PATCH で Google に反映'],
           ['google_tasks', 'タスク作成/更新/完了時', 'data.ts → syncTaskToGoogle', 'Supabase tasks→Google Tasks一方向同期。日付ありタスクのみ。google_task_idでリンク。lib/googleTasksApi.ts'],
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
         ]} />

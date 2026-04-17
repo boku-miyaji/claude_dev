@@ -1250,6 +1250,13 @@ export function Calendar() {
           ))}
         </div>
         <button className="btn btn-ghost btn-sm" onClick={refetch} style={{ fontSize: 11 }}>↻</button>
+        <button
+          className="btn btn-p btn-sm"
+          onClick={() => { setEditingEvent(null); setModalOpen(true) }}
+          style={{ fontSize: 11 }}
+        >
+          + 予定
+        </button>
       </div>
 
       {/* Layer toggles — 月ビューのセル表示の切替用なので月のみに表示 */}
