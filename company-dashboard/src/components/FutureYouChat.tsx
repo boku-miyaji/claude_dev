@@ -103,6 +103,12 @@ export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_par
         />
       )}
 
+      {!loading && openingMessage && (
+        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 10, letterSpacing: '.02em' }}>
+          朝/昼/夕/夜で自動更新 — 日記を書いても追加生成はしません
+        </div>
+      )}
+
       {!expanded && !loading && (
         <button
           className="btn btn-ghost btn-sm"

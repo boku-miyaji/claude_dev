@@ -1430,21 +1430,47 @@ export function SelfAnalysis() {
 
   useEffect(() => { load() }, [load])
 
-  // Auto-trigger MBTI analysis once per visit if stale (>30 days) and enough diary data.
-  // Ensures users see fresh insight without pressing any button.
-  const autoMbtiTriedRef = useRef(false)
+  // Auto-refresh stale analyses in the background — one per visit, slowest-changing types have longer TTL.
+  // User only writes the diary; the system keeps self-understanding fresh.
+  const autoRefreshScheduledRef = useRef(false)
   useEffect(() => {
-    if (loading || isRunningAll || running || autoMbtiTriedRef.current) return
+    if (loading || isRunningAll || running || autoRefreshScheduledRef.current) return
     if (diaryCount < 20) return
-    const mbti = pastResults.find((r) => r.analysis_type === 'mbti')
-    const daysSince = mbti ? (Date.now() - new Date(mbti.created_at).getTime()) / 86400000 : Infinity
-    if (daysSince < 30) return
-    autoMbtiTriedRef.current = true
-    runAnalysis('mbti', false).then((r) => {
-      if (r) {
-        setPastResults((prev) => [r, ...prev.filter((p) => p.analysis_type !== 'mbti')])
+
+    // Staleness thresholds (days) per analysis type. Only types listed here auto-refresh.
+    const TTL: Partial<Record<AnalysisType, number>> = {
+      mbti: 30,
+      big5: 30,
+      stress_resilience: 30,
+      strengths_finder: 60,
+      communication_style: 60,
+      values: 90,
+    }
+
+    const staleTypes = ALL_TYPES.filter((type) => {
+      const ttl = TTL[type]
+      if (ttl == null) return false
+      const latest = pastResults.find((r) => r.analysis_type === type)
+      const daysSince = latest ? (Date.now() - new Date(latest.created_at).getTime()) / 86400000 : Infinity
+      return daysSince >= ttl
+    })
+
+    if (staleTypes.length === 0) return
+    autoRefreshScheduledRef.current = true
+
+    // Run stale types sequentially in the background. Users don't block on this.
+    ;(async () => {
+      for (const type of staleTypes) {
+        try {
+          const result = await runAnalysis(type, false)
+          if (result) {
+            setPastResults((prev) => [result, ...prev.filter((p) => p.analysis_type !== type)])
+          }
+        } catch {
+          // Errors surface via analysisError. Continue with next type.
+        }
       }
-    }).catch(() => { /* surfaces via analysisError */ })
+    })()
   }, [loading, isRunningAll, running, pastResults, diaryCount, runAnalysis])
 
   // Run all analyses sequentially with stepper
@@ -1486,7 +1512,7 @@ export function SelfAnalysis() {
     <div className="page">
       <PageHeader
         title="Self-Analysis"
-        description="日記データからあなたを多角的に分析します"
+        description="日記データからあなたを多角的に分析 — 古くなったタイプは開いた時に自動再分析（MBTI/Big5/ストレス耐性=30日、ストレングス/コミュ=60日、価値観=90日）"
         actions={
           hasResults ? (
             <div style={{ display: 'flex', gap: 8 }}>

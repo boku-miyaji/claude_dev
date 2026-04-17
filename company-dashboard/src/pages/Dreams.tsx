@@ -329,7 +329,7 @@ export function Dreams() {
     <div className="page">
       <PageHeader
         title="Dreams & Goals"
-        description="期限なし = 夢。期限あり = 目標。"
+        description="期限なし = 夢。期限あり = 目標。気づきは毎朝9時に過去7日の日記から自動検出"
         actions={
           <div style={{ display: 'flex', gap: 8 }}>
             {dreams.length >= 3 && (

@@ -361,8 +361,11 @@ function TabOverview() {
           ['tasks (編集)', 'Today画面でタイトルクリック', 'インライン編集', 'タイトル・期限・優先度変更。google_task_idあれば→Google Tasks自動更新'],
           ['habits (完了)', 'Today画面でチェック', 'ユーザータップ', '→ 統合プログレスバーに即反映'],
           ['habits (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', '即追加。Habitsページで詳細編集'],
-          ['weekly_narratives', 'Weeklyページで「生成」ボタン', 'ユーザー操作', 'DB保存。過去の週は再生成可能'],
-          ['self_analysis', 'Self Analysisで再分析ボタン', 'ユーザー操作', 'ハイブリッド方式: 初回=全データ分析→analysis_context保存、更新=前回context+差分データで効率的更新。統合まとめタブで全分析結果を一覧'],
+          ['weekly_narratives', '週1 自動（Weeklyページ初回表示時に先週分が無ければ自動生成）', 'フロント auto-trigger', 'DB保存。手動「生成」ボタンは再生成用に残存。model=claude-opus-4-7'],
+          ['self_analysis', 'タイプ別に自動再分析（MBTI/Big5/ストレス=30日、ストレングス/コミュ=60日、価値観=90日）', 'フロント auto-trigger（SelfAnalysis初回表示時にstale検出→順次バックグラウンド実行）', 'ハイブリッド方式: 初回=全データ分析→analysis_context保存、更新=前回context+差分データで効率的更新。model=claude-opus-4-7。手動「再分析」ボタンも維持'],
+          ['dream_detected', '毎朝9時（narrator-update cron内、前回から7日未満ならskip）', 'GitHub Actions → Edge Function', '過去7日の日記と active dreams を Opus 4.7 で照合→ activity_log にINSERT → Dreams画面「最近の気づき」に表示'],
+          ['narrator (Arc/Theme/Chapter)', '毎朝9時（週/月/四半期スパンで内部スキップ判定）', 'GitHub Actions → narrator-update Edge Function', 'Arc=週1、Theme=月1、Chapter=四半期1。model=claude-opus-4-7。Storyページで表示'],
+          ['ai_partner (時間帯別メッセージ)', '朝/昼/夕/夜の時間帯変化でキャッシュ再生成', 'useMorningBriefing（ページ表示時）', '日記投稿では再生成しない（冗長回避）。model=claude-opus-4-7。過去3件の出力をプロンプト注入して同じ表現を避ける'],
           ['news_items', 'Today/Reportsで「収集」ボタン', 'Edge Function news-collect（4ソース並列）+ news-enrich（LLM日本語要約）', 'Google News RSS + arXiv API + Hacker News API + 公式ブログRSS → DB保存 + クリック追跡。news-enrich は title_ja/summary を gpt-5.4-nano で生成（バッチ + POST{id}で手動再翻訳可、Today/Reports の各記事に「日本語訳」ボタン）'],
           ['calendar_events', 'Calendar/Todayページ', 'Edge Function proxy', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。lib/calendarApi.ts（共通モジュール）。maxResults=250 + nextPageTokenページングで取りこぼし防止、失敗カレンダーは failed_calendars[] + partial フラグで返却しCalendar.tsxで警告バッジ表示。Todayではタスクと統合タイムライン(useTodayTimeline)表示'],
           ['google_tasks', 'タスク作成/更新/完了時', 'data.ts → syncTaskToGoogle', 'Supabase tasks→Google Tasks一方向同期。日付ありタスクのみ。google_task_idでリンク。lib/googleTasksApi.ts'],
@@ -394,8 +397,9 @@ function TabOverview() {
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--text3)' }}>コスト分離の原則</div>
         <Tbl headers={['処理場所', '使用モデル', 'コスト', '用途']} rows={[
-          ['ダッシュボード（リアルタイム）', 'gpt-5.4-nano / gpt-5.4 (Edge Function)', 'OpenAI API従量課金', '感情分析(nano)、AIコメント(5.4)、自己分析(5.4)、夢検出(nano)'],
-          ['Edge Function（バッチ）', 'gpt-5.4', 'OpenAI API従量課金', 'narrator-update（Arc Reader/Theme Finder/Chapter）'],
+          ['ダッシュボード（構造化/タグ付け系）', 'gpt-5.4-nano / gpt-5.4-mini', 'OpenAI API従量課金（低）', '感情分析(mini)、夢分類(nano)、検索rerank(nano)、ルーティング判定(nano)、Moment Detector(nano)'],
+          ['ダッシュボード（自己理解系）', 'claude-opus-4-7', 'Anthropic API従量課金（高精度）', '時間帯別メッセージ、Self-Analysis(MBTI/Big5/等)、Weekly Narrative'],
+          ['Edge Function（バッチ・narrator-update）', 'claude-opus-4-7', 'Anthropic API従量課金', 'Arc Reader(週1) / Theme Finder(月1) / Chapter Generator(四半期) / Dream Detection(週1)。毎朝9時JST GitHub Actions cron で起動'],
           ['Claude Code（バッチ）', 'Claude CLI opus', 'サブスク内（追加費用なし）', 'プロンプト分類、成長分析、スキル進化、部署評価'],
           ['Edge Function（バッチ分析）', 'gpt-5.4-mini', 'OpenAI API（月$0.1以下）', 'CEOインサイト3層分析（日記+prompt_log）、フィードバック蒸留'],
           ['Claude Code（Hook）', 'なし（キーワードのみ）', 'ゼロ', 'prompt-log タグ付け、growth-detector シグナル検出'],
