@@ -1,0 +1,417 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - generic [ref=e12]:
+    - banner [ref=e13]:
+      - generic [ref=e14]:
+        - link "提案仮説支援" [ref=e15] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=e16]:
+          - link "顧客一覧" [ref=e18] [cursor=pointer]:
+            - /url: /
+          - generic [ref=e19]:
+            - generic [ref=e20]: ">"
+            - generic [ref=e21]: 伊藤園
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - button "ガイド" [ref=e24]:
+              - img [ref=e25]
+              - generic [ref=e28]: ガイド
+            - button "HTMLダウンロード" [ref=e29]:
+              - img [ref=e30]
+              - generic [ref=e33]: HTMLダウンロード
+            - button "新規面談記録" [ref=e34]:
+              - img
+              - text: 新規面談記録
+          - link "システム仕様" [ref=e35] [cursor=pointer]:
+            - /url: /system-spec
+            - img [ref=e36]
+            - generic [ref=e38]: システム仕様
+          - button "説明ON" [ref=e39]:
+            - img [ref=e40]
+            - generic [ref=e43]: 説明ON
+          - link "Dev" [ref=e44] [cursor=pointer]:
+            - /url: /dev
+            - img [ref=e45]
+            - generic [ref=e47]: Dev
+          - button [ref=e48]:
+            - img [ref=e49]
+    - generic [ref=e52]: Magentic の実行結果を読み込み中...
+    - generic [ref=e54]:
+      - button "アジェンダ 6" [ref=e55]:
+        - img [ref=e56]
+        - text: アジェンダ
+        - generic [ref=e59]: "6"
+      - button "キーパーソン 7" [ref=e60]:
+        - img [ref=e61]
+        - text: キーパーソン
+        - generic [ref=e66]: "7"
+      - button "面談記録 0" [ref=e67]:
+        - img [ref=e68]
+        - text: 面談記録
+        - generic [ref=e71]: "0"
+      - button "関連情報" [ref=e72]:
+        - img [ref=e73]
+        - text: 関連情報
+    - main [ref=e75]:
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - generic [ref=e80]: 伊藤園
+            - generic [ref=e81]: 食料品（緑茶飲料・茶葉）
+            - generic [ref=e82]: 売上 4,617億円（2025年4月期連結）
+            - generic [ref=e83]: 5,432名（連結）
+          - generic [ref=e84]:
+            - generic [ref=e85]: "直近ニュース: 新中期経営計画 2025-2029 を発表（2024年6月、営業利益率8%以上・ROE10%以上を目標化）"
+            - generic [ref=e86]: "業界動向: 国内清涼飲料市場は成熟期。無糖茶カテゴリは健康志向で堅調。世界の緑茶RTD市場は北米・アジア中心に年率5-7%で拡大。機能性表示食品の市場規模も継続成長。"
+            - generic [ref=e87]: "業績: 緑茶飲料国内シェア首位。「お～いお茶」ブランドは無糖茶売上 No.1。茶葉調達から製造までの一貫バリューチェーン。海外売上比率約10%（北米・東南アジア中心）。配当性向30%目安。"
+            - generic [ref=e88]: "競合動向: 国内緑茶RTD: キリンビバレッジ（生茶）、サントリー食品（伊右衛門）、コカ・コーラボトラーズジャパン（綾鷹）と競合。海外: Unilever（Lipton）、Starbucks Teavana、中国系プレイヤーと競合。プレミアム領域・機能性領域での差別化が論点。"
+        - button "この画面の設計意図" [ref=e90]:
+          - img [ref=e91]
+          - text: この画面の設計意図
+          - img [ref=e93]
+        - generic [ref=e95]:
+          - button "情報を追加" [ref=e96]:
+            - img
+            - text: 情報を追加
+          - button "面談記録を追加" [ref=e97]:
+            - img
+            - text: 面談記録を追加
+          - button "更新履歴" [ref=e99]:
+            - img
+            - text: 更新履歴
+          - button "面談準備" [ref=e101]:
+            - img
+            - text: 面談準備
+        - textbox "検索..." [ref=e103]
+        - table [ref=e105]:
+          - rowgroup [ref=e106]:
+            - row "経営アジェンダ 重要度 理解度 課題意識 キーパーソン りそなの提供価値 つながりうる商品 対応方針" [ref=e107]:
+              - columnheader [ref=e108]
+              - columnheader [ref=e109]
+              - columnheader [ref=e110]
+              - columnheader "経営アジェンダ" [ref=e111]
+              - columnheader "重要度" [ref=e112]
+              - columnheader "理解度" [ref=e113]
+              - columnheader "課題意識" [ref=e114]
+              - columnheader "キーパーソン" [ref=e115]
+              - columnheader "りそなの提供価値" [ref=e116]
+              - columnheader "つながりうる商品" [ref=e117]
+              - columnheader "対応方針" [ref=e118]
+            - row "大分類 小分類 実現したいこと お困りごと・理由 意思決定者 影響者 情報提供者" [ref=e119]:
+              - columnheader "大分類" [ref=e120]
+              - columnheader "小分類" [ref=e121]
+              - columnheader "実現したいこと" [ref=e122]:
+                - generic [ref=e123]: 実現したいこと
+              - columnheader "お困りごと・理由" [ref=e124]:
+                - generic [ref=e125]: お困りごと・理由
+              - columnheader "意思決定者" [ref=e126]:
+                - generic [ref=e127]: 意思決定者
+              - columnheader "影響者" [ref=e128]
+              - columnheader "情報提供者" [ref=e129]
+          - rowgroup [ref=e130]:
+            - row "事業 売上向上 海外事業 『お～いお茶』グローバル化加速 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 事業再構築補助金 公募開… 高 浅い 『お～いお茶』販売国60ヵ国以上、海外売上年平均8%成長 伊藤園 新中期経営計画 2025-2029 海外売上比率約10%。投資・PMI・為替リスク管理が未整備 中計目標数値（海外年率8%）より推定 本庄 大介（代表取締役社長） 伊藤園 役員紹介 Yosuke Jay Honjo（米国事業担当執行役員 / ITO EN North America President & CEO） ー 海外M&Aファイナンス / グローバルCMS / 為替ヘッジ / 現地法人融資 海外M&Aファイナンス / CMS / 為替ヘッジ / 現地法人向け融資 ー" [ref=e131]:
+              - cell [ref=e132]:
+                - checkbox [ref=e133]
+              - cell "事業" [ref=e134]
+              - cell "売上向上" [ref=e135]
+              - cell "海外事業" [ref=e136]
+              - cell "『お～いお茶』グローバル化加速 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 事業再構築補助金 公募開…" [ref=e137]:
+                - button "『お～いお茶』グローバル化加速" [ref=e138]
+                - generic [ref=e139]:
+                  - generic [ref=e140]:
+                    - img [ref=e141]
+                    - generic [ref=e144]: 更新 2026-04-15
+                  - generic [ref=e145]:
+                    - 'generic "3月決算企業の本決算発表 業績・財務状況の最新情報が公開。課題の再評価タイミング 推奨: 決算説明会の内容をウォッチし、アジェンダを更新" [ref=e146]': 📅 5月 3月決算企業の本決算発表
+                    - 'generic "事業再構築補助金 公募開始 新規事業・業態転換の資金ニーズ 推奨: 対象企業に補助金活用を提案" [ref=e147]': ⏰ 4月 事業再構築補助金 公募開…
+              - cell "高" [ref=e148]:
+                - combobox "経営インパクト大 / 収益直結" [ref=e150] [cursor=pointer]:
+                  - option "高" [selected]
+                  - option "中"
+                  - option "低"
+              - cell "浅い" [ref=e151]:
+                - combobox "仮説段階。未確認事項が多い" [ref=e152] [cursor=pointer]:
+                  - option "浅い" [selected]
+                  - option "普通"
+                  - option "深い"
+              - cell "『お～いお茶』販売国60ヵ国以上、海外売上年平均8%成長 伊藤園 新中期経営計画 2025-2029" [ref=e153]:
+                - generic "クリックして編集" [ref=e154] [cursor=pointer]:
+                  - text: 『お～いお茶』販売国60ヵ国以上、海外売上年平均8%成長
+                  - button "伊藤園 新中期経営計画 2025-2029" [ref=e155]:
+                    - text: 伊藤園 新中期経営計画 2025-2029
+                    - img [ref=e156]
+              - cell "海外売上比率約10%。投資・PMI・為替リスク管理が未整備 中計目標数値（海外年率8%）より推定" [ref=e160]:
+                - generic "クリックして編集" [ref=e161] [cursor=pointer]:
+                  - text: 海外売上比率約10%。投資・PMI・為替リスク管理が未整備
+                  - button "中計目標数値（海外年率8%）より推定" [ref=e162]
+              - cell "本庄 大介（代表取締役社長） 伊藤園 役員紹介" [ref=e163]:
+                - generic "クリックして編集" [ref=e164] [cursor=pointer]:
+                  - text: 本庄 大介（代表取締役社長）
+                  - button "伊藤園 役員紹介" [ref=e165]:
+                    - text: 伊藤園 役員紹介
+                    - img [ref=e166]
+              - cell "Yosuke Jay Honjo（米国事業担当執行役員 / ITO EN North America President & CEO）" [ref=e170]:
+                - generic "クリックして編集" [ref=e171] [cursor=pointer]: Yosuke Jay Honjo（米国事業担当執行役員 / ITO EN North America President & CEO）
+              - cell "ー" [ref=e172]:
+                - generic [ref=e173]: ー
+              - cell "海外M&Aファイナンス / グローバルCMS / 為替ヘッジ / 現地法人融資" [ref=e174]:
+                - generic "クリックして編集" [ref=e175] [cursor=pointer]: 海外M&Aファイナンス / グローバルCMS / 為替ヘッジ / 現地法人融資
+              - cell "海外M&Aファイナンス / CMS / 為替ヘッジ / 現地法人向け融資" [ref=e176]:
+                - generic "クリックして編集" [ref=e177] [cursor=pointer]: 海外M&Aファイナンス / CMS / 為替ヘッジ / 現地法人向け融資
+              - cell "ー" [ref=e178]:
+                - generic [ref=e179]: ー
+            - row "売上向上 新事業創出 茶・健康軸のM&A・資本提携 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 事業再構築補助金 公募開… 中 浅い 茶・健康を軸にした新事業領域の創出、資本提携・M&Aによる事業領域拡大 伊藤園 新中期経営計画（M&A活用の明記） 自社成長だけでは中計目標達成が困難。M&A実績は限定的で執行体制も未成熟 中計目標の蓋然性分析より推定 本庄 大介（代表取締役社長） 神谷 茂（専務執行役員、総合企画・グループ経営推進） ー M&Aアドバイザリー / 買収ファイナンス / デューデリジェンス支援 / PMI伴走 M&Aアドバイザリー / 買収ファイナンス / LBOローン ー" [ref=e180]:
+              - cell [ref=e181]:
+                - checkbox [ref=e182]
+              - cell "売上向上" [ref=e183]
+              - cell "新事業創出" [ref=e184]
+              - cell "茶・健康軸のM&A・資本提携 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 事業再構築補助金 公募開…" [ref=e185]:
+                - button "茶・健康軸のM&A・資本提携" [ref=e186]
+                - generic [ref=e187]:
+                  - generic [ref=e188]:
+                    - img [ref=e189]
+                    - generic [ref=e192]: 更新 2026-04-15
+                  - generic [ref=e193]:
+                    - 'generic "3月決算企業の本決算発表 業績・財務状況の最新情報が公開。課題の再評価タイミング 推奨: 決算説明会の内容をウォッチし、アジェンダを更新" [ref=e194]': 📅 5月 3月決算企業の本決算発表
+                    - 'generic "事業再構築補助金 公募開始 新規事業・業態転換の資金ニーズ 推奨: 対象企業に補助金活用を提案" [ref=e195]': ⏰ 4月 事業再構築補助金 公募開…
+              - cell "中" [ref=e196]:
+                - combobox "中期的に重要 / 間接的収益" [ref=e198] [cursor=pointer]:
+                  - option "高"
+                  - option "中" [selected]
+                  - option "低"
+              - cell "浅い" [ref=e199]:
+                - combobox "仮説段階。未確認事項が多い" [ref=e200] [cursor=pointer]:
+                  - option "浅い" [selected]
+                  - option "普通"
+                  - option "深い"
+              - cell "茶・健康を軸にした新事業領域の創出、資本提携・M&Aによる事業領域拡大 伊藤園 新中期経営計画（M&A活用の明記）" [ref=e201]:
+                - generic "クリックして編集" [ref=e202] [cursor=pointer]:
+                  - text: 茶・健康を軸にした新事業領域の創出、資本提携・M&Aによる事業領域拡大
+                  - button "伊藤園 新中期経営計画（M&A活用の明記）" [ref=e203]:
+                    - text: 伊藤園 新中期経営計画（M&A活用の明記）
+                    - img [ref=e204]
+              - cell "自社成長だけでは中計目標達成が困難。M&A実績は限定的で執行体制も未成熟 中計目標の蓋然性分析より推定" [ref=e208]:
+                - generic "クリックして編集" [ref=e209] [cursor=pointer]:
+                  - text: 自社成長だけでは中計目標達成が困難。M&A実績は限定的で執行体制も未成熟
+                  - button "中計目標の蓋然性分析より推定" [ref=e210]
+              - cell "本庄 大介（代表取締役社長）" [ref=e211]:
+                - generic "クリックして編集" [ref=e212] [cursor=pointer]: 本庄 大介（代表取締役社長）
+              - cell "神谷 茂（専務執行役員、総合企画・グループ経営推進）" [ref=e213]:
+                - generic "クリックして編集" [ref=e214] [cursor=pointer]: 神谷 茂（専務執行役員、総合企画・グループ経営推進）
+              - cell "ー" [ref=e215]:
+                - generic [ref=e216]: ー
+              - cell "M&Aアドバイザリー / 買収ファイナンス / デューデリジェンス支援 / PMI伴走" [ref=e217]:
+                - generic "クリックして編集" [ref=e218] [cursor=pointer]: M&Aアドバイザリー / 買収ファイナンス / デューデリジェンス支援 / PMI伴走
+              - cell "M&Aアドバイザリー / 買収ファイナンス / LBOローン" [ref=e219]:
+                - generic "クリックして編集" [ref=e220] [cursor=pointer]: M&Aアドバイザリー / 買収ファイナンス / LBOローン
+              - cell "ー" [ref=e221]:
+                - generic [ref=e222]: ー
+            - row "コスト削減 国内事業の構造改革 サプライチェーン最適化・収益性改善 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 事業再構築補助金 公募開… 高 浅い 国内事業の体制再構築とSCM最適化で営業利益率8%以上を実現 伊藤園 新中期経営計画 2025-2029（営業利益率8%目標） 原材料・物流コスト高騰と人口減少で収益性低下。現状の営業利益率は目標に未達 中計リスク認識 + 業界動向 中野 悦久（専務執行役員、生産本部長・物流担当・CSO） 伊藤園 役員紹介 神谷 茂（専務執行役員、総合企画・グループ経営・SCM戦略） ー 設備投資ファイナンス / 運転資金効率化 / サプライチェーンファイナンス / 物流施設融資 設備投資ローン / 仕入ファイナンス / 物流施設向け融資 / コミットメントライン ー" [ref=e223]:
+              - cell [ref=e224]:
+                - checkbox [ref=e225]
+              - cell "コスト削減" [ref=e226]
+              - cell "国内事業の構造改革" [ref=e227]
+              - cell "サプライチェーン最適化・収益性改善 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 事業再構築補助金 公募開…" [ref=e228]:
+                - button "サプライチェーン最適化・収益性改善" [ref=e229]
+                - generic [ref=e230]:
+                  - generic [ref=e231]:
+                    - img [ref=e232]
+                    - generic [ref=e235]: 更新 2026-04-15
+                  - generic [ref=e236]:
+                    - 'generic "3月決算企業の本決算発表 業績・財務状況の最新情報が公開。課題の再評価タイミング 推奨: 決算説明会の内容をウォッチし、アジェンダを更新" [ref=e237]': 📅 5月 3月決算企業の本決算発表
+                    - 'generic "事業再構築補助金 公募開始 新規事業・業態転換の資金ニーズ 推奨: 対象企業に補助金活用を提案" [ref=e238]': ⏰ 4月 事業再構築補助金 公募開…
+              - cell "高" [ref=e239]:
+                - combobox "経営インパクト大 / 収益直結" [ref=e241] [cursor=pointer]:
+                  - option "高" [selected]
+                  - option "中"
+                  - option "低"
+              - cell "浅い" [ref=e242]:
+                - combobox "仮説段階。未確認事項が多い" [ref=e243] [cursor=pointer]:
+                  - option "浅い" [selected]
+                  - option "普通"
+                  - option "深い"
+              - cell "国内事業の体制再構築とSCM最適化で営業利益率8%以上を実現 伊藤園 新中期経営計画 2025-2029（営業利益率8%目標）" [ref=e244]:
+                - generic "クリックして編集" [ref=e245] [cursor=pointer]:
+                  - text: 国内事業の体制再構築とSCM最適化で営業利益率8%以上を実現
+                  - button "伊藤園 新中期経営計画 2025-2029（営業利益率8%目標）" [ref=e246]:
+                    - text: 伊藤園 新中期経営計画 2025-2029（営業利益率8%目標）
+                    - img [ref=e247]
+              - cell "原材料・物流コスト高騰と人口減少で収益性低下。現状の営業利益率は目標に未達 中計リスク認識 + 業界動向" [ref=e251]:
+                - generic "クリックして編集" [ref=e252] [cursor=pointer]:
+                  - text: 原材料・物流コスト高騰と人口減少で収益性低下。現状の営業利益率は目標に未達
+                  - button "中計リスク認識 + 業界動向" [ref=e253]
+              - cell "中野 悦久（専務執行役員、生産本部長・物流担当・CSO） 伊藤園 役員紹介" [ref=e254]:
+                - generic "クリックして編集" [ref=e255] [cursor=pointer]:
+                  - text: 中野 悦久（専務執行役員、生産本部長・物流担当・CSO）
+                  - button "伊藤園 役員紹介" [ref=e256]:
+                    - text: 伊藤園 役員紹介
+                    - img [ref=e257]
+              - cell "神谷 茂（専務執行役員、総合企画・グループ経営・SCM戦略）" [ref=e261]:
+                - generic "クリックして編集" [ref=e262] [cursor=pointer]: 神谷 茂（専務執行役員、総合企画・グループ経営・SCM戦略）
+              - cell "ー" [ref=e263]:
+                - generic [ref=e264]: ー
+              - cell "設備投資ファイナンス / 運転資金効率化 / サプライチェーンファイナンス / 物流施設融資" [ref=e265]:
+                - generic "クリックして編集" [ref=e266] [cursor=pointer]: 設備投資ファイナンス / 運転資金効率化 / サプライチェーンファイナンス / 物流施設融資
+              - cell "設備投資ローン / 仕入ファイナンス / 物流施設向け融資 / コミットメントライン" [ref=e267]:
+                - generic "クリックして編集" [ref=e268] [cursor=pointer]: 設備投資ローン / 仕入ファイナンス / 物流施設向け融資 / コミットメントライン
+              - cell "ー" [ref=e269]:
+                - generic [ref=e270]: ー
+            - row "基盤 ヒト 経営基盤強化 人的資本経営・DX推進 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 新年度税制改正施行 中 浅い グローバル化対応の機能別組織への移行、多様な人材育成、DX推進で経営基盤を強化 伊藤園 新中期経営計画（経営基盤強化） 同族経営の伝統企業でグローバル化・DX対応が課題。人的資本経営の具体施策が未開示 同族経営の一般論＋中計の課題認識より推定 平田 篤（専務執行役員、管理本部長・CHRO・CFO） 伊藤園 役員紹介 本庄 周介（代表取締役副社長 兼 執行役員） ー 人事制度改革支援 / DX投資ファイナンス / 従業員向け金融サービス / 確定拠出年金 DX投資ローン / 福利厚生サービス / 確定拠出年金 / 事業承継支援 ー" [ref=e271]:
+              - cell [ref=e272]:
+                - checkbox [ref=e273]
+              - cell "基盤" [ref=e274]
+              - cell "ヒト" [ref=e275]
+              - cell "経営基盤強化" [ref=e276]
+              - cell "人的資本経営・DX推進 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 新年度税制改正施行" [ref=e277]:
+                - button "人的資本経営・DX推進" [ref=e278]
+                - generic [ref=e279]:
+                  - generic [ref=e280]:
+                    - img [ref=e281]
+                    - generic [ref=e284]: 更新 2026-04-15
+                  - generic [ref=e285]:
+                    - 'generic "3月決算企業の本決算発表 業績・財務状況の最新情報が公開。課題の再評価タイミング 推奨: 決算説明会の内容をウォッチし、アジェンダを更新" [ref=e286]': 📅 5月 3月決算企業の本決算発表
+                    - 'generic "新年度税制改正施行 税制変更に伴う財務戦略の見直し 推奨: 税制改正の影響分析と対応策を提案" [ref=e287]': ⏰ 4月 新年度税制改正施行
+              - cell "中" [ref=e288]:
+                - combobox "中期的に重要 / 間接的収益" [ref=e290] [cursor=pointer]:
+                  - option "高"
+                  - option "中" [selected]
+                  - option "低"
+              - cell "浅い" [ref=e291]:
+                - combobox "仮説段階。未確認事項が多い" [ref=e292] [cursor=pointer]:
+                  - option "浅い" [selected]
+                  - option "普通"
+                  - option "深い"
+              - cell "グローバル化対応の機能別組織への移行、多様な人材育成、DX推進で経営基盤を強化 伊藤園 新中期経営計画（経営基盤強化）" [ref=e293]:
+                - generic "クリックして編集" [ref=e294] [cursor=pointer]:
+                  - text: グローバル化対応の機能別組織への移行、多様な人材育成、DX推進で経営基盤を強化
+                  - button "伊藤園 新中期経営計画（経営基盤強化）" [ref=e295]:
+                    - text: 伊藤園 新中期経営計画（経営基盤強化）
+                    - img [ref=e296]
+              - cell "同族経営の伝統企業でグローバル化・DX対応が課題。人的資本経営の具体施策が未開示 同族経営の一般論＋中計の課題認識より推定" [ref=e300]:
+                - generic "クリックして編集" [ref=e301] [cursor=pointer]:
+                  - text: 同族経営の伝統企業でグローバル化・DX対応が課題。人的資本経営の具体施策が未開示
+                  - button "同族経営の一般論＋中計の課題認識より推定" [ref=e302]
+              - cell "平田 篤（専務執行役員、管理本部長・CHRO・CFO） 伊藤園 役員紹介" [ref=e303]:
+                - generic "クリックして編集" [ref=e304] [cursor=pointer]:
+                  - text: 平田 篤（専務執行役員、管理本部長・CHRO・CFO）
+                  - button "伊藤園 役員紹介" [ref=e305]:
+                    - text: 伊藤園 役員紹介
+                    - img [ref=e306]
+              - cell "本庄 周介（代表取締役副社長 兼 執行役員）" [ref=e310]:
+                - generic "クリックして編集" [ref=e311] [cursor=pointer]: 本庄 周介（代表取締役副社長 兼 執行役員）
+              - cell "ー" [ref=e312]:
+                - generic [ref=e313]: ー
+              - cell "人事制度改革支援 / DX投資ファイナンス / 従業員向け金融サービス / 確定拠出年金" [ref=e314]:
+                - generic "クリックして編集" [ref=e315] [cursor=pointer]: 人事制度改革支援 / DX投資ファイナンス / 従業員向け金融サービス / 確定拠出年金
+              - cell "DX投資ローン / 福利厚生サービス / 確定拠出年金 / 事業承継支援" [ref=e316]:
+                - generic "クリックして編集" [ref=e317] [cursor=pointer]: DX投資ローン / 福利厚生サービス / 確定拠出年金 / 事業承継支援
+              - cell "ー" [ref=e318]:
+                - generic [ref=e319]: ー
+            - row "モノ （未整理）" [ref=e320]:
+              - cell [ref=e321]
+              - cell "モノ" [ref=e322]
+              - cell "（未整理）" [ref=e323]
+            - row "カネ 財務戦略 資本政策・株主還元 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 新年度税制改正施行 中 浅い ROE 10%以上・配当性向 30%目安を維持しつつ成長投資との両立を実現 伊藤園 新中期経営計画（ROE10%・配当性向30%） 本庄家同族経営下での資本効率向上と株主還元強化。自社株買い等の実績は限定的 推定（同族経営の一般論） 平田 篤（専務執行役員、管理本部長・CHRO・CFO） 伊藤園 役員紹介 本庄 大介（代表取締役社長） ー IRアドバイザリー / 自社株買い支援 / 私募債 / 政策保有株式縮減支援 自社株買いローン / 私募債引受 / 社債引受 / コーポレートアドバイザリー ー" [ref=e324]:
+              - cell [ref=e325]:
+                - checkbox [ref=e326]
+              - cell "カネ" [ref=e327]
+              - cell "財務戦略" [ref=e328]
+              - cell "資本政策・株主還元 更新 2026-04-15 📅 5月 3月決算企業の本決算発表 ⏰ 4月 新年度税制改正施行" [ref=e329]:
+                - button "資本政策・株主還元" [ref=e330]
+                - generic [ref=e331]:
+                  - generic [ref=e332]:
+                    - img [ref=e333]
+                    - generic [ref=e336]: 更新 2026-04-15
+                  - generic [ref=e337]:
+                    - 'generic "3月決算企業の本決算発表 業績・財務状況の最新情報が公開。課題の再評価タイミング 推奨: 決算説明会の内容をウォッチし、アジェンダを更新" [ref=e338]': 📅 5月 3月決算企業の本決算発表
+                    - 'generic "新年度税制改正施行 税制変更に伴う財務戦略の見直し 推奨: 税制改正の影響分析と対応策を提案" [ref=e339]': ⏰ 4月 新年度税制改正施行
+              - cell "中" [ref=e340]:
+                - combobox "中期的に重要 / 間接的収益" [ref=e342] [cursor=pointer]:
+                  - option "高"
+                  - option "中" [selected]
+                  - option "低"
+              - cell "浅い" [ref=e343]:
+                - combobox "仮説段階。未確認事項が多い" [ref=e344] [cursor=pointer]:
+                  - option "浅い" [selected]
+                  - option "普通"
+                  - option "深い"
+              - cell "ROE 10%以上・配当性向 30%目安を維持しつつ成長投資との両立を実現 伊藤園 新中期経営計画（ROE10%・配当性向30%）" [ref=e345]:
+                - generic "クリックして編集" [ref=e346] [cursor=pointer]:
+                  - text: ROE 10%以上・配当性向 30%目安を維持しつつ成長投資との両立を実現
+                  - button "伊藤園 新中期経営計画（ROE10%・配当性向30%）" [ref=e347]:
+                    - text: 伊藤園 新中期経営計画（ROE10%・配当性向30%）
+                    - img [ref=e348]
+              - cell "本庄家同族経営下での資本効率向上と株主還元強化。自社株買い等の実績は限定的 推定（同族経営の一般論）" [ref=e352]:
+                - generic "クリックして編集" [ref=e353] [cursor=pointer]:
+                  - text: 本庄家同族経営下での資本効率向上と株主還元強化。自社株買い等の実績は限定的
+                  - button "推定（同族経営の一般論）" [ref=e354]
+              - cell "平田 篤（専務執行役員、管理本部長・CHRO・CFO） 伊藤園 役員紹介" [ref=e355]:
+                - generic "クリックして編集" [ref=e356] [cursor=pointer]:
+                  - text: 平田 篤（専務執行役員、管理本部長・CHRO・CFO）
+                  - button "伊藤園 役員紹介" [ref=e357]:
+                    - text: 伊藤園 役員紹介
+                    - img [ref=e358]
+              - cell "本庄 大介（代表取締役社長）" [ref=e362]:
+                - generic "クリックして編集" [ref=e363] [cursor=pointer]: 本庄 大介（代表取締役社長）
+              - cell "ー" [ref=e364]:
+                - generic [ref=e365]: ー
+              - cell "IRアドバイザリー / 自社株買い支援 / 私募債 / 政策保有株式縮減支援" [ref=e366]:
+                - generic "クリックして編集" [ref=e367] [cursor=pointer]: IRアドバイザリー / 自社株買い支援 / 私募債 / 政策保有株式縮減支援
+              - cell "自社株買いローン / 私募債引受 / 社債引受 / コーポレートアドバイザリー" [ref=e368]:
+                - generic "クリックして編集" [ref=e369] [cursor=pointer]: 自社株買いローン / 私募債引受 / 社債引受 / コーポレートアドバイザリー
+              - cell "ー" [ref=e370]:
+                - generic [ref=e371]: ー
+            - row "社会対応(SDGs) ー ESG・サステナビリティ 茶産地支援・環境配慮・GHG削減 更新 2026-04-15 中 浅い 茶産地支援による原料安定調達と環境配慮型サプライチェーンの確立、気候変動対応と GHG 削減 伊藤園 新中期経営計画（サステナビリティ経営） 茶葉生産地の気候変動・後継者不足による調達リスク。包材・物流の GHG 削減投資の優先順位づけが課題 伊藤園 統合報告書 / マテリアリティ 中野 悦久（専務執行役員、生産本部長・物流担当・CSO） 伊藤園 役員紹介（中野CSO） 神谷 茂（専務執行役員、総合企画・SCM戦略） ー サステナビリティリンクローン / グリーンボンド / 茶産地向け環境投融資 / ESGレーティング対応支援 サステナビリティリンクローン / グリーンボンド / 環境配慮型設備投資ローン ー" [ref=e372]:
+              - cell [ref=e373]:
+                - checkbox [ref=e374]
+              - cell "社会対応(SDGs)" [ref=e375]
+              - cell "ー" [ref=e376]
+              - cell "ESG・サステナビリティ" [ref=e377]
+              - cell "茶産地支援・環境配慮・GHG削減 更新 2026-04-15" [ref=e378]:
+                - button "茶産地支援・環境配慮・GHG削減" [ref=e379]
+                - generic [ref=e381]:
+                  - img [ref=e382]
+                  - generic [ref=e385]: 更新 2026-04-15
+              - cell "中" [ref=e386]:
+                - combobox "中期的に重要 / 間接的収益" [ref=e388] [cursor=pointer]:
+                  - option "高"
+                  - option "中" [selected]
+                  - option "低"
+              - cell "浅い" [ref=e389]:
+                - combobox "仮説段階。未確認事項が多い" [ref=e390] [cursor=pointer]:
+                  - option "浅い" [selected]
+                  - option "普通"
+                  - option "深い"
+              - cell "茶産地支援による原料安定調達と環境配慮型サプライチェーンの確立、気候変動対応と GHG 削減 伊藤園 新中期経営計画（サステナビリティ経営）" [ref=e391]:
+                - generic "クリックして編集" [ref=e392] [cursor=pointer]:
+                  - text: 茶産地支援による原料安定調達と環境配慮型サプライチェーンの確立、気候変動対応と GHG 削減
+                  - button "伊藤園 新中期経営計画（サステナビリティ経営）" [ref=e393]:
+                    - text: 伊藤園 新中期経営計画（サステナビリティ経営）
+                    - img [ref=e394]
+              - cell "茶葉生産地の気候変動・後継者不足による調達リスク。包材・物流の GHG 削減投資の優先順位づけが課題 伊藤園 統合報告書 / マテリアリティ" [ref=e398]:
+                - generic "クリックして編集" [ref=e399] [cursor=pointer]:
+                  - text: 茶葉生産地の気候変動・後継者不足による調達リスク。包材・物流の GHG 削減投資の優先順位づけが課題
+                  - button "伊藤園 統合報告書 / マテリアリティ" [ref=e400]
+              - cell "中野 悦久（専務執行役員、生産本部長・物流担当・CSO） 伊藤園 役員紹介（中野CSO）" [ref=e401]:
+                - generic "クリックして編集" [ref=e402] [cursor=pointer]:
+                  - text: 中野 悦久（専務執行役員、生産本部長・物流担当・CSO）
+                  - button "伊藤園 役員紹介（中野CSO）" [ref=e403]:
+                    - text: 伊藤園 役員紹介（中野CSO）
+                    - img [ref=e404]
+              - cell "神谷 茂（専務執行役員、総合企画・SCM戦略）" [ref=e408]:
+                - generic "クリックして編集" [ref=e409] [cursor=pointer]: 神谷 茂（専務執行役員、総合企画・SCM戦略）
+              - cell "ー" [ref=e410]:
+                - generic [ref=e411]: ー
+              - cell "サステナビリティリンクローン / グリーンボンド / 茶産地向け環境投融資 / ESGレーティング対応支援" [ref=e412]:
+                - generic "クリックして編集" [ref=e413] [cursor=pointer]: サステナビリティリンクローン / グリーンボンド / 茶産地向け環境投融資 / ESGレーティング対応支援
+              - cell "サステナビリティリンクローン / グリーンボンド / 環境配慮型設備投資ローン" [ref=e414]:
+                - generic "クリックして編集" [ref=e415] [cursor=pointer]: サステナビリティリンクローン / グリーンボンド / 環境配慮型設備投資ローン
+              - cell "ー" [ref=e416]:
+                - generic [ref=e417]: ー
+        - button "アジェンダを追加" [ref=e419]:
+          - img
+          - text: アジェンダを追加
+    - button "折衝アシスタント" [ref=e421]:
+      - img [ref=e422]

@@ -7,6 +7,7 @@ import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { useMomentDetector } from '@/hooks/useMomentDetector'
 import { useDiaryExtraction, type DiaryExtractionResult } from '@/hooks/useDiaryExtraction'
 import { DiaryExtractionResultCard } from '@/components/DiaryExtractionResultCard'
+import { PendingUpdatesBanner } from '@/components/PendingUpdatesBanner'
 import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
@@ -1157,6 +1158,7 @@ export function Today() {
   return (
     <div className="page">
       {Greeting}
+      <PendingUpdatesBanner />
       {Briefing}
       {Diary}
       {TimelineSection}

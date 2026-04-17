@@ -1,0 +1,60 @@
+meeting:
+  date: "2026-03-31"
+  time: "20:30"
+  duration_min: 60
+  title: "Int_DN_図面から暗黙知を抽出する方法について共有"
+  calendar: "xyz"
+  company_id: "polaris"
+  recurring: false
+  recurrence_freq: "one-off"
+
+  audience:
+    primary: "external-partner"
+    size: 4
+    key_stakeholders:
+      - "yohei.sakamoto@polarisai.co.jp"
+
+  purpose:
+    primary: "knowledge-sharing"
+    secondary: null
+
+  your_role: "presenter"        # 「共有」= 社長側が共有する想定
+  format: "online"
+  stakes: "high"                # 社長が「早めに準備が必要」と明言
+
+  prep_dependency:
+    depends_on: []
+    blocks: []
+
+prep:
+  planned_start: "2026-03-29T21:00"  # 今晩から開始
+  actual_start: null
+  actual_end: null
+  actual_duration_min: null
+  lead_time_hours: 47.5              # MTGまで約48時間
+
+  tasks:
+    - type: "research"
+      description: "図面からの暗黙知抽出手法の整理"
+      duration_min: null
+      complexity: "complex"
+    - type: "document-creation"
+      description: "共有資料作成"
+      duration_min: null
+      complexity: "medium"
+
+  interruptions: null
+  context_switches: null
+
+  ceo_note: "早めに準備が必要（社長指示 2026-03-29）"
+
+result:
+  prep_sufficient: null
+  quality_score: null
+  what_was_missing: null
+  what_was_unnecessary: null
+  ideal_lead_time_hours: null
+  ideal_duration_min: null
+  meeting_outcome: null
+  notes: null
+  next_action: null

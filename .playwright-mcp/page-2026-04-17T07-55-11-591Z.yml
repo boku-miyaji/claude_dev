@@ -1,0 +1,369 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: 提案仮説支援
+        - generic [ref=e7]:
+          - generic [ref=e8]: 顧客一覧
+          - generic [ref=e9]: ›
+          - generic [ref=e10]: 伊藤園（Magentic）
+      - generic [ref=e11]: HTMLダウンロード版 · 2026-04-17
+  - navigation [ref=e12]:
+    - generic [ref=e13]:
+      - button "📋 アジェンダ 6" [ref=e14] [cursor=pointer]:
+        - text: 📋 アジェンダ
+        - generic [ref=e15]: "6"
+      - button "👥 キーパーソン 7" [ref=e16] [cursor=pointer]:
+        - text: 👥 キーパーソン
+        - generic [ref=e17]: "7"
+      - button "🗂 関連情報" [ref=e18] [cursor=pointer]
+  - main [ref=e19]:
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]: 伊藤園（Magentic）
+          - generic [ref=e24]: 食料品（緑茶飲料・茶葉）
+          - generic [ref=e25]: 売上 4617億円
+          - generic [ref=e26]: 5432名
+        - generic [ref=e27]:
+          - generic [ref=e28]: 直近ニュース:新中期経営計画 2025-2029 発表（市場での成長戦略を明示）
+          - generic [ref=e29]: 業界動向:国内清涼飲料市場は成熟期。無糖茶カテゴリは健康志向で堅調。世界の緑茶RTD市場は北米・アジア中心に年率5-7%で拡大。機能性表示食品の市場規模も継続成長。
+          - generic [ref=e30]: 業績:緑茶飲料国内シェア首位。「お～いお茶」ブランドは無糖茶売上 No.1。茶葉調達から製造までの一貫バリューチェーン。海外売上比率約10%（北米・東南アジア中心）。配当性向30%目安。
+          - generic [ref=e31]: "競合動向:国内緑茶RTD: キリンビバレッジ（生茶）、サントリー食品（伊右衛門）、コカ・コーラボトラーズジャパン（綾鷹）と競合。海外: Unilever（Lipton）、Starbucks Teavana、中国系プレイヤーと競合。プレミアム領域・機能性領域での差別化が論点。"
+      - generic [ref=e33]:
+        - generic [ref=e34]: ビジョン:世界のティーカンパニーへ — 健康創造企業として『心身の健康』『社会の健康』『地球環境の健康』の価値を創造
+        - generic [ref=e35]: 事業戦略:1.『お～いお茶』のグローバル化 2. 国内既存事業の盤石化 3. 新たな事業の創出（茶・健康軸、M&A活用） 4. 経営基盤の強化（ガバナンス/人的資本/DX） 5. サステナビリティ経営の推進
+      - table [ref=e38]:
+        - rowgroup [ref=e39]:
+          - row "軸 大分類 経営アジェンダ（小分類） 重要度 理解度 課題意識 キーパーソン りそなの提供価値 つながりうる商品 対応方針" [ref=e40]:
+            - columnheader [ref=e41]
+            - columnheader "軸" [ref=e42]
+            - columnheader "大分類" [ref=e43]
+            - columnheader "経営アジェンダ（小分類）" [ref=e44]
+            - columnheader "重要度" [ref=e45]
+            - columnheader "理解度" [ref=e46]
+            - columnheader "課題意識" [ref=e47]
+            - columnheader "キーパーソン" [ref=e48]
+            - columnheader "りそなの提供価値" [ref=e49]
+            - columnheader "つながりうる商品" [ref=e50]
+            - columnheader "対応方針" [ref=e51]
+          - row "実現したいこと お困りごと・理由 意思決定者 影響者 情報提供者" [ref=e52]:
+            - columnheader "実現したいこと" [ref=e53]
+            - columnheader "お困りごと・理由" [ref=e54]
+            - columnheader "意思決定者" [ref=e55]
+            - columnheader "影響者" [ref=e56]
+            - columnheader "情報提供者" [ref=e57]
+        - rowgroup [ref=e58]:
+          - row "事業 売上向上 海外事業 『お～いお茶』グローバル化加速 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 事業再構築補助金 公募開始 高 普通 確信度Lv2 『お～いお茶』を販売国60ヵ国以上に拡大 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 海外売上比率10%の上昇余地 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 Yosuke Jay Oceanbright Honjo（米国事業担当執行役員） Yosuke Jay Oceanbright Honjo 情報源 — — 確信度Lv2 海外市場での茶飲料リーダーシップを構築 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 お～いお茶 / 抹茶グリーンティー 確信度Lv1 米国でのマーケティング調査の実施 新たな需要国での代理店選定" [ref=e59]:
+            - cell "事業" [ref=e60]
+            - cell "売上向上" [ref=e61]
+            - cell "海外事業" [ref=e62]
+            - cell "『お～いお茶』グローバル化加速 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 事業再構築補助金 公募開始" [ref=e63]:
+              - text: 『お～いお茶』グローバル化加速
+              - generic [ref=e64]: 🕐 更新 2023-10-21
+              - generic [ref=e65]:
+                - generic "3月決算企業の本決算発表 — 業績・財務状況の最新情報が公開。課題の再評価タイミング" [ref=e66]: 📅 5月 3月決算企業の本決算発表
+                - generic "事業再構築補助金 公募開始 — 新規事業・業態転換の資金ニーズ" [ref=e67]: 📅 4月 事業再構築補助金 公募開始
+            - cell "高" [ref=e68]
+            - cell "普通" [ref=e69]
+            - cell "確信度Lv2 『お～いお茶』を販売国60ヵ国以上に拡大 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e70]:
+              - generic [ref=e71]:
+                - generic [ref=e72]:
+                  - generic "確信度Lv2" [ref=e73]
+                  - text: 『お～いお茶』を販売国60ヵ国以上に拡大
+                - generic "IR" [ref=e74]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e75] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 海外売上比率10%の上昇余地 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e76]:
+              - generic [ref=e77]:
+                - generic [ref=e78]:
+                  - generic "確信度Lv2" [ref=e79]
+                  - text: 海外売上比率10%の上昇余地
+                - generic "IR" [ref=e80]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e81] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 Yosuke Jay Oceanbright Honjo（米国事業担当執行役員） Yosuke Jay Oceanbright Honjo 情報源" [ref=e82]:
+              - generic [ref=e83]:
+                - generic [ref=e84]:
+                  - generic "確信度Lv2" [ref=e85]
+                  - text: Yosuke Jay Oceanbright Honjo（米国事業担当執行役員）
+                - generic "HP" [ref=e86]: Yosuke Jay Oceanbright Honjo 情報源
+            - cell "—" [ref=e87]:
+              - generic [ref=e89]: —
+            - cell "—" [ref=e90]:
+              - generic [ref=e92]: —
+            - cell "確信度Lv2 海外市場での茶飲料リーダーシップを構築 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e93]:
+              - generic [ref=e94]:
+                - generic [ref=e95]:
+                  - generic "確信度Lv2" [ref=e96]
+                  - text: 海外市場での茶飲料リーダーシップを構築
+                - generic "IR" [ref=e97]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e98] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 お～いお茶 / 抹茶グリーンティー" [ref=e99]:
+              - generic [ref=e101]:
+                - generic "確信度Lv2" [ref=e102]
+                - text: お～いお茶 / 抹茶グリーンティー
+            - cell "確信度Lv1 米国でのマーケティング調査の実施 新たな需要国での代理店選定" [ref=e103]:
+              - generic [ref=e105]:
+                - generic "確信度Lv1" [ref=e106]
+                - text: 米国でのマーケティング調査の実施 新たな需要国での代理店選定
+          - row "売上向上 新たな事業の創出 健康軸のM&A戦略 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 事業再構築補助金 公募開始 中 普通 確信度Lv2 茶・健康軸での新事業創出 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 M&A候補の発掘と選定課題 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv1 — 神谷 茂（専務執行役員） — 確信度Lv2 健茶関連の新商品の市場開拓 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 機能性抹茶 / オーガニック緑茶 確信度Lv1 健康機能性に特化した企業のM&A検討 研究機関とのコラボレーションプロジェクト開始" [ref=e107]:
+            - cell "売上向上" [ref=e108]
+            - cell "新たな事業の創出" [ref=e109]
+            - cell "健康軸のM&A戦略 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 事業再構築補助金 公募開始" [ref=e110]:
+              - text: 健康軸のM&A戦略
+              - generic [ref=e111]: 🕐 更新 2023-10-21
+              - generic [ref=e112]:
+                - generic "3月決算企業の本決算発表 — 業績・財務状況の最新情報が公開。課題の再評価タイミング" [ref=e113]: 📅 5月 3月決算企業の本決算発表
+                - generic "事業再構築補助金 公募開始 — 新規事業・業態転換の資金ニーズ" [ref=e114]: 📅 4月 事業再構築補助金 公募開始
+            - cell "中" [ref=e115]
+            - cell "普通" [ref=e116]
+            - cell "確信度Lv2 茶・健康軸での新事業創出 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e117]:
+              - generic [ref=e118]:
+                - generic [ref=e119]:
+                  - generic "確信度Lv2" [ref=e120]
+                  - text: 茶・健康軸での新事業創出
+                - generic "IR" [ref=e121]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e122] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 M&A候補の発掘と選定課題 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e123]:
+              - generic [ref=e124]:
+                - generic [ref=e125]:
+                  - generic "確信度Lv2" [ref=e126]
+                  - text: M&A候補の発掘と選定課題
+                - generic "IR" [ref=e127]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e128] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv1 —" [ref=e129]:
+              - generic [ref=e131]:
+                - generic "確信度Lv1" [ref=e132]
+                - text: —
+            - cell "神谷 茂（専務執行役員）" [ref=e133]:
+              - generic [ref=e135]: 神谷 茂（専務執行役員）
+            - cell "—" [ref=e136]:
+              - generic [ref=e138]: —
+            - cell "確信度Lv2 健茶関連の新商品の市場開拓 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e139]:
+              - generic [ref=e140]:
+                - generic [ref=e141]:
+                  - generic "確信度Lv2" [ref=e142]
+                  - text: 健茶関連の新商品の市場開拓
+                - generic "IR" [ref=e143]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e144] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 機能性抹茶 / オーガニック緑茶" [ref=e145]:
+              - generic [ref=e147]:
+                - generic "確信度Lv2" [ref=e148]
+                - text: 機能性抹茶 / オーガニック緑茶
+            - cell "確信度Lv1 健康機能性に特化した企業のM&A検討 研究機関とのコラボレーションプロジェクト開始" [ref=e149]:
+              - generic [ref=e151]:
+                - generic "確信度Lv1" [ref=e152]
+                - text: 健康機能性に特化した企業のM&A検討 研究機関とのコラボレーションプロジェクト開始
+          - row "コスト削減 国内事業の盤石化 構造改革と収益性重視 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 事業再構築補助金 公募開始 高 普通 確信度Lv2 国内既存事業の収益性を向上 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 コスト構造の見直しの必要性 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 中野 悦久（専務執行役員） 中野 悦久 情報源 — — 確信度Lv2 サプライチェーンの効率化提案 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 物流最適化ソリューション / AI在庫管理システム 確信度Lv1 コストモデルの詳細分析に基づく改善策の立案 主要サプライヤーとの契約見直し" [ref=e153]:
+            - cell "コスト削減" [ref=e154]
+            - cell "国内事業の盤石化" [ref=e155]
+            - cell "構造改革と収益性重視 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 事業再構築補助金 公募開始" [ref=e156]:
+              - text: 構造改革と収益性重視
+              - generic [ref=e157]: 🕐 更新 2023-10-21
+              - generic [ref=e158]:
+                - generic "3月決算企業の本決算発表 — 業績・財務状況の最新情報が公開。課題の再評価タイミング" [ref=e159]: 📅 5月 3月決算企業の本決算発表
+                - generic "事業再構築補助金 公募開始 — 新規事業・業態転換の資金ニーズ" [ref=e160]: 📅 4月 事業再構築補助金 公募開始
+            - cell "高" [ref=e161]
+            - cell "普通" [ref=e162]
+            - cell "確信度Lv2 国内既存事業の収益性を向上 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e163]:
+              - generic [ref=e164]:
+                - generic [ref=e165]:
+                  - generic "確信度Lv2" [ref=e166]
+                  - text: 国内既存事業の収益性を向上
+                - generic "IR" [ref=e167]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e168] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 コスト構造の見直しの必要性 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e169]:
+              - generic [ref=e170]:
+                - generic [ref=e171]:
+                  - generic "確信度Lv2" [ref=e172]
+                  - text: コスト構造の見直しの必要性
+                - generic "IR" [ref=e173]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e174] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 中野 悦久（専務執行役員） 中野 悦久 情報源" [ref=e175]:
+              - generic [ref=e176]:
+                - generic [ref=e177]:
+                  - generic "確信度Lv2" [ref=e178]
+                  - text: 中野 悦久（専務執行役員）
+                - generic "HP" [ref=e179]: 中野 悦久 情報源
+            - cell "—" [ref=e180]:
+              - generic [ref=e182]: —
+            - cell "—" [ref=e183]:
+              - generic [ref=e185]: —
+            - cell "確信度Lv2 サプライチェーンの効率化提案 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e186]:
+              - generic [ref=e187]:
+                - generic [ref=e188]:
+                  - generic "確信度Lv2" [ref=e189]
+                  - text: サプライチェーンの効率化提案
+                - generic "IR" [ref=e190]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e191] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 物流最適化ソリューション / AI在庫管理システム" [ref=e192]:
+              - generic [ref=e194]:
+                - generic "確信度Lv2" [ref=e195]
+                - text: 物流最適化ソリューション / AI在庫管理システム
+            - cell "確信度Lv1 コストモデルの詳細分析に基づく改善策の立案 主要サプライヤーとの契約見直し" [ref=e196]:
+              - generic [ref=e198]:
+                - generic "確信度Lv1" [ref=e199]
+                - text: コストモデルの詳細分析に基づく改善策の立案 主要サプライヤーとの契約見直し
+          - row "基盤 ヒト 経営基盤 人的資本経営強化 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 新年度税制改正施行 中 普通 確信度Lv2 人的資本を活用した組織強化 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 人材育成・確保の必要性 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv1 — 平田 篤（専務執行役員） — 確信度Lv2 DX人材育成プログラムの実施 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 人材開発プラットフォーム / オンライン学習システム 確信度Lv1 DX戦略の見直しと教育プログラムの整備 新卒採用のターゲット層にDXスキル要件追加" [ref=e200]:
+            - cell "基盤" [ref=e201]
+            - cell "ヒト" [ref=e202]
+            - cell "経営基盤" [ref=e203]
+            - cell "人的資本経営強化 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 新年度税制改正施行" [ref=e204]:
+              - text: 人的資本経営強化
+              - generic [ref=e205]: 🕐 更新 2023-10-21
+              - generic [ref=e206]:
+                - generic "3月決算企業の本決算発表 — 業績・財務状況の最新情報が公開。課題の再評価タイミング" [ref=e207]: 📅 5月 3月決算企業の本決算発表
+                - generic "新年度税制改正施行 — 税制変更に伴う財務戦略の見直し" [ref=e208]: 📅 4月 新年度税制改正施行
+            - cell "中" [ref=e209]
+            - cell "普通" [ref=e210]
+            - cell "確信度Lv2 人的資本を活用した組織強化 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e211]:
+              - generic [ref=e212]:
+                - generic [ref=e213]:
+                  - generic "確信度Lv2" [ref=e214]
+                  - text: 人的資本を活用した組織強化
+                - generic "IR" [ref=e215]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e216] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 人材育成・確保の必要性 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e217]:
+              - generic [ref=e218]:
+                - generic [ref=e219]:
+                  - generic "確信度Lv2" [ref=e220]
+                  - text: 人材育成・確保の必要性
+                - generic "IR" [ref=e221]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e222] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv1 —" [ref=e223]:
+              - generic [ref=e225]:
+                - generic "確信度Lv1" [ref=e226]
+                - text: —
+            - cell "平田 篤（専務執行役員）" [ref=e227]:
+              - generic [ref=e229]: 平田 篤（専務執行役員）
+            - cell "—" [ref=e230]:
+              - generic [ref=e232]: —
+            - cell "確信度Lv2 DX人材育成プログラムの実施 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e233]:
+              - generic [ref=e234]:
+                - generic [ref=e235]:
+                  - generic "確信度Lv2" [ref=e236]
+                  - text: DX人材育成プログラムの実施
+                - generic "IR" [ref=e237]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e238] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 人材開発プラットフォーム / オンライン学習システム" [ref=e239]:
+              - generic [ref=e241]:
+                - generic "確信度Lv2" [ref=e242]
+                - text: 人材開発プラットフォーム / オンライン学習システム
+            - cell "確信度Lv1 DX戦略の見直しと教育プログラムの整備 新卒採用のターゲット層にDXスキル要件追加" [ref=e243]:
+              - generic [ref=e245]:
+                - generic "確信度Lv1" [ref=e246]
+                - text: DX戦略の見直しと教育プログラムの整備 新卒採用のターゲット層にDXスキル要件追加
+          - row "カネ 経営基盤 金融戦略の最適化 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 新年度税制改正施行 中 浅い 確信度Lv2 資本効率の向上と資本コスト削減 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 設備投資の効果的運用 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 平田 篤（専務執行役員） 平田 篤 情報源 — — 確信度Lv2 最適資本構成提案 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 リースファイナンスパッケージ / 資金流動化サービス 確信度Lv1 設備投資のROI再評価基準策定 資本コスト削減のためのプロジェクト推進" [ref=e247]:
+            - cell "カネ" [ref=e248]
+            - cell "経営基盤" [ref=e249]
+            - cell "金融戦略の最適化 🕐 更新 2023-10-21 📅 5月 3月決算企業の本決算発表 📅 4月 新年度税制改正施行" [ref=e250]:
+              - text: 金融戦略の最適化
+              - generic [ref=e251]: 🕐 更新 2023-10-21
+              - generic [ref=e252]:
+                - generic "3月決算企業の本決算発表 — 業績・財務状況の最新情報が公開。課題の再評価タイミング" [ref=e253]: 📅 5月 3月決算企業の本決算発表
+                - generic "新年度税制改正施行 — 税制変更に伴う財務戦略の見直し" [ref=e254]: 📅 4月 新年度税制改正施行
+            - cell "中" [ref=e255]
+            - cell "浅い" [ref=e256]
+            - cell "確信度Lv2 資本効率の向上と資本コスト削減 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e257]:
+              - generic [ref=e258]:
+                - generic [ref=e259]:
+                  - generic "確信度Lv2" [ref=e260]
+                  - text: 資本効率の向上と資本コスト削減
+                - generic "IR" [ref=e261]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e262] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 設備投資の効果的運用 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e263]:
+              - generic [ref=e264]:
+                - generic [ref=e265]:
+                  - generic "確信度Lv2" [ref=e266]
+                  - text: 設備投資の効果的運用
+                - generic "IR" [ref=e267]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e268] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 平田 篤（専務執行役員） 平田 篤 情報源" [ref=e269]:
+              - generic [ref=e270]:
+                - generic [ref=e271]:
+                  - generic "確信度Lv2" [ref=e272]
+                  - text: 平田 篤（専務執行役員）
+                - generic "HP" [ref=e273]: 平田 篤 情報源
+            - cell "—" [ref=e274]:
+              - generic [ref=e276]: —
+            - cell "—" [ref=e277]:
+              - generic [ref=e279]: —
+            - cell "確信度Lv2 最適資本構成提案 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e280]:
+              - generic [ref=e281]:
+                - generic [ref=e282]:
+                  - generic "確信度Lv2" [ref=e283]
+                  - text: 最適資本構成提案
+                - generic "IR" [ref=e284]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e285] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 リースファイナンスパッケージ / 資金流動化サービス" [ref=e286]:
+              - generic [ref=e288]:
+                - generic "確信度Lv2" [ref=e289]
+                - text: リースファイナンスパッケージ / 資金流動化サービス
+            - cell "確信度Lv1 設備投資のROI再評価基準策定 資本コスト削減のためのプロジェクト推進" [ref=e290]:
+              - generic [ref=e292]:
+                - generic "確信度Lv1" [ref=e293]
+                - text: 設備投資のROI再評価基準策定 資本コスト削減のためのプロジェクト推進
+          - row "社会対応(SDGs) — サステナビリティ経営 茶産地支援プログラム 🕐 更新 2023-10-21 高 普通 確信度Lv2 茶産地支援とGHG削減の推進 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 産地支援の効果的な実行計画不足 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv1 — — 阿部 啓子（社外取締役） 確信度Lv2 持続可能な茶産地モデルの提案 伊藤園 新中期経営計画 2025-2029 ↗ 確信度Lv2 産地支援ファンド / カーボンオフセットプログラム 確信度Lv1 生産地の環境負荷を評価する新基準の策定 GHG削減活動の詳細評価と報告" [ref=e294]:
+            - cell "社会対応(SDGs)" [ref=e295]
+            - cell "—" [ref=e296]
+            - cell "サステナビリティ経営" [ref=e297]
+            - cell "茶産地支援プログラム 🕐 更新 2023-10-21" [ref=e298]:
+              - text: 茶産地支援プログラム
+              - generic [ref=e299]: 🕐 更新 2023-10-21
+            - cell "高" [ref=e300]
+            - cell "普通" [ref=e301]
+            - cell "確信度Lv2 茶産地支援とGHG削減の推進 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e302]:
+              - generic [ref=e303]:
+                - generic [ref=e304]:
+                  - generic "確信度Lv2" [ref=e305]
+                  - text: 茶産地支援とGHG削減の推進
+                - generic "IR" [ref=e306]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e307] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 産地支援の効果的な実行計画不足 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e308]:
+              - generic [ref=e309]:
+                - generic [ref=e310]:
+                  - generic "確信度Lv2" [ref=e311]
+                  - text: 産地支援の効果的な実行計画不足
+                - generic "IR" [ref=e312]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e313] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv1 —" [ref=e314]:
+              - generic [ref=e316]:
+                - generic "確信度Lv1" [ref=e317]
+                - text: —
+            - cell "—" [ref=e318]:
+              - generic [ref=e320]: —
+            - cell "阿部 啓子（社外取締役）" [ref=e321]:
+              - generic [ref=e323]: 阿部 啓子（社外取締役）
+            - cell "確信度Lv2 持続可能な茶産地モデルの提案 伊藤園 新中期経営計画 2025-2029 ↗" [ref=e324]:
+              - generic [ref=e325]:
+                - generic [ref=e326]:
+                  - generic "確信度Lv2" [ref=e327]
+                  - text: 持続可能な茶産地モデルの提案
+                - generic "IR" [ref=e328]:
+                  - link "伊藤園 新中期経営計画 2025-2029 ↗" [ref=e329] [cursor=pointer]:
+                    - /url: https://www.itoen.co.jp/news/article/65710/
+            - cell "確信度Lv2 産地支援ファンド / カーボンオフセットプログラム" [ref=e330]:
+              - generic [ref=e332]:
+                - generic "確信度Lv2" [ref=e333]
+                - text: 産地支援ファンド / カーボンオフセットプログラム
+            - cell "確信度Lv1 生産地の環境負荷を評価する新基準の策定 GHG削減活動の詳細評価と報告" [ref=e334]:
+              - generic [ref=e336]:
+                - generic "確信度Lv1" [ref=e337]
+                - text: 生産地の環境負荷を評価する新基準の策定 GHG削減活動の詳細評価と報告
+  - contentinfo [ref=e338]: りそな営業支援AI — 伊藤園（Magentic） 分析レポート（2026-04-17）

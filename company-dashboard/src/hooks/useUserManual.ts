@@ -61,20 +61,47 @@ export const CATEGORY_META: Record<ManualCategory, { label: string; description:
   custom:          { label: 'その他',            description: '自分で追加したカード',              order: 8 },
 }
 
+/** pending_updates row limited to Manual proposals (source='manual_seed'). */
+export interface ManualPendingUpdate {
+  id: number
+  category: ManualCategory
+  title: string
+  preview: string | null
+  proposed_content: {
+    seeds: Array<{ text: string; evidence?: string[] }>
+  }
+  current_content: {
+    cards: Array<{ id: number; text: string; user_edited: boolean }>
+  } | null
+  metadata: { diary_count?: number; roots_count?: number; generated_at?: string } | null
+  status: 'pending' | 'accepted' | 'rejected' | 'dismissed'
+  created_at: string
+}
+
 export function useUserManual() {
   const [cards, setCards] = useState<ManualCard[]>([])
+  const [pending, setPending] = useState<ManualPendingUpdate[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase
-      .from('user_manual_cards')
-      .select('*')
-      .eq('archived', false)
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: true })
-    setCards((data as ManualCard[]) ?? [])
+    const [cardsRes, pendingRes] = await Promise.all([
+      supabase
+        .from('user_manual_cards')
+        .select('*')
+        .eq('archived', false)
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('pending_updates')
+        .select('id, category, title, preview, proposed_content, current_content, metadata, status, created_at')
+        .eq('source', 'manual_seed')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false }),
+    ])
+    setCards((cardsRes.data as ManualCard[]) ?? [])
+    setPending((pendingRes.data as ManualPendingUpdate[]) ?? [])
     setLoading(false)
   }, [])
 
@@ -123,18 +150,19 @@ export function useUserManual() {
   }, [load])
 
   /**
-   * Theme Finder を呼び出して種カードを生成。
-   * 既存の user_edited_at があるカードは上書きしない。
-   * 新規の種のみ挿入する。
+   * Propose seed cards as **pending_updates** rather than writing directly.
+   * Uses Opus 4.7 with diary + story_memory + Roots (life_story_entries) as input.
+   * Users review the proposals and approve/reject each category.
+   *
+   * @param onlyCategory  If provided, the other categories are dropped from the proposals.
    */
-  const generateSeedCards = useCallback(async () => {
+  const generateSeedCards = useCallback(async (onlyCategory?: ManualCategory) => {
     setGenerating(true)
     try {
-      // Fetch recent diary + story_memory で AI に depth ある材料を渡す
       const threeMonthsAgo = new Date()
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
 
-      const [diaryRes, themeRes] = await Promise.all([
+      const [diaryRes, themeRes, rootsRes, existingCardsRes] = await Promise.all([
         supabase
           .from('diary_entries')
           .select('body, entry_date')
@@ -145,6 +173,16 @@ export function useUserManual() {
           .from('story_memory')
           .select('memory_type, content, narrative_text')
           .in('memory_type', ['identity', 'emotional_dna', 'aspirations']),
+        // Roots: life-story entries give childhood→career depth that diary alone can't cover
+        supabase
+          .from('life_story_entries')
+          .select('stage, axis, question, answer, depth_level')
+          .order('created_at', { ascending: false })
+          .limit(120),
+        supabase
+          .from('user_manual_cards')
+          .select('id, category, seed_text, user_text, user_edited_at')
+          .eq('archived', false),
       ])
 
       const diaryText = (diaryRes.data || [])
@@ -155,20 +193,27 @@ export function useUserManual() {
         .map((m) => `${m.memory_type}: ${m.narrative_text}`)
         .join('\n')
 
-      if (!diaryText) {
+      const rootsEntries = (rootsRes.data || []) as Array<{
+        stage: string; axis: string; question: string; answer: string; depth_level: number
+      }>
+      const rootsText = rootsEntries
+        .map((e) => `[${e.stage}/${e.axis}] Q:${e.question} A:${e.answer.substring(0, 160)}`)
+        .join('\n')
+
+      if (!diaryText && rootsEntries.length === 0) {
         setGenerating(false)
         return { ok: false, reason: 'insufficient_data' as const }
       }
 
       const result = await aiCompletion(
-        `## 日記 (${(diaryRes.data || []).length}件)\n${diaryText}\n\n## Theme Finder の結果\n${themeSummary || 'なし'}`,
+        `## 日記 (${(diaryRes.data || []).length}件)\n${diaryText || '(なし)'}\n\n## Theme Finder の結果\n${themeSummary || 'なし'}\n\n## Roots / 人生の棚卸し (${rootsEntries.length}件)\n${rootsText || 'まだ未着手'}`,
         {
-          systemPrompt: `あなたは、ある人の日記を深く読み解き「自分の取扱説明書」の種を書く存在。
-その人が自分について読んで「ああ、そうかもしれない」と腑に落ちる1〜2文を、カテゴリごとに生成する。
+          systemPrompt: `あなたは、ある人の日記・Theme Finder の結果・Roots（人生の棚卸し）を深く読み解き「自分の取扱説明書」の種を書く存在。
+その人が自分について読んで「ああ、そうかもしれない」と腑に落ちる1〜2文を、カテゴリごとに生成する。Roots には幼少期から現在までの価値観・家庭環境・転機が含まれるので、それを根拠として織り込む。
 
 ## 出力 (JSON)
 {
-  "identity": { "text": "この人を一言で表すと", "evidence": ["日記からの短い引用1", "引用2"] },
+  "identity": { "text": "この人を一言で表すと", "evidence": ["日記またはRootsからの短い引用1", "引用2"] },
   "values": [
     { "text": "価値観カード1", "evidence": ["引用"] },
     { "text": "価値観カード2", "evidence": ["引用"] }
@@ -192,12 +237,13 @@ export function useUserManual() {
 - 1カードは1〜2文、80字以内
 - 「頑張り屋」「努力家」等の汎用ラベルは禁止
 - failure_pattern は評価せず観察する語り方で書く。「◯◯しがち」「◯◯の時に止まる傾向がある」など
-- 日記の生の言葉を evidence に含める (20字以内の短い引用)
+- evidence は日記 or Roots の生の言葉を短く引用 (20字以内)。Roots からの場合は先頭に [stage/axis] 等を付けずに本文だけ引用
 - 日本語で出力
 - 各配列カテゴリは最大2件まで`,
           jsonMode: true,
+          model: 'claude-opus-4-7',
           temperature: 0.6,
-          maxTokens: 1200,
+          maxTokens: 1500,
           source: 'user_manual_seed',
         },
       )
@@ -212,61 +258,70 @@ export function useUserManual() {
         aspiration?: { text: string; evidence?: string[] }
       }
 
-      // 既存のカードを取得。user_edited_at がセットされているものは上書き禁止。
-      const { data: existing } = await supabase
-        .from('user_manual_cards')
-        .select('id, category, user_edited_at')
-      const editedCategories = new Set(
-        (existing ?? [])
-          .filter((c) => c.user_edited_at !== null)
-          .map((c) => c.category as ManualCategory),
-      )
-
-      // 古い種 (source='theme_finder' かつ 未編集) は削除してから insert
-      const rowsToInsert: Array<{
-        category: ManualCategory
-        seed_text: string
-        evidence: Array<{ quote: string }>
-        source: 'theme_finder'
-        confidence: 'medium'
-      }> = []
-
-      const addRow = (
-        category: ManualCategory,
-        entry: { text: string; evidence?: string[] },
-      ) => {
-        if (editedCategories.has(category)) return
+      // Group proposed seeds by category
+      const proposedByCategory = new Map<ManualCategory, Array<{ text: string; evidence?: string[] }>>()
+      const addSeed = (category: ManualCategory, entry: { text: string; evidence?: string[] } | undefined) => {
         if (!entry?.text) return
-        rowsToInsert.push({
-          category,
-          seed_text: entry.text,
-          evidence: (entry.evidence ?? []).map((q) => ({ quote: q })),
-          source: 'theme_finder',
-          confidence: 'medium',
+        if (onlyCategory && onlyCategory !== category) return
+        if (!proposedByCategory.has(category)) proposedByCategory.set(category, [])
+        proposedByCategory.get(category)!.push(entry)
+      }
+      if (parsed.identity) addSeed('identity', parsed.identity)
+      for (const v of parsed.values ?? []) addSeed('values', v)
+      for (const v of parsed.joy_trigger ?? []) addSeed('joy_trigger', v)
+      for (const v of parsed.energy_source ?? []) addSeed('energy_source', v)
+      for (const v of parsed.failure_pattern ?? []) addSeed('failure_pattern', v)
+      for (const v of parsed.recovery_style ?? []) addSeed('recovery_style', v)
+      if (parsed.aspiration) addSeed('aspiration', parsed.aspiration)
+
+      // Current cards grouped by category (for diff display later)
+      const currentByCategory = new Map<ManualCategory, Array<{ id: number; text: string; user_edited: boolean }>>()
+      for (const c of (existingCardsRes.data ?? []) as Array<{ id: number; category: ManualCategory; seed_text: string | null; user_text: string | null; user_edited_at: string | null }>) {
+        if (!currentByCategory.has(c.category)) currentByCategory.set(c.category, [])
+        currentByCategory.get(c.category)!.push({
+          id: c.id,
+          text: c.user_text ?? c.seed_text ?? '',
+          user_edited: c.user_edited_at !== null,
         })
       }
 
-      if (parsed.identity) addRow('identity', parsed.identity)
-      for (const v of parsed.values ?? []) addRow('values', v)
-      for (const v of parsed.joy_trigger ?? []) addRow('joy_trigger', v)
-      for (const v of parsed.energy_source ?? []) addRow('energy_source', v)
-      for (const v of parsed.failure_pattern ?? []) addRow('failure_pattern', v)
-      for (const v of parsed.recovery_style ?? []) addRow('recovery_style', v)
-      if (parsed.aspiration) addRow('aspiration', parsed.aspiration)
+      // Clear any still-pending manual proposals for the same categories, then insert new ones.
+      const categoryArray = Array.from(proposedByCategory.keys())
+      if (categoryArray.length > 0) {
+        await supabase
+          .from('pending_updates')
+          .update({ status: 'dismissed', decided_at: new Date().toISOString() })
+          .eq('source', 'manual_seed')
+          .eq('status', 'pending')
+          .in('category', categoryArray)
+      }
 
-      // 未編集の theme_finder 種を一旦削除
-      await supabase
-        .from('user_manual_cards')
-        .delete()
-        .eq('source', 'theme_finder')
-        .is('user_edited_at', null)
+      const metadata = {
+        diary_count: (diaryRes.data ?? []).length,
+        roots_count: rootsEntries.length,
+        generated_at: new Date().toISOString(),
+      }
+
+      const rowsToInsert = categoryArray.map((cat) => {
+        const seeds = proposedByCategory.get(cat)!
+        const meta = CATEGORY_META[cat]
+        return {
+          source: 'manual_seed',
+          category: cat,
+          title: `${meta.label} の更新候補`,
+          preview: seeds[0]?.text?.substring(0, 100) ?? null,
+          proposed_content: { seeds },
+          current_content: { cards: currentByCategory.get(cat) ?? [] },
+          metadata,
+        }
+      })
 
       if (rowsToInsert.length > 0) {
-        await supabase.from('user_manual_cards').insert(rowsToInsert)
+        await supabase.from('pending_updates').insert(rowsToInsert)
       }
 
       await load()
-      return { ok: true as const, generated: rowsToInsert.length }
+      return { ok: true as const, proposed: rowsToInsert.length }
     } catch (err) {
       console.error('[useUserManual] generateSeedCards failed', err)
       return { ok: false as const, reason: 'error' as const }
@@ -275,8 +330,61 @@ export function useUserManual() {
     }
   }, [load])
 
+  /** Approve a pending update: apply its seeds to user_manual_cards (replacing unedited seeds in that category). */
+  const acceptUpdate = useCallback(async (id: number) => {
+    const row = pending.find((p) => p.id === id)
+    if (!row) return
+    const category = row.category
+    // Delete still-unedited theme_finder seeds in this category (let user-edited ones stand)
+    await supabase
+      .from('user_manual_cards')
+      .delete()
+      .eq('category', category)
+      .eq('source', 'theme_finder')
+      .is('user_edited_at', null)
+
+    const seeds = row.proposed_content?.seeds ?? []
+    if (seeds.length > 0) {
+      await supabase.from('user_manual_cards').insert(
+        seeds.map((s) => ({
+          category,
+          seed_text: s.text,
+          evidence: (s.evidence ?? []).map((q) => ({ quote: q })),
+          source: 'theme_finder',
+          confidence: 'medium',
+        })),
+      )
+    }
+
+    await supabase
+      .from('pending_updates')
+      .update({ status: 'accepted', decided_at: new Date().toISOString() })
+      .eq('id', id)
+
+    await load()
+  }, [pending, load])
+
+  /** Reject a pending update: mark rejected, no changes to user_manual_cards. */
+  const rejectUpdate = useCallback(async (id: number) => {
+    await supabase
+      .from('pending_updates')
+      .update({ status: 'rejected', decided_at: new Date().toISOString() })
+      .eq('id', id)
+    await load()
+  }, [load])
+
+  /** Dismiss = hide for now, don't treat as rejected. Kept for future resurface. */
+  const dismissUpdate = useCallback(async (id: number) => {
+    await supabase
+      .from('pending_updates')
+      .update({ status: 'dismissed', decided_at: new Date().toISOString() })
+      .eq('id', id)
+    await load()
+  }, [load])
+
   return {
     cards,
+    pending,
     loading,
     generating,
     editCard,
@@ -284,6 +392,9 @@ export function useUserManual() {
     togglePin,
     archiveCard,
     generateSeedCards,
+    acceptUpdate,
+    rejectUpdate,
+    dismissUpdate,
     refresh: load,
   }
 }

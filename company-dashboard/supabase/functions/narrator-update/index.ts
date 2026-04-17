@@ -328,6 +328,155 @@ async function runDreamDetection(): Promise<{ detected: number; skipped?: boolea
 }
 
 // ============================================================
+// Manual Refresh: propose updated user_manual seeds as pending_updates
+// Triggers when the last proposal/acceptance is >30 days old, so the user
+// reviews fresh takes periodically without having to press a button.
+// ============================================================
+
+const MANUAL_CATEGORY_META: Record<string, { label: string; order: number }> = {
+  identity: { label: "私という人", order: 1 },
+  values: { label: "大事にしているもの", order: 2 },
+  joy_trigger: { label: "幸せを感じる瞬間", order: 3 },
+  energy_source: { label: "エネルギーの源", order: 4 },
+  failure_pattern: { label: "つまずきのクセ", order: 5 },
+  recovery_style: { label: "回復のしかた", order: 6 },
+  aspiration: { label: "本当に求めているもの", order: 7 },
+};
+
+async function runManualRefresh(): Promise<{ refreshed: boolean; categories?: number; skipped?: string }> {
+  // Single-user focus-you: grab the primary user from existing user-scoped data.
+  // Existing tables use `user_id`; new ones (pending_updates, life_story_entries)
+  // use `owner_id`. We read user_id from user_manual_cards first, then fall back
+  // to life_story_entries.
+  let ownerId: string | undefined;
+  const { data: card } = await sb.from("user_manual_cards").select("user_id").limit(1).maybeSingle();
+  ownerId = (card as { user_id?: string } | null)?.user_id;
+  if (!ownerId) {
+    const { data: roots } = await sb.from("life_story_entries").select("owner_id").limit(1).maybeSingle();
+    ownerId = (roots as { owner_id?: string } | null)?.owner_id;
+  }
+  if (!ownerId) return { refreshed: false, skipped: "no_user" };
+
+  // Skip if a recent manual_seed proposal (pending OR accepted) exists within 30 days
+  const thirty = new Date(Date.now() - 30 * 86400000).toISOString();
+  const { count: recentCount } = await sb
+    .from("pending_updates")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_id", ownerId)
+    .eq("source", "manual_seed")
+    .in("status", ["pending", "accepted"])
+    .gte("created_at", thirty);
+  if ((recentCount ?? 0) > 0) return { refreshed: false, skipped: "recent_exists" };
+
+  // Gather input: diary (90d) + story_memory + Roots (life_story_entries) + current cards
+  const since = new Date(Date.now() - 90 * 86400000).toISOString();
+  // diary_entries doesn't have owner_id column — relies on is_owner() RLS function.
+  // Service role bypasses RLS so we see all rows; limited by recency is fine for single-user setup.
+  const [diaryRes, themeRes, rootsRes, existingCardsRes] = await Promise.all([
+    sb.from("diary_entries").select("body, entry_date")
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(60),
+    sb.from("story_memory").select("memory_type, narrative_text")
+      .in("memory_type", ["identity", "emotional_dna", "aspirations"]),
+    sb.from("life_story_entries").select("stage, axis, question, answer")
+      .eq("owner_id", ownerId)
+      .order("created_at", { ascending: false })
+      .limit(120),
+    sb.from("user_manual_cards").select("id, category, seed_text, user_text, user_edited_at")
+      .eq("user_id", ownerId)
+      .eq("archived", false),
+  ]);
+
+  const diaries = (diaryRes.data ?? []) as Array<{ body: string; entry_date: string }>;
+  const rootsEntries = (rootsRes.data ?? []) as Array<{ stage: string; axis: string; question: string; answer: string }>;
+  if (diaries.length < 10 && rootsEntries.length === 0) return { refreshed: false, skipped: "insufficient_data" };
+
+  const diaryText = diaries.map((d) => `[${d.entry_date}] ${d.body.substring(0, 180)}`).join("\n");
+  const themeSummary = ((themeRes.data ?? []) as Array<{ memory_type: string; narrative_text: string | null }>)
+    .map((m) => `${m.memory_type}: ${m.narrative_text ?? ""}`).join("\n");
+  const rootsText = rootsEntries
+    .map((e) => `[${e.stage}/${e.axis}] Q:${e.question} A:${e.answer.substring(0, 160)}`)
+    .join("\n");
+
+  const systemPrompt = `あなたは、ある人の日記・Theme Finder の結果・Roots（人生の棚卸し）を深く読み解き「自分の取扱説明書」の種を書く存在。
+その人が自分について読んで「ああ、そうかもしれない」と腑に落ちる1〜2文を、カテゴリごとに生成する。Roots には幼少期から現在までの価値観・家庭環境・転機が含まれるので、それを根拠として織り込む。
+
+## 出力 (JSON)
+{
+  "identity": { "text": "この人を一言で表すと", "evidence": ["引用1", "引用2"] },
+  "values": [{ "text": "価値観カード", "evidence": ["引用"] }],
+  "joy_trigger": [{ "text": "幸せを感じる瞬間の傾向", "evidence": ["引用"] }],
+  "energy_source": [{ "text": "エネルギーの源", "evidence": ["引用"] }],
+  "failure_pattern": [{ "text": "つまずきのクセ", "evidence": ["引用"] }],
+  "recovery_style": [{ "text": "回復のしかた", "evidence": ["引用"] }],
+  "aspiration": { "text": "本当に求めているもの", "evidence": ["引用"] }
+}
+
+## ルール
+- 1カードは1〜2文、80字以内
+- 「頑張り屋」「努力家」等の汎用ラベルは禁止
+- failure_pattern は評価せず観察する語り方で
+- evidence は日記 or Roots の生の言葉を短く引用 (20字以内)
+- 日本語で、各配列カテゴリは最大2件まで`;
+
+  const userMessage = `## 日記 (${diaries.length}件)\n${diaryText || "(なし)"}\n\n## Theme Finder\n${themeSummary || "なし"}\n\n## Roots (${rootsEntries.length}件)\n${rootsText || "まだ未着手"}`;
+
+  const parsed = await llmJson(systemPrompt, userMessage, 0.6, 1500);
+  if (!parsed) return { refreshed: false, skipped: "llm_failed" };
+
+  // Group proposed seeds by category
+  const byCategory = new Map<string, Array<{ text: string; evidence?: string[] }>>();
+  const push = (cat: string, entry: unknown) => {
+    const e = entry as { text?: string; evidence?: string[] } | undefined;
+    if (!e?.text) return;
+    if (!byCategory.has(cat)) byCategory.set(cat, []);
+    byCategory.get(cat)!.push({ text: e.text, evidence: e.evidence });
+  };
+  push("identity", parsed.identity);
+  for (const v of (parsed.values as unknown[]) ?? []) push("values", v);
+  for (const v of (parsed.joy_trigger as unknown[]) ?? []) push("joy_trigger", v);
+  for (const v of (parsed.energy_source as unknown[]) ?? []) push("energy_source", v);
+  for (const v of (parsed.failure_pattern as unknown[]) ?? []) push("failure_pattern", v);
+  for (const v of (parsed.recovery_style as unknown[]) ?? []) push("recovery_style", v);
+  push("aspiration", parsed.aspiration);
+
+  // Build current_content snapshot per category for diff UI
+  const currentByCat = new Map<string, Array<{ id: number; text: string; user_edited: boolean }>>();
+  for (const c of (existingCardsRes.data ?? []) as Array<{ id: number; category: string; seed_text: string | null; user_text: string | null; user_edited_at: string | null }>) {
+    if (!currentByCat.has(c.category)) currentByCat.set(c.category, []);
+    currentByCat.get(c.category)!.push({
+      id: c.id,
+      text: c.user_text ?? c.seed_text ?? "",
+      user_edited: c.user_edited_at !== null,
+    });
+  }
+
+  const metadata = {
+    diary_count: diaries.length,
+    roots_count: rootsEntries.length,
+    generated_at: new Date().toISOString(),
+    triggered_by: "narrator_update_cron",
+  };
+
+  const rows = Array.from(byCategory.entries()).map(([cat, seeds]) => ({
+    owner_id: ownerId,
+    source: "manual_seed",
+    category: cat,
+    title: `${MANUAL_CATEGORY_META[cat]?.label ?? cat} の更新候補`,
+    preview: seeds[0]?.text?.substring(0, 100) ?? null,
+    proposed_content: { seeds },
+    current_content: { cards: currentByCat.get(cat) ?? [] },
+    metadata,
+  }));
+
+  if (rows.length === 0) return { refreshed: false, skipped: "no_proposals" };
+
+  await sb.from("pending_updates").insert(rows);
+  return { refreshed: true, categories: rows.length };
+}
+
+// ============================================================
 // Main handler
 // ============================================================
 
@@ -339,11 +488,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const [arc, theme, chapter, dreamScan] = await Promise.all([
+    const [arc, theme, chapter, dreamScan, manualRefresh] = await Promise.all([
       runArcReader(),
       runThemeFinder(),
       runChapterGenerator(),
       runDreamDetection(),
+      runManualRefresh(),
     ]);
 
     const summary = {
@@ -351,13 +501,14 @@ Deno.serve(async (req) => {
       theme_finder: theme,
       chapter_generator: chapter,
       dream_detection: dreamScan,
+      manual_refresh: manualRefresh,
       run_at: new Date().toISOString(),
     };
 
     // Log
     await sb.from("activity_log").insert({
       action: "narrator_update",
-      description: `Arc:${arc.updated ? arc.phase : 'skip'} Theme:${theme.updated ? 'updated' : 'skip'} Chapter:${chapter.created ? chapter.title : 'skip'} Dream:${dreamScan.skipped ? 'skip' : dreamScan.detected}`,
+      description: `Arc:${arc.updated ? arc.phase : 'skip'} Theme:${theme.updated ? 'updated' : 'skip'} Chapter:${chapter.created ? chapter.title : 'skip'} Dream:${dreamScan.skipped ? 'skip' : dreamScan.detected} Manual:${manualRefresh.refreshed ? manualRefresh.categories : 'skip'}`,
       metadata: summary,
     });
 

@@ -411,6 +411,8 @@ function TabOverview() {
           ['calendar_events (読み取り)', 'Calendar/Todayページ', 'Edge Function proxy (GET /events)', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。maxResults=250 + nextPageTokenページングで取りこぼし防止、失敗カレンダーは failed_calendars[] で警告バッジ表示'],
           ['calendar_events (作成/編集/削除)', 'Calendarページ「+ 予定」ボタン or 既存予定クリック', 'Edge Function proxy (POST/PATCH/DELETE /events)', 'focus-you内で完結。Googleカレンダー画面を別で開く必要なし。EventModalでsummary/日付/開始終了/calendarId編集可能。ドラッグ移動も PATCH で Google に反映'],
           ['life_story_entries', 'Rootsページで質問に答える', 'Edge Function life-story (POST next_question/answer/summarize/coverage)', 'Opus 4.7で過去回答を踏まえて質問生成→ステージ×軸(幼少期/小/中/高/大学/社会人初期/中期/最近 × 価値観/家庭/嬉しかった/苦しかった/転機/仕事/人間関係)のカバレッジをDBに蓄積。再実行ほど手薄エリアを聞く。セッション終了でsummarize→テーマ/言語化/次回候補を返す'],
+          ['pending_updates (承認フロー)', 'AI生成後、ユーザー承認まで待機', 'useUserManual / narrator-update runManualRefresh', '全ての AI 生成提案を pending_updates に蓄積 (source=manual_seed 等)。ユーザーはTodayバナー→該当ページで [承認] / [却下] / [後で]。承認時のみ本体テーブル (user_manual_cards) に反映。Today上部のPendingUpdatesBannerが合計件数を表示'],
+          ['user_manual_cards 更新候補', '30日経過判定 (毎朝9時JST cron)', 'narrator-update/runManualRefresh', 'Opus 4.7 + 日記60件 + Theme Finder + Roots 120件から種カード生成 → pending_updates に保存 (本体を直接書き換えない)。カテゴリ別 [このカテゴリだけ再生成] ボタンも有。evidence (日記・Rootsからの引用) 併記'],
           ['google_tasks', 'タスク作成/更新/完了時', 'data.ts → syncTaskToGoogle', 'Supabase tasks→Google Tasks一方向同期。日付ありタスクのみ。google_task_idでリンク。lib/googleTasksApi.ts'],
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
         ]} />
