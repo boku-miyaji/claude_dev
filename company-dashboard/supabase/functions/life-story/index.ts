@@ -79,7 +79,11 @@ async function anthropicJson<T = Record<string, unknown>>(
     body: JSON.stringify({
       model: OPUS_MODEL,
       max_tokens: maxTokens,
-      temperature,
+      // Claude Opus 4.7+ では temperature が deprecated のため送らない。
+      // (temperature 引数は将来の旧モデル対応のため残す)
+      ...(temperature !== undefined && !/opus-4-7|opus-4-8|sonnet-4-7|sonnet-4-8/i.test(OPUS_MODEL)
+        ? { temperature }
+        : {}),
       system: `${systemPrompt}\n\n必ず JSON オブジェクトのみを返してください。前後に説明文を付けない。`,
       messages: [{ role: "user", content: userMessage }],
     }),
