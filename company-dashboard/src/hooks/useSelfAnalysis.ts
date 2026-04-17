@@ -673,10 +673,10 @@ changes_from_previous フィールドに、前回からの変化を具体的に�
 `
       const prompt = modePreamble + dataLiteracyPreamble + PROMPT_BUILDERS[type](prevResult)
 
-      // Call AI via Edge Function (OpenAI)
+      // Call AI via Edge Function (Claude Opus 4.7 — deep personality analysis)
       const { content: resultText } = await aiCompletion(userData, { source: 'self_analysis',
         systemPrompt: prompt,
-        model: 'gpt-5.4',
+        model: 'claude-opus-4-7',
         jsonMode: true,
         temperature: 0.4,
         maxTokens: 4500,

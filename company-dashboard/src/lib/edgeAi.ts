@@ -61,11 +61,21 @@ export async function aiCompletion(
   if (result.usage || result.model) {
     const tokIn = result.usage?.prompt_tokens || 0
     const tokOut = result.usage?.completion_tokens || 0
-    // Estimate cost if not provided (GPT-5.4 nano ~$0.05/1M in, $0.40/1M out)
-    const costUsd = (tokIn * 0.00000005) + (tokOut * 0.0000004)
+    // Estimate cost by model (USD per token)
+    const modelName = result.model || options.model || 'gpt-5.4-nano'
+    const rates: Record<string, { i: number; o: number }> = {
+      'gpt-5.4-nano':     { i: 0.00000005, o: 0.0000004 },
+      'gpt-5.4-mini':     { i: 0.0000004,  o: 0.0000016 },
+      'gpt-5.4':          { i: 0.0000025,  o: 0.000015  },
+      'claude-haiku-4-5': { i: 0.000001,   o: 0.000005  },
+      'claude-sonnet-4-6':{ i: 0.000003,   o: 0.000015  },
+      'claude-opus-4-7':  { i: 0.000005,   o: 0.000025  },
+    }
+    const rate = rates[modelName] ?? rates['gpt-5.4-nano']
+    const costUsd = (tokIn * rate.i) + (tokOut * rate.o)
     supabase.from('api_cost_log').insert({
       source: options.source || 'other',
-      model: result.model || options.model || 'gpt-5.4-nano',
+      model: modelName,
       tokens_input: tokIn,
       tokens_output: tokOut,
       cost_usd: costUsd,

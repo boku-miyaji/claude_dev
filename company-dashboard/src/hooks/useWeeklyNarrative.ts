@@ -249,6 +249,7 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
 
       const { content: narrative } = await aiCompletion(userData, { source: 'weekly_narrative',
         systemPrompt,
+        model: 'claude-opus-4-7',
         temperature: 0.7,
         maxTokens: 600,
       })

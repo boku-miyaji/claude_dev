@@ -253,7 +253,13 @@
       "Edit(/.claude/skills/med/**)",
       "Edit(/.claude/skills/low/**)",
       "Bash(netstat -ltnp)",
-      "Bash(PORT=3333 pnpm dev)"
+      "Bash(PORT=3333 pnpm dev)",
+      "Bash(.venv/bin/uvicorn src.main:app --host 127.0.0.1 --port 8000 --log-level warning)",
+      "Bash(PORT=3334 pnpm dev)",
+      "WebFetch(domain:vercel.com)",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebFetch(domain:www.cloudflare.com)",
+      "WebFetch(domain:blog.cloudflare.com)"
     ],
     "deny": [
       "Read(**/.env)",

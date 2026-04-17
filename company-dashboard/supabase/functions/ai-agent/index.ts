@@ -102,6 +102,7 @@ const COST_TABLE: Record<string, { input: number; output: number }> = {
   "o4-mini": { input: 1.10 / 1e6, output: 4.40 / 1e6 },
   "claude-sonnet-4-6": { input: 3.0 / 1e6, output: 15.0 / 1e6 },
   "claude-haiku-4-5": { input: 1.0 / 1e6, output: 5.0 / 1e6 },
+  "claude-opus-4-7": { input: 5.0 / 1e6, output: 25.0 / 1e6 },
 };
 
 // ============================================================
@@ -1493,14 +1494,72 @@ Deno.serve(async (req) => {
   }
 
   if (body.mode === "completion") {
-    if (!OPENAI_API_KEY) {
+    const model = body.model || "gpt-5.4-nano";
+    const useAnthropic = isAnthropicModel(model);
+
+    if (useAnthropic && !ANTHROPIC_API_KEY) {
+      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+    if (!useAnthropic && !OPENAI_API_KEY) {
       return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
         status: 500,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
 
-    const model = body.model || "gpt-5.4-nano";
+    // ---------- Anthropic path ----------
+    if (useAnthropic) {
+      const jsonMode = body.response_format?.type === "json_object";
+      const systemPrompt = jsonMode && body.system_prompt
+        ? `${body.system_prompt}\n\n必ず JSON オブジェクトのみを返してください。前後に説明文を付けない。`
+        : body.system_prompt;
+      const anthBody: Record<string, unknown> = {
+        model,
+        max_tokens: body.max_tokens ?? 4096,
+        messages: [{ role: "user", content: body.message }],
+      };
+      if (systemPrompt) anthBody.system = systemPrompt;
+      if (body.temperature != null) anthBody.temperature = body.temperature;
+
+      const anthRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify(anthBody),
+      });
+
+      if (!anthRes.ok) {
+        const errText = await anthRes.text();
+        return new Response(JSON.stringify({ error: `Anthropic API error: ${anthRes.status}`, detail: errText.substring(0, 500) }), {
+          status: anthRes.status,
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
+      }
+
+      const anthData = await anthRes.json();
+      const content = Array.isArray(anthData.content)
+        ? anthData.content.filter((b: { type: string }) => b.type === "text").map((b: { text: string }) => b.text).join("")
+        : "";
+      const usage = anthData.usage
+        ? {
+            prompt_tokens: anthData.usage.input_tokens || 0,
+            completion_tokens: anthData.usage.output_tokens || 0,
+            total_tokens: (anthData.usage.input_tokens || 0) + (anthData.usage.output_tokens || 0),
+          }
+        : undefined;
+
+      return new Response(JSON.stringify({ content, model, usage }), {
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    // ---------- OpenAI path ----------
     const messages: { role: string; content: string }[] = [];
     if (body.system_prompt) {
       messages.push({ role: "system", content: body.system_prompt });

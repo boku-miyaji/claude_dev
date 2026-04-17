@@ -343,7 +343,7 @@ ${modeInstructions[timeMode]}
 
       const result = await aiCompletion(userMessage, { source: 'ai_partner',
         systemPrompt: finalSystemPrompt,
-        model: 'gpt-5.4',
+        model: 'claude-opus-4-7',
         maxTokens: 200,
       })
       const briefingMessage = result.content?.trim()?.replace(/[【】]/g, '')

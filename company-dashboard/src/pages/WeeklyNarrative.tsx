@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Card, PageHeader } from '@/components/ui'
 import { useWeeklyNarrative } from '@/hooks/useWeeklyNarrative'
 
@@ -16,6 +16,18 @@ const EMOTION_LABELS: Record<string, string> = {
 export function WeeklyNarrative() {
   const { weeks, loading, generating, error, generate } = useWeeklyNarrative()
   const [selectedIdx, setSelectedIdx] = useState(0)
+  const autoTriedRef = useRef(false)
+
+  // Auto-generate last week's narrative if missing. Runs once per page mount.
+  // User only writes the diary — the system auto-generates the weekly reflection.
+  useEffect(() => {
+    if (loading || generating || autoTriedRef.current) return
+    if (weeks.length < 2) return
+    const lastWeek = weeks[1]
+    if (!lastWeek || lastWeek.narrative) return
+    autoTriedRef.current = true
+    generate(lastWeek.weekStart, lastWeek.weekEnd).catch(() => { /* surfaces via error state */ })
+  }, [loading, generating, weeks, generate])
 
   if (loading) {
     return (
@@ -30,7 +42,7 @@ export function WeeklyNarrative() {
 
   return (
     <div className="page">
-      <PageHeader title="Weekly Story" description="あなたの1週間を振り返ります" />
+      <PageHeader title="Weekly Story" description="先週分は自動で生成されます（未生成なら開くと生成開始）" />
 
       {/* Week selector tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 24, overflowX: 'auto', paddingBottom: 4 }}>

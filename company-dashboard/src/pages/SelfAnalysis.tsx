@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Card, PageHeader } from '@/components/ui'
 import { useSelfAnalysis, type AnalysisType, type AnalysisRecord } from '@/hooks/useSelfAnalysis'
@@ -1429,6 +1429,23 @@ export function SelfAnalysis() {
   }, [fetchDiary, fetchTasks, fetchDreams])
 
   useEffect(() => { load() }, [load])
+
+  // Auto-trigger MBTI analysis once per visit if stale (>30 days) and enough diary data.
+  // Ensures users see fresh insight without pressing any button.
+  const autoMbtiTriedRef = useRef(false)
+  useEffect(() => {
+    if (loading || isRunningAll || running || autoMbtiTriedRef.current) return
+    if (diaryCount < 20) return
+    const mbti = pastResults.find((r) => r.analysis_type === 'mbti')
+    const daysSince = mbti ? (Date.now() - new Date(mbti.created_at).getTime()) / 86400000 : Infinity
+    if (daysSince < 30) return
+    autoMbtiTriedRef.current = true
+    runAnalysis('mbti', false).then((r) => {
+      if (r) {
+        setPastResults((prev) => [r, ...prev.filter((p) => p.analysis_type !== 'mbti')])
+      }
+    }).catch(() => { /* surfaces via analysisError */ })
+  }, [loading, isRunningAll, running, pastResults, diaryCount, runAnalysis])
 
   // Run all analyses sequentially with stepper
   const runAllWithMode = useCallback(async (forceFullScan: boolean) => {
