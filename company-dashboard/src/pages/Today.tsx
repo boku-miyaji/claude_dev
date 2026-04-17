@@ -4,7 +4,6 @@ import { calculateStreak } from '@/lib/streak'
 import { Card } from '@/components/ui'
 import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis'
 import { useMorningBriefing } from '@/hooks/useMorningBriefing'
-import { useDreamDetection } from '@/hooks/useDreamDetection'
 import { useMomentDetector } from '@/hooks/useMomentDetector'
 import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodayTimeline } from '@/hooks/useTodayTimeline'
@@ -13,7 +12,6 @@ import { toast } from '@/components/ui'
 import { StoryArcCard } from '@/components/StoryArcCard'
 import { FutureYouChat } from '@/components/FutureYouChat'
 import { useDataStore } from '@/stores/data'
-import { useBriefingStore } from '@/stores/briefing'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
 import type { TimeMode } from '@/lib/timeMode'
 import type { DiaryEntry } from '@/types/diary'
@@ -171,7 +169,6 @@ export function Today() {
   const [uploadingImages, setUploadingImages] = useState(false)
   const [emotionBadges, setEmotionBadges] = useState<Map<string, EmotionBadge[]>>(new Map())
   const { analyze, analyzing, error: emotionError } = useEmotionAnalysis()
-  const { detect } = useDreamDetection()
   const { detect: detectMoment } = useMomentDetector()
   const weather = useTodayWeather()
 
@@ -346,7 +343,6 @@ export function Today() {
 
   /* ── Save diary ── */
 
-  const invalidateBriefing = useBriefingStore((s) => s.invalidate)
 
   const handleImageSelect = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) return
@@ -419,7 +415,6 @@ export function Today() {
         scores.sort((a, b) => b.value - a.value)
         setEmotionBadges((prev) => { const next = new Map(prev); next.set(inserted.id, scores.filter((s) => s.value > 20).slice(0, 2)); return next })
       }
-      detect(content.trim()).then((detections) => { for (const d of detections) toast(`夢『${d.dream_title}』に近づいているかもしれません！`) })
       detectMoment(typeof inserted.id === 'number' ? inserted.id : parseInt(inserted.id, 10), content.trim()).then((r) => { if (r.detected && r.moment) toast(`転機を検出: ${r.moment.title}`) })
       // Persist embedding (fire-and-forget; 過去の自分カード検索用)
       const numericId = typeof inserted.id === 'number' ? inserted.id : parseInt(inserted.id, 10)
@@ -427,10 +422,8 @@ export function Today() {
         supabase.functions.invoke('diary-embed', { body: { id: numericId, text: content.trim() } })
           .catch((err) => console.error('[Today] diary-embed failed', err))
       }
-      // Re-generate AI comment with new diary context
-      invalidateBriefing()
     }
-  }, [addDiaryEntry, analyze, detect, detectMoment, todayStr, invalidateBriefing, pendingImages, pendingImagePreviews])
+  }, [addDiaryEntry, analyze, detectMoment, todayStr, pendingImages, pendingImagePreviews])
 
   const diaryPrompt = useMemo(() => getDiaryPrompt(timeMode, recentEventName ?? undefined), [timeMode, recentEventName])
   // 「過去の自分カード」— 今書いている内容と意味が近い 14日より前の日記を返す

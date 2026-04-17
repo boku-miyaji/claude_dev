@@ -316,6 +316,7 @@ export function useMorningBriefing(
 
 ## 時間帯
 ${modeInstructions[timeMode]}
+{{RECENT_BLOCK}}
 {{FEEDBACK_BLOCK}}`
 
       const userMessage = contextParts.length > 0
@@ -331,7 +332,14 @@ ${modeInstructions[timeMode]}
         fetchActivePromptRules(),
       ])
       const feedbackBlock = buildFewShotBlock(distilled, promptRules)
-      const finalSystemPrompt = systemPrompt.replace('{{FEEDBACK_BLOCK}}', feedbackBlock)
+      // Pull recent outputs directly from store to avoid stale closures (no dep dirtying).
+      const recent = useBriefingStore.getState().recentMessages
+      const recentBlock = recent.length > 0
+        ? `\n## 直近こう返した（同じ表現・同じ切り口を避ける）\n${recent.map((m) => `- ${m}`).join('\n')}\n同じフレーズの使い回しは禁止。違う角度で観察すること。`
+        : ''
+      const finalSystemPrompt = systemPrompt
+        .replace('{{RECENT_BLOCK}}', recentBlock)
+        .replace('{{FEEDBACK_BLOCK}}', feedbackBlock)
 
       const result = await aiCompletion(userMessage, { source: 'ai_partner',
         systemPrompt: finalSystemPrompt,

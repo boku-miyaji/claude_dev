@@ -251,7 +251,9 @@
       "Edit(/.claude/skills/xhigh/**)",
       "Edit(/.claude/skills/high/**)",
       "Edit(/.claude/skills/med/**)",
-      "Edit(/.claude/skills/low/**)"
+      "Edit(/.claude/skills/low/**)",
+      "Bash(netstat -ltnp)",
+      "Bash(PORT=3333 pnpm dev)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -284,7 +286,8 @@
       "/workspace/company-dashboard/docs",
       "/workspace/.company",
       "/workspace/scratch/design",
-      "/workspace/scratch/research"
+      "/workspace/scratch/research",
+      "/workspace/.company/departments/investigation"
     ]
   },
   "hooks": {
