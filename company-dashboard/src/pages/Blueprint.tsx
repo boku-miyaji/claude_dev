@@ -1273,7 +1273,7 @@ function TabAiFeatures() {
           ['モデル', 'gpt-5.4-nano', 'コスト最小。reasoning model なので分析系に強い'],
           ['reasoning_effort', 'low', 'minimal だと出力が空になるケースがあった'],
           ['max_completion_tokens', '8000', 'reasoning + output の合計。少ないとreasoning に消費されて出力空に'],
-          ['temperature', '(デフォルト1)', 'gpt-5.4-nano は temperature カスタム非対応'],
+          ['temperature', '(デフォルト1)', 'gpt-5.4-nano / claude-opus-4-7 系は temperature 非対応（edge 側で自動スキップ）'],
         ]} />
       </Section>
 

@@ -1,6 +1,12 @@
 [functions.ai-agent]
 verify_jwt = false
 
+# diary-embed: ブラウザから authorization ヘッダを付けずに呼ぶため、
+# ゲートウェイ検証を外す。関数内では anon key 相当で動作する
+# （SERVICE_ROLE_KEY で sb クライアントを作るので書き込みも可能）。
+[functions.diary-embed]
+verify_jwt = false
+
 [functions.google-calendar-proxy]
 # Supabase の新しい ES256 非対称鍵 + publishable key 方式では、
 # Edge Function ゲートウェイがユーザー JWT (ES256) を検証できず

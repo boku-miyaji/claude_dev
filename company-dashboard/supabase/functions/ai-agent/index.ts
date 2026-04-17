@@ -1522,7 +1522,12 @@ Deno.serve(async (req) => {
         messages: [{ role: "user", content: body.message }],
       };
       if (systemPrompt) anthBody.system = systemPrompt;
-      if (body.temperature != null) anthBody.temperature = body.temperature;
+      // Anthropic の新モデル（claude-opus-4-7 等）は temperature が deprecated。
+      // 旧モデル（claude-sonnet-4-6 / claude-haiku-4-5 以前）のみ受け付ける。
+      const anthropicSupportsTemperature = !/claude-(opus-4-7|opus-4-8|sonnet-4-7|sonnet-4-8)/i.test(model);
+      if (body.temperature != null && anthropicSupportsTemperature) {
+        anthBody.temperature = body.temperature;
+      }
 
       const anthRes = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
