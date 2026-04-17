@@ -243,7 +243,9 @@
       "mcp__claude_ai_Google_Calendar__list_events",
       "mcp__claude_ai_Google_Calendar__list_calendars",
       "Bash(.claude/hooks/thinking-level.sh)",
-      "WebFetch(domain:docs.claude.com)"
+      "WebFetch(domain:docs.claude.com)",
+      "Bash(rm /workspace/.claude/hooks/thinking-level.sh)",
+      "Bash(mkdir -p /workspace/.claude/skills/max /workspace/.claude/skills/xhigh /workspace/.claude/skills/high /workspace/.claude/skills/med /workspace/.claude/skills/low)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -535,6 +537,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
