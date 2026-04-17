@@ -21,3 +21,8 @@ verify_jwt = false
 
 [functions.news-learn]
 verify_jwt = false
+
+# life-story: user-auth + Anthropic Opus 4.7 for interactive life retrospective.
+# Same reason as above — verify JWT inside the function.
+[functions.life-story]
+verify_jwt = false

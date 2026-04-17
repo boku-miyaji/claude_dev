@@ -28,6 +28,7 @@ import { Goals } from '@/pages/Goals'
 import { Habits } from '@/pages/Habits'
 import { WeeklyNarrative } from '@/pages/WeeklyNarrative'
 import { Story } from '@/pages/Story'
+import { LifeHistory } from '@/pages/LifeHistory'
 import { GoogleAuthCallback } from '@/pages/GoogleAuthCallback'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { ShortcutHelp } from '@/components/ShortcutHelp'
@@ -96,6 +97,7 @@ export function App() {
           <Route path="/habits" element={<Habits />} />
           <Route path="/weekly" element={<WeeklyNarrative />} />
           <Route path="/story" element={<Story />} />
+          <Route path="/roots" element={<LifeHistory />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/requests" element={<Requests />} />
           <Route path="/companies" element={<Companies />} />

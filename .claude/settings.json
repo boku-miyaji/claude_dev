@@ -263,7 +263,9 @@
       "Bash(rm -f .next/dev/lock)",
       "Bash(cd /workspace/aces-rikyu-sales-proposals-poc sed -n '1,50p' project_rikyu/services/workflow_service.py echo \"---\" sed -n '220,280p' project_rikyu/services/workflow_service.py echo \"---OutputPrinterMiddleware---\" cat project_rikyu/agents/middleware/output_printer_middleware.py)",
       "Bash(cd /workspace/aces-rikyu-sales-proposals-poc cat project_rikyu/models/shared.py echo \"---existing meeting_prep instructions \\(first 60 lines\\)---\" head -60 project_rikyu/prompts/instructions/magentic/meeting_prep_json_output_writer_instructions.md echo \"---existing meeting_prep knowledge \\(first 30 lines\\)---\" head -30 project_rikyu/prompts/knowledge_base/magentic/meeting_prep_json_output_writer_knowledge_base.md echo \"---MeetingPrepOutput model---\" grep -rn \"class MeetingPrepOutput\" project_rikyu/models/)",
-      "Bash(cd /workspace/aces-rikyu-sales-proposals-poc find project_rikyu/prompts -name \"*meeting_prep_json*\" echo \"---\")"
+      "Bash(cd /workspace/aces-rikyu-sales-proposals-poc find project_rikyu/prompts -name \"*meeting_prep_json*\" echo \"---\")",
+      "Bash(cd /workspace/aces-rikyu-sales-proposals-poc ls -la .venv)",
+      "Bash(cd /workspace/aces-rikyu-sales-proposals-poc ls -la .venv/bin/)"
     ],
     "deny": [
       "Read(**/.env)",

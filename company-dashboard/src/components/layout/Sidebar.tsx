@@ -24,6 +24,7 @@ const PRODUCT_NAV: NavEntry[] = [
   // Understand
   { type: 'label', label: 'Understand' },
   { type: 'item', page: 'story', icon: '📖', label: 'Story' },
+  { type: 'item', page: 'roots', icon: '🕰', label: 'Roots' },
   { type: 'item', page: 'manual', icon: '📘', label: 'Manual' },
   { type: 'item', page: 'insights', icon: '📊', label: 'Insights' },
   { type: 'item', page: 'me', icon: '🧬', label: 'Self-Analysis' },
