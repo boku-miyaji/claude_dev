@@ -1,0 +1,18 @@
+{
+  "name": "ai-company",
+  "owner": {
+    "name": "owner"
+  },
+  "metadata": {
+    "description": "AI company plugin"
+  },
+  "plugins": [
+    {
+      "name": "company",
+      "source": "./plugins/company",
+      "description": "HD + PJ company virtual organization management",
+      "strict": false,
+      "skills": ["./plugins/company/skills/auto-prep","./plugins/company/skills/company","./plugins/company/skills/diary","./plugins/company/skills/invoice","./plugins/company/skills/no-edit","./plugins/company/skills/permission","./plugins/company/skills/register","./plugins/company/skills/weekly-digest"]
+    }
+  ]
+}

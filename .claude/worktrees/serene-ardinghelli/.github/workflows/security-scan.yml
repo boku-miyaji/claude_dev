@@ -1,0 +1,36 @@
+name: Weekly Security Scan
+
+on:
+  schedule:
+    # 毎週月曜 10:00 JST = 01:00 UTC
+    - cron: '0 1 * * 1'
+  workflow_dispatch: # 手動実行も可能
+
+permissions:
+  contents: write
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+
+      - name: Run security scan
+        run: python scripts/security/scan.py
+
+      - name: Commit scan results
+        env:
+          TIMESTAMP: ${{ github.run_id }}
+        run: |
+          git config user.name "security-bot"
+          git config user.email "security-bot@users.noreply.github.com"
+          git add .company/departments/security/audits/
+          git diff --cached --quiet || \
+            git commit -m "chore(security): weekly scan report [run:${TIMESTAMP}]"
+          git push

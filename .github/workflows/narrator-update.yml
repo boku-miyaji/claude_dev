@@ -1,0 +1,33 @@
+name: Narrator Update (Daily)
+
+# Runs Arc Reader (weekly), Theme Finder (monthly), Chapter Generator (quarterly),
+# Dream Detection (weekly). Each has internal skip-if-recent logic, so daily trigger
+# is safe and idempotent — no duplicate LLM calls.
+
+on:
+  schedule:
+    # 09:00 JST = 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke narrator-update edge function
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -e
+          echo "Invoking narrator-update..."
+          RESPONSE=$(curl -sS -X POST "${SUPABASE_URL}/functions/v1/narrator-update" \
+            -H "Content-Type: application/json" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            --max-time 300)
+          echo "Response: ${RESPONSE}"
+          if echo "${RESPONSE}" | grep -q '"error"'; then
+            echo "::error::narrator-update returned an error"
+            exit 1
+          fi

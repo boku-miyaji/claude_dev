@@ -1,0 +1,160 @@
+{
+  "report_id": "2026-04-05-1500",
+  "period": {
+    "from": "2026-04-01",
+    "to": "2026-04-05"
+  },
+  "previous_report": "2026-04-01-1600",
+  "collection_method": "on-demand",
+  "topic": "Claude Code harness engineering",
+  "alerts": [
+    {
+      "id": "ALERT-1",
+      "title": "Claude Code v2.1.92 released -- forceRemoteSettingsRefresh, Bedrock wizard",
+      "date": "2026-04-04",
+      "severity": "medium",
+      "url": "https://code.claude.com/docs/en/changelog",
+      "category": "AI tools"
+    },
+    {
+      "id": "ALERT-2",
+      "title": "Anthropic Engineering Blog: Harness Design for Long-Running Apps",
+      "date": "2026-03-24",
+      "severity": "high",
+      "url": "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+      "category": "AI tools"
+    }
+  ],
+  "items": [
+    {
+      "id": "cc-changelog-1",
+      "title": "Claude Code v2.1.92 -- forceRemoteSettingsRefresh, Bedrock wizard, /cost improvements",
+      "date": "2026-04-04",
+      "url": "https://code.claude.com/docs/en/changelog",
+      "category": "AI tools",
+      "source": "changelog"
+    },
+    {
+      "id": "cc-changelog-2",
+      "title": "Claude Code v2.1.91 -- MCP maxResultSizeChars 500K, disableSkillShellExecution, plugin executables",
+      "date": "2026-04-02",
+      "url": "https://code.claude.com/docs/en/changelog",
+      "category": "AI tools",
+      "source": "changelog"
+    },
+    {
+      "id": "cc-changelog-3",
+      "title": "Claude Code v2.1.90 -- /powerup, --resume cache fix, auto mode boundary enforcement",
+      "date": "2026-04-01",
+      "url": "https://code.claude.com/docs/en/changelog",
+      "category": "AI tools",
+      "source": "changelog"
+    },
+    {
+      "id": "harness-1",
+      "title": "Anthropic: Harness Design for Long-Running Application Development (3-agent architecture)",
+      "date": "2026-03-24",
+      "url": "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+      "category": "AI tools",
+      "source": "official blog"
+    },
+    {
+      "id": "harness-2",
+      "title": "The Model Isn't the Product: What the Claude Code Leak Reveals About Harness Engineering",
+      "date": "2026-04-01",
+      "url": "https://jazz-twk.medium.com/the-model-isnt-the-product-what-the-claude-code-leak-reveals-about-harness-engineering-e44c84ba0e3e",
+      "category": "AI tools",
+      "source": "medium"
+    },
+    {
+      "id": "harness-3",
+      "title": "Skill Issue: Harness Engineering for Coding Agents (5 principles)",
+      "date": "2026-03-01",
+      "url": "https://www.humanlayer.dev/blog/skill-issue-harness-engineering-for-coding-agents",
+      "category": "AI tools",
+      "source": "blog"
+    },
+    {
+      "id": "harness-4",
+      "title": "What Is Harness Engineering? Complete Guide for AI Agent Development 2026",
+      "date": "2026-04-01",
+      "url": "https://www.nxcode.io/resources/news/what-is-harness-engineering-complete-guide-2026",
+      "category": "AI tools",
+      "source": "blog"
+    },
+    {
+      "id": "hooks-1",
+      "title": "Claude Code Hooks expanded to 21 events, 4 handler types (command, HTTP, prompt, agent)",
+      "date": "2026-04-01",
+      "url": "https://www.pixelmojo.io/blogs/claude-code-hooks-production-quality-ci-cd-patterns",
+      "category": "AI tools",
+      "source": "blog"
+    },
+    {
+      "id": "agents-1",
+      "title": "Agent Teams: Experimental multi-session orchestration (v2.1.32+)",
+      "date": "2026-04-01",
+      "url": "https://code.claude.com/docs/en/agent-teams",
+      "category": "AI tools",
+      "source": "docs"
+    },
+    {
+      "id": "agents-2",
+      "title": "7 Agent Architecture Lessons from Claude Code Source Leak",
+      "date": "2026-04-01",
+      "url": "https://particula.tech/blog/claude-code-source-leak-agent-architecture-lessons",
+      "category": "AI tools",
+      "source": "blog"
+    },
+    {
+      "id": "claudemd-1",
+      "title": "CLAUDE.md Best Practices: 10 Sections (under 200 lines, Progressive Disclosure)",
+      "date": "2026-03-01",
+      "url": "https://uxplanet.org/claude-md-best-practices-1ef4f861ce7c",
+      "category": "AI tools",
+      "source": "ux planet"
+    },
+    {
+      "id": "claudemd-2",
+      "title": "Writing a Good CLAUDE.md (HumanLayer, 60 lines)",
+      "date": "2026-03-01",
+      "url": "https://www.humanlayer.dev/blog/writing-a-good-claude-md",
+      "category": "AI tools",
+      "source": "blog"
+    },
+    {
+      "id": "enterprise-1",
+      "title": "How Anthropic Teams Use Claude Code (official PDF)",
+      "date": "2026-04-01",
+      "url": "https://www-cdn.anthropic.com/58284b19e702b49db9302d5b6f135ad8871e7658.pdf",
+      "category": "AI tools",
+      "source": "official"
+    },
+    {
+      "id": "enterprise-2",
+      "title": "Faros AI: Claude Code for Tech Debt (200 files fixed, Docker 50% reduction)",
+      "date": "2026-03-01",
+      "url": "https://www.faros.ai/blog/claude-code-for-tech-debt",
+      "category": "AI tools",
+      "source": "case study"
+    },
+    {
+      "id": "enterprise-3",
+      "title": "Turing: Claude Code Reshaping Enterprise AI (30% delivery velocity improvement)",
+      "date": "2026-04-01",
+      "url": "https://www.turing.com/blog/how-claude-code-is-reshaping-enterprise-ai",
+      "category": "AI tools",
+      "source": "blog"
+    },
+    {
+      "id": "kairos-1",
+      "title": "KAIROS/autoDream deep analysis: persistent daemon + memory consolidation",
+      "date": "2026-04-01",
+      "url": "https://www.deeplearning.ai/the-batch/claude-codes-source-code-leaked-exposing-potential-future-features-kairos-and-autodream/",
+      "category": "AI tools",
+      "source": "deeplearning.ai"
+    }
+  ],
+  "total_items": 16,
+  "generated_at": "2026-04-05T15:00:00+09:00"
+}

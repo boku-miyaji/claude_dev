@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HD Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface-hover: #1a1a25;
+    --border: #1e1e2e;
+    --border-accent: #2a2a3e;
+    --text: #e0e0e8;
+    --text-muted: #6b6b80;
+    --text-dim: #4a4a5e;
+    --accent: #6366f1;
+    --accent-soft: rgba(99, 102, 241, 0.12);
+    --accent-hover: #818cf8;
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.12);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245, 158, 11, 0.12);
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.12);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.12);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+  .header h1 span { color: var(--text-muted); font-weight: 400; }
+  .header-meta { font-size: 12px; color: var(--text-dim); font-family: var(--mono); }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+  .section { margin-bottom: 32px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+  .section-badge { font-size: 11px; font-family: var(--mono); color: var(--text-dim); background: var(--surface); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 900px) { .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .grid-3, .grid-4, .grid-2 { grid-template-columns: 1fr; } .container { padding: 16px; } }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; transition: border-color 0.15s; }
+  .card:hover { border-color: var(--border-accent); }
+
+  .company-card { cursor: default; }
+  .company-card .company-id { font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--accent-soft); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+  .company-card .company-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .company-card .company-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+  .company-card .company-stats { display: flex; gap: 16px; }
+  .company-card .stat { display: flex; flex-direction: column; }
+  .stat-value { font-size: 20px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.02em; }
+  .stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .status { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status-active .status-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+  .score { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: var(--mono); }
+  .score-s { background: var(--accent-soft); color: var(--accent); }
+  .score-a { background: var(--green-soft); color: var(--green); }
+  .score-b { background: var(--blue-soft); color: var(--blue); }
+  .score-c { background: var(--amber-soft); color: var(--amber); }
+  .score-d { background: var(--red-soft); color: var(--red); }
+
+  .todo-list { list-style: none; }
+  .todo-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-check { width: 16px; height: 16px; border: 1.5px solid var(--border-accent); border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+  .todo-check.done { background: var(--green-soft); border-color: var(--green); position: relative; }
+  .todo-check.done::after { content: '\2713'; position: absolute; top: -1px; left: 2px; font-size: 11px; color: var(--green); }
+  .todo-content { flex: 1; }
+  .todo-content.done { text-decoration: line-through; color: var(--text-dim); }
+  .todo-meta { display: flex; gap: 8px; margin-top: 2px; }
+  .todo-tag { font-size: 10px; font-family: var(--mono); padding: 1px 5px; border-radius: 3px; }
+  .todo-tag.high { background: var(--red-soft); color: var(--red); }
+  .todo-tag.normal { background: var(--blue-soft); color: var(--blue); }
+  .todo-tag.low { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
+  .todo-tag.company { background: var(--accent-soft); color: var(--accent); }
+
+  .eval-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .eval-table th { text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .eval-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .eval-table tr:last-child td { border-bottom: none; }
+  .eval-table .dept-name { font-weight: 500; }
+  .eval-table .eval-mark { font-family: var(--mono); text-align: center; }
+  .mark-excellent { color: var(--accent); }
+  .mark-good { color: var(--green); }
+  .mark-fair { color: var(--amber); }
+  .mark-poor { color: var(--red); }
+
+  .activity-list { list-style: none; }
+  .activity-item { display: flex; gap: 12px; padding: 8px 0; font-size: 13px; }
+  .activity-date { font-family: var(--mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; min-width: 80px; }
+  .activity-company { font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+  .activity-text { color: var(--text-muted); }
+
+  .schedule-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .schedule-item:last-child { border-bottom: none; }
+  .schedule-date { font-family: var(--mono); font-size: 12px; color: var(--text-muted); min-width: 90px; }
+  .schedule-date.overdue { color: var(--red); }
+  .schedule-date.today { color: var(--green); }
+  .schedule-date.upcoming { color: var(--amber); }
+  .schedule-bar { height: 3px; border-radius: 2px; flex: 1; background: var(--border); }
+  .schedule-progress { height: 100%; border-radius: 2px; background: var(--accent); }
+  .schedule-label { min-width: 120px; }
+  .schedule-company { font-family: var(--mono); font-size: 10px; color: var(--accent); }
+
+  .kpi-card { text-align: center; padding: 20px 16px; }
+  .kpi-value { font-size: 32px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.03em; }
+  .kpi-value.good { color: var(--green); }
+  .kpi-value.warn { color: var(--amber); }
+  .kpi-value.bad { color: var(--red); }
+  .kpi-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .kpi-change { font-size: 11px; font-family: var(--mono); margin-top: 2px; }
+  .kpi-change.up { color: var(--green); }
+  .kpi-change.down { color: var(--red); }
+
+  .note-card { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+  .note-card strong { color: var(--text); }
+
+  .footer { padding: 24px 32px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; }
+
+  /* ============================================================
+     INBOX
+     ============================================================ */
+  .inbox-section { border: 2px solid var(--accent); border-radius: var(--radius-lg); background: var(--surface); margin-bottom: 32px; }
+  .inbox-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); }
+  .inbox-header h2 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .inbox-count { font-family: var(--mono); font-size: 11px; background: var(--accent); color: #fff; padding: 1px 7px; border-radius: 10px; min-width: 20px; text-align: center; }
+  .inbox-body { padding: 16px; }
+  .inbox-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .inbox-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; transition: border-color 0.15s; }
+  .inbox-input:focus { border-color: var(--accent); }
+  .inbox-input::placeholder { color: var(--text-dim); }
+  .inbox-select { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; color: var(--text-muted); font-family: var(--mono); font-size: 11px; outline: none; cursor: pointer; min-width: 100px; }
+  .inbox-select:focus { border-color: var(--accent); }
+
+  .btn { padding: 8px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 500; font-family: var(--font); cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--border-accent); color: var(--text); }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  .pending-list { list-style: none; }
+  .pending-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .pending-item:last-child { border-bottom: none; }
+  .pending-icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  .pending-icon.todo { background: var(--blue-soft); color: var(--blue); }
+  .pending-icon.task { background: var(--amber-soft); color: var(--amber); }
+  .pending-icon.note { background: var(--green-soft); color: var(--green); }
+  .pending-icon.request { background: var(--accent-soft); color: var(--accent); }
+  .pending-body { flex: 1; }
+  .pending-text { margin-bottom: 2px; }
+  .pending-meta { display: flex; gap: 8px; align-items: center; font-size: 10px; color: var(--text-dim); font-family: var(--mono); }
+  .pending-delete { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: all 0.15s; }
+  .pending-delete:hover { color: var(--red); background: var(--red-soft); }
+
+  .clipboard-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg); border-top: 1px solid var(--border); border-radius: 0 0 10px 10px; }
+  .clipboard-bar .hint { font-size: 11px; color: var(--text-dim); }
+
+  .tab-nav { display: flex; gap: 2px; margin-bottom: 12px; background: var(--bg); border-radius: var(--radius); padding: 2px; width: fit-content; }
+  .tab-btn { padding: 6px 14px; border-radius: 6px; border: none; background: transparent; color: var(--text-dim); font-size: 12px; font-family: var(--font); cursor: pointer; transition: all 0.15s; }
+  .tab-btn.active { background: var(--surface); color: var(--text); }
+  .tab-btn:hover:not(.active) { color: var(--text-muted); }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: #fff; padding: 10px 20px; border-radius: var(--radius); font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 1000; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .inbox-textarea { width: 100%; min-height: 80px; resize: vertical; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; transition: border-color 0.15s; }
+  .inbox-textarea:focus { border-color: var(--accent); }
+  .inbox-textarea::placeholder { color: var(--text-dim); }
+
+  .empty-state { text-align: center; padding: 24px; color: var(--text-dim); font-size: 13px; }
+
+  /* ============================================================
+     CALENDAR — Google Calendar style time-grid
+     ============================================================ */
+  .calendar-section { margin-bottom: 32px; }
+
+  .calendar-week-header { display: grid; grid-template-columns: 56px repeat(7, 1fr); gap: 0; border-bottom: 1px solid var(--border); }
+  .calendar-week-header .cal-corner { width: 56px; }
+  .calendar-week-header .cal-day-col-header { text-align: center; padding: 8px 4px 10px; border-left: 1px solid var(--border); }
+  .calendar-week-header .cal-day-col-header.today { }
+  .cal-day-col-header .cal-dow { font-size: 11px; font-weight: 500; letter-spacing: 0.04em; color: var(--text-dim); display: block; margin-bottom: 2px; }
+  .cal-day-col-header.today .cal-dow { color: var(--accent); }
+  .cal-day-col-header .cal-date-num { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--text); display: inline-block; line-height: 1; }
+  .cal-day-col-header.today .cal-date-num { color: #fff; background: var(--accent); width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
+
+  .calendar-timegrid { display: grid; grid-template-columns: 56px repeat(7, 1fr); gap: 0; position: relative; overflow-y: auto; max-height: 660px; }
+  .cal-time-label { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-align: right; padding-right: 8px; height: 60px; position: relative; top: -7px; line-height: 1; }
+  .cal-hour-slot { height: 60px; border-bottom: 1px solid var(--border); border-left: 1px solid var(--border); cursor: pointer; transition: background 0.1s; position: relative; }
+  .cal-hour-slot:hover { background: rgba(99, 102, 241, 0.06); }
+  .cal-hour-slot:hover::after { content: '+'; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 18px; color: var(--accent); opacity: 0.4; pointer-events: none; }
+
+  /* Event blocks — Google Calendar filled-chip style */
+  .cal-event { position: absolute; left: 3px; right: 3px; border-radius: 6px; padding: 4px 8px; font-size: 12px; line-height: 1.35; overflow: hidden; cursor: default; z-index: 2; transition: box-shadow 0.15s, filter 0.15s; }
+  .cal-event:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.35); z-index: 3; filter: brightness(1.1); }
+  .cal-event .cal-ev-time { font-family: var(--mono); font-size: 10px; opacity: 0.85; display: block; margin-bottom: 1px; }
+  .cal-event .cal-ev-title { font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Work: green filled */
+  .cal-event.cal-work { background: #1a7f37; color: #e6f9ed; border: none; }
+  .cal-event.cal-work .cal-ev-time { color: rgba(230,249,237,0.7); }
+  .cal-event.cal-work:hover { background: #1f8c3e; }
+
+  /* Personal: indigo filled */
+  .cal-event.cal-primary { background: #5b5fc7; color: #eef0ff; border: none; }
+  .cal-event.cal-primary .cal-ev-time { color: rgba(238,240,255,0.7); }
+  .cal-event.cal-primary:hover { background: #6b6fd4; }
+
+  /* Other: amber filled */
+  .cal-event.cal-secondary { background: #b45309; color: #fef3c7; border: none; }
+  .cal-event.cal-secondary .cal-ev-time { color: rgba(254,243,199,0.7); }
+  .cal-event.cal-secondary:hover { background: #c2600c; }
+
+  .cal-event.past { opacity: 0.4; }
+
+  /* Now indicator */
+  .cal-now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--red); z-index: 5; pointer-events: none; }
+  .cal-now-line::before { content: ''; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
+
+  .calendar-legend { display: flex; gap: 16px; margin-top: 10px; }
+  .calendar-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+  .calendar-legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+  .calendar-legend-dot.work { background: #1a7f37; }
+  .calendar-legend-dot.primary { background: #5b5fc7; }
+  .calendar-legend-dot.secondary { background: #b45309; }
+
+  /* Add-event modal */
+  .cal-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+  .cal-modal-overlay.show { display: flex; }
+  .cal-modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; width: 340px; max-width: 90vw; }
+  .cal-modal h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .cal-modal label { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px; margin-top: 10px; }
+  .cal-modal input, .cal-modal select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; }
+  .cal-modal input:focus, .cal-modal select:focus { border-color: var(--accent); }
+  .cal-modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+  @media (max-width: 900px) {
+    .calendar-week-header, .calendar-timegrid { grid-template-columns: 44px repeat(7, 1fr); }
+    .cal-time-label { font-size: 9px; padding-right: 4px; }
+  }
+  @media (max-width: 600px) {
+    .calendar-week-header, .calendar-timegrid { grid-template-columns: 38px repeat(7, 1fr); }
+    .cal-event .cal-ev-title { font-size: 10px; }
+    .cal-event .cal-ev-time { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>HD Dashboard <span>/ Miyaji Yuta</span></h1>
+  <div class="header-meta">Updated: 2026-04-01 21:58 JST</div>
+</div>
+
+<div class="container">
+
+  <!-- ========== INBOX (Interactive) ========== -->
+  <section class="section">
+    <div class="inbox-section">
+      <div class="inbox-header">
+        <h2>Inbox <span class="inbox-count" id="inbox-count">0</span></h2>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-ghost btn-sm" id="btn-clear">Clear All</button>
+          <button class="btn btn-primary" id="btn-copy">Copy for Claude Code</button>
+        </div>
+      </div>
+
+      <div class="inbox-body">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="quick">Quick Add</button>
+          <button class="tab-btn" data-tab="note">Note</button>
+        </div>
+
+        <!-- Quick Add tab -->
+        <div id="tab-quick">
+          <div class="inbox-input-row">
+            <select class="inbox-select" id="item-type">
+              <option value="todo">TODO</option>
+              <option value="task">Task</option>
+              <option value="request">Request</option>
+              <option value="note">Memo</option>
+            </select>
+            <select class="inbox-select" id="item-company">
+              <option value="hd">HD</option>
+              <option value="foundry">foundry</option>
+              <option value="rikyu">rikyu</option>
+              <option value="circuit">circuit</option>
+              <option value="polaris">polaris</option>
+            </select>
+            <input class="inbox-input" id="item-text" type="text" placeholder="TODO, task, or request...">
+            <button class="btn btn-primary" id="btn-add">Add</button>
+          </div>
+        </div>
+
+        <!-- Note tab -->
+        <div id="tab-note" style="display:none;">
+          <div style="margin-bottom: 8px;">
+            <div class="inbox-input-row">
+              <select class="inbox-select" id="note-company">
+                <option value="hd">HD</option>
+                <option value="foundry">foundry</option>
+                <option value="rikyu">rikyu</option>
+                <option value="circuit">circuit</option>
+                <option value="polaris">polaris</option>
+              </select>
+              <input class="inbox-input" id="note-subject" type="text" placeholder="Subject (optional)">
+            </div>
+            <textarea class="inbox-textarea" id="note-body" placeholder="Write your note, comment, or context..."></textarea>
+          </div>
+          <div style="text-align: right;">
+            <button class="btn btn-primary" id="btn-add-note">Add Note</button>
+          </div>
+        </div>
+
+        <!-- Pending items -->
+        <div id="pending-container" style="margin-top: 16px;">
+          <ul class="pending-list" id="pending-list"></ul>
+          <div class="empty-state" id="empty-state">No pending items</div>
+        </div>
+      </div>
+
+      <div class="clipboard-bar">
+        <span class="hint">Pending items are saved in your browser. Copy and paste into <code style="color:var(--accent)">/company</code> to process.</span>
+        <span class="hint" id="last-copied"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Calendar (Time-grid) ========== -->
+  <section class="section calendar-section">
+    <div class="section-header">
+      <span class="section-title">Calendar</span>
+      <span class="section-badge" id="cal-range-label"></span>
+    </div>
+
+    <!-- Day headers -->
+    <div class="calendar-week-header" id="cal-week-header"></div>
+
+    <!-- Time grid -->
+    <div class="calendar-timegrid" id="cal-timegrid"></div>
+
+    <div class="calendar-legend">
+      <div class="calendar-legend-item"><div class="calendar-legend-dot work"></div>Work (ACES)</div>
+      <div class="calendar-legend-item"><div class="calendar-legend-dot primary"></div>Personal</div>
+      <div class="calendar-legend-item"><div class="calendar-legend-dot secondary"></div>Other</div>
+    </div>
+  </section>
+
+  <!-- Add-event modal -->
+  <div class="cal-modal-overlay" id="cal-modal">
+    <div class="cal-modal">
+      <h3 id="cal-modal-title">Add Event</h3>
+      <label>Title</label>
+      <input type="text" id="cal-new-title" placeholder="Event title">
+      <label>Date</label>
+      <input type="date" id="cal-new-date">
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><label>Start</label><input type="time" id="cal-new-start"></div>
+        <div style="flex:1;"><label>End</label><input type="time" id="cal-new-end"></div>
+      </div>
+      <label>Type</label>
+      <select id="cal-new-type">
+        <option value="work">Work</option>
+        <option value="primary">Personal</option>
+        <option value="secondary">Other</option>
+      </select>
+      <div class="cal-modal-actions">
+        <button class="btn btn-ghost btn-sm" id="cal-modal-cancel">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="cal-modal-save">Add to Inbox</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== KPI Overview ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">Overview</span>
+      <span class="section-badge">KPI</span>
+    </div>
+    <div class="grid-4">
+      <div class="card kpi-card">
+        <div class="kpi-value good">4</div>
+        <div class="kpi-label">PJ Companies</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-value warn">-</div>
+        <div class="kpi-label">Open TODO</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-value good">-</div>
+        <div class="kpi-label">OK Rate</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-value good">-</div>
+        <div class="kpi-label">Score</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PJ Companies ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">PJ Companies</span>
+      <span class="section-badge">4 active</span>
+    </div>
+    <div class="grid-3">
+      <div class="card company-card">
+        <div class="company-id">foundry</div>
+        <div class="company-name">Foundry移行会社</div>
+        <div class="company-desc">SOMPOケア Foundry移行PJT支援</div>
+        <div class="status status-active"><div class="status-dot"></div>Active</div>
+      </div>
+      <div class="card company-card">
+        <div class="company-id">rikyu</div>
+        <div class="company-name">りきゅう</div>
+        <div class="company-desc">りそな向け営業支援DX</div>
+        <div class="status status-active"><div class="status-dot"></div>Active</div>
+      </div>
+      <div class="card company-card">
+        <div class="company-id">circuit</div>
+        <div class="company-name">回路設計支援システム会社</div>
+        <div class="company-desc">電子回路設計DX + Polaris AI協業</div>
+        <div class="status status-active"><div class="status-dot"></div>Active</div>
+      </div>
+      <div class="card company-card">
+        <div class="company-id">polaris</div>
+        <div class="company-name">Polaris AI</div>
+        <div class="company-desc">図面暗黙知抽出（Polaris AI社協業）</div>
+        <div class="status status-active"><div class="status-dot"></div>Active</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Context ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">Context & Notes</span>
+      <span class="section-badge">Secretary</span>
+    </div>
+    <div class="card note-card" style="padding: 16px;">
+      <strong>Calendar integrated.</strong> Time-grid weekly view (today + 7 days). Click empty slots to add events to Inbox. Events from 3 calendars (primary, ACES, secondary).
+    </div>
+  </section>
+
+</div>
+
+<div class="footer">
+  <span>Generated by HD Secretary</span>
+  <span>Customize sections by talking to your secretary</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  var STORAGE_KEY = 'hd-dashboard-inbox';
+  var TYPE_ICONS = { todo: 'T', task: 'K', note: 'N', request: 'R' };
+  var TYPE_LABELS = { todo: 'TODO', task: 'Task', note: 'Note', request: 'Request' };
+
+  function loadItems() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+  function saveItems(items) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    renderItems();
+  }
+
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function(k) {
+        if (k === 'className') node.className = attrs[k];
+        else if (k === 'textContent') node.textContent = attrs[k];
+        else if (k.startsWith('on')) node.addEventListener(k.slice(2), attrs[k]);
+        else node.setAttribute(k, attrs[k]);
+      });
+    }
+    if (children) {
+      children.forEach(function(c) {
+        if (typeof c === 'string') node.appendChild(document.createTextNode(c));
+        else if (c) node.appendChild(c);
+      });
+    }
+    return node;
+  }
+
+  function renderItems() {
+    var items = loadItems();
+    var list = document.getElementById('pending-list');
+    var empty = document.getElementById('empty-state');
+    var count = document.getElementById('inbox-count');
+
+    count.textContent = String(items.length);
+    while (list.firstChild) list.removeChild(list.firstChild);
+
+    if (items.length === 0) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+
+    items.forEach(function(item) {
+      var time = new Date(item.createdAt);
+      var hh = String(time.getHours()).padStart(2, '0');
+      var mm = String(time.getMinutes()).padStart(2, '0');
+      var dateStr = time.toISOString().slice(0, 10);
+
+      var li = el('li', { className: 'pending-item' }, [
+        el('div', { className: 'pending-icon ' + item.type, textContent: TYPE_ICONS[item.type] || '?' }),
+        el('div', { className: 'pending-body' }, [
+          el('div', { className: 'pending-text', textContent: item.text }),
+          el('div', { className: 'pending-meta' }, [
+            el('span', { textContent: TYPE_LABELS[item.type] || item.type }),
+            el('span', { className: 'todo-tag company', textContent: item.company }),
+            el('span', { textContent: dateStr + ' ' + hh + ':' + mm })
+          ])
+        ]),
+        el('button', {
+          className: 'pending-delete',
+          textContent: '\u00d7',
+          title: 'Delete',
+          onclick: function() { deleteItem(item.id); }
+        })
+      ]);
+      list.appendChild(li);
+    });
+  }
+
+  function addItem() {
+    var textEl = document.getElementById('item-text');
+    var text = textEl.value.trim();
+    if (!text) return;
+    var type = document.getElementById('item-type').value;
+    var company = document.getElementById('item-company').value;
+    var items = loadItems();
+    items.push({ id: Date.now(), type: type, company: company, text: text, createdAt: new Date().toISOString() });
+    saveItems(items);
+    textEl.value = '';
+    textEl.focus();
+    showToast('Added');
+  }
+
+  function addNote() {
+    var bodyEl = document.getElementById('note-body');
+    var body = bodyEl.value.trim();
+    if (!body) return;
+    var company = document.getElementById('note-company').value;
+    var subjectEl = document.getElementById('note-subject');
+    var subject = subjectEl.value.trim();
+    var items = loadItems();
+    items.push({
+      id: Date.now(), type: 'note', company: company,
+      text: subject ? subject + ': ' + body : body,
+      createdAt: new Date().toISOString()
+    });
+    saveItems(items);
+    bodyEl.value = '';
+    subjectEl.value = '';
+    showToast('Note added');
+  }
+
+  function deleteItem(id) {
+    var items = loadItems().filter(function(i) { return i.id !== id; });
+    saveItems(items);
+  }
+
+  function clearAll() {
+    if (!confirm('Clear all pending items?')) return;
+    saveItems([]);
+    showToast('Cleared');
+  }
+
+  function copyToClipboard() {
+    var items = loadItems();
+    if (items.length === 0) { showToast('No items to copy'); return; }
+
+    var grouped = {};
+    items.forEach(function(item) {
+      if (!grouped[item.company]) grouped[item.company] = [];
+      grouped[item.company].push(item);
+    });
+
+    var md = '## Dashboard Inbox (' + items.length + ' items)\n\n';
+    Object.keys(grouped).forEach(function(company) {
+      md += '### [' + company + ']\n\n';
+      grouped[company].forEach(function(item) {
+        var label = TYPE_LABELS[item.type] || item.type;
+        if (item.type === 'todo') md += '- [ ] ' + item.text + '\n';
+        else if (item.type === 'task' || item.type === 'request') md += '- **[' + label + ']** ' + item.text + '\n';
+        else md += '- ' + item.text + '\n';
+      });
+      md += '\n';
+    });
+    md += '---\n_From HD Dashboard at ' + new Date().toLocaleString('ja-JP') + '_\n';
+
+    navigator.clipboard.writeText(md).then(function() {
+      showToast('Copied ' + items.length + ' items');
+      document.getElementById('last-copied').textContent = 'Last copied: ' + new Date().toLocaleTimeString('ja-JP');
+    }).catch(function() {
+      var ta = document.createElement('textarea');
+      ta.value = md;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Copied ' + items.length + ' items');
+    });
+  }
+
+  function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 2000);
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var tab = btn.getAttribute('data-tab');
+      document.getElementById('tab-quick').style.display = tab === 'quick' ? 'block' : 'none';
+      document.getElementById('tab-note').style.display = tab === 'note' ? 'block' : 'none';
+    });
+  });
+
+  document.getElementById('btn-add').addEventListener('click', addItem);
+  document.getElementById('btn-add-note').addEventListener('click', addNote);
+  document.getElementById('btn-clear').addEventListener('click', clearAll);
+  document.getElementById('btn-copy').addEventListener('click', copyToClipboard);
+  document.getElementById('item-text').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addItem();
+  });
+
+  renderItems();
+})();
+
+/* ============================================================
+   CALENDAR — Time-grid weekly view (today + 7 days)
+   ============================================================ */
+(function() {
+  'use strict';
+
+  var HOUR_H = 60; // px per hour — matches .cal-hour-slot height
+  var START_HOUR = 8;
+  var END_HOUR = 21;
+  var DAYS = 7;
+  var DOW_JA = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MONTH_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Event data (server-rendered, today = 2026-04-03)
+  var EVENTS = [
+    { date: '2026-04-03', start: '09:30', end: '10:30', title: 'Rikyu 最終報告会 認識合わせ', type: 'work' },
+    { date: '2026-04-03', start: '11:00', end: '12:00', title: '[Ex] Sケアレビュー枠', type: 'work' },
+    { date: '2026-04-03', start: '15:00', end: '16:00', title: 'Rikyu Proposals 見積もり議論', type: 'work' },
+    { date: '2026-04-03', start: '17:00', end: '17:30', title: 'Claudeお勉強会', type: 'work' },
+    { date: '2026-04-03', start: '17:30', end: '18:00', title: '全社MTG', type: 'work' },
+    { date: '2026-04-03', start: '18:00', end: '19:00', title: 'Rikyu MVP見積もりレビュー', type: 'work' },
+    { date: '2026-04-04', start: '10:00', end: '12:00', title: '白井さん花見', type: 'primary' },
+    { date: '2026-04-06', start: '10:00', end: '11:00', title: '[in] rikyu algo mtg', type: 'work' },
+    { date: '2026-04-06', start: '14:00', end: '15:00', title: '[Ex] SOMPOケア IT企画部', type: 'work' },
+    { date: '2026-04-07', start: '10:00', end: '11:00', title: '[in] rikyu algo mtg', type: 'work' },
+    { date: '2026-04-07', start: '14:00', end: '15:00', title: '[Ex] SOMPOケア IT企画部', type: 'work' },
+    { date: '2026-04-07', start: '15:00', end: '16:00', title: '[Ex] りそな銀行 期末報告会', type: 'work' },
+    { date: '2026-04-07', start: '16:00', end: '17:00', title: 'Daiquiri 事務手検索 社内定例', type: 'work' },
+    { date: '2026-04-07', start: '18:00', end: '19:00', title: 'Delta デリバリー全体会', type: 'work' }
+  ];
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function fmtDate(d) { return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function parseTime(s) { var p = s.split(':'); return parseInt(p[0],10) + parseInt(p[1],10)/60; }
+  function isToday(d) { var t = new Date(); return d.getFullYear()===t.getFullYear() && d.getMonth()===t.getMonth() && d.getDate()===t.getDate(); }
+
+  function escapeText(s) {
+    var d = document.createElement('span');
+    d.textContent = s;
+    return d.textContent;
+  }
+
+  var today = new Date();
+  today.setHours(0,0,0,0);
+  var days = [];
+  for (var i = 0; i < DAYS; i++) {
+    var d = new Date(today);
+    d.setDate(today.getDate() + i);
+    days.push(d);
+  }
+
+  // Range label
+  var rangeEl = document.getElementById('cal-range-label');
+  if (rangeEl) {
+    rangeEl.textContent = MONTH_EN[days[0].getMonth()] + ' ' + days[0].getDate() + ' - ' +
+                          MONTH_EN[days[6].getMonth()] + ' ' + days[6].getDate();
+  }
+
+  // Day column headers
+  var headerEl = document.getElementById('cal-week-header');
+  var corner = document.createElement('div');
+  corner.className = 'cal-corner';
+  headerEl.appendChild(corner);
+  days.forEach(function(d) {
+    var div = document.createElement('div');
+    div.className = 'cal-day-col-header' + (isToday(d) ? ' today' : '');
+    var dowSpan = document.createElement('span');
+    dowSpan.className = 'cal-dow';
+    dowSpan.textContent = DOW_JA[d.getDay()];
+    var dateSpan = document.createElement('span');
+    dateSpan.className = 'cal-date-num';
+    dateSpan.textContent = String(d.getDate());
+    div.appendChild(dowSpan);
+    div.appendChild(dateSpan);
+    headerEl.appendChild(div);
+  });
+
+  // Time grid
+  var gridEl = document.getElementById('cal-timegrid');
+  gridEl.style.position = 'relative';
+
+  for (var h = START_HOUR; h <= END_HOUR; h++) {
+    var label = document.createElement('div');
+    label.className = 'cal-time-label';
+    label.textContent = h === START_HOUR ? '' : pad(h) + ':00';
+    gridEl.appendChild(label);
+
+    for (var di = 0; di < DAYS; di++) {
+      var slot = document.createElement('div');
+      slot.className = 'cal-hour-slot';
+      slot.setAttribute('data-day', String(di));
+      slot.setAttribute('data-hour', String(h));
+      gridEl.appendChild(slot);
+    }
+  }
+
+  // Collect slots by day
+  var slotElements = gridEl.querySelectorAll('.cal-hour-slot');
+  var daySlots = [];
+  for (var di = 0; di < DAYS; di++) daySlots.push([]);
+  slotElements.forEach(function(s) {
+    daySlots[parseInt(s.getAttribute('data-day'),10)].push(s);
+  });
+
+  var now = new Date();
+  var nowHours = now.getHours() + now.getMinutes() / 60;
+
+  // Place events after layout
+  requestAnimationFrame(function() {
+    EVENTS.forEach(function(ev) {
+      var di = -1;
+      for (var i = 0; i < days.length; i++) {
+        if (fmtDate(days[i]) === ev.date) { di = i; break; }
+      }
+      if (di < 0) return;
+
+      var startH = parseTime(ev.start);
+      var endH = parseTime(ev.end);
+      var topOffset = (startH - START_HOUR) * HOUR_H;
+      var height = (endH - startH) * HOUR_H;
+      if (height < 20) height = 20;
+
+      var firstSlot = daySlots[di][0];
+      if (!firstSlot) return;
+      var rect = firstSlot.getBoundingClientRect();
+      var gridRect = gridEl.getBoundingClientRect();
+      var left = rect.left - gridRect.left;
+      var width = rect.width;
+
+      var evDiv = document.createElement('div');
+      evDiv.className = 'cal-event cal-' + ev.type;
+      if (isToday(days[di]) && endH <= nowHours) {
+        evDiv.classList.add('past');
+      }
+      evDiv.style.position = 'absolute';
+      evDiv.style.pointerEvents = 'auto';
+      evDiv.style.top = topOffset + 'px';
+      evDiv.style.left = (left + 2) + 'px';
+      evDiv.style.width = (width - 4) + 'px';
+      evDiv.style.height = (height - 2) + 'px';
+
+      var timeSpan = document.createElement('span');
+      timeSpan.className = 'cal-ev-time';
+      timeSpan.textContent = ev.start + ' - ' + ev.end;
+      var titleSpan = document.createElement('span');
+      titleSpan.className = 'cal-ev-title';
+      titleSpan.textContent = ev.title;
+      evDiv.appendChild(timeSpan);
+      evDiv.appendChild(titleSpan);
+      gridEl.appendChild(evDiv);
+    });
+
+    // Now indicator line
+    if (nowHours >= START_HOUR && nowHours <= END_HOUR) {
+      var firstSlot = daySlots[0][0];
+      if (firstSlot) {
+        var rect = firstSlot.getBoundingClientRect();
+        var gridRect = gridEl.getBoundingClientRect();
+        var topPos = (nowHours - START_HOUR) * HOUR_H;
+        var nowLine = document.createElement('div');
+        nowLine.className = 'cal-now-line';
+        nowLine.style.position = 'absolute';
+        nowLine.style.top = topPos + 'px';
+        nowLine.style.left = (rect.left - gridRect.left) + 'px';
+        nowLine.style.width = rect.width + 'px';
+        gridEl.appendChild(nowLine);
+      }
+    }
+
+    // Scroll to around current time
+    var scrollTo = Math.max(0, (Math.min(nowHours, 10) - START_HOUR) * HOUR_H - 40);
+    gridEl.scrollTop = scrollTo;
+  });
+
+  // Click empty slot to open add modal
+  gridEl.addEventListener('click', function(e) {
+    var slot = e.target.closest('.cal-hour-slot');
+    if (!slot) return;
+    var di = parseInt(slot.getAttribute('data-day'), 10);
+    var h = parseInt(slot.getAttribute('data-hour'), 10);
+    openAddModal(days[di], h);
+  });
+
+  function openAddModal(date, hour) {
+    var modal = document.getElementById('cal-modal');
+    document.getElementById('cal-new-date').value = fmtDate(date);
+    document.getElementById('cal-new-start').value = pad(hour) + ':00';
+    document.getElementById('cal-new-end').value = pad(hour + 1) + ':00';
+    document.getElementById('cal-new-title').value = '';
+    document.getElementById('cal-modal-title').textContent =
+      'Add Event \u2014 ' + (date.getMonth()+1) + '/' + date.getDate() + ' ' + pad(hour) + ':00';
+    modal.classList.add('show');
+    setTimeout(function() { document.getElementById('cal-new-title').focus(); }, 100);
+  }
+
+  document.getElementById('cal-modal-cancel').addEventListener('click', function() {
+    document.getElementById('cal-modal').classList.remove('show');
+  });
+  document.getElementById('cal-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  document.getElementById('cal-modal-save').addEventListener('click', function() {
+    var title = document.getElementById('cal-new-title').value.trim();
+    if (!title) { document.getElementById('cal-new-title').focus(); return; }
+    var date = document.getElementById('cal-new-date').value;
+    var start = document.getElementById('cal-new-start').value;
+    var end = document.getElementById('cal-new-end').value;
+    var type = document.getElementById('cal-new-type').value;
+    var typeLabel = type === 'work' ? 'Work' : type === 'primary' ? 'Personal' : 'Other';
+
+    var STORAGE_KEY = 'hd-dashboard-inbox';
+    var items = [];
+    try { items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(ex) {}
+    items.push({
+      id: Date.now(),
+      type: 'task',
+      company: 'hd',
+      text: '[Calendar] ' + date + ' ' + start + '-' + end + ' (' + typeLabel + ') ' + title,
+      createdAt: new Date().toISOString()
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+
+    var countEl = document.getElementById('inbox-count');
+    if (countEl) countEl.textContent = String(items.length);
+
+    document.getElementById('cal-modal').classList.remove('show');
+
+    var toast = document.getElementById('toast');
+    if (toast) {
+      toast.textContent = 'Event added to Inbox';
+      toast.classList.add('show');
+      setTimeout(function() { toast.classList.remove('show'); }, 2000);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

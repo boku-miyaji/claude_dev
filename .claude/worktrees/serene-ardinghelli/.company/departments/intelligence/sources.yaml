@@ -1,0 +1,306 @@
+# 情報収集部 - 監視対象設定
+# 更新日: 2026-04-10
+
+# ============================================================
+# X アカウント（WebSearch site:x.com 経由で取得）
+# ============================================================
+x_accounts:
+  # AI / Tech 系
+  - handle: "@AnthropicAI"
+    category: "AI"
+    note: "Claude / Anthropic 公式"
+    priority: high
+  - handle: "@OpenAI"
+    category: "AI"
+    note: "OpenAI 公式"
+    priority: high
+  - handle: "@GoogleAI"
+    category: "AI"
+    note: "Google AI 公式"
+    priority: high
+
+  # 個人アカウント
+  - handle: "@trq212"
+    category: "個人"
+    priority: high
+  - handle: "@systematicls"
+    category: "個人"
+    priority: high
+  - handle: "@tricalt"
+    category: "個人"
+    priority: high
+  - handle: "@CodevolutionWeb"
+    category: "開発"
+    note: "Web開発チュートリアル"
+    priority: normal
+  - handle: "@AkshayxSaini"
+    category: "開発"
+    note: "開発コンテンツ"
+    priority: normal
+
+# ============================================================
+# キーワード検索
+# ============================================================
+keywords:
+  - term: "Claude Code"
+    category: "AI tools"
+    frequency: daily
+  - term: "Cursor AI"
+    category: "AI tools"
+    frequency: daily
+  - term: "GitHub Copilot"
+    category: "AI tools"
+    frequency: weekly
+  - term: "AI Agent framework"
+    category: "AI tools"
+    frequency: weekly
+  - term: "MCP server"
+    category: "AI tools"
+    frequency: daily
+  - term: "AI coding assistant"
+    category: "AI tools"
+    frequency: weekly
+
+# ============================================================
+# 公式ブログ・リリースノート（WebFetch で取得可能）
+# ============================================================
+web_sources:
+  # --- AI 企業公式 ---
+  - url: "https://www.anthropic.com/news"
+    category: "AI"
+    name: "Anthropic Blog"
+    frequency: daily
+    priority: high
+  - url: "https://www.anthropic.com/engineering"
+    category: "AI"
+    name: "Anthropic Engineering Blog"
+    note: "ハーネス設計、エージェント評価、セキュリティ等の技術深掘り"
+    frequency: daily
+    priority: high
+  - url: "https://claude.com/blog"
+    category: "AI"
+    name: "Claude Blog"
+    note: "Claude Code, Managed Agents, Advisor Strategy 等のプロダクト発表"
+    frequency: daily
+    priority: high
+  - url: "https://www.anthropic.com/research"
+    category: "AI research"
+    name: "Anthropic Research"
+    note: "安全性、解釈可能性、エージェント信頼性の論文"
+    frequency: weekly
+    priority: high
+  - url: "https://openai.com/news/"
+    category: "AI"
+    name: "OpenAI Blog"
+    frequency: daily
+    priority: high
+  - url: "https://openai.com/research/"
+    category: "AI research"
+    name: "OpenAI Research"
+    note: "GPT/o-series, 安全性, alignment の研究論文・テクニカルレポート"
+    frequency: daily
+    priority: high
+  - url: "https://blog.google/technology/ai/"
+    category: "AI"
+    name: "Google AI Blog"
+    frequency: daily
+    priority: high
+  - url: "https://deepmind.google/discover/blog/"
+    category: "AI research"
+    name: "Google DeepMind Blog"
+    note: "Gemini, AlphaFold, 基盤研究の論文・レポート"
+    frequency: daily
+    priority: high
+  - url: "https://ai.meta.com/blog/"
+    category: "AI"
+    name: "Meta AI Blog"
+    note: "Llama, オープンモデル, 研究発表"
+    frequency: daily
+    priority: high
+  - url: "https://ai.meta.com/research/publications/"
+    category: "AI research"
+    name: "Meta AI Research Publications"
+    note: "FAIR の論文・テクニカルレポート"
+    frequency: weekly
+    priority: high
+
+  # --- ツール公式 ---
+  - url: "https://code.claude.com/docs/en/changelog"
+    category: "AI tools"
+    name: "Claude Code Changelog"
+    frequency: daily
+  - url: "https://cursor.com/changelog"
+    category: "AI tools"
+    name: "Cursor Changelog"
+    frequency: daily
+  - url: "https://modelcontextprotocol.io/development/roadmap"
+    category: "AI tools"
+    name: "MCP Roadmap"
+    frequency: weekly
+
+  # --- テックニュース ---
+  - url: "https://techcrunch.com/category/artificial-intelligence/"
+    category: "tech news"
+    name: "TechCrunch AI"
+    frequency: daily
+  - url: "https://www.theverge.com/ai-artificial-intelligence"
+    category: "tech news"
+    name: "The Verge AI"
+    frequency: daily
+
+# ============================================================
+# 技術記事プラットフォーム（キーワード × サイト限定検索）
+# ============================================================
+tech_articles:
+  # --- 海外 ---
+  - site: "dev.to"
+    name: "Dev.to"
+    note: "海外版 Zenn/Qiita。開発者コミュニティ記事"
+    keywords: ["Claude Code", "MCP server", "AI agent", "Cursor"]
+    frequency: daily
+  - site: "medium.com"
+    name: "Medium"
+    note: "テック記事プラットフォーム"
+    keywords: ["Claude Code", "AI coding assistant", "MCP"]
+    frequency: daily
+  - site: "hashnode.dev"
+    name: "Hashnode"
+    note: "開発者ブログプラットフォーム"
+    keywords: ["Claude", "AI agent", "MCP server"]
+    frequency: weekly
+  - site: "huggingface.co/blog"
+    name: "Hugging Face Blog"
+    note: "MLコミュニティ公式ブログ"
+    keywords: ["agent", "MCP", "coding"]
+    frequency: weekly
+  - site: "arxiv.org"
+    name: "arXiv"
+    note: "AI/ML 論文プレプリント"
+    keywords: ["LLM agent", "code generation", "agentic"]
+    frequency: weekly
+
+  # --- 日本 ---
+  - site: "zenn.dev"
+    name: "Zenn"
+    note: "日本の技術記事プラットフォーム"
+    keywords: ["Claude Code", "MCP", "Cursor", "AIエージェント"]
+    frequency: daily
+  - site: "note.com"
+    name: "note"
+    note: "日本のクリエイター記事プラットフォーム"
+    keywords: ["Claude Code", "AI開発", "MCP"]
+    frequency: daily
+  - site: "qiita.com"
+    name: "Qiita"
+    note: "日本のエンジニア向け技術情報共有"
+    keywords: ["Claude Code", "MCP", "AIエージェント", "Cursor"]
+    frequency: daily
+
+# ============================================================
+# 学術論文（arXiv / 主要研究機関）
+# ============================================================
+academic_papers:
+  # arXiv カテゴリ × キーワード検索
+  # 検索URL: https://arxiv.org/search/?searchtype=all&query={keyword}
+  arxiv:
+    categories: ["cs.AI", "cs.CL", "cs.LG", "cs.MA", "cs.SE"]
+    keywords:
+      - term: "LLM agent"
+        note: "エージェントアーキテクチャ全般"
+        frequency: daily
+      - term: "code generation LLM"
+        note: "コード生成・自動プログラミング"
+        frequency: daily
+      - term: "multi-agent system LLM"
+        note: "マルチエージェント協調"
+        frequency: daily
+      - term: "memory augmented LLM"
+        note: "記憶拡張・長期記憶"
+        frequency: daily
+      - term: "agentic coding"
+        note: "エージェント的コーディング"
+        frequency: daily
+      - term: "tool use LLM"
+        note: "ツール使用・関数呼び出し"
+        frequency: weekly
+      - term: "self-improvement LLM"
+        note: "自己改善・自己進化"
+        frequency: weekly
+      - term: "knowledge management AI"
+        note: "ナレッジマネジメント・暗黙知"
+        frequency: weekly
+      - term: "personal AI assistant"
+        note: "パーソナルAI・自己理解"
+        frequency: weekly
+
+  # 注目研究機関（著者名・所属で追跡）
+  research_groups:
+    - name: "Google DeepMind"
+      note: "Gemini, AlphaCode, PaperOrchestra等"
+    - name: "Stanford NLP"
+      note: "エージェント評価、マルチエージェント研究"
+    - name: "Anthropic"
+      note: "安全性、解釈可能性"
+    - name: "Meta FAIR"
+      note: "オープンモデル、Llama"
+
+# ============================================================
+# セキュリティ（サプライチェーン攻撃・脆弱性動向）
+# ============================================================
+security:
+  keywords:
+    - term: "supply chain attack npm pypi"
+      category: "security"
+      frequency: daily
+    - term: "GitHub Actions vulnerability"
+      category: "security"
+      frequency: daily
+    - term: "npm malicious package"
+      category: "security"
+      frequency: daily
+    - term: "PyPI malware"
+      category: "security"
+      frequency: weekly
+
+  web_sources:
+    - url: "https://github.blog/security/"
+      category: "security"
+      name: "GitHub Security Blog"
+      frequency: daily
+    - url: "https://socket.dev/blog"
+      category: "security"
+      name: "Socket.dev Blog"
+      note: "npm/PyPI サプライチェーン攻撃検知"
+      frequency: daily
+
+  x_accounts:
+    - handle: "@SocketDev"
+      category: "security"
+      note: "サプライチェーンセキュリティ速報"
+      priority: high
+    - handle: "@snaborofficial"
+      category: "security"
+      note: "Snyk 公式"
+      priority: normal
+
+# ============================================================
+# GitHub リリース監視
+# ============================================================
+github_releases:
+  - repo: "anthropics/claude-code"
+    category: "AI tools"
+    name: "Claude Code"
+  - repo: "modelcontextprotocol/specification"
+    category: "AI tools"
+    name: "MCP Spec"
+  - repo: "anthropics/anthropic-sdk-python"
+    category: "AI tools"
+    name: "Anthropic Python SDK"
+
+# ============================================================
+# Hacker News（キーワードフィルター）
+# ============================================================
+hacker_news:
+  enabled: true
+  keywords: ["Claude", "Anthropic", "Cursor", "MCP", "AI agent", "coding assistant"]
+  min_score: 50  # 50ポイント以上の記事のみ

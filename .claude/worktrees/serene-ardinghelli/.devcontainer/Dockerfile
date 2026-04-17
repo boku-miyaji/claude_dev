@@ -1,0 +1,143 @@
+FROM node:22
+
+ARG TZ
+ENV TZ="$TZ"
+
+# Install basic development tools and iptables/ipset
+RUN apt-get update && apt-get install -y \
+  less \
+  git \
+  procps \
+  sudo \
+  fzf \
+  zsh \
+  man-db \
+  unzip \
+  gnupg2 \
+  gh \
+  iptables \
+  ipset \
+  iproute2 \
+  dnsutils \
+  aggregate \
+  jq \
+  wget \
+  curl \
+  vim \
+  tmux \
+  tree \
+  bat \
+  fd-find \
+  ripgrep \
+  tldr \
+  lsof \
+  ffmpeg \
+  && rm -rf /var/lib/apt/lists/*
+
+# Ensure default node user has access to /usr/local/share
+RUN mkdir -p /usr/local/share/npm-global && \
+  chown -R node:node /usr/local/share
+
+ARG USERNAME=node
+
+# Persist bash and zsh history.
+RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
+  && mkdir /commandhistory \
+  && touch /commandhistory/.bash_history \
+  && touch /commandhistory/.zsh_history \
+  && chown -R $USERNAME /commandhistory
+
+# Set `DEVCONTAINER` environment variable to help with orientation
+ENV DEVCONTAINER=true
+
+# Create workspace and config directories and set permissions
+RUN mkdir -p /workspace /home/node/.claude && \
+  chown -R node:node /workspace /home/node/.claude
+
+WORKDIR /workspace
+
+RUN ARCH=$(dpkg --print-architecture) && \
+  wget "https://github.com/dandavison/delta/releases/download/0.18.2/git-delta_0.18.2_${ARCH}.deb" && \
+  sudo dpkg -i "git-delta_0.18.2_${ARCH}.deb" && \
+  rm "git-delta_0.18.2_${ARCH}.deb"
+
+# Set up non-root user
+USER node
+
+# Install global packages
+ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
+ENV PATH=$PATH:/usr/local/share/npm-global/bin
+
+# Set the default shell to zsh rather than sh
+ENV SHELL=/bin/zsh
+
+# Install oh-my-zsh
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+# Install powerlevel10k theme
+RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+
+# Install zsh plugins
+RUN git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
+    git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
+# Copy custom .zshrc
+COPY --chown=node:node .zshrc /home/node/.zshrc
+
+# Copy p10k.zsh if it exists (will be mounted or copied separately)
+# The .p10k.zsh file should be placed in .devcontainer/ directory
+COPY --chown=node:node .p10k.zsh /home/node/.p10k.zsh
+
+# Install Claude
+RUN npm install -g @anthropic-ai/claude-code
+
+# install ccusage
+RUN npm install -g ccusage
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy and set up firewall script
+COPY init-firewall.sh /usr/local/bin/
+USER root
+RUN chmod +x /usr/local/bin/init-firewall.sh && \
+  echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
+  chmod 0440 /etc/sudoers.d/node-firewall
+
+# sudo を導入済みなら apt install 行は不要
+RUN echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-node-fullsudo \
+ && chmod 0440 /etc/sudoers.d/90-node-fullsudo
+
+ RUN echo 'node:node' | chpasswd
+
+# Python 3とpipをインストール
+# node:22はDebianベース（Debian 12 bookworm）
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-dev \
+    python3-venv \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# node userにPython環境のアクセス権を付与
+# Pythonのバージョンを確認して適切なパスを設定
+RUN PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2) && \
+    chown -R node:node /usr/local/lib/python${PYTHON_VERSION} || \
+    chown -R node:node /usr/lib/python3 || true
+
+# Supabase CLI インストール
+ARG SUPABASE_VERSION=2.78.1
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -fsSL "https://github.com/supabase/cli/releases/download/v${SUPABASE_VERSION}/supabase_${SUPABASE_VERSION}_linux_${ARCH}.deb" -o /tmp/supabase.deb && \
+    dpkg -i /tmp/supabase.deb && \
+    rm /tmp/supabase.deb
+
+# もとの non-root ユーザーに戻す
+USER node
+
+# uv を公式インストーラでインストール(pipはだめ)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# PATH を通す（コンテナ全体で有効）
+ENV PATH="/home/node/.local/bin:${PATH}"
+

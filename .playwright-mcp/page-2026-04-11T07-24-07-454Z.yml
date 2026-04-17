@@ -1,0 +1,92 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e5]:
+        - link "提案仮説支援" [ref=e6] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=e7]:
+          - generic [ref=e9]: システム仕様
+        - generic [ref=e10]:
+          - link "システム仕様" [ref=e11] [cursor=pointer]:
+            - /url: /system-spec
+            - img [ref=e12]
+            - generic [ref=e14]: システム仕様
+          - button "説明ON" [ref=e15]:
+            - img [ref=e16]
+            - generic [ref=e19]: 説明ON
+          - link "Dev" [ref=e20] [cursor=pointer]:
+            - /url: /dev
+            - img [ref=e21]
+            - generic [ref=e23]: Dev
+          - button [ref=e24]:
+            - img [ref=e25]
+    - main [ref=e28]:
+      - generic [ref=e29]:
+        - heading "システム仕様" [level=1] [ref=e30]
+        - paragraph [ref=e31]: 背景・設計思想・使い方から、ナレッジ・アルゴリズム・データ構造まで俯瞰できます
+      - generic [ref=e32]:
+        - link "体験設計 ペルソナ・ジャーニーマップ・感情曲線・フリクションポイント・設計判断 4原則 / 5フリクションポイント / 3シナリオ / 8フェーズのジャーニー" [ref=e33] [cursor=pointer]:
+          - /url: /system-spec/experience-design
+          - generic [ref=e35]:
+            - img [ref=e37]
+            - generic [ref=e39]:
+              - heading "体験設計" [level=3] [ref=e41]
+              - paragraph [ref=e42]: ペルソナ・ジャーニーマップ・感情曲線・フリクションポイント・設計判断
+              - paragraph [ref=e43]: 4原則 / 5フリクションポイント / 3シナリオ / 8フェーズのジャーニー
+        - link "背景・設計思想・使い方 背景と目的 / 設計原則 / 確信度・フェーズ / 用語集 3原則 + 4メカニズム / 画面の思考フロー / できること" [ref=e44] [cursor=pointer]:
+          - /url: /guide
+          - generic [ref=e46]:
+            - img [ref=e48]
+            - generic [ref=e50]:
+              - heading "背景・設計思想・使い方" [level=3] [ref=e52]
+              - paragraph [ref=e53]: 背景と目的 / 設計原則 / 確信度・フェーズ / 用語集
+              - paragraph [ref=e54]: 3原則 + 4メカニズム / 画面の思考フロー / できること
+        - link "システム概要 データ・ナレッジ・アルゴリズムの全体接続と拡張アーキテクチャ フロー図 / 接続マトリクス / 拡張ポイント / ナレッジアセット再利用" [ref=e55] [cursor=pointer]:
+          - /url: /system-spec/overview
+          - generic [ref=e57]:
+            - img [ref=e59]
+            - generic [ref=e63]:
+              - heading "システム概要" [level=3] [ref=e65]
+              - paragraph [ref=e66]: データ・ナレッジ・アルゴリズムの全体接続と拡張アーキテクチャ
+              - paragraph [ref=e67]: フロー図 / 接続マトリクス / 拡張ポイント / ナレッジアセット再利用
+        - link "データ・ナレッジ・暗黙知 K1-K8ナレッジ / 7エンティティ / 10データソース / ニーズ・ソリューションDB 7ナレッジ / 5自動+2手動+3今後" [ref=e68] [cursor=pointer]:
+          - /url: /system-spec/data-knowledge
+          - generic [ref=e70]:
+            - img [ref=e72]
+            - generic [ref=e74]:
+              - heading "データ・ナレッジ・暗黙知" [level=3] [ref=e76]
+              - paragraph [ref=e77]: K1-K8ナレッジ / 7エンティティ / 10データソース / ニーズ・ソリューションDB
+              - paragraph [ref=e78]: 7ナレッジ / 5自動+2手動+3今後
+        - link "アルゴリズム 6種類のAIモジュール 2層処理（ルールエンジン＋LLM）/ フェーズ詳細 / プロンプト設計" [ref=e79] [cursor=pointer]:
+          - /url: /system-spec/algorithms
+          - generic [ref=e81]:
+            - img [ref=e83]
+            - generic [ref=e86]:
+              - heading "アルゴリズム" [level=3] [ref=e88]
+              - paragraph [ref=e89]: 6種類のAIモジュール
+              - paragraph [ref=e90]: 2層処理（ルールエンジン＋LLM）/ フェーズ詳細 / プロンプト設計
+        - link "自己進化アーキテクチャ RM操作+顧客対話のフィードバックでナレッジ・ルール・プロンプトを自動改善 4エンジン / 15信号源 / 内部+外部フィードバック / 仮説的中率42%→63%" [ref=e91] [cursor=pointer]:
+          - /url: /system-spec/self-evolution
+          - generic [ref=e93]:
+            - img [ref=e95]
+            - generic [ref=e107]:
+              - heading "自己進化アーキテクチャ" [level=3] [ref=e109]
+              - paragraph [ref=e110]: RM操作+顧客対話のフィードバックでナレッジ・ルール・プロンプトを自動改善
+              - paragraph [ref=e111]: 4エンジン / 15信号源 / 内部+外部フィードバック / 仮説的中率42%→63%
+        - link "セキュリティ対策 脅威モデル / 5層多層防御 / コンプライアンス / リスク・対策マッピング 13リスク / 5防御層 / 15規制フレームワーク" [ref=e112] [cursor=pointer]:
+          - /url: /system-spec/security
+          - generic [ref=e114]:
+            - img [ref=e116]
+            - generic [ref=e118]:
+              - heading "セキュリティ対策" [level=3] [ref=e120]
+              - paragraph [ref=e121]: 脅威モデル / 5層多層防御 / コンプライアンス / リスク・対策マッピング
+              - paragraph [ref=e122]: 13リスク / 5防御層 / 15規制フレームワーク
+        - generic [ref=e125] [cursor=pointer]:
+          - img [ref=e127]
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - heading "Mock→AI接続状況" [level=3] [ref=e131]
+              - img [ref=e132]
+            - paragraph [ref=e134]: 12箇所のハードコード
+            - paragraph [ref=e135]: 11Mock / 1未実装

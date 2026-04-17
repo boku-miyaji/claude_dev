@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "zen": {
+      "command": "docker",
+      "args": ["exec","-i","zen-mcp-server","python","server.py"]
+    }
+  }
+}

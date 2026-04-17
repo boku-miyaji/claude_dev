@@ -1,0 +1,1628 @@
+import { useCallback, useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { Card, PageHeader } from '@/components/ui'
+import { useSelfAnalysis, type AnalysisType, type AnalysisRecord } from '@/hooks/useSelfAnalysis'
+import { useDataStore } from '@/stores/data'
+
+type TabType = 'summary' | 'mbti' | 'big5' | 'strengths_finder' | 'values' | 'stress_resilience' | 'communication_style'
+
+/** Analysis types that are actually run via LLM */
+const ALL_TYPES: AnalysisType[] = ['mbti', 'big5', 'strengths_finder', 'values', 'stress_resilience', 'communication_style']
+
+const TAB_META: Record<TabType, { label: string; title: string }> = {
+  summary: { label: 'まとめ', title: '統合分析' },
+  mbti: { label: 'MBTI', title: 'MBTI' },
+  big5: { label: 'Big5', title: 'Big5' },
+  strengths_finder: { label: 'SF', title: 'StrengthsFinder' },
+  values: { label: 'Values', title: 'Values' },
+  stress_resilience: { label: 'Stress', title: 'ストレス耐性' },
+  communication_style: { label: 'Comm', title: 'コミュニケーション' },
+}
+
+const ALL_TABS: TabType[] = ['summary', 'mbti', 'big5', 'strengths_finder', 'values', 'stress_resilience', 'communication_style']
+
+// ---------------------------------------------------------------------------
+// SVG Pentagon Radar Chart for Big5
+// ---------------------------------------------------------------------------
+
+interface PentagonRadarProps {
+  scores: number[] // [openness, conscientiousness, extraversion, agreeableness, neuroticism]
+  labels: string[]
+  size?: number
+}
+
+function PentagonRadar({ scores, labels, size = 300 }: PentagonRadarProps) {
+  const cx = size / 2
+  const cy = size / 2
+  const maxR = size * 0.4 // 120 for size=300
+
+  function getPoint(index: number, radius: number): [number, number] {
+    const angle = (index * 2 * Math.PI) / 5 - Math.PI / 2
+    return [cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)]
+  }
+
+  function polygonPoints(radius: number): string {
+    return Array.from({ length: 5 }, (_, i) => getPoint(i, radius).join(',')).join(' ')
+  }
+
+  function dataPolygonPoints(): string {
+    return scores.map((s, i) => {
+      const r = (s / 100) * maxR
+      return getPoint(i, r).join(',')
+    }).join(' ')
+  }
+
+  const gridLayers = [0.25, 0.5, 0.75]
+
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ display: 'block', margin: '0 auto' }}>
+      {/* Grid lines */}
+      {gridLayers.map((scale) => (
+        <polygon
+          key={scale}
+          points={polygonPoints(maxR * scale)}
+          fill="none"
+          stroke="var(--surface2)"
+          strokeWidth={1}
+        />
+      ))}
+      {/* Outer pentagon */}
+      <polygon
+        points={polygonPoints(maxR)}
+        fill="none"
+        stroke="var(--surface2)"
+        strokeWidth={1}
+      />
+      {/* Axis lines */}
+      {Array.from({ length: 5 }, (_, i) => {
+        const [x, y] = getPoint(i, maxR)
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="var(--surface2)" strokeWidth={0.5} />
+      })}
+      {/* Data polygon */}
+      <polygon
+        points={dataPolygonPoints()}
+        fill="rgba(99,102,241,0.15)"
+        stroke="var(--accent)"
+        strokeWidth={2}
+      />
+      {/* Data dots */}
+      {scores.map((s, i) => {
+        const r = (s / 100) * maxR
+        const [x, y] = getPoint(i, r)
+        return <circle key={i} cx={x} cy={y} r={4} fill="var(--accent)" />
+      })}
+      {/* Labels */}
+      {labels.map((label, i) => {
+        const [x, y] = getPoint(i, maxR + 24)
+        return (
+          <text
+            key={i}
+            x={x}
+            y={y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="var(--text2)"
+            fontSize={11}
+            fontWeight={500}
+          >
+            {label} {scores[i]}
+          </text>
+        )
+      })}
+    </svg>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Shared: Changes badge
+// ---------------------------------------------------------------------------
+function ChangesFromPrevious({ result }: { result: Record<string, unknown> }) {
+  const changes = result.changes_from_previous as string | undefined
+  if (!changes) return null
+  return (
+    <div style={{
+      marginTop: 16, padding: '12px 16px',
+      background: 'rgba(91,141,239,0.08)', borderRadius: 8,
+      borderLeft: '3px solid var(--accent)',
+    }}>
+      <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+        前回からの変化
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>{changes}</div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Helper: Structured description sections
+// ---------------------------------------------------------------------------
+function FormattedDescription({ text }: { text: string }) {
+  const sections = text.split(/(?=【)/).filter(Boolean)
+  if (sections.length <= 1) {
+    return (
+      <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.8 }}>
+        {text.split('\n').filter(Boolean).map((p, i) => <p key={i} style={{ marginBottom: 8 }}>{p}</p>)}
+      </div>
+    )
+  }
+
+  function getSectionStyle(header: string): React.CSSProperties {
+    if (header.includes('活かし方')) {
+      return { padding: '12px 16px', background: 'var(--surface2)', borderRadius: 8, borderLeft: '3px solid var(--green)' }
+    }
+    if (header.includes('注意点')) {
+      return { padding: '12px 16px', background: 'var(--surface2)', borderRadius: 8, borderLeft: '3px solid var(--amber)' }
+    }
+    return { padding: '12px 16px', background: 'var(--surface2)', borderRadius: 8 }
+  }
+
+  function getHeaderColor(header: string): string {
+    if (header.includes('活かし方')) return 'var(--green)'
+    if (header.includes('注意点')) return 'var(--amber)'
+    return 'var(--accent2)'
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {sections.map((sec, i) => {
+        const headerMatch = sec.match(/^【(.+?)】\s*/)
+        if (!headerMatch) {
+          return <p key={i} style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.8, marginBottom: 4 }}>{sec.trim()}</p>
+        }
+        const header = headerMatch[1]
+        const body = sec.slice(headerMatch[0].length).trim()
+        const lines = body.split('\n').filter(Boolean)
+        return (
+          <div key={i} style={getSectionStyle(header)}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: getHeaderColor(header), marginBottom: 8 }}>{header}</div>
+            {lines.map((line, j) => {
+              const numMatch = line.match(/^(\d+)[.)]\s*(.+)/)
+              if (numMatch) {
+                return (
+                  <div key={j} style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, paddingLeft: 4, marginBottom: 4, display: 'flex', gap: 8 }}>
+                    <span style={{ color: getHeaderColor(header), fontWeight: 600, minWidth: 16 }}>{numMatch[1]}.</span>
+                    <span>{numMatch[2]}</span>
+                  </div>
+                )
+              }
+              return <div key={j} style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 2 }}>{line}</div>
+            })}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Evidence display
+// ---------------------------------------------------------------------------
+function EvidenceList({ evidence }: { evidence: string[] }) {
+  if (!evidence || evidence.length === 0) return null
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+        根拠
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {evidence.map((e, i) => {
+          const dateMatch = e.match(/^\[([^\]]+)\]\s*(.*)$/)
+          return (
+            <div key={i} style={{
+              padding: '8px 12px', background: 'var(--surface2)', borderRadius: 6,
+              fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic',
+            }}>
+              {dateMatch ? (
+                <>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text3)', fontStyle: 'normal', marginRight: 8 }}>{dateMatch[1]}</span>
+                  {dateMatch[2]}
+                </>
+              ) : e}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard Cards (compact summaries for 2x2 grid)
+// ---------------------------------------------------------------------------
+
+function MbtiDashCard({ result }: { result: Record<string, unknown> }) {
+  const dims = result.dimensions as Record<string, { score: number; label: string }> | undefined
+  const typeName = result.type_name as string | undefined
+  return (
+    <div>
+      <div style={{ textAlign: 'center', marginBottom: 12 }}>
+        <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--accent2)', fontFamily: 'var(--mono)', letterSpacing: 4 }}>
+          {String(result.type)}
+        </div>
+        {typeName && <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 2 }}>{typeName}</div>}
+      </div>
+      {dims && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {Object.entries(dims).map(([key, val]) => {
+            const labels = key.split('_')
+            const pct = ((val.score + 100) / 200) * 100
+            return (
+              <div key={key}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>
+                  <span>{labels[0]}</span><span>{labels[1]}</span>
+                </div>
+                <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden', position: 'relative' }}>
+                  <div style={{
+                    position: 'absolute',
+                    left: `${Math.min(pct, 50)}%`,
+                    width: `${Math.abs(pct - 50)}%`,
+                    height: '100%',
+                    background: 'var(--accent)',
+                    borderRadius: 2,
+                  }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Big5DashCard({ result }: { result: Record<string, unknown> }) {
+  const traits = [
+    { key: 'openness', label: '開放性' },
+    { key: 'conscientiousness', label: '誠実性' },
+    { key: 'extraversion', label: '外向性' },
+    { key: 'agreeableness', label: '協調性' },
+    { key: 'neuroticism', label: '神経症傾向' },
+  ]
+  const scores = traits.map(t => (result[t.key] as number) ?? 0)
+  const labels = traits.map(t => t.label)
+  return <PentagonRadar scores={scores} labels={labels} size={200} />
+}
+
+function SfDashCard({ result }: { result: Record<string, unknown> }) {
+  const strengths = (result.top_strengths as { name: string; score: number; domain: string }[]) ?? []
+  const domainSummary = result.domain_summary as Record<string, { score: number; label: string }> | undefined
+  const domainColors: Record<string, string> = {
+    strategic_thinking: 'var(--accent)',
+    relationship_building: 'var(--green)',
+    influencing: 'var(--amber)',
+    executing: 'var(--red)',
+  }
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 8 }}>Top 5</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
+        {strengths.slice(0, 5).map((s, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text2)' }}>
+            <span>{i + 1}. {s.name}</span>
+            <span style={{ fontFamily: 'var(--mono)', color: 'var(--accent2)', fontWeight: 600, fontSize: 11 }}>{s.score}</span>
+          </div>
+        ))}
+      </div>
+      {domainSummary && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {Object.entries(domainSummary).map(([key, val]) => (
+            <div key={key}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginBottom: 2 }}>
+                <span>{val.label}</span><span>{val.score}</span>
+              </div>
+              <div style={{ height: 3, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${val.score}%`, background: domainColors[key] ?? 'var(--accent)', borderRadius: 2 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ValuesDashCard({ result }: { result: Record<string, unknown> }) {
+  const values = (result.values as { name: string; rank: number; score: number }[]) ?? []
+  const amberShades = ['var(--amber)', 'rgba(245,158,11,0.8)', 'rgba(245,158,11,0.6)', 'rgba(245,158,11,0.45)', 'rgba(245,158,11,0.3)']
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {values.slice(0, 5).map((v, i) => (
+        <div key={v.rank}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text2)', marginBottom: 2 }}>
+            <span>#{v.rank} {v.name}</span>
+            <span style={{ fontFamily: 'var(--mono)', fontWeight: 600, fontSize: 10 }}>{v.score}</span>
+          </div>
+          <div style={{ height: 4, background: 'var(--surface2)', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${v.score}%`, background: amberShades[i] ?? 'var(--amber)', borderRadius: 2 }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Shared: Section card with colored border
+// ---------------------------------------------------------------------------
+interface SectionCardProps {
+  title: string
+  color: 'accent' | 'green' | 'amber' | 'red'
+  icon?: string
+  children: React.ReactNode
+  style?: React.CSSProperties
+}
+
+function SectionCard({ title, color, icon, children, style }: SectionCardProps) {
+  const colorMap: Record<string, { border: string; bg: string; text: string }> = {
+    accent: { border: 'var(--accent)', bg: 'var(--accent-bg)', text: 'var(--accent)' },
+    green: { border: 'var(--green)', bg: 'var(--green-bg)', text: 'var(--green)' },
+    amber: { border: 'var(--amber)', bg: 'var(--amber-bg)', text: 'var(--amber)' },
+    red: { border: 'var(--red)', bg: 'var(--red-bg)', text: 'var(--red)' },
+  }
+  const c = colorMap[color]
+  return (
+    <div style={{
+      padding: '16px 20px', background: c.bg, borderRadius: 10,
+      borderLeft: `3px solid ${c.border}`, ...style,
+    }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: c.text, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+        {icon && <span style={{ marginRight: 6 }}>{icon}</span>}{title}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+// Shared: Quote block
+function QuoteBlock({ text }: { text: string }) {
+  const dateMatch = text.match(/^\[([^\]]+)\]\s*(.*)$/)
+  return (
+    <div style={{
+      padding: '8px 12px', background: 'var(--surface2)', borderRadius: 6,
+      borderLeft: '2px solid var(--text3)', marginTop: 6,
+      fontSize: 11, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic',
+    }}>
+      {dateMatch ? (
+        <>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)', fontStyle: 'normal', marginRight: 8 }}>{dateMatch[1]}</span>
+          {dateMatch[2]}
+        </>
+      ) : text}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Type guard helpers for structured description
+// ---------------------------------------------------------------------------
+interface MbtiDescStructured {
+  core_insight: string
+  daily_patterns: { pattern: string; detail: string; quote: string }[]
+  strengths_in_action: { strength: string; detail: string; quote: string }[]
+  growth_edges: { edge: string; detail: string; suggestion: string }[]
+  advice: { title: string; detail: string }[]
+}
+
+function isMbtiDescStructured(d: unknown): d is MbtiDescStructured {
+  return typeof d === 'object' && d !== null && 'core_insight' in d
+}
+
+// ---------------------------------------------------------------------------
+// Detail Tab: MBTI
+// ---------------------------------------------------------------------------
+function MbtiDetail({ result }: { result: Record<string, unknown> }) {
+  const dims = result.dimensions as Record<string, { score: number; label: string }> | undefined
+  const typeName = result.type_name as string | undefined
+  const evidence = (result.evidence as string[]) ?? []
+  const desc = result.description
+
+  const dimLabels: Record<string, [string, string]> = {
+    E_I: ['外向的 (E)', '内向的 (I)'],
+    S_N: ['感覚的 (S)', '直観的 (N)'],
+    T_F: ['思考型 (T)', '感情型 (F)'],
+    J_P: ['判断型 (J)', '知覚型 (P)'],
+  }
+
+  return (
+    <div>
+      {/* Type display */}
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ fontSize: 48, fontWeight: 700, color: 'var(--accent2)', fontFamily: 'var(--mono)', letterSpacing: 6 }}>
+          {String(result.type)}
+        </div>
+        {typeName && <div style={{ fontSize: 16, color: 'var(--text2)', marginTop: 4 }}>{typeName}</div>}
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>
+          確信度: {String(result.confidence)}
+        </div>
+      </div>
+
+      {/* Bidirectional bars */}
+      {dims && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
+          {Object.entries(dims).map(([key, val]) => {
+            const [leftLabel, rightLabel] = dimLabels[key] ?? key.split('_')
+            const pct = ((val.score + 100) / 200) * 100
+            return (
+              <div key={key}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
+                  <span style={{ color: 'var(--text2)', fontWeight: 500 }}>{leftLabel}</span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text3)' }}>{val.score > 0 ? '+' : ''}{val.score}</span>
+                  <span style={{ color: 'var(--text2)', fontWeight: 500 }}>{rightLabel}</span>
+                </div>
+                <div style={{ height: 8, background: 'var(--surface2)', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
+                  <div style={{ position: 'absolute', left: '50%', top: 0, width: 1, height: '100%', background: 'var(--text3)', opacity: 0.4, zIndex: 1 }} />
+                  <div style={{
+                    position: 'absolute',
+                    left: `${Math.min(pct, 50)}%`,
+                    width: `${Math.abs(pct - 50)}%`,
+                    height: '100%',
+                    background: 'var(--accent)',
+                    borderRadius: 4,
+                  }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--text3)', marginTop: 2, opacity: 0.6 }}>
+                  <span>-100</span><span>0</span><span>+100</span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Structured description (new format) */}
+      {isMbtiDescStructured(desc) ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Core Insight — hero quote */}
+          <div style={{
+            padding: '20px 24px', background: 'var(--accent-bg)', borderRadius: 12,
+            borderLeft: '4px solid var(--accent)',
+          }}>
+            <div style={{ fontSize: 15, color: 'var(--text)', lineHeight: 1.8, fontWeight: 500 }}>
+              {desc.core_insight}
+            </div>
+          </div>
+
+          {/* Daily Patterns */}
+          <SectionCard title="Daily Patterns" color="accent">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {desc.daily_patterns.map((p, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                    {p.pattern}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{p.detail}</div>
+                  {p.quote && <QuoteBlock text={p.quote} />}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Strengths in Action */}
+          <SectionCard title="Strengths in Action" color="green">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {desc.strengths_in_action.map((s, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                    {s.strength}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{s.detail}</div>
+                  {s.quote && <QuoteBlock text={s.quote} />}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Growth Edges */}
+          <SectionCard title="Growth Edges" color="amber">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {desc.growth_edges.map((g, i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                    {g.edge}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 4 }}>{g.detail}</div>
+                  <div style={{ fontSize: 12, color: 'var(--green)', lineHeight: 1.6 }}>
+                    <span style={{ fontWeight: 600 }}>Tip: </span>{g.suggestion}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Advice */}
+          <SectionCard title="Advice" color="accent">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {desc.advice.map((a, i) => (
+                <div key={i} style={{ display: 'flex', gap: 12 }}>
+                  <span style={{
+                    fontSize: 16, fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--mono)',
+                    minWidth: 24, textAlign: 'center',
+                  }}>{i + 1}</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{a.title}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{a.detail}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+      ) : (
+        /* Fallback: old string format */
+        Boolean(desc) && <FormattedDescription text={String(desc)} />
+      )}
+
+      {/* Evidence */}
+      <EvidenceList evidence={evidence} />
+
+      {/* Changes */}
+      <ChangesFromPrevious result={result} />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Detail Tab: Big5
+// ---------------------------------------------------------------------------
+interface Big5SummaryStructured {
+  profile_narrative: string
+  trait_insights: { trait: string; score_meaning: string; quote: string }[]
+  trait_interactions: { combo: string; insight: string }[]
+  advice: { title: string; detail: string }[]
+}
+
+function isBig5SummaryStructured(s: unknown): s is Big5SummaryStructured {
+  return typeof s === 'object' && s !== null && 'profile_narrative' in s
+}
+
+function Big5Detail({ result }: { result: Record<string, unknown> }) {
+  const traits = [
+    { key: 'openness', label: '開放性' },
+    { key: 'conscientiousness', label: '誠実性' },
+    { key: 'extraversion', label: '外向性' },
+    { key: 'agreeableness', label: '協調性' },
+    { key: 'neuroticism', label: '神経症傾向' },
+  ]
+  const scores = traits.map(t => (result[t.key] as number) ?? 0)
+  const labels = traits.map(t => t.label)
+  const evidence = (result.evidence as string[]) ?? []
+  const summaryRaw = result.summary
+  const structured = isBig5SummaryStructured(summaryRaw) ? summaryRaw : null
+  // Build a trait insight lookup for structured mode
+  const traitInsightMap = new Map(
+    structured?.trait_insights?.map(ti => [ti.trait, ti]) ?? [],
+  )
+
+  function getLevel(score: number): { label: string; color: string } {
+    if (score >= 65) return { label: 'HIGH', color: 'var(--green)' }
+    if (score >= 40) return { label: 'MID', color: 'var(--text3)' }
+    return { label: 'LOW', color: 'var(--amber)' }
+  }
+
+  return (
+    <div>
+      {/* Pentagon Radar */}
+      <div style={{ marginBottom: 24 }}>
+        <PentagonRadar scores={scores} labels={labels} size={300} />
+      </div>
+
+      {/* Profile Narrative (structured) */}
+      {structured?.profile_narrative && (
+        <div style={{
+          padding: '20px 24px', background: 'var(--accent-bg)', borderRadius: 12,
+          borderLeft: '4px solid var(--accent)', marginBottom: 20,
+        }}>
+          <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.8, fontWeight: 500 }}>
+            {structured.profile_narrative}
+          </div>
+        </div>
+      )}
+
+      {/* Factor cards with integrated insights */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+        {traits.map((t, i) => {
+          const score = scores[i]
+          const level = getLevel(score)
+          const insight = traitInsightMap.get(t.label)
+          return (
+            <div key={t.key} style={{
+              padding: '14px 18px', background: 'var(--surface2)', borderRadius: 10,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{t.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 18, fontWeight: 700, color: 'var(--accent2)' }}>{score}</span>
+                  <span style={{
+                    fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                    background: level.color === 'var(--green)' ? 'rgba(34,197,94,0.15)' :
+                               level.color === 'var(--amber)' ? 'rgba(245,158,11,0.15)' :
+                               'rgba(255,255,255,0.08)',
+                    color: level.color,
+                    letterSpacing: '.05em',
+                  }}>
+                    {level.label}
+                  </span>
+                </div>
+              </div>
+              <div style={{ height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: insight ? 10 : 0 }}>
+                <div style={{ height: '100%', width: `${score}%`, background: 'var(--accent)', borderRadius: 3 }} />
+              </div>
+              {insight && (
+                <>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+                    {insight.score_meaning}
+                  </div>
+                  {insight.quote && <QuoteBlock text={insight.quote} />}
+                </>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Trait Interactions */}
+      {structured?.trait_interactions && structured.trait_interactions.length > 0 && (
+        <SectionCard title="Trait Interactions" color="accent" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {structured.trait_interactions.map((ti, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                  {ti.combo}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{ti.insight}</div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Advice */}
+      {structured?.advice && structured.advice.length > 0 && (
+        <SectionCard title="Advice" color="green" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {structured.advice.map((a, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12 }}>
+                <span style={{
+                  fontSize: 16, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--mono)',
+                  minWidth: 24, textAlign: 'center',
+                }}>{i + 1}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{a.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{a.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Fallback: old string format */}
+      {!structured && typeof summaryRaw === 'string' && summaryRaw && (
+        <FormattedDescription text={summaryRaw} />
+      )}
+
+      {/* Evidence */}
+      <EvidenceList evidence={evidence} />
+
+      {/* Changes */}
+      <ChangesFromPrevious result={result} />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Detail Tab: StrengthsFinder
+// ---------------------------------------------------------------------------
+type SfEvidenceItem = { point: string; quote: string }
+type SfStrength = { name: string; name_en?: string; score: number; domain: string; evidence: string | SfEvidenceItem[] }
+type SfSynergy = { combo: string; insight: string }
+type SfBlindSpot = { point: string; mitigation: string }
+type SfAction = { action: string; why: string }
+
+function SfDetail({ result }: { result: Record<string, unknown> }) {
+  const strengths = (result.top_strengths as SfStrength[]) ?? []
+  const domainSummary = result.domain_summary as Record<string, { score: number; label: string; description?: string }> | undefined
+  const workFit = (result.work_fit as string[]) ?? []
+  const growthAreas = (result.growth_areas as string[]) ?? []
+  const synergy = (result.synergy as SfSynergy[]) ?? []
+  const blindSpot = (result.blind_spot as SfBlindSpot[]) ?? []
+  const actionPlan = (result.action_plan as SfAction[]) ?? []
+
+  const domainColors: Record<string, string> = {
+    strategic_thinking: 'var(--accent)',
+    relationship_building: 'var(--green)',
+    influencing: 'var(--amber)',
+    executing: 'var(--red)',
+  }
+  const domainTagColors: Record<string, string> = {
+    '戦略的思考力': 'var(--accent)',
+    '人間関係構築力': 'var(--green)',
+    '影響力': 'var(--amber)',
+    '実行力': 'var(--red)',
+  }
+
+  return (
+    <div>
+      {/* Top 5 Strengths */}
+      <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+        Top 5 Strengths
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+        {strengths.map((s, i) => {
+          const hasStructuredEvidence = Array.isArray(s.evidence)
+          return (
+            <div key={i} style={{ padding: '14px 16px', background: 'var(--surface2)', borderRadius: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--accent2)', fontFamily: 'var(--mono)' }}>#{i + 1}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{s.name}</span>
+                    {s.name_en && <span style={{ fontSize: 11, color: 'var(--text3)' }}>({s.name_en})</span>}
+                  </div>
+                </div>
+                <span style={{
+                  fontSize: 9, fontWeight: 600, padding: '2px 8px', borderRadius: 10,
+                  background: domainTagColors[s.domain] ? `${domainTagColors[s.domain]}22` : 'var(--accent-bg)',
+                  color: domainTagColors[s.domain] ?? 'var(--accent)',
+                }}>
+                  {s.domain}
+                </span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: 'var(--accent2)' }}>{s.score}</span>
+              </div>
+              <div style={{ height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{ height: '100%', width: `${s.score}%`, background: 'var(--accent)', borderRadius: 3 }} />
+              </div>
+              {/* Structured evidence (new) */}
+              {hasStructuredEvidence ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {(s.evidence as SfEvidenceItem[]).map((ev, j) => (
+                    <div key={j}>
+                      <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+                        {ev.point}
+                      </div>
+                      {ev.quote && <QuoteBlock text={ev.quote} />}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Fallback: old string evidence */
+                s.evidence && typeof s.evidence === 'string' && (
+                  <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                    {s.evidence}
+                  </div>
+                )
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Synergy */}
+      {synergy.length > 0 && (
+        <SectionCard title="Synergy" color="accent" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {synergy.map((sy, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                  {sy.combo}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{sy.insight}</div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Blind Spot */}
+      {blindSpot.length > 0 && (
+        <SectionCard title="Blind Spot" color="amber" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {blindSpot.map((bs, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 4 }}>{bs.point}</div>
+                <div style={{ fontSize: 12, color: 'var(--green)', lineHeight: 1.6 }}>
+                  <span style={{ fontWeight: 600 }}>Mitigation: </span>{bs.mitigation}
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Action Plan */}
+      {actionPlan.length > 0 && (
+        <SectionCard title="Action Plan" color="green" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {actionPlan.map((ap, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12 }}>
+                <span style={{
+                  fontSize: 16, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--mono)',
+                  minWidth: 24, textAlign: 'center',
+                }}>{i + 1}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{ap.action}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6 }}>{ap.why}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* 4 Domain Balance */}
+      {domainSummary && (
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            4 Domain Balance
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {Object.entries(domainSummary).map(([key, val]) => (
+              <div key={key}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                  <span style={{ color: 'var(--text2)', fontWeight: 500 }}>{val.label}</span>
+                  <span style={{ fontFamily: 'var(--mono)', color: 'var(--text2)', fontWeight: 600 }}>{val.score}</span>
+                </div>
+                <div style={{ height: 8, background: 'var(--surface2)', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${val.score}%`, background: domainColors[key] ?? 'var(--accent)', borderRadius: 4 }} />
+                </div>
+                {val.description && (
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{val.description}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Work Fit Tags */}
+      {workFit.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            適合する仕事
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {workFit.map((w, i) => (
+              <span key={i} style={{
+                fontSize: 12, padding: '5px 14px', background: 'var(--accent-bg)',
+                color: 'var(--accent2)', borderRadius: 16, fontWeight: 500,
+              }}>{w}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Growth Areas */}
+      {growthAreas.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            成長領域
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {growthAreas.map((g, i) => (
+              <div key={i} style={{
+                fontSize: 12, color: 'var(--text2)', padding: '10px 14px',
+                background: 'var(--surface2)', borderRadius: 8, lineHeight: 1.6,
+                borderLeft: '3px solid var(--accent)',
+              }}>
+                <span style={{ fontWeight: 600, color: 'var(--accent2)', marginRight: 8 }}>{i + 1}.</span>
+                {g}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Summary */}
+      {Boolean(result.summary) && typeof result.summary === 'string' && (
+        <FormattedDescription text={String(result.summary)} />
+      )}
+
+      <ChangesFromPrevious result={result} />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Detail Tab: Values
+// ---------------------------------------------------------------------------
+type ValEvidenceItem = { point: string; quote: string }
+type ValTension = { values: string[]; detail: string; quote?: string }
+type ValAlignment = {
+  aligned?: { value: string; detail: string }[]
+  gap?: { value: string; stated: string; actual: string; detail: string }[]
+}
+type ValValue = { name: string; rank: number; score: number; evidence: string | ValEvidenceItem[] }
+
+function ValuesDetail({ result }: { result: Record<string, unknown> }) {
+  const values = (result.values as ValValue[]) ?? []
+  const tension = (result.tension as ValTension[]) ?? []
+  const alignment = (result.alignment as ValAlignment) ?? null
+  const lifeQuestions = (result.life_question as string[]) ?? []
+  const amberShades = ['rgba(245,158,11,1)', 'rgba(245,158,11,0.8)', 'rgba(245,158,11,0.65)', 'rgba(245,158,11,0.5)', 'rgba(245,158,11,0.35)', 'rgba(245,158,11,0.25)', 'rgba(245,158,11,0.2)']
+
+  return (
+    <div>
+      {/* Ranking */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+        {values.map((v, i) => {
+          const hasStructuredEvidence = Array.isArray(v.evidence)
+          return (
+            <div key={v.rank} style={{ padding: '14px 18px', background: 'var(--surface2)', borderRadius: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ fontSize: 18, fontWeight: 700, color: amberShades[i] ?? 'var(--amber)', fontFamily: 'var(--mono)' }}>#{v.rank}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', flex: 1 }}>{v.name}</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: amberShades[i] ?? 'var(--amber)' }}>{v.score}</span>
+              </div>
+              <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{ height: '100%', width: `${v.score}%`, background: amberShades[i] ?? 'var(--amber)', borderRadius: 3 }} />
+              </div>
+              {/* Structured evidence (new) */}
+              {hasStructuredEvidence ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {(v.evidence as ValEvidenceItem[]).map((ev, j) => (
+                    <div key={j}>
+                      <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+                        {ev.point}
+                      </div>
+                      {ev.quote && <QuoteBlock text={ev.quote} />}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Fallback: old string evidence */
+                v.evidence && typeof v.evidence === 'string' && (
+                  <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                    {v.evidence}
+                  </div>
+                )
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Tension */}
+      {tension.length > 0 && (
+        <SectionCard title="Values in Tension" color="amber" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {tension.map((t, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                  {t.values.join(' vs ')}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{t.detail}</div>
+                {t.quote && <QuoteBlock text={t.quote} />}
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Alignment */}
+      {alignment && (
+        <>
+          {alignment.aligned && alignment.aligned.length > 0 && (
+            <SectionCard title="Aligned: Words = Action" color="green" style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {alignment.aligned.map((a, i) => (
+                  <div key={i}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{a.value}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{a.detail}</div>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          )}
+          {alignment.gap && alignment.gap.length > 0 && (
+            <SectionCard title="Gap: Ideal vs Reality" color="accent" style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {alignment.gap.map((g, i) => (
+                  <div key={i}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{g.value}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600 }}>Stated: </span>{g.stated}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600 }}>Actual: </span>{g.actual}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.7 }}>{g.detail}</div>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          )}
+        </>
+      )}
+
+      {/* Life Questions */}
+      {lifeQuestions.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          {lifeQuestions.map((q, i) => (
+            <div key={i} style={{
+              padding: '20px 24px', background: 'var(--accent-bg)', borderRadius: 12,
+              borderLeft: '4px solid var(--accent)', marginBottom: i < lifeQuestions.length - 1 ? 12 : 0,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                Question for You
+              </div>
+              <div style={{ fontSize: 15, color: 'var(--text)', lineHeight: 1.8, fontWeight: 500 }}>
+                {q}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Value Changes */}
+      {Boolean(result.changes) && (
+        <div style={{
+          padding: '12px 16px', background: 'var(--surface2)', borderRadius: 8,
+          marginBottom: 16, borderLeft: '3px solid var(--amber)',
+        }}>
+          <div style={{ fontSize: 11, color: 'var(--amber)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            価値観の変化
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>{String(result.changes)}</div>
+        </div>
+      )}
+
+      {/* Summary */}
+      {Boolean(result.summary) && typeof result.summary === 'string' && (
+        <FormattedDescription text={String(result.summary)} />
+      )}
+
+      <ChangesFromPrevious result={result} />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Summary Tab: 統合分析
+// ---------------------------------------------------------------------------
+
+function SummaryTab({ latestByType }: { latestByType: (type: AnalysisType) => AnalysisRecord | undefined }) {
+  const mbti = latestByType('mbti')?.result
+  const big5 = latestByType('big5')?.result
+  const sf = latestByType('strengths_finder')?.result
+  const vals = latestByType('values')?.result
+
+  const hasAny = mbti || big5 || sf || vals
+
+  if (!hasAny) {
+    return (
+      <Card>
+        <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text3)', fontSize: 13 }}>
+          まずは各分析を実行してください
+        </div>
+      </Card>
+    )
+  }
+
+  // Extract key data
+  const mbtiType = mbti ? String(mbti.type ?? '') : ''
+  const mbtiName = mbti ? String(mbti.type_name ?? '') : ''
+  const mbtiDesc = mbti?.description
+  const coreInsight = typeof mbtiDesc === 'object' && mbtiDesc !== null
+    ? String((mbtiDesc as Record<string, unknown>).core_insight ?? '')
+    : ''
+
+  const big5Traits = big5 ? [
+    { key: '開放性', score: (big5.openness as number) ?? 0 },
+    { key: '誠実性', score: (big5.conscientiousness as number) ?? 0 },
+    { key: '外向性', score: (big5.extraversion as number) ?? 0 },
+    { key: '協調性', score: (big5.agreeableness as number) ?? 0 },
+    { key: '神経症傾向', score: (big5.neuroticism as number) ?? 0 },
+  ] : []
+  const highTraits = big5Traits.filter(t => t.score >= 60).map(t => t.key)
+  const lowTraits = big5Traits.filter(t => t.score < 40).map(t => t.key)
+
+  const topStrengths = sf
+    ? ((sf.top_strengths as { name: string; score: number; domain: string }[]) ?? []).slice(0, 5)
+    : []
+  const synergy = sf ? ((sf.synergy as { pattern: string; detail: string }[]) ?? []) : []
+  const blindSpots = sf ? ((sf.blind_spot as string[]) ?? []) : []
+
+  const topValues = vals
+    ? ((vals.values as { name: string; rank: number; score: number }[]) ?? []).slice(0, 5)
+    : []
+  const lifeQuestions = vals ? ((vals.life_question as string[]) ?? []) : []
+  const tensions = vals ? ((vals.tension as { values: string[]; detail: string }[]) ?? []) : []
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Hero: Who you are */}
+      <Card style={{ borderLeft: '4px solid var(--accent)' }}>
+        <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+          あなたという人
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 12 }}>
+          {mbtiType && (
+            <span style={{ fontSize: 28, fontWeight: 700, color: 'var(--accent2)', fontFamily: 'var(--mono)', letterSpacing: 3 }}>
+              {mbtiType}
+            </span>
+          )}
+          {mbtiName && <span style={{ fontSize: 14, color: 'var(--text2)' }}>{mbtiName}</span>}
+        </div>
+        {coreInsight && (
+          <div style={{
+            fontSize: 14, color: 'var(--text)', lineHeight: 1.9, fontWeight: 400,
+            padding: '14px 18px', background: 'var(--surface2)', borderRadius: 8,
+            borderLeft: '3px solid var(--accent)',
+          }}>
+            {coreInsight}
+          </div>
+        )}
+      </Card>
+
+      {/* 2-column: Traits + Strengths */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+        {/* Big5 Traits */}
+        {big5Traits.length > 0 && (
+          <Card>
+            <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+              性格特性 (Big5)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {big5Traits.map(t => (
+                <div key={t.key}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                    <span style={{ color: 'var(--text2)', fontWeight: 500 }}>{t.key}</span>
+                    <span style={{
+                      fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600,
+                      color: t.score >= 60 ? 'var(--green)' : t.score < 40 ? 'var(--amber)' : 'var(--text3)',
+                    }}>{t.score}</span>
+                  </div>
+                  <div style={{ height: 5, background: 'var(--surface2)', borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', width: `${t.score}%`, borderRadius: 3,
+                      background: t.score >= 60 ? 'var(--green)' : t.score < 40 ? 'var(--amber)' : 'var(--accent)',
+                    }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {(highTraits.length > 0 || lowTraits.length > 0) && (
+              <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+                {highTraits.length > 0 && <div><strong style={{ color: 'var(--green)' }}>高い:</strong> {highTraits.join('・')}</div>}
+                {lowTraits.length > 0 && <div><strong style={{ color: 'var(--amber)' }}>控えめ:</strong> {lowTraits.join('・')}</div>}
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* Top Strengths */}
+        {topStrengths.length > 0 && (
+          <Card>
+            <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+              強み Top 5
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {topStrengths.map((s, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent2)', fontWeight: 700, minWidth: 20 }}>#{i + 1}</span>
+                  <span style={{ fontSize: 13, color: 'var(--text)', flex: 1 }}>{s.name}</span>
+                  <span style={{
+                    fontSize: 9, padding: '2px 8px', borderRadius: 10, fontWeight: 500,
+                    background: 'var(--surface2)', color: 'var(--text3)',
+                  }}>{s.domain}</span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600, color: 'var(--accent2)' }}>{s.score}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
+
+      {/* Values */}
+      {topValues.length > 0 && (
+        <Card>
+          <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            価値観
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {topValues.map((v, i) => (
+              <div key={i} style={{
+                padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 500,
+                background: i === 0 ? 'var(--amber)' : i < 3 ? 'rgba(245,158,11,0.15)' : 'var(--surface2)',
+                color: i === 0 ? '#fff' : i < 3 ? 'var(--amber)' : 'var(--text2)',
+              }}>
+                {v.name} <span style={{ fontFamily: 'var(--mono)', fontSize: 10, opacity: 0.8 }}>{v.score}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Synergy: 強みの掛け算 */}
+      {synergy.length > 0 && (
+        <Card style={{ borderLeft: '4px solid var(--green)' }}>
+          <div style={{ fontSize: 11, color: 'var(--green)', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            強みの掛け算
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {synergy.map((s, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{s.pattern}</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{s.detail}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Tensions + Blind Spots */}
+      {(tensions.length > 0 || blindSpots.length > 0) && (
+        <Card style={{ borderLeft: '4px solid var(--amber)' }}>
+          <div style={{ fontSize: 11, color: 'var(--amber)', fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            葛藤と盲点
+          </div>
+          {tensions.map((t, i) => (
+            <div key={`t${i}`} style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 2 }}>
+                {t.values.join(' × ')}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.7 }}>{t.detail}</div>
+            </div>
+          ))}
+          {blindSpots.map((b, i) => (
+            <div key={`b${i}`} style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 6 }}>
+              {b}
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {/* Life Questions */}
+      {lifeQuestions.length > 0 && (
+        <Card style={{ background: 'var(--surface2)', border: 'none' }}>
+          <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            あなたへの問い
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {lifeQuestions.map((q, i) => (
+              <div key={i} style={{
+                fontSize: 14, color: 'var(--text)', lineHeight: 1.9, fontWeight: 400,
+                padding: '12px 16px', background: 'var(--bg)',
+                borderRadius: 8, borderLeft: '3px solid var(--accent)',
+                fontStyle: 'italic',
+              }}>
+                {q}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Progress Stepper (during analysis)
+// ---------------------------------------------------------------------------
+function ProgressStepper({ currentType, completedTypes }: { currentType: AnalysisType | null; completedTypes: Set<string> }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, padding: '16px 0' }}>
+      {ALL_TYPES.map((type, i) => {
+        const isCompleted = completedTypes.has(type)
+        const isCurrent = type === currentType
+        const meta = TAB_META[type as TabType]
+        return (
+          <div key={type} style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: isCompleted ? 'var(--green)' : isCurrent ? 'var(--accent)' : 'var(--surface2)',
+                color: isCompleted || isCurrent ? '#fff' : 'var(--text3)',
+                fontSize: 14, fontWeight: 600,
+                position: 'relative',
+              }}>
+                {isCompleted ? (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8.5L6.5 12L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : isCurrent ? (
+                  <div style={{
+                    width: 14, height: 14, borderRadius: '50%',
+                    border: '2px solid #fff', borderTopColor: 'transparent',
+                    animation: 'spin 1s linear infinite',
+                  }} />
+                ) : (
+                  <span>{i + 1}</span>
+                )}
+              </div>
+              <span style={{ fontSize: 10, color: isCurrent ? 'var(--accent)' : isCompleted ? 'var(--green)' : 'var(--text3)', fontWeight: 500 }}>
+                {meta.label}
+              </span>
+            </div>
+            {i < ALL_TYPES.length - 1 && (
+              <div style={{
+                width: 40, height: 2, margin: '0 4px',
+                marginBottom: 18,
+                background: completedTypes.has(ALL_TYPES[i + 1]) || completedTypes.has(type) ? 'var(--green)' : 'var(--surface2)',
+              }} />
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Empty State
+// ---------------------------------------------------------------------------
+function EmptyStateView({ diaryCount, onRun, disabled }: { diaryCount: number; onRun: () => void; disabled: boolean }) {
+  const progress = Math.min((diaryCount / 20) * 100, 100)
+  const canRun = diaryCount >= 20
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: '60px 20px', textAlign: 'center',
+    }}>
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style={{ marginBottom: 20, opacity: 0.6 }}>
+        <circle cx="32" cy="32" r="28" stroke="var(--text3)" strokeWidth="2" strokeDasharray="4 4" />
+        <circle cx="32" cy="22" r="8" stroke="var(--accent)" strokeWidth="2" />
+        <path d="M18 48c0-7.73 6.27-14 14-14s14 6.27 14 14" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+      <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>
+        まだ分析がありません
+      </div>
+      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 24, maxWidth: 360, lineHeight: 1.6 }}>
+        日記データをもとに、MBTI / Big5 / StrengthsFinder / 価値観の4つの観点からあなたを分析します。
+      </div>
+
+      {/* Diary progress */}
+      <div style={{ width: '100%', maxWidth: 300, marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text3)', marginBottom: 6 }}>
+          <span>日記</span>
+          <span>{diaryCount} / 20件</span>
+        </div>
+        <div style={{ height: 6, background: 'var(--surface2)', borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{
+            height: '100%', width: `${progress}%`,
+            background: canRun ? 'var(--green)' : 'var(--accent)',
+            borderRadius: 3, transition: 'width 0.3s',
+          }} />
+        </div>
+        {!canRun && (
+          <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
+            分析には20件以上の日記が必要です
+          </div>
+        )}
+      </div>
+
+      <button className="btn btn-p" disabled={disabled || !canRun} onClick={onRun} style={{ padding: '10px 32px' }}>
+        分析を開始
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
+
+export function SelfAnalysis() {
+  const { diaryEntries, fetchDiary, fetchTasks, fetchDreams } = useDataStore()
+  const [loading, setLoading] = useState(true)
+  const [pastResults, setPastResults] = useState<AnalysisRecord[]>([])
+  const [activeTab, setActiveTab] = useState<TabType>('summary')
+  const [completedTypes, setCompletedTypes] = useState<Set<string>>(new Set())
+  const [isRunningAll, setIsRunningAll] = useState(false)
+
+  const { runAnalysis, running, runningType, error: analysisError } = useSelfAnalysis()
+
+  const diaryCount = diaryEntries.length
+  const hasResults = pastResults.length > 0
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    await Promise.all([fetchDiary({ days: 365 }), fetchTasks(), fetchDreams()])
+    const { data } = await supabase
+      .from('self_analysis')
+      .select('*')
+      .order('created_at', { ascending: false })
+    setPastResults((data as AnalysisRecord[]) ?? [])
+    setLoading(false)
+  }, [fetchDiary, fetchTasks, fetchDreams])
+
+  useEffect(() => { load() }, [load])
+
+  // Run all analyses sequentially with stepper
+  const runAllWithMode = useCallback(async (forceFullScan: boolean) => {
+    setIsRunningAll(true)
+    setCompletedTypes(new Set())
+    for (const type of ALL_TYPES) {
+      const result = await runAnalysis(type, forceFullScan)
+      if (result) {
+        setPastResults((prev) => {
+          const filtered = prev.filter((r) => r.analysis_type !== type)
+          return [result, ...filtered]
+        })
+        setCompletedTypes((prev) => new Set([...prev, type]))
+      }
+    }
+    setIsRunningAll(false)
+  }, [runAnalysis])
+
+  const handleRunAll = useCallback(() => runAllWithMode(false), [runAllWithMode])
+  const handleRunAllFull = useCallback(() => runAllWithMode(true), [runAllWithMode])
+
+  // Get latest result per type
+  const latestByType = (type: AnalysisType) =>
+    pastResults.find((r) => r.analysis_type === type)
+
+  const activeResult = activeTab !== 'summary' ? latestByType(activeTab) : undefined
+
+  if (loading) {
+    return (
+      <div className="page">
+        <PageHeader title="Self-Analysis" />
+        <div style={{ color: 'var(--text3)' }}>Loading...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="page">
+      <PageHeader
+        title="Self-Analysis"
+        description="日記データからあなたを多角的に分析します"
+        actions={
+          hasResults ? (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="btn btn-p"
+                disabled={running || diaryCount < 20}
+                onClick={handleRunAll}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {running || isRunningAll ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{
+                      display: 'inline-block', width: 12, height: 12, borderRadius: '50%',
+                      border: '2px solid currentColor', borderTopColor: 'transparent',
+                      animation: 'spin 1s linear infinite',
+                    }} />
+                    分析中...
+                  </span>
+                ) : '差分分析'}
+              </button>
+              <button
+                className="btn btn-g"
+                disabled={running || diaryCount < 20}
+                onClick={handleRunAllFull}
+                style={{ whiteSpace: 'nowrap', fontSize: 12 }}
+              >
+                全分析
+              </button>
+            </div>
+          ) : undefined
+        }
+      />
+
+      {/* Analysis Error */}
+      {analysisError && (
+        <div style={{ fontSize: 12, color: 'var(--red)', padding: '8px 12px', background: 'var(--surface2)', borderRadius: 8, marginBottom: 16 }}>
+          {analysisError}
+        </div>
+      )}
+
+      {/* Progress Stepper during analysis */}
+      {isRunningAll && (
+        <div className="section">
+          <Card>
+            <ProgressStepper currentType={runningType} completedTypes={completedTypes} />
+          </Card>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!hasResults && !isRunningAll && (
+        <Card>
+          <EmptyStateView diaryCount={diaryCount} onRun={handleRunAll} disabled={running} />
+        </Card>
+      )}
+
+      {/* Dashboard + Detail when results exist */}
+      {hasResults && (
+        <>
+          {/* Dashboard 2x2 Grid */}
+          <div className="section">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 12,
+            }}>
+              {ALL_TYPES.map((type) => {
+                const r = latestByType(type)
+                if (!r) return <div key={type} />
+                const meta = TAB_META[type as TabType]
+                const isActive = activeTab === type
+                return (
+                  <Card
+                    key={type}
+                    style={{
+                      cursor: 'pointer',
+                      border: isActive ? '1px solid var(--accent)' : '1px solid transparent',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onClick={() => setActiveTab(type as TabType)}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: isActive ? 'var(--accent)' : 'var(--text2)' }}>{meta.title}</span>
+                      <span style={{ fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+                        {new Date(r.created_at).toLocaleDateString('ja-JP')}
+                      </span>
+                    </div>
+                    {type === 'mbti' && <MbtiDashCard result={r.result} />}
+                    {type === 'big5' && <Big5DashCard result={r.result} />}
+                    {type === 'strengths_finder' && <SfDashCard result={r.result} />}
+                    {type === 'values' && <ValuesDashCard result={r.result} />}
+                  </Card>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="section">
+            <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
+              {ALL_TABS.map((type) => {
+                const meta = TAB_META[type as TabType]
+                const isActive = activeTab === type
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setActiveTab(type)}
+                    style={{
+                      padding: '10px 20px',
+                      fontSize: 13,
+                      fontWeight: isActive ? 600 : 400,
+                      color: isActive ? 'var(--accent)' : 'var(--text3)',
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
+                      cursor: 'pointer',
+                      transition: 'color 0.2s, border-color 0.2s',
+                      marginBottom: -1,
+                    }}
+                  >
+                    {meta.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Detail Content */}
+            {activeTab === 'summary' ? (
+              <SummaryTab latestByType={latestByType} />
+            ) : activeResult ? (
+              <Card>
+                {activeTab === 'mbti' && <MbtiDetail result={activeResult.result} />}
+                {activeTab === 'big5' && <Big5Detail result={activeResult.result} />}
+                {activeTab === 'strengths_finder' && <SfDetail result={activeResult.result} />}
+                {activeTab === 'values' && <ValuesDetail result={activeResult.result} />}
+              </Card>
+            ) : (
+              <Card>
+                <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text3)', fontSize: 13 }}>
+                  この分析はまだ実行されていません
+                </div>
+              </Card>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Diary count hint when results exist but low count */}
+      {hasResults && diaryCount < 20 && (
+        <div style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', marginTop: 8 }}>
+          分析には日記20件以上が必要です（現在 {diaryCount}件）
+        </div>
+      )}
+    </div>
+  )
+}

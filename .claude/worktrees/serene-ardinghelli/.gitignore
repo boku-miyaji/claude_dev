@@ -1,0 +1,80 @@
+# claude - session state (DO NOT TRACK)
+.claude/.claude.json
+.claude/.claude.json.backup
+.claude/.claude.json.corrupted.*
+
+# claude - credentials (SENSITIVE - DO NOT TRACK)
+.claude/.credentials.json
+.claude/.credentials.json.*
+
+# claude - shared settings (tracked in git for cross-server consistency)
+# .claude/settings.json → tracked (hooks, plugins, base permissions)
+# claude - local settings (server-specific overrides, NOT tracked)
+.claude/settings.local.json
+.claude/security_warnings_state_*.json
+.claude/session-env/
+
+# claude - runtime directories
+.claude/projects/
+.claude/todos/
+.claude/ide/
+.claude/statsig/
+.claude/cache/
+.claude/debug/
+.claude/file-history/
+.claude/history.jsonl
+.claude/shell-snapshots/
+.claude/stats-cache.json
+
+# claude - plugins (local state)
+.claude/plugins/cache/
+.claude/plugins/installed_plugins.json
+.claude/plugins/known_marketplaces.json
+.claude/plugins/install-counts-cache.json
+.claude/plugins/marketplaces/
+
+# claude - local knowledge and plans
+.claude/knowledge/
+.claude/plans/
+
+# 子プロジェクト (各自のgitで管理、プレフィックスで一括除外)
+aces-*/
+miyaji-*/
+polaris-*/
+probspace-*/
+
+# untracked dirs
+docs/
+!company-dashboard/docs/
+invoice/
+sample/
+untracked/
+public/
+
+# others
+.cache
+tasks*
+
+# cursor server backup - keep local but don't track
+.cursor-server.bak/
+
+# company - org structure (tracked in git for cross-server sharing)
+# .company/ → tracked (HD structure, departments, registry)
+# .company-*/ → tracked (PJ company context, secretary)
+
+# company - PJ固有の調査レポート (claude_devの管理対象外)
+.company/departments/research/tech/
+
+# company - local repo map (server-specific, auto-generated)
+.company/repo-map.md
+
+# scratch - モックアップ・壁打ち資料・試作品の置き場（恒久的に管理外）
+# 詳細ルールは .claude/rules/scratch-workspace.md
+scratch/
+
+# secrets & tokens (NEVER commit)
+.config/google/credentials.json
+token.json
+.claude/hooks/supabase.env
+.vercel
+node_modules

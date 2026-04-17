@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HD Dashboard</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface-hover: #1a1a25;
+    --border: #1e1e2e;
+    --border-accent: #2a2a3e;
+    --text: #e0e0e8;
+    --text-muted: #6b6b80;
+    --text-dim: #4a4a5e;
+    --accent: #6366f1;
+    --accent-soft: rgba(99, 102, 241, 0.12);
+    --accent-hover: #818cf8;
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.12);
+    --amber: #f59e0b;
+    --amber-soft: rgba(245, 158, 11, 0.12);
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.12);
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.12);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+  .header h1 span { color: var(--text-muted); font-weight: 400; }
+  .header-meta { font-size: 12px; color: var(--text-dim); font-family: var(--mono); }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+
+  .section { margin-bottom: 32px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+  .section-badge { font-size: 11px; font-family: var(--mono); color: var(--text-dim); background: var(--surface); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 900px) { .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); } .grid-2 { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .grid-3, .grid-4, .grid-2 { grid-template-columns: 1fr; } .container { padding: 16px; } }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; transition: border-color 0.15s; }
+  .card:hover { border-color: var(--border-accent); }
+
+  .company-card { cursor: default; }
+  .company-card .company-id { font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--accent-soft); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+  .company-card .company-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .company-card .company-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+  .company-card .company-stats { display: flex; gap: 16px; }
+  .company-card .stat { display: flex; flex-direction: column; }
+  .stat-value { font-size: 20px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.02em; }
+  .stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .status { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status-active .status-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+  .score { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: var(--mono); }
+  .score-s { background: var(--accent-soft); color: var(--accent); }
+  .score-a { background: var(--green-soft); color: var(--green); }
+  .score-b { background: var(--blue-soft); color: var(--blue); }
+  .score-c { background: var(--amber-soft); color: var(--amber); }
+  .score-d { background: var(--red-soft); color: var(--red); }
+
+  .todo-list { list-style: none; }
+  .todo-item { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-check { width: 16px; height: 16px; border: 1.5px solid var(--border-accent); border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+  .todo-check.done { background: var(--green-soft); border-color: var(--green); position: relative; }
+  .todo-check.done::after { content: '\2713'; position: absolute; top: -1px; left: 2px; font-size: 11px; color: var(--green); }
+  .todo-content { flex: 1; }
+  .todo-content.done { text-decoration: line-through; color: var(--text-dim); }
+  .todo-meta { display: flex; gap: 8px; margin-top: 2px; }
+  .todo-tag { font-size: 10px; font-family: var(--mono); padding: 1px 5px; border-radius: 3px; }
+  .todo-tag.high { background: var(--red-soft); color: var(--red); }
+  .todo-tag.normal { background: var(--blue-soft); color: var(--blue); }
+  .todo-tag.low { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
+  .todo-tag.company { background: var(--accent-soft); color: var(--accent); }
+
+  .eval-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .eval-table th { text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .eval-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .eval-table tr:last-child td { border-bottom: none; }
+  .eval-table .dept-name { font-weight: 500; }
+  .eval-table .eval-mark { font-family: var(--mono); text-align: center; }
+  .mark-excellent { color: var(--accent); }
+  .mark-good { color: var(--green); }
+  .mark-fair { color: var(--amber); }
+  .mark-poor { color: var(--red); }
+
+  .activity-list { list-style: none; }
+  .activity-item { display: flex; gap: 12px; padding: 8px 0; font-size: 13px; }
+  .activity-date { font-family: var(--mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; min-width: 80px; }
+  .activity-company { font-family: var(--mono); font-size: 11px; color: var(--accent); background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+  .activity-text { color: var(--text-muted); }
+
+  .schedule-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .schedule-item:last-child { border-bottom: none; }
+  .schedule-date { font-family: var(--mono); font-size: 12px; color: var(--text-muted); min-width: 90px; }
+  .schedule-date.overdue { color: var(--red); }
+  .schedule-date.today { color: var(--green); }
+  .schedule-date.upcoming { color: var(--amber); }
+  .schedule-bar { height: 3px; border-radius: 2px; flex: 1; background: var(--border); }
+  .schedule-progress { height: 100%; border-radius: 2px; background: var(--accent); }
+  .schedule-label { min-width: 120px; }
+  .schedule-company { font-family: var(--mono); font-size: 10px; color: var(--accent); }
+
+  .kpi-card { text-align: center; padding: 20px 16px; }
+  .kpi-value { font-size: 32px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.03em; }
+  .kpi-value.good { color: var(--green); }
+  .kpi-value.warn { color: var(--amber); }
+  .kpi-value.bad { color: var(--red); }
+  .kpi-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  .kpi-change { font-size: 11px; font-family: var(--mono); margin-top: 2px; }
+  .kpi-change.up { color: var(--green); }
+  .kpi-change.down { color: var(--red); }
+
+  .note-card { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+  .note-card strong { color: var(--text); }
+
+  .footer { padding: 24px 32px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; }
+
+  /* ============================================================
+     INBOX
+     ============================================================ */
+  .inbox-section { border: 2px solid var(--accent); border-radius: var(--radius-lg); background: var(--surface); margin-bottom: 32px; }
+  .inbox-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); }
+  .inbox-header h2 { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .inbox-count { font-family: var(--mono); font-size: 11px; background: var(--accent); color: #fff; padding: 1px 7px; border-radius: 10px; min-width: 20px; text-align: center; }
+  .inbox-body { padding: 16px; }
+  .inbox-input-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .inbox-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; transition: border-color 0.15s; }
+  .inbox-input:focus { border-color: var(--accent); }
+  .inbox-input::placeholder { color: var(--text-dim); }
+  .inbox-select { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; color: var(--text-muted); font-family: var(--mono); font-size: 11px; outline: none; cursor: pointer; min-width: 100px; }
+  .inbox-select:focus { border-color: var(--accent); }
+
+  .btn { padding: 8px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 500; font-family: var(--font); cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--border-accent); color: var(--text); }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  .pending-list { list-style: none; }
+  .pending-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .pending-item:last-child { border-bottom: none; }
+  .pending-icon { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  .pending-icon.todo { background: var(--blue-soft); color: var(--blue); }
+  .pending-icon.task { background: var(--amber-soft); color: var(--amber); }
+  .pending-icon.note { background: var(--green-soft); color: var(--green); }
+  .pending-icon.request { background: var(--accent-soft); color: var(--accent); }
+  .pending-body { flex: 1; }
+  .pending-text { margin-bottom: 2px; }
+  .pending-meta { display: flex; gap: 8px; align-items: center; font-size: 10px; color: var(--text-dim); font-family: var(--mono); }
+  .pending-delete { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: all 0.15s; }
+  .pending-delete:hover { color: var(--red); background: var(--red-soft); }
+
+  .clipboard-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg); border-top: 1px solid var(--border); border-radius: 0 0 10px 10px; }
+  .clipboard-bar .hint { font-size: 11px; color: var(--text-dim); }
+
+  .tab-nav { display: flex; gap: 2px; margin-bottom: 12px; background: var(--bg); border-radius: var(--radius); padding: 2px; width: fit-content; }
+  .tab-btn { padding: 6px 14px; border-radius: 6px; border: none; background: transparent; color: var(--text-dim); font-size: 12px; font-family: var(--font); cursor: pointer; transition: all 0.15s; }
+  .tab-btn.active { background: var(--surface); color: var(--text); }
+  .tab-btn:hover:not(.active) { color: var(--text-muted); }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: #fff; padding: 10px 20px; border-radius: var(--radius); font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 1000; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .inbox-textarea { width: 100%; min-height: 80px; resize: vertical; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; transition: border-color 0.15s; }
+  .inbox-textarea:focus { border-color: var(--accent); }
+  .inbox-textarea::placeholder { color: var(--text-dim); }
+
+  .empty-state { text-align: center; padding: 24px; color: var(--text-dim); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HD DASHBOARD
+     Generated by /company dashboard. Customize via secretary.
+     - {{...}} placeholders replaced with real data at generation
+     - Inbox section uses localStorage (browser-side, interactive)
+     ============================================================ -->
+
+<div class="header">
+  <h1>HD Dashboard <span>/ {{OWNER_NAME}}</span></h1>
+  <div class="header-meta">Updated: {{GENERATED_DATE}} {{GENERATED_TIME}}</div>
+</div>
+
+<div class="container">
+
+  <!-- ========== INBOX (Interactive) ========== -->
+  <section class="section">
+    <div class="inbox-section">
+      <div class="inbox-header">
+        <h2>Inbox <span class="inbox-count" id="inbox-count">0</span></h2>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-ghost btn-sm" id="btn-clear">Clear All</button>
+          <button class="btn btn-primary" id="btn-copy">Copy for Claude Code</button>
+        </div>
+      </div>
+
+      <div class="inbox-body">
+        <div class="tab-nav">
+          <button class="tab-btn active" data-tab="quick">Quick Add</button>
+          <button class="tab-btn" data-tab="note">Note</button>
+        </div>
+
+        <!-- Quick Add tab -->
+        <div id="tab-quick">
+          <div class="inbox-input-row">
+            <select class="inbox-select" id="item-type">
+              <option value="todo">TODO</option>
+              <option value="task">Task</option>
+              <option value="request">Request</option>
+              <option value="note">Memo</option>
+            </select>
+            <select class="inbox-select" id="item-company">
+              <option value="hd">HD</option>
+              <!-- {{COMPANY_OPTIONS_START}} -->
+              <option value="{{COMPANY_ID}}">{{COMPANY_ID}}</option>
+              <!-- {{COMPANY_OPTIONS_END}} -->
+            </select>
+            <input class="inbox-input" id="item-text" type="text" placeholder="TODO, task, or request...">
+            <button class="btn btn-primary" id="btn-add">Add</button>
+          </div>
+        </div>
+
+        <!-- Note tab -->
+        <div id="tab-note" style="display:none;">
+          <div style="margin-bottom: 8px;">
+            <div class="inbox-input-row">
+              <select class="inbox-select" id="note-company">
+                <option value="hd">HD</option>
+                <!-- {{COMPANY_OPTIONS_START}} -->
+                <option value="{{COMPANY_ID}}">{{COMPANY_ID}}</option>
+                <!-- {{COMPANY_OPTIONS_END}} -->
+              </select>
+              <input class="inbox-input" id="note-subject" type="text" placeholder="Subject (optional)">
+            </div>
+            <textarea class="inbox-textarea" id="note-body" placeholder="Write your note, comment, or context..."></textarea>
+          </div>
+          <div style="text-align: right;">
+            <button class="btn btn-primary" id="btn-add-note">Add Note</button>
+          </div>
+        </div>
+
+        <!-- Pending items (rendered by JS using safe DOM methods) -->
+        <div id="pending-container" style="margin-top: 16px;">
+          <ul class="pending-list" id="pending-list"></ul>
+          <div class="empty-state" id="empty-state">No pending items</div>
+        </div>
+      </div>
+
+      <div class="clipboard-bar">
+        <span class="hint">Pending items are saved in your browser. Copy and paste into <code style="color:var(--accent)">/company</code> to process.</span>
+        <span class="hint" id="last-copied"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== KPI Overview ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">Overview</span>
+      <span class="section-badge">KPI</span>
+    </div>
+    <div class="grid-4">
+      <div class="card kpi-card">
+        <div class="kpi-value good">{{TOTAL_COMPANIES}}</div>
+        <div class="kpi-label">PJ Companies</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-value warn">{{TOTAL_OPEN_TODOS}}</div>
+        <div class="kpi-label">Open TODO</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-value good">{{OVERALL_OK_RATE}}%</div>
+        <div class="kpi-label">OK Rate</div>
+        <div class="kpi-change up">{{OK_RATE_CHANGE}}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-value good">{{OVERALL_SCORE}}</div>
+        <div class="kpi-label">Score</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PJ Companies ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">PJ Companies</span>
+      <span class="section-badge">{{TOTAL_COMPANIES}} active</span>
+    </div>
+    <div class="grid-3">
+      <!-- {{COMPANY_CARDS_START}} -->
+      <div class="card company-card">
+        <div class="company-id">{{COMPANY_ID}}</div>
+        <div class="company-name">{{COMPANY_NAME}}</div>
+        <div class="company-desc">{{COMPANY_DESCRIPTION}}</div>
+        <div class="status status-active"><div class="status-dot"></div>Active</div>
+        <div class="company-stats" style="margin-top: 12px;">
+          <div class="stat">
+            <span class="stat-value">{{COMPANY_OPEN_TODOS}}</span>
+            <span class="stat-label">TODO</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{COMPANY_DEPARTMENTS}}</span>
+            <span class="stat-label">Depts</span>
+          </div>
+          <div class="stat">
+            <span class="score score-{{COMPANY_SCORE_CLASS}}">{{COMPANY_SCORE}}</span>
+            <span class="stat-label">Score</span>
+          </div>
+        </div>
+      </div>
+      <!-- {{COMPANY_CARDS_END}} -->
+    </div>
+  </section>
+
+  <div class="grid-2">
+    <!-- ========== TODO ========== -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-title">Today's TODO</span>
+        <span class="section-badge">{{TODAY_DATE}}</span>
+      </div>
+      <div class="card">
+        <ul class="todo-list">
+          <!-- {{TODO_ITEMS_START}} -->
+          <li class="todo-item">
+            <div class="todo-check {{TODO_DONE_CLASS}}"></div>
+            <div class="todo-content {{TODO_DONE_CLASS}}">
+              {{TODO_TEXT}}
+              <div class="todo-meta">
+                <span class="todo-tag company">{{TODO_COMPANY}}</span>
+                <span class="todo-tag {{TODO_PRIORITY}}">{{TODO_PRIORITY_LABEL}}</span>
+              </div>
+            </div>
+          </li>
+          <!-- {{TODO_ITEMS_END}} -->
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== Schedule ========== -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-title">Schedule</span>
+        <span class="section-badge">Milestones</span>
+      </div>
+      <div class="card">
+        <!-- {{SCHEDULE_ITEMS_START}} -->
+        <div class="schedule-item">
+          <div class="schedule-date {{SCHEDULE_DATE_CLASS}}">{{SCHEDULE_DATE}}</div>
+          <div>
+            <div class="schedule-label">{{SCHEDULE_TITLE}}</div>
+            <div class="schedule-company">{{SCHEDULE_COMPANY}}</div>
+          </div>
+          <div class="schedule-bar">
+            <div class="schedule-progress" style="width: {{SCHEDULE_PROGRESS}}%"></div>
+          </div>
+        </div>
+        <!-- {{SCHEDULE_ITEMS_END}} -->
+      </div>
+    </section>
+  </div>
+
+  <!-- ========== Evaluation ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">Department Evaluation</span>
+      <span class="section-badge">HR Report</span>
+    </div>
+    <div class="card">
+      <table class="eval-table">
+        <thead>
+          <tr><th>Company</th><th>Dept</th><th>Autonomy</th><th>OK Rate</th><th>Collab</th><th>Goal</th><th>Usage</th><th>Total</th></tr>
+        </thead>
+        <tbody>
+          <!-- {{EVAL_ROWS_START}} -->
+          <tr>
+            <td><span class="todo-tag company">{{EVAL_COMPANY}}</span></td>
+            <td class="dept-name">{{EVAL_DEPT}}</td>
+            <td class="eval-mark {{EVAL_AUTONOMY_CLASS}}">{{EVAL_AUTONOMY}}</td>
+            <td class="eval-mark {{EVAL_QUALITY_CLASS}}">{{EVAL_QUALITY}}</td>
+            <td class="eval-mark {{EVAL_COLLAB_CLASS}}">{{EVAL_COLLAB}}</td>
+            <td class="eval-mark {{EVAL_GOAL_CLASS}}">{{EVAL_GOAL}}</td>
+            <td class="eval-mark {{EVAL_USAGE_CLASS}}">{{EVAL_USAGE}}</td>
+            <td><span class="score score-{{EVAL_TOTAL_CLASS}}">{{EVAL_TOTAL}}</span></td>
+          </tr>
+          <!-- {{EVAL_ROWS_END}} -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="grid-2">
+    <!-- ========== Activity ========== -->
+    <section class="section">
+      <div class="section-header"><span class="section-title">Recent Activity</span></div>
+      <div class="card">
+        <ul class="activity-list">
+          <!-- {{ACTIVITY_ITEMS_START}} -->
+          <li class="activity-item">
+            <span class="activity-date">{{ACTIVITY_DATE}}</span>
+            <span class="activity-company">{{ACTIVITY_COMPANY}}</span>
+            <span class="activity-text">{{ACTIVITY_TEXT}}</span>
+          </li>
+          <!-- {{ACTIVITY_ITEMS_END}} -->
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== Issues ========== -->
+    <section class="section">
+      <div class="section-header">
+        <span class="section-title">Issues & Proposals</span>
+        <span class="section-badge">HR</span>
+      </div>
+      <div class="card">
+        <!-- {{ISSUES_START}} -->
+        <div class="note-card" style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+            <span class="todo-tag {{ISSUE_SEVERITY}}">{{ISSUE_SEVERITY_LABEL}}</span>
+            <span class="todo-tag company">{{ISSUE_COMPANY}}</span>
+          </div>
+          <strong>{{ISSUE_TITLE}}</strong><br>
+          {{ISSUE_DESCRIPTION}}
+        </div>
+        <!-- {{ISSUES_END}} -->
+      </div>
+    </section>
+  </div>
+
+  <!-- ========== Context ========== -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title">Context & Notes</span>
+      <span class="section-badge">Secretary</span>
+    </div>
+    <div class="card note-card" style="padding: 16px;">
+      {{CONTEXT_NOTES}}
+    </div>
+  </section>
+
+</div>
+
+<div class="footer">
+  <span>Generated by HD Secretary</span>
+  <span>Customize sections by talking to your secretary</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  var STORAGE_KEY = 'hd-dashboard-inbox';
+  var TYPE_ICONS = { todo: 'T', task: 'K', note: 'N', request: 'R' };
+  var TYPE_LABELS = { todo: 'TODO', task: 'Task', note: 'Note', request: 'Request' };
+
+  // --- Storage ---
+  function loadItems() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+  function saveItems(items) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    renderItems();
+  }
+
+  // --- Safe DOM helpers ---
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function(k) {
+        if (k === 'className') node.className = attrs[k];
+        else if (k === 'textContent') node.textContent = attrs[k];
+        else if (k.startsWith('on')) node.addEventListener(k.slice(2), attrs[k]);
+        else node.setAttribute(k, attrs[k]);
+      });
+    }
+    if (children) {
+      children.forEach(function(c) {
+        if (typeof c === 'string') node.appendChild(document.createTextNode(c));
+        else if (c) node.appendChild(c);
+      });
+    }
+    return node;
+  }
+
+  // --- Render pending items (safe DOM, no innerHTML) ---
+  function renderItems() {
+    var items = loadItems();
+    var list = document.getElementById('pending-list');
+    var empty = document.getElementById('empty-state');
+    var count = document.getElementById('inbox-count');
+
+    count.textContent = String(items.length);
+
+    // Clear list safely
+    while (list.firstChild) list.removeChild(list.firstChild);
+
+    if (items.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    items.forEach(function(item) {
+      var time = new Date(item.createdAt);
+      var hh = String(time.getHours()).padStart(2, '0');
+      var mm = String(time.getMinutes()).padStart(2, '0');
+      var dateStr = time.toISOString().slice(0, 10);
+
+      var li = el('li', { className: 'pending-item' }, [
+        el('div', { className: 'pending-icon ' + item.type, textContent: TYPE_ICONS[item.type] || '?' }),
+        el('div', { className: 'pending-body' }, [
+          el('div', { className: 'pending-text', textContent: item.text }),
+          el('div', { className: 'pending-meta' }, [
+            el('span', { textContent: TYPE_LABELS[item.type] || item.type }),
+            el('span', { className: 'todo-tag company', textContent: item.company }),
+            el('span', { textContent: dateStr + ' ' + hh + ':' + mm })
+          ])
+        ]),
+        el('button', {
+          className: 'pending-delete',
+          textContent: '\u00d7',
+          title: 'Delete',
+          onclick: function() { deleteItem(item.id); }
+        })
+      ]);
+
+      list.appendChild(li);
+    });
+  }
+
+  // --- Actions ---
+  function addItem() {
+    var textEl = document.getElementById('item-text');
+    var text = textEl.value.trim();
+    if (!text) return;
+    var type = document.getElementById('item-type').value;
+    var company = document.getElementById('item-company').value;
+    var items = loadItems();
+    items.push({ id: Date.now(), type: type, company: company, text: text, createdAt: new Date().toISOString() });
+    saveItems(items);
+    textEl.value = '';
+    textEl.focus();
+    showToast('Added');
+  }
+
+  function addNote() {
+    var bodyEl = document.getElementById('note-body');
+    var body = bodyEl.value.trim();
+    if (!body) return;
+    var company = document.getElementById('note-company').value;
+    var subjectEl = document.getElementById('note-subject');
+    var subject = subjectEl.value.trim();
+    var items = loadItems();
+    items.push({
+      id: Date.now(), type: 'note', company: company,
+      text: subject ? subject + ': ' + body : body,
+      createdAt: new Date().toISOString()
+    });
+    saveItems(items);
+    bodyEl.value = '';
+    subjectEl.value = '';
+    showToast('Note added');
+  }
+
+  function deleteItem(id) {
+    var items = loadItems().filter(function(i) { return i.id !== id; });
+    saveItems(items);
+  }
+
+  function clearAll() {
+    if (!confirm('Clear all pending items?')) return;
+    saveItems([]);
+    showToast('Cleared');
+  }
+
+  function copyToClipboard() {
+    var items = loadItems();
+    if (items.length === 0) { showToast('No items to copy'); return; }
+
+    var grouped = {};
+    items.forEach(function(item) {
+      if (!grouped[item.company]) grouped[item.company] = [];
+      grouped[item.company].push(item);
+    });
+
+    var md = '## Dashboard Inbox (' + items.length + ' items)\n\n';
+    Object.keys(grouped).forEach(function(company) {
+      md += '### [' + company + ']\n\n';
+      grouped[company].forEach(function(item) {
+        var label = TYPE_LABELS[item.type] || item.type;
+        if (item.type === 'todo') md += '- [ ] ' + item.text + '\n';
+        else if (item.type === 'task' || item.type === 'request') md += '- **[' + label + ']** ' + item.text + '\n';
+        else md += '- ' + item.text + '\n';
+      });
+      md += '\n';
+    });
+    md += '---\n_From HD Dashboard at ' + new Date().toLocaleString('ja-JP') + '_\n';
+
+    navigator.clipboard.writeText(md).then(function() {
+      showToast('Copied ' + items.length + ' items');
+      document.getElementById('last-copied').textContent = 'Last copied: ' + new Date().toLocaleTimeString('ja-JP');
+    }).catch(function() {
+      var ta = document.createElement('textarea');
+      ta.value = md;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Copied ' + items.length + ' items');
+    });
+  }
+
+  function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 2000);
+  }
+
+  // --- Tab switching ---
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var tab = btn.getAttribute('data-tab');
+      document.getElementById('tab-quick').style.display = tab === 'quick' ? 'block' : 'none';
+      document.getElementById('tab-note').style.display = tab === 'note' ? 'block' : 'none';
+    });
+  });
+
+  // --- Event bindings ---
+  document.getElementById('btn-add').addEventListener('click', addItem);
+  document.getElementById('btn-add-note').addEventListener('click', addNote);
+  document.getElementById('btn-clear').addEventListener('click', clearAll);
+  document.getElementById('btn-copy').addEventListener('click', copyToClipboard);
+  document.getElementById('item-text').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addItem();
+  });
+
+  // --- Init ---
+  renderItems();
+})();
+</script>
+
+</body>
+</html>

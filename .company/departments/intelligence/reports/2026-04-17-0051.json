@@ -1,0 +1,272 @@
+{
+  "metadata": {
+    "report_id": "2026-04-17-0051",
+    "generated_at": "2026-04-17T00:51:00+09:00",
+    "report_period": {
+      "start": "2026-04-16T13:30:00+09:00",
+      "end": "2026-04-17T00:51:00+09:00"
+    },
+    "total_items": 8,
+    "new_items_24h": 2,
+    "new_items_72h": 6
+  },
+  "critical_alerts": [
+    {
+      "id": "alert-opus47",
+      "type": "product_release",
+      "severity": "high",
+      "title": "Claude Opus 4.7 リリース",
+      "published_date": "2026-04-16",
+      "summary": "Anthropic が Claude Opus 4.7 をリリース。コーディング、エージェント、ビジョン（2,576ピクセル対応）が大幅強化。マルチステップタスク精度と一貫性向上。価格据え置き。",
+      "url": "https://www.anthropic.com/news",
+      "implications": [
+        "HD エージェント品質向上・自動化度拡大",
+        "知識ベース分析機能精度向上",
+        "感情分析・ナラティブ生成の精度向上"
+      ],
+      "action_required": "company-dashboard aiPartner.ts の model ID を 4.6 → 4.7 に更新",
+      "priority": "critical"
+    },
+    {
+      "id": "alert-routines",
+      "type": "product_feature",
+      "severity": "high",
+      "title": "Claude Code Routines リリース（研究プレビュー）",
+      "published_date": "2026-04-14",
+      "summary": "Claude Code に 3 種類のルーティン（Scheduled/API/Webhook）を追加。クラウド上でのコード自動実行が可能。GitHub App 連携で PR イベント自動トリガー可能。",
+      "url": "https://claude.com/blog/introducing-routines-in-claude-code",
+      "types": ["Scheduled Routines", "API Routines", "Webhook Routines"],
+      "daily_limits": {
+        "pro": 5,
+        "max": 15,
+        "team": 25,
+        "enterprise": 25
+      },
+      "implications": [
+        "HD 秘書のバッチ処理自動化",
+        "GitHub 連携の高度化",
+        "朝夜ブリーフィングの完全自動化",
+        "Hook 依存度低減"
+      ],
+      "action_required": "POC 設計・検討（GitHub Webhook Routine への移行検討）",
+      "priority": "high"
+    },
+    {
+      "id": "alert-teampcp",
+      "type": "security",
+      "severity": "critical",
+      "title": "TeamPCP 供給チェーン攻撃キャンペーン（北朝鮮 UNC1069）",
+      "campaign_period": {
+        "start": "2026-03-19",
+        "end": "2026-04-03"
+      },
+      "attack_date_confirmed": "2026-03-31",
+      "summary": "北朝鮮系 UNC1069 が npm/PyPI に 1,700+ 悪意あるパッケージを投入。Axios（100M+ downloads/week）直接侵害。メンテナー認証窃取 → Remote Access Trojan 設置。Google が属性化。",
+      "affected_packages": [
+        {
+          "package": "axios",
+          "ecosystem": "npm",
+          "date_compromised": "2026-03-31",
+          "impact": "100+ million downloads per week",
+          "attack_type": "maintainer credential theft"
+        },
+        {
+          "package": "litellm",
+          "versions": ["1.82.7", "1.82.8"],
+          "ecosystem": "pypi",
+          "date_compromised": "2026-03-24",
+          "status": "quarantined"
+        },
+        {
+          "package": "trivy",
+          "ecosystem": "multiple",
+          "status": "confirmed_compromised"
+        },
+        {
+          "package": "telnyx",
+          "ecosystem": "npm",
+          "status": "confirmed_compromised"
+        }
+      ],
+      "attribution": "UNC1069 (overlaps with BlueNoroff, North Korean threat actors)",
+      "url": "https://thehackernews.com/2026/04/google-attributes-axios-npm-supply.html",
+      "implications": [
+        "focus-you dependencies 供給チェーンリスク再検証必須",
+        "npm audit / pip-audit 定期実行化",
+        "メンテナー認証強化（MFA）"
+      ],
+      "action_required": "package.json, requirements.txt audit + dependency review",
+      "priority": "critical"
+    }
+  ],
+  "product_updates": [
+    {
+      "id": "update-claude-code-v2-1-111",
+      "date": "2026-04-16",
+      "product": "Claude Code",
+      "version": "v2.1.111",
+      "features": [
+        {
+          "name": "Claude Opus 4.7 xhigh",
+          "description": "/effort コマンドで速度 vs 知能チューニング可能"
+        },
+        {
+          "name": "/ultrareview",
+          "description": "並列マルチエージェント分析による包括的コードレビュー"
+        },
+        {
+          "name": "/less-permission-prompts",
+          "description": "Bash/MCP ツール呼び出し分析と許可リスト自動生成"
+        },
+        {
+          "name": "Auto (match terminal) theme",
+          "description": "端末配色に自動追従"
+        },
+        {
+          "name": "PowerShell tool (Windows)",
+          "description": "ロールアウト開始"
+        }
+      ],
+      "url": "https://code.claude.com/docs/en/changelog"
+    },
+    {
+      "id": "update-claude-code-v2-1-110",
+      "date": "2026-04-15",
+      "product": "Claude Code",
+      "version": "v2.1.110",
+      "features": [
+        {
+          "name": "/tui command",
+          "description": "フルスクリーン表示でちらつき排除"
+        },
+        {
+          "name": "Push Notifications",
+          "description": "Remote Control 有効時にモバイル通知対応"
+        },
+        {
+          "name": "/focus command",
+          "description": "通常ビューと詳細トランスクリプト表示の切り替え"
+        }
+      ],
+      "url": "https://code.claude.com/docs/en/changelog"
+    },
+    {
+      "id": "update-cursor-3-1-canvases",
+      "date": "2026-04-15",
+      "product": "Cursor",
+      "version": "3.1",
+      "feature": "Interactive Canvases",
+      "description": "Agents Window で複数ビジュアライゼーションを同時表示。ダッシュボード、カスタムUI、既存 Cursor コンポーネント統合。",
+      "components": ["tables", "boxes", "diagrams", "charts", "diffs", "todo lists"],
+      "persistence": "Canvas レイアウトがセッション間で保存される",
+      "url": "https://cursor.com/changelog"
+    }
+  ],
+  "papers": [
+    {
+      "id": "paper-memory-lm-era",
+      "arxiv_id": "2604.01707",
+      "published_date": "2026-04-16",
+      "title": "Memory in the LLM Era: Modular Architectures and Strategies in a Unified Framework",
+      "url": "https://arxiv.org/abs/2604.01707",
+      "key_concepts": [
+        "consolidation（統合）",
+        "updating（更新）",
+        "filtering（フィルタリング）",
+        "enhancement（拡張）"
+      ],
+      "relevance_to_focus_you": "Knowledge Base の進化ルール改善に直結。古い知見の自動削除・新知見統合が効率化。",
+      "priority": "medium"
+    },
+    {
+      "id": "paper-agent-loops-graphs",
+      "arxiv_id": "2604.11378",
+      "published_date": "2026-04-13",
+      "title": "From Agent Loops to Structured Graphs: A Scheduler-Theoretic Framework for LLM Agent Execution",
+      "author": "Hu Wei",
+      "url": "https://arxiv.org/abs/2604.11378",
+      "key_insights": [
+        "Agent Loop の課題：暗黙的依存関係、無制限リカバリー、ミュータブル履歴",
+        "SGH（Structured Graph Harness）提案で明示的 DAG に変換"
+      ],
+      "relevance_to_focus_you": "HD パイプライン設計の理論的基盤。DAG ベース部署委譲の正当性確認。implicit dependencies 排除で部署間ハンドオフエラー削減。",
+      "priority": "high"
+    },
+    {
+      "id": "paper-blast-blockchain-agents",
+      "arxiv_id": "2604.12127",
+      "published_date": "2026-04-13",
+      "title": "BLAST: Blockchain-based LLM-powered Agentic Spectrum Trading",
+      "url": "https://arxiv.org/abs/2604.12127",
+      "key_concepts": [
+        "自律エージェント × スペクトラム取引",
+        "認知ラジオサイクル（sense-plan-act）",
+        "分散意思決定で system welfare 向上"
+      ],
+      "relevance_to_focus_you": "マルチエージェント間の分散意思決定モデル。複数部署エージェントが独立判断しつつシステム全体効率を高める設計パターン参考。",
+      "priority": "medium"
+    },
+    {
+      "id": "paper-llm-agents-social-scientists",
+      "arxiv_id": "2604.01520",
+      "published_date": "2026-04-02",
+      "title": "LLM Agents as Social Scientists: A Human–AI Collaborative Platform for Social Science Automation",
+      "authors": "Lei Wang et al.",
+      "institution": "Renmin University of China, Microsoft Research",
+      "url": "https://arxiv.org/abs/2604.01520",
+      "platform": "S-Researcher",
+      "key_features": [
+        "YuLan-OneSim（最大100,000並行エージェント）",
+        "帰納法・演繹法・仮説推論モード",
+        "Axelrod 文化力学・ゲーム理論検証"
+      ],
+      "relevance_to_focus_you": "ナラティブ分析・感情分析の検証方法に応用可。社長の日記データから抽出した自己物語が統計的に有意か複数シミュレーション検証。",
+      "priority": "medium"
+    }
+  ],
+  "recommendations": {
+    "immediate": [
+      {
+        "priority": "critical",
+        "action": "Claude Opus 4.7 への移行",
+        "target": "company-dashboard/src/lib/aiPartner.ts",
+        "timeline": "本日中",
+        "effort": "极小"
+      },
+      {
+        "priority": "critical",
+        "action": "セキュリティ監査（dependencies）",
+        "target": "package.json, requirements.txt",
+        "timeline": "2026-04-17 中",
+        "commands": ["npm audit --audit-level=moderate", "pip-audit"],
+        "effort": "小"
+      }
+    ],
+    "short_term": [
+      {
+        "priority": "high",
+        "action": "Claude Code Routines POC 設計",
+        "target": ".github/workflows/intelligence-collect.yml → Scheduled Routine",
+        "timeline": "2026-04-17 までに設計書",
+        "effort": "中"
+      }
+    ],
+    "medium_term": [
+      {
+        "priority": "medium",
+        "action": "Memory フレームワーク導入（arXiv:2604.01707）",
+        "target": "knowledge_base テーブルの consolidation/filtering ロジック",
+        "timeline": "2026-04-30 までに設計",
+        "effort": "中"
+      }
+    ]
+  },
+  "validation": {
+    "arxiv_ids_verified": 4,
+    "urls_verified": 10,
+    "duplicate_check_vs_previous": "重複なし。全て新規。",
+    "24h_priority_rule": "順守。24h内：Opus 4.7。72h内：Routines, Canvases, 論文複数。",
+    "security_alerts_included": true,
+    "self_check_passed": true
+  }
+}

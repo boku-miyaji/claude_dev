@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calendar × Tasks 統合案 比較</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1a1a24;
+    --surface3: #22222e;
+    --border: #2a2a38;
+    --text: #e6e6ed;
+    --text2: #a0a0b0;
+    --text3: #6b6b80;
+    --accent: #6366f1;
+    --accent2: #a78bfa;
+    --accent-bg: rgba(99, 102, 241, .08);
+    --red: #ef4444;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --cal-primary: #5b5fc7;
+    --cal-work: #1a7f37;
+    --cal-secondary: #b45309;
+    --task-color: #8b5cf6;
+    --r: 6px;
+    --r2: 10px;
+    --mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    --font: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 24px;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--text3); font-size: 12px; margin-bottom: 20px; }
+
+  /* Tab switcher */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .tab {
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+  }
+  .tab:hover { color: var(--text2); }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-desc {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.7;
+  }
+  .panel-desc strong { color: var(--text); }
+  .panel-desc .pros, .panel-desc .cons {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-right: 8px;
+  }
+  .pros { background: rgba(34,197,94,.15); color: var(--green); }
+  .cons { background: rgba(239,68,68,.15); color: var(--red); }
+
+  /* ========== Shared calendar styles ========== */
+  .cal-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    overflow: hidden;
+  }
+  .cal-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .cal-header button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font);
+  }
+  .cal-header button:hover { background: var(--surface2); color: var(--text); }
+  .cal-header .title {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 4px;
+    flex: 1;
+  }
+  .view-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .view-toggle button {
+    border: none;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+  .view-toggle button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-add {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* Day header row */
+  .cal-dow {
+    display: grid;
+    grid-template-columns: 56px repeat(7, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+  .cal-dow-cell {
+    padding: 8px 0;
+    text-align: center;
+    border-left: 1px solid var(--border);
+  }
+  .cal-dow-cell .dow-label {
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 2px;
+  }
+  .cal-dow-cell .date-num {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .cal-dow-cell.today .date-num {
+    color: #fff;
+    background: var(--accent);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  /* All-day row */
+  .cal-allday-row {
+    display: grid;
+    grid-template-columns: 56px repeat(7, 1fr);
+    border-bottom: 2px solid var(--border);
+    min-height: 40px;
+    background: var(--surface2);
+  }
+  .cal-allday-label {
+    font-size: 9px;
+    color: var(--text3);
+    text-align: right;
+    padding: 6px 8px 0;
+    line-height: 1.2;
+  }
+  .cal-allday-cell {
+    border-left: 1px solid var(--border);
+    padding: 3px 3px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  /* Time grid */
+  .cal-body {
+    position: relative;
+  }
+  .cal-row {
+    display: grid;
+    grid-template-columns: 56px repeat(7, 1fr);
+    min-height: 48px;
+  }
+  .cal-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    text-align: right;
+    padding: 2px 8px 0 0;
+    line-height: 1;
+  }
+  .cal-cell {
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    min-height: 48px;
+    cursor: pointer;
+    position: relative;
+  }
+  .cal-cell:hover { background: rgba(99, 102, 241, .04); }
+
+  /* Event blocks */
+  .evt {
+    position: absolute;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    overflow: hidden;
+    cursor: pointer;
+    line-height: 1.3;
+  }
+  .evt.primary { background: var(--cal-primary); }
+  .evt.work { background: var(--cal-work); }
+  .evt.secondary { background: var(--cal-secondary); }
+
+  /* Task blocks (time-boxed) */
+  .task-box {
+    position: absolute;
+    border-radius: 4px;
+    padding: 3px 6px 3px 22px;
+    font-size: 11px;
+    background: rgba(139, 92, 246, .12);
+    border: 1.5px dashed var(--task-color);
+    color: var(--task-color);
+    font-weight: 500;
+    overflow: hidden;
+    cursor: pointer;
+    line-height: 1.3;
+  }
+  .task-box::before {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--task-color);
+    border-radius: 3px;
+    background: transparent;
+  }
+  .task-box.done {
+    opacity: 0.45;
+    text-decoration: line-through;
+  }
+  .task-box.done::before {
+    background: var(--task-color);
+  }
+  .task-box.done::after {
+    content: '✓';
+    position: absolute;
+    left: 7px;
+    top: 50%;
+    transform: translateY(-55%);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  /* All-day tasks */
+  .task-pill {
+    background: rgba(139, 92, 246, .15);
+    border: 1px dashed var(--task-color);
+    color: var(--task-color);
+    border-radius: 3px;
+    padding: 2px 6px 2px 20px;
+    font-size: 10px;
+    font-weight: 500;
+    position: relative;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .task-pill::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 11px;
+    height: 11px;
+    border: 1.5px solid var(--task-color);
+    border-radius: 2px;
+  }
+  .task-pill.done { opacity: 0.45; text-decoration: line-through; }
+  .task-pill.done::before { background: var(--task-color); }
+
+  /* Events on all-day row */
+  .evt-pill {
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .evt-pill.work { background: var(--cal-work); }
+  .evt-pill.primary { background: var(--cal-primary); }
+
+  /* Now indicator */
+  .now-line {
+    position: absolute;
+    height: 2px;
+    background: var(--red);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .now-line::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+
+  .cal-legend {
+    display: flex;
+    gap: 12px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 11px;
+    color: var(--text2);
+    flex-wrap: wrap;
+  }
+  .cal-legend .item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .cal-legend .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+  .cal-legend .dot.primary { background: var(--cal-primary); }
+  .cal-legend .dot.work { background: var(--cal-work); }
+  .cal-legend .dot.secondary { background: var(--cal-secondary); }
+  .cal-legend .dot.task {
+    background: rgba(139, 92, 246, .15);
+    border: 1.5px dashed var(--task-color);
+  }
+
+  /* ========== B layout: 2-pane ========== */
+  .two-pane {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    overflow: hidden;
+  }
+  .task-sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+  }
+  .task-sidebar-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .task-sidebar-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .task-quick-add {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .task-quick-add input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-family: var(--font);
+  }
+  .task-section-label {
+    padding: 12px 16px 6px;
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 600;
+    letter-spacing: .5px;
+  }
+  .task-item {
+    padding: 8px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: grab;
+    transition: background .1s;
+    font-size: 12px;
+    border-left: 3px solid transparent;
+  }
+  .task-item:hover { background: var(--surface2); border-left-color: var(--accent); }
+  .task-item .chk {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--text3);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .task-item.done .chk { background: var(--task-color); border-color: var(--task-color); }
+  .task-item.done .title { text-decoration: line-through; color: var(--text3); }
+  .task-item .title { flex: 1; color: var(--text2); }
+  .task-item.sched { opacity: 0.5; }
+  .task-item.sched .title::after {
+    content: ' · 10:00';
+    color: var(--text3);
+    font-size: 10px;
+  }
+  .task-item .pri {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(239,68,68,.15);
+    color: var(--red);
+  }
+
+  /* ========== C layout: tabs with cross-search ========== */
+  .c-wrapper {
+    display: grid;
+    gap: 16px;
+  }
+  .c-search-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .c-search-bar input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-family: var(--font);
+  }
+  .c-search-results {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    padding: 14px;
+    display: none;
+  }
+  .c-search-results.on { display: block; }
+  .c-res-group { margin-bottom: 10px; }
+  .c-res-group h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; color: var(--text3); font-weight: 600; }
+  .c-res-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 5px;
+    margin-bottom: 2px;
+    cursor: pointer;
+  }
+  .c-res-item:hover { background: var(--surface2); }
+  .c-res-item .type-badge {
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .c-res-item .type-badge.event { background: var(--cal-primary); color: #fff; }
+  .c-res-item .type-badge.task { background: rgba(139, 92, 246, .15); border: 1px solid var(--task-color); color: var(--task-color); }
+  .c-res-item .time { font-size: 10px; color: var(--text3); margin-left: auto; font-family: var(--mono); }
+
+  .c-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .c-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r2);
+    overflow: hidden;
+  }
+  .c-card-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .c-card-header h3 { margin: 0; font-size: 14px; font-weight: 600; }
+  .c-card-body { padding: 14px 16px; }
+
+  .c-hover-peek {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text3);
+  }
+  .c-hover-peek strong { color: var(--text2); }
+
+  /* Decision footer */
+  .decision {
+    margin-top: 32px;
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: var(--r2);
+  }
+  .decision h3 { margin: 0 0 12px; font-size: 14px; }
+  .decision p { margin: 0 0 6px; color: var(--text2); font-size: 12px; }
+
+  /* Small annotations */
+  .note {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    margin-left: 6px;
+    font-weight: 500;
+  }
+  .drop-hint {
+    font-size: 10px;
+    color: var(--text3);
+    padding: 6px 10px;
+    background: var(--surface2);
+    border-radius: 4px;
+    margin: 8px 10px;
+    border-left: 2px solid var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<h1>Calendar × Tasks 統合案 比較</h1>
+<div class="sub">3案の UX モック。タブで切替可能。判断材料にしてください。</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="sw('a')">A. 統合型 (Sunsama風) ★推奨</button>
+  <button class="tab" onclick="sw('b')">B. 2ペイン (左タスク / 右カレンダー)</button>
+  <button class="tab" onclick="sw('c')">C. タブ維持 + 横断検索</button>
+</div>
+
+<!-- ========================================================== -->
+<!-- PANEL A: Sunsama-style integrated                         -->
+<!-- ========================================================== -->
+<div class="panel active" id="panel-a">
+  <div class="panel-desc">
+    <strong>コンセプト</strong>: Tasks タブを廃止。タスクはカレンダー上で「終日（時間未定）」と「時間確定」の2状態で表示。ドラッグで相互変換。<br>
+    <span class="pros">時間意識が育つ</span>
+    <span class="pros">1画面で完結</span>
+    <span class="pros">ドラッグで時間割当</span>
+    <span class="cons">タスク多いと終日行が膨らむ</span>
+    <span class="cons">一覧俯瞰には不向き</span>
+  </div>
+
+  <div class="cal-container">
+    <div class="cal-header">
+      <button>◀</button>
+      <button>今日</button>
+      <button>▶</button>
+      <div class="title">2026年4月12日 — 18日</div>
+      <div class="view-toggle">
+        <button>日</button>
+        <button class="active">週</button>
+        <button>月</button>
+        <button>リスト</button>
+      </div>
+      <button class="btn-add">+ 追加</button>
+    </div>
+
+    <!-- Day headers -->
+    <div class="cal-dow">
+      <div></div>
+      <div class="cal-dow-cell"><div class="dow-label" style="color:#ef4444">日</div><div class="date-num">12</div></div>
+      <div class="cal-dow-cell today"><div class="dow-label" style="color:var(--accent)">月</div><div class="date-num">13</div></div>
+      <div class="cal-dow-cell"><div class="dow-label">火</div><div class="date-num">14</div></div>
+      <div class="cal-dow-cell"><div class="dow-label">水</div><div class="date-num">15</div></div>
+      <div class="cal-dow-cell"><div class="dow-label">木</div><div class="date-num">16</div></div>
+      <div class="cal-dow-cell"><div class="dow-label">金</div><div class="date-num">17</div></div>
+      <div class="cal-dow-cell"><div class="dow-label" style="color:#3b82f6">土</div><div class="date-num">18</div></div>
+    </div>
+
+    <!-- All-day row with tasks + all-day events -->
+    <div class="cal-allday-row">
+      <div class="cal-allday-label">終日<br><span style="color:var(--task-color);font-size:9px">タスク</span></div>
+      <div class="cal-allday-cell"></div>
+      <div class="cal-allday-cell">
+        <div class="task-pill">日記レビュー</div>
+        <div class="task-pill">請求書送付</div>
+        <div class="task-pill done">コード整理</div>
+      </div>
+      <div class="cal-allday-cell">
+        <div class="task-pill">資料のFB反映</div>
+      </div>
+      <div class="cal-allday-cell">
+        <div class="evt-pill work">稼働報告</div>
+        <div class="task-pill">会食準備</div>
+      </div>
+      <div class="cal-allday-cell">
+        <div class="task-pill">Knowledge整理</div>
+        <div class="task-pill">週次振り返り</div>
+      </div>
+      <div class="cal-allday-cell"></div>
+      <div class="cal-allday-cell"></div>
+    </div>
+
+    <!-- Time grid -->
+    <div class="cal-body">
+      <div class="cal-row">
+        <div class="cal-time">9:00</div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell" style="position:relative">
+          <div class="evt work" style="top:0;left:2px;right:2px;height:46px">9:00 朝ミーティング</div>
+        </div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-time">10:00</div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell" style="position:relative">
+          <div class="task-box" style="top:0;left:2px;right:2px;height:70px">コードレビュー</div>
+        </div>
+        <div class="cal-cell" style="position:relative">
+          <div class="evt primary" style="top:0;left:2px;right:2px;height:46px">プロダクト定例</div>
+        </div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell" style="position:relative">
+          <div class="evt primary" style="top:0;left:2px;right:2px;height:94px">大和証券 事務手続</div>
+        </div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-time">11:00</div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-time">12:00</div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell" style="position:relative">
+          <div class="evt secondary" style="top:0;left:2px;right:2px;height:46px">ランチ@丸の内</div>
+        </div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-time">13:00</div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell" style="position:relative">
+          <div class="task-box" style="top:0;left:2px;right:2px;height:94px">資料作成</div>
+        </div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell" style="position:relative">
+          <div class="task-box done" style="top:0;left:2px;right:2px;height:46px">メール返信</div>
+        </div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-time">14:00</div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell" style="position:relative">
+          <div class="evt work" style="top:0;left:2px;right:2px;height:94px">プロダクトレビュー</div>
+        </div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+      </div>
+      <div class="cal-row">
+        <div class="cal-time">15:00</div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+        <div class="cal-cell"></div>
+      </div>
+      <div class="now-line" style="top:65px;left:calc(56px + 1 * (100% - 56px) / 7);width:calc((100% - 56px) / 7)"></div>
+    </div>
+
+    <div class="cal-legend">
+      <div class="item"><div class="dot primary"></div>Primary</div>
+      <div class="item"><div class="dot work"></div>Work</div>
+      <div class="item"><div class="dot secondary"></div>Secondary</div>
+      <div class="item"><div class="dot task"></div>Task (時間確定)</div>
+      <div class="item" style="margin-left:auto;color:var(--text3)">終日行はドラッグで時間確定 · 時間確定タスクは上にドラッグで未定戻し</div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">キー操作 1</div>
+      <div style="font-size:12px">セルクリック → ミニポップオーバーで<br><strong>イベント/タスク</strong>どちらで作成か選択</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">キー操作 2</div>
+      <div style="font-size:12px">終日タスクを時間グリッドに<br><strong>ドラッグ</strong>→ 時間確定に昇格</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">キー操作 3</div>
+      <div style="font-size:12px">チェックボックスクリック<br><strong>カレンダーから離れずに完了</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- PANEL B: 2-pane layout                                    -->
+<!-- ========================================================== -->
+<div class="panel" id="panel-b">
+  <div class="panel-desc">
+    <strong>コンセプト</strong>: 左にタスクインボックス（未着手・未定）、右にカレンダー。左から右へドラッグで時間割当。タスクの全貌が常に見える。<br>
+    <span class="pros">タスク一覧が常時可視</span>
+    <span class="pros">未消化タスクを忘れない</span>
+    <span class="pros">インボックス〜カレンダー流れが明快</span>
+    <span class="cons">幅を取る（モバイル✗）</span>
+    <span class="cons">カレンダー領域が狭くなる</span>
+  </div>
+
+  <div class="two-pane">
+    <!-- Left: Task sidebar -->
+    <div class="task-sidebar">
+      <div class="task-sidebar-header">
+        <h3>タスク</h3>
+        <button style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px">+</button>
+      </div>
+      <div class="task-quick-add">
+        <input placeholder="タスクを追加...">
+      </div>
+      <div style="flex:1;overflow-y:auto">
+        <div class="task-section-label">📥 未割当 (8)</div>
+        <div class="task-item">
+          <div class="chk"></div>
+          <div class="title">日記レビューして感情ラベル修正</div>
+          <div class="pri">高</div>
+        </div>
+        <div class="task-item">
+          <div class="chk"></div>
+          <div class="title">請求書送付（大和証券）</div>
+        </div>
+        <div class="task-item">
+          <div class="chk"></div>
+          <div class="title">資料のFB反映</div>
+          <div class="pri">高</div>
+        </div>
+        <div class="task-item">
+          <div class="chk"></div>
+          <div class="title">Knowledge整理</div>
+        </div>
+        <div class="task-item">
+          <div class="chk"></div>
+          <div class="title">経費レシート提出</div>
+        </div>
+        <div class="task-item">
+          <div class="chk"></div>
+          <div class="title">週次振り返り執筆</div>
+        </div>
+        <div class="task-item">
+          <div class="chk"></div>
+          <div class="title">会食の日程調整</div>
+        </div>
+        <div class="task-item">
+          <div class="chk"></div>
+          <div class="title">リリースノート確認</div>
+        </div>
+
+        <div class="task-section-label">🗓 時間確定済み (3)</div>
+        <div class="task-item sched">
+          <div class="chk"></div>
+          <div class="title">コードレビュー</div>
+        </div>
+        <div class="task-item sched">
+          <div class="chk"></div>
+          <div class="title">資料作成</div>
+        </div>
+        <div class="task-item sched done">
+          <div class="chk"></div>
+          <div class="title">メール返信</div>
+        </div>
+
+        <div class="drop-hint">← カレンダーからドラッグ戻しで時間解除</div>
+      </div>
+    </div>
+
+    <!-- Right: Calendar -->
+    <div>
+      <div class="cal-header" style="border-bottom:1px solid var(--border)">
+        <button>◀</button>
+        <button>今日</button>
+        <button>▶</button>
+        <div class="title">4月13日 (月)</div>
+        <div class="view-toggle">
+          <button>日</button>
+          <button class="active">週</button>
+          <button>月</button>
+        </div>
+      </div>
+      <div class="cal-dow" style="grid-template-columns:56px repeat(5, 1fr)">
+        <div></div>
+        <div class="cal-dow-cell today"><div class="dow-label" style="color:var(--accent)">月</div><div class="date-num">13</div></div>
+        <div class="cal-dow-cell"><div class="dow-label">火</div><div class="date-num">14</div></div>
+        <div class="cal-dow-cell"><div class="dow-label">水</div><div class="date-num">15</div></div>
+        <div class="cal-dow-cell"><div class="dow-label">木</div><div class="date-num">16</div></div>
+        <div class="cal-dow-cell"><div class="dow-label">金</div><div class="date-num">17</div></div>
+      </div>
+      <div class="cal-body">
+        <div class="cal-row" style="grid-template-columns:56px repeat(5, 1fr)">
+          <div class="cal-time">9:00</div>
+          <div class="cal-cell" style="position:relative">
+            <div class="evt work" style="top:0;left:2px;right:2px;height:46px">朝ミーティング</div>
+          </div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+        </div>
+        <div class="cal-row" style="grid-template-columns:56px repeat(5, 1fr)">
+          <div class="cal-time">10:00</div>
+          <div class="cal-cell" style="position:relative">
+            <div class="task-box" style="top:0;left:2px;right:2px;height:70px">コードレビュー</div>
+          </div>
+          <div class="cal-cell" style="position:relative">
+            <div class="evt primary" style="top:0;left:2px;right:2px;height:46px">プロダクト定例</div>
+          </div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell" style="position:relative">
+            <div class="evt primary" style="top:0;left:2px;right:2px;height:94px">大和証券</div>
+          </div>
+          <div class="cal-cell"></div>
+        </div>
+        <div class="cal-row" style="grid-template-columns:56px repeat(5, 1fr)">
+          <div class="cal-time">11:00</div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+        </div>
+        <div class="cal-row" style="grid-template-columns:56px repeat(5, 1fr)">
+          <div class="cal-time">12:00</div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell" style="position:relative">
+            <div class="evt secondary" style="top:0;left:2px;right:2px;height:46px">ランチ</div>
+          </div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+        </div>
+        <div class="cal-row" style="grid-template-columns:56px repeat(5, 1fr)">
+          <div class="cal-time">13:00</div>
+          <div class="cal-cell" style="position:relative">
+            <div class="task-box" style="top:0;left:2px;right:2px;height:94px">資料作成</div>
+          </div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell" style="position:relative">
+            <div class="task-box done" style="top:0;left:2px;right:2px;height:46px">メール返信</div>
+          </div>
+          <div class="cal-cell"></div>
+        </div>
+        <div class="cal-row" style="grid-template-columns:56px repeat(5, 1fr)">
+          <div class="cal-time">14:00</div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell" style="position:relative">
+            <div class="evt work" style="top:0;left:2px;right:2px;height:94px">プロダクトレビュー</div>
+          </div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+        </div>
+        <div class="cal-row" style="grid-template-columns:56px repeat(5, 1fr)">
+          <div class="cal-time">15:00</div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+          <div class="cal-cell"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- PANEL C: Tabs with cross-search                           -->
+<!-- ========================================================== -->
+<div class="panel" id="panel-c">
+  <div class="panel-desc">
+    <strong>コンセプト</strong>: Tasks と Calendar は別タブのまま。グローバル検索バーで横断検索。Tasks ページ上でタスクにカーソルを合わせると、カレンダーのプレビューがポップ。既存構造最小変更。<br>
+    <span class="pros">既存構造維持で低リスク</span>
+    <span class="pros">それぞれを深く操作可能</span>
+    <span class="cons">統合感ない</span>
+    <span class="cons">時間確定の手間変わらず</span>
+    <span class="cons">切替が必要</span>
+  </div>
+
+  <div class="c-wrapper">
+    <!-- Search bar -->
+    <div class="c-search-bar">
+      <span style="color:var(--text3)">🔍</span>
+      <input placeholder="タスク・イベントを横断検索... (例: 大和証券)" value="大和">
+      <span style="font-size:10px;color:var(--text3)">Cmd+K</span>
+    </div>
+
+    <!-- Search results (simulated open) -->
+    <div class="c-search-results on">
+      <div class="c-res-group">
+        <h4>イベント (2件)</h4>
+        <div class="c-res-item">
+          <span class="type-badge event">EVT</span>
+          <span>大和証券 事務手続</span>
+          <span class="time">4/15 木 10:00</span>
+        </div>
+        <div class="c-res-item">
+          <span class="type-badge event">EVT</span>
+          <span>大和 定例会議</span>
+          <span class="time">4/22 水 14:00</span>
+        </div>
+      </div>
+      <div class="c-res-group">
+        <h4>タスク (3件)</h4>
+        <div class="c-res-item">
+          <span class="type-badge task">TASK</span>
+          <span>請求書送付（大和証券）</span>
+          <span class="time">未定</span>
+        </div>
+        <div class="c-res-item">
+          <span class="type-badge task">TASK</span>
+          <span>大和様 事前準備</span>
+          <span class="time">4/14</span>
+        </div>
+        <div class="c-res-item">
+          <span class="type-badge task">TASK</span>
+          <span>大和様 フィードバック反映</span>
+          <span class="time">4/18</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Split: Tasks panel + Calendar panel -->
+    <div class="c-split">
+      <div class="c-card">
+        <div class="c-card-header">
+          <h3>📋 Tasks</h3>
+          <button style="background:var(--accent);color:#fff;border:none;padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer">+ 追加</button>
+        </div>
+        <div class="c-card-body">
+          <div class="task-section-label" style="padding:0 0 6px">今日</div>
+          <div class="task-item" style="padding:6px 0">
+            <div class="chk"></div>
+            <div class="title">日記レビュー</div>
+          </div>
+          <div class="task-item" style="padding:6px 0">
+            <div class="chk"></div>
+            <div class="title">請求書送付（大和証券）</div>
+            <div class="pri">高</div>
+          </div>
+          <div class="task-item" style="padding:6px 0">
+            <div class="chk"></div>
+            <div class="title">資料のFB反映</div>
+          </div>
+
+          <div class="c-hover-peek">
+            <strong>🔍 Hover preview:</strong> 「請求書送付」にカーソルをあてると、右のカレンダーに<strong>ハイライト表示</strong>され、関連イベント (大和証券) がパルスアニメーション
+          </div>
+        </div>
+      </div>
+
+      <div class="c-card">
+        <div class="c-card-header">
+          <h3>📅 Calendar</h3>
+          <div class="view-toggle">
+            <button class="active">日</button>
+            <button>週</button>
+          </div>
+        </div>
+        <div class="c-card-body" style="padding:0">
+          <div class="cal-body">
+            <div class="cal-row" style="grid-template-columns:56px 1fr">
+              <div class="cal-time">9:00</div>
+              <div class="cal-cell" style="position:relative">
+                <div class="evt work" style="top:0;left:2px;right:2px;height:46px">朝MTG</div>
+              </div>
+            </div>
+            <div class="cal-row" style="grid-template-columns:56px 1fr">
+              <div class="cal-time">10:00</div>
+              <div class="cal-cell" style="position:relative">
+                <div class="evt primary" style="top:0;left:2px;right:2px;height:94px;box-shadow:0 0 0 2px var(--accent),0 0 20px rgba(99,102,241,.4);animation:pulse 1.5s infinite">大和証券 事務手続</div>
+              </div>
+            </div>
+            <div class="cal-row" style="grid-template-columns:56px 1fr">
+              <div class="cal-time">11:00</div>
+              <div class="cal-cell"></div>
+            </div>
+            <div class="cal-row" style="grid-template-columns:56px 1fr">
+              <div class="cal-time">12:00</div>
+              <div class="cal-cell" style="position:relative">
+                <div class="evt secondary" style="top:0;left:2px;right:2px;height:46px">ランチ</div>
+              </div>
+            </div>
+            <div class="cal-row" style="grid-template-columns:56px 1fr">
+              <div class="cal-time">13:00</div>
+              <div class="cal-cell"></div>
+            </div>
+            <div class="cal-row" style="grid-template-columns:56px 1fr">
+              <div class="cal-time">14:00</div>
+              <div class="cal-cell" style="position:relative">
+                <div class="evt work" style="top:0;left:2px;right:2px;height:94px">プロダクトレビュー</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Decision footer -->
+<div class="decision">
+  <h3>意思決定チェックリスト</h3>
+  <p>☐ タスクをカレンダー上で直接時間指定できる必要があるか？ → YES なら A or B</p>
+  <p>☐ 未消化タスクを常に視界に入れたいか？ → YES なら B</p>
+  <p>☐ 既存の Tasks タブの充実した機能（タグ・フィルタ・バルク操作）を深く使っているか？ → YES なら C</p>
+  <p>☐ モバイルで使うことがあるか？ → YES なら A（B は幅不足で厳しい）</p>
+  <p>☐ タスクは1日10件以上ある日があるか？ → YES なら A の終日行が膨らむ問題あり、B が無難</p>
+  <p style="margin-top:12px;color:var(--accent);font-weight:600">推奨: A → タスクが1日5件以内 / モバイル重視 / 時間ブロッキング文化を育てたい</p>
+</div>
+
+<script>
+function sw(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+<style>
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--accent), 0 0 20px rgba(99,102,241,.4); }
+  50% { box-shadow: 0 0 0 2px var(--accent), 0 0 30px rgba(99,102,241,.7); }
+}
+</style>
+
+</body>
+</html>

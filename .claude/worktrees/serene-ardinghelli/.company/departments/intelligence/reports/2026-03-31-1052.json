@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "report_id": "2026-03-31-1052",
+    "generated_at": "2026-03-31T10:52:00+09:00",
+    "period_start": "2026-03-01",
+    "period_end": "2026-03-31",
+    "collection_method": "on-demand",
+    "sources_used": ["WebSearch", "WebFetch", "x.com", "news.ycombinator.com", "zenn.dev", "qiita.com", "note.com", "anthropic.com", "openai.com", "cursor.com", "code.claude.com"]
+  },
+  "alerts": [
+    {
+      "id": "ALERT-1",
+      "severity": "critical",
+      "title": "Anthropic Mythos (Capybara) モデルがデータリークで発覚",
+      "date": "2026-03-26",
+      "summary": "Opus 4.6超の次世代モデル。ステップチェンジレベルの性能だがサイバーセキュリティリスクが前例のないレベル",
+      "url": "https://fortune.com/2026/03/26/anthropic-says-testing-mythos-powerful-new-ai-model-after-data-leak-reveals-its-existence-step-change-in-capabilities/"
+    },
+    {
+      "id": "ALERT-2",
+      "severity": "breaking",
+      "title": "Claude Code v2.1.68: Opus 4/4.1 廃止、Opus 4.6に自動移行",
+      "date": "2026-03-04",
+      "summary": "ファーストパーティAPIからOpus 4/4.1削除。ハードコードしている場合は対応必要",
+      "url": "https://code.claude.com/docs/en/changelog"
+    },
+    {
+      "id": "ALERT-3",
+      "severity": "major",
+      "title": "Claude Code v2.1.75: 1Mコンテキストウィンドウがデフォルト化",
+      "date": "2026-03-13",
+      "summary": "Opus 4.6で1Mトークンコンテキストが Max/Team/Enterpriseでデフォルトに",
+      "url": "https://code.claude.com/docs/en/changelog"
+    },
+    {
+      "id": "ALERT-4",
+      "severity": "major",
+      "title": "Cursor が独自AIモデル開発を計画",
+      "date": "2026-03-19",
+      "summary": "Anthropic/OpenAIに対抗する独自モデル。AIコーディング市場の競争が新局面",
+      "url": "https://www.bloomberg.com/news/articles/2026-03-19/ai-coding-startup-cursor-plans-new-model-to-rival-anthropic-openai"
+    }
+  ],
+  "items": {
+    "ai_companies": {
+      "anthropic": [
+        {"id": "kw-Anthr-1", "date": "2026-03-28", "title": "収益$19Bランレートに急成長", "url": "https://techcrunch.com/2026/03/28/anthropics-claude-popularity-with-paying-consumers-is-skyrocketing/"},
+        {"id": "kw-Anthr-2", "date": "2026-03", "title": "Ramp AI Index: 初回購入者70%でAnthropicが勝利", "url": "https://x.com/thealexbanks/status/2034273131796336703"},
+        {"id": "kw-Anthr-3", "date": "2026-03-12", "title": "Claude Partner Network に$100M投資", "url": "https://www.anthropic.com/news"},
+        {"id": "kw-Anthr-4", "date": "2026-03-11", "title": "The Anthropic Institute 設立", "url": "https://www.anthropic.com/news"},
+        {"id": "kw-Anthr-5", "date": "2026-03-18", "title": "81,000人のAI利用調査公開", "url": "https://www.anthropic.com/news"},
+        {"id": "kw-Anthr-6", "date": "2026-03-10", "title": "シドニーオフィス開設 (APAC4拠点目)", "url": "https://www.anthropic.com/news"},
+        {"id": "kw-Anthr-7", "date": "2026-03-06", "title": "Mozilla提携でFirefoxセキュリティ強化", "url": "https://www.anthropic.com/news"},
+        {"id": "kw-Anthr-9", "date": "2026-03", "title": "2026 Agentic Coding Trends 18ページレポート", "url": "https://x.com/DataChaz/status/2025480272750563538"}
+      ],
+      "openai": [
+        {"id": "kw-OpenAI-1", "date": "2026-03-05", "title": "GPT-5.4 リリース", "url": "https://releasebot.io/updates/openai"},
+        {"id": "kw-OpenAI-2", "date": "2026-03", "title": "年間収益$25Bランレート突破", "url": "https://openai.com/news/"},
+        {"id": "kw-OpenAI-3", "date": "2026-02", "title": "$110B資金調達ラウンド完了 ($840Bバリュエーション)", "url": "https://techcrunch.com/2026/03/27/why-softbanks-new-40b-loan-points-to-a-2026-openai-ipo/"},
+        {"id": "kw-OpenAI-4", "date": "2026-03", "title": "デスクトップ統合スーパーアプリ計画", "url": "https://releasebot.io/updates/openai"},
+        {"id": "kw-OpenAI-6", "date": "2026-03-11", "title": "GPT-5.1系モデル廃止", "url": "https://help.openai.com/en/articles/6825453-chatgpt-release-notes"}
+      ],
+      "google": [
+        {"id": "kw-Google-1", "date": "2026-03", "title": "Gemini 3 Pro プロモーション", "url": "https://x.com/Google/status/2003571411173742981"},
+        {"id": "kw-Google-2", "date": "2026-03", "title": "DeepMind: 2026年は継続的学習の年", "url": "https://x.com/ai_for_success/status/2006915541911613950"},
+        {"id": "kw-Google-3", "date": "2026-03", "title": "Colab MCP Server 公開", "url": "https://developers.googleblog.com/announcing-the-colab-mcp-server-connect-any-ai-agent-to-google-colab/"}
+      ]
+    },
+    "tools": {
+      "claude_code": {
+        "versions_released": "v2.1.63 -> v2.1.88 (25+ versions in March)",
+        "major_features": [
+          "1M context window default (v2.1.75)",
+          "Voice mode with push-to-talk",
+          "/loop recurring tasks",
+          "Computer Use integration",
+          "Auto Mode (research preview)",
+          "Channels (Telegram/Discord)",
+          "Code Review (multi-agent)",
+          "MCP Elicitation",
+          "PowerShell tool (Windows)",
+          "Transcript search",
+          "Opus 4.6 default with 64K output tokens"
+        ]
+      },
+      "cursor": {
+        "major_updates": [
+          "Composer 2 (2026-03-19)",
+          "Self-hosted Cloud Agents (2026-03-25)",
+          "JetBrains IDE integration (2026-03-04)",
+          "Automations (2026-03-05)",
+          "30+ new plugins (2026-03-11)"
+        ],
+        "revenue": "$2B annualized",
+        "valuation": "$29B"
+      },
+      "mcp": {
+        "key_developments": [
+          "AAIF (Agentic AI Foundation) 設立",
+          "gRPC transport support (Google contribution)",
+          "97M installs",
+          "MCP Apps official extension",
+          "freee MCP OSS release",
+          "Xcode 26.3 native MCP support"
+        ]
+      }
+    }
+  },
+  "total_items_collected": 65
+}

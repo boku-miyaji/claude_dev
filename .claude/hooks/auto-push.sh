@@ -30,10 +30,28 @@ if git diff --quiet HEAD 2>/dev/null && git diff --cached --quiet HEAD 2>/dev/nu
   exit 0
 fi
 
-# Stage tracked changes only (no untracked files — those need explicit add)
+# Stage tracked changes
 git add -u 2>/dev/null || exit 0
 
-# Safety: unstage anything that looks like secrets or large binaries
+# Stage safe untracked files so newly created sources are auto-committed too.
+# .gitignore already filters out scratch/ and build artifacts; we add a defensive
+# pattern + size filter here to avoid committing secrets, DB files, or huge binaries.
+git ls-files --others --exclude-standard -z 2>/dev/null | while IFS= read -r -d '' file; do
+  [ -z "$file" ] && continue
+  case "$file" in
+    *.env|*.env.*|*credentials*|*token.json|*.key|*.pem|*.p12|*.pfx) continue ;;
+    *secret*|*private*) continue ;;
+    *.sqlite|*.sqlite3|*.db) continue ;;
+    *.mp4|*.mov|*.zip|*.tar|*.gz|*.tgz|*.7z|*.rar) continue ;;
+  esac
+  # Skip files larger than 5MB (large binaries, datasets, model weights)
+  size=$(stat -c%s -- "$file" 2>/dev/null || echo 0)
+  [ "$size" -gt 5242880 ] && continue
+  git add -- "$file" 2>/dev/null || true
+done
+
+# Safety: unstage anything that still looks like secrets or dangerous files
+# (second line of defense in case the untracked filter above missed something)
 DANGEROUS_PATTERNS=(.env .env.* credentials* token.json *.key *.pem *.p12 *.pfx)
 for pat in "${DANGEROUS_PATTERNS[@]}"; do
   git diff --cached --name-only 2>/dev/null | grep -i "$pat" | while read -r f; do

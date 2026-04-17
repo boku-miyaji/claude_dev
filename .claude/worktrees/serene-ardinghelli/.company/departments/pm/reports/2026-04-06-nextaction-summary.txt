@@ -1,0 +1,141 @@
+================================================================================
+PM部完了レポート: リサーチ部ハンドオフ対応
+日付: 2026-04-06
+================================================================================
+
+【依頼内容】
+リサーチ部が完成させた「Claude Code公式アーキテクチャ vs HD設計 差分分析書」
+（ファイル: /workspace/.company/departments/research/tech/claude-code-architecture-analysis.md）
+のネクストアクション（10項目）をタスクチケット化して、Supabase tasksテーブルに登録する。
+
+【成果物】
+
+1. SQLスクリプト
+   ファイル: /workspace/.company/departments/pm/scripts/insert-nextactions-2026-04-06.sql
+   - 10件の INSERT ステートメント（tasks テーブル）
+   - project_id: akycymnahqypmtsfqhtr
+   - すぐに実行可能な形式
+
+2. チケット整理書
+   ファイル: /workspace/.company/departments/pm/tickets/2026-04-06-nextaction-batch.md
+   - P0/P1/P2の優先度分類
+   - 各タスクの詳細な「アクション内容」（実装手順まで記載）
+   - 依存関係マッピング
+   - 登録方法（SQLダイレクト/API/execute_sql の3オプション）
+
+3. プロジェクト進捗ファイル
+   ファイル: /workspace/.company/departments/pm/projects/2026-04-06-research-nextaction-integration.md
+   - マイルストーン進捗
+   - 実装詳細（M1-M6）
+   - 依存関係グラフ
+   - リスク＆対応
+   - 次ステップ（秘書向けチェックリスト）
+
+================================================================================
+
+【ネクストアクション分類】
+
+P0: 高優先度（期限: 2026-04-13 ※1週間以内）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TASK-001: settings.json の allow リストを共通/PJ固有に分離
+  担当: システム開発部（sys-dev）
+  背景: 200行超の巨大なallow リストが肥大化している
+  提案: settings.json（共通） + settings.local.json（PJ固有）に分離
+
+TASK-002: 各 Sub-agent の model/maxTurns/effort を最適化
+  担当: 秘書（secretary）+ 社長判断
+  背景: 全Agent が model:sonnet, maxTurns:15 で画一的→コスト無駄
+  提案: リサーチ(opus,20), AI開発(opus,20), PM(haiku,10)等で差別化
+
+TASK-003: Pre/PostCompact Hook の強化 + Compact Instructions 追加
+  担当: システム開発部（sys-dev）
+  背景: Compaction 対策が最小限→context喪失リスク
+  提案: CLAUDE.md に「Compact Instructions」セクション追加 + Hook強化
+
+TASK-004: Auto Memory の状態確認と独自ナレッジシステムとの役割分担決定
+  担当: 秘書（secretary）※社長壁打ち必要
+  背景: 公式 Auto Memory と独自 knowledge/ が並行稼働→重複・矛盾リスク
+  提案: SSOT（Single Source of Truth）を明確化する役割分担
+
+P1: 中優先度（期限: 未定、依存関係に基づいて調整）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TASK-005: SubagentStart/Stop Hook の設計・実装
+  担当: システム開発部（sys-dev）
+  依存: TASK-002（Sub-agent最適化）完了後
+  効果: 委譲の可観測性向上、完了検証の自動化
+
+TASK-006: @import の導入（委譲テンプレート等）
+  担当: 秘書（secretary）
+  背景: references/ のドキュメントを手動 Read している
+  提案: CLAUDE.md に @import で参照ドキュメント自動ロード
+
+TASK-007: HTTP Hook への Supabase 書き込み移行検討
+  担当: システム開発部（sys-dev）
+  背景: 複数スクリプトで独自に curl Supabase 書き込み→認証情報重複
+  提案: HTTP hook に移行（シンプル化）
+
+P2: 低優先度（期限: 未定、将来的な最適化）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TASK-008: path-specific rules の導入
+  担当: 秘書（secretary）
+  効果: コンテキストウィンドウ節約（常時ロード→必要時のみロード）
+
+TASK-009: Explore 相当の軽量 Agent 追加
+  担当: 秘書（secretary）
+  依存: TASK-002 推奨
+  効果: コードベース探索フェーズを軽量に実行可能
+
+TASK-010: Agent Teams 機能の調査
+  担当: リサーチ部（research）
+  目的: Claude Code 2026年新機能を調査→パイプライン管理負荷削減可能性検証
+
+================================================================================
+
+【実装統計】
+
+タスク数: 10件
+- P0（高）: 4件 → 期限: 2026-04-13 ✓
+- P1（中）: 3件 → 依存関係管理
+- P2（低）: 3件 → 将来実装
+
+担当部署: 3部署
+- システム開発部: 4件（TASK-001, 003, 005, 007）
+- 秘書: 5件（TASK-002, 004, 006, 008, 009）
+- リサーチ部: 1件（TASK-010）
+
+クリティカルパス:
+  TASK-002（Sub-agent最適化）→ TASK-005, TASK-009
+
+================================================================================
+
+【次ステップ（秘書向け）】
+
+1. このレポート + チケット整理書を読む
+2. SQLスクリプトの内容を確認
+3. 承認 → Supabase にタスク登録
+   - オプション1: SQL管理画面でスクリプト実行
+   - オプション2: API経由で各タスク POST
+   - オプション3: execute_sql ツール
+4. 各部署への委譲
+   - システム開発部: TASK-001, 003, 005, 007
+   - 秘書: TASK-002, 004, 006, 008, 009（自身も含める）
+   - リサーチ部: TASK-010
+5. 進捗追跡: Supabase tasks テーブル + 各部署の報告
+
+================================================================================
+
+【ファイル一覧】
+
+成果物:
+✓ /workspace/.company/departments/pm/scripts/insert-nextactions-2026-04-06.sql
+✓ /workspace/.company/departments/pm/tickets/2026-04-06-nextaction-batch.md
+✓ /workspace/.company/departments/pm/projects/2026-04-06-research-nextaction-integration.md
+✓ /workspace/.company/departments/pm/reports/2026-04-06-nextaction-summary.txt （このファイル）
+
+参照元:
+- /workspace/.company/departments/research/tech/claude-code-architecture-analysis.md
+
+================================================================================
+
+以上、PM部完了レポートです。
+実装は行わず、タスク登録のみの状態です。秘書の確認・承認後、登録実行をお願いします。

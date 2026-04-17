@@ -1,0 +1,490 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "respectGitignore": false,
+  "env": {
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "30000",
+    "CLAUDE_CODE_DISABLE_TELEMETRY": "1"
+  },
+  "permissions": {
+    "allow": [
+      "// --- Shell: general tools ---",
+      "Bash(python3:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(python:*)",
+      "Bash(python -c:*)",
+      "Bash(node:*)",
+      "Bash(node -e \":*)",
+      "Bash(timeout:*)",
+      "Bash(wc:*)",
+      "Bash(pgrep:*)",
+      "Bash(pkill:*)",
+      "Bash(kill:*)",
+      "Bash(lsof:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(sort:*)",
+      "Bash(xargs:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(dd:*)",
+      "Bash(env)",
+      "Bash(chmod:*)",
+      "Bash(fuser:*)",
+      "Bash(xxd:*)",
+      "Bash(shasum:*)",
+      "Bash(set -a)",
+      "Bash(set +a)",
+      "Bash(source:*)",
+      "Bash(for dir:*)",
+      "Bash(sqlite3:*)",
+      "// --- Package managers ---",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm:*)",
+      "Bash(pip:*)",
+      "Bash(pip3:*)",
+      "Bash(uv:*)",
+      "Bash(conda:*)",
+      "Bash(apt-get:*)",
+      "Bash(apt-cache:*)",
+      "Bash(apt list:*)",
+      "Bash(dpkg -l:*)",
+      "// --- Git (portable patterns) ---",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git checkout:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git clone:*)",
+      "Bash(git submodule:*)",
+      "Bash(git revert:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git rm:*)",
+      "Bash(git remote:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git hash-object:*)",
+      "Bash(git update-index:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git version:*)",
+      "Bash(git config:*)",
+      "Bash(git -C:*)",
+      "Bash(gh pr:*)",
+      "Bash(GIT_TRACE=1 git:*)",
+      "// --- Docker ---",
+      "Bash(docker compose:*)",
+      "Bash(docker-compose:*)",
+      "Bash(/usr/bin/docker compose:*)",
+      "Bash(docker compose exec:*)",
+      "// --- Build & test ---",
+      "Bash(pytest:*)",
+      "Bash(npx tsc:*)",
+      "// --- GPU monitoring ---",
+      "Bash(nvidia-smi:*)",
+      "// --- Read (portable paths) ---",
+      "Read(//workspace/**)",
+      "Read(//tmp/**)",
+      "Read(//dev/**)",
+      "Read(//usr/**)",
+      "// --- Web ---",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:docs.kicad.org)",
+      "WebFetch(domain:dev-docs.kicad.org)",
+      "WebFetch(domain:forum.kicad.info)",
+      "WebFetch(domain:www.notion.so)",
+      "WebFetch(domain:platform.openai.com)",
+      "// --- MCP plugins ---",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "mcp__plugin_serena_serena__activate_project",
+      "mcp__plugin_serena_serena__check_onboarding_performed",
+      "mcp__plugin_serena_serena__list_dir",
+      "mcp__plugin_serena_serena__search_for_pattern",
+      "mcp__plugin_serena_serena__find_symbol",
+      "mcp__plugin_serena_serena__find_file",
+      "mcp__plugin_serena_serena__read_file",
+      "mcp__plugin_serena_serena__create_text_file",
+      "mcp__plugin_serena_serena__replace_content",
+      "mcp__plugin_serena_serena__replace_symbol_body",
+      "mcp__plugin_serena_serena__insert_after_symbol",
+      "mcp__plugin_serena_serena__get_symbols_overview",
+      "mcp__plugin_serena_serena__write_memory",
+      "mcp__plugin_serena_serena__list_memories",
+      "mcp__plugin_serena_serena__think_about_collected_information",
+      "mcp__plugin_serena_serena__think_about_whether_you_are_done",
+      "mcp__playwright",
+      "// --- Skills ---",
+      "Skill(design-principles)",
+      "Skill(design-principles:*)",
+      "Skill(document-skills:xlsx)",
+      "// --- Common Web domains ---",
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:openai.com)",
+      "WebFetch(domain:developers.openai.com)",
+      "WebFetch(domain:platform.openai.com)",
+      "WebFetch(domain:cursor.com)",
+      "WebFetch(domain:opencode.ai)",
+      "WebFetch(domain:qiita.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:arxiv.org)",
+      "// --- Common tools ---",
+      "Bash(supabase --version)",
+      "Bash(supabase projects:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(vercel --version)",
+      "Bash(gh auth:*)",
+      "Bash(corepack enable:*)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "// --- Common Read ---",
+      "Read(//home/node/**)",
+      "Read(//workspace/company-dashboard/**)",
+      "Edit(~/.claude/skills/company/**)",
+      "Bash(export LANG=en_US.UTF-8)",
+      "Bash(export LC_ALL=en_US.UTF-8)",
+      "Bash(openssl rand:*)",
+      "mcp__claude_ai_Google_Calendar__gcal_list_calendars",
+      "Bash(/workspace/.claude/hooks/dept-eval-trigger.sh)",
+      "Bash(mkdir -p _drafts)",
+      "Bash(mv review_wrapup_20260409.md evaluation_framework_20260409.md final_platform_comparison_20260409.md pptx_slide_drafts_20260409.md _drafts/)",
+      "WebFetch(domain:timbr.ai)",
+      "WebFetch(domain:seemoredata.io)",
+      "Bash(awk '/return [^\\(]/{print \">>> RETURN: \" NR \" \" $0; next} /use[A-Z]/{print \"    HOOK: \" NR \" \" $0}')",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:claude.com)",
+      "WebFetch(domain:blog.google)",
+      "WebFetch(domain:deepmind.google)",
+      "WebFetch(domain:ai.meta.com)",
+      "WebFetch(domain:www.t.u-tokyo.ac.jp)",
+      "WebFetch(domain:doi.org)",
+      "WebFetch(domain:pubs.rsc.org)",
+      "WebFetch(domain:pmc.ncbi.nlm.nih.gov)",
+      "WebFetch(domain:phys.org)",
+      "WebFetch(domain:www.dighyd.org)",
+      "Edit(/.claude/skills/supabase-preflight/**)",
+      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/devil-advocate.md)",
+      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/review-pr.md)",
+      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/pptx-rikyu.md)",
+      "Bash(sed -n '/^---$/,/^---$/d; p' /workspace/.claude/commands/pptx-aces-rikyu.md)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(awk 'NR==5355,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk 'NR==6146,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk 'NR==1399,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk 'NR==7581,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk '/renderDiary/,/renderGrowth/')",
+      "Bash(awk 'NR>=8870,/^function [a-zA-Z]/' /workspace/company-dashboard/src/lib/legacy.ts)",
+      "Bash(awk ':*)",
+      "Bash(awk 'NR>=541' /workspace/company-dashboard/src/pages/Finance.tsx)",
+      "Bash(ps -p 2840420 -o pid,etime,state)",
+      "Bash(supabase functions:*)",
+      "Bash(./node_modules/.bin/vite build:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(node_modules/.bin/vite build:*)",
+      "Bash(ls components/ui/)",
+      "Bash(ls components/)",
+      "mcp__plugin_serena_serena__initial_instructions",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(command -v supabase)"
+    ],
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.key)",
+      "Read(**/*secret*)",
+      "Read(**/*credentials*)"
+    ],
+    "additionalDirectories": [
+      "/home/node/.claude/plugins/cache/ai-company/company/1.0.0",
+      "/home/node/.claude/plugins/cache/ai-company/company/1.0.0/.claude-plugin",
+      "/home/node/.claude/plugins/marketplaces/ai-company/.claude-plugin",
+      "/home/node/.claude/knowledge",
+      "/workspace/.company/departments/security",
+      "/workspace/.claude/hooks",
+      "/tmp",
+      "/home/node/.claude/plugins/marketplaces/ai-company/skills/company",
+      "/home/node/.claude/plugins/marketplaces/ai-company/skills",
+      "/home/node/.claude/plugins/marketplaces/ai-company/plugins/company/.claude-plugin",
+      "/home/node/.claude/plugins/cache/ai-company/company/unknown",
+      "/home/node/.claude/plugins",
+      "/workspace/.claude/commands",
+      "/home/node/.claude/plugins/cache/ai-company/company/0edaac953b3d/.claude-plugin",
+      "/home/node/.claude",
+      "/workspace/.claude/agents",
+      "/workspace/.company/departments/research",
+      "/workspace/.company/departments",
+      "/workspace/.claude/skills",
+      "/workspace/company-dashboard/docs",
+      "/workspace/.company",
+      "/workspace/scratch/design"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/prompt-log.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/growth-detector.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/session-summary-periodic.sh",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "^/company",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/company-pull.sh"
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/work-rhythm-update.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/permission-guard.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/auto-pull.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/session-start-marker.sh"
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/supabase-status.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/config-sync.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/knowledge-lint.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/freshness-alert.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/freshness-auto-fix.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/doc-freshness-check.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/dept-eval-trigger.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/pipeline-resume.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/daily-analysis-batch.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/chat-effectiveness-weekly.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/weekly-insights.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/auto-push.sh"
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/session-summary.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/growth-summarize.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/pre-compact-save.sh"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/post-compact-restore.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/bash-guard.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/skill-usage-log.sh",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/post-edit-check.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/artifact-auto-sync.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/claude-md-size-guard.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/docs-sync-guard.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/edge-function-deploy.sh",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/tool-collector.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/agent-activity-log.sh",
+            "async": true
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "document-skills@anthropic-agent-skills": true,
+    "frontend-design@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "serena@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "supabase@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "company@ai-company": true
+  },
+  "extraKnownMarketplaces": {
+    "ai-company": {
+      "source": {
+        "source": "github",
+        "repo": "boku-miyaji/claude_dev",
+        "path": "."
+      }
+    }
+  },
+  "skipDangerousModePermissionPrompt": false,
+  "effortLevel": "max"
+}

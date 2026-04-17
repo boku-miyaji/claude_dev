@@ -1,0 +1,7 @@
+- generic [ref=e4]:
+  - img "Focus You" [ref=e5]
+  - heading "Focus You" [level=1] [ref=e6]
+  - paragraph [ref=e7]: 日記から自分を知る
+  - button "Sign in with GitHub" [ref=e8] [cursor=pointer]:
+    - img [ref=e9]
+    - text: Sign in with GitHub

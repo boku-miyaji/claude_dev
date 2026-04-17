@@ -1,0 +1,10 @@
+[functions.ai-agent]
+verify_jwt = false
+
+[functions.google-calendar-proxy]
+# Supabase の新しい ES256 非対称鍵 + publishable key 方式では、
+# Edge Function ゲートウェイがユーザー JWT (ES256) を検証できず
+# `{"code":401,"message":"Invalid JWT"}` を返す事象が発生する。
+# 関数内で sb.auth.getUser(jwt) が /auth/v1/user を叩いて検証するため、
+# ゲートウェイ検証は外して関数内検証に一本化する。
+verify_jwt = false

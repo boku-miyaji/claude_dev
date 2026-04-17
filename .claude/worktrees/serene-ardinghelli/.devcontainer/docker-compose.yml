@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Development container
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile-cpu
+      args:
+        TZ: ${TZ:-Asia/Tokyo}
+
+    volumes:
+      # Workspace mount
+      - ..:/workspace:cached
+
+      # Claude config
+      - ../.claude:/home/node/.claude:consistent
+
+      # Bash history
+      - claude-code-bashhistory:/commandhistory
+
+    # Network mode for devcontainer features
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+    environment:
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      CLAUDE_CONFIG_DIR: "/home/node/.claude"
+      POWERLEVEL9K_DISABLE_GITSTATUS: "true"
+      USE_GPU: "false"
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      # Connection info for API server
+      API_SERVER_HOST: api-server
+      API_SERVER_PORT: 8080
+
+    # Keep container running
+    command: sleep infinity
+
+    # Port forwarding (optional, if you need to access from host)
+    ports:
+      - "3000:3000"  # Example: frontend dev server
+
+    # Dependencies
+    depends_on:
+      api-server:
+        condition: service_started
+
+    # Use the shared network
+    networks:
+      - dev-network
+
+  # Persistent API Server
+  api-server:
+    build:
+      context: ./api-server
+      dockerfile: Dockerfile
+
+    # Restart policy for persistence
+    restart: unless-stopped
+
+    # Port mapping
+    ports:
+      - "8080:8080"
+
+    # Volume for persistent data (if needed)
+    volumes:
+      - api-data:/app/data
+      # Mount source code for hot-reload during development (optional)
+      # - ../api-server:/app:cached
+
+    environment:
+      NODE_ENV: development
+      PORT: 8080
+
+    # Health check (optional but recommended)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - dev-network
+
+# Named volumes
+volumes:
+  claude-code-bashhistory:
+  api-data:
+
+# Shared network
+networks:
+  dev-network:
+    driver: bridge

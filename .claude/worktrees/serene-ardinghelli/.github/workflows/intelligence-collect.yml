@@ -1,0 +1,45 @@
+name: Intelligence Collection
+
+on:
+  schedule:
+    # 09:00 JST = 00:00 UTC (数分ずらしてピーク回避)
+    - cron: '3 0 * * *'
+    # 21:00 JST = 12:00 UTC (夜のキャッチアップ)
+    - cron: '7 12 * * *'
+  workflow_dispatch: # 手動実行も可能
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r scripts/intelligence/requirements.txt
+
+      - name: Run intelligence collection
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_INGEST_KEY: ${{ secrets.SUPABASE_INGEST_KEY }}
+        run: python scripts/intelligence/collect.py
+
+      - name: Commit and push reports
+        env:
+          TIMESTAMP: ${{ github.run_id }}
+        run: |
+          git config user.name "intelligence-bot"
+          git config user.email "intelligence-bot@users.noreply.github.com"
+          git add .company/departments/intelligence/reports/
+          git diff --cached --quiet || \
+            git commit -m "chore(intelligence): auto-collect report [run:${TIMESTAMP}]"
+          git push

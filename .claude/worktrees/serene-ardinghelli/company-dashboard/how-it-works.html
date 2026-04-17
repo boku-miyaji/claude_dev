@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仮想カンパニーシステム — 運営ガイド</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --text: #e0e0e8;
+    --text-dim: #8888a0;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #34d399;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --orange: #fb923c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 0;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: 80px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+  }
+
+  .hero p {
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  section {
+    margin-bottom: 64px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: var(--accent2);
+  }
+
+  p, li { color: var(--text); font-size: 0.95rem; }
+  p { margin-bottom: 12px; }
+  ul, ol { padding-left: 24px; margin-bottom: 16px; }
+  li { margin-bottom: 6px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .badge-git { background: #f8717122; color: var(--red); border: 1px solid #f8717144; }
+  .badge-supabase { background: #34d39922; color: var(--green); border: 1px solid #34d39944; }
+  .badge-file { background: #6366f122; color: var(--accent2); border: 1px solid #6366f144; }
+  .badge-hook { background: #fbbf2422; color: var(--yellow); border: 1px solid #fbbf2444; }
+  .badge-auto { background: #60a5fa22; color: var(--blue); border: 1px solid #60a5fa44; }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .hero { padding: 48px 20px; }
+    .hero h1 { font-size: 1.8rem; }
+  }
+
+  .mermaid-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+
+  .mermaid { text-align: center; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+  th, td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  th {
+    background: var(--surface2);
+    font-weight: 600;
+    color: var(--accent2);
+  }
+  td { background: var(--surface); }
+
+  code {
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--accent2);
+  }
+
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    margin: 12px 0;
+    line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .flow-num {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .insurance-card {
+    border-left: 3px solid var(--yellow);
+  }
+
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 48px;
+  }
+  .toc ol { counter-reset: toc; list-style: none; padding-left: 0; }
+  .toc li { counter-increment: toc; margin-bottom: 4px; }
+  .toc li::before {
+    content: counter(toc) ".";
+    color: var(--accent);
+    font-weight: 600;
+    margin-right: 8px;
+  }
+  .toc a { color: var(--text); text-decoration: none; }
+  .toc a:hover { color: var(--accent2); }
+
+  .highlight { color: var(--accent2); font-weight: 600; }
+  .dim { color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>仮想カンパニーシステム</h1>
+  <p>HD + PJ会社の組織構造でAIエージェントが自律的に動く仕組み</p>
+  <p class="dim" style="margin-top: 8px; font-size: 0.85rem;">Last updated: 2026-03-29</p>
+</div>
+
+<div class="container">
+
+<!-- TOC -->
+<div class="toc">
+  <div class="card-title" style="margin-bottom: 12px;">目次</div>
+  <ol>
+    <li><a href="#architecture">全体アーキテクチャ</a></li>
+    <li><a href="#data-layers">3層データ管理 — ファイル × Git × Supabase</a></li>
+    <li><a href="#memory-flow">記憶の流れ — どこに何が記録されるか</a></li>
+    <li><a href="#hooks">自動化 — Hook による無意識の同期</a></li>
+    <li><a href="#intelligence">情報収集 → リサーチ — 知の循環</a></li>
+    <li><a href="#insurance">保険 — うまくいかないときの備え</a></li>
+    <li><a href="#improvement">改善サイクル — 組織が賢くなる仕組み</a></li>
+    <li><a href="#prep-intelligence">準備タイミングインテリジェンス</a></li>
+    <li><a href="#philosophy">設計思想 — エンハンス、代替ではない</a></li>
+    <li><a href="#ai-features">AI機能 — LLMがどう動いているか</a></li>
+  </ol>
+</div>
+
+<!-- 1. Architecture -->
+<section id="architecture">
+  <h2>1. 全体アーキテクチャ</h2>
+  <p>1人の社長（あなた）が複数PJを横断管理するための仮想持株会社構造。AIエージェント（Claude）が秘書として各社を運営します。</p>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+graph TB
+    CEO["👤 社長"]
+
+    subgraph HD[".company/ — HD（ホールディングス）"]
+        SEC["🗂 秘書室<br/>inbox / todos / notes / prep-log"]
+        HR["📊 人事部<br/>evaluations / proposals"]
+        REG["📋 registry.md"]
+
+        subgraph DEPT["共通部署"]
+            AI["AI開発"]
+            SYS["システム開発"]
+            PM["PM"]
+            MAT["資料制作"]
+            RES["リサーチ"]
+            INT["情報収集"]
+        end
+    end
+
+    subgraph PJ["PJ会社群"]
+        R[".company-rikyu/<br/>りそな営業支援DX"]
+        F[".company-foundry/<br/>SOMPOケアFoundry"]
+        C[".company-circuit/<br/>回路設計支援"]
+    end
+
+    subgraph INFRA["インフラ"]
+        GIT["Git<br/>マルチリポジトリ"]
+        SB["Supabase<br/>クラウド同期"]
+        GCal["Google Calendar<br/>予定管理"]
+    end
+
+    CEO --> |"/company"| SEC
+    CEO --> |"/company rikyu"| R
+    SEC --> DEPT
+    SEC --> HR
+    DEPT --> PJ
+    R & F & C & P --> GIT
+    SEC --> SB
+    SEC --> GCal
+
+    style HD fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style PJ fill:#0f3460,stroke:#60a5fa,color:#e0e0e8
+    style INFRA fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    </pre>
+  </div>
+
+  <h3>設計思想</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">共通部署はHDに集約</div>
+      <p>ai-dev, sys-dev, pm 等は全社共通。PJ会社はコンテキスト（クライアント情報、ドメイン知識）だけを持つ。</p>
+    </div>
+    <div class="card">
+      <div class="card-title">秘書が窓口</div>
+      <p>社長は「何をしたいか」だけ言えばいい。秘書がどの部署に振るか、どのPJかを判断する。</p>
+    </div>
+  </div>
+
+  <h3>ファイル構成</h3>
+  <pre><code>/workspace/
+├── .claude/                           Claude Code 設定ディレクトリ
+│   ├── settings.json                  共有設定（hooks/プラグイン/env） ← git管理
+│   ├── settings.local.json            マシン固有設定（パス/権限） ← gitignore
+│   ├── .mcp.json                      MCP サーバー接続設定
+│   ├── CLAUDE.md                      プロジェクト指示書
+│   ├── hooks/                         自動実行スクリプト群
+│   └── plugins/marketplaces/          インストール済みプラグイン
+│
+├── plugins/company/skills/            カスタムスキル (SKILL.md)
+│
+├── company-dashboard/                 ダッシュボード本体
+│   ├── index.html                     SPA
+│   ├── supabase-setup.sql             全テーブル一括セットアップ
+│   ├── supabase-migration-*.sql       差分マイグレーション
+│   └── docs/                          ドキュメント群
+│
+└── vercel.json                        Vercel 設定</code></pre>
+
+  <h3>settings.json の構造</h3>
+  <pre><code>{
+  "env": { ... },                // 環境変数
+  "permissions": {
+    "allow": [ ... ],            // 許可ルール
+    "additionalDirectories": [ ... ]
+  },
+  "hooks": {                     // SessionStart / UserPromptSubmit / PermissionRequest
+    "UserPromptSubmit": [ ... ],
+    "PermissionRequest": [ ... ],
+    "SessionStart": [ ... ]
+  },
+  "enabledPlugins": { ... },     // インストール済みプラグイン
+  "extraKnownMarketplaces": { ... }  // カスタムマーケットプレイス
+}</code></pre>
+
+  <h3>PJ会社のディレクトリ構造</h3>
+  <pre><code>/workspace/
+├── .company/              HD（ホールディングス）のルート
+│   ├── registry.md        全PJ会社の一覧・設定
+│   └── knowledge/         HD共通のナレッジ
+├── .company-ai/           AI開発会社
+├── .company-circuit/      回路図PJ会社
+├── .company-rikyu/        りきゅうPJ会社
+└── ...</code></pre>
+
+  <h3>マイグレーション一覧</h3>
+  <table>
+    <thead><tr><th>ファイル</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase-setup.sql</code></td><td>新規セットアップ用（全テーブル一括）</td></tr>
+      <tr><td><code>migration-002</code></td><td>user_id 削除</td></tr>
+      <tr><td><code>migration-003</code></td><td>prompt_log + ceo_insights</td></tr>
+      <tr><td><code>migration-004</code></td><td>knowledge_base + CLAUDE.md 可視化</td></tr>
+      <tr><td><code>migration-005</code></td><td>portfolio + career テーブル</td></tr>
+      <tr><td><code>migration-006</code></td><td>Hook 用 anon RLS ポリシー</td></tr>
+      <tr><td><code>migration-007</code></td><td>slash_commands テーブル</td></tr>
+      <tr><td><code>migration-008</code></td><td>財務テーブル（projects, invoices, expenses, time_entries, tax_payments）</td></tr>
+      <tr><td><code>migration-009</code></td><td>マルチサーバー対応（claude_settings に server_host 追加）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 2. Data Layers -->
+<section id="data-layers">
+  <h2>2. 3層データ管理</h2>
+  <p>データは3つの層で管理され、それぞれ異なる役割を持ちます。</p>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+graph LR
+    subgraph L1["Layer 1: ローカルファイル"]
+        direction TB
+        F1[".company/ CLAUDE.md<br/>組織ルール・判断基準"]
+        F2[".company-*/secretary/<br/>メモ・TODO・意思決定"]
+        F3[".company/departments/<br/>部署ルール"]
+        F4["prep-log/<br/>準備実績データ"]
+    end
+
+    subgraph L2["Layer 2: Git"]
+        direction TB
+        G1["claude_dev<br/>（HD・共通設定）"]
+        G2["project-rikyu/<br/>（PJコード・成果物）"]
+        G3["circuit_diagram/<br/>（PJコード・成果物）"]
+    end
+
+    subgraph L3["Layer 3: Supabase"]
+        direction TB
+        S1["claude_settings<br/>設定・権限・プラグイン"]
+        S2["prompt_log<br/>全プロンプト履歴"]
+        S3["tasks / comments<br/>タスク・コメント"]
+        S4["knowledge_base<br/>学習したルール"]
+        S5["ceo_insights<br/>社長分析"]
+    end
+
+    L1 -->|"git commit & push"| L2
+    L1 -->|"Hook自動同期"| L3
+    L3 -->|"/company起動時に読込"| L1
+
+    style L1 fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style L2 fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    style L3 fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    </pre>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>層</th><th>何を保存</th><th>永続性</th><th>同期</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-file">ファイル</span></td>
+        <td>組織ルール、メモ、TODO、準備ログ、部署CLAUDE.md</td>
+        <td>セッション内で即座に利用可能</td>
+        <td>git push で他環境へ</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-git">Git</span></td>
+        <td>HD設定 (claude_dev)、PJコード (各リポジトリ)</td>
+        <td>バージョン管理・履歴保持</td>
+        <td>push/pull で全環境同期</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-supabase">Supabase</span></td>
+        <td>プロンプト履歴、ナレッジ、設定、タスク、分析結果</td>
+        <td>クラウド永続・モバイルからもアクセス</td>
+        <td>Hook で自動書込み、/company で読込み</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <details style="margin: 20px 0;">
+    <summary style="cursor: pointer; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-weight: 600; font-size: 0.95rem; color: var(--accent2); list-style: none; display: flex; align-items: center; gap: 8px;">
+      <span style="transition: transform .2s; display: inline-block;">&#9662;</span> 全テーブル一覧（クリックで展開）
+    </summary>
+    <div style="background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; padding: 20px;">
+
+      <h3 style="margin-top: 0;">組織・タスク</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>categories</code></td><td>大分類</td><td>/company</td></tr>
+          <tr><td><code>companies</code></td><td>PJ会社</td><td>/company</td></tr>
+          <tr><td><code>departments</code></td><td>部署</td><td>/company</td></tr>
+          <tr><td><code>tasks</code></td><td>タスク・TODO</td><td>/company / Inbox</td></tr>
+          <tr><td><code>comments</code></td><td>コメント</td><td>Web / /company</td></tr>
+          <tr><td><code>evaluations</code></td><td>部署評価</td><td>/company</td></tr>
+          <tr><td><code>activity_log</code></td><td>アクティビティ</td><td>各種操作</td></tr>
+        </tbody>
+      </table>
+
+      <h3>秘書・HR</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>secretary_notes</code></td><td>メモ・inbox・意思決定・学びログ（type列で区別）</td><td>/company</td></tr>
+          <tr><td><code>hr_proposals</code></td><td>組織改編提案</td><td>/company</td></tr>
+          <tr><td><code>hr_retrospectives</code></td><td>KPTレトロスペクティブ</td><td>/company</td></tr>
+        </tbody>
+      </table>
+
+      <h3>AI・ナレッジ</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>prompt_log</code></td><td>全入力履歴</td><td>prompt-log.sh (Hook)</td></tr>
+          <tr><td><code>ceo_insights</code></td><td>行動分析</td><td>/company</td></tr>
+          <tr><td><code>knowledge_base</code></td><td>ルール蓄積</td><td>/company</td></tr>
+          <tr><td><code>claude_settings</code></td><td>設定スナップショット + HD設定</td><td>config-sync.sh + /company</td></tr>
+          <tr><td><code>slash_commands</code></td><td>スキル一覧</td><td>sync-slash-commands.sh</td></tr>
+        </tbody>
+      </table>
+
+      <h3>ポートフォリオ・キャリア</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>services</code></td><td>提供サービス</td><td>/company</td></tr>
+          <tr><td><code>portfolio_projects</code></td><td>実績</td><td>/company</td></tr>
+          <tr><td><code>tech_stack</code></td><td>技術スタック</td><td>/company</td></tr>
+          <tr><td><code>career</code></td><td>キャリア目標</td><td>/company</td></tr>
+        </tbody>
+      </table>
+
+      <h3>財務</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>projects</code></td><td>案件マスター</td><td>/invoice</td></tr>
+          <tr><td><code>invoices</code></td><td>請求書（売上）</td><td>/invoice</td></tr>
+          <tr><td><code>expenses</code></td><td>経費</td><td>/invoice</td></tr>
+          <tr><td><code>time_entries</code></td><td>稼働時間</td><td>/invoice sync (Calendar)</td></tr>
+          <tr><td><code>tax_payments</code></td><td>税金スケジュール</td><td>/invoice tax</td></tr>
+        </tbody>
+      </table>
+
+      <h3>UI・パーソナライズ</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>tab_clicks</code></td><td>タブクリック数集計（ナビ優先順位の自動調整）</td><td>Dashboard (navigate)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>AI Chat</h3>
+      <table>
+        <thead><tr><th>テーブル</th><th>用途</th><th>書き込み元</th></tr></thead>
+        <tbody>
+          <tr><td><code>conversations</code></td><td>チャット会話</td><td>AI Chat</td></tr>
+          <tr><td><code>messages</code></td><td>メッセージ + attachments JSONB</td><td>AI Chat</td></tr>
+          <tr><td><code>chat_usage</code></td><td>日次コスト集計</td><td>AI Chat</td></tr>
+          <tr><td><code>chat-attachments</code> (Storage)</td><td>画像・ファイルの永続保存</td><td>AI Chat</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </details>
+
+  <h3>なぜ3層？</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">ファイル = 速度</div>
+      <p class="dim">エージェントが即座に読み書き。CLAUDE.mdはコンテキストに直接注入される。</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Git = 履歴</div>
+      <p class="dim">誰が何を変えたか追跡可能。PJごとに独立リポジトリで境界を保つ。</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Supabase = 分析</div>
+      <p class="dim">全プロンプトを蓄積→行動パターン分析。どの端末からでもアクセス可能。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Memory Flow -->
+<section id="memory-flow">
+  <h2>3. 記憶の流れ</h2>
+  <p>システムは複数の「記憶」を持ち、それぞれ異なるライフサイクルで管理されます。</p>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+flowchart TB
+    INPUT["社長の発言・指示"]
+
+    INPUT --> |"毎回自動"| PROMPT["prompt_log<br/>(Supabase)"]
+    INPUT --> |"修正指示を検出"| KB["knowledge_base<br/>(Supabase)"]
+    INPUT --> |"意思決定"| NOTES["secretary/notes/<br/>(ファイル)"]
+    INPUT --> |"TODO"| TODOS["secretary/todos/<br/>(ファイル)"]
+    INPUT --> |"アイデア"| INBOX["secretary/inbox/<br/>(ファイル)"]
+    INPUT --> |"auto memory"| MEM["~/.claude/memory/<br/>(Claude Memory)"]
+
+    PROMPT --> |"蓄積10件超"| INSIGHTS["ceo_insights<br/>社長分析"]
+    KB --> |"confidence ≥ 3"| CLAUDE_MD["CLAUDE.md<br/>昇格"]
+
+    INSIGHTS --> |"行動パターン"| BETTER["秘書の提案精度向上"]
+    CLAUDE_MD --> |"永続ルール"| BETTER
+    KB --> |"暗黙適用"| BETTER
+
+    style PROMPT fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style KB fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style INSIGHTS fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style NOTES fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style TODOS fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style INBOX fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style MEM fill:#2e1a2e,stroke:#818cf8,color:#e0e0e8
+    style CLAUDE_MD fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    </pre>
+  </div>
+
+  <h3>記憶の種類と昇格パス</h3>
+  <table>
+    <thead>
+      <tr><th>記憶タイプ</th><th>保存先</th><th>寿命</th><th>昇格条件</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>プロンプト履歴</td>
+        <td><code>prompt_log</code> (Supabase)</td>
+        <td>永久蓄積</td>
+        <td>10件超 → CEO分析トリガー</td>
+      </tr>
+      <tr>
+        <td>ナレッジ（LLMデフォルトとの差分）</td>
+        <td><code>knowledge_base</code> (Supabase)</td>
+        <td>active / promoted / archived</td>
+        <td>confidence ≥ 3 → CLAUDE.md 昇格提案</td>
+      </tr>
+      <tr>
+        <td>意思決定ログ</td>
+        <td><code>secretary/notes/</code> (ファイル)</td>
+        <td>日付ベースで蓄積</td>
+        <td>パターン検出 → ルール化提案</td>
+      </tr>
+      <tr>
+        <td>Claude Memory</td>
+        <td><code>~/.claude/memory/</code></td>
+        <td>セッション横断</td>
+        <td>フィードバック・ユーザー情報を記録</td>
+      </tr>
+      <tr>
+        <td>CLAUDE.md ルール</td>
+        <td><code>.company*/CLAUDE.md</code></td>
+        <td><strong>最も永続的</strong></td>
+        <td>エージェントの恒久的な行動指針</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card">
+    <div class="card-title">ポイント: 記憶は「昇格」する</div>
+    <p>一時的なメモ → 繰り返し出現 → ナレッジ化 → CLAUDE.mdルール化。<br/>
+    これにより、同じ指示を2回する必要がなくなり、エージェントが自律的に改善されていきます。</p>
+  </div>
+</section>
+
+<!-- 4. Hooks -->
+<section id="hooks">
+  <h2>4. 自動化 — Hook による無意識の同期</h2>
+  <p>Claude Codeの「Hook」機能により、<strong>社長が何もしなくても</strong>バックグラウンドで同期・記録が行われます。</p>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+sequenceDiagram
+    participant CEO as 社長
+    participant CC as Claude Code
+    participant Hook as Hooks
+    participant SB as Supabase
+    participant Git as Git
+
+    Note over CEO,Git: セッション開始時
+    CC->>Hook: SessionStart
+    Hook->>SB: supabase-status.sh (接続確認)
+    Hook->>SB: config-sync.sh (設定・プラグイン・権限同期)
+    Hook->>SB: sync-slash-commands.sh (スキル同期)
+
+    Note over CEO,Git: 毎回の入力時
+    CEO->>CC: プロンプト入力
+    CC->>Hook: UserPromptSubmit
+    Hook->>SB: prompt-log.sh (非同期記録)
+
+    Note over CEO,Git: /company 実行時
+    CEO->>CC: /company
+    CC->>Hook: company-pull.sh (git pull)
+    CC->>Git: 最新の組織データ取得
+    CC->>SB: knowledge_base 読込み
+    CC->>SB: comments 確認
+
+    Note over CEO,Git: 作業完了時
+    CC->>Git: git commit & push
+    CC->>SB: activity_log 記録
+    </pre>
+  </div>
+
+  <h3>Hook一覧</h3>
+  <table>
+    <thead>
+      <tr><th>Hook</th><th>トリガー</th><th>処理</th><th>非同期</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>supabase-status.sh</code></td>
+        <td><span class="badge badge-auto">SessionStart</span></td>
+        <td>Supabase接続確認。不通なら警告表示</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td><code>config-sync.sh</code></td>
+        <td><span class="badge badge-auto">SessionStart</span></td>
+        <td>settings.json, MCP, CLAUDE.md, プラグイン → Supabase同期</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><code>prompt-log.sh</code></td>
+        <td><span class="badge badge-hook">UserPromptSubmit</span></td>
+        <td>全プロンプトをSupabaseに記録</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><code>company-pull.sh</code></td>
+        <td><span class="badge badge-hook">UserPromptSubmit</span> <code>/company</code></td>
+        <td>git pull で最新の組織データ取得</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td><code>permission-guard.sh</code></td>
+        <td><span class="badge badge-hook">PermissionRequest</span></td>
+        <td>権限レベル(full/safe/strict)に基づく自動判定</td>
+        <td>No</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>config-sync.sh の詳細フロー</h3>
+  <pre><code>セッション起動
+  |
+config-sync.sh 実行
+  ├── settings.json を読み取り
+  │   ├── plugins (enabledPlugins)
+  │   ├── permissions (allow ルール)
+  │   ├── hooks 設定
+  │   └── env 設定
+  ├── .mcp.json を読み取り → MCP サーバー一覧
+  ├── .claude/CLAUDE.md → 内容全文
+  ├── .company/CLAUDE.md → HD設定（company_claude_md）
+  ├── 全てを JSON にまとめて claude_settings テーブルに UPSERT
+  │
+  └── sync-slash-commands.sh を呼び出し
+      ├── 7つのソースから SKILL.md をスキャン:
+      │   1. plugins/*/skills/*/          (カスタム)
+      │   2. .claude/skills/*/            (ワークスペース)
+      │   3. ~/.claude/skills/*/          (ユーザー)
+      │   4. marketplaces/anthropic-agent-skills/
+      │   5. marketplaces/claude-plugins-official/plugins/
+      │   6. marketplaces/claude-plugins-official/external_plugins/
+      │   7. marketplaces/ai-company/.claude/skills/
+      ├── skills-cache.json と比較（差分検知）
+      ├── 変更があれば slash_commands テーブルに UPSERT
+      └── キャッシュを更新</code></pre>
+
+  <h3>prompt-log.sh の詳細フロー</h3>
+  <pre><code>ユーザーが入力
+  |
+prompt-log.sh 実行（async = バックグラウンド）
+  ├── stdin から JSON を読み取り（prompt 内容）
+  ├── 自動タグ付け（キーワードベース）
+  │   "テスト" → ["test"]
+  │   "バグ"   → ["debug"]
+  │   "設計"   → ["design"]
+  └── prompt_log テーブルに POST</code></pre>
+
+  <h3>Hook ファイル一覧</h3>
+  <table>
+    <thead><tr><th>ファイル</th><th>役割</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase.env</code></td><td>Supabase 接続情報（URL + Anon Key）</td></tr>
+      <tr><td><code>prompt-log.sh</code></td><td>UserPromptSubmit → prompt_log</td></tr>
+      <tr><td><code>config-sync.sh</code></td><td>SessionStart → claude_settings + slash_commands</td></tr>
+      <tr><td><code>sync-slash-commands.sh</code></td><td>全スキルスキャン + 差分同期</td></tr>
+      <tr><td><code>permission-guard.sh</code></td><td>権限レベルに応じた自動承認/拒否</td></tr>
+      <tr><td><code>skills-cache.json</code></td><td>スキル同期のキャッシュ（差分検知用）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 5. Intelligence → Research -->
+<section id="intelligence">
+  <h2>5. 情報収集 → リサーチ — 知の循環</h2>
+  <p>intelligence部署（情報収集）が自動でデータを集め、research部署（リサーチ）がそれを分析・構造化する。2つの部署は独立ではなく、パイプラインとして連携します。</p>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+flowchart TB
+    subgraph INT["intelligence — 情報収集部"]
+        S1["sources.yaml<br/>監視対象の定義"]
+        C1["collect.py<br/>GitHub Actions 09:00/21:00"]
+        R1["reports/<br/>JSON + Markdown"]
+        P1["preferences.yaml<br/>スコアリング"]
+    end
+
+    subgraph RES["research — リサーチ部署"]
+        M1["market/<br/>市場・競合分析"]
+        T1["tech/<br/>技術調査"]
+        CR["client-research/<br/>企業・人物調査"]
+    end
+
+    subgraph OUT["出力（3段構成）"]
+        O1["① 公知情報ベース分析<br/>ソースURL付き"]
+        O2["② 限界の明示<br/>非公開情報が必要な領域"]
+        O3["③ 壁打ちモード<br/>社長の手元情報と統合"]
+    end
+
+    S1 --> C1
+    C1 --> R1
+    R1 --> |"スコア上位を優先"| P1
+    P1 --> |"フィードバック"| S1
+
+    R1 --> |"収集データを素材として"| M1 & T1 & CR
+    M1 & T1 & CR --> O1 --> O2 --> O3
+
+    CEO2["👤 社長"] --> |"有用/ノイズ"| P1
+    CEO2 --> |"手元の非公開情報"| O3
+
+    style INT fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style RES fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style OUT fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    </pre>
+  </div>
+
+  <h3>intelligence: 自動収集エンジン</h3>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">収集チャネル</div>
+      <ul>
+        <li><strong>キーワード検索</strong> — DuckDuckGo で指定キーワードの上位5件</li>
+        <li><strong>X アカウント監視</strong> — site:x.com 検索で最新ポスト</li>
+        <li><strong>Webサイト監視</strong> — IR、プレスリリース等（拡張予定）</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">スコアリングシステム</div>
+      <ul>
+        <li><strong>有用</strong> → スコア +0.2（最大2.0）</li>
+        <li><strong>ノイズ</strong> → スコア -0.2（最小0.1）</li>
+        <li><strong>探索枠 20%</strong> — 低スコアでも20%の確率で収集（過学習防止）</li>
+        <li><strong>30日減衰</strong> — FBなしスコアはデフォルト(1.0)へ回帰</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>research: 分析 → 3段構成出力</h3>
+  <p>intelligence の収集データを素材として、リサーチ部署が分析・構造化する。<strong>すべての出力は3段構成に従う。</strong></p>
+
+  <table>
+    <thead>
+      <tr><th>段</th><th>内容</th><th>目的</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>① 公知情報</strong></td>
+        <td>IR、決算、プレスリリース等から得られる情報を整理。全情報にソースURL付与</td>
+        <td>人が直接確認・検証できる</td>
+      </tr>
+      <tr>
+        <td><strong>② 限界の明示</strong></td>
+        <td>「ここから先は非公開情報が必要」を正直に示す。推測は明確にラベル付け</td>
+        <td>何がわかっていて何がわからないかを透明に</td>
+      </tr>
+      <tr>
+        <td><strong>③ 壁打ちモード</strong></td>
+        <td>社長が手元の非公開情報（中計・議事録等）を見ながら深掘りできる導線</td>
+        <td>AI出力を自分の理解として昇華する</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>自動発動タイミング</h3>
+  <table>
+    <thead>
+      <tr><th>タイミング</th><th>何が起きるか</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>09:00 / 21:00（自動）</td><td>GitHub Actions で sources.yaml の全ソースを収集 → レポート生成</td></tr>
+      <tr><td>/company 起動時</td><td>最新レポートの要約をブリーフィングに含める</td></tr>
+      <tr><td>MTG準備時（prep-log連動）</td><td>クライアントMTG前に相手企業の最新情報を自動チェック</td></tr>
+      <tr><td>新PJ会社作成時</td><td>クライアント企業の基本情報を自動収集して CLAUDE.md に注入</td></tr>
+    </tbody>
+  </table>
+
+  <h3>ダッシュボード連携</h3>
+  <p>ダッシュボードの <strong>Intelligence タブ</strong> に表示される内容:</p>
+  <ul>
+    <li><strong>Sources</strong> — sources.yaml の全監視対象（スコア・有効/無効の管理）</li>
+    <li><strong>Reports</strong> — secretary_notes テーブルの type='intelligence_report' レコード</li>
+    <li><strong>Score Analytics</strong> — ソースごとのスコア推移・フィードバック履歴</li>
+  </ul>
+</section>
+
+<!-- 6. Insurance -->
+<section id="insurance">
+  <h2>6. 保険 — うまくいかないときの備え</h2>
+  <p>3つの障害シナリオに対するフォールバック設計。</p>
+
+  <div class="card insurance-card">
+    <div class="card-title">⚡ Supabase が落ちた場合</div>
+    <table>
+      <tr><th>機能</th><th>通常</th><th>フォールバック</th></tr>
+      <tr>
+        <td>プロンプト記録</td>
+        <td>Supabase <code>prompt_log</code></td>
+        <td>記録スキップ（会話内コンテキストで代替）</td>
+      </tr>
+      <tr>
+        <td>タスク管理</td>
+        <td>Supabase <code>tasks</code></td>
+        <td><code>secretary/todos/</code> ローカルファイル</td>
+      </tr>
+      <tr>
+        <td>ナレッジ</td>
+        <td>Supabase <code>knowledge_base</code></td>
+        <td>CLAUDE.md に昇格済みルール + Claude Memory で代替</td>
+      </tr>
+      <tr>
+        <td>設定同期</td>
+        <td>Supabase <code>claude_settings</code></td>
+        <td>ローカル settings.json が正（Supabaseはミラー）</td>
+      </tr>
+    </table>
+    <p class="dim" style="margin-top: 8px;">設計原則: <strong>ローカルファイルが常にマスター</strong>。Supabaseは分析・同期・モバイルアクセス用。落ちても作業は止まらない。</p>
+  </div>
+
+  <div class="card insurance-card">
+    <div class="card-title">⚡ Git push できない場合</div>
+    <ul>
+      <li>ローカルにコミットは残る（作業内容は失われない）</li>
+      <li>次回セッションの <code>company-pull.sh</code> で conflict を検出 → 秘書が報告</li>
+      <li>Supabase にはHook経由で設定が同期されているため、別端末でも最低限のコンテキストは利用可能</li>
+    </ul>
+  </div>
+
+  <div class="card insurance-card">
+    <div class="card-title">⚡ エージェントが間違った判断をした場合</div>
+    <ul>
+      <li><strong>権限ガード</strong>: <code>permission-guard.sh</code> が破壊的操作を自動ブロック（safe/strictモード）</li>
+      <li><strong>チェックポイント制</strong>: 重要な作業は設計完了後に社長に確認してから実装に進む</li>
+      <li><strong>Git履歴</strong>: すべての変更はコミットされているため <code>git revert</code> で復旧可能</li>
+      <li><strong>修正検出 → ナレッジ化</strong>: 同じ修正指示2回で自動ルール改善提案</li>
+    </ul>
+  </div>
+
+  <h3>マルチリポジトリによる爆発半径の制限</h3>
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+graph TB
+    MAIN["claude_dev (メインリポジトリ)<br/>.claude/ + .company/ + docs/"]
+    R["project-rikyu/<br/>独自リポジトリ"]
+    F["project-scotch-care/<br/>独自リポジトリ"]
+    C["circuit_diagram/<br/>独自リポジトリ"]
+
+    MAIN -.->|"参照のみ"| R
+    MAIN -.->|"参照のみ"| F
+    MAIN -.->|"参照のみ"| C
+
+    style MAIN fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style R fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    style F fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    style C fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    </pre>
+  </div>
+  <p>PJリポジトリは完全に独立。あるPJでミスをしても、他PJや組織設定には影響しない。CLAUDE.mdのコミットルールがこの境界を強制します。</p>
+</section>
+
+<!-- 7. Improvement -->
+<section id="improvement">
+  <h2>7. 改善サイクル</h2>
+  <p>組織は3つのフィードバックループで自動的に賢くなっていきます。</p>
+
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+flowchart LR
+    subgraph LOOP1["Loop 1: ナレッジ蓄積（即時）"]
+        A1["社長の修正指示"] --> A2["knowledge_base に記録"]
+        A2 --> A3["次回から暗黙適用"]
+        A3 --> A4["confidence上昇"]
+        A4 --> A5["CLAUDE.md に昇格"]
+    end
+
+    subgraph LOOP2["Loop 2: 人事評価（定期）"]
+        B1["作業実績を観察"] --> B2["5軸評価<br/>自律完遂率/一発OK率/連携効率/目標寄与/稼働率"]
+        B2 --> B3["低スコア検出"]
+        B3 --> B4["CLAUDE.md ルール改善提案"]
+    end
+
+    subgraph LOOP3["Loop 3: CEO分析（蓄積）"]
+        C1["prompt_log 蓄積"] --> C2["行動パターン分析<br/>時間帯/曜日/好み/傾向"]
+        C2 --> C3["ceo_insights に記録"]
+        C3 --> C4["秘書の先回り提案"]
+    end
+
+    style LOOP1 fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style LOOP2 fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    style LOOP3 fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    </pre>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Loop 1: ナレッジ蓄積</div>
+      <p><strong>トリガー:</strong> 「〜しないで」「〜じゃなくて」等の修正指示</p>
+      <p><strong>速度:</strong> 即時反映</p>
+      <p><strong>例:</strong> 「pytestで書いて」→ 次回から自動でpytest使用</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Loop 2: 組織最適化</div>
+      <p><strong>トリガー:</strong> 同じ修正2回 / 稼働なし3回 / 差し戻し2回</p>
+      <p><strong>速度:</strong> パターン検出時</p>
+      <p><strong>例:</strong> 設計差し戻し頻発 → 設計チェックリスト追加提案</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Loop 3: CEO分析</div>
+      <p><strong>トリガー:</strong> prompt_log 10件超</p>
+      <p><strong>速度:</strong> 蓄積ベース</p>
+      <p><strong>例:</strong> 午前10-12時に集中 → 重要タスクはこの時間に提案</p>
+    </div>
+  </div>
+
+  <h3>改善の具体的な流れ</h3>
+  <div class="flow-step">
+    <div class="flow-num">1</div>
+    <div>
+      <strong>観察</strong> — 社長の修正指示・追加質問・差し戻しを自動記録
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">2</div>
+    <div>
+      <strong>パターン検出</strong> — 同じ種類の修正が繰り返されていないか分析
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">3</div>
+    <div>
+      <strong>提案</strong> — 該当部署/会社のCLAUDE.mdに追記すべきルールを提案
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">4</div>
+    <div>
+      <strong>適用</strong> — 社長が承認したらCLAUDE.mdを更新
+    </div>
+  </div>
+  <div class="flow-step">
+    <div class="flow-num">5</div>
+    <div>
+      <strong>検証</strong> — 次回同種のタスクで改善されたか確認
+    </div>
+  </div>
+</section>
+
+<!-- 8. Prep Intelligence -->
+<section id="prep-intelligence">
+  <h2>8. 準備タイミングインテリジェンス</h2>
+  <p>ミーティングごとに「いつ準備を始めるべきか」を実績データから精度高く予測するシステム。</p>
+
+  <h3>多次元ミーティング分類</h3>
+  <table>
+    <thead>
+      <tr><th>軸</th><th>分類</th><th>準備への影響</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>audience</strong></td>
+        <td>client-exec / client-working / internal-team / external-partner / personal</td>
+        <td>client-exec → 最も入念な準備が必要</td>
+      </tr>
+      <tr>
+        <td><strong>purpose</strong></td>
+        <td>reporting / status-update / brainstorming / decision / demo / review / knowledge-sharing</td>
+        <td>reporting/demo → 成果物が必要。status-update → 軽め</td>
+      </tr>
+      <tr>
+        <td><strong>your_role</strong></td>
+        <td>presenter / co-presenter / facilitator / participant / observer</td>
+        <td>presenter → フル準備。observer → ゼロ</td>
+      </tr>
+      <tr>
+        <td><strong>stakes</strong></td>
+        <td>critical / high / medium / low</td>
+        <td>critical → 72h前開始。low → 準備不要</td>
+      </tr>
+      <tr>
+        <td><strong>format</strong></td>
+        <td>in-person / online / hybrid</td>
+        <td>in-person → 移動時間・環境準備も考慮</td>
+      </tr>
+      <tr>
+        <td><strong>recurring</strong></td>
+        <td>weekly / biweekly / monthly / one-off</td>
+        <td>定例 → 前回の続きなので準備軽い傾向</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>精度向上の4フェーズ</h3>
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+graph LR
+    P1["Phase 1<br/>経験則<br/>0-4件"] --> P2["Phase 2<br/>実績統計<br/>5-9件"]
+    P2 --> P3["Phase 3<br/>個別最適化<br/>10-19件"]
+    P3 --> P4["Phase 4<br/>予測モデル<br/>20件〜"]
+
+    style P1 fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    style P2 fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    style P3 fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style P4 fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    </pre>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Phase 1: 経験則 (0-4件)</div>
+      <p>stakes × your_role のマトリクスで固定値を使用。社長の明示的指示を優先。</p>
+      <pre><code>critical × presenter → 72h前, 180min
+high × presenter     → 24h前, 120min
+medium × participant → 1h前, 15min</code></pre>
+    </div>
+    <div class="card">
+      <div class="card-title">Phase 2: 統計 (5-9件)</div>
+      <p>同一分類の過去実績から中央値を算出。<br/>
+      <code>GROUP BY (stakes, role, purpose)</code><br/>
+      精度表示: <code>±XX%</code></p>
+    </div>
+    <div class="card">
+      <div class="card-title">Phase 3: 個別最適 (10-19件)</div>
+      <p>PJ × 相手 × 目的 の3軸で最適化。<br/>
+      MTG間の依存関係も考慮（AのMTGの結果がBの準備に必要）</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Phase 4: 予測 (20件〜)</div>
+      <p>カレンダーの新規イベントを自動分類し、過去類似MTGから準備タスクを予測。<br/>
+      ブリーフィングに推奨準備開始時刻を自動表示。</p>
+    </div>
+  </div>
+
+  <h3>フィードバックループ</h3>
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+flowchart TB
+    CAL["カレンダーイベント検出"] --> CLASS["多次元分類<br/>audience/purpose/role/stakes"]
+    CLASS --> EST["準備時間推定<br/>（過去実績ベース）"]
+    EST --> BRIEF["ブリーフィングで提案<br/>★★★ 推奨: 3/29夜〜開始"]
+    BRIEF --> PREP["実際の準備作業"]
+    PREP --> LOG["prep-log に記録<br/>開始/終了/作業内訳"]
+    LOG --> MTG["ミーティング実施"]
+    MTG --> FB["結果フィードバック<br/>十分だったか？何が足りなかったか？"]
+    FB --> |"実績蓄積"| EST
+
+    FB --> |"quality≤2 が2回"| ADJ["リードタイム自動引き上げ提案"]
+    ADJ --> EST
+
+    style CAL fill:#1a1a2e,stroke:#60a5fa,color:#e0e0e8
+    style FB fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    style ADJ fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    </pre>
+  </div>
+
+  <p>データ保存先: <code>.company/secretary/prep-log/{date}_{slug}.yaml</code></p>
+</section>
+
+<!-- 9. Philosophy -->
+<section id="philosophy">
+  <h2>9. 設計思想 — エンハンス、代替ではない</h2>
+
+  <div class="card" style="border-left: 3px solid var(--accent);">
+    <div class="card-title" style="font-size: 1.15rem;">このシステムは人の仕事を完全代替するのではなく、エンハンスするもの</div>
+    <p style="margin-top: 12px;">AI出力をそのまま商談に持ち込むのは難しい。自分で説明できない内容は使えない。</p>
+  </div>
+
+  <h3>なぜ「完成品」を作らないのか</h3>
+  <div class="mermaid-wrapper">
+    <pre class="mermaid">
+flowchart LR
+    AI["AI出力<br/>（素材）"] --> WALL["壁打ち<br/>社長 × 秘書"]
+    WALL --> OWN["自分の解釈<br/>として昇華"]
+    OWN --> MTG["商談・報告<br/>自分の言葉で説明"]
+
+    BAD["AI出力を<br/>そのまま使う"] -.->|"✕"| FAIL["質問に答えられない<br/>思考力が低下"]
+
+    style AI fill:#1a1a2e,stroke:#6366f1,color:#e0e0e8
+    style WALL fill:#2e2e1a,stroke:#fbbf24,color:#e0e0e8
+    style OWN fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style MTG fill:#1a2e1a,stroke:#34d399,color:#e0e0e8
+    style BAD fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    style FAIL fill:#2e1a1a,stroke:#f87171,color:#e0e0e8
+    </pre>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title" style="color: var(--green);">正しい使い方</div>
+      <ul>
+        <li>AI出力を<strong>壁打ちの素材</strong>として使う</li>
+        <li>腹落ちするまで対話で深掘りする</li>
+        <li>質問が来そうなところは自分で掘る</li>
+        <li>公知情報の限界を理解した上で非公開情報と統合する</li>
+        <li>最終的に<strong>自分の言葉で説明できる状態</strong>にする</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color: var(--red);">避けるべき使い方</div>
+      <ul>
+        <li>AI出力をそのままコピペして報告する</li>
+        <li>内容を理解せずに資料として提出する</li>
+        <li>「AIが作ったから正しいだろう」と検証しない</li>
+        <li>思考プロセスをスキップする</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>システム全体に適用される原則</h3>
+  <table>
+    <thead>
+      <tr><th>部署</th><th>適用</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>リサーチ</strong></td>
+        <td>3段構成出力（公知情報+リンク → 限界明示 → 壁打ちモード）</td>
+      </tr>
+      <tr>
+        <td><strong>資料制作</strong></td>
+        <td>資料は「完成品」ではなく「壁打ちの素材」。社長レビュー必須</td>
+      </tr>
+      <tr>
+        <td><strong>AI開発</strong></td>
+        <td>設計書はチェックポイントで社長確認。実装は理解した上で承認</td>
+      </tr>
+      <tr>
+        <td><strong>秘書</strong></td>
+        <td>重要な判断は必ず社長に確認。自動実行は権限レベルで制御</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 10. AI機能 — LLMがどう動いているか -->
+<section id="ai-features">
+  <h2>10. AI機能 — LLMがどう動いているか</h2>
+  <p>ダッシュボードに組み込まれた5つのAI機能。全てSupabase Edge Function (<code>ai-agent</code>) 経由でOpenAI APIを呼び出し、<code>edgeAi.ts</code> の <code>aiCompletion()</code> で統一的にアクセスする。</p>
+
+  <!-- 10.1 感情分析 -->
+  <h3 id="ai-emotion">10.1 感情分析</h3>
+  <div class="card">
+    <p>日記保存時に自動実行。テキストからPlutchik 8感情・Russell感情空間・PERMA+V・WBIスコアを数値化しDBに保存する。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["日記保存"] --> B["useEmotionAnalysis.analyze"]
+    B --> C["aiCompletion\njsonMode: true"]
+    C --> D["Edge Function: ai-agent"]
+    D --> E["gpt-5-nano"]
+    E --> F["JSON parse"]
+    F --> G1["emotion_analysis INSERT"]
+    F --> G2["diary_entries.wbi UPDATE"]
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>diary_entries.body</code></td><td>1件 (保存直後)</td><td>感情分析対象テキスト</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.3</td></tr>
+        <tr><td>maxTokens</td><td>1000</td></tr>
+        <tr><td>response_format</td><td>json_object</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>出力:</strong> <code>emotion_analysis</code> テーブルにINSERT (Plutchik 8値 0-100, valence/arousal -1.0~1.0, PERMA+V 0-10, WBI 0-10)。<code>diary_entries.wbi</code> もUPDATE。キャッシュ・差分分析なし。毎回新規分析。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useEmotionAnalysis.ts</code> (<code>useEmotionAnalysis</code>, <code>EMOTION_ANALYSIS_PROMPT</code>) / <code>edgeAi.ts</code> (<code>aiCompletion</code>) / <code>Today.tsx</code> (<code>saveEntry</code>, <code>PLUTCHIK_LABELS</code>)
+    <br/>詳細: <code>docs/ai-features/emotion-analysis.md</code></p>
+  </div>
+
+  <!-- 10.2 自己分析 -->
+  <h3 id="ai-self">10.2 自己分析</h3>
+  <div class="card">
+    <p>日記・プロンプトログ・タスク・カレンダー・夢の5データソースを統合し、MBTI・Big5・ストレングスファインダー・感情トリガー・価値観の5種分析をLLMで実行。差分分析モードにより前回以降の変化を追跡する。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["分析を開始ボタン"] --> B["useSelfAnalysis.runAnalysis"]
+    B --> C{"前回分析あり?"}
+    C -- Yes --> D["since = 前回created_at\ndelta mode"]
+    C -- No --> E["since = null\nfull mode"]
+    D --> F["collectData: 5ソース取得"]
+    E --> F
+    F --> G["PROMPT_BUILDERS:\n前回結果をコンテキスト注入"]
+    G --> H["aiCompletion\njsonMode: true"]
+    H --> I["self_analysis INSERT"]
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>diary_entries</code></td><td>最大80件</td><td>性格推定の主要データ</td></tr>
+        <tr><td><code>prompt_log</code></td><td>最大200件</td><td>行動パターン分析</td></tr>
+        <tr><td><code>tasks</code></td><td>最大100件</td><td>実行力・先延ばし傾向</td></tr>
+        <tr><td><code>calendar_events</code></td><td>最大50件</td><td>時間管理パターン</td></tr>
+        <tr><td><code>dreams</code></td><td>全件</td><td>価値観・志向性</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.4</td></tr>
+        <tr><td>maxTokens</td><td>3000</td></tr>
+        <tr><td>response_format</td><td>json_object</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>差分分析の仕組み:</strong></p>
+    <ol>
+      <li><code>self_analysis</code> から前回結果を取得 → <code>since = prevAnalysis.created_at</code></li>
+      <li><code>diary_entries</code> / <code>prompt_log</code> は <code>created_at > since</code> でフィルタ (新規データのみ)</li>
+      <li>前回結果をプロンプトに注入 (例: 前回タイプ INFP, スコア E_I=35...)</li>
+      <li>LLM出力に <code>changes_from_previous</code> フィールドが追加される</li>
+    </ol>
+
+    <p><strong>出力:</strong> <code>self_analysis</code> テーブルにINSERT (<code>analysis_type</code>, <code>result</code> jsonb, <code>summary</code>, <code>data_count</code>)。5タイプを順次実行。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useSelfAnalysis.ts</code> (<code>useSelfAnalysis</code>, <code>collectData</code>, <code>getPreviousAnalysis</code>, <code>mbtiPrompt</code> 他) / <code>SelfAnalysis.tsx</code> (<code>MbtiResult</code>, <code>Big5Result</code>, <code>ChangesFromPrevious</code> 他)
+    <br/>詳細: <code>docs/ai-features/self-analysis.md</code></p>
+  </div>
+
+  <!-- 10.3 朝の一言 -->
+  <h3 id="ai-briefing">10.3 朝の一言</h3>
+  <div class="card">
+    <p>Todayページ表示時に7データソースを並列取得し、時間帯 (朝/昼/夜) に応じた短い一言をLLMが生成。Zustandストアで24時間キャッシュされる。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["Today ページ mount"] --> B{"キャッシュあり?"}
+    B -- Yes --> Z["キャッシュ表示"]
+    B -- No --> C["7ソース並列取得"]
+    C --> D["コンテキスト組み立て"]
+    D --> E["時間帯別 systemPrompt"]
+    E --> F["aiCompletion"]
+    F --> G["briefingStore キャッシュ"]
+    G --> Z
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>diary_entries</code></td><td>直近5件</td><td>最近の日記 + WBI推移</td></tr>
+        <tr><td><code>emotion_analysis</code></td><td>直近10件</td><td>感情傾向・主要感情</td></tr>
+        <tr><td><code>tasks</code></td><td>直近10件</td><td>今日の完了/期限タスク</td></tr>
+        <tr><td><code>dreams</code></td><td>active 5件</td><td>進行中の夢リスト</td></tr>
+        <tr><td><code>ceo_insights</code></td><td>直近5件</td><td>ユーザーの特徴</td></tr>
+        <tr><td><code>prompt_log</code></td><td>直近50件</td><td>深夜作業率算出</td></tr>
+        <tr><td><code>calculateStreak()</code></td><td>1値</td><td>日記連続記録日数</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.3</td></tr>
+        <tr><td>maxTokens</td><td>200</td></tr>
+        <tr><td>jsonMode</td><td>false (テキスト応答)</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>出力:</strong> DBには保存しない。Zustandインメモリキャッシュのみ (キー: <code>{日付}_{timeMode}</code>)。日記保存時に <code>invalidateBriefing()</code> で再生成。エラー時は時間帯別フォールバックメッセージを表示。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useMorningBriefing.ts</code> (<code>useMorningBriefing</code>, <code>getFallback</code>) / <code>aiPartner.ts</code> (<code>buildPartnerSystemPrompt</code>) / <code>briefing.ts</code> (<code>useBriefingStore</code>)
+    <br/>詳細: <code>docs/ai-features/morning-briefing.md</code></p>
+  </div>
+
+  <!-- 10.4 夢進捗検出 -->
+  <h3 id="ai-dream">10.4 夢進捗検出</h3>
+  <div class="card">
+    <p>日記保存時に自動実行。日記内容と夢リストをLLMで照合し、夢の達成に近づいた可能性を検出。結果はToast通知で即時表示、DBには保存しない。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["日記保存"] --> B["useDreamDetection.detect"]
+    B --> C["dreams テーブル取得\nactive / in_progress"]
+    C --> D["aiCompletion\njsonMode: true"]
+    D --> E{"confidence?"}
+    E -- "high/medium" --> F["Toast 通知表示"]
+    E -- "low" --> G["破棄"]
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td>日記本文 (引数)</td><td>1件</td><td>照合対象テキスト</td></tr>
+        <tr><td><code>dreams</code></td><td>active/in_progress全件</td><td>照合元の夢リスト</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.3</td></tr>
+        <tr><td>maxTokens</td><td>500</td></tr>
+        <tr><td>response_format</td><td>json_object</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>出力:</strong> DBには保存しない。キャッシュもなし。confidence が medium 以上のみ <code>Toast</code> 通知 (<code>夢『{title}』に近づいているかもしれません！</code>)。毎回日記保存のたびに実行。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useDreamDetection.ts</code> (<code>useDreamDetection</code>, <code>DreamDetection</code>) / <code>edgeAi.ts</code> (<code>aiCompletion</code>) / <code>Today.tsx</code> (<code>saveEntry</code>)
+    <br/>詳細: <code>docs/ai-features/dream-detection.md</code></p>
+  </div>
+
+  <!-- 10.5 週次ナラティブ -->
+  <h3 id="ai-weekly">10.5 週次ナラティブ</h3>
+  <div class="card">
+    <p>1週間分の日記・感情・タスク・ゴール・習慣データを集約し、LLMがユーザーの週を温かく振り返る200-300字のナラティブを生成。<code>weekly_narratives</code> テーブルに永続保存。</p>
+
+    <div class="mermaid-wrapper">
+      <pre class="mermaid">
+flowchart LR
+    A["Weekly ページ\n週選択 + 生成ボタン"] --> B["useWeeklyNarrative.generate"]
+    B --> C["6ソース並列取得\nweekStart〜weekEnd"]
+    C --> D["統計計算\nWBI平均・主要感情・習慣達成率"]
+    D --> E["aiCompletion\nテキスト応答"]
+    E --> F["weekly_narratives INSERT"]
+    F --> G["UI更新"]
+      </pre>
+    </div>
+
+    <table>
+      <thead><tr><th>入力テーブル</th><th>件数</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>diary_entries</code></td><td>指定週の全件</td><td>週の出来事テキスト</td></tr>
+        <tr><td><code>emotion_analysis</code></td><td>指定週の全件</td><td>WBI平均・主要感情</td></tr>
+        <tr><td><code>tasks</code></td><td>指定週の完了分</td><td>達成リスト</td></tr>
+        <tr><td><code>goals</code></td><td>直近10件</td><td>ゴール進捗</td></tr>
+        <tr><td><code>habits</code></td><td>active全件</td><td>習慣達成率の分母</td></tr>
+        <tr><td><code>habit_logs</code></td><td>指定週の全件</td><td>習慣達成率の分子</td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead><tr><th>LLM設定</th><th>値</th></tr></thead>
+      <tbody>
+        <tr><td>model</td><td><code>gpt-5-nano</code></td></tr>
+        <tr><td>temperature</td><td>0.7 (高め: 表現の多様性)</td></tr>
+        <tr><td>maxTokens</td><td>600</td></tr>
+        <tr><td>jsonMode</td><td>false (テキスト応答)</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>出力:</strong> <code>weekly_narratives</code> テーブルにINSERT (<code>week_start</code>, <code>week_end</code>, <code>narrative</code>, <code>stats</code> jsonb)。過去6週分を一覧表示し、未生成の週のみ「生成」ボタンを表示。</p>
+    <p class="dim"><strong>ソース:</strong> <code>useWeeklyNarrative.ts</code> (<code>useWeeklyNarrative</code>, <code>WeeklyNarrativeRecord</code>, <code>WeekInfo</code>) / <code>edgeAi.ts</code> (<code>aiCompletion</code>)
+    <br/>詳細: <code>docs/ai-features/weekly-narrative.md</code></p>
+  </div>
+</section>
+
+<!-- Footer -->
+<section style="text-align: center; padding: 40px 0; border-top: 1px solid var(--border);">
+  <p class="dim">Generated by HD Secretary — .company/ system</p>
+  <p class="dim" style="font-size: 0.8rem;">
+    ファイル: .company/how-it-works.html<br/>
+    詳細スキーマ: .company/secretary/prep-log/SCHEMA.md
+  </p>
+</section>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#6366f1',
+      primaryTextColor: '#e0e0e8',
+      primaryBorderColor: '#818cf8',
+      lineColor: '#4a4a6a',
+      secondaryColor: '#1a1a2e',
+      tertiaryColor: '#0f3460',
+      noteTextColor: '#e0e0e8',
+      noteBkgColor: '#1a1a2e',
+      noteBorderColor: '#6366f1',
+      actorTextColor: '#e0e0e8',
+      actorBkg: '#1a1a2e',
+      actorBorder: '#6366f1',
+      signalColor: '#818cf8',
+      signalTextColor: '#e0e0e8'
+    },
+    flowchart: { curve: 'basis' },
+    sequence: { actorMargin: 50, messageMargin: 40 }
+  });
+</script>
+
+</body>
+</html>

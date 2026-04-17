@@ -1,0 +1,76 @@
+# MCP プロファイル管理
+# コンテキストウィンドウの最適化のため、タスク種別に応じて使用するプラグインを意識する。
+# Claude Code は動的な有効/無効切替に未対応のため、秘書が「このタスクで使うべきプラグイン」を
+# 判断し、不要なMCPツールの使用を避ける運用ガイドラインとする。
+
+profiles:
+  # 常時使用（最小限のコアツール）
+  core:
+    plugins:
+      - context7              # ドキュメント検索
+      - commit-commands       # Git操作
+      - company               # HD組織管理
+    note: "どのタスクでも使う基本セット"
+
+  # 開発作業（コーディング・レビュー）
+  development:
+    plugins:
+      - serena                # セマンティックコード分析
+      - pr-review-toolkit     # PRレビュー
+      - code-review           # コードレビュー
+      - security-guidance     # セキュリティチェック
+    triggers:
+      - "実装して"
+      - "コードレビュー"
+      - "PR"
+      - "バグ修正"
+
+  # 資料作成
+  documents:
+    plugins:
+      - document-skills       # PPTX/DOCX/PDF/XLSX作成
+      - frontend-design       # HTML/Webデザイン
+    triggers:
+      - "資料"
+      - "プレゼン"
+      - "提案書"
+      - "スライド"
+      - "レポート"
+
+  # データ・分析
+  data:
+    plugins:
+      - supabase              # データベース操作
+    triggers:
+      - "データ"
+      - "分析"
+      - "ダッシュボード"
+
+  # GitHub連携
+  github:
+    plugins:
+      - github                # Issue/PR操作
+    triggers:
+      - "Issue"
+      - "GitHub"
+
+# PJ会社別の推奨プロファイル
+pj_defaults:
+  circuit:
+    profiles: [core, development]
+    note: "回路設計PJ: 主にコーディング作業"
+
+  rikyu:
+    profiles: [core, documents, data]
+    note: "りきゅうPJ: 資料作成+データ分析が主"
+
+  foundry:
+    profiles: [core, documents]
+    note: "FoundryPJ: 資料・提案書作成が主"
+
+# コンテキスト節約のための運用ルール
+guidelines:
+  - "秘書はタスク開始時にどのプロファイルが必要か判断する"
+  - "不要なMCPツールは呼ばない（ツール一覧がコンテキストを消費するため）"
+  - "1タスクで使うプロファイルは core + 1〜2個を推奨"
+  - "全プラグイン同時使用は避ける（コンテキスト200k→70kに縮小するリスク）"

@@ -1,0 +1,356 @@
+# データ鮮度ポリシー
+# /company 起動時に秘書が自動チェックし、閾値超過データを更新する
+#
+# priority: 更新実行の優先順位（1が最優先。同時に複数staleなら優先度順）
+# max_age_days: この日数を超えたら stale と判定
+# auto_update: true = 秘書が自動で更新実行 / false = リマインドのみ
+# check_method: 鮮度チェックの方法
+# update_action: 更新時に秘書が実行するアクション
+# blocking: true = ブリーフィング前に実行（結果を待つ）/ false = ブリーフィング後にバックグラウンド
+
+data_sources:
+
+  # ── 優先度0: レジストリ整合性（全データの基盤） ──
+
+  registry_consistency:
+    priority: 0
+    max_age_days: 0
+    auto_update: true
+    blocking: true
+    check_method: script
+    check_script: "scripts/company/validate-registry.sh"
+    stale_condition: "会社・部署の情報が1箇所でも不整合"
+    update_action: |
+      scripts/company/sync-registry.sh を実行し、全派生ファイルを更新。
+      更新後、git diff で変更内容を社長に報告。
+
+  # ── 優先度1: 分析系（意思決定に直結、最も古くなりやすい） ──
+
+  ceo_insights:
+    priority: 1
+    max_age_days: 7
+    auto_update: true
+    blocking: false
+    check_method: supabase_query
+    check_query: >
+      SELECT created_at FROM ceo_insights
+      ORDER BY created_at DESC LIMIT 1
+    count_query: >
+      SELECT count(*) as cnt FROM prompt_log
+      WHERE created_at > (
+        SELECT COALESCE(max(created_at), '2000-01-01')
+        FROM ceo_insights
+      )
+    stale_condition: "最終分析から7日超過 OR 未分析プロンプト20件超"
+    update_action: |
+      prompt_log の未分析分を集計し、以下のカテゴリで ceo_insights に INSERT:
+      - pattern（行動パターン）
+      - preference（好み）
+      - work_rhythm（稼働リズム: 時間帯・曜日）
+      - tendency（傾向）
+
+  knowledge_base:
+    priority: 2
+    max_age_days: 14
+    auto_update: true
+    blocking: false
+    check_method: supabase_query
+    check_query: >
+      SELECT created_at FROM knowledge_base
+      WHERE status = 'active'
+      ORDER BY created_at DESC LIMIT 1
+    promotion_check: >
+      SELECT rule, confidence FROM knowledge_base
+      WHERE status = 'active' AND confidence >= 3
+    stale_condition: "14日間新規ナレッジなし"
+    update_action: |
+      1. 直近のセッションで修正指示パターンがなかったか prompt_log を確認
+      2. Claude Memory (~/.claude/memory/) に記録された feedback 型メモリを確認
+      3. Supabase側に未反映のナレッジがあれば knowledge_base に INSERT
+      4. confidence >= 3 のルールがあれば CLAUDE.md 昇格を提案
+
+  evaluations:
+    priority: 3
+    max_age_days: 30
+    auto_update: true
+    blocking: false
+    check_method: file_check
+    check_path: ".company/hr/evaluations/"
+    stale_condition: "最終評価から30日超過"
+    update_action: |
+      人事部の5軸評価（自律完遂率/一発OK率/連携効率/目標寄与度/稼働率）を実行:
+      1. 各PJ会社の直近アクティビティを確認
+      2. prompt_log から修正指示・差し戻しパターンを検出
+      3. 評価レポートを .company/hr/evaluations/YYYY-MM-DD.md に出力
+      4. 改善提案があれば .company/hr/proposals/ に記録
+
+  # ── 優先度2: フィードバック系（精度向上に必要） ──
+
+  prep_log_feedback:
+    priority: 6
+    max_age_days: 3
+    auto_update: false
+    blocking: false
+    check_method: file_and_calendar
+    stale_condition: "完了済みMTGで事後フィードバック未入力のものがある"
+    update_action: |
+      1. Google Calendar から過去7日の完了済みMTGを取得
+      2. prep-log/ に対応する FB（quality スコア）があるか確認
+      3. 未入力のMTGをリストアップしてリマインド
+      リマインド形式:
+        「以下のMTGの事後フィードバックが未入力です:
+         - 3/28 A社定例 → 準備は十分でしたか？(1-5)
+         - 3/29 B社レビュー → 準備は十分でしたか？(1-5)」
+
+  intelligence_feedback:
+    priority: 7
+    max_age_days: 7
+    auto_update: false
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/intelligence/reports/"
+    stale_condition: "直近7日のレポートにフィードバック未入力のアイテムがある"
+    update_action: |
+      直近の intelligence レポートを読み、FB未入力の高スコアアイテムを提示:
+        「情報収集レポートへのフィードバックがあれば教えてください:
+         [kw-Claude-1] Claude Code新機能 → 有用/ノイズ？
+         [x-Anthr-2] Anthropic発表 → 有用/ノイズ？」
+
+  preferences_decay:
+    priority: 8
+    max_age_days: 30
+    auto_update: true
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/intelligence/preferences.yaml"
+    stale_condition: "preferences.yaml の最終更新から30日超過"
+    update_action: |
+      preferences.yaml のスコアに30日減衰を適用:
+      score = score + (1.0 - score) * 0.1
+      （デフォルト1.0に向かって10%回帰）
+
+  # ── 優先度2.5: セキュリティ（サプライチェーン保護） ──
+
+  security_audit:
+    priority: 4
+    max_age_days: 30
+    auto_update: false
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/security/audits/"
+    stale_condition: "最終セキュリティ監査から30日超過"
+    update_action: |
+      リマインド:
+        「セキュリティ監査が30日以上更新されていません。
+         全PJの GitHub Actions SHA固定状況、依存関係、CI権限を再チェックしませんか？
+         最終監査: audits/YYYY-MM-DD.md」
+
+  security_scan:
+    priority: 5
+    max_age_days: 7
+    auto_update: true
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/security/audits/scan-latest.md"
+    stale_condition: "週次セキュリティスキャンが7日以上前（GitHub Actions障害の可能性）"
+    update_action: |
+      GitHub Actions の security-scan ワークフローが正常に動いているか確認。
+      障害時は手動で python scripts/security/scan.py を実行。
+
+  # ── 優先度3: 基盤データ（自動更新済みだが確認は必要） ──
+
+  intelligence_reports:
+    priority: 8
+    max_age_days: 1
+    auto_update: true
+    blocking: false
+    check_method: file_check
+    check_path: ".company/departments/intelligence/reports/"
+    stale_condition: "最新レポートが24時間以上前（GitHub Actions障害の可能性）"
+    update_action: |
+      GitHub Actions が正常に動作していない可能性。手動で collect.py を実行:
+      python scripts/intelligence/collect.py
+
+  diary_analysis:
+    priority: 10
+    max_age_days: 30
+    auto_update: false
+    blocking: false
+    check_method: supabase_query
+    check_query: >
+      SELECT created_at FROM diary_analysis
+      ORDER BY created_at DESC LIMIT 1
+    stale_condition: "最終日記分析から30日超過"
+    update_action: |
+      リマインドのみ:
+        「日記分析が30日以上更新されていません。
+         /company diary で近況を記録しませんか？」
+
+# ── 実行ルール ──
+
+  # ── 優先度9: Growth Chronicle（失敗→改善の自動記録） ──
+
+  growth_events:
+    priority: 9
+    max_age_days: 7
+    auto_update: true
+    blocking: false
+    check_method: combined
+    check_query: >
+      SELECT event_date FROM growth_events
+      ORDER BY event_date DESC LIMIT 1
+    stale_condition: "最終記録から7日超過 AND 直近のgit logにfix/refactorコミットが3件以上"
+    update_action: |
+      1. git log --oneline --since="{last_growth_date}" | grep -v "auto-save" で直近コミットを取得
+      2. fix/refactor/revert が3件以上あれば、パターン分析（連続fix、同じキーワードの繰り返し等）
+      3. 検出したパターンを growth_events テーブルに INSERT（event_type, category, severity, phase, title, what_happened, root_cause, countermeasure, result, related_commits, tags）
+      4. 件数と内容をブリーフィングで報告
+
+  # ── 優先度10: ナレッジ昇格チェック ──
+
+  knowledge_promotion:
+    priority: 10
+    max_age_days: 7
+    auto_update: true
+    blocking: false
+    check_method: supabase_query
+    check_query: >
+      SELECT id, category, rule, confidence FROM knowledge_base
+      WHERE status = 'active' AND confidence >= 3
+      AND id NOT IN (SELECT id FROM knowledge_base WHERE status = 'promoted')
+    stale_condition: "confidence ≥ 3 かつ未昇格のルールが存在"
+    update_action: |
+      1. 昇格候補を取得（confidence ≥ 3, status = 'active'）
+      2. 該当ルールを .claude/rules/ の適切なファイルに追記
+      3. knowledge_base の status を 'promoted'、promoted_to を 'rules/{file}' に更新
+      4. ブリーフィングで「ルール昇格しました: {rule}」と報告
+
+  # ── 優先度11: CLAUDE.md サイズ管理 ──
+
+  claude_md_size:
+    priority: 11
+    max_age_days: 0
+    auto_update: true
+    blocking: false
+    check_method: script
+    check_script: "wc -l .claude/CLAUDE.md | awk '{print $1}'"
+    stale_condition: "CLAUDE.md が 200行を超過"
+    update_action: |
+      1. CLAUDE.md の行数を確認
+      2. 200行超過の場合、手順的な記述を .claude/rules/ に分離
+      3. CLAUDE.md から分離した部分を削除し、rules/ への参照に置き換え
+      4. ブリーフィングで「CLAUDE.md を {before}行 → {after}行 にスリム化しました」と報告
+
+  # ── 優先度12: design-philosophy + HowItWorks 同期チェック ──
+
+  design_docs_sync:
+    priority: 12
+    max_age_days: 14
+    auto_update: true
+    blocking: false
+    check_method: combined
+    check_query: >
+      SELECT count(*) FROM growth_events
+      WHERE event_date > (
+        SELECT COALESCE(
+          (SELECT substring(unnest(regexp_matches(
+            pg_read_file('/dev/null'), '.*'))  -- placeholder: use file mtime
+          FROM generate_series(1,1)), '2000-01-01')
+      )
+    stale_condition: "design-philosophy.md の最終更新から14日超過 AND 直近にAI機能変更・設計判断あり"
+    update_action: |
+      1. git log --since="{last_update}" で直近の変更を確認
+      2. AI機能変更（hooks/, edgeAi.ts, ai-agent/）があれば HowItWorks AI Features の内容を更新
+      3. 設計判断（refactor, architecture変更）があれば design-philosophy.md に追記
+      4. 更新履歴テーブルに日付と変更内容を追記
+
+  knowledge_lint:
+    priority: 1
+    max_age_days: 1
+    auto_update: false
+    blocking: false
+    check_method: script
+    check_script: "bash /workspace/.claude/hooks/knowledge-lint.sh"
+    stale_condition: "ナレッジLintが24時間以上未実行。成果物の矛盾・古さ・孤立を検出すべき"
+    update_action: |
+      SessionStart Hook で自動実行。検出結果:
+      - STALE: 30日超未更新のファイル → 更新 or アーカイブ
+      - ORPHANED: 他から参照されていないファイル → index.mdに追記 or 削除
+      - LARGE: 100行超のCLAUDE.md → rules/に分離
+
+  impl_docs_sync:
+    priority: 1.5
+    max_age_days: 0
+    auto_update: false
+    blocking: false
+    check_method: script
+    check_script: |
+      # Compare last modified dates of implementation files vs HowItWorks
+      IMPL_FILES="supabase/functions/ai-agent/index.ts .claude/hooks/*.sh .claude/rules/*.md .company/departments/*/CLAUDE.md .company/freshness-policy.yaml"
+      DOC_FILE="company-dashboard/src/pages/HowItWorks.tsx"
+      DOC_DATE=$(git log -1 --format=%ct -- "$DOC_FILE" 2>/dev/null || echo 0)
+      STALE=""
+      for pattern in $IMPL_FILES; do
+        for f in $pattern; do
+          [ -f "$f" ] || continue
+          F_DATE=$(git log -1 --format=%ct -- "$f" 2>/dev/null || echo 0)
+          if [ "$F_DATE" -gt "$DOC_DATE" ]; then
+            STALE="$STALE $f"
+          fi
+        done
+      done
+      [ -n "$STALE" ] && echo "STALE:$STALE"
+    stale_condition: "実装ファイルが HowItWorks より新しい → ドキュメントが古くなっている"
+    update_action: |
+      1. git log で実装変更の内容を確認
+      2. HowItWorks.tsx の該当セクションを更新
+      3. 対応表: ai-agent→AI Features, hooks→Overview/Harness, rules→Operations, departments→Operations
+
+  dept_knowledge_refresh:
+    priority: 3.5
+    max_age_days: 14
+    auto_update: false
+    blocking: false
+    check_method: file_check
+    check_file: ".company/departments/ops/knowledge-updates/"
+    stale_condition: "部署知識ローテーションが14日超過。各部署のベストプラクティスが古くなっている可能性"
+    update_action: |
+      1. ローテーション番号を日付から算出（epoch日数 ÷ 14 % 5）
+      2. references/dept-knowledge-sources.md からローテーション対象2部署を特定
+      3. 情報収集部: 対象部署の知識ソースをWeb調査（検索キーワード参照）
+      4. 運営改善部: 調査結果と現行CLAUDE.mdのGAP分析
+      5. GAP あり → 社長に更新提案を提示（自動更新しない）
+      6. 結果を departments/{dept}/knowledge-updates/YYYY-MM-DD.md に記録
+
+  harness_research:
+    priority: 2.5
+    max_age_days: 7
+    auto_update: false
+    blocking: false
+    check_method: file_check
+    check_file: ".company/departments/research/tech/harness-engineering-claude-code-2026.md"
+    stale_condition: "ハーネスエンジニアリング調査が7日超過。Claude Code の新機能・新Hookパターンを見逃している可能性"
+    update_action: |
+      1. 情報収集部: Claude Code 最新リリースノート・ハーネス記事をWeb調査
+      2. 運営改善部: 現行システムと最新ベストプラクティスのギャップ分析
+      3. 並列起動（Agent tool × 2）→ 結果統合
+      4. HowItWorks Improvement Proposals タブの更新提案を社長に提示
+      5. research/tech/harness-engineering-claude-code-2026.md を更新
+
+execution_rules:
+  # ブリーフィング表示順: priority 昇順
+  # auto_update=true のものは確認なしで実行
+  # auto_update=false のものはリマインドのみ（社長に判断を委ねる）
+  # blocking=true のものはブリーフィング前に完了を待つ
+  # 1回の起動で更新するのは最大3件（コンテキスト消費を抑制）
+  max_auto_updates_per_session: 3
+
+  # stale データの報告形式
+  report_format: |
+    📊 データ鮮度チェック:
+      ✅ prompt_log — リアルタイム（最終: 数分前）
+      ✅ intelligence — 最新（最終: 今朝 09:00）
+      ⚠️ ceo_insights — 12日経過（未分析プロンプト: 34件）→ 自動更新中...
+      ⚠️ evaluations — 38日経過 → 自動更新中...
+      💬 prep-log FB — 2件未入力 → 後ほどお聞きします
+      ✅ knowledge_base — 5日前（active: 8件）

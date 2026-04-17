@@ -1,0 +1,132 @@
+{"ts":"2026-04-07T15:36:17+09:00","event":"agent_dispatch","dept":"Explore","desc":"Read all 6 RFI PDFs thoroughly","model":"opus","background":false}
+{"ts":"2026-04-07T15:47:55+09:00","event":"agent_dispatch","dept":"Explore","desc":"Read Sky and Hitachi RFIs","model":"opus","background":false}
+{"ts":"2026-04-07T15:48:00+09:00","event":"agent_dispatch","dept":"Explore","desc":"Read PwC and SF RFIs","model":"opus","background":false}
+{"ts":"2026-04-07T15:48:25+09:00","event":"agent_dispatch","dept":"Explore","desc":"Read Deloitte and Fujitsu RFIs","model":"opus","background":false}
+{"ts":"2026-04-07T21:57:28+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"競合・市場調査：AI仮想組織SaaS","model":"opus","background":true}
+{"ts":"2026-04-07T21:57:50+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"商用プロダクトコンセプト設計","model":"opus","background":true}
+{"ts":"2026-04-07T22:09:41+09:00","event":"agent_dispatch","dept":"Explore","desc":"設計思想・Vision・diary機能を調査","model":"default","background":false}
+{"ts":"2026-04-07T22:10:24+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"ジャーナリング×AI×ウェルビーイング市場調査","model":"opus","background":true}
+{"ts":"2026-04-07T22:10:54+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"Narrator商用プロダクト形態設計","model":"opus","background":true}
+{"ts":"2026-04-07T22:41:22+09:00","event":"agent_dispatch","dept":"Explore","desc":"How It Works ページの構造調査","model":"default","background":false}
+{"ts":"2026-04-07T22:46:25+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"Intelligence: latest news collection","model":"haiku","background":true}
+{"ts":"2026-04-07T23:17:14+09:00","event":"agent_dispatch","dept":"Explore","desc":"Dreams ほしい物追加バグ調査","model":"default","background":false}
+{"ts":"2026-04-07T23:32:00+09:00","event":"agent_dispatch","dept":"Explore","desc":"ニュース表示バグ調査","model":"default","background":false}
+{"ts":"2026-04-08T00:06:21+09:00","event":"agent_dispatch","dept":"Explore","desc":"全分析系処理の列挙","model":"haiku","background":false}
+{"ts":"2026-04-08T10:18:42+09:00","event":"agent_dispatch","dept":"Explore","desc":"ニュース機能のコード調査","model":"sonnet","background":false}
+{"ts":"2026-04-08T10:32:01+09:00","event":"agent_dispatch","dept":"general-purpose","desc":"調査部: auto-push消失の根本原因調査","model":"opus","background":false}
+{"ts":"2026-04-08T10:49:34+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"リファクタリング最新動向リサーチ","model":"opus","background":true}
+{"ts":"2026-04-08T10:51:29+09:00","event":"agent_dispatch","dept":"Explore","desc":"ニュース収集の全コード把握","model":"sonnet","background":false}
+{"ts":"2026-04-08T11:22:49+09:00","event":"agent_dispatch","dept":"Explore","desc":"GCal認証の現状調査","model":"sonnet","background":false}
+{"ts":"2026-04-08T23:24:42+09:00","event":"agent_dispatch","dept":"Explore","desc":"AIチャット画面のコード調査","model":"sonnet","background":false}
+{"ts":"2026-04-09T10:55:50+09:00","event":"agent_dispatch","dept":"資料制作部","desc":"プレゼン想定問答集の作成","model":"default","background":false}
+{"ts":"2026-04-09T11:07:13+09:00","event":"agent_dispatch","dept":"Explore","desc":"LLM対応状況の技術調査","model":"default","background":false}
+{"ts":"2026-04-09T11:29:30+09:00","event":"agent_dispatch","dept":"Explore","desc":"Calendar sign-in bug investigation","model":"sonnet","background":false}
+{"ts":"2026-04-09T12:13:09+09:00","event":"agent_dispatch","dept":"資料制作部","desc":"MTG説明ガイドの作成","model":"default","background":false}
+{"ts":"2026-04-09T16:22:21+09:00","event":"agent_dispatch","dept":"Explore","desc":"Explore emotion dashboard code","model":"haiku","background":false}
+{"ts":"2026-04-09T16:29:35+09:00","event":"agent_dispatch","dept":"Explore","desc":"focus-you現状把握","model":"default","background":false}
+{"ts":"2026-04-09T16:39:26+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"focus-you体験設計フレームワーク","model":"default","background":false}
+{"ts":"2026-04-09T18:48:57+09:00","event":"agent_dispatch","dept":"Explore","desc":"現状のモデル利用と動線調査","model":"default","background":false}
+{"ts":"2026-04-09T19:04:36+09:00","event":"agent_dispatch","dept":"","desc":"Snowflake 2026 fact check","model":"sonnet","background":false}
+{"ts":"2026-04-09T19:04:47+09:00","event":"agent_dispatch","dept":"","desc":"AWS data platform 2026 fact check","model":"sonnet","background":false}
+{"ts":"2026-04-09T19:04:54+09:00","event":"agent_dispatch","dept":"","desc":"Databricks 2026 fact check","model":"sonnet","background":false}
+{"ts":"2026-04-09T19:16:42+09:00","event":"agent_dispatch","dept":"テスト部","desc":"hook test","model":"haiku","background":false}
+{"ts":"2026-04-10T09:19:38+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"マーケ視点でロゴ評価","model":"opus","background":false}
+{"ts":"2026-04-10T09:20:27+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"心理学視点でロゴ評価","model":"opus","background":false}
+{"ts":"2026-04-10T09:47:36+09:00","event":"agent_dispatch","dept":"Explore","desc":"Explore calendar Edge Function","model":"haiku","background":false}
+{"ts":"2026-04-10T13:24:33+09:00","event":"agent_dispatch","dept":"","desc":"RFI回答6社の精査","model":"opus","background":false}
+{"ts":"2026-04-10T16:34:02+09:00","event":"agent_dispatch","dept":"","desc":"Sky/Salesforce RFI確認","model":"sonnet","background":false}
+{"ts":"2026-04-10T16:35:07+09:00","event":"agent_dispatch","dept":"","desc":"Sky RFI BI閲覧者数確認","model":"sonnet","background":false}
+{"ts":"2026-04-10T16:41:57+09:00","event":"agent_dispatch","dept":"","desc":"全6社RFIコスト精査","model":"opus","background":false}
+{"ts":"2026-04-10T22:22:52+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"Claude Code最新情報の収集","model":"haiku","background":false}
+{"ts":"2026-04-10T22:25:34+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"Claude Code docs deep search","model":"sonnet","background":false}
+{"ts":"2026-04-10T22:43:48+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"#89 Managed Agents 調査","model":"opus","background":true}
+{"ts":"2026-04-10T22:44:02+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"#86 検索DB活用調査","model":"opus","background":true}
+{"ts":"2026-04-10T23:04:53+09:00","event":"agent_dispatch","dept":"Explore","desc":"Find news collection cron setup","model":"haiku","background":false}
+{"ts":"2026-04-10T23:36:42+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"定期情報収集レポート作成","model":"opus","background":false}
+{"ts":"2026-04-11T15:10:46+09:00","event":"agent_dispatch","dept":"Explore","desc":"Circuit graph extraction code survey","model":"default","background":false}
+{"ts":"2026-04-11T16:07:33+09:00","event":"agent_dispatch","dept":"Explore","desc":"Explore focus-you experience design","model":"sonnet","background":false}
+{"ts":"2026-04-11T16:08:51+09:00","event":"agent_dispatch","dept":"Explore","desc":"Explore rikyu server structure","model":"sonnet","background":false}
+{"ts":"2026-04-11T16:17:10+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"rikyu体験設計ドキュメント作成","model":"default","background":false}
+{"ts":"2026-04-11T16:23:05+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"system-spec体験設計ページ追加","model":"sonnet","background":false}
+{"ts":"2026-04-11T21:07:51+09:00","event":"agent_dispatch","dept":"Explore","desc":"Explore diary rhythm UI location","model":"default","background":false}
+{"ts":"2026-04-11T21:52:03+09:00","event":"agent_dispatch","dept":"Explore","desc":"Audit product vs personal features","model":"default","background":false}
+{"ts":"2026-04-11T22:17:53+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"体験設計に非同期処理体験を追加","model":"default","background":false}
+{"ts":"2026-04-12T07:42:04+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Migrate 5 CLI legacy pages to React","model":"sonnet","background":false}
+{"ts":"2026-04-12T09:08:48+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Fix Calendar, Finance, Artifacts","model":"sonnet","background":true}
+{"ts":"2026-04-12T09:19:43+09:00","event":"agent_dispatch","dept":"Explore","desc":"Thorough legacy vs React audit","model":"default","background":false}
+{"ts":"2026-04-12T09:22:11+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Fix Settings + Insights gaps","model":"sonnet","background":true}
+{"ts":"2026-04-12T09:22:30+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Fix Growth Work Intensity","model":"sonnet","background":true}
+{"ts":"2026-04-12T10:28:58+09:00","event":"agent_dispatch","dept":"Explore","desc":"Dashboard codebase exploration","model":"sonnet","background":false}
+{"ts":"2026-04-12T11:19:24+09:00","event":"agent_dispatch","dept":"Explore","desc":"調査: ローディング遅延問題 #102","model":"sonnet","background":false}
+{"ts":"2026-04-12T11:20:43+09:00","event":"agent_dispatch","dept":"Explore","desc":"調査: AIチャットのフレームワーク問題 #101","model":"sonnet","background":false}
+{"ts":"2026-04-12T11:28:25+09:00","event":"agent_dispatch","dept":"Explore","desc":"Finance page code review","model":"default","background":false}
+{"ts":"2026-04-12T11:32:20+09:00","event":"agent_dispatch","dept":"Explore","desc":"Find ceo_insights generation logic","model":"sonnet","background":false}
+{"ts":"2026-04-12T16:04:53+09:00","event":"agent_dispatch","dept":"Explore","desc":"Survey current AI Partner UX","model":"sonnet","background":false}
+{"ts":"2026-04-12T16:25:39+09:00","event":"agent_dispatch","dept":"Explore","desc":"Investigate Growth tracking system","model":"default","background":false}
+{"ts":"2026-04-12T20:01:32+09:00","event":"agent_dispatch","dept":"Explore","desc":"Survey Phase 2 target files","model":"sonnet","background":false}
+{"ts":"2026-04-12T21:35:11+09:00","event":"agent_dispatch","dept":"Explore","desc":"Survey existing calendar-like views","model":"sonnet","background":false}
+{"ts":"2026-04-12T22:12:00+09:00","event":"agent_dispatch","dept":"Explore","desc":"Map existing AI partner chat system","model":"default","background":false}
+{"ts":"2026-04-13T10:26:34+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"MDS vs Lakehouse trends 2025-2026","model":"default","background":true}
+{"ts":"2026-04-13T17:19:04+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"りきゅうUX体験設計","model":"default","background":false}
+{"ts":"2026-04-13T17:37:28+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"rikyu体験設計 大幅修正","model":"default","background":false}
+{"ts":"2026-04-13T17:42:00+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"focus-you参考でrikyu再整形","model":"default","background":false}
+{"ts":"2026-04-13T17:45:56+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"rikyu UI/UX具体化","model":"default","background":false}
+{"ts":"2026-04-13T18:00:03+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"rikyu experience-design ページ全面書き直し","model":"default","background":false}
+{"ts":"2026-04-14T09:33:38+09:00","event":"agent_dispatch","dept":"Explore","desc":"data-knowledge/knowledge ページ要約","model":"default","background":false}
+{"ts":"2026-04-14T10:15:59+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"experience-design page タブ構成で全面実装","model":"default","background":false}
+{"ts":"2026-04-14T10:38:52+09:00","event":"agent_dispatch","dept":"Explore","desc":"Explore focus-you calendar implementation","model":"default","background":false}
+{"ts":"2026-04-14T20:41:41+09:00","event":"agent_dispatch","dept":"Explore","desc":"polaris全体パイプライン構成調査","model":"default","background":false}
+{"ts":"2026-04-14T20:43:27+09:00","event":"agent_dispatch","dept":"Explore","desc":"GNN調査資料の整理","model":"default","background":false}
+{"ts":"2026-04-15T09:47:20+09:00","event":"agent_dispatch","dept":"Explore","desc":"Calendar fetching investigation","model":"default","background":false}
+{"ts":"2026-04-15T09:51:32+09:00","event":"agent_dispatch","dept":"Explore","desc":"Request screenshot attach investigation","model":"default","background":false}
+{"ts":"2026-04-15T10:00:54+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Calendar fetch bug fix","model":"default","background":false}
+{"ts":"2026-04-15T10:17:58+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"focus-you Today画面 改修 (#113 #114)","model":"default","background":false}
+{"ts":"2026-04-15T10:22:02+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Request image attachment","model":"default","background":false}
+{"ts":"2026-04-15T10:23:02+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Today改修の完了と commit","model":"default","background":false}
+{"ts":"2026-04-15T10:29:09+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Resume request attachment agent","model":"default","background":false}
+{"ts":"2026-04-15T10:42:10+09:00","event":"agent_dispatch","dept":"QA検証部","desc":"Browser verify calendar and requests","model":"default","background":false}
+{"ts":"2026-04-15T10:42:40+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Update Blueprint doc","model":"default","background":false}
+{"ts":"2026-04-15T10:49:01+09:00","event":"agent_dispatch","dept":"QA検証部","desc":"Resume QA verification","model":"default","background":false}
+{"ts":"2026-04-15T10:52:03+09:00","event":"agent_dispatch","dept":"QA検証部","desc":"QA with auth workaround","model":"default","background":false}
+{"ts":"2026-04-15T11:09:01+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"データ基盤3種学習資料の作成","model":"default","background":false}
+{"ts":"2026-04-15T11:12:20+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集ブリーフィング","model":"default","background":false}
+{"ts":"2026-04-15T11:16:41+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集ブリーフィング再実行","model":"default","background":false}
+{"ts":"2026-04-15T15:29:12+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集: 直近24h 最優先","model":"default","background":false}
+{"ts":"2026-04-15T15:31:53+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集検証続行","model":"default","background":false}
+{"ts":"2026-04-15T15:35:23+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"データ基盤3強のAI活用編ハンズオン","model":"default","background":false}
+{"ts":"2026-04-15T15:36:21+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"focus-you本番基盤としての3基盤評価","model":"default","background":true}
+{"ts":"2026-04-16T13:30:29+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"第2弾AI活用編の残りパターン完成","model":"default","background":true}
+{"ts":"2026-04-16T13:38:17+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集部: 最新情報収集","model":"default","background":false}
+{"ts":"2026-04-16T13:51:02+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"残りのAI活用編ファイル書き込み","model":"default","background":true}
+{"ts":"2026-04-16T15:41:02+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"AI活用編 残り15ファイル書き込み","model":"default","background":false}
+{"ts":"2026-04-16T15:41:42+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"残り5ファイル書き込み完了","model":"default","background":true}
+{"ts":"2026-04-16T17:41:25+09:00","event":"agent_dispatch","dept":"","desc":"FY26-27 4行対応のデータ・アルゴ追加項目整理","model":"opus","background":false}
+{"ts":"2026-04-17T00:09:53+09:00","event":"agent_dispatch","dept":"Explore","desc":"Explore calendar codebase","model":"default","background":false}
+{"ts":"2026-04-17T09:33:13+09:00","event":"agent_dispatch","dept":"claude-code-guide","desc":"Claude Code effort level設定調査","model":"default","background":false}
+{"ts":"2026-04-17T09:39:27+09:00","event":"agent_dispatch","dept":"claude-code-guide","desc":"Claude Code thinking keyword budget確認","model":"default","background":false}
+{"ts":"2026-04-17T09:42:24+09:00","event":"agent_dispatch","dept":"claude-code-guide","desc":"Claude Code effort level制御方法調査","model":"default","background":false}
+{"ts":"2026-04-17T09:53:34+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"Morning briefing intelligence gathering","model":"default","background":false}
+{"ts":"2026-04-17T10:00:20+09:00","event":"agent_dispatch","dept":"Explore","desc":"rikyu 伊藤園デモ 現状把握","model":"default","background":false}
+{"ts":"2026-04-17T10:04:33+09:00","event":"agent_dispatch","dept":"Explore","desc":"rikyu server 画面構成の把握","model":"default","background":false}
+{"ts":"2026-04-17T10:12:04+09:00","event":"agent_dispatch","dept":"Explore","desc":"focus-you LLM usage audit","model":"default","background":false}
+{"ts":"2026-04-17T10:24:21+09:00","event":"agent_dispatch","dept":"Explore","desc":"伊藤園データ型とコンポーネント構造抽出","model":"default","background":false}
+{"ts":"2026-04-17T10:50:19+09:00","event":"agent_dispatch","dept":"調査部","desc":"りきゅう設計の整合性マップ作成","model":"default","background":false}
+{"ts":"2026-04-17T11:05:13+09:00","event":"agent_dispatch","dept":"Explore","desc":"本物のアジェンダテーブル/KP組織図の構造抽出","model":"default","background":false}
+{"ts":"2026-04-17T11:09:25+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"りきゅう体験設計v1.2案","model":"default","background":false}
+{"ts":"2026-04-17T11:12:01+09:00","event":"agent_dispatch","dept":"Explore","desc":"focus-you 現状把握","model":"default","background":false}
+{"ts":"2026-04-17T11:19:20+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"セキュリティ・アーキテクチャ調査","model":"default","background":false}
+{"ts":"2026-04-17T11:19:22+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"AWS vs Azure for DX","model":"default","background":false}
+{"ts":"2026-04-17T11:19:28+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"Vercel vs Cloudflare 比較","model":"default","background":false}
+{"ts":"2026-04-17T11:25:11+09:00","event":"agent_dispatch","dept":"資料制作部","desc":"統合インフラ意思決定レポート","model":"default","background":false}
+{"ts":"2026-04-17T11:30:56+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"りきゅうデータv15＋アルゴv3＋ナレッジ層","model":"default","background":false}
+{"ts":"2026-04-17T11:44:03+09:00","event":"agent_dispatch","dept":"調査部","desc":"v1.2とv15の整合性レビュー","model":"default","background":false}
+{"ts":"2026-04-17T11:52:10+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"バッチ処理U10〜U12設計追加","model":"default","background":true}
+{"ts":"2026-04-17T12:52:04+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"system-spec Group A 更新","model":"default","background":true}
+{"ts":"2026-04-17T12:52:28+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"system-spec Group B 更新","model":"default","background":true}
+{"ts":"2026-04-17T12:52:54+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"system-spec Group C 更新","model":"default","background":true}
+{"ts":"2026-04-17T12:53:27+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"system-spec Group D 更新","model":"default","background":true}
+{"ts":"2026-04-17T12:55:55+09:00","event":"agent_dispatch","dept":"Explore","desc":"Magentic既存実装の現状把握","model":"default","background":false}
+{"ts":"2026-04-17T13:14:29+09:00","event":"agent_dispatch","dept":"Explore","desc":"既存JsonOutputWriter/Pydantic/types完全照合","model":"default","background":false}
+{"ts":"2026-04-17T13:18:57+09:00","event":"agent_dispatch","dept":"資料制作部","desc":"金融案件向け学習ロードマップ","model":"default","background":false}
+{"ts":"2026-04-17T13:19:55+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"focus-you 商用版セキュリティ再評価","model":"default","background":false}
+{"ts":"2026-04-17T13:24:24+09:00","event":"agent_dispatch","dept":"資料制作部","desc":"focus-you 単独レポート作成","model":"default","background":false}

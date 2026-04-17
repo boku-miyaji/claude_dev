@@ -1,0 +1,637 @@
+　<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIチャットの立ち位置と動線 — 設計案</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --surface2: #f5f5f4;
+    --border: #e7e5e4;
+    --text: #18181b;
+    --text2: #52525b;
+    --text3: #a1a1aa;
+    --accent: #2563eb;
+    --accent-soft: #eff6ff;
+    --green: #16a34a;
+    --green-soft: #f0fdf4;
+    --amber: #d97706;
+    --amber-soft: #fffbeb;
+    --red: #dc2626;
+    --red-soft: #fef2f2;
+    --mono: 'SF Mono', ui-monospace, 'Menlo', monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Inter', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    margin: 0;
+    padding: 40px 24px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container {
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+  }
+  .subtitle {
+    color: var(--text2);
+    font-size: 15px;
+    margin-bottom: 48px;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 64px 0 20px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 28px 0 8px;
+    color: var(--text);
+  }
+  p { margin: 0 0 12px; color: var(--text2); font-size: 14px; }
+  .intro p { font-size: 15px; }
+
+  /* Position cards */
+  .positions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin: 20px 0 28px;
+  }
+  .position-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .position-card.recommended {
+    border-color: var(--green);
+    background: var(--green-soft);
+    position: relative;
+  }
+  .position-card .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .position-card.recommended .tag { color: var(--green); }
+  .position-card h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--text);
+  }
+  .position-card .desc {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 12px;
+    line-height: 1.55;
+  }
+  .position-card .example {
+    font-size: 12px;
+    color: var(--text2);
+    background: rgba(0,0,0,0.03);
+    border-left: 2px solid var(--text3);
+    padding: 8px 10px;
+    border-radius: 0 6px 6px 0;
+    line-height: 1.55;
+  }
+  .position-card.recommended .example {
+    background: rgba(22, 163, 74, 0.06);
+    border-left-color: var(--green);
+  }
+
+  /* Comparison table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 28px;
+    font-size: 13px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--surface2);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.label { color: var(--text2); font-weight: 500; width: 30%; }
+  td.good { color: var(--green); font-weight: 600; }
+  td.warn { color: var(--amber); }
+  td.bad { color: var(--red); }
+  td .recommended-cell {
+    background: var(--green-soft);
+    color: var(--green);
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* Mockup */
+  .mockup {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 16px 0 28px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .mockup .label {
+    font-family: -apple-system, sans-serif;
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  /* Option blocks */
+  .option {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+  }
+  .option.recommended {
+    border-color: var(--green);
+    background: var(--green-soft);
+  }
+  .option-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .option-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .option-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--green);
+    color: #fff;
+  }
+  .option p { font-size: 13px; }
+
+  /* Recommendation box */
+  .recommendation {
+    background: linear-gradient(135deg, var(--green-soft) 0%, #ecfdf5 100%);
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 28px 28px 24px;
+    margin: 32px 0;
+  }
+  .recommendation .label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+  .recommendation h3 {
+    font-size: 20px;
+    margin: 0 0 16px;
+    color: var(--text);
+  }
+  .recommendation p {
+    color: var(--text2);
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .recommendation ul {
+    margin: 12px 0 0;
+    padding-left: 20px;
+    font-size: 14px;
+    color: var(--text2);
+  }
+  .recommendation li { margin-bottom: 6px; }
+
+  /* Mockup boxes with better visual */
+  .mockup-frame {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0 28px;
+    flex-wrap: wrap;
+  }
+  .mockup-screen {
+    flex: 1;
+    min-width: 300px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .mockup-screen .chrome {
+    background: var(--surface2);
+    padding: 8px 14px;
+    font-size: 11px;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mockup-screen .chrome::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--text3);
+    border-radius: 50%;
+    opacity: 0.3;
+  }
+  .mockup-screen .body {
+    padding: 18px;
+  }
+  .mockup-greeting {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .mockup-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .mockup-card.partner {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .mockup-card.partner .partner-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .mockup-card .line {
+    color: var(--text);
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .mockup-card .cta {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .mockup-card.expanded {
+    padding: 14px;
+  }
+  .mockup-chat-msg {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .mockup-chat-msg.user {
+    background: #fff;
+    color: var(--text);
+    text-align: right;
+  }
+  .mockup-chat-msg.ai {
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--text);
+  }
+  .mockup-textarea {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  /* Summary box */
+  .summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  .summary h3 { margin-top: 0; }
+  .summary p { color: var(--text2); font-size: 14px; }
+
+  /* Footer */
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--text3);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .positions { grid-template-columns: 1fr; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 19px; }
+    body { padding: 24px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="eyebrow">focus-you design proposal</div>
+  <h1>AIチャットの立ち位置と動線</h1>
+  <div class="subtitle">ChatGPT と差別化し、このシステムでしか成立しない相棒を作る</div>
+
+  <!-- Intro -->
+  <div class="intro">
+    <p>現状、AIパートナー（Top の1行コメント）と AIチャット（独立タブ）が完全に分離していて、繋がっていない。切り替えが必要なタブは認知コストが高く、汎用的な質問は結局 ChatGPT に流れてしまう。</p>
+    <p>「日記・感情・時間の使い方を知っている相手にしか聞けないこと」だけに用途を絞り、動線もそれに合わせて作り直す。</p>
+  </div>
+
+  <!-- ============ 1. 立ち位置 ============ -->
+  <h2>1. 立ち位置の候補</h2>
+
+  <div class="positions">
+
+    <div class="position-card">
+      <div class="tag">A案</div>
+      <h4>メンター（先生／師）</h4>
+      <div class="desc">年上で経験豊富、少し距離がある相手。質問に対して俯瞰的な視点を返す。</div>
+      <div class="example">「この案件受けるか悩んでます」<br>→「過去の似た選択を振り返ると、あなたは◯◯を優先してきました。今回の違いは何ですか？」</div>
+    </div>
+
+    <div class="position-card recommended">
+      <div class="tag">B案 ✦ 推奨</div>
+      <h4>相棒（バディ）</h4>
+      <div class="desc">対等で、同じ目線で一緒に考える相手。親しさがある。答えを押し付けず問い返してくれる。</div>
+      <div class="example">「最近モヤモヤしてる」<br>→「うん、日記読んでると先週の◯◯から引きずってる気がする。あれ、自分でもしんどかったよね」</div>
+    </div>
+
+    <div class="position-card">
+      <div class="tag">C案</div>
+      <h4>未来の自分（5年後の自分）</h4>
+      <div class="desc">価値観を共有する「自分そのもの」。精神的な繋がりが強い。時制が独特。</div>
+      <div class="example">「この選択正しい？」<br>→「5年後の俺から見ると、こっちを選んだ方が後悔してない。理由は今の俺が◯◯を大事にしてるから」</div>
+    </div>
+
+    <div class="position-card">
+      <div class="tag">D案</div>
+      <h4>聞き役（カウンセラー）</h4>
+      <div class="desc">答えを出さない。問い返し、深掘り、整理だけする。穏やかで判断しない。</div>
+      <div class="example">「案件受けるか迷ってる」<br>→「一番引っかかってる部分はどこ？」「それを決めると何が変わる？」</div>
+    </div>
+
+  </div>
+
+  <h3>立ち位置 比較表</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>観点</th>
+        <th>A メンター</th>
+        <th>B 相棒</th>
+        <th>C 未来の自分</th>
+        <th>D 聞き役</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="label">親近感</td><td>低</td><td class="good">高</td><td class="good">最高</td><td>中</td></tr>
+      <tr><td class="label">指示性（答えくれる）</td><td>高</td><td>中</td><td>中</td><td>低</td></tr>
+      <tr><td class="label">ChatGPT との差</td><td class="bad">小</td><td>中</td><td class="good">大</td><td>中</td></tr>
+      <tr><td class="label">人生相談への適性</td><td>中</td><td class="good">高</td><td class="good">高</td><td class="good">高</td></tr>
+      <tr><td class="label">初回の違和感</td><td>小</td><td>小</td><td class="warn">大（慣れ必要）</td><td>中</td></tr>
+      <tr><td class="label">使い続けたときの重み</td><td>浅い</td><td>中</td><td class="good">深い</td><td class="good">深い</td></tr>
+      <tr><td class="label">実装難易度</td><td>低</td><td>低</td><td>中</td><td>低</td></tr>
+    </tbody>
+  </table>
+
+  <div class="summary">
+    <h3>推奨: B 相棒 + D 聞き役のハイブリッド</h3>
+    <p>対等な親しみと、答えを押し付けない問い返し。「あなたを知ってる相棒が、考えを整理してくれる」感じ。C 未来の自分は魅力的だが、初回ユーザーが戸惑いやすい。</p>
+  </div>
+
+  <!-- ============ 2. 動線 ============ -->
+  <h2>2. 動線の候補</h2>
+
+  <div class="option">
+    <div class="option-header">
+      <div class="option-title">案① 独立タブ維持（現状）</div>
+    </div>
+    <p>サイドバーに「AI Chat」タブを残す。クリックして別画面で会話する。分かりやすいが、わざわざ切り替える必要あり。「何を聞くか」の導線がなく、結局 ChatGPT 的に使われる。</p>
+  </div>
+
+  <div class="option recommended">
+    <div class="option-header">
+      <div class="option-title">案② AIパートナーから深掘り</div>
+      <div class="option-badge">推奨</div>
+    </div>
+    <p>Top の AI Partner の1行コメントをクリックすると、その場でカードが展開して対話が始まる。AI Chat タブは廃止。タブ切り替え不要で、文脈が継続する。</p>
+
+    <div class="mockup-frame">
+      <div class="mockup-screen">
+        <div class="chrome">Today — クリック前</div>
+        <div class="body">
+          <div class="mockup-greeting">おはよう、ゆうた</div>
+          <div class="mockup-card partner">
+            <div class="partner-label">相棒</div>
+            <div class="line">昨日の「疲れた」が気になってる。</div>
+            <div class="cta">もう少し話す →</div>
+          </div>
+          <div class="mockup-card">Tasks / Habits / ...</div>
+        </div>
+      </div>
+
+      <div class="mockup-screen">
+        <div class="chrome">Today — 展開後</div>
+        <div class="body">
+          <div class="mockup-greeting">おはよう、ゆうた</div>
+          <div class="mockup-card partner expanded">
+            <div class="partner-label">相棒</div>
+            <div class="line" style="margin-bottom: 10px;">昨日の「疲れた」が気になってる。</div>
+            <div class="mockup-chat-msg user">三茶ワークで集中できない日が続いてる</div>
+            <div class="mockup-chat-msg ai">そっか。先週までは調子良かったよね。何が変わったと思う？</div>
+            <div class="mockup-textarea">入力してください...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option recommended">
+    <div class="option-header">
+      <div class="option-title">案③ 日記投稿直後のインライン誘い</div>
+      <div class="option-badge">推奨</div>
+    </div>
+    <p>日記を書いて「記録する」を押した直後、その場で相棒が一言反応する。書いた直後の新鮮な感情を捕まえられる。案② と組み合わせ可能。</p>
+
+    <div class="mockup-frame">
+      <div class="mockup-screen">
+        <div class="chrome">日記投稿直後</div>
+        <div class="body">
+          <div class="mockup-textarea" style="margin-bottom: 10px;">今日は三茶ワークで4時間集中した。でも夕方から気分が落ちた...</div>
+          <div style="font-size: 11px; color: var(--green); margin-bottom: 12px;">✓ 保存しました</div>
+          <div class="mockup-card partner">
+            <div class="partner-label">相棒</div>
+            <div class="line">三茶ワーク、最近よく出てくるね。ここが一番集中できる場所？</div>
+            <div class="cta">話す →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option">
+    <div class="option-header">
+      <div class="option-title">案④ 全ページ共通フローティング（右下常駐）</div>
+    </div>
+    <p>どのページでも右下に💬ボタンが常駐。いつでも呼び出せるが「用途が絞れず汎用チャット化しやすい」懸念が戻ってくる。</p>
+  </div>
+
+  <h3>動線 比較表</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>観点</th>
+        <th>① 独立タブ</th>
+        <th>② Partner 深掘り</th>
+        <th>③ 日記後インライン</th>
+        <th>④ フローティング</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="label">切り替えコスト</td><td class="bad">高</td><td class="good">低</td><td class="good">低</td><td class="good">低</td></tr>
+      <tr><td class="label">発見しやすさ</td><td class="good">高</td><td>中</td><td class="good">高</td><td class="good">高</td></tr>
+      <tr><td class="label">汎用チャット化防止</td><td class="bad">弱</td><td class="good">強</td><td class="good">強</td><td class="bad">弱</td></tr>
+      <tr><td class="label">文脈の継続</td><td class="bad">弱（空から開始）</td><td class="good">強</td><td class="good">強</td><td class="bad">弱</td></tr>
+      <tr><td class="label">初回ユーザーの迷い</td><td>中</td><td>小</td><td class="good">最小</td><td>中</td></tr>
+      <tr><td class="label">人生相談への誘導</td><td class="bad">弱</td><td class="good">強</td><td>中</td><td class="bad">弱</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============ 3. 推奨構成 ============ -->
+  <h2>3. 推奨構成</h2>
+
+  <div class="recommendation">
+    <div class="label">Final Recommendation</div>
+    <h3>B 相棒 × 案②+③ の組み合わせ</h3>
+    <p><strong>立ち位置</strong>: 対等な相棒が、答えを押し付けずに問い返してくれる。</p>
+    <p><strong>動線</strong>: 独立タブは廃止。以下の2つの入口で Today 画面に統合する。</p>
+    <ul>
+      <li><strong>入口1</strong>: AIパートナーの1行コメントをクリック → その場で展開して対話開始</li>
+      <li><strong>入口2</strong>: 日記を書いた直後に「相棒の一言」→ そのまま続けて対話</li>
+    </ul>
+  </div>
+
+  <h3>推奨構成の全体像</h3>
+
+  <div class="mockup-screen" style="margin: 16px 0 28px;">
+    <div class="chrome">Today ページ（推奨構成）</div>
+    <div class="body">
+      <div class="mockup-greeting">おはよう、ゆうた</div>
+      <div style="font-size: 11px; color: var(--text3); margin-bottom: 14px;">2026年4月12日(日) ☀️ 18℃/10℃</div>
+
+      <div class="mockup-card partner">
+        <div class="partner-label">相棒</div>
+        <div class="line">昨日の「疲れた」が気になってる。</div>
+        <div class="cta">もう少し話す →</div>
+      </div>
+
+      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin: 18px 0 8px;">今日の日記</div>
+      <div class="mockup-textarea">今日はどんな一日になりそう？</div>
+      <div style="font-size: 11px; color: var(--text3); margin-top: 6px;">※ 投稿後に相棒が反応する</div>
+
+      <div style="font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin: 18px 0 8px;">今日やること</div>
+      <div class="mockup-card">Tasks / Habits / ...</div>
+    </div>
+  </div>
+
+  <h3>既存との差分（実装観点）</h3>
+  <div class="summary">
+    <p>・サイドバーから <code>AI Chat</code> タブを削除</p>
+    <p>・<code>Today.tsx</code> の Briefing カードを展開可能な対話 UI にする</p>
+    <p>・日記の保存完了後に「相棒の一言」セクションを追加</p>
+    <p>・バックエンドのシステムプロンプトを「相棒 + 聞き役」トーンに書き換え</p>
+  </div>
+
+  <!-- ============ 4. 総括比較 ============ -->
+  <h2>4. 総括（推奨案 vs 現状維持）</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>観点</th>
+        <th>推奨案（相棒 × ②+③）</th>
+        <th>現状維持（独立タブ・汎用）</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="label">ChatGPT との差別化</td><td class="good">明確</td><td class="bad">曖昧</td></tr>
+      <tr><td class="label">使われる場面</td><td class="good">日記の延長・感情の整理</td><td class="bad">なんでも（結局使われない）</td></tr>
+      <tr><td class="label">認知コスト</td><td class="good">低（Today で完結）</td><td class="bad">高（タブ切り替え）</td></tr>
+      <tr><td class="label">実装コスト</td><td>中</td><td class="good">低（既存のまま）</td></tr>
+      <tr><td class="label">失敗リスク</td><td>中（トーンの作り込み次第）</td><td>低</td></tr>
+      <tr><td class="label">使われる頻度（予想）</td><td class="good">高</td><td class="bad">低</td></tr>
+      <tr><td class="label">体験の一貫性</td><td class="good">高（Today に集約）</td><td>中</td></tr>
+    </tbody>
+  </table>
+
+  <footer>
+    focus-you / design proposal — 2026-04-12
+  </footer>
+
+</div>
+</body>
+</html>

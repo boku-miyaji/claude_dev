@@ -1,0 +1,269 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - heading "伊藤園 — 追加分析" [level=1] [ref=e6]
+        - generic [ref=e7]: りそな営業支援AI（rikyu） | 公開情報から自動生成された経営アジェンダ仮説とキーパーソン分析
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - strong [ref=e10]: 業種
+          - text: 食料品（緑茶飲料・茶葉）
+        - generic [ref=e11]:
+          - strong [ref=e12]: 売上
+          - text: 4,617億円（2025年4月期連結）
+        - generic [ref=e13]:
+          - strong [ref=e14]: 従業員
+          - text: 5,432名（連結）
+  - navigation [ref=e15]:
+    - generic [ref=e16]:
+      - button "アジェンダ 6" [ref=e17] [cursor=pointer]:
+        - text: アジェンダ
+        - generic [ref=e18]: "6"
+      - button "キーパーソン 7" [active] [ref=e19] [cursor=pointer]:
+        - text: キーパーソン
+        - generic [ref=e20]: "7"
+  - main [ref=e21]:
+    - generic [ref=e279]:
+      - generic [ref=e280]:
+        - strong [ref=e281]: キーパーソン構成：
+        - text: 意思決定者 4名 / 影響者 3名 / 情報提供者 0名。関連アジェンダは各カード内に表示。
+      - generic [ref=e282]:
+        - generic [ref=e283]:
+          - generic [ref=e284]:
+            - text: 意思決定者
+            - generic [ref=e285]: 4名
+          - generic [ref=e286]:
+            - article [ref=e287] [cursor=pointer]:
+              - generic [ref=e288]: 本
+              - generic [ref=e289]:
+                - generic [ref=e290]:
+                  - generic "確信度Lv2" [ref=e291]
+                  - text: 本庄 大介
+                - generic [ref=e292]: 代表取締役社長 ／ 経営
+                - generic [ref=e293]: 本庄家同族経営の現当主。創業家出身で経営全般の最終決定権を持つ。中期経営計画の策定を主導。面談実績なし。
+                - generic [ref=e294]:
+                  - generic [ref=e295]: 未接触
+                  - generic [ref=e296]: 影響度高
+                  - generic [ref=e297]: 関係浅い
+            - article [ref=e298] [cursor=pointer]:
+              - generic [ref=e299]: 本
+              - generic [ref=e300]:
+                - generic [ref=e301]:
+                  - generic "確信度Lv2" [ref=e302]
+                  - text: 本庄 周介
+                - generic [ref=e303]: 代表取締役副社長 兼 執行役員 ／ 経営
+                - generic [ref=e304]: 本庄家同族経営の共同経営者。社長を補佐し幅広く管掌。同族経営のガバナンス上、社長と同等の発言力を持つと推定。
+                - generic [ref=e305]:
+                  - generic [ref=e306]: 未接触
+                  - generic [ref=e307]: 影響度高
+                  - generic [ref=e308]: 関係浅い
+            - article [ref=e309] [cursor=pointer]:
+              - generic [ref=e310]: 平
+              - generic [ref=e311]:
+                - generic [ref=e312]:
+                  - generic "確信度Lv2" [ref=e313]
+                  - text: 平田 篤
+                - generic [ref=e314]: 専務執行役員（管理本部長 / CHRO / CFO） ／ 管理本部
+                - generic [ref=e315]: 2025年5月にCFO就任。CHRO兼任で人的資本経営とDXも管掌。財務と人事の両方の決裁権を持つ稀有なポジション。内部統制も担当。
+                - generic [ref=e316]:
+                  - generic [ref=e317]: 未接触
+                  - generic [ref=e318]: 影響度高
+                  - generic [ref=e319]: 関係浅い
+            - article [ref=e320] [cursor=pointer]:
+              - generic [ref=e321]: 中
+              - generic [ref=e322]:
+                - generic [ref=e323]:
+                  - generic "確信度Lv2" [ref=e324]
+                  - text: 中野 悦久
+                - generic [ref=e325]: 専務執行役員（生産本部長 / 物流本部担当 / CSO） ／ 生産本部
+                - generic [ref=e326]: 生産・物流を管掌。CSO（チーフ・サステナビリティ・オフィサー）兼任で、構造改革とサステナビリティ両立の責任者。SCM最適化の実行責任者。
+                - generic [ref=e327]:
+                  - generic [ref=e328]: 未接触
+                  - generic [ref=e329]: 影響度中
+                  - generic [ref=e330]: 関係浅い
+        - generic [ref=e331]:
+          - generic [ref=e332]:
+            - text: 影響者
+            - generic [ref=e333]: 3名
+          - generic [ref=e334]:
+            - article [ref=e335] [cursor=pointer]:
+              - generic [ref=e336]: 神
+              - generic [ref=e337]:
+                - generic [ref=e338]:
+                  - generic "確信度Lv2" [ref=e339]
+                  - text: 神谷 茂
+                - generic [ref=e340]: 専務執行役員（総合企画部 / グループ経営推進部 / サプライチェーン戦略部 担当） ／ 総合企画
+                - generic [ref=e341]: 事業戦略・グループ経営・SCM戦略を一貫して管掌。中期経営計画の策定と実行のキードライバー。M&A検討時も中心的役割と推定。
+                - generic [ref=e342]:
+                  - generic [ref=e343]: 未接触
+                  - generic [ref=e344]: 影響度高
+                  - generic [ref=e345]: 関係浅い
+            - article [ref=e346] [cursor=pointer]:
+              - generic [ref=e347]: YO
+              - generic [ref=e348]:
+                - generic [ref=e349]:
+                  - generic "確信度Lv2" [ref=e350]
+                  - text: Yosuke Jay Oceanbright Honjo
+                - generic [ref=e351]: 米国事業担当執行役員 / ITO EN (North America) INC. President & CEO ／ 米国法人
+                - generic [ref=e352]: 本庄家の米国側キーパーソン。北米事業の実質責任者として、海外展開の実務を担う。本社の海外戦略策定にも発言力を持つと推定。
+                - generic [ref=e353]:
+                  - generic [ref=e354]: 未接触
+                  - generic [ref=e355]: 影響度中
+                  - generic [ref=e356]: 関係浅い
+            - article [ref=e357] [cursor=pointer]:
+              - generic [ref=e358]: 阿
+              - generic [ref=e359]:
+                - generic [ref=e360]:
+                  - generic "確信度Lv1" [ref=e361]
+                  - text: 阿部 啓子
+                - generic [ref=e362]: 社外取締役 ／ 取締役会
+                - generic [ref=e363]: 社外取締役。食品科学・機能性食品領域の知見を持つと推定。取締役会で新事業創出・健康領域に関する議論に影響力を持つと見られる。
+                - generic [ref=e364]:
+                  - generic [ref=e365]: 未接触
+                  - generic [ref=e366]: 影響度中
+                  - generic [ref=e367]: 関係浅い
+  - contentinfo [ref=e149]: りそな営業支援AI — 伊藤園 分析レポート（2026-04-17）
+  - generic:
+    - generic:
+      - generic:
+        - generic: 事業 › 売上向上 › 海外事業
+        - generic:
+          - heading "『お～いお茶』グローバル化加速" [level=2]
+          - button "閉じる": ✕
+        - generic:
+          - generic: 事業
+          - generic: 重要度 高
+          - generic: 課題深掘
+          - generic: ステータス 未着手
+          - generic: 理解度 浅い
+        - generic: 新中期経営計画2025-2029の最重要施策。海外成長目標（年率8%）が国内成長目標（年率2%）の4倍に設定されており、経営トップの関与度が最も高い領域。
+      - generic:
+        - generic:
+          - heading "確信度Lv2 実現したい姿" [level=3]:
+            - generic "確信度Lv2"
+            - text: 実現したい姿
+          - generic: 新中期経営計画(2025-2029)の最重要施策。『お～いお茶』を現在の販売国（約30-40カ国）から60ヵ国以上に倍増。海外売上年率8%（国内2%の4倍）で差別化された成長ドライバー。米国ITO EN (North America) が既に事業基盤として存在するため、これを中核に東南アジア/欧州への横展開が想定される。
+          - generic: "初期仮説: 『お～いお茶』を販売国60ヵ国以上に拡大し、海外売上を年平均8%以上で成長させる"
+        - generic:
+          - heading "確信度Lv2 ペインポイント" [level=3]:
+            - generic "確信度Lv2"
+            - text: ペインポイント
+          - generic: 海外売上比率は約10%と国内依存構造が強い。(1)海外展開には現地パートナー/買収/販路確保の選択が必要だが、中計で『M&A活用』を明記している一方、過去の大型M&A実績は少ない、(2)米国以外の主要市場（中国/東南アジア/欧州）での知名度は低く、ブランディング投資が必要、(3)原料茶葉の安定調達・サプライチェーン構築、(4)為替変動が収益を圧迫するリスク、(5)海外事業のPL/BS管理の複雑化。
+          - generic: "初期仮説: 海外売上比率は約10%と低く、成長のための投資・PMI・為替リスク管理が今後の課題"
+        - generic:
+          - heading "確信度Lv1 りそなの提供価値 / 関連商品" [level=3]:
+            - generic "確信度Lv1"
+            - text: りそなの提供価値 / 関連商品
+          - generic:
+            - generic: 提供価値
+            - generic: 海外PMIファイナンス、海外現地法人のCMS（キャッシュマネジメント）、為替リスクヘッジ、海外M&A支援
+            - generic: 関連商品
+            - generic:
+              - generic "確信度Lv1"
+              - text: 海外M&Aファイナンス / CMS / 為替ヘッジ / 現地法人向け融資
+        - generic:
+          - heading "解決方針候補" [level=3]
+          - generic:
+            - generic:
+              - generic:
+                - text: 海外M&Aファイナンス + CMS パッケージ
+                - generic: 適合度 中
+              - generic: 中計で示された『M&A活用』を見据え、ブリッジローン・シンジケートローン・買収後のPMI資金管理を一体提供。既存の米国子会社を含むグローバルCMS導入で為替リスクも軽減。
+              - generic: "根拠: 伊藤園は海外年率8%成長目標の達成にM&Aを明記。既存取引行との比較で、りそなのアジア拠点ネットワーク（シンガポール/香港/上海）が差別化ポイントになりうる。"
+            - generic:
+              - generic:
+                - text: 為替ヘッジの戦略的活用
+                - generic: 適合度 中
+              - generic: 海外売上拡大とともに為替エクスポージャーが増加。長期的な為替ヘッジポートフォリオ設計を提案。
+              - generic: "根拠: リスク認識で『物価上昇および為替変動への対応』が明記されており、CFO平田氏の関心事項と想定される。"
+        - generic:
+          - heading "顧客が取りうる打ち手" [level=3]
+          - generic:
+            - generic:
+              - generic:
+                - text: 既存北米拠点 (ITO EN North America) を中核にした EC/DTC チャネル強化
+                - generic: インパクト 高
+                - generic: 短期
+              - generic: 米国で既に基盤がある ITO EN NA を核に、自社 EC と Amazon/Walmart など大手 EC での販路を拡大。現地法人のデジタルマーケ投資を進める。
+              - generic: "前提: 米国法人に対する本社の投資方針の明確化"
+            - generic:
+              - generic:
+                - text: 東南アジア市場への参入戦略策定
+                - generic: インパクト 高
+                - generic: 中期
+              - generic: シンガポール・マレーシア・インドネシア等、緑茶文化の受容性が高い東南アジア市場を次の重点地域に設定。現地ローカルパートナー提携を模索する。
+              - generic: "前提: 市場調査・パートナー候補の洗い出し"
+            - generic:
+              - generic:
+                - text: 海外 M&A による販路・ブランド獲得
+                - generic: インパクト 高
+                - generic: 中期
+              - generic: 現地既存ブランドの買収により、ゼロからのブランディング投資を回避。Unilever (Lipton) が使った「現地ブランド取得」戦略のミニ版。
+              - generic: "前提: M&A 実行体制 / 買収予算 / 統合ガバナンス"
+            - generic:
+              - generic:
+                - text: 為替ヘッジポートフォリオの構築
+                - generic: インパクト 中
+                - generic: 短期
+              - generic: 海外売上比率拡大に伴う為替エクスポージャー増加に備え、長期ヘッジ戦略を策定。オプション・スワップを組み合わせたコスト効率型ヘッジ
+              - generic: "前提: CFO 平田氏の財務方針確認"
+        - generic:
+          - heading "意思決定構造" [level=3]
+          - generic:
+            - generic: 意思決定者
+            - generic:
+              - generic "確信度Lv2"
+              - text: 本庄 大介（代表取締役社長）
+            - generic: 影響者
+            - generic: Yosuke Jay Oceanbright Honjo（米国事業担当執行役員 / ITO EN North America President & CEO）
+            - generic: 情報提供者
+            - generic: —
+        - generic:
+          - heading "打ち手 / ネクストステップ" [level=3]
+          - generic:
+            - generic: アクションプラン
+            - generic:
+              - generic "確信度Lv1"
+              - text: —
+            - generic: ネクストステップ
+            - generic:
+              - generic "確信度Lv1"
+              - text: 財務部門への初回アプローチ（CFO平田篤ライン）。米国事業との連携方針を探る
+        - generic:
+          - heading "懸念事項（人が確認すべき点）" [level=3]
+          - list:
+            - listitem:
+              - strong: 現メインバンクとの取引関係が不明
+              - generic: "理由: 伊藤園の主要取引銀行（三菱UFJ推定）との関係性・シェア・既存提案状況を把握できていない。りそなが入れる余地を見極める必要"
+            - listitem:
+              - strong: CFO平田氏との接点なし
+              - generic: "理由: 2025年5月就任の新CFO。CHRO兼任で人的資本経営とDXも管掌。財務戦略の方針が未確認"
+            - listitem:
+              - strong: M&A案件の具体性
+              - generic: "理由: 中計で『M&A活用』を明記しているが、具体的な対象領域・規模は未開示。実案件が動いていないタイミングではファイナンス提案は空振りになる可能性"
+        - generic:
+          - heading "論点（議論・確認すべきポイント）" [level=3]
+          - list:
+            - listitem: 海外展開の優先地域は？ 既存拠点（北米）の強化か、新興市場（東南アジア/欧州）への進出か
+            - listitem: M&A活用の具体性は？ 対象規模・領域・資金調達方針
+            - listitem: 現メインバンクの提案状況は？ りそなが入れる余地
+            - listitem: CFO平田氏の財務方針は？ 保守的か積極的か
+            - listitem: 米国法人 (ITO EN North America) と本社の意思決定分担は？
+        - generic:
+          - heading "関連キーパーソン" [level=3]
+          - generic:
+            - generic: 本庄 大介 / 意思決定者
+            - generic: 本庄 周介 / 意思決定者
+            - generic: 平田 篤 / 意思決定者
+            - generic: Yosuke Jay Oceanbright Honjo / 影響者
+        - generic:
+          - heading "参照情報" [level=3]
+          - list:
+            - listitem:
+              - generic: IR
+              - link "伊藤園 新中期経営計画 2025-2029":
+                - /url: https://www.itoen.co.jp/news/article/65710/
+            - listitem:
+              - generic: ニュース
+              - 'link "日経ESG: 伊藤園、お～いお茶の海外展開を強化"':
+                - /url: https://project.nikkeibp.co.jp/ESG/atcl/column/00007/051300221/

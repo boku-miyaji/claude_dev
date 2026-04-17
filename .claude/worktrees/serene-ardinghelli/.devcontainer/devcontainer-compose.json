@@ -1,0 +1,62 @@
+{
+  "name": "Claude Code Sandbox (CPU) with Docker Compose",
+
+  // Use Docker Compose
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+
+  // Customizations
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "ms-python.python",
+        "ms-python.isort",
+        "ms-python.black-formatter",
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+          },
+          "zsh": {
+            "path": "zsh"
+          }
+        }
+      }
+    }
+  },
+
+  // Remote user
+  "remoteUser": "node",
+  "userEnvProbe": "loginInteractiveShell",
+
+  // Forward ports from both containers
+  "forwardPorts": [3000, 8080],
+
+  // Port attributes
+  "portsAttributes": {
+    "3000": {
+      "label": "Frontend Dev Server",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "API Server",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // Post-create command (runs after container is created)
+  "postCreateCommand": "echo 'Development environment ready! API server is running on http://api-server:8080'"
+}
