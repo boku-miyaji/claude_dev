@@ -242,7 +242,8 @@
       "WebFetch(domain:subliminal-learning.com)",
       "mcp__claude_ai_Google_Calendar__list_events",
       "mcp__claude_ai_Google_Calendar__list_calendars",
-      "Bash(.claude/hooks/thinking-level.sh)"
+      "Bash(.claude/hooks/thinking-level.sh)",
+      "WebFetch(domain:docs.claude.com)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -534,6 +535,5 @@
       }
     }
   },
-  "skipDangerousModePermissionPrompt": false,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": false
 }
