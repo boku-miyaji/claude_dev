@@ -245,7 +245,12 @@
       "Bash(.claude/hooks/thinking-level.sh)",
       "WebFetch(domain:docs.claude.com)",
       "Bash(rm /workspace/.claude/hooks/thinking-level.sh)",
-      "Bash(mkdir -p /workspace/.claude/skills/max /workspace/.claude/skills/xhigh /workspace/.claude/skills/high /workspace/.claude/skills/med /workspace/.claude/skills/low)"
+      "Bash(mkdir -p /workspace/.claude/skills/max /workspace/.claude/skills/xhigh /workspace/.claude/skills/high /workspace/.claude/skills/med /workspace/.claude/skills/low)",
+      "Edit(/.claude/skills/max/**)",
+      "Edit(/.claude/skills/xhigh/**)",
+      "Edit(/.claude/skills/high/**)",
+      "Edit(/.claude/skills/med/**)",
+      "Edit(/.claude/skills/low/**)"
     ],
     "deny": [
       "Read(**/.env)",
