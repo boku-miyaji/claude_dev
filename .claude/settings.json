@@ -240,7 +240,8 @@
       "WebFetch(domain:www.nature.com)",
       "WebFetch(domain:alignment.anthropic.com)",
       "WebFetch(domain:subliminal-learning.com)",
-      "mcp__claude_ai_Google_Calendar__list_events"
+      "mcp__claude_ai_Google_Calendar__list_events",
+      "mcp__claude_ai_Google_Calendar__list_calendars"
     ],
     "deny": [
       "Read(**/.env)",
