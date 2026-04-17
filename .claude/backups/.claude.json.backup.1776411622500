@@ -671,8 +671,8 @@
         "amount_minor_units": 1000,
         "currency": "USD"
       },
-      "remaining_passes": 0,
-      "timestamp": 1776411622922
+      "remaining_passes": 3,
+      "timestamp": 1776320342867
     }
   },
   "feedbackSurveyState": {
@@ -688,7 +688,7 @@
   "groveConfigCache": {
     "0e3bd740-e45a-41f7-9a8e-dea96899ee97": {
       "grove_enabled": true,
-      "timestamp": 1776411622500
+      "timestamp": 1776313436058
     }
   },
   "overageCreditGrantCache": {

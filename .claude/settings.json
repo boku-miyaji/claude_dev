@@ -266,7 +266,8 @@
       "Bash(cd /workspace/aces-rikyu-sales-proposals-poc find project_rikyu/prompts -name \"*meeting_prep_json*\" echo \"---\")",
       "Bash(cd /workspace/aces-rikyu-sales-proposals-poc ls -la .venv)",
       "Bash(cd /workspace/aces-rikyu-sales-proposals-poc ls -la .venv/bin/)",
-      "Bash(cd /workspace/aces-rikyu-sales-proposals-poc ls tests/ find tests -name \"*.py\")"
+      "Bash(cd /workspace/aces-rikyu-sales-proposals-poc ls tests/ find tests -name \"*.py\")",
+      "Bash(cd /workspace/aces-rikyu-sales-proposals-poc grep -n \"output\\\\|/lib\\\\b\" .gitignore)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -300,7 +301,8 @@
       "/workspace/.company",
       "/workspace/scratch/design",
       "/workspace/scratch/research",
-      "/workspace/.company/departments/investigation"
+      "/workspace/.company/departments/investigation",
+      "/workspace/aces-rikyu-sales-proposals-poc/scripts"
     ]
   },
   "hooks": {
