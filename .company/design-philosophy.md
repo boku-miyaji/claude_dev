@@ -576,6 +576,45 @@ Claude Code で発見された CVE-2025-59536 / CVE-2026-21852 の教訓: **hook
 
 **現状の focus-you での該当箇所**: Google Calendar 認証、Edge Function 呼び出し、将来的な OpenAI 以外の LLM 統合、将来的な plugin システム。すべて追加時にこのチェックを通す。
 
+### ⑩ Silence over Noise — 価値なきコメントは出さない（社長指示 2026-04-19）
+
+**② Approval Fatigue 対策の先鋭化。** 毎回コメントを生成する姿勢そのものが危険。無難なことを言うくらいなら、何も言わないほうが信頼を壊さない。
+
+**原則**:
+- **LLM 自身に「価値あるコメントが出せるか」を判定させる**。出せないと判断したら `SILENT` とだけ返すようプロンプトに指示する
+- **fallback を削除する**。「今日も穏やかに始めましょう」のような無難な一言は、ユーザーから見ると AI が何も見ていないのと同じ、むしろ「適当なことを言う存在」として信頼を損なう
+- **黙る方が誠実**。既に実装されている `useMomentDetector` の「大半の日記は転機ではない。10件に1件程度」の姿勢を、**全ての AI コメント生成に適用する**
+
+**実装パターン**:
+
+```ts
+// プロンプトに追加
+"価値ある一言が思いつかない場合は SILENT とだけ返してください。
+無難なコメント（「お疲れさまです」「今日も穏やかに」等）を絞り出すくらいなら
+黙るほうが誠実です。"
+
+// クライアント側で検出
+if (result === 'SILENT' || result.startsWith('[SILENT]')) {
+  setMessage(null)  // 表示しない
+}
+
+// fallback は null を返す（無難な一言で埋めない）
+```
+
+**適用対象**:
+
+| 機能 | 現状 | 変更後 |
+|---|---|---|
+| AI PaRTner (useMorningBriefing) | fallback で「今日も穏やかに」 | SILENT なら非表示 |
+| Moment Detector | 既に 10件に1件の閾値 | ✅ 維持（模範ケース） |
+| Theme Finder | 定期更新のみ | SILENT 判定追加（変化なければ更新しない） |
+| Arc Reader | 定期更新のみ | SILENT 判定追加 |
+| Foresight | 兆候があれば生成 | SILENT をデフォルト姿勢に |
+
+**例外**: ユーザーが明示的に「コメントくれ」ボタンを押した時は、SILENT でも何か返す（明示要求 > 沈黙原則）。自動生成の時だけ沈黙を許す。
+
+**キラーフレーズ**: *「一番親身なパートナーは、毎回何か言う人ではなく、言うべき時を見極める人。」*
+
 ### ⑨ Subagent Summary-only Return（秘書組織のハンドオフ仕様）
 
 Claude Code の subagent は **full transcript を親に返さず、最終応答と metadata だけ返す**。生 transcript は sidechain `.jsonl` + `.meta.json` に保存。**context-as-bottleneck 原則の核心実装**。
@@ -611,3 +650,4 @@ Claude Code の subagent は **full transcript を親に返さず、最終応答
 | 2026-04-06 | ハイブリッド分析方式・データソース文脈リテラシーを追加。Self-Analysis深化（構造化インサイト・統合まとめタブ） |
 | 2026-04-12 | 「コーチングを超える」セクション追加。連続データ×因果発見の差別化、価値の3層構造、「動けてない日を責めない」必須原則 |
 | 2026-04-19 | 「AI Agent System としての設計原則」9項目追加（Claude Code 論文より）。長期的自己理解能力の保全、Approval Fatigue 対策、Append-only、5層 Context Shapers、File-based Transparency、Deny-first、Pre-trust Init Ordering、Subagent Summary-only |
+| 2026-04-19 | ⑩ Silence over Noise 追加（社長指示）。AI PaRTner は価値ある一言が思いつかない時は SILENT を返し、何も表示しない。fallback の「無難な一言」を廃止 |

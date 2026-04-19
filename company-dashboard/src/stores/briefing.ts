@@ -17,7 +17,8 @@ interface BriefingStore {
   contextSnapshot: BriefingContextSnapshot | null
   /** Last N generated messages (most recent first). Used to avoid repetition in prompts. */
   recentMessages: string[]
-  setMessage: (msg: string, snapshot?: BriefingContextSnapshot) => void
+  /** Pass null to explicitly signal "AI chose to stay silent" (Silence over Noise, design-philosophy ⑩). */
+  setMessage: (msg: string | null, snapshot?: BriefingContextSnapshot) => void
   setLoading: (loading: boolean) => void
   setLastFetched: (date: string) => void
   invalidate: () => void

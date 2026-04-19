@@ -90,9 +90,15 @@ export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_par
           <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent2)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
           <span style={{ fontSize: 12, color: 'var(--text3)' }}>考え中...</span>
         </div>
-      ) : (
+      ) : openingMessage ? (
         <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
-          {openingMessage || '今日はどんな一日ですか。'}
+          {openingMessage}
+        </div>
+      ) : (
+        // design-philosophy ⑩ Silence over Noise: AI chose to stay silent.
+        // No platitude. Just show the entry point to the user.
+        <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
+          話したいことがあれば。
         </div>
       )}
 

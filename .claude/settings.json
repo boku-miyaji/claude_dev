@@ -281,7 +281,8 @@
       "Bash(claude --version)",
       "Bash(claude --print --help)",
       "Bash(break)",
-      "Bash(/workspace/scripts/intelligence/check-arxiv-sync.sh)"
+      "Bash(/workspace/scripts/intelligence/check-arxiv-sync.sh)",
+      "Bash(awk '{print $2, $3, $4, $11, $12, $13, $14}')"
     ],
     "deny": [
       "Read(**/.env)",

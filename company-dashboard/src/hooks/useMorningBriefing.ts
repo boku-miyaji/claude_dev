@@ -246,6 +246,19 @@ export function useMorningBriefing(
    - これ以外では提案しない
 5. 100字以内。一文で十分なら一文
 
+## 沈黙の選択（最重要・design-philosophy ⑩）
+**価値ある一言が思いつかなければ、SILENT とだけ返してください。**
+
+以下の場合は必ず SILENT:
+- 日記が短すぎて拾える具体が無い
+- 直近と同じ文脈で、前回と違う角度の観察も思いつかない
+- 無難なクリシェ（「お疲れさまでした」「今日も穏やかに」）しか書けない
+- 観察しようにも事実が一つも拾えない
+
+**無難なことを絞り出すくらいなら黙るのが誠実です。**
+一番親身なパートナーは毎回何か言う人ではなく、言うべき時を見極める人。
+迷ったら SILENT。出す時は本物だけ。
+
 ## 良い応答の型
 
 ### 型A: 観察のみ（最も多い。これで終えていい）
@@ -349,6 +362,14 @@ ${modeInstructions[timeMode]}
       const briefingMessage = result.content?.trim()?.replace(/[【】]/g, '')
       console.log('[AI Partner] Result:', result)
 
+      // design-philosophy ⑩ Silence over Noise: model chose silence.
+      // Cache the silence so we don't retry on every render.
+      if (isSilent(briefingMessage)) {
+        setMessage(null)
+        setLastFetched(cacheKey)
+        return
+      }
+
       if (briefingMessage) {
         const snapshot = {
           time_mode: timeMode,
@@ -358,13 +379,15 @@ ${modeInstructions[timeMode]}
         setMessage(briefingMessage, snapshot)
         setLastFetched(cacheKey)
       } else {
-        // Don't cache fallback — retry on next render
-        setMessage(getFallback(timeMode))
+        // Empty / malformed response — treat as silence too. No fallback message.
+        setMessage(null)
+        setLastFetched(cacheKey)
       }
     } catch (err) {
       console.error('[AI Partner] Briefing error:', err)
-      // Don't cache error fallback — retry on next render
-      setMessage(getFallback(timeMode))
+      // On API error, stay silent rather than show a generic platitude.
+      // Do NOT cache — allow retry on next render.
+      setMessage(null)
     } finally {
       setLoading(false)
     }
@@ -377,10 +400,9 @@ ${modeInstructions[timeMode]}
   return { message, loading }
 }
 
-function getFallback(mode: TimeMode): string {
-  switch (mode) {
-    case 'morning': return '今日も穏やかに始めましょう。'
-    case 'afternoon': return '午後もあなたのペースで。'
-    case 'evening': return '今日も一日、おつかれさまでした。'
-  }
+/** Detect the model's silence signal. Tolerant to surrounding punctuation / casing / brackets. */
+function isSilent(msg: string | undefined): boolean {
+  if (!msg) return false
+  const normalized = msg.replace(/[\s.。、!！?？「」『』""'']/g, '').toUpperCase()
+  return normalized === 'SILENT' || normalized === '[SILENT]' || normalized.startsWith('SILENT')
 }
