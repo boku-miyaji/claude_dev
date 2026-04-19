@@ -18,6 +18,19 @@ const PRESET_LABELS: Record<string, string> = {
   recent: '最近',
 }
 
+// 誕生年が分かれば、preset ステージに年齢範囲を自動マップできる。
+// custom ステージは year_start/year_end を直接持つ。
+const PRESET_AGE_RANGES: Record<string, { start: number; end: number }> = {
+  childhood:    { start: 0,  end: 6 },
+  elementary:   { start: 6,  end: 12 },
+  junior_high:  { start: 12, end: 15 },
+  high_school:  { start: 15, end: 18 },
+  university:   { start: 18, end: 22 },
+  early_career: { start: 22, end: 27 },
+  mid_career:   { start: 27, end: 37 },
+  // recent は現在年基準（誕生年から算出）。後段で特別扱い。
+}
+
 const AXES = [
   { key: 'values', label: '価値観' },
   { key: 'family', label: '家庭' },
@@ -121,6 +134,7 @@ export function LifeHistory() {
   const [entries, setEntries] = useState<LifeEntry[]>([])
   const [expandedStage, setExpandedStage] = useState<string | null>(null)
   const [showHeatmap, setShowHeatmap] = useState(false)
+  const [birthYear, setBirthYear] = useState<number | null>(null)
 
   // Session state
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -176,7 +190,50 @@ export function LifeHistory() {
     setEntries((data ?? []) as LifeEntry[])
   }, [])
 
-  useEffect(() => { loadStages(); loadCoverage(); loadEntries() }, [loadStages, loadCoverage, loadEntries])
+  const loadBirthYear = useCallback(async () => {
+    const { data } = await supabase
+      .from('user_settings')
+      .select('birth_year')
+      .maybeSingle()
+    setBirthYear((data?.birth_year as number | null | undefined) ?? null)
+  }, [])
+
+  useEffect(() => { loadStages(); loadCoverage(); loadEntries(); loadBirthYear() }, [loadStages, loadCoverage, loadEntries, loadBirthYear])
+
+  /** stage から「年齢範囲 / 西暦範囲」を導出。誕生年不明や recent 等は部分的に null を返す。 */
+  const stageTimeRange = useCallback((s: Stage): { ageStart: number | null; ageEnd: number | null; yearStart: number | null; yearEnd: number | null } => {
+    const now = new Date().getFullYear()
+
+    // custom stage は year_start/end を優先
+    let yearStart = s.year_start ?? null
+    let yearEnd = s.year_end ?? null
+
+    // preset の年齢マッピング（必要なら year を逆算）
+    let ageStart: number | null = null
+    let ageEnd: number | null = null
+
+    const preset = PRESET_AGE_RANGES[s.key]
+    if (preset) {
+      ageStart = preset.start
+      ageEnd = preset.end
+      if (birthYear) {
+        yearStart = yearStart ?? (birthYear + preset.start)
+        yearEnd = yearEnd ?? (birthYear + preset.end)
+      }
+    } else if (s.key === 'recent') {
+      yearStart = yearStart ?? (now - 3)
+      yearEnd = yearEnd ?? now
+      if (birthYear) {
+        ageStart = yearStart - birthYear
+        ageEnd = yearEnd - birthYear
+      }
+    } else if (birthYear && (yearStart || yearEnd)) {
+      // custom stage: year から年齢を逆算
+      if (yearStart) ageStart = yearStart - birthYear
+      if (yearEnd) ageEnd = yearEnd - birthYear
+    }
+    return { ageStart, ageEnd, yearStart, yearEnd }
+  }, [birthYear])
 
   const stageLabel = useCallback((key: string): string => {
     const s = stages.find((x) => x.key === key)
@@ -581,6 +638,14 @@ export function LifeHistory() {
         <div className="section-title">
           人生の軌跡（{totalEntries}件の記録）
         </div>
+        {!birthYear && (
+          <Card style={{ marginBottom: 12, background: 'rgba(99,102,241,0.06)', border: '1px dashed var(--accent)' }}>
+            <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.6 }}>
+              誕生年を設定すると、各時期の<strong>西暦と年齢</strong>が自動で表示されます。
+              <a href="/profile" style={{ color: 'var(--accent)', marginLeft: 6, textDecoration: 'underline' }}>基本情報で設定する →</a>
+            </div>
+          </Card>
+        )}
         <div style={{ position: 'relative', paddingLeft: 24 }}>
           <div style={{ position: 'absolute', left: 7, top: 8, bottom: 8, width: 2, background: 'var(--border)' }} />
           {stages.map((s) => {
@@ -594,28 +659,42 @@ export function LifeHistory() {
             })
             const isCustom = s.kind === 'custom'
             const canPropose = stageEntries.length >= 5
-            const yearRange = (s.year_start || s.year_end)
-              ? `${s.year_start ?? '?'}–${s.year_end ?? '?'}`
-              : null
+            const { ageStart, ageEnd, yearStart, yearEnd } = stageTimeRange(s)
+            const yearText = formatRange(yearStart, yearEnd)
+            const ageText = formatRange(ageStart, ageEnd, '歳')
             return (
               <div key={s.key} style={{ position: 'relative', marginBottom: 14, marginLeft: isCustom ? 16 : 0 }}>
                 <div style={{
-                  position: 'absolute', left: -21 - (isCustom ? 16 : 0), top: 14, width: 16, height: 16,
+                  position: 'absolute', left: -21 - (isCustom ? 16 : 0), top: 22, width: 16, height: 16,
                   borderRadius: '50%',
                   background: isEmpty ? 'var(--surface2)' : (isCustom ? 'var(--accent2)' : 'var(--accent)'),
                   border: '2px solid var(--surface)', boxShadow: isEmpty ? 'none' : '0 0 0 2px rgba(99,102,241,0.15)',
                 }} />
-                <Card style={{ opacity: isEmpty ? 0.7 : 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{s.label}</div>
-                    {yearRange && <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{yearRange}</div>}
-                    {isCustom && (
-                      <span style={{ fontSize: 9, padding: '1px 6px', background: 'rgba(16,185,129,0.15)', color: 'var(--accent2)', borderRadius: 8, textTransform: 'uppercase', letterSpacing: '.08em' }}>custom</span>
-                    )}
-                    <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
-                      {isEmpty ? '未着手' : `${stageEntries.length}件の記録`}
+                <Card style={{ opacity: isEmpty ? 0.5 : 1 }}>
+                  {/* 時系列メタ: 年号 + 年齢 + ラベル */}
+                  <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 10 }}>
+                    <div style={{ minWidth: 120 }}>
+                      <div style={{ fontSize: 18, fontWeight: 600, fontFamily: 'var(--mono)', color: yearText ? 'var(--text)' : 'var(--text3)', letterSpacing: '-.01em', lineHeight: 1.1 }}>
+                        {yearText ?? '—'}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)', marginTop: 2 }}>
+                        {ageText ?? (birthYear ? '' : '誕生年未設定')}
+                      </div>
                     </div>
-                    <div style={{ flex: 1 }} />
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{s.label}</div>
+                        {isCustom && (
+                          <span style={{ fontSize: 9, padding: '1px 6px', background: 'rgba(16,185,129,0.15)', color: 'var(--accent2)', borderRadius: 8, textTransform: 'uppercase', letterSpacing: '.08em' }}>custom</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)', marginTop: 2 }}>
+                        {isEmpty ? '未着手' : `${stageEntries.length}件の記録`}
+                      </div>
+                    </div>
+                  </div>
+                  {/* 操作ボタン（折り返し対応） */}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                     {!isEmpty && (
                       <button
                         className="btn btn-ghost btn-sm"
@@ -920,6 +999,16 @@ export function LifeHistory() {
       )}
     </div>
   )
+}
+
+/** 年齢・年号レンジを "A–B" / "A–" / "–B" / null で表示する。suffix を付けると "A–B歳" 等。 */
+function formatRange(start: number | null | undefined, end: number | null | undefined, suffix = ''): string | null {
+  const s = start ?? null
+  const e = end ?? null
+  if (s == null && e == null) return null
+  if (s != null && e != null) return s === e ? `${s}${suffix}` : `${s}–${e}${suffix}`
+  if (s != null) return `${s}${suffix}〜`
+  return `〜${e}${suffix}`
 }
 
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
