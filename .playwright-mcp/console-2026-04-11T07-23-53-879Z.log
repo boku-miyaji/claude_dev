@@ -1,7 +1,0 @@
-[     109ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ http://localhost:3457/manifest.json:0
-[     230ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ http://localhost:3457/manifest.json:0
-[     233ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3457/api/annotations:0
-[     234ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3457/api/data:0
-[     234ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3457/favicon.ico:0
-[    1249ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3457/api/data:0
-[    9429ms] [ERROR] Manifest: Line: 1, column: 1, Syntax error. @ http://localhost:3457/manifest.json:0
