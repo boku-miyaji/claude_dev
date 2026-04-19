@@ -284,7 +284,8 @@
       "Bash(/workspace/scripts/intelligence/check-arxiv-sync.sh)",
       "Bash(awk '{print $2, $3, $4, $11, $12, $13, $14}')",
       "Bash(supabase secrets *)",
-      "Bash(deno --version)"
+      "Bash(deno --version)",
+      "Bash(awk '{print $2,$3,$4,$10}')"
     ],
     "deny": [
       "Read(**/.env)",
