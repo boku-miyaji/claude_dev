@@ -286,7 +286,8 @@
       "Bash(supabase secrets *)",
       "Bash(deno --version)",
       "Bash(awk '{print $2,$3,$4,$10}')",
-      "Bash(.venv/bin/alembic current *)"
+      "Bash(.venv/bin/alembic current *)",
+      "Bash(deno check *)"
     ],
     "deny": [
       "Read(**/.env)",
