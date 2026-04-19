@@ -379,7 +379,115 @@ export function Settings() {
       <PersonalizationSection settings={userSettings} userId={userId} />
       <PartnerFeedbackSettings />
       <ApiKeysSection settings={userSettings} userId={userId} />
+      <DataExportSection />
       {isCliMode && <ClaudeCodeSection settings={claudeSettings} />}
     </div>
+  )
+}
+
+// ============================================================
+// DataExportSection — design-philosophy ⑤ File-based Transparency
+// ============================================================
+//
+// Your data is yours. This section lets you download every personal
+// record (diary, emotions, Narrator memory, tasks, dreams, ...) as a
+// single JSON file. Regenerated / ephemeral tables and org-level
+// masters (companies, departments, slash_commands, _migrations ...)
+// are excluded.
+
+/** Tables that contain personal authored content or personal AI analysis. */
+const EXPORT_TABLES = [
+  'diary_entries',
+  'diary_entry_revisions',
+  'emotion_analysis',
+  'diary_analysis',
+  'story_memory',
+  'story_moments',
+  'dreams',
+  'goals',
+  'habits',
+  'habit_logs',
+  'tasks',
+  'task_calendar_links',
+  'calendar_events',
+  'self_analysis',
+  'life_story_entries',
+  'weekly_narratives',
+  'ceo_insights',
+  'prompt_log',
+  'prompt_sessions',
+  'messages',
+  'conversations',
+  'chat_interactions',
+  'ai_partner_feedback',
+  'ai_partner_distilled_lessons',
+  'ai_partner_prompt_rules',
+  'ai_partner_memories',
+  'user_manual_cards',
+  'growth_events',
+  'time_entries',
+  'wishlist',
+  'secretary_notes',
+  'knowledge_base',
+  'user_settings',
+]
+
+function DataExportSection() {
+  const [busy, setBusy] = useState(false)
+  const [progress, setProgress] = useState<string | null>(null)
+
+  const exportAll = async () => {
+    setBusy(true)
+    setProgress('データを集めています...')
+    const out: Record<string, unknown> = {
+      _meta: {
+        exported_at: new Date().toISOString(),
+        source: 'focus-you',
+        schema_version: 1,
+      },
+    }
+    let failedCount = 0
+    for (const t of EXPORT_TABLES) {
+      setProgress(`取得中: ${t}`)
+      const { data, error } = await supabase.from(t).select('*').limit(100000)
+      if (error) {
+        console.warn(`[DataExport] ${t} failed:`, error)
+        failedCount++
+        out[t] = { error: error.message }
+      } else {
+        out[t] = data ?? []
+      }
+    }
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const today = new Date().toISOString().substring(0, 10)
+    a.download = `focus-you-export-${today}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    setProgress(null)
+    setBusy(false)
+    toast(
+      failedCount > 0
+        ? `エクスポート完了（${EXPORT_TABLES.length - failedCount}/${EXPORT_TABLES.length} テーブル。一部失敗はコンソール参照）`
+        : `エクスポート完了（${EXPORT_TABLES.length} テーブル）`,
+    )
+  }
+
+  return (
+    <Card style={{ marginTop: 16 }}>
+      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>データのエクスポート</div>
+      <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 12 }}>
+        あなたのデータはあなたのものです。日記・感情分析・Narrator の解釈・夢・タスクなど、個人に紐づく
+        すべての記録を1つのJSONファイルとしてダウンロードできます。ベンダーロックイン回避のため、
+        どこかに移したくなった時にもこのエクスポートだけで完結します。
+      </div>
+      <button className="btn btn-primary btn-sm" onClick={exportAll} disabled={busy}>
+        {busy ? (progress ?? '処理中...') : '全データをダウンロード（JSON）'}
+      </button>
+    </Card>
   )
 }

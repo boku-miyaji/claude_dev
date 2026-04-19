@@ -1086,15 +1086,16 @@ function TabDesignPhilosophy() {
 
       <Section title="AI Agent System としての設計原則（Claude Code 論文より）">
         <Principle title="第6の価値軸: 長期的な自己理解能力の保全" body="短期的な能力増幅と引き換えに長期的な人間能力が萎縮してはいけない。AI が代わりに考えるのではなく、鏡として返す。「このアプリを使うほど、このアプリが要らなくなる」を目指す。評価指標も短期(DAU等)と長期(感情語彙拡大・意思決定後悔率低下)の二層化。" color="var(--accent)" />
-        <Tbl headers={['原則', 'focus-you での含意']} rows={[
-          ['① 長期能力の保全', 'AI は鏡。依存が減るほどユーザーが育つ設計。評価指標を二層化'],
-          ['② Approval Fatigue 対策', '通知・確認を増やさない。Narrator 頻度可変、提案を出し惜しむ。93% 承認率の警告'],
-          ['③ Append-only + read-time projection', '過去を書き換えない。diary edit は revision として追記、週次/月次は view として生成'],
-          ['④ 5層 Context Shapers', 'Budget → Snip → Microcompact → Context collapse → Auto-compact。embedding に飛びつかない'],
-          ['⑤ File-based Transparency', 'ユーザーが全データを export/edit/import 可。Narrator memory も読めて直せる'],
-          ['⑦ Deny-first + Values over Rules', '新統合はデフォルト off。Narrator の外部自動投稿は禁止。可逆性で重み付け'],
-          ['⑧ Pre-trust Init Ordering', 'plugin/統合追加時は時系列順序も設計。trust dialog 前に外部コードが走らないか'],
-          ['⑨ Subagent Summary-only', '部署 full transcript を親に注入しない。YAML handoff + sidechain 管理'],
+        <Tbl headers={['原則', 'focus-you での含意', '実装状況']} rows={[
+          ['① 長期能力の保全', 'AI は鏡。依存が減るほどユーザーが育つ設計。評価指標を二層化', '思想のみ'],
+          ['② Approval Fatigue 対策', '通知・確認を増やさない。Narrator 頻度可変、提案を出し惜しむ。93% 承認率の警告', '⑩ と統合'],
+          ['③ Append-only + read-time projection', 'diary edit は revision として追記、週次/月次は view として生成', 'diary_entry_revisions table + diaryRevisions.ts ユーティリティ'],
+          ['④ 5層 Context Shapers', 'Budget → Snip → Microcompact → Context collapse → Auto-compact。embedding に飛びつかない', '思想のみ（将来の長期蓄積時に適用）'],
+          ['⑤ File-based Transparency', 'ユーザーが全データを export/edit/import 可。Narrator memory も読めて直せる', 'Settings > データのエクスポート + Story > 「AIの解釈を直す」'],
+          ['⑦ Deny-first + Values over Rules', '新統合はデフォルト off。Narrator の外部自動投稿は禁止。可逆性で重み付け', '思想のみ'],
+          ['⑧ Pre-trust Init Ordering', 'plugin/統合追加時は時系列順序も設計。trust dialog 前に外部コードが走らないか', '思想のみ（チェックリスト化済）'],
+          ['⑨ Subagent Summary-only', '部署 full transcript を親に注入しない。YAML handoff + sidechain 管理', '既存の handoff.md + agent_sessions'],
+          ['⑩ Silence over Noise', 'AI PaRTner は価値ある一言が思いつかない時は SILENT を返し、何も表示しない。無難な fallback 廃止', 'useMorningBriefing + FutureYouChat に実装済'],
         ]} />
         <div style={{ marginTop: 12, fontSize: 12, color: 'var(--muted)' }}>
           詳細: <strong>.company/design-philosophy.md</strong> の「AI Agent System としての設計原則」セクション。
