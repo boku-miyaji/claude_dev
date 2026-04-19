@@ -132,3 +132,4 @@
 {"ts":"2026-04-17T13:24:24+09:00","event":"agent_dispatch","dept":"資料制作部","desc":"focus-you 単独レポート作成","model":"default","background":false}
 {"ts":"2026-04-19T09:57:31+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"CEO向けブリーフィングレポート生成","model":"default","background":false}
 {"ts":"2026-04-19T10:20:05+09:00","event":"agent_dispatch","dept":"Explore","desc":"ダッシュボード構造調査","model":"default","background":false}
+{"ts":"2026-04-19T11:52:08+09:00","event":"agent_dispatch","dept":"claude-code-guide","desc":"Check compound Bash permission behavior","model":"default","background":false}
