@@ -716,8 +716,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 69,
-      "lastUsedAt": 1776560103086
+      "usageCount": 68,
+      "lastUsedAt": 1776560014132
     },
     "register": {
       "usageCount": 11,
@@ -748,8 +748,8 @@
       "lastUsedAt": 1775909419013
     },
     "update-config": {
-      "usageCount": 2,
-      "lastUsedAt": 1776560143962
+      "usageCount": 1,
+      "lastUsedAt": 1775915550615
     }
   },
   "overageCreditUpsellSeenCount": 2,

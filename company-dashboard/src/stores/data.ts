@@ -58,6 +58,7 @@ interface DataStore {
     estimated_minutes?: number | null
     time_slot?: string | null
     sort_order?: number
+    progress_pct?: number | null
     attachments?: AttachmentMeta[] | null
   }) => Promise<Task | null>
   updateTask: (id: string, data: Partial<Task>) => Promise<void>
@@ -353,6 +354,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
         estimated_minutes: task.estimated_minutes ?? null,
         time_slot: task.time_slot ?? null,
         sort_order: task.sort_order ?? 0,
+        progress_pct: task.progress_pct ?? null,
         status: 'open',
         attachments: task.attachments ?? [],
       })

@@ -66,8 +66,21 @@ function formatDueDate(dueDate: string | null, todayStr: string): { label: strin
   return { label: `${parseInt(m)}/${parseInt(d)}`, color: 'var(--text3)', bg: 'var(--surface2)', border: 'var(--border)' }
 }
 
+function ProgressBar({ pct }: { pct: number }) {
+  return (
+    <div style={{ width: 40, height: 3, borderRadius: 2, background: 'var(--surface2)', overflow: 'hidden', flexShrink: 0 }}>
+      <div style={{
+        width: `${Math.max(0, Math.min(100, pct))}%`,
+        height: '100%',
+        background: pct >= 100 ? 'var(--green)' : 'var(--accent)',
+        transition: 'width .2s',
+      }} />
+    </div>
+  )
+}
+
 function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
-  task: { id: string; title: string; due_date: string | null; priority: string; status: string }
+  task: { id: string; title: string; due_date: string | null; priority: string; status: string; progress_pct?: number | null; deadline_at?: string | null }
   todayStr: string
   done: boolean
   onToggle: () => void
@@ -77,6 +90,7 @@ function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
   const [editTitle, setEditTitle] = useState(t.title)
   const [editDue, setEditDue] = useState(t.due_date || '')
   const [editPriority, setEditPriority] = useState(t.priority)
+  const [editProgress, setEditProgress] = useState<string>(t.progress_pct != null ? String(t.progress_pct) : '')
   const due = formatDueDate(t.due_date, todayStr)
 
   const save = () => {
@@ -84,6 +98,8 @@ function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
     if (editTitle.trim() && editTitle.trim() !== t.title) updates.title = editTitle.trim()
     if (editDue !== (t.due_date || '')) updates.due_date = editDue || null
     if (editPriority !== t.priority) updates.priority = editPriority
+    const nextPct = editProgress === '' ? null : Math.max(0, Math.min(100, parseInt(editProgress, 10)))
+    if (nextPct !== (t.progress_pct ?? null)) updates.progress_pct = nextPct
     if (Object.keys(updates).length > 0) onUpdate(t.id, updates)
     setEditing(false)
   }
@@ -117,6 +133,19 @@ function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
             <option value="normal">通常</option>
             <option value="high">高</option>
           </select>
+          <label style={{ fontSize: 10, color: 'var(--text3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            進捗
+            <input
+              type="number"
+              min={0}
+              max={100}
+              placeholder="-"
+              value={editProgress}
+              onChange={(e) => setEditProgress(e.target.value)}
+              style={{ width: 48, fontSize: 11, padding: '3px 6px', border: '1px solid var(--border)', borderRadius: 4, fontFamily: 'var(--mono)', background: 'var(--surface)', color: 'var(--text2)' }}
+            />
+            <span style={{ fontFamily: 'var(--mono)' }}>%</span>
+          </label>
           <div style={{ flex: 1, minWidth: 0 }} />
           <button className="btn btn-g btn-sm" style={{ fontSize: 11, padding: '3px 8px' }} onClick={() => setEditing(false)}>Cancel</button>
           <button className="btn btn-p btn-sm" style={{ fontSize: 11, padding: '3px 8px' }} onClick={save}>Save</button>
@@ -125,6 +154,7 @@ function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
     )
   }
 
+  const hasProgress = t.progress_pct != null && !done
   return (
     <div style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, opacity: done ? 0.55 : 1 }}>
       <span
@@ -142,11 +172,17 @@ function TaskRow({ task: t, todayStr, done, onToggle, onUpdate }: {
         {done ? '✓' : ''}
       </span>
       <span
-        onClick={() => { if (!done) { setEditTitle(t.title); setEditDue(t.due_date || ''); setEditPriority(t.priority); setEditing(true) } }}
+        onClick={() => { if (!done) { setEditTitle(t.title); setEditDue(t.due_date || ''); setEditPriority(t.priority); setEditProgress(t.progress_pct != null ? String(t.progress_pct) : ''); setEditing(true) } }}
         style={{ flex: 1, fontWeight: 500, textDecoration: done ? 'line-through' : 'none', color: done ? 'var(--text3)' : 'var(--text)', cursor: done ? 'default' : 'pointer' }}
       >
         {t.title}
       </span>
+      {hasProgress && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          <ProgressBar pct={t.progress_pct ?? 0} />
+          <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)', minWidth: 26, textAlign: 'right' }}>{t.progress_pct}%</span>
+        </span>
+      )}
       {due && (
         <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3, color: due.color, background: due.bg, border: `1px solid ${due.border}`, fontFamily: 'var(--mono)' }}>
           {due.label}
@@ -230,6 +266,45 @@ export function Today() {
   // Tasks: today's actionable items (requests are excluded — they live in the Tasks page)
   const allOpenTasks = useMemo(() => tasks.filter((t) => (t.status === 'open' || t.status === 'in_progress') && t.type !== 'request'), [tasks])
   const completedToday = useMemo(() => tasks.filter((t) => t.status === 'done' && t.type !== 'request' && t.completed_at?.substring(0, 10) === todayStr), [tasks, todayStr])
+
+  // ── Deadline aggregator ──
+  // A task "has a deadline" when either deadline_at or due_date is set.
+  // Classification uses the earliest of the two (deadline_at wins when both exist).
+  const deadlineBuckets = useMemo(() => {
+    const tomorrow = new Date(todayStr + 'T00:00:00')
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+    const weekEnd = new Date(todayStr + 'T00:00:00')
+    weekEnd.setDate(weekEnd.getDate() + 7)
+    const weekEndStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`
+
+    const overdue: typeof allOpenTasks = []
+    const dueToday: typeof allOpenTasks = []
+    const dueTomorrow: typeof allOpenTasks = []
+    const dueThisWeek: typeof allOpenTasks = []
+
+    for (const t of allOpenTasks) {
+      const deadlineDate = t.deadline_at ? t.deadline_at.substring(0, 10) : t.due_date
+      if (!deadlineDate) continue
+      if (deadlineDate < todayStr) overdue.push(t)
+      else if (deadlineDate === todayStr) dueToday.push(t)
+      else if (deadlineDate === tomorrowStr) dueTomorrow.push(t)
+      else if (deadlineDate <= weekEndStr) dueThisWeek.push(t)
+    }
+
+    const byDeadline = (a: typeof allOpenTasks[number], b: typeof allOpenTasks[number]) => {
+      const ad = a.deadline_at || (a.due_date ? a.due_date + 'T23:59:59' : '9999')
+      const bd = b.deadline_at || (b.due_date ? b.due_date + 'T23:59:59' : '9999')
+      return ad.localeCompare(bd)
+    }
+    overdue.sort(byDeadline)
+    dueToday.sort(byDeadline)
+    dueTomorrow.sort(byDeadline)
+    dueThisWeek.sort(byDeadline)
+    return { overdue, dueToday, dueTomorrow, dueThisWeek }
+  }, [allOpenTasks, todayStr])
+
+  const hasDeadlineAlert = deadlineBuckets.overdue.length + deadlineBuckets.dueToday.length + deadlineBuckets.dueTomorrow.length + deadlineBuckets.dueThisWeek.length > 0
 
   // Timeline: merges calendar events + time-bound tasks into 30-min slots
   const timeline = useTodayTimeline(allOpenTasks, completedToday)

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { Card, Modal, toast } from '@/components/ui'
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar'
 import { startCalendarAuth } from '@/lib/calendarApi'
+import { fetchTasksForEvent, linkTaskToEvent, unlinkTaskFromEvent, type LinkedTaskRow } from '@/lib/taskLinks'
 import { GCAL_CALENDARS } from '@/lib/constants'
 import type { ViewMode, CalendarEvent, CalendarType } from '@/types/calendar'
 import type { Task } from '@/types/tasks'
@@ -152,17 +153,22 @@ function isSubmitShortcut(e: React.KeyboardEvent): boolean {
 // Event Modal
 // ============================================================
 
-function EventModal({ open, onClose, initialDate, initialHour, editEvent, onSave, onDelete }: {
+function EventModal({ open, onClose, initialDate, initialHour, editEvent, onSave, onDelete, allTasks }: {
   open: boolean; onClose: () => void; initialDate?: string; initialHour?: number
   editEvent?: CalendarEvent | null
   onSave: (form: { summary: string; date: string; startTime: string; endTime: string }) => Promise<void>
   onDelete?: () => Promise<void>
+  /** Full task list, used to populate the "link a task to this block" picker. */
+  allTasks?: Task[]
 }) {
   const [summary, setSummary] = useState('')
   const [date, setDate] = useState('')
   const [startTime, setStartTime] = useState('10:00')
   const [endTime, setEndTime] = useState('11:00')
   const [saving, setSaving] = useState(false)
+  const [linkedTasks, setLinkedTasks] = useState<LinkedTaskRow[]>([])
+  const [linkPickerOpen, setLinkPickerOpen] = useState(false)
+  const [linkFilter, setLinkFilter] = useState('')
 
   const doSave = useCallback(async () => {
     if (saving || !summary.trim()) return
@@ -184,8 +190,53 @@ function EventModal({ open, onClose, initialDate, initialHour, editEvent, onSave
         setStartTime(`${String(h).padStart(2, '0')}:00`)
         setEndTime(`${String(h + 1).padStart(2, '0')}:00`)
       }
+      setLinkPickerOpen(false)
+      setLinkFilter('')
     }
   }, [open, editEvent, initialDate, initialHour])
+
+  // Load linked tasks whenever an existing event is opened
+  useEffect(() => {
+    if (!open || !editEvent) { setLinkedTasks([]); return }
+    let cancelled = false
+    fetchTasksForEvent(editEvent.id).then((rows) => {
+      if (!cancelled) setLinkedTasks(rows)
+    })
+    return () => { cancelled = true }
+  }, [open, editEvent])
+
+  const linkedTaskIds = useMemo(() => new Set(linkedTasks.map((l) => String(l.task_id))), [linkedTasks])
+
+  const linkableTasks = useMemo(() => {
+    if (!allTasks) return []
+    const q = linkFilter.trim().toLowerCase()
+    return allTasks
+      .filter((t) => t.status !== 'done' && t.status !== 'cancelled')
+      .filter((t) => !linkedTaskIds.has(String(t.id)))
+      .filter((t) => !q || t.title.toLowerCase().includes(q))
+      .slice(0, 20)
+  }, [allTasks, linkedTaskIds, linkFilter])
+
+  const handleLink = useCallback(async (task: Task) => {
+    if (!editEvent) return
+    const row = await linkTaskToEvent(task.id, editEvent.id, editEvent.calendar_id)
+    if (row) {
+      setLinkedTasks((prev) => [...prev, { ...row, tasks: task }])
+      setLinkFilter('')
+      toast(`「${task.title}」を紐付けました`)
+    } else {
+      toast('紐付けに失敗しました')
+    }
+  }, [editEvent])
+
+  const handleUnlink = useCallback(async (taskId: string | number) => {
+    if (!editEvent) return
+    const ok = await unlinkTaskFromEvent(taskId, editEvent.id)
+    if (ok) {
+      setLinkedTasks((prev) => prev.filter((l) => String(l.task_id) !== String(taskId)))
+      toast('紐付けを外しました')
+    }
+  }, [editEvent])
 
   return (
     <Modal open={open} onClose={onClose} title={editEvent ? 'イベントを編集' : 'イベントを追加'}
@@ -208,6 +259,104 @@ function EventModal({ open, onClose, initialDate, initialHour, editEvent, onSave
           <div style={{ flex: 1 }}><label style={{ fontSize: 12, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>終了</label>
             <input className="input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} /></div>
         </div>
+
+        {/* Linked tasks — only available when editing an existing event */}
+        {editEvent && (
+          <div style={{ marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>この時間ブロックで進めるタスク</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 10 }}>{linkedTasks.length}件</span>
+            </div>
+            {linkedTasks.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
+                {linkedTasks.map((row) => {
+                  const t = row.tasks
+                  const title = t?.title || `(削除済み: ${row.task_id})`
+                  return (
+                    <div key={row.id} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '6px 8px', borderRadius: 4,
+                      background: 'var(--surface2)',
+                      border: '1px solid var(--border)',
+                      fontSize: 12,
+                    }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8b5cf6', flexShrink: 0 }} />
+                      <span style={{ flex: 1 }}>{title}</span>
+                      {t?.progress_pct != null && (
+                        <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{t.progress_pct}%</span>
+                      )}
+                      {t?.deadline_at && (
+                        <span style={{ fontSize: 9, color: 'var(--red)', padding: '1px 5px', borderRadius: 3, background: 'var(--red-bg)', border: '1px solid var(--red-border)' }}>
+                          〆{t.deadline_at.substring(5, 10)}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => handleUnlink(row.task_id)}
+                        style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 2, fontSize: 13, lineHeight: 1 }}
+                        title="紐付けを外す"
+                      >×</button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {!linkPickerOpen ? (
+              <button
+                className="btn btn-g btn-sm"
+                style={{ fontSize: 11, padding: '4px 10px' }}
+                onClick={() => setLinkPickerOpen(true)}
+              >+ タスクを紐付ける</button>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <input
+                  className="input"
+                  placeholder="タスクを検索..."
+                  value={linkFilter}
+                  onChange={(e) => setLinkFilter(e.target.value)}
+                  autoFocus
+                  style={{ fontSize: 12, padding: '5px 8px' }}
+                />
+                <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 4, background: 'var(--surface)' }}>
+                  {linkableTasks.length === 0 ? (
+                    <div style={{ padding: 10, fontSize: 11, color: 'var(--text3)', textAlign: 'center' }}>
+                      {linkFilter ? '該当するタスクがありません' : '紐付け可能なタスクがありません'}
+                    </div>
+                  ) : (
+                    linkableTasks.map((t) => (
+                      <div
+                        key={t.id}
+                        onClick={() => handleLink(t)}
+                        style={{
+                          padding: '6px 10px', fontSize: 12, cursor: 'pointer',
+                          borderBottom: '1px solid var(--border)',
+                          display: 'flex', alignItems: 'center', gap: 6,
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface2)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <span style={{ flex: 1 }}>{t.title}</span>
+                        {t.priority === 'high' && (
+                          <span style={{ fontSize: 9, color: 'var(--amber)', padding: '0 4px', background: 'var(--amber-bg)', borderRadius: 3 }}>高</span>
+                        )}
+                        {t.deadline_at && (
+                          <span style={{ fontSize: 9, color: 'var(--red)', padding: '0 4px', background: 'var(--red-bg)', borderRadius: 3 }}>
+                            〆{t.deadline_at.substring(5, 10)}
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+                <button
+                  className="btn btn-g btn-sm"
+                  style={{ fontSize: 11, padding: '3px 10px', alignSelf: 'flex-start' }}
+                  onClick={() => { setLinkPickerOpen(false); setLinkFilter('') }}
+                >閉じる</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </Modal>
   )
@@ -1353,7 +1502,8 @@ export function Calendar() {
       </div>
 
       <EventModal open={modalOpen} onClose={() => setModalOpen(false)}
-        editEvent={editingEvent} onSave={handleSave} onDelete={editingEvent ? handleDelete : undefined} />
+        editEvent={editingEvent} onSave={handleSave} onDelete={editingEvent ? handleDelete : undefined}
+        allTasks={tasks} />
 
       {quickAdd && (
         <QuickAddPopover
