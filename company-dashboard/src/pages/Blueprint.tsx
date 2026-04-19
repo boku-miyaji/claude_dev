@@ -1123,7 +1123,7 @@ function TabOperations() {
           ['資料制作', 'draft→writing→review→[CEO確認]→完了', 'CEO確認必須（「自分の言葉で説明できる」が基準）', 'HIGH'],
           ['リサーチ', 'planning→in-progress→[3段構成チェック]→completed', '公知情報+限界+壁打ち導線の3段構成が必須', 'HIGH'],
           ['UXデザイン', 'シナリオ→感情曲線→摩擦分析→状態遷移→[5原則チェック]→実装仕様', 'HCI法則(Fitts/Hick/Miller)+Nielsen 10項目で検証', 'VERY HIGH'],
-          ['情報収集', '収集→スコアリング→[フィードバック反映]→次回収集', 'いいね/クリックの暗黙的FB + スコア減衰で過学習防止', 'VERY HIGH'],
+          ['情報収集', '収集→スコアリング→示唆抽出→intelligence_suggestions INSERT→次回収集', 'いいね/クリックの暗黙的FB + スコア減衰で過学習防止 + focus-youへの示唆は /insights Suggestions タブでチェック/採用/却下/実装済 管理（tasks連携）', 'VERY HIGH'],
           ['セキュリティ', '日次監視→週次スキャン→月次監査→[SLA追跡]', 'Critical 24h / High 7d / Medium 30d / Low 90d のSLA', 'VERY HIGH'],
           ['マーケ', '仮説→施策実行→計測→[判定]→学習→ピボット or 強化', '仮説検証ループ（成功→強化、失敗→ピボット、不明→計測改善）', 'MEDIUM-HIGH'],
           ['運営改善', 'ヘルスチェック→問題検出→修正→検証→定着', 'CLAUDE.md行数/スキル同期/マイグレーション/ナレッジ重複の4点チェック', 'MEDIUM-HIGH'],
@@ -1294,6 +1294,7 @@ function TabAiFeatures() {
           ['insights_read', 'CEOインサイト', 'Supabase filter (category)', '行動パターン・傾向・仕事リズムの参照'],
           ['activity_search', 'アクティビティ検索', 'Supabase filter', '最近の操作・イベントの検索'],
           ['intelligence_read', '情報レポート', 'Supabase query', '最新の情報収集レポート取得'],
+          ['suggestions_manage', 'focus-you示唆管理', 'Supabase filter (status)', 'intelligence_suggestions テーブル。new→checked(tasks連携)→adopted/rejected→implemented、またはdismissed'],
           ['web_search', 'Web検索', 'DuckDuckGo HTML', '最新情報・ドキュメントの検索'],
         ]} />
         <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8, lineHeight: 1.6 }}>
