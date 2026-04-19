@@ -44,6 +44,8 @@
       "Bash(sha256sum:*)",
       "Bash(cut:*)",
       "Bash(jq:*)",
+      "Bash(cd:*)",
+      "Bash(tee:*)",
       "Bash(for dir:*)",
       "Bash(sqlite3:*)",
       "// --- Package managers ---",
