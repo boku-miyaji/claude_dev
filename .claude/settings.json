@@ -278,7 +278,8 @@
       "Bash(awk -F/ '{print $1}')",
       "Bash(getent hosts *)",
       "WebFetch(domain:mem0.ai)",
-      "Bash(claude --version)"
+      "Bash(claude --version)",
+      "Bash(claude --print --help)"
     ],
     "deny": [
       "Read(**/.env)",
