@@ -1,13 +1,13 @@
 {
-  "saved_at": "2026-04-16T09:38:04+09:00",
-  "today": "2026-04-16",
+  "saved_at": "2026-04-19T18:04:12+09:00",
+  "today": "2026-04-19",
   "work_dir": "/workspace/aces-rikyu-sales-proposals-poc",
-  "git_last_commit": "f7a445879f19689dee2c3e5028db6c23c5aa0130 chore: auto-save session changes",
+  "git_last_commit": "87e1714a7307daea9b7948c9fc06b3386bdaf7e0 chore: auto-save session changes",
   "active_tasks": [],
   "note": "Context Compaction により古い会話が圧縮されました。以下の情報を確認してください。",
   "reminders": [
     "タスク状態は Supabase tasks テーブルで確認",
-    "直近の決定事項は secretary/notes/2026-04-16-decisions.md で確認",
+    "直近の決定事項は secretary/notes/2026-04-19-decisions.md で確認",
     "パイプライン進捗があれば secretary/notes/ の最新ファイルで確認",
     "active_tasks フィールドに処理中タスクが記録されています（Supabase接続時のみ）"
   ]
