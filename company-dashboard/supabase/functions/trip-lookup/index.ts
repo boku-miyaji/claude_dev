@@ -148,7 +148,9 @@ async function computeRoutes(origin: string, destination: string, departureIso: 
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": GOOGLE_ROUTES_API_KEY,
-      "X-Goog-FieldMask": "routes.duration,routes.legs.steps,routes.legs.startLocation,routes.legs.endLocation,routes.travelAdvisory,routes.legs.steps.transitDetails,routes.legs.steps.travelMode,routes.legs.steps.staticDuration,routes.legs.steps.transitDetails.stopDetails,routes.legs.steps.transitDetails.transitLine,routes.legs.steps.transitDetails.stopDetails.arrivalTime,routes.legs.steps.transitDetails.stopDetails.departureTime",
+      // Parent paths include all child fields. Keep the mask short and include travelAdvisory
+      // for fare/traffic data when Google decides to populate it.
+      "X-Goog-FieldMask": "routes.duration,routes.legs.steps.travelMode,routes.legs.steps.staticDuration,routes.legs.steps.transitDetails,routes.travelAdvisory",
     },
     body: JSON.stringify(body),
   });
