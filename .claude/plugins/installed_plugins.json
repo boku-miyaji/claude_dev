@@ -85,10 +85,10 @@
       {
         "scope": "project",
         "projectPath": "/workspace",
-        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/supabase/0.1.0",
-        "version": "0.1.0",
+        "installPath": "/home/node/.claude/plugins/cache/claude-plugins-official/supabase/0.1.4",
+        "version": "0.1.4",
         "installedAt": "2026-01-07T13:01:55.514Z",
-        "lastUpdated": "2026-04-19T00:41:41.513Z"
+        "lastUpdated": "2026-04-19T11:43:04.956Z"
       }
     ],
     "commit-commands@claude-plugins-official": [
