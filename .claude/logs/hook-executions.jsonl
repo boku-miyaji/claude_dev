@@ -14308,3 +14308,7 @@
 {"ts":"2026-04-19T09:40:34+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-19T09:40:39+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-19T09:40:44+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-19T09:40:56+09:00","hook":"tool-collector","tool":"TodoWrite","status":"ok"}
+{"ts":"2026-04-19T09:40:58+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-19T09:41:03+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-19T09:41:04+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
