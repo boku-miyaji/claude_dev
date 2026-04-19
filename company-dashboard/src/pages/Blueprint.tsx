@@ -408,7 +408,7 @@ function TabOverview() {
           ['dream_detected', '毎朝9時（narrator-update cron内、前回から7日未満ならskip）', 'GitHub Actions → Edge Function', '過去7日の日記と active dreams を Opus 4.7 で照合→ activity_log にINSERT → Dreams画面「最近の気づき」に表示'],
           ['narrator (Arc/Theme/Chapter)', '毎朝9時（週/月/四半期スパンで内部スキップ判定）', 'GitHub Actions → narrator-update Edge Function', 'Arc=週1、Theme=月1、Chapter=四半期1。model=claude-opus-4-7。Storyページで表示'],
           ['ai_partner (時間帯別メッセージ)', '朝/昼/夕/夜の時間帯変化でキャッシュ再生成', 'useMorningBriefing（ページ表示時）', '日記投稿では再生成しない（冗長回避）。model=claude-opus-4-7。過去3件の出力をプロンプト注入して同じ表現を避ける'],
-          ['news_items', 'Today/Reportsで「収集」ボタン', 'Edge Function news-collect（4ソース並列）+ news-enrich（LLM日本語要約）', 'Google News RSS + arXiv API + Hacker News API + 公式ブログRSS → DB保存 + クリック追跡。news-enrich は title_ja/summary を gpt-5.4-nano で生成（バッチ + POST{id}で手動再翻訳可、Today/Reports の各記事に「日本語訳」ボタン）'],
+          ['news_items', 'Today/Reportsで「収集」ボタン + 06:00/18:00 JST cron', 'Edge Function news-collect（6ソース並列）+ news-enrich（LLM日本語要約）', 'Google News RSS + arXiv API + Hacker News API + GitHub Releases + 公式ブログRSS + tech記事 → DB保存 + クリック追跡。arXiv は catch-all(5カテゴリ/3日) + keyword-filtered(11キーワード/7日) の二段構成で取りこぼし防止（sources.yaml と同期、CI で検証）。news-enrich は title_ja/summary を gpt-5.4-nano で生成'],
           ['calendar_events (読み取り)', 'Calendar/Todayページ', 'Edge Function proxy (GET /events)', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。maxResults=250 + nextPageTokenページングで取りこぼし防止、失敗カレンダーは failed_calendars[] で警告バッジ表示'],
           ['calendar_events (作成/編集/削除)', 'Calendarページ「+ 予定」ボタン or 既存予定クリック', 'Edge Function proxy (POST/PATCH/DELETE /events)', 'focus-you内で完結。Googleカレンダー画面を別で開く必要なし。EventModalでsummary/日付/開始終了/calendarId編集可能。ドラッグ移動も PATCH で Google に反映'],
           ['life_story_entries', 'Rootsページで質問に答える', 'Edge Function life-story (POST next_question/answer/summarize/coverage)', 'Opus 4.7で過去回答を踏まえて質問生成→ステージ×軸(幼少期/小/中/高/大学/社会人初期/中期/最近 × 価値観/家庭/嬉しかった/苦しかった/転機/仕事/人間関係)のカバレッジをDBに蓄積。再実行ほど手薄エリアを聞く。セッション終了でsummarize→テーマ/言語化/次回候補を返す'],
@@ -1371,13 +1371,13 @@ function TabAiFeatures() {
 
         <AiFeatureCard
           name="7. ニュース収集"
-          trigger="Today画面「最新を取得」ボタン / Reportsページ「手動収集」ボタン"
-          input="トピックリスト(AI/LLM, Claude, OpenAI等) + ユーザー関心度(news_preferences.interest_score)"
-          model="gpt-5.4-mini (agent mode + web_search)"
-          pipeline="関心度高いトピック抽出 → agent mode で web_search 実行 → JSON配列パース → news_items テーブルに保存"
-          output="[{title, summary, url, source, topic, date}] の配列"
+          trigger="Today画面「最新を取得」ボタン / Reportsページ「手動収集」ボタン / 06:00・18:00 JST cron (news-collect.yml)"
+          input="intelligence_sources テーブル（enabled source）+ ARXIV_KEYWORDS/CATEGORIES（sources.yaml と同期）"
+          model="gpt-5.4-nano (news-enrich で日本語翻訳のみ。収集自体はLLM不使用)"
+          pipeline="intelligence_sources 読み込み → 6ソース並列fetch (keyword/web_source/tech_article/hacker_news/github_release + arXiv built-in) → URL でdedupe → news_items に INSERT → news-enrich で title_ja/summary 生成"
+          output="arXiv 1回あたり 30-50件（catch-all 5カテゴリ/3日 + keyword 11語/7日）"
           storage="news_items テーブル（Single Source of Truth）"
-          hook="lib/newsCollect.ts（共通モジュール）← Today.tsx / Reports.tsx から呼び出し"
+          hook="lib/newsCollect.ts ← Today.tsx / Reports.tsx / scripts/news/collect.sh ← CI。arxiv 取りこぼし防止: check-arxiv-sync.sh + 回収率モニタ(>=5)"
         />
 
         <AiFeatureCard
