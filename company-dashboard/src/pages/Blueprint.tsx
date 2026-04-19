@@ -1083,6 +1083,24 @@ function TabDesignPhilosophy() {
         ]} />
         <Principle title="知識の3層構造" body="Layer1: docs/knowledge/（体系的学習ノート）→ Layer2: knowledge_base（行動ルール）→ Layer3: CLAUDE.md（全セッション自動適用）。下に行くほど影響範囲が広く、昇格には実績が必要。" color="var(--accent)" />
       </Section>
+
+      <Section title="AI Agent System としての設計原則（Claude Code 論文より）">
+        <Principle title="第6の価値軸: 長期的な自己理解能力の保全" body="短期的な能力増幅と引き換えに長期的な人間能力が萎縮してはいけない。AI が代わりに考えるのではなく、鏡として返す。「このアプリを使うほど、このアプリが要らなくなる」を目指す。評価指標も短期(DAU等)と長期(感情語彙拡大・意思決定後悔率低下)の二層化。" color="var(--accent)" />
+        <Tbl headers={['原則', 'focus-you での含意']} rows={[
+          ['① 長期能力の保全', 'AI は鏡。依存が減るほどユーザーが育つ設計。評価指標を二層化'],
+          ['② Approval Fatigue 対策', '通知・確認を増やさない。Narrator 頻度可変、提案を出し惜しむ。93% 承認率の警告'],
+          ['③ Append-only + read-time projection', '過去を書き換えない。diary edit は revision として追記、週次/月次は view として生成'],
+          ['④ 5層 Context Shapers', 'Budget → Snip → Microcompact → Context collapse → Auto-compact。embedding に飛びつかない'],
+          ['⑤ File-based Transparency', 'ユーザーが全データを export/edit/import 可。Narrator memory も読めて直せる'],
+          ['⑦ Deny-first + Values over Rules', '新統合はデフォルト off。Narrator の外部自動投稿は禁止。可逆性で重み付け'],
+          ['⑧ Pre-trust Init Ordering', 'plugin/統合追加時は時系列順序も設計。trust dialog 前に外部コードが走らないか'],
+          ['⑨ Subagent Summary-only', '部署 full transcript を親に注入しない。YAML handoff + sidechain 管理'],
+        ]} />
+        <div style={{ marginTop: 12, fontSize: 12, color: 'var(--muted)' }}>
+          詳細: <strong>.company/design-philosophy.md</strong> の「AI Agent System としての設計原則」セクション。
+          論文: <strong>arXiv:2604.14228</strong> (Liu et al. 2026) — Claude Code ソース解析による設計空間論文。
+        </div>
+      </Section>
     </>
   )
 }

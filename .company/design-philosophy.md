@@ -447,6 +447,160 @@ Layer 3: 行動    — 言語化を使って自己制御・前向きさに繋げ
 
 ---
 
+## AI Agent System としての設計原則
+
+> 2026-04-19 追加。Claude Code 設計空間論文（arXiv:2604.14228）から focus-you に取り込む思想。
+> Anthropic Claude Code のソース解析から抽出された **5価値・13原則** のうち、個人向け AI プロダクトに効く9項目を focus-you の文脈で再解釈する。
+
+focus-you は AI Agent System の一種であり、Claude Code のような production agent と同じ設計問題を抱える。ただし**デプロイ文脈が違う**（開発ツール vs 個人の自己理解ツール）ため、原則は同じでも実装の答えは変わる。
+
+### ① 長期的な自己理解能力の保全（第6の価値軸）
+
+Claude Code 論文が「evaluative lens」として提案する第6の価値。短期的な能力増幅と引き換えに、長期的な人間能力が萎縮してはいけない、という視点。
+
+**実証データ（論文より）**:
+- Cursor 導入 807 リポジトリ: コード複雑度 +40.7%、初期速度 +281% → 3ヶ月でベースライン
+- 16-developer RCT: 本人は 20% 速く感じたが実際は **19% 遅く** なった
+- EEG 研究: LLM 使用者は AI 除去後も神経接続の弱化が持続
+- Shen & Tamkin: AI 支援下で理解度テスト -17%
+
+**focus-you での含意**:
+
+| AI 日記アプリが陥る罠 | focus-you が取るべき逆 |
+|---|---|
+| AI があなたの代わりに考える | あなたが考えたことを鏡として返す |
+| AI が日記を書いてくれる | あなたが書いた一文から感情の構造を見せる |
+| AI が意思決定する | AI が判断の根拠を見える化してユーザーに決めさせる |
+| 依存が増えるほど "便利" | 依存が減るほど "あなたが育つ" |
+
+**評価指標の二層化**:
+- **短期指標**: DAU、書き込み頻度、継続率 ← 既存の KPI
+- **長期指標（新設）**: 感情語彙の拡大率、意思決定の後悔率低下、フリーズ頻度の減少、**AI なしでも自分を言語化できる度合い**
+
+**キラーフレーズ候補**: 「このアプリを使うほど、このアプリが要らなくなる」。Narrator が成長させるのは **アプリへの依存** ではなく **ユーザー自身の物語理解能力**。
+
+### ② Approval Fatigue 対策 — 提案を出し惜しむ設計
+
+Claude Code で 93% の permission prompt は慣れで承認される（Hughes 2026）。auto-approve 率は <50 セッションで 20% → 750 セッションで 40%+ と漸増。**通知・確認を増やすほど、ユーザーは機械的に承認するだけになり、安全機構が無力化する**。
+
+既存の「AI PaRTner トーンガイド」（わかってる人のボソッと一言）の **理論的裏付け** として位置付ける。
+
+**実装指針**:
+- **Narrator の登場頻度は可変** — 毎日は出さない。感情の揺れ幅・イベント密度で出現判定
+- **提案・リマインド系通知は「出さない判断」を classifier で決める** — ルールベースで silent にする方向に倒す
+- **確認ダイアログを増やさず、最初に境界を決めて後は黙って動く** — onboarding で境界を固め、日常の確認を最小化
+- **通知頻度の上限を設ける** — 1日 N 回まで、同カテゴリは M 時間空ける
+
+**反パターン**: 毎日 Narrator が長文で語りかけてくる → 慣れて読まなくなる → Narrator 無効化と同じ。
+
+### ③ Append-only + Read-time Projection（過去を書き換えない）
+
+Claude Code の session transcript は append-only JSONL、compaction も過去を削除せず境界マーカーと summary event を追記するだけ。Resume/Fork もトランスクリプトを replay して復元。
+
+**なぜ focus-you で重要か**:
+- 日記は **ユーザーの履歴そのもの**。過去を書き換えるプロダクトは根本で信頼を失う
+- 失敗した日・動けなかった日も「記録された一日」（既存原則「動けてない日を責めない」と一致）
+- 「3月の第2週のパターン」を発見するには、過去が**変化していない**ことが大前提
+
+**設計方針**:
+
+| 対象 | 方針 |
+|---|---|
+| `diary_entries` | edit は許すが、revision は別レコード（`diary_entry_revisions`）として追記。UI で履歴を見られる |
+| `emotion_analysis` | 新しい分析が出ても過去の分析は消さない。`superseded_by` で新旧を繋ぐ |
+| `story_memory` | `memory_type` ごとに最新を持ちつつ、過去スナップショットを `story_memory_archive` に残す |
+| `ceo_insights` | 日次インサイトは追記のみ、上書きしない |
+| 週次・月次ダイジェスト | **read-time projection**。元エントリには触らず、view として生成 |
+
+**教訓**: 「要約されたビュー」は計算結果であり、原データではない。原データは **最小単位で不変**、view は **いつでも作り直せる** が設計の核。
+
+### ④ 5層 Context Shapers — 日記の長期蓄積アーキテクチャ
+
+Claude Code は毎モデル呼び出し前に5段の圧縮を順に実行: Budget reduction → Snip → Microcompact → Context collapse → Auto-compact。**RAG/embedding に飛びつく前に、段階的に軽い圧縮から試す**設計。
+
+**focus-you の長期蓄積に適用**:
+
+```
+Layer 1: Budget reduction  — 個別エントリのサイズ上限（超過分は reference 化）
+Layer 2: Snip             — 古いメタデータ・タグの軽トリム（本文は保持）
+Layer 3: Microcompact     — キーワード・感情タグの細粒度抽出
+Layer 4: Context collapse — 月単位の read-time projection（月サマリ表示、原エントリは残る）
+Layer 5: Auto-compact     — LLM 要約（最終手段、年単位アーカイブ用）
+```
+
+**embedding を避ける理由**（論文 §7.2 の思想）:
+- ユーザーが「何が検索で引かれたか」見えない
+- 感情的な記憶は近傍検索より**時系列・文脈の連続性**が重要
+- ファイル粒度（日付・週・月）の LLM スキャンで十分、entry 粒度の embedding はプライバシー・可読性で劣る
+
+**既存の「ハイブリッド分析方式（精神科医モデル）」は Layer 4-5 に相当**。Layer 1-3 は今後の長期蓄積に備えて先行設計しておく。
+
+### ⑤ File-based Transparency over Opaque DB
+
+Claude Code の設計思想で最も強いメッセージ: *stored context should be inspectable and editable by the user*（CLAUDE.md は平文 Markdown、embedding/opaque DB は不採用）。
+
+**focus-you の含意**:
+- ユーザーは自分の **全データ（日記・感情分析・Narrator memory）を export/edit/import できる**
+- 感情ラベルは編集可能（「AI が怒りと判定したが違う」を上書きできる。ただし③に従い履歴は残す）
+- プライバシー設定は「不透明な checkbox」ではなく、**どのデータが何に使われるか** を見える形で提示
+- Narrator が生成した `story_memory` も **ユーザーが読めて、間違いを正せる**
+
+**反パターン**: 「AI があなたをこう理解しています」を **変更不可能な読み取り専用** で見せる。これはユーザーを AI の解釈に従属させる。逆に、ユーザーが AI の解釈を書き換えると、その差分自体が重要な自己理解のデータになる。
+
+**実装ヒント**: `/data-export` ページを作り、全テーブルの自分のデータを JSON でダウンロード可能にする。vendor lock-in 回避＋プロダクトとしての信頼獲得。
+
+### ⑦ Deny-first + Values over Rules（外部連携の原則）
+
+Claude Code の安全姿勢: deny-first with human escalation。未知のアクションはデフォルト拒否、人間にエスカレ。`deny` は `allow` を常に上書き。
+
+**focus-you で外部連携（Slack/Calendar/メール送信、Webhook、外部 AI サービス呼び出し）を足す時の原則**:
+
+| ルール | 意味 |
+|---|---|
+| **デフォルト拒否** | 新規統合は最初はすべて off。ユーザーが明示的に on にする |
+| **deny は常に勝つ** | 「全AIコメントを許可」より「感情的に揺れてる時は無効」が強い |
+| **values over rules** | 硬直ルールより、文脈判断＋決定論的ガードレール。例: 「夜22時以降は通知なし」は rule、「疲れが見えるときは黙る」は value |
+| **reversibility-weighted** | read-only 系（カレンダー閲覧）は軽く、write 系（投稿・送信）は重く。Narrator が SNS に自動投稿は絶対しない |
+
+### ⑧ Pre-trust Initialization Ordering（プラグイン追加時の警戒）
+
+Claude Code で発見された CVE-2025-59536 / CVE-2026-21852 の教訓: **hook/MCP/settings ファイル読込が trust dialog の前に実行される時間窓** があり、ここに悪意あるコードを仕込める。**空間順序（どこで検証するか）だけでなく時間順序（いつ検証するか）を描くべき**。
+
+**focus-you が今後 plugin / integration を増やす時の設計チェックリスト**:
+
+1. 設定ロード → trust dialog → 実行 の **時系列を設計図で描く**
+2. 外部コードが `SessionStart` 前に走る経路がないか（auto-pull、hook など）
+3. ユーザー同意前に外部 URL を fetch する経路がないか
+4. localStorage/env 経由の hijack 経路がないか
+5. 新統合の追加は「既存の trust 境界の**内側**」か「新しい trust 境界が必要」か明示する
+
+**現状の focus-you での該当箇所**: Google Calendar 認証、Edge Function 呼び出し、将来的な OpenAI 以外の LLM 統合、将来的な plugin システム。すべて追加時にこのチェックを通す。
+
+### ⑨ Subagent Summary-only Return（秘書組織のハンドオフ仕様）
+
+Claude Code の subagent は **full transcript を親に返さず、最終応答と metadata だけ返す**。生 transcript は sidechain `.jsonl` + `.meta.json` に保存。**context-as-bottleneck 原則の核心実装**。
+
+**秘書組織（HD + PJ 別会社）への適用**:
+
+| 項目 | 現状 | 追加原則 |
+|---|---|---|
+| ハンドオフフォーマット | YAML（`.claude/rules/handoff.md`）で既に規定済み | ✅ |
+| 部署の transcript 保存 | agent_sessions にイベント記録 | ✅（既存の仕組みで代替可） |
+| 親に返す情報 | summary（handoff YAML の text） | **full 会話ログを親に注入しない** |
+| 生の transcript | 部署成果物ファイル + agent_sessions のイベント | **sidechain 的に別管理、親コンテキストに混入させない** |
+
+**focus-you プロダクトとしての応用**: もし将来「複数視点から日記を分析」（感情視点・行動視点・関係視点）を実装するなら、各視点の full transcript ではなく **summary のみをユーザーに表示**、生 transcript は別テーブルに残す。ユーザーが深堀りしたい時だけ展開する。
+
+### 通底する3つのコミットメント（Claude Code 論文より継承）
+
+1. **Graduated layering over monolithic mechanisms** — 通知・権限・圧縮はすべて段階的な多層にする。単一ルールで解決しようとしない
+2. **Append-only designs that favor auditability over query power** — 監査性と再構築可能性を、クエリ性能より優先する
+3. **Model judgment within a deterministic harness** — LLM に判断を任せ、周辺を決定論的インフラで支える（1.6% vs 98.4% の比率）
+
+**focus-you の実装配分も同じ目安**: LLM プロンプト・判断ロジックは全体の 2% 程度に留め、残り 98% は **データ整合性・権限・キャッシュ無効化・時間帯判定・文脈組み立て** などの決定論的インフラに投資する。Narrator の質は LLM の賢さではなく、**Narrator に渡すコンテキストの質**で決まる。
+
+---
+
 ## 更新履歴
 
 | 日付 | 追加・変更内容 |
@@ -456,3 +610,4 @@ Layer 3: 行動    — 言語化を使って自己制御・前向きさに繋げ
 | 2026-04-05 | Narrator（語り手）思想を追加。ストーリーの力、Narrative Intelligence 4エンジン、Courage Board |
 | 2026-04-06 | ハイブリッド分析方式・データソース文脈リテラシーを追加。Self-Analysis深化（構造化インサイト・統合まとめタブ） |
 | 2026-04-12 | 「コーチングを超える」セクション追加。連続データ×因果発見の差別化、価値の3層構造、「動けてない日を責めない」必須原則 |
+| 2026-04-19 | 「AI Agent System としての設計原則」9項目追加（Claude Code 論文より）。長期的自己理解能力の保全、Approval Fatigue 対策、Append-only、5層 Context Shapers、File-based Transparency、Deny-first、Pre-trust Init Ordering、Subagent Summary-only |
