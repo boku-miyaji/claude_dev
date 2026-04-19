@@ -5,6 +5,7 @@ import { useArcReader } from '@/hooks/useArcReader'
 import { useThemeFinder } from '@/hooks/useThemeFinder'
 import { aiCompletion } from '@/lib/edgeAi'
 import { supabase } from '@/lib/supabase'
+import { archiveStoryMemoryByType } from '@/lib/storyMemoryArchive'
 import { fetchCalendarEvents } from '@/lib/calendarApi'
 import type { CalendarEvent } from '@/types/calendar'
 
@@ -32,6 +33,10 @@ export function Story() {
     const next = arcDraft.trim()
     if (!next) return
     setSavingArc(true)
+    // design-philosophy ③ Append-only: archive the AI interpretation before
+    // the user overwrites it. The user's correction is itself useful signal
+    // for future Narrator runs — we keep the history on both sides.
+    await archiveStoryMemoryByType('current_arc', 'user_override')
     const { error } = await supabase
       .from('story_memory')
       .update({

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { aiCompletion } from '@/lib/edgeAi'
+import { archiveStoryMemoryById } from '@/lib/storyMemoryArchive'
 import type { ArcReaderResult } from '@/types/narrator'
 
 /**
@@ -73,10 +74,29 @@ export function useArcReader() {
         .map((d) => `[${d.created_at.substring(0, 10)}] ${d.body.substring(0, 120)}`)
         .join('\n')
 
+      // design-philosophy ⑩ Silence over Noise: feed the previous interpretation
+      // so the model can decide "nothing meaningfully changed; stay silent".
+      const { data: previousArcRow } = await supabase
+        .from('story_memory')
+        .select('narrative_text, updated_at')
+        .eq('memory_type', 'current_arc')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      const previousBlock = previousArcRow?.narrative_text
+        ? `\n\n## 前回の解釈 (${previousArcRow.updated_at?.substring(0, 10) ?? ''})\n"${previousArcRow.narrative_text}"`
+        : ''
+
       const result = await aiCompletion(
-        `## 感情の時系列データ（${emotions.length}件）\n${JSON.stringify(emotionTimeline, null, 1)}\n\n## 日記の抜粋\n${diarySnippets}`,
+        `## 感情の時系列データ（${emotions.length}件）\n${JSON.stringify(emotionTimeline, null, 1)}\n\n## 日記の抜粋\n${diarySnippets}${previousBlock}`,
         {
           systemPrompt: `感情データと日記の内容から、この人の最近2週間の状態を具体的に読み取る。
+
+## 沈黙の選択（design-philosophy ⑩）
+「前回の解釈」が提示されている場合、前回と実質同じ状態（同じフェーズ・同じ文脈で前回の narrative でも通用する）なら、再解釈せず SILENT を返す。
+同じことを言い換えただけの再生成は、ユーザーから見ると AI の過剰介入。本当に変化があった時だけ新しい narrative を書く。
+
+SILENT 時の出力: {"phase": null, "narrative": "SILENT", "confidence": 0}
 
 ## フェーズ（内部分類用）
 - exploration: 新しいことを試している。不安と期待が混在
@@ -111,23 +131,41 @@ export function useArcReader() {
       )
 
       const parsed = JSON.parse(result.content) as ArcReaderResult
+
+      // design-philosophy ⑩ Silence over Noise: model signalled no meaningful
+      // change. Keep the existing interpretation visible, skip the DB write.
+      if (!parsed.phase || parsed.narrative === 'SILENT') {
+        if (previousArcRow?.narrative_text) {
+          // Surface the previous interpretation so the UI still has something to render.
+          setArc({
+            phase: (parsed.phase as ArcReaderResult['phase']) ?? 'reflection',
+            narrative: previousArcRow.narrative_text,
+            confidence: 1,
+          })
+        }
+        return null
+      }
+
       setArc(parsed)
 
-      // Persist to story_memory
+      // Persist to story_memory (append-only via archive-then-update)
       const { data: existing } = await supabase
         .from('story_memory')
-        .select('id')
+        .select('id, version')
         .eq('memory_type', 'current_arc')
         .limit(1)
         .single()
 
       if (existing) {
+        // design-philosophy ③ Append-only: snapshot the previous state first.
+        await archiveStoryMemoryById(existing.id, 'arc_reader_refresh')
+        const prevVersion = (existing as { version?: number }).version ?? 1
         await supabase
           .from('story_memory')
           .update({
             content: parsed,
             narrative_text: parsed.narrative,
-            version: (existing as { id: number }).id ? 2 : 1, // increment conceptually
+            version: prevVersion + 1,
             updated_at: new Date().toISOString(),
           })
           .eq('id', existing.id)

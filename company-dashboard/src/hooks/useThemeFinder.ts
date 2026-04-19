@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { aiCompletion } from '@/lib/edgeAi'
+import { archiveStoryMemoryById } from '@/lib/storyMemoryArchive'
 
 interface ThemeFinderResult {
   identity: string           // 通底テーマ（「意味を問う人」等）
@@ -10,6 +11,7 @@ interface ThemeFinderResult {
     recoveryStyle: string    // 回復スタイル
   }
   aspirations: string        // 志向性の要約
+  silent?: boolean           // design-philosophy ⑩: model chose not to rewrite the theme
 }
 
 /**
@@ -101,12 +103,30 @@ export function useThemeFinder() {
         .map((g) => `[${g.level}] ${g.title} (${g.status})`)
         .join('\n')
 
+      // design-philosophy ⑩: feed previous theme so the model can choose silence.
+      const { data: prevIdentity } = await supabase
+        .from('story_memory')
+        .select('content, narrative_text, updated_at')
+        .eq('memory_type', 'identity')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      const previousBlock = prevIdentity?.narrative_text
+        ? `\n\n## 前回のテーマ (${prevIdentity.updated_at?.substring(0, 10) ?? ''})\n"${prevIdentity.narrative_text}"\n前回の詳細: ${JSON.stringify(prevIdentity.content).substring(0, 400)}`
+        : ''
+
       const result = await aiCompletion(
-        `## 日記（${(diaryRes.data || []).length}件）\n${diaryText}\n\n## 感情傾向\n${emotionSummary}\n\n## 夢\n${dreamsText || 'なし'}\n\n## ゴール\n${goalsText || 'なし'}`,
+        `## 日記（${(diaryRes.data || []).length}件）\n${diaryText}\n\n## 感情傾向\n${emotionSummary}\n\n## 夢\n${dreamsText || 'なし'}\n\n## ゴール\n${goalsText || 'なし'}${previousBlock}`,
         {
           systemPrompt: `あなたは人生の通底テーマを発見する存在。長期間の日記・感情・夢・目標を横断的に分析し、この人の「核心」を言語化する。
 
-## 出力（JSON）
+## 沈黙の選択（design-philosophy ⑩）
+「前回のテーマ」が提示されている場合、この3ヶ月で identity や志向性に実質的な変化が見られなければ再解釈しない。
+月1回のスケジュールに従って機械的に書き直すと、ユーザーの自己理解が AI の言い換えに振り回される。本当に新しい材料（新しい夢の達成、価値観の転換、感情パターンの明確な変化）があった時だけ更新する。
+
+SILENT 時の出力: {"silent": true}
+
+## 通常の出力（JSON）
 {
   "identity": "この人を一言で表すテーマ。例: 「つくる人」「意味を問う人」「橋を架ける人」。抽象的すぎず、具体的すぎず。",
   "emotionalDNA": {
@@ -130,9 +150,19 @@ export function useThemeFinder() {
       )
 
       const parsed = JSON.parse(result.content) as ThemeFinderResult
+
+      // design-philosophy ⑩: model chose silence. Keep existing theme visible, skip writes.
+      if (parsed.silent || !parsed.identity) {
+        if (prevIdentity?.content) {
+          setTheme(prevIdentity.content as unknown as ThemeFinderResult)
+        }
+        return null
+      }
+
       setTheme(parsed)
 
-      // Persist to story_memory (identity + emotional_dna + aspirations)
+      // Persist to story_memory (identity + emotional_dna + aspirations).
+      // upsertMemory snapshots to archive first (design-philosophy ③).
       await upsertMemory('identity', parsed as unknown as Record<string, unknown>, parsed.identity)
       await upsertMemory('emotional_dna', parsed.emotionalDNA, JSON.stringify(parsed.emotionalDNA))
       await upsertMemory('aspirations', { aspirations: parsed.aspirations }, parsed.aspirations)
@@ -156,15 +186,23 @@ export function useThemeFinder() {
 async function upsertMemory(memoryType: string, content: Record<string, unknown>, narrativeText: string) {
   const { data: existing } = await supabase
     .from('story_memory')
-    .select('id')
+    .select('id, version')
     .eq('memory_type', memoryType)
     .limit(1)
     .single()
 
   if (existing) {
+    // design-philosophy ③ Append-only: snapshot before overwrite.
+    await archiveStoryMemoryById(existing.id, 'theme_finder_refresh')
+    const prevVersion = (existing as { version?: number }).version ?? 1
     await supabase
       .from('story_memory')
-      .update({ content, narrative_text: narrativeText, updated_at: new Date().toISOString() })
+      .update({
+        content,
+        narrative_text: narrativeText,
+        version: prevVersion + 1,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', existing.id)
   } else {
     await supabase

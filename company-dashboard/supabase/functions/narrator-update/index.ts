@@ -14,6 +14,34 @@ const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 const PLUTCHIK = ["joy", "trust", "fear", "surprise", "sadness", "disgust", "anger", "anticipation"] as const;
 
+/**
+ * design-philosophy ③ Append-only: before any UPDATE on story_memory,
+ * snapshot the current row into story_memory_archive so the history is
+ * never destroyed. Failures MUST NOT block the update.
+ */
+async function archiveStoryMemory(id: number, memoryType: string, reason: string): Promise<void> {
+  try {
+    const { data: current } = await sb
+      .from("story_memory")
+      .select("id, memory_type, content, narrative_text, version, created_at, updated_at")
+      .eq("id", id)
+      .maybeSingle();
+    if (!current) return;
+    await sb.from("story_memory_archive").insert({
+      original_id: current.id,
+      memory_type: current.memory_type,
+      content: current.content,
+      narrative_text: current.narrative_text,
+      version: current.version,
+      original_created_at: current.created_at,
+      original_updated_at: current.updated_at,
+      archive_reason: reason,
+    });
+  } catch (e) {
+    console.warn(`[narrator-update] archive ${memoryType} failed:`, e);
+  }
+}
+
 // Narrator memory (Arc/Theme/Chapter) uses Claude Opus 4.7 for deep self-understanding.
 async function llmJson(
   systemPrompt: string,
@@ -64,15 +92,15 @@ async function llmJson(
 // Arc Reader: weekly emotional phase detection
 // ============================================================
 
-async function runArcReader(): Promise<{ updated: boolean; phase?: string }> {
-  // Check last update
+async function runArcReader(): Promise<{ updated: boolean; phase?: string; silent?: boolean }> {
+  // Check last update + fetch previous narrative for SILENT comparison
   const { data: existing } = await sb
     .from("story_memory")
-    .select("updated_at")
+    .select("id, updated_at, narrative_text")
     .eq("memory_type", "current_arc")
     .order("updated_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (existing) {
     const daysSince = (Date.now() - new Date(existing.updated_at).getTime()) / 86400000;
@@ -104,41 +132,60 @@ async function runArcReader(): Promise<{ updated: boolean; phase?: string }> {
   });
 
   const diaryText = (diaries || []).map((d) => `[${d.created_at.substring(0, 10)}] ${d.body.substring(0, 120)}`).join("\n");
+  const previousBlock = existing?.narrative_text
+    ? `\n\n## 前回の解釈 (${existing.updated_at.substring(0, 10)})\n"${existing.narrative_text}"`
+    : "";
 
   const systemPrompt = `感情データと日記の内容から、この人が今どんな時期にいるかを判定する。
 narrativeは友達が「最近どう？」と聞かれて答えるくらいの自然な日本語で、具体的な出来事や気持ちに触れて1-2文で書く。
 抽象的・詩的な表現は禁止（×「大きな扉を開けた」「キラリと見えてきた」）。日記の内容に基づいた具体的な事実を述べる。
-出力JSON: {"phase":"exploration|immersion|reflection|reconstruction|leap","narrative":"1-2文の具体的な説明","confidence":0.0-1.0}`;
+
+## 沈黙の選択（design-philosophy ⑩）
+「前回の解釈」が提示されている場合、前回と実質同じ状態（同じフェーズ・同じ文脈で前回の narrative でも通用する）なら、再解釈せず SILENT を返す。
+週次の定期実行に従って機械的に書き直すと、ユーザーから見ると AI の過剰介入になる。本当に変化があった時だけ新しい narrative を書く。
+SILENT 時の出力: {"phase": null, "narrative": "SILENT", "confidence": 0}
+
+## 通常の出力
+{"phase":"exploration|immersion|reflection|reconstruction|leap","narrative":"1-2文の具体的な説明","confidence":0.0-1.0}`;
   const parsed = await llmJson(
     systemPrompt,
-    `感情:\n${JSON.stringify(timeline)}\n\n日記:\n${diaryText}`,
+    `感情:\n${JSON.stringify(timeline)}\n\n日記:\n${diaryText}${previousBlock}`,
     0.5,
     300,
   );
-  if (!parsed || !parsed.phase) return { updated: false };
 
-  // Upsert to story_memory
+  // Silence: keep prior row, skip write.
+  if (!parsed || !parsed.phase || parsed.narrative === "SILENT") {
+    return { updated: false, silent: true };
+  }
+
+  // Upsert to story_memory with archive-then-update.
   if (existing) {
-    await sb.from("story_memory").update({ content: parsed, narrative_text: parsed.narrative, updated_at: new Date().toISOString() }).eq("memory_type", "current_arc");
+    await archiveStoryMemory(existing.id as number, "current_arc", "arc_reader_cron");
+    await sb.from("story_memory").update({
+      content: parsed,
+      narrative_text: parsed.narrative,
+      updated_at: new Date().toISOString(),
+    }).eq("id", existing.id as number);
   } else {
     await sb.from("story_memory").insert({ memory_type: "current_arc", content: parsed, narrative_text: parsed.narrative });
   }
 
-  return { updated: true, phase: parsed.phase };
+  return { updated: true, phase: parsed.phase as string };
 }
 
 // ============================================================
 // Theme Finder: monthly identity/theme detection
 // ============================================================
 
-async function runThemeFinder(): Promise<{ updated: boolean; identity?: string }> {
+async function runThemeFinder(): Promise<{ updated: boolean; identity?: string; silent?: boolean }> {
   const { data: existing } = await sb
     .from("story_memory")
-    .select("updated_at")
+    .select("updated_at, content, narrative_text")
     .eq("memory_type", "identity")
     .order("updated_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (existing) {
     const daysSince = (Date.now() - new Date(existing.updated_at).getTime()) / 86400000;
@@ -158,30 +205,46 @@ async function runThemeFinder(): Promise<{ updated: boolean; identity?: string }
 
   const diaryText = (diaryRes.data || []).map((d) => `[${d.entry_date}] ${d.body.substring(0, 150)}`).join("\n");
   const dreamsText = (dreamsRes.data || []).map((d) => `${d.title} (${d.status})`).join(", ");
+  const previousBlock = existing?.narrative_text
+    ? `\n\n## 前回のテーマ (${existing.updated_at.substring(0, 10)})\n"${existing.narrative_text}"\n前回の詳細: ${JSON.stringify(existing.content).substring(0, 400)}`
+    : "";
 
   const parsed = await llmJson(
-    `長期の日記から人生テーマを発見。出力JSON: {"identity":"テーマ","emotionalDNA":{"joyTriggers":["3つ"],"energySources":["2-3つ"],"recoveryStyle":"傾向"},"aspirations":"志向1-2文"}`,
-    `日記(${(diaryRes.data || []).length}件):\n${diaryText}\n\n夢: ${dreamsText || "なし"}`,
+    `長期の日記から人生テーマを発見。
+
+## 沈黙の選択（design-philosophy ⑩）
+「前回のテーマ」が提示されている場合、この3ヶ月で identity や志向性に実質的な変化が見られなければ再解釈しない。
+月1回のスケジュールに従って機械的に書き直すと、ユーザーの自己理解が AI の言い換えに振り回される。
+本当に新しい材料（新しい夢の達成、価値観の転換、感情パターンの明確な変化）があった時だけ更新する。
+SILENT 時の出力: {"silent": true}
+
+## 通常の出力
+{"identity":"テーマ","emotionalDNA":{"joyTriggers":["3つ"],"energySources":["2-3つ"],"recoveryStyle":"傾向"},"aspirations":"志向1-2文"}`,
+    `日記(${(diaryRes.data || []).length}件):\n${diaryText}\n\n夢: ${dreamsText || "なし"}${previousBlock}`,
     0.6,
     500,
   );
-  if (!parsed || !parsed.identity) return { updated: false };
 
-  // Upsert identity, emotional_dna, aspirations
+  if (!parsed || parsed.silent || !parsed.identity) {
+    return { updated: false, silent: true };
+  }
+
+  // Upsert identity, emotional_dna, aspirations (archive-then-update).
   for (const [type, content, narrative] of [
     ["identity", parsed, parsed.identity],
     ["emotional_dna", parsed.emotionalDNA || {}, JSON.stringify(parsed.emotionalDNA)],
     ["aspirations", { aspirations: parsed.aspirations }, parsed.aspirations],
   ] as [string, Record<string, unknown>, string][]) {
-    const { data: ex } = await sb.from("story_memory").select("id").eq("memory_type", type).limit(1).single();
+    const { data: ex } = await sb.from("story_memory").select("id").eq("memory_type", type).limit(1).maybeSingle();
     if (ex) {
+      await archiveStoryMemory(ex.id as number, type, "theme_finder_cron");
       await sb.from("story_memory").update({ content, narrative_text: narrative, updated_at: new Date().toISOString() }).eq("id", ex.id);
     } else {
       await sb.from("story_memory").insert({ memory_type: type, content, narrative_text: narrative });
     }
   }
 
-  return { updated: true, identity: parsed.identity };
+  return { updated: true, identity: parsed.identity as string };
 }
 
 // ============================================================
