@@ -78,3 +78,12 @@ token.json
 .claude/hooks/supabase.env
 .vercel
 node_modules
+
+# Client-received materials — NEVER commit
+project-scotch-care/reference_docs/受領資料/
+project-scotch-care/reference_docs/**/*.pptx
+project-scotch-care/reference_docs/**/*.pdf
+project-scotch-care/reference_docs/**/*.xlsx
+project-scotch-care/reference_docs/**/*.docx
+*.playwright-mcp/
+**/itoen-magentic*.png
