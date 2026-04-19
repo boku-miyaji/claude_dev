@@ -269,7 +269,8 @@
       "Bash(cd /workspace/aces-rikyu-sales-proposals-poc ls tests/ find tests -name \"*.py\")",
       "Bash(cd /workspace/aces-rikyu-sales-proposals-poc grep -n \"output\\\\|/lib\\\\b\" .gitignore)",
       "Bash(cd /workspace/aces-rikyu-sales-proposals-poc rm -f server/public/itoen-magentic-preview.html rm -f /tmp/itoen-run.log /tmp/rikyu-dev.log)",
-      "Bash(awk -F/ '{print $1}')"
+      "Bash(awk -F/ '{print $1}')",
+      "Bash(getent hosts *)"
     ],
     "deny": [
       "Read(**/.env)",
