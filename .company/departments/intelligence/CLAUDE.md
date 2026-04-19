@@ -347,6 +347,38 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/artifacts?on_conflict=file_path" \
 
 **「示唆なし」は許容しない。** どんな情報でも focus-you の文脈で解釈する。それが情報収集部の付加価値。
 
+#### 構造化 YAML ブロックの追加（必須）
+
+`## 💡 focus-you への示唆` の Markdown セクション本文に加えて、その直後（または報告末尾）に機械可読な YAML ブロックを必ず追加する。`intelligence_suggestions` テーブルへの自動 INSERT に使われる。
+
+````markdown
+```yaml
+# suggestions
+suggestions:
+  - title: "..."
+    description: "..."
+    priority: high|medium|low
+    effort: small|medium|large
+    category: algorithm|architecture|ux|cost|competition|design|other
+    source_urls:
+      - https://...
+```
+````
+
+Markdown セクションと YAML の内容は同期させる（同じ示唆を2表現で書く）。YAML ブロックの最初の行は `# suggestions` というコメントを必ず入れる。
+
+### レポート生成後の自動 INSERT
+
+レポートを保存した後、必ず以下を実行して `intelligence_suggestions` テーブルに記録する:
+
+```bash
+source /home/node/.claude/hooks/supabase.env
+python3 /workspace/scripts/intelligence/ingest-suggestions.py \
+  /workspace/.company/departments/intelligence/reports/YYYY-MM-DD-briefing.md
+```
+
+INSERT 件数がレポートの suggestion 数と一致することを確認する。一致しない場合は YAML ブロックの syntax を見直す。同じレポートを2回流しても既存分はスキップされる（冪等）。
+
 ## 手動実行（GitHub Actions）
 
 ```bash

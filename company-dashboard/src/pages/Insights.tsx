@@ -1,9 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, PageHeader, EmptyState } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
+import {
+  adoptSuggestion,
+  checkSuggestion,
+  dismissSuggestion,
+  markImplemented,
+  rejectSuggestion,
+} from '@/lib/intelligenceSuggestions'
+import type {
+  IntelligenceSuggestion,
+  SuggestionPriority,
+  SuggestionStatus,
+} from '@/types/intelligence'
 
 // ============================================================
-// Types
+// Types (existing Overview sections)
 // ============================================================
 
 interface HourCount { hour: number; count: number }
@@ -58,7 +70,7 @@ const CONF_COLORS: Record<string, string> = { high: 'var(--green)', medium: 'var
 const SUG_COLORS: Record<string, string> = { positive: 'var(--green)', neutral: 'var(--accent2)', warning: 'var(--amber)' }
 
 // ============================================================
-// Sub-components
+// Sub-components (shared by Overview)
 // ============================================================
 
 function RhythmBar({ counts, max, labels, colorFn, height = 60 }: {
@@ -325,10 +337,10 @@ function InsightCards({ insights, isCliMode }: { insights: Insight[]; isCliMode:
 }
 
 // ============================================================
-// Main Page
+// Overview Tab (wraps all existing sections)
 // ============================================================
 
-export function Insights() {
+function OverviewTab() {
   const [insights, setInsights] = useState<Insight[]>([])
   const [isCliMode, setIsCliMode] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -344,12 +356,10 @@ export function Insights() {
     })
   }, [])
 
-  if (loading) return <div className="page"><PageHeader title="Insights" description="あなたの行動パターン・傾向" /><div className="skeleton-card" style={{ height: 200 }} /></div>
+  if (loading) return <div className="skeleton-card" style={{ height: 200 }} />
 
   return (
-    <div className="page">
-      <PageHeader title="Insights" description="あなたの行動パターン・傾向" />
-
+    <>
       <DiaryRhythmSection />
       {isCliMode && <WorkRhythmSection />}
 
@@ -357,6 +367,432 @@ export function Insights() {
         ? <EmptyState icon="📊" message="インサイトはまだありません。日記を書き続けると自動で分析が始まります。" />
         : <InsightCards insights={insights} isCliMode={isCliMode} />
       }
+    </>
+  )
+}
+
+// ============================================================
+// Suggestions Tab (intelligence_suggestions)
+// ============================================================
+
+const PRIORITY_COLORS: Record<SuggestionPriority, string> = {
+  high: 'var(--red)',
+  medium: 'var(--amber)',
+  low: 'var(--text3)',
+}
+
+const STATUS_LABELS: Record<SuggestionStatus, string> = {
+  new: '未チェック',
+  checked: 'チェック済',
+  adopted: '採用',
+  rejected: '却下',
+  implemented: '実装済',
+  dismissed: 'スキップ',
+}
+
+const STATUS_COLORS: Record<SuggestionStatus, string> = {
+  new: 'var(--accent2)',
+  checked: 'var(--blue)',
+  adopted: 'var(--green)',
+  rejected: 'var(--text3)',
+  implemented: 'var(--accent)',
+  dismissed: 'var(--text3)',
+}
+
+const ACTIVE_STATUSES: SuggestionStatus[] = ['new', 'checked']
+
+function SuggestionsTab() {
+  const [all, setAll] = useState<IntelligenceSuggestion[]>([])
+  const [loading, setLoading] = useState(true)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
+
+  // filters
+  const [priorityFilter, setPriorityFilter] = useState<Set<SuggestionPriority>>(new Set())
+  const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set())
+  const [statusFilter, setStatusFilter] = useState<Set<SuggestionStatus>>(new Set())
+
+  const load = async () => {
+    const { data } = await supabase
+      .from('intelligence_suggestions')
+      .select('*')
+      .order('source_report_date', { ascending: false })
+    setAll((data as IntelligenceSuggestion[]) || [])
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  const categories = useMemo(() => {
+    const set = new Set<string>()
+    for (const s of all) if (s.category) set.add(s.category)
+    return Array.from(set).sort()
+  }, [all])
+
+  const visible = useMemo(() => {
+    return all.filter((s) => {
+      if (!showArchived && !ACTIVE_STATUSES.includes(s.status)) return false
+      if (priorityFilter.size > 0 && (!s.priority || !priorityFilter.has(s.priority))) return false
+      if (categoryFilter.size > 0 && (!s.category || !categoryFilter.has(s.category))) return false
+      if (statusFilter.size > 0 && !statusFilter.has(s.status)) return false
+      return true
+    })
+  }, [all, showArchived, priorityFilter, categoryFilter, statusFilter])
+
+  const counts = useMemo(() => {
+    const c: Record<SuggestionStatus, number> = {
+      new: 0, checked: 0, adopted: 0, rejected: 0, implemented: 0, dismissed: 0,
+    }
+    for (const s of all) c[s.status]++
+    return c
+  }, [all])
+
+  async function doAction(
+    id: string,
+    action: (id: string) => Promise<unknown>,
+    errorLabel: string,
+  ) {
+    setBusyId(id)
+    try {
+      await action(id)
+      await load()
+    } catch (e) {
+      console.error(`[SuggestionsTab] ${errorLabel} failed:`, e)
+      alert(`${errorLabel}に失敗しました: ${(e as Error).message || e}`)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  function togglePriority(p: SuggestionPriority) {
+    setPriorityFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(p)) next.delete(p); else next.add(p)
+      return next
+    })
+  }
+  function toggleCategory(c: string) {
+    setCategoryFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(c)) next.delete(c); else next.add(c)
+      return next
+    })
+  }
+  function toggleStatus(s: SuggestionStatus) {
+    setStatusFilter((prev) => {
+      const next = new Set(prev)
+      if (next.has(s)) next.delete(s); else next.add(s)
+      return next
+    })
+  }
+
+  if (loading) return <div className="skeleton-card" style={{ height: 200 }} />
+
+  if (all.length === 0) {
+    return <EmptyState icon="💡" message="示唆はまだありません。情報収集部のレポートから自動で収集されます。" />
+  }
+
+  return (
+    <div>
+      {/* Status summary */}
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, fontSize: 12, flexWrap: 'wrap' }}>
+        {(['new', 'checked', 'adopted', 'rejected', 'implemented', 'dismissed'] as const).map((st) => (
+          <span key={st} style={{ color: 'var(--text3)' }}>
+            <b style={{ color: STATUS_COLORS[st] }}>{counts[st]}</b> {STATUS_LABELS[st]}
+          </span>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="card" style={{ padding: 12, marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <FilterGroup label="優先度">
+          {(['high', 'medium', 'low'] as const).map((p) => (
+            <FilterChip
+              key={p}
+              active={priorityFilter.has(p)}
+              onClick={() => togglePriority(p)}
+              color={PRIORITY_COLORS[p]}
+            >
+              {p}
+            </FilterChip>
+          ))}
+        </FilterGroup>
+
+        {categories.length > 0 && (
+          <FilterGroup label="カテゴリ">
+            {categories.map((c) => (
+              <FilterChip
+                key={c}
+                active={categoryFilter.has(c)}
+                onClick={() => toggleCategory(c)}
+              >
+                {c}
+              </FilterChip>
+            ))}
+          </FilterGroup>
+        )}
+
+        <FilterGroup label="状態">
+          {(['new', 'checked', 'adopted', 'rejected', 'implemented', 'dismissed'] as const).map((s) => (
+            <FilterChip
+              key={s}
+              active={statusFilter.has(s)}
+              onClick={() => toggleStatus(s)}
+              color={STATUS_COLORS[s]}
+            >
+              {STATUS_LABELS[s]}
+            </FilterChip>
+          ))}
+        </FilterGroup>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+          <span style={{ fontSize: 11, color: 'var(--text3)' }}>{visible.length} / {all.length} 件</span>
+          <label style={{ fontSize: 12, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+            />
+            完了・却下・スキップも表示
+          </label>
+        </div>
+      </div>
+
+      {/* Cards */}
+      {visible.length === 0 ? (
+        <EmptyState icon="🔍" message="条件に合う示唆がありません" />
+      ) : (
+        visible.map((s) => (
+          <SuggestionCard
+            key={s.id}
+            suggestion={s}
+            busy={busyId === s.id}
+            onCheck={() => doAction(s.id, checkSuggestion, 'チェック')}
+            onDismiss={() => doAction(s.id, dismissSuggestion, '削除')}
+            onAdopt={() => doAction(s.id, adoptSuggestion, '採用')}
+            onReject={() => doAction(s.id, rejectSuggestion, '却下')}
+            onImplemented={() => doAction(s.id, markImplemented, '実装済み')}
+          />
+        ))
+      )}
+    </div>
+  )
+}
+
+function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3)', letterSpacing: '0.5px', minWidth: 52 }}>
+        {label}
+      </span>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>{children}</div>
+    </div>
+  )
+}
+
+function FilterChip({ active, onClick, color, children }: {
+  active: boolean
+  onClick: () => void
+  color?: string
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        fontSize: 11,
+        padding: '3px 10px',
+        borderRadius: 12,
+        border: `1px solid ${active ? (color || 'var(--accent)') : 'var(--border)'}`,
+        background: active ? (color || 'var(--accent)') + '22' : 'var(--surface)',
+        color: active ? (color || 'var(--accent)') : 'var(--text2)',
+        cursor: 'pointer',
+        fontWeight: active ? 600 : 400,
+        fontFamily: 'var(--font)',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function SuggestionCard({
+  suggestion: s,
+  busy,
+  onCheck,
+  onDismiss,
+  onAdopt,
+  onReject,
+  onImplemented,
+}: {
+  suggestion: IntelligenceSuggestion
+  busy: boolean
+  onCheck: () => void
+  onDismiss: () => void
+  onAdopt: () => void
+  onReject: () => void
+  onImplemented: () => void
+}) {
+  const reportDate = s.source_report_date
+    ? new Date(s.source_report_date).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' })
+    : null
+
+  return (
+    <div className="card" style={{ marginBottom: 12, padding: 14, opacity: busy ? 0.6 : 1 }}>
+      {/* Header: title + status */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 6 }}>
+        <div style={{ flex: 1, fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.4 }}>
+          {s.title}
+        </div>
+        <span style={{
+          fontSize: 10, padding: '2px 8px', borderRadius: 10,
+          background: STATUS_COLORS[s.status] + '22',
+          color: STATUS_COLORS[s.status],
+          fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0,
+        }}>
+          {STATUS_LABELS[s.status]}
+        </span>
+      </div>
+
+      {/* Description */}
+      {s.description && (
+        <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 10 }}>
+          {s.description}
+        </div>
+      )}
+
+      {/* Metadata row: priority / effort / category / date */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+        {s.priority && (
+          <span style={{
+            fontSize: 10, padding: '1px 7px', borderRadius: 3,
+            background: PRIORITY_COLORS[s.priority] + '22',
+            color: PRIORITY_COLORS[s.priority], fontWeight: 600,
+          }}>
+            {s.priority}
+          </span>
+        )}
+        {s.effort && (
+          <span style={{
+            fontSize: 10, padding: '1px 7px', borderRadius: 3,
+            background: 'var(--surface2)', color: 'var(--text3)',
+          }}>
+            effort: {s.effort}
+          </span>
+        )}
+        {s.category && (
+          <span style={{
+            fontSize: 10, padding: '1px 7px', borderRadius: 3,
+            background: 'var(--accent-bg, var(--surface2))', color: 'var(--accent2)',
+          }}>
+            {s.category}
+          </span>
+        )}
+        {reportDate && (
+          <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+            {reportDate}
+          </span>
+        )}
+        {s.task_id !== null && (
+          <a
+            href={`#/tasks?id=${s.task_id}`}
+            style={{ fontSize: 10, color: 'var(--accent)', textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); window.location.hash = `#/tasks?id=${s.task_id}` }}
+          >
+            → タスク #{s.task_id}
+          </a>
+        )}
+      </div>
+
+      {/* Source URLs */}
+      {s.source_urls && s.source_urls.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, fontSize: 11 }}>
+          {s.source_urls.map((url, i) => (
+            <a
+              key={i}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: 'var(--accent)', textDecoration: 'none' }}
+            >
+              {shortenUrl(url)} ↗
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+        {s.status === 'new' && (
+          <>
+            <button className="btn btn-g btn-sm" onClick={onDismiss} disabled={busy}>削除</button>
+            <button className="btn btn-p btn-sm" onClick={onCheck} disabled={busy}>チェック</button>
+          </>
+        )}
+        {s.status === 'checked' && (
+          <>
+            <button className="btn btn-g btn-sm" onClick={onReject} disabled={busy}>却下</button>
+            <button className="btn btn-p btn-sm" onClick={onAdopt} disabled={busy}>採用</button>
+          </>
+        )}
+        {s.status === 'adopted' && (
+          <button className="btn btn-p btn-sm" onClick={onImplemented} disabled={busy}>実装済みにする</button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function shortenUrl(url: string): string {
+  try {
+    const u = new URL(url)
+    const host = u.hostname.replace(/^www\./, '')
+    const path = u.pathname.length > 1 ? u.pathname : ''
+    const combined = `${host}${path}`
+    return combined.length > 50 ? combined.substring(0, 50) + '...' : combined
+  } catch {
+    return url.length > 50 ? url.substring(0, 50) + '...' : url
+  }
+}
+
+// ============================================================
+// Main Page
+// ============================================================
+
+type Tab = 'overview' | 'suggestions'
+
+export function Insights() {
+  const initialTab: Tab = window.location.hash === '#suggestions' ? 'suggestions' : 'overview'
+  const [tab, setTab] = useState<Tab>(initialTab)
+
+  const handleTabChange = (next: Tab) => {
+    setTab(next)
+    window.location.hash = next === 'suggestions' ? '#suggestions' : ''
+  }
+
+  return (
+    <div className="page">
+      <PageHeader title="Insights" description="あなたの行動パターン・傾向" />
+
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', paddingBottom: 0 }}>
+        {([['overview', 'Overview'], ['suggestions', 'Suggestions']] as const).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => handleTabChange(id)}
+            style={{
+              background: 'none', border: 'none', padding: '10px 20px', fontSize: 13,
+              fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)',
+              color: tab === id ? 'var(--accent)' : 'var(--text3)',
+              borderBottom: tab === id ? '2px solid var(--accent)' : '2px solid transparent',
+              marginBottom: -2,
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'overview' ? <OverviewTab /> : <SuggestionsTab />}
     </div>
   )
 }

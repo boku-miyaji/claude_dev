@@ -10,11 +10,12 @@
     2. ```yaml ... ``` コードフェンス内で、先頭に `# suggestions` コメントを持つか、
        top-level キー `suggestions:` を持つブロックを抽出
     3. yaml.safe_load でパース
-    4. 各項目を intelligence_suggestions テーブルへ INSERT
+    4. 各項目について、まず (title, source_report_path) で既存確認（SELECT）
+       存在すればスキップ（冪等）
+    5. 存在しなければ intelligence_suggestions テーブルへ INSERT
        - source_report_path: レポートの .company/... 相対パス
        - source_report_date: ファイル名から YYYY-MM-DD を抽出
        - status: 'new'
-    5. 既存に同一 (title, source_report_path) があれば 409 で skip（冪等）
 
 環境変数:
     SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_INGEST_KEY
@@ -189,6 +190,60 @@ def infer_source_report_date(file_path: Path) -> str | None:
 
 
 # ── DB 通信 ──────────────────────────────────────────────────────
+def check_existing(
+    supabase_url: str,
+    anon_key: str,
+    ingest_key: str,
+    title: str,
+    source_report_path: str,
+    timeout: float = 10.0,
+) -> bool | None:
+    """(title, source_report_path) の組み合わせが既に存在するか確認。
+
+    Returns:
+        True: 既存あり（スキップ対象）
+        False: 既存なし（INSERT して良い）
+        None: 通信エラー（判定不能 → 呼び出し側でエラー扱い）
+    """
+    # PostgREST フィルタ: title と source_report_path で完全一致
+    headers = {
+        "apikey": anon_key,
+        "Authorization": f"Bearer {anon_key}",
+        "x-ingest-key": ingest_key,
+    }
+    # URL エンコード（PostgREST は `eq.<value>` の形式）
+    params = {
+        "title": f"eq.{title}",
+        "source_report_path": f"eq.{source_report_path}",
+        "select": "id",
+        "limit": "1",
+    }
+    try:
+        resp = requests.get(
+            f"{supabase_url}/rest/v1/intelligence_suggestions",
+            headers=headers,
+            params=params,
+            timeout=timeout,
+        )
+    except requests.RequestException as exc:
+        print(f"  [error] SELECT 失敗 {title[:60]}: {exc}", file=sys.stderr)
+        return None
+
+    if resp.status_code == 200:
+        try:
+            rows = resp.json()
+        except ValueError:
+            rows = []
+        return len(rows) > 0
+
+    body = (resp.text or "")[:200]
+    print(
+        f"  [error] SELECT HTTP {resp.status_code} {body}",
+        file=sys.stderr,
+    )
+    return None
+
+
 def post_suggestion(
     supabase_url: str,
     anon_key: str,
@@ -200,6 +255,10 @@ def post_suggestion(
 
     result:
         'inserted' | 'duplicate' | 'error'
+
+    注意: 冪等性は呼び出し側で check_existing() を先に呼んで担保する。
+    本関数は安全網として Prefer: resolution=ignore-duplicates も付けるが、
+    現時点で DB 側に UNIQUE 制約は無いため、SELECT による事前チェックが主防衛ライン。
     """
     headers = {
         "apikey": anon_key,
@@ -283,21 +342,41 @@ def run(
     print(f"[ingest] 抽出件数: {len(suggestions)}")
 
     inserted = 0
-    duplicates = 0
+    skipped = 0
     errors = 0
 
     for sug in suggestions:
         payload = build_insert_payload(sug, source_report_path, source_report_date)
+
+        # 冪等性: (title, source_report_path) が既にあればスキップ
+        exists = check_existing(
+            supabase_url,
+            anon_key,
+            ingest_key,
+            sug["title"],
+            source_report_path,
+        )
+        if exists is None:
+            # SELECT 自体が失敗した場合はエラー扱い（誤って重複 INSERT しない）
+            errors += 1
+            continue
+        if exists:
+            print(f"  [skip] 既存: {sug['title'][:60]}")
+            skipped += 1
+            continue
+
         result, _ = post_suggestion(supabase_url, anon_key, ingest_key, payload)
         if result == "inserted":
+            print(f"  [insert] {sug['title'][:60]}")
             inserted += 1
         elif result == "duplicate":
-            duplicates += 1
+            # SELECT 後の競合レース。スキップ扱い
+            skipped += 1
         else:
             errors += 1
 
     print(
-        f"[ingest] 結果: inserted={inserted} duplicates={duplicates} errors={errors}"
+        f"[ingest] 結果: inserted={inserted} skipped={skipped} errors={errors}"
     )
 
     return 2 if errors > 0 else 0

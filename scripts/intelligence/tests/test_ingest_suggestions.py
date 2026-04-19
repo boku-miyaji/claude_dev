@@ -283,7 +283,93 @@ def test_post_suggestion_exception(monkeypatch):
     assert code == 0
 
 
+class _FakeJsonResp:
+    """200 OK + JSON body を返すモック。check_existing 用。"""
+
+    def __init__(self, status_code: int, json_data=None, text: str = ""):
+        self.status_code = status_code
+        self._json = json_data if json_data is not None else []
+        self.text = text
+
+    def json(self):
+        return self._json
+
+
+# ── check_existing ────────────────────────────────────────────────
+def test_check_existing_found(monkeypatch):
+    captured = {}
+
+    def fake_get(url, headers, params, timeout):
+        captured["url"] = url
+        captured["params"] = params
+        captured["headers"] = headers
+        return _FakeJsonResp(200, json_data=[{"id": "abc-123"}])
+
+    monkeypatch.setattr(ingest.requests, "get", fake_get)
+
+    exists = ingest.check_existing(
+        "https://sb.example", "anon", "ikey", "Title A", ".company/x.md"
+    )
+    assert exists is True
+    assert captured["params"]["title"] == "eq.Title A"
+    assert captured["params"]["source_report_path"] == "eq..company/x.md"
+    assert captured["headers"]["x-ingest-key"] == "ikey"
+
+
+def test_check_existing_not_found(monkeypatch):
+    monkeypatch.setattr(
+        ingest.requests,
+        "get",
+        lambda *a, **kw: _FakeJsonResp(200, json_data=[]),
+    )
+    exists = ingest.check_existing(
+        "https://sb.example", "anon", "ikey", "Title B", ".company/y.md"
+    )
+    assert exists is False
+
+
+def test_check_existing_http_error_returns_none(monkeypatch):
+    monkeypatch.setattr(
+        ingest.requests,
+        "get",
+        lambda *a, **kw: _FakeJsonResp(500, json_data=None, text="boom"),
+    )
+    exists = ingest.check_existing(
+        "https://sb.example", "anon", "ikey", "Title C", ".company/z.md"
+    )
+    assert exists is None
+
+
+def test_check_existing_network_error_returns_none(monkeypatch):
+    def raise_it(*a, **kw):
+        raise ingest.requests.ConnectionError("down")
+
+    monkeypatch.setattr(ingest.requests, "get", raise_it)
+    exists = ingest.check_existing(
+        "https://sb.example", "anon", "ikey", "Title D", ".company/w.md"
+    )
+    assert exists is None
+
+
 # ── run（ファイル→DB 流れのインテグレーション） ──────────────────
+def _mock_select_empty(monkeypatch):
+    """SELECT は常に「存在しない」を返す。"""
+    monkeypatch.setattr(
+        ingest.requests,
+        "get",
+        lambda *a, **kw: _FakeJsonResp(200, json_data=[]),
+    )
+
+
+def _mock_select_exists(monkeypatch):
+    """SELECT は常に「既存あり」を返す。"""
+    monkeypatch.setattr(
+        ingest.requests,
+        "get",
+        lambda *a, **kw: _FakeJsonResp(200, json_data=[{"id": "exists"}]),
+    )
+
+
 def test_run_full_flow(tmp_path, monkeypatch):
     # テスト用レポート作成
     report = tmp_path / "2026-04-10-briefing.md"
@@ -307,6 +393,8 @@ suggestions:
         encoding="utf-8",
     )
 
+    _mock_select_empty(monkeypatch)
+
     calls = []
 
     def fake_post(url, headers, json, timeout):
@@ -321,6 +409,80 @@ suggestions:
     assert calls[0]["title"] == "From Test"
     assert calls[0]["status"] == "new"
     assert calls[0]["source_report_date"] == "2026-04-10"
+
+
+def test_run_idempotent_skips_existing(tmp_path, monkeypatch, capsys):
+    """同じレポートを2回流しても、2回目は SELECT で弾かれ INSERT されない。"""
+    report = tmp_path / "2026-04-11-briefing.md"
+    report.write_text(
+        """```yaml
+# suggestions
+suggestions:
+  - title: "Only One"
+    priority: high
+    effort: small
+    category: ux
+```""",
+        encoding="utf-8",
+    )
+
+    _mock_select_exists(monkeypatch)
+
+    post_calls = []
+
+    def fake_post(url, headers, json, timeout):
+        post_calls.append(json)
+        return _FakeResp(201)
+
+    monkeypatch.setattr(ingest.requests, "post", fake_post)
+
+    rc = ingest.run(report, "https://sb.example", "anon", "ikey")
+    assert rc == 0
+    # SELECT で存在確認されたので POST は呼ばれない
+    assert len(post_calls) == 0
+
+    out = capsys.readouterr().out
+    assert "skipped=1" in out
+
+
+def test_run_mixed_inserts_and_skips(tmp_path, monkeypatch):
+    """1件は既存、もう1件は新規の混在シナリオ。"""
+    report = tmp_path / "2026-04-12-briefing.md"
+    report.write_text(
+        """```yaml
+# suggestions
+suggestions:
+  - title: "Already There"
+    priority: high
+    effort: small
+    category: ux
+  - title: "Brand New"
+    priority: medium
+    effort: medium
+    category: algorithm
+```""",
+        encoding="utf-8",
+    )
+
+    # title で分岐して SELECT 結果を返す
+    def fake_get(url, headers, params, timeout):
+        if params.get("title") == "eq.Already There":
+            return _FakeJsonResp(200, json_data=[{"id": "x"}])
+        return _FakeJsonResp(200, json_data=[])
+
+    monkeypatch.setattr(ingest.requests, "get", fake_get)
+
+    post_calls = []
+    monkeypatch.setattr(
+        ingest.requests,
+        "post",
+        lambda url, headers, json, timeout: (post_calls.append(json) or _FakeResp(201)),
+    )
+
+    rc = ingest.run(report, "https://sb.example", "anon", "ikey")
+    assert rc == 0
+    assert len(post_calls) == 1
+    assert post_calls[0]["title"] == "Brand New"
 
 
 def test_run_no_yaml_returns_zero(tmp_path):
@@ -350,8 +512,40 @@ suggestions:
 ```""",
         encoding="utf-8",
     )
+    _mock_select_empty(monkeypatch)
     monkeypatch.setattr(
         ingest.requests, "post", lambda *a, **kw: _FakeResp(500, "boom")
     )
     rc = ingest.run(report, "https://sb.example", "anon", "ikey")
     assert rc == 2
+
+
+def test_run_select_failure_counted_as_error(tmp_path, monkeypatch):
+    """SELECT 自体が失敗した suggestion はエラー扱いで INSERT もされない。"""
+    report = tmp_path / "2026-04-13.md"
+    report.write_text(
+        """```yaml
+# suggestions
+suggestions:
+  - title: "Select Fails"
+    priority: low
+    effort: small
+    category: other
+```""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        ingest.requests,
+        "get",
+        lambda *a, **kw: _FakeJsonResp(500, json_data=None, text="boom"),
+    )
+    post_calls = []
+    monkeypatch.setattr(
+        ingest.requests,
+        "post",
+        lambda *a, **kw: (post_calls.append(kw) or _FakeResp(201)),
+    )
+    rc = ingest.run(report, "https://sb.example", "anon", "ikey")
+    assert rc == 2
+    # SELECT が失敗したので INSERT も試みない
+    assert len(post_calls) == 0
