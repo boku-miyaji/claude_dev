@@ -3,7 +3,24 @@ import { Card } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/components/ui/Toast'
 import { useDataStore } from '@/stores/data'
-import type { DiaryExtractionResult, NewTaskSuggestion, TaskTimeMode } from '@/hooks/useDiaryExtraction'
+import type { DiaryExtractionResult, MoodSuggestion, NewTaskSuggestion, TaskTimeMode, TripLookup } from '@/hooks/useDiaryExtraction'
+
+interface RouteOption {
+  summary: string
+  durationMinutes: number
+  departureTime: string | null
+  arrivalTime: string | null
+  fareYen: number | null
+  steps: string[]
+}
+
+interface TripLookupResult {
+  ok: boolean
+  origin: string
+  destination: string
+  departureTime: string
+  routes: RouteOption[]
+}
 
 interface Props {
   result: DiaryExtractionResult
@@ -229,6 +246,56 @@ export function DiaryExtractionResultCard({ result, onDismiss, onChanged }: Prop
           />
         )
       })}
+
+      {/* Trip lookups (concrete transit info via Google Routes) */}
+      {result.trip_lookups.map((trip, i) => (
+        <TripLookupRow
+          key={`trip-${i}-${trip.destination}`}
+          trip={trip}
+          onAddTask={async (routeDescription, departureIso) => {
+            const date = departureIso ? departureIso.substring(0, 10) : null
+            const time = departureIso ? new Date(departureIso).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo' }) : null
+            const created = await addTaskToStore({
+              title: `${trip.destination}へ`,
+              description: routeDescription,
+              type: 'task',
+              priority: 'normal',
+              source: 'auto:diary-extract',
+              due_date: date,
+              scheduled_at: date && time ? `${date}T${time}:00+09:00` : null,
+            })
+            if (!created) {
+              toast('追加に失敗しました')
+              return
+            }
+            toast(`「${trip.destination}へ」をタスクに追加しました`)
+            onChanged()
+          }}
+        />
+      ))}
+
+      {/* Mood suggestions (emotion-driven candidates) */}
+      {result.mood_suggestions.map((m, i) => (
+        <MoodSuggestionRow
+          key={`mood-${i}-${m.topic}`}
+          suggestion={m}
+          onAddTask={async (candidate) => {
+            const created = await addTaskToStore({
+              title: candidate.title,
+              description: candidate.description,
+              type: 'task',
+              priority: 'normal',
+              source: 'auto:diary-extract',
+            })
+            if (!created) {
+              toast('追加に失敗しました')
+              return
+            }
+            toast(`「${candidate.title}」をタスクに追加しました`)
+            onChanged()
+          }}
+        />
+      ))}
 
       {/* New habit suggestions (only surface; don't create — habits have metadata) */}
       {result.new_habit_suggestions.length > 0 && (
@@ -463,6 +530,210 @@ function NewTaskRow({ suggestion, expanded, pending, onToggleExpand, onSave }: N
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ============================================================
+// Trip lookup — concrete transit info via Google Routes Edge Function
+// ============================================================
+
+interface TripLookupRowProps {
+  trip: TripLookup
+  onAddTask: (routeDescription: string, departureIso: string | null) => Promise<void>
+}
+
+function TripLookupRow({ trip, onAddTask }: TripLookupRowProps) {
+  const [loading, setLoading] = useState(false)
+  const [routes, setRoutes] = useState<RouteOption[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
+
+  const lookup = async () => {
+    if (loading) return
+    setLoading(true)
+    setError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token || ''
+      const res = await fetch(import.meta.env.VITE_SUPABASE_URL + '/functions/v1/trip-lookup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ origin: trip.origin, destination: trip.destination, when: trip.when }),
+      })
+      const body = await res.json() as TripLookupResult | { error: string }
+      if (!res.ok || 'error' in body) {
+        setError('error' in body ? body.error : 'ルート取得に失敗しました')
+        setRoutes(null)
+      } else {
+        setRoutes(body.routes)
+        setExpanded(true)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'ルート取得に失敗しました')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{ marginBottom: 8, padding: '8px 10px', background: 'var(--surface2)', borderRadius: 6, border: '1px solid var(--border)' }}>
+      <div style={{ fontSize: 12, color: 'var(--text2)', display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ color: 'var(--accent)' }}>🚉</span>
+        <span style={{ flex: 1 }}>
+          {trip.origin ? `${trip.origin} → ` : ''}<strong>{trip.destination}</strong>
+          <span style={{ marginLeft: 8, color: 'var(--text3)', fontSize: 11 }}>（{trip.when}）</span>
+        </span>
+        {trip.quote && <span style={{ fontSize: 10, color: 'var(--text3)' }}>「{trip.quote}」</span>}
+        {!routes && (
+          <button
+            className="btn btn-p btn-sm"
+            disabled={loading}
+            onClick={lookup}
+            style={{ fontSize: 10, padding: '2px 8px' }}
+          >
+            {loading ? '調査中...' : 'ルート調査'}
+          </button>
+        )}
+      </div>
+      {trip.reasoning && (
+        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4, fontStyle: 'italic' }}>
+          AI: {trip.reasoning}
+        </div>
+      )}
+      {error && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 6 }}>{error}</div>}
+      {routes && expanded && (
+        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {routes.length === 0 && <div style={{ fontSize: 11, color: 'var(--text3)' }}>ルートが見つかりませんでした</div>}
+          {routes.map((route, i) => (
+            <RouteCard
+              key={i}
+              route={route}
+              destination={trip.destination}
+              onAdd={() => onAddTask(formatRouteDescription(route, trip), route.departureTime)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function formatRouteDescription(route: RouteOption, trip: TripLookup): string {
+  const lines: string[] = []
+  if (route.departureTime) {
+    const dep = new Date(route.departureTime).toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })
+    lines.push(`発: ${dep}`)
+  }
+  if (route.arrivalTime) {
+    const arr = new Date(route.arrivalTime).toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })
+    lines.push(`着: ${arr}`)
+  }
+  if (route.durationMinutes) lines.push(`所要: ${formatDuration(route.durationMinutes)}`)
+  if (route.fareYen !== null) lines.push(`運賃: ¥${route.fareYen.toLocaleString('ja-JP')}`)
+  if (route.steps.length > 0) lines.push(`経路: ${route.steps.join(' / ')}`)
+  if (trip.quote) lines.push(`日記: 「${trip.quote}」`)
+  return lines.join('\n')
+}
+
+function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes}分`
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m === 0 ? `${h}時間` : `${h}時間${m}分`
+}
+
+function RouteCard({ route, destination, onAdd }: { route: RouteOption; destination: string; onAdd: () => void }) {
+  const dep = route.departureTime ? new Date(route.departureTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' }) : null
+  const arr = route.arrivalTime ? new Date(route.arrivalTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' }) : null
+  return (
+    <div style={{ padding: '6px 8px', background: 'var(--surface)', borderRadius: 4, fontSize: 11 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
+        <span style={{ fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--text)' }}>
+          {dep || '—'} → {arr || '—'}
+        </span>
+        <span style={{ color: 'var(--text3)' }}>{formatDuration(route.durationMinutes)}</span>
+        {route.fareYen !== null && <span style={{ color: 'var(--text3)' }}>¥{route.fareYen.toLocaleString('ja-JP')}</span>}
+        <div style={{ flex: 1 }} />
+        <button
+          className="btn btn-p btn-sm"
+          onClick={onAdd}
+          style={{ fontSize: 10, padding: '2px 8px' }}
+          title={`${destination} へのタスクに追加`}
+        >
+          タスクに
+        </button>
+      </div>
+      {route.steps.length > 0 && (
+        <div style={{ color: 'var(--text2)', lineHeight: 1.5 }}>
+          {route.steps.join(' → ')}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================
+// Mood suggestion — soft candidates surfaced from emotional cues
+// ============================================================
+
+interface MoodSuggestionRowProps {
+  suggestion: MoodSuggestion
+  onAddTask: (candidate: { title: string; description: string }) => Promise<void>
+}
+
+function MoodSuggestionRow({ suggestion, onAddTask }: MoodSuggestionRowProps) {
+  const icon: Record<MoodSuggestion['topic'], string> = {
+    trip: '🧳',
+    meal: '🍜',
+    activity: '🎯',
+    rest: '🛋️',
+    other: '✨',
+  }
+  const label: Record<MoodSuggestion['topic'], string> = {
+    trip: '旅行',
+    meal: '食事',
+    activity: 'アクティビティ',
+    rest: '休息',
+    other: 'その他',
+  }
+
+  return (
+    <div style={{ marginBottom: 8, padding: '8px 10px', background: 'var(--surface2)', borderRadius: 6, border: '1px solid var(--border)' }}>
+      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+        <span>{icon[suggestion.topic]}</span>
+        <span style={{ fontWeight: 600, color: 'var(--text2)' }}>{label[suggestion.topic]}の候補</span>
+        {suggestion.quote && <span style={{ fontSize: 10 }}>「{suggestion.quote}」</span>}
+      </div>
+      {suggestion.reasoning && (
+        <div style={{ fontSize: 10, color: 'var(--text3)', marginBottom: 6, fontStyle: 'italic' }}>
+          AI: {suggestion.reasoning}
+        </div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {suggestion.candidates.map((c, i) => (
+          <div
+            key={i}
+            style={{ padding: '6px 8px', background: 'var(--surface)', borderRadius: 4, display: 'flex', alignItems: 'baseline', gap: 8 }}
+          >
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, color: 'var(--text)', fontWeight: 600 }}>{c.title}</div>
+              {c.description && <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2, lineHeight: 1.5 }}>{c.description}</div>}
+            </div>
+            <button
+              className="btn btn-p btn-sm"
+              onClick={() => onAddTask(c)}
+              style={{ fontSize: 10, padding: '2px 8px', flexShrink: 0 }}
+            >
+              タスクに
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

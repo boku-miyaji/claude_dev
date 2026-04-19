@@ -196,6 +196,12 @@ export function Sidebar() {
 
       <div className="nav-spacer" />
       <button
+        className={`nav-item${currentPage === 'profile' ? ' active' : ''}`}
+        onClick={() => navigate('/profile')}
+      >
+        <span className="nav-icon">👤</span> 基本情報
+      </button>
+      <button
         className={`nav-item${currentPage === 'settings' ? ' active' : ''}`}
         onClick={() => navigate('/settings')}
       >

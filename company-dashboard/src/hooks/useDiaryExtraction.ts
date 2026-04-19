@@ -38,14 +38,64 @@ export interface NewHabitSuggestion {
   quote: string
 }
 
+/**
+ * A concrete travel/transit mention that warrants a real-time lookup
+ * (departure times, route, fare) via the trip-lookup Edge Function.
+ *
+ * Example: diary says "明日始発で下田" → one TripLookup with
+ * origin=home_station, destination="下田", when="明日始発".
+ */
+export interface TripLookup {
+  /** Short quote from the diary (10-30 chars). */
+  quote: string
+  /** Station / city name. Null means "use user's home_station". */
+  origin: string | null
+  /** Station / city name. */
+  destination: string
+  /** Free-text time hint ("明日始発", "土曜の夕方", "今夜22時発" etc). */
+  when: string
+  /** Why this warranted surfacing (e.g. "明日の朝イチで動く予定あり"). */
+  reasoning: string
+}
+
+/**
+ * A soft, emotion-driven wish surfaced from the diary that isn't actionable as a task yet.
+ * We suggest 2-3 concrete candidates to help the user concretize it.
+ *
+ * Example: diary says "旅行行きたい" → one MoodSuggestion with topic=trip
+ * and candidates like [熱海1泊, 白馬3泊, 沖縄].
+ */
+export interface MoodSuggestion {
+  /** Short quote from the diary. */
+  quote: string
+  topic: 'trip' | 'meal' | 'activity' | 'rest' | 'other'
+  /** One-liner about why this triggered (mood, season, past patterns). */
+  reasoning: string
+  candidates: Array<{
+    /** Short label shown on the card button. */
+    title: string
+    /** 1-2 sentence description. */
+    description: string
+  }>
+}
+
 export interface DiaryExtractionResult {
   done_tasks: TaskDoneDetection[]
   new_tasks: NewTaskSuggestion[]
   done_habits: HabitDoneDetection[]
   new_habit_suggestions: NewHabitSuggestion[]
+  trip_lookups: TripLookup[]
+  mood_suggestions: MoodSuggestion[]
 }
 
-const EMPTY: DiaryExtractionResult = { done_tasks: [], new_tasks: [], done_habits: [], new_habit_suggestions: [] }
+const EMPTY: DiaryExtractionResult = {
+  done_tasks: [],
+  new_tasks: [],
+  done_habits: [],
+  new_habit_suggestions: [],
+  trip_lookups: [],
+  mood_suggestions: [],
+}
 
 interface UseDiaryExtractionReturn {
   extract: (diaryContent: string) => Promise<DiaryExtractionResult>
@@ -75,9 +125,10 @@ export function useDiaryExtraction(): UseDiaryExtractionReturn {
       //   - open tasks to match completions against
       //   - active habits to match habit completions
       //   - recent tasks (any status) to infer time patterns for new-task suggestions
+      //   - user_settings for profile-driven trip/mood suggestions
       const sixtyDaysAgo = new Date()
       sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
-      const [tasksRes, habitsRes, recentRes] = await Promise.all([
+      const [tasksRes, habitsRes, recentRes, profileRes] = await Promise.all([
         supabase
           .from('tasks')
           .select('id, title')
@@ -95,6 +146,10 @@ export function useDiaryExtraction(): UseDiaryExtractionReturn {
           .gte('created_at', sixtyDaysAgo.toISOString())
           .order('created_at', { ascending: false })
           .limit(60),
+        supabase
+          .from('user_settings')
+          .select('home_station, home_area, home_address, birth_year, family_structure, chat_occupation, hobbies, travel_style, food_preferences, budget_note, health_notes, basic_info_freetext')
+          .maybeSingle(),
       ])
 
       const openTasks = (tasksRes.data ?? []) as { id: string; title: string }[]
@@ -106,9 +161,11 @@ export function useDiaryExtraction(): UseDiaryExtractionReturn {
         due_date: string | null
         estimated_minutes: number | null
       }[]
+      const profile = (profileRes.data ?? {}) as Record<string, string | number | null>
 
-      // If there's no state to match against, skip the LLM call entirely
-      if (openTasks.length === 0 && activeHabits.length === 0) {
+      // Keep running if the diary has meaningful content — trip/mood suggestions work
+      // without any tasks or habits, so we only bail when the diary itself is too short.
+      if (body.length < 10 && openTasks.length === 0 && activeHabits.length === 0) {
         setExtracting(false)
         return EMPTY
       }
@@ -143,8 +200,45 @@ export function useDiaryExtraction(): UseDiaryExtractionReturn {
       const tomorrow = new Date(now)
       tomorrow.setDate(tomorrow.getDate() + 1)
       const tomorrowStr = tomorrow.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', timeZone: 'Asia/Tokyo' })
+      const season = (() => {
+        const m = now.getMonth() + 1
+        if (m >= 3 && m <= 5) return '春'
+        if (m >= 6 && m <= 8) return '夏'
+        if (m >= 9 && m <= 11) return '秋'
+        return '冬'
+      })()
 
-      const systemPrompt = `ユーザーの日記から、既存のタスク・習慣の完了、および新規タスク・新規習慣候補を抽出してください。
+      const profileLines: string[] = []
+      const p = profile as {
+        home_station?: string | null
+        home_area?: string | null
+        home_address?: string | null
+        birth_year?: number | null
+        family_structure?: string | null
+        chat_occupation?: string | null
+        hobbies?: string | null
+        travel_style?: string | null
+        food_preferences?: string | null
+        budget_note?: string | null
+        health_notes?: string | null
+        basic_info_freetext?: string | null
+      }
+      if (p.home_station) profileLines.push(`- 最寄り駅: ${p.home_station}`)
+      if (p.home_area) profileLines.push(`- エリア: ${p.home_area}`)
+      if (p.home_address) profileLines.push(`- 住所: ${p.home_address}`)
+      if (p.birth_year) profileLines.push(`- 生まれ年: ${p.birth_year}（${now.getFullYear() - Number(p.birth_year)}歳）`)
+      if (p.chat_occupation) profileLines.push(`- 職業: ${p.chat_occupation}`)
+      if (p.family_structure) profileLines.push(`- 家族: ${p.family_structure}`)
+      if (p.hobbies) profileLines.push(`- 趣味: ${p.hobbies}`)
+      if (p.travel_style) profileLines.push(`- 旅行スタイル: ${p.travel_style}`)
+      if (p.food_preferences) profileLines.push(`- 食の好み: ${p.food_preferences}`)
+      if (p.budget_note) profileLines.push(`- 予算感: ${p.budget_note}`)
+      if (p.health_notes) profileLines.push(`- 健康メモ: ${p.health_notes}`)
+      if (p.basic_info_freetext) profileLines.push(`- その他: ${p.basic_info_freetext}`)
+      const profileText = profileLines.join('\n') || '(未登録 — 提案は一般的な粒度になる)'
+      const profileKnown = profileLines.length > 0
+
+      const systemPrompt = `ユーザーの日記から、既存のタスク・習慣の完了／新規タスク・習慣候補／具体化提案（乗換）／気分連想提案（旅行・食事など）を抽出してください。
 
 ## 原則
 - 確信が持てる言及だけ返す（confidence=high）。曖昧なら medium、かすかなら low
@@ -153,27 +247,60 @@ export function useDiaryExtraction(): UseDiaryExtractionReturn {
 - 習慣は「走った」「ストレッチした」のような実行の明示的記述のみ
 - quote には日記本文の該当箇所を短く引用（10-30字）
 
-## 新規タスクの時間推論（重要）
+## 新規タスクの時間推論
 
 各 new_task に対して、最適な扱い方を推論する:
 
 ### mode の選び方
-- **"deadline"**: いつまでに終わらせるかが重要なタスク。提出物・返信・外部依存。
-  - 日記に「〇日までに」「来週までに」「今週中」などの期限語がある
-  - 過去の類似タスクが deadline で管理されている
-- **"scheduled"**: まとまった作業時間を確保すべきタスク。資料作成・コーディング・読書など。
-  - 30分以上の集中作業が必要
-  - 過去の類似タスクに scheduled_at と estimated_minutes がある
-- **"none"**: いつやってもよい軽い雑務・TODO。
-  - 短時間で片付く、期限もない
+- **"deadline"**: 締切が重要なタスク（提出・返信・外部依存）。日記に「〇日までに」等の期限語や、過去の類似タスクが deadline 運用ならこちら
+- **"scheduled"**: まとまった作業時間を確保すべきタスク（資料作成・コーディング・読書）。30分以上の集中が必要ならこちら
+- **"none"**: いつやってもよい軽い雑務・TODO
 
 ### 日時の推論ルール
 - 日記に明示された日時（「明日14時」「金曜まで」）があれば必ずそれを使う
-- 過去パターンに類似タスクがあれば、その時間帯・所要時間を参考にする（例: 過去の「レポート作成」が平均90分なら 90）
-- 「明日〜する」→ suggested_date = 明日
-- 「今日中に」→ suggested_date = 今日
-- 不明なときは suggested_date = 今日、時刻は作業ブロックなら午前10時をデフォルト
-- reasoning に根拠を10-30字で書く（例: "過去の類似タスクは午前に30分", "明日に言及あり"）
+- 過去パターンに類似タスクがあれば、その時間帯・所要時間を参考にする
+- 「明日〜する」→ suggested_date = 明日。「今日中に」→ 今日
+- 不明なら suggested_date = 今日、時刻は作業ブロックなら午前10時をデフォルト
+- reasoning に根拠を10-30字（例: "過去の類似タスクは午前に30分"）
+
+## 具体化提案（trip_lookups）
+
+日記に「移動・旅行・訪問の予定」が具体的に示唆されていて、**出発時刻・ルート・運賃を調べる価値がある**場合に抽出する。
+
+例:
+- 「明日始発で下田」→ origin=(最寄り駅 or null), destination="下田", when="明日始発"
+- 「土曜京都行く」→ destination="京都", when="土曜"
+- 「19時から渋谷で飲み」→ destination="渋谷", when="今日19時"（出発時刻逆算用）
+
+### 抽出条件
+- 行き先が明確（駅名・地名・店名）
+- 時刻の示唆がある（"明日朝", "始発", "19時", "土曜" 等）
+- 単なる思考・願望（「京都いいなぁ」）は除外。実際に行く予定の記述のみ
+
+### origin
+- ユーザーが出発地を明示していなければ null（= ユーザー最寄り駅を採用）
+
+## 気分連想提案（mood_suggestions）
+
+日記に「願望・疲れ・気分・季節感」が表れていて、まだタスク化されていない場合に、具体化を助ける候補を2-3個出す。
+
+### トピック分類
+- **trip**: 「旅行行きたい」「温泉」「遠くに行きたい」
+- **meal**: 「美味しいもの食べたい」「ラーメン」「お寿司」
+- **activity**: 「体動かしたい」「映画見たい」「散歩」
+- **rest**: 「休みたい」「何もしたくない」「ぼーっとしたい」
+- **other**: 上記以外（買い物、イベント等）
+
+### 候補の質
+- **プロフィール情報が登録されている**: 趣味・予算・スタイル・所在地に合わせて**具体名**で提案（店名・地名・商品名）
+- **未登録**: 一般的な粒度（「近場の温泉」「海辺のカフェ」等）でOK
+- 必ず2-3個出す。1つだと選択肢にならない
+- 季節（${season}）と曜日感覚を反映する
+
+### 禁止
+- 単なる共感で終わらない（「わかる〜」だけはダメ）
+- 日記に無い提案（「旅行」って書いてないのに旅行提案）は禁止
+- トピックが見つからなければ空配列
 
 ## 出力JSON
 {
@@ -188,16 +315,34 @@ export function useDiaryExtraction(): UseDiaryExtractionReturn {
     "reasoning": "10-30字の根拠"
   }],
   "done_habits": [{ "habit_id": 既存ID, "confidence": "high|medium|low", "quote": "日記の該当箇所" }],
-  "new_habit_suggestions": [{ "title": "短い習慣名", "quote": "日記の該当箇所" }]
+  "new_habit_suggestions": [{ "title": "短い習慣名", "quote": "日記の該当箇所" }],
+  "trip_lookups": [{
+    "quote": "日記の該当箇所",
+    "origin": "駅名 または null",
+    "destination": "駅名・地名",
+    "when": "いつ（自由記述）",
+    "reasoning": "10-30字の根拠"
+  }],
+  "mood_suggestions": [{
+    "quote": "日記の該当箇所",
+    "topic": "trip|meal|activity|rest|other",
+    "reasoning": "10-30字の根拠",
+    "candidates": [
+      { "title": "短いラベル", "description": "1-2文の説明" }
+    ]
+  }]
 }
 
 該当がないフィールドは空配列で。JSON 以外は返さないでください。`
 
       const userMessage = `## 今日
-${todayStr}（明日: ${tomorrowStr}）
+${todayStr}（明日: ${tomorrowStr}、季節: ${season}）
 
 ## 日記
 ${body}
+
+## ユーザーの基本情報${profileKnown ? '' : '（未登録 — 提案は一般的な粒度に）'}
+${profileText}
 
 ## 既存のオープンなタスク
 ${taskList}
@@ -213,8 +358,8 @@ ${patternList}`
         systemPrompt,
         model: 'claude-opus-4-7',
         jsonMode: true,
-        temperature: 0.2,
-        maxTokens: 1200,
+        temperature: 0.3,
+        maxTokens: 2500,
       })
 
       if (!content) {
@@ -238,7 +383,24 @@ ${patternList}`
         suggested_minutes?: number | null
         reasoning?: string
       }
-      const parsed = JSON.parse(match[0]) as Partial<DiaryExtractionResult> & { new_tasks?: ParsedNewTask[] }
+      type ParsedTripLookup = {
+        quote?: string
+        origin?: string | null
+        destination?: string
+        when?: string
+        reasoning?: string
+      }
+      type ParsedMoodSuggestion = {
+        quote?: string
+        topic?: string
+        reasoning?: string
+        candidates?: Array<{ title?: string; description?: string }>
+      }
+      const parsed = JSON.parse(match[0]) as Partial<DiaryExtractionResult> & {
+        new_tasks?: ParsedNewTask[]
+        trip_lookups?: ParsedTripLookup[]
+        mood_suggestions?: ParsedMoodSuggestion[]
+      }
 
       // Enrich with titles for UI display
       const done_tasks: TaskDoneDetection[] = (parsed.done_tasks ?? []).map((d) => {
@@ -284,11 +446,45 @@ ${patternList}`
         })
         .filter((n): n is NewTaskSuggestion => n !== null)
 
+      const trip_lookups: TripLookup[] = (parsed.trip_lookups ?? [])
+        .map((t) => {
+          const destination = (t.destination ?? '').trim()
+          if (!destination) return null
+          return {
+            quote: (t.quote ?? '').toString(),
+            origin: typeof t.origin === 'string' && t.origin.trim() ? t.origin.trim() : null,
+            destination,
+            when: (t.when ?? '').toString(),
+            reasoning: (t.reasoning ?? '').toString().slice(0, 60),
+          } satisfies TripLookup
+        })
+        .filter((t): t is TripLookup => t !== null)
+
+      const validTopics: MoodSuggestion['topic'][] = ['trip', 'meal', 'activity', 'rest', 'other']
+      const mood_suggestions: MoodSuggestion[] = (parsed.mood_suggestions ?? [])
+        .map((m) => {
+          const topicRaw = (m.topic ?? 'other').toString().toLowerCase()
+          const topic = (validTopics as string[]).includes(topicRaw) ? (topicRaw as MoodSuggestion['topic']) : 'other'
+          const candidates = (m.candidates ?? [])
+            .map((c) => ({ title: (c.title ?? '').toString().trim(), description: (c.description ?? '').toString().trim() }))
+            .filter((c) => c.title)
+          if (candidates.length === 0) return null
+          return {
+            quote: (m.quote ?? '').toString(),
+            topic,
+            reasoning: (m.reasoning ?? '').toString().slice(0, 60),
+            candidates,
+          } satisfies MoodSuggestion
+        })
+        .filter((m): m is MoodSuggestion => m !== null)
+
       const result: DiaryExtractionResult = {
         done_tasks,
         new_tasks,
         done_habits,
         new_habit_suggestions: (parsed.new_habit_suggestions ?? []).map((n) => ({ title: n.title ?? '', quote: n.quote ?? '' })).filter((n) => n.title),
+        trip_lookups,
+        mood_suggestions,
       }
 
       setExtracting(false)

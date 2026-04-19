@@ -32,3 +32,8 @@ verify_jwt = false
 # Same reason as above — verify JWT inside the function.
 [functions.life-story]
 verify_jwt = false
+
+# trip-lookup: user-auth + Google Routes API for transit time/fare lookup.
+# Same ES256 rationale — verify JWT inside the function.
+[functions.trip-lookup]
+verify_jwt = false

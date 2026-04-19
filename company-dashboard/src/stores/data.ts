@@ -60,6 +60,7 @@ interface DataStore {
     sort_order?: number
     progress_pct?: number | null
     attachments?: AttachmentMeta[] | null
+    source?: string | null
   }) => Promise<Task | null>
   updateTask: (id: string, data: Partial<Task>) => Promise<void>
   deleteTask: (id: string) => Promise<void>
@@ -357,6 +358,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
         progress_pct: task.progress_pct ?? null,
         status: 'open',
         attachments: task.attachments ?? [],
+        source: task.source ?? null,
       })
       .select('*, companies(name)')
       .single()

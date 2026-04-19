@@ -8,6 +8,7 @@ import { Calendar } from '@/pages/Calendar'
 import { Insights } from '@/pages/Insights'
 import { Growth } from '@/pages/Growth'
 import { Settings } from '@/pages/Settings'
+import { BasicInfo } from '@/pages/BasicInfo'
 import { Blueprint } from '@/pages/Blueprint'
 import { SlashCommands } from '@/pages/SlashCommands'
 import { Knowledge } from '@/pages/Knowledge'
@@ -107,6 +108,7 @@ export function App() {
           <Route path="/growth" element={<Growth />} />
           <Route path="/blueprint" element={<Blueprint />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<BasicInfo />} />
           <Route path="/knowledge" element={<Knowledge />} />
           <Route path="/finance" element={<Finance />} />
           <Route path="/prompts" element={<Prompts />} />
