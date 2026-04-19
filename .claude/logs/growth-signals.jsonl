@@ -3,3 +3,4 @@
 {"ts":"2026-04-19T09:43:49+09:00","signal":"correction","prompt":"Classify each prompt. For each, output JSON with id and tags.\nTags to assign:\n- pj: project (rikyu/circuit/foundry or null)\n- intent: implement/fix/investigate/design/review/brainstorm/manage/info/chat\n- dept: ai-dev/sys-dev/security/materials/intelligence/research/ux-design/pm/ops/secretary or null\n"}
 {"ts":"2026-04-19T09:45:37+09:00","signal":"repeated_issue","prompt":"複数タスク入れたい。\n継続タスクはべつに締め切りを設けなければいいだけ。タイムブロック単体で設定すればいいだけ。またタイムブロックは繰り返し設定もできるようにしてほしい。\nかならず締切とタイムブロックは�"}
 {"ts":"2026-04-19T12:37:16+09:00","signal":"frustration","prompt":"ちがう。requestsに3件あるでしょ？\n"}
+{"ts":"2026-04-19T12:37:16+09:00","signal":"frustration","prompt":"ちがう。requestsに3件あるでしょ？\n"}
