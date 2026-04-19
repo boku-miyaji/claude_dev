@@ -280,7 +280,8 @@
       "WebFetch(domain:mem0.ai)",
       "Bash(claude --version)",
       "Bash(claude --print --help)",
-      "Bash(break)"
+      "Bash(break)",
+      "Bash(/workspace/scripts/intelligence/check-arxiv-sync.sh)"
     ],
     "deny": [
       "Read(**/.env)",

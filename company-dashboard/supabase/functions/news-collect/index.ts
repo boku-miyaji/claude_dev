@@ -156,39 +156,100 @@ async function fetchGithubRelease(src: Source): Promise<RawNewsItem[]> {
   return items;
 }
 
-/** arXiv: search for AI/ML papers (always included as built-in) */
+// arxiv keywords: keep in sync with .company/departments/intelligence/sources.yaml
+// (academic_papers.arxiv.keywords). Sync check: scripts/intelligence/check-arxiv-sync.sh
+const ARXIV_KEYWORDS = [
+  "LLM agent",
+  "code generation LLM",
+  "multi-agent system LLM",
+  "memory augmented LLM",
+  "agentic coding",
+  "tool use LLM",
+  "self-improvement LLM",
+  "knowledge management AI",
+  "personal AI assistant",
+  "Claude Code",
+  "AI coding assistant",
+];
+const ARXIV_CATEGORIES = ["cs.AI", "cs.CL", "cs.LG", "cs.SE", "cs.MA"];
+const ARXIV_CATCHALL_MAX_DAYS = 3;
+const ARXIV_KEYWORD_MAX_DAYS = 7;
+const ARXIV_MAX_RESULTS = 150;
+
+function buildArxivUrl(searchQuery: string, maxResults: number): string {
+  const params = new URLSearchParams({
+    search_query: searchQuery,
+    sortBy: "submittedDate",
+    sortOrder: "descending",
+    max_results: String(maxResults),
+  });
+  return `https://export.arxiv.org/api/query?${params.toString()}`;
+}
+
+async function runArxivQuery(apiUrl: string, maxDays: number, seen: Set<string>): Promise<RawNewsItem[]> {
+  const items: RawNewsItem[] = [];
+  const res = await fetch(apiUrl);
+  if (!res.ok) {
+    console.error(`arxiv HTTP ${res.status} for ${apiUrl}`);
+    return items;
+  }
+  const xml = await res.text();
+
+  const entries = xml.match(/<entry>([\s\S]*?)<\/entry>/g) || [];
+  for (const entry of entries) {
+    const title = extractTag(entry, "title")?.replace(/\n/g, " ").trim();
+    const summary = extractTag(entry, "summary")?.replace(/\n/g, " ").trim().substring(0, 300);
+    const link = entry.match(/href="(https:\/\/arxiv\.org\/abs\/[^"]+)"/)?.[1];
+    const published = extractTag(entry, "published")?.substring(0, 10);
+
+    if (!title || !link) continue;
+    if (seen.has(link)) continue;
+    if (published && isOlderThanDays(published, maxDays)) continue;
+
+    seen.add(link);
+    items.push({
+      title,
+      summary: summary || "",
+      url: link,
+      source: "arXiv",
+      source_type: "arxiv",
+      source_url: apiUrl,
+      topic: "academic",
+      published_date: published || null,
+    });
+  }
+  return items;
+}
+
+/**
+ * arXiv: search for AI/ML papers (always included as built-in).
+ *
+ * Two queries are run and merged:
+ *   1. Catch-all recent (last ARXIV_CATCHALL_MAX_DAYS days) across ARXIV_CATEGORIES.
+ *   2. Keyword-filtered recent (last ARXIV_KEYWORD_MAX_DAYS days) — captures
+ *      relevant papers that fall outside the catch-all's newest window.
+ *
+ * Keywords and categories are in sync with sources.yaml.
+ */
 async function fetchArxiv(): Promise<RawNewsItem[]> {
   const items: RawNewsItem[] = [];
-  const query = "cat:cs.AI+OR+cat:cs.CL+OR+cat:cs.LG";
-  const apiUrl = `https://export.arxiv.org/api/query?search_query=${query}&sortBy=submittedDate&sortOrder=descending&max_results=8`;
+  const seen = new Set<string>();
+  const catClause = `(${ARXIV_CATEGORIES.map((c) => `cat:${c}`).join(" OR ")})`;
 
   try {
-    const res = await fetch(apiUrl);
-    if (!res.ok) return items;
-    const xml = await res.text();
+    const catchAllUrl = buildArxivUrl(catClause, ARXIV_MAX_RESULTS);
+    items.push(...(await runArxivQuery(catchAllUrl, ARXIV_CATCHALL_MAX_DAYS, seen)));
+  } catch (e) {
+    console.error(`arxiv catch-all failed: ${(e as Error).message}`);
+  }
 
-    const entries = xml.match(/<entry>([\s\S]*?)<\/entry>/g) || [];
-    for (const entry of entries) {
-      const title = extractTag(entry, "title")?.replace(/\n/g, " ").trim();
-      const summary = extractTag(entry, "summary")?.replace(/\n/g, " ").trim().substring(0, 300);
-      const link = entry.match(/href="(https:\/\/arxiv\.org\/abs\/[^"]+)"/)?.[1];
-      const published = extractTag(entry, "published")?.substring(0, 10);
-
-      if (!title || !link) continue;
-      if (published && isOlderThanDays(published, 3)) continue;
-
-      items.push({
-        title,
-        summary: summary || "",
-        url: link,
-        source: "arXiv",
-        source_type: "arxiv",
-        source_url: apiUrl,
-        topic: "academic",
-        published_date: published || null,
-      });
-    }
-  } catch { /* skip */ }
+  try {
+    const kwClause = `(${ARXIV_KEYWORDS.map((k) => `all:"${k}"`).join(" OR ")})`;
+    const kwUrl = buildArxivUrl(`${catClause} AND ${kwClause}`, ARXIV_MAX_RESULTS);
+    items.push(...(await runArxivQuery(kwUrl, ARXIV_KEYWORD_MAX_DAYS, seen)));
+  } catch (e) {
+    console.error(`arxiv keyword query failed: ${(e as Error).message}`);
+  }
 
   return items;
 }

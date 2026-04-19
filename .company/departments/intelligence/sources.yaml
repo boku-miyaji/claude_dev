@@ -202,6 +202,11 @@ tech_articles:
 academic_papers:
   # arXiv カテゴリ × キーワード検索
   # 検索URL: https://arxiv.org/search/?searchtype=all&query={keyword}
+  #
+  # 注意: categories / keywords は news-collect Edge Function の
+  # ARXIV_CATEGORIES / ARXIV_KEYWORDS (company-dashboard/supabase/functions/
+  # news-collect/index.ts) と必ず同期すること。
+  # CI チェック: scripts/intelligence/check-arxiv-sync.sh が差分を検出する。
   arxiv:
     categories: ["cs.AI", "cs.CL", "cs.LG", "cs.MA", "cs.SE"]
     keywords:
@@ -231,6 +236,12 @@ academic_papers:
         frequency: weekly
       - term: "personal AI assistant"
         note: "パーソナルAI・自己理解"
+        frequency: weekly
+      - term: "Claude Code"
+        note: "Claude Code プロダクト関連（設計論文含む）"
+        frequency: daily
+      - term: "AI coding assistant"
+        note: "AIコーディングアシスタント全般（Cursor, Copilot等）"
         frequency: weekly
 
   # 注目研究機関（著者名・所属で追跡）
