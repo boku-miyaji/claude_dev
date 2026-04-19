@@ -1207,6 +1207,75 @@ export function Today() {
     </div>
   ) : null
 
+  /* ── Deadlines section — overdue / today / tomorrow / this week ── */
+
+  const DeadlinesSection = hasDeadlineAlert ? (
+    <div className="section">
+      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>締切</span>
+        <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+          {deadlineBuckets.overdue.length > 0 && (
+            <span style={{ color: 'var(--red)', marginRight: 8 }}>遅延 {deadlineBuckets.overdue.length}</span>
+          )}
+          今日 {deadlineBuckets.dueToday.length} / 明日 {deadlineBuckets.dueTomorrow.length} / 今週 {deadlineBuckets.dueThisWeek.length}
+        </span>
+      </div>
+      <Card>
+        {deadlineBuckets.overdue.length > 0 && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--red)', marginTop: 2, marginBottom: 4 }}>
+              遅延
+            </div>
+            {deadlineBuckets.overdue.map((t) => (
+              <TaskRow key={t.id} task={t} todayStr={todayStr} done={false}
+                onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }}
+                onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
+            ))}
+          </>
+        )}
+        {deadlineBuckets.dueToday.length > 0 && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--red)', marginTop: 10, marginBottom: 4 }}>
+              今日
+            </div>
+            {deadlineBuckets.dueToday.map((t) => (
+              <TaskRow key={t.id} task={t} todayStr={todayStr} done={false}
+                onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }}
+                onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
+            ))}
+          </>
+        )}
+        {deadlineBuckets.dueTomorrow.length > 0 && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--amber)', marginTop: 10, marginBottom: 4 }}>
+              明日
+            </div>
+            {deadlineBuckets.dueTomorrow.map((t) => (
+              <TaskRow key={t.id} task={t} todayStr={todayStr} done={false}
+                onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }}
+                onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
+            ))}
+          </>
+        )}
+        {deadlineBuckets.dueThisWeek.length > 0 && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)', marginTop: 10, marginBottom: 4 }}>
+              今週中
+            </div>
+            {deadlineBuckets.dueThisWeek.slice(0, 5).map((t) => (
+              <TaskRow key={t.id} task={t} todayStr={todayStr} done={false}
+                onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }}
+                onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
+            ))}
+            {deadlineBuckets.dueThisWeek.length > 5 && (
+              <div style={{ padding: '5px 0 0', fontSize: 11, color: 'var(--text3)' }}>他 {deadlineBuckets.dueThisWeek.length - 5}件</div>
+            )}
+          </>
+        )}
+      </Card>
+    </div>
+  ) : null
+
   /* ── [7] Backlog (other open tasks, shown only if relevant) ── */
 
   const Backlog = otherOpenTasks.length > 0 ? (
@@ -1225,24 +1294,31 @@ export function Today() {
   ) : null
 
   /* ════════════════════════════════════════════
-     UNIFIED LAYOUT — same order regardless of time of day.
-     Only the greeting text and briefing tone differ by timeMode.
-     Diary stays high so it can be reached without scrolling.
+     UNIFIED LAYOUT — 3-layer structure:
+       L1 やること (action required): diary, habits
+       L2 緊急 (urgency): deadlines, calendar
+       L3 有益 (informative): briefing, news, fragments
      ════════════════════════════════════════════ */
 
   return (
     <div className="page">
+      {/* ── L1 やること (action required) ── */}
       {Greeting}
       <PendingUpdatesBanner />
-      {Briefing}
       {Diary}
-      {TimelineSection}
       {HabitsSection}
+
+      {/* ── L2 緊急 (urgency — deadlines & calendar) ── */}
+      {DeadlinesSection}
+      {TimelineSection}
       {Tomorrow}
+
+      {/* ── L3 有益 (informative — briefing, news, analysis) ── */}
+      {Briefing}
       {NewsSection}
       {Backlog}
-      {StatusBar}
       {Fragments}
+      {StatusBar}
     </div>
   )
 }

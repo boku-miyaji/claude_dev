@@ -399,7 +399,8 @@ function TabOverview() {
           ['tasks (新規提案)', '日記投稿時', 'useDiaryExtraction', '日記に「〜しないと」「明日〜する」等の将来アクションを検出。ユーザー「追加」クリックで作成（自動作成はしない）'],
           ['tasks (完了)', 'Today画面でチェックボックス', 'インラインCRUD', 'status=done + 取り消し線。→ Google Tasks同期(completed)。再クリックで戻す(needsAction)'],
           ['tasks (追加)', 'Today画面の + ボタン / 秘書(自然言語)', 'インラインCRUD', 'due_date/scheduled_at/deadline_at で3ゾーン振り分け。日付あり→Google Tasks自動作成(google_task_id保存)'],
-          ['tasks (編集)', 'Today画面でタイトルクリック', 'インライン編集', 'タイトル・期限・優先度変更。google_task_idあれば→Google Tasks自動更新'],
+          ['tasks (編集)', 'Today画面でタイトルクリック', 'インライン編集', 'タイトル・期限・優先度・進捗(progress_pct 0-100)を変更。google_task_idあれば→Google Tasks自動更新'],
+          ['tasks ↔ calendar 紐付け', 'Calendarページ→イベントクリック→「タスクを紐付ける」', 'EventModal内の検索+選択UI', '時間ブロック(= Calendarイベント)に複数タスクをぶら下げる。N:N。task_calendar_links テーブルに永続化。紐付き行にタイトル/進捗/締切バッジ表示'],
           ['habits (完了)', 'Today画面でチェック', 'ユーザータップ', '→ 統合プログレスバーに即反映'],
           ['habits (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', '即追加。Habitsページで詳細編集'],
           ['weekly_narratives', '週1 自動（Weeklyページ初回表示時に先週分が無ければ自動生成）', 'フロント auto-trigger', 'DB保存。手動「生成」ボタンは再生成用に残存。model=claude-opus-4-7'],
@@ -1022,7 +1023,7 @@ function TabDesignPhilosophy() {
   return (
     <>
       <Section title="体験設計">
-        <Principle title="Today = コマンドセンター" body="Todayページから一歩も出ずに日常の全操作が完結する設計。タスク完了/追加/編集、習慣チェック/追加、日記記録がすべてインライン。別ページへの遷移=離脱。" color="var(--accent)" />
+        <Principle title="Today = コマンドセンター（3層構造）" body="Todayは3層で組まれる。L1 やること(入力必須): Greeting/日記/今日の習慣 — ユーザーの手が必要なものを最上段。L2 緊急(カレンダー・締切): 締切セクション(遅延/今日/明日/今週)/今日のタイムライン/明日の予定 — 動かないと詰まる情報。L3 有益(通知・ニュース): Briefing(未来のあなた)/News/バックログ/断片 — 受動的に読める情報は下。日常の全操作はインラインで完結、別ページ遷移=離脱。" color="var(--accent)" />
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
           <MiniCard title="今日の予定 = 1画面完結 (2026-04-15)" body="GCalイベント + タスクを全て「今日の予定」に集約。3ブロック構成: 時間指定(時刻付き、完了済みも同ブロック内に残る) / 時間未定(日付のみ) / 近日(明日〜7日、明日のGCalイベントも統合)。旧「今日やること」「近日の締切」「明日の予定」の独立セクションは廃止。重複表示がなくなり1画面で意思決定できる。useTodayTimeline hook。" />
           <MiniCard title="今日の習慣" body="Today画面では習慣のみを別セクションで分離。タスクとは情報性質が違う(タスク=1回限りの予定、習慣=反復)ため統合せず並置。習慣全完了時は「All done!」。" />
@@ -1567,7 +1568,8 @@ function TabAiFeatures() {
           ['diary_analysis', 'period_type(weekly/monthly), ai_insights, highlights(JSONB)', 'ナレッジ（週次/月次の中間分析結果。3層分析のL2/L3出力）'],
           ['growth_events', 'what_happened, root_cause, countermeasure', 'ナレッジ（事例パターン）'],
           ['prompt_log', 'prompt, context, tags, created_at', 'データ（生ログ）'],
-          ['tasks', 'title, status, priority, due_date, scheduled_at, deadline_at, estimated_minutes, time_slot, google_task_id, completed_at, attachments(JSONB)', 'データ（行動記録）。日付あり→Google Tasks同期。Today「今日の予定」3ブロック: 時間指定(時刻付き)/時間未定(日付のみ)/近日(未来7日)。attachments は Requests ページの画像添付メタ配列（Storage: request-attachments）'],
+          ['tasks', 'title, status, priority, due_date, scheduled_at, deadline_at, estimated_minutes, time_slot, progress_pct, google_task_id, completed_at, attachments(JSONB)', 'データ（行動記録）。scheduled_at=作業時間ブロック / deadline_at=社会的締切 を独立管理。progress_pct(0-100)で進捗を記録。日付あり→Google Tasks同期。Today「今日の予定」3ブロック: 時間指定(時刻付き)/時間未定(日付のみ)/近日(未来7日)。attachments は Requests ページの画像添付メタ配列（Storage: request-attachments）'],
+          ['task_calendar_links', 'task_id, calendar_event_id, calendar_id, recurring_event_id, progress_contribution, note', 'データ（紐付け中間テーブル）。1タスクにN時間ブロック / 1ブロックにNタスクのN:N。Calendar.tsx EventModal から追加/削除。recurring_event_id で繰り返しイベントのシリーズ紐付けも対応'],
           ['dreams', 'title, category, status, priority', 'ナレッジ（暗黙知の言語化）'],
           ['goals', 'title, level, progress, dream_id', 'ナレッジ（夢の形式化）'],
           ['conversations / messages', 'role, content, tool_calls', 'データ（対話ログ）'],
