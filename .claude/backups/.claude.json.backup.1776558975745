@@ -671,8 +671,8 @@
         "amount_minor_units": 1000,
         "currency": "USD"
       },
-      "remaining_passes": 3,
-      "timestamp": 1776320342867
+      "remaining_passes": 0,
+      "timestamp": 1776411622922
     }
   },
   "feedbackSurveyState": {
@@ -688,7 +688,7 @@
   "groveConfigCache": {
     "0e3bd740-e45a-41f7-9a8e-dea96899ee97": {
       "grove_enabled": true,
-      "timestamp": 1776313436058
+      "timestamp": 1776411622500
     }
   },
   "overageCreditGrantCache": {
@@ -713,12 +713,12 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 61,
-      "lastUsedAt": 1776388392677
+      "usageCount": 65,
+      "lastUsedAt": 1776412141088
     },
     "register": {
-      "usageCount": 10,
-      "lastUsedAt": 1776219457948
+      "usageCount": 11,
+      "lastUsedAt": 1776392728966
     },
     "pptx-aces-rikyu": {
       "usageCount": 1,
