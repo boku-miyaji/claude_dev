@@ -139,3 +139,4 @@
 {"ts":"2026-04-19T12:10:29+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"intelligence_suggestions テーブル + UI実装","model":"default","background":false}
 {"ts":"2026-04-19T12:28:41+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"ingest-suggestions.py＋CLAUDE.md更新","model":"default","background":false}
 {"ts":"2026-04-19T12:31:03+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Insights.tsx タブ追加＋UI","model":"default","background":false}
+{"ts":"2026-04-19T17:20:47+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"ハンズオンに非構造化データ対応を追加","model":"default","background":true}

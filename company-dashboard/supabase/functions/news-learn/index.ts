@@ -120,8 +120,8 @@ async function extractKeywordsFromClicks(): Promise<{ created: number }> {
           role: "user",
           content: `以下はユーザーがクリックしたニュース記事のタイトルです。この人が関心を持っている具体的な技術トピックやキーワードを3-5個抽出してください。\n\n既に登録済みのキーワード: ${Array.from(existingTerms).join(", ")}\n\nクリックした記事:\n${titles}\n\n新しいキーワードのみJSON配列で返してください。汎用的すぎるもの（"AI"、"tech"等）は除外。例: ["MCP server", "prompt caching", "code generation"]`,
         }],
-        temperature: 0.3,
-        max_tokens: 200,
+        max_completion_tokens: 200,
+        reasoning_effort: "low",
         response_format: { type: "json_object" },
       }),
     });

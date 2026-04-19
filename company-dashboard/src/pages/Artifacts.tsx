@@ -357,7 +357,7 @@ export function Artifacts() {
 
   const loadList = async (company: string) => {
     setLoading(true)
-    let query = supabase.from('artifacts').select('id,title,file_path,file_type,company_id,last_synced_at,status,created_at,updated_at,companies(name)').eq('status', 'active').order('updated_at', { ascending: false }).limit(30)
+    let query = supabase.from('artifacts').select('id,title,file_path,file_type,company_id,last_synced_at,status,created_at,updated_at,companies(name)').eq('status', 'active').not('file_path', 'like', '.company/departments/intelligence/reports/%').order('updated_at', { ascending: false }).limit(30)
     if (company) query = query.eq('company_id', company)
     const res = await query
     const arts = res.data || []
@@ -379,7 +379,7 @@ export function Artifacts() {
   const loadMore = async () => {
     setLoadingMore(true)
     const offset = artifacts.length
-    let query = supabase.from('artifacts').select('id,title,file_path,file_type,company_id,last_synced_at,status,created_at,updated_at,companies(name)').eq('status', 'active').order('updated_at', { ascending: false }).range(offset, offset + 29)
+    let query = supabase.from('artifacts').select('id,title,file_path,file_type,company_id,last_synced_at,status,created_at,updated_at,companies(name)').eq('status', 'active').not('file_path', 'like', '.company/departments/intelligence/reports/%').order('updated_at', { ascending: false }).range(offset, offset + 29)
     if (filterCompany) query = query.eq('company_id', filterCompany)
     const res = await query
     const moreArts = res.data || []

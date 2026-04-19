@@ -111,22 +111,35 @@ ${sourceText}`;
           { role: "user", content: prompt },
         ],
         max_completion_tokens: 500,
-        reasoning_effort: "minimal",
+        reasoning_effort: "low",
         response_format: { type: "json_object" },
       }),
     });
     if (!res.ok) {
       const errText = await res.text();
-      console.error(`OpenAI error: ${res.status} ${errText.substring(0, 200)}`);
+      console.error(`news-enrich openai http ${res.status}: ${errText.substring(0, 400)}`);
       return null;
     }
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content || "";
-    const parsed = JSON.parse(content);
-    if (typeof parsed.title_ja !== "string" || typeof parsed.summary !== "string") return null;
+    if (!content) {
+      console.error(`news-enrich empty content, finish_reason=${data.choices?.[0]?.finish_reason}, usage=${JSON.stringify(data.usage)}`);
+      return null;
+    }
+    let parsed: { title_ja?: unknown; summary?: unknown };
+    try {
+      parsed = JSON.parse(content);
+    } catch (e) {
+      console.error(`news-enrich json parse failed: ${(e as Error).message}, content=${content.substring(0, 200)}`);
+      return null;
+    }
+    if (typeof parsed.title_ja !== "string" || typeof parsed.summary !== "string") {
+      console.error(`news-enrich shape mismatch: keys=${Object.keys(parsed).join(",")}, content=${content.substring(0, 200)}`);
+      return null;
+    }
     return { title_ja: parsed.title_ja.substring(0, 100), summary: parsed.summary.substring(0, 500) };
   } catch (e) {
-    console.error(`summarize failed: ${(e as Error).message}`);
+    console.error(`news-enrich summarize exception: ${(e as Error).message}`);
     return null;
   }
 }

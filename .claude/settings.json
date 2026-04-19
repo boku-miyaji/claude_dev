@@ -279,7 +279,8 @@
       "Bash(getent hosts *)",
       "WebFetch(domain:mem0.ai)",
       "Bash(claude --version)",
-      "Bash(claude --print --help)"
+      "Bash(claude --print --help)",
+      "Bash(break)"
     ],
     "deny": [
       "Read(**/.env)",
