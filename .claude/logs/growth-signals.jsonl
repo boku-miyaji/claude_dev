@@ -71,3 +71,5 @@
 {"ts":"2026-04-20T14:31:10+09:00","signal":"correction","prompt":"体験設計とアルゴ、システムは粒度あっている？なぜ設計と他は粒度が違いすぎる。\n"}
 {"ts":"2026-04-20T14:31:10+09:00","signal":"correction","prompt":"体験設計とアルゴ、システムは粒度あっている？なぜ設計と他は粒度が違いすぎる。\n"}
 {"ts":"2026-04-20T14:53:56+09:00","signal":"frustration","prompt":"Bは何でダメ？azure openai ではなく、openai apiで実行して\n"}
+{"ts":"2026-04-20T14:53:56+09:00","signal":"frustration","prompt":"Bは何でダメ？azure openai ではなく、openai apiで実行して\n"}
+{"ts":"2026-04-20T15:01:49+09:00","signal":"correction","prompt":"体制詳細は既存のままではないのでは？適切に修正して。リソース・体制に関しては今までの整理（下記）と整合性をとってください。\nPhase1:初期実装\t\tPhase2:パイロット検証\t\tPhase3:MVP展開検証\t\n¥64,100,000\t\t¥106,100,000\t\t¥46,300,000\n"}
