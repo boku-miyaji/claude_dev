@@ -16163,3 +16163,5 @@
 {"ts":"2026-04-20T14:24:52+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
 {"ts":"2026-04-20T14:24:57+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-20T14:25:01+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-20T14:32:22+09:00","hook":"tool-collector","tool":"Grep","status":"ok"}
+{"ts":"2026-04-20T14:32:38+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
