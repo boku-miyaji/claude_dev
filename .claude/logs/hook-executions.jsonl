@@ -16317,3 +16317,5 @@
 {"ts":"2026-04-20T17:20:28+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-20T17:21:07+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-20T17:21:26+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-20T17:30:44+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-20T17:31:04+09:00","hook":"tool-collector","tool":"TodoWrite","status":"ok"}
