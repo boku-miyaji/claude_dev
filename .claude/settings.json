@@ -294,7 +294,10 @@
       "Bash(awk '{print $2, $10, $11, $13}')",
       "Bash(awk '{print $2, $10, $11}')",
       "Bash(ps -p 2845025 -o pid,etime,%cpu,cmd)",
-      "Bash(ps -p 2921143 -o pid,etime,%cpu,cmd)"
+      "Bash(ps -p 2921143 -o pid,etime,%cpu,cmd)",
+      "Bash(ps -p 2926657 -o pid,etime,%cpu,cmd)",
+      "Read(//proc/2926657/fd/**)",
+      "Read(//proc/2926657/**)"
     ],
     "deny": [
       "Read(**/.env)",
