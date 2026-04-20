@@ -301,7 +301,8 @@
       "Bash(netstat -anp)",
       "Bash(py-spy dump *)",
       "Bash(.venv/bin/py-spy dump *)",
-      "Bash(ps -p 2979790 -o pid,etime,%cpu)"
+      "Bash(ps -p 2979790 -o pid,etime,%cpu)",
+      "Bash(ps -p 3274785 -o pid,etime,%cpu,cmd)"
     ],
     "deny": [
       "Read(**/.env)",
