@@ -39,11 +39,20 @@ maxTurns: 10
 
 - JSON → `.company/departments/intelligence/reports/YYYY-MM-DD-HHMM.json`
 - Markdown → `.company/departments/intelligence/reports/YYYY-MM-DD-HHMM.md`
-- **IMPORTANT: Supabase INSERT（必須・省略禁止）**:
+- **Markdown 末尾に必須セクション**:
+  - `## 💡 focus-you への示唆` — 本文に「取り入れるべき / 検討に値する / 現状で正しいと確認できたもの」の3分類で記述
+  - その直後に機械可読 YAML ブロック（`# suggestions` コメント始まり、各項目に title/description/priority/effort/category/source_urls）。詳細フォーマットは `.company/departments/intelligence/CLAUDE.md` の「構造化 YAML ブロックの追加（必須）」参照
+- **IMPORTANT: Supabase INSERT（必須・省略禁止・ワンセット）**:
   1. `secretary_notes` に type='intelligence_report' でレポート全文を INSERT
   2. `news_items` に各ニュースアイテムを個別 INSERT（title, summary, url, source, topic, published_date）
-  3. curl コマンドは `.company/departments/intelligence/CLAUDE.md` の「Supabase連携」セクションを参照
-  4. **ファイル保存だけで終わらない。ダッシュボードに反映されなければ意味がない。**
+  3. `intelligence_suggestions` に **`ingest-suggestions.py` で自動 INSERT**:
+     ```bash
+     source /home/node/.claude/hooks/supabase.env
+     python3 /workspace/scripts/intelligence/ingest-suggestions.py <保存した Markdown のフルパス>
+     ```
+     成功したら `INSERT 件数 == YAML suggestions 件数` を確認する。Markdown を書くだけで終わるのは不可。これをやらないと Insights → Suggestions タブに反映されず、社長が示唆をチェックできない。
+  4. curl や詳細コマンドは `.company/departments/intelligence/CLAUDE.md` の「Supabase連携」セクションを参照
+  5. **ファイル保存だけで終わらない。3つの INSERT が全部通って初めて完了報告してよい。**
 
 ## レポートルール
 
