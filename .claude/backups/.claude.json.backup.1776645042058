@@ -715,8 +715,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 73,
-      "lastUsedAt": 1776645042056
+      "usageCount": 72,
+      "lastUsedAt": 1776588787737
     },
     "register": {
       "usageCount": 11,
