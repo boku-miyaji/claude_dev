@@ -16415,3 +16415,6 @@
 {"ts":"2026-04-21T07:55:44+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-21T07:55:50+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-21T07:55:53+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T07:55:55+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T07:55:58+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-21T07:56:07+09:00","hook":"tool-collector","tool":"Agent:Explore","status":"ok"}
