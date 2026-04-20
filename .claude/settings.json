@@ -323,7 +323,8 @@
       "/workspace/scratch/research",
       "/workspace/.company/departments/investigation",
       "/workspace/aces-rikyu-sales-proposals-poc/scripts",
-      "/workspace"
+      "/workspace",
+      "/workspace/aces-rikyu-sales-proposals-poc/server/.next/dev"
     ]
   },
   "hooks": {
