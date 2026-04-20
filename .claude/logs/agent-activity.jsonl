@@ -144,3 +144,4 @@
 {"ts":"2026-04-19T21:17:39+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"DIVE recommender UI 3点改善実装","model":"default","background":false}
 {"ts":"2026-04-19T21:21:02+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"DIVE recommender 実装続行","model":"default","background":false}
 {"ts":"2026-04-20T09:56:40+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"朝のCEOブリーフィング情報収集","model":"default","background":true}
+{"ts":"2026-04-20T13:08:46+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"CEO向け情報収集ブリーフィング","model":"default","background":false}
