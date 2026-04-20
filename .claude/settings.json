@@ -297,7 +297,10 @@
       "Bash(ps -p 2921143 -o pid,etime,%cpu,cmd)",
       "Bash(ps -p 2926657 -o pid,etime,%cpu,cmd)",
       "Read(//proc/2926657/fd/**)",
-      "Read(//proc/2926657/**)"
+      "Read(//proc/2926657/**)",
+      "Bash(netstat -anp)",
+      "Bash(py-spy dump *)",
+      "Bash(.venv/bin/py-spy dump *)"
     ],
     "deny": [
       "Read(**/.env)",
