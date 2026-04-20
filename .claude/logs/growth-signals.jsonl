@@ -70,3 +70,4 @@
 {"ts":"2026-04-20T12:46:02+09:00","signal":"correction","prompt":"Analyze these failure signals from a Claude Code session and respond with ONLY valid JSON:\n{\"title\": \"concise title\", \"what_happened\": \"what went wrong\", \"root_cause\": \"likely cause\", \"countermeasure\": \"suggested fix\"}\n\nSignals (68 total, showing last 20):\n[correction] Classify each prompt. For each\n"}
 {"ts":"2026-04-20T14:31:10+09:00","signal":"correction","prompt":"体験設計とアルゴ、システムは粒度あっている？なぜ設計と他は粒度が違いすぎる。\n"}
 {"ts":"2026-04-20T14:31:10+09:00","signal":"correction","prompt":"体験設計とアルゴ、システムは粒度あっている？なぜ設計と他は粒度が違いすぎる。\n"}
+{"ts":"2026-04-20T14:53:56+09:00","signal":"frustration","prompt":"Bは何でダメ？azure openai ではなく、openai apiで実行して\n"}
