@@ -1242,6 +1242,10 @@ Step 3 [直列]: システム開発(実装) → QA(テスト)
           ['supabase-migration-*.sql', 'AI Features タブ（データ構造テーブル一覧）'],
           ['src/hooks/useTodayTimeline.ts', 'Design Philosophy タブ（統合タイムライン）+ Overview タブ（更新連鎖マップ）'],
           ['src/lib/googleTasksApi.ts', 'Overview タブ（Google Tasks同期フロー）+ Design Philosophy タブ（GCal Tasks同期）'],
+          ['src/components/MorningQuoteCard.tsx', 'AI Features タブ（朝イチの一節カード）+ Design Philosophy タブ（受動表示・Silence over Noise）'],
+          ['src/hooks/useMorningQuote.ts', 'AI Features タブ（朝イチの一節データ取得）'],
+          ['scripts/morning-quote/*', 'Overview タブ（鮮度マップ・バッチ一覧）+ AI Features タブ（Claude CLI バッチ）'],
+          ['.github/workflows/morning-quote.yml', 'Overview タブ（GitHub Actions cron 一覧）'],
         ]} />
         <Principle title="教訓: 2026-04-06 useSelfAnalysis.ts 改修時" body="ハイブリッド分析方式を実装したが、対応表に useSelfAnalysis.ts がなかったため Hook が発火せず、社長に指摘されるまで Blueprint が古いまま残った。対応表を7→14ファイルに拡充。新しいAI機能フックを追加したら必ずこの表にも追加すること。" color="var(--amber)" />
         <P>この Hook はハーネスエンジニアリングの「決定論的制御」にあたる。CLAUDE.md に「ドキュメントを更新して」と書いても無視される可能性があるが、Hook は確実に発火する。</P>
@@ -2246,6 +2250,7 @@ function TabRoadmap() {
             ['2026-04-21', '⑫ Positioning Focus 確定', '表看板を「連続データ × 忘れていた範囲のパターン発見」に確定。Foresight Engine は「Foresight as Question」に再定義（予言ではなく兆候の問い）。競合調査で Rosebud Wrapped と機能名レベルで重複していることが判明したため、予言軸は捨てる'],
             ['2026-04-21', 'Arc/Theme/Foresight はバッチ Opus 一本化', 'ブラウザ側 useArcReader / useThemeFinder / useForesight は LLM を叩かず story_memory を読み取るだけの責務に変更。夜間バッチ（narrator-update、claude-opus-4-7）を唯一の生成経路にする'],
             ['2026-04-21', 'Blueprint と実装の整合化', 'Hook 42スクリプト / 19データソース / 11部署(+リファクタで12) / 27ルート / AI Features 4カード(#1 #2 #4 #5)のモデル記述を実装に合わせる。社長判断で「Blueprint を実装に合わせる」方針を確定'],
+            ['2026-04-21', '朝イチの一節機能を追加', '前日の日記からキーワード・感情・テーマを複数観点で抽出 → Web検索 → スコアリングで1つ選出 → Today 最上部に受動表示（装飾ゼロ、本文17px主役）。AI PaRTner（FutureYouChat）は存続・別機能として残す。quotes / user_quote_deliveries / user_quote_favorites の3テーブル、お気に入りはハート1タップ（トースト・モーダルなし）、一覧は Journal タブ。バッチは Claude CLI（`claude --print` + WebSearch）、API課金ゼロ（定額 Claude Code 経由）、GitHub Actions 06:30 JST cron。日記0件の日はセクション非表示（スターター名言プールなし）'],
           ]}
         />
       </Section>
