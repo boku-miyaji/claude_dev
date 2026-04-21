@@ -85,5 +85,11 @@ project-scotch-care/reference_docs/**/*.pptx
 project-scotch-care/reference_docs/**/*.pdf
 project-scotch-care/reference_docs/**/*.xlsx
 project-scotch-care/reference_docs/**/*.docx
+# Working artifacts (screenshots, mockups, previews) — must go in scratch/
+.playwright-mcp/
 *.playwright-mcp/
-**/itoen-magentic*.png
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.webp
