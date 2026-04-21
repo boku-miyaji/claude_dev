@@ -60,9 +60,9 @@ export function Ideas() {
     setSaving(false)
     if (created) {
       setText('')
-      toast.success('アイデアを追加')
+      toast('アイデアを追加')
     } else {
-      toast.error('保存に失敗しました')
+      toast('保存に失敗しました')
     }
   }, [text, saving, addIdea])
 
@@ -100,14 +100,14 @@ export function Ideas() {
     const snippet = idea.content.length > 24 ? idea.content.slice(0, 24) + '…' : idea.content
     if (!window.confirm(`削除しますか？\n\n「${snippet}」`)) return
     await deleteIdea(idea.id)
-    toast.success('削除しました')
+    toast('削除しました')
   }, [deleteIdea])
 
   return (
     <div className="page">
       <PageHeader
         title="Ideas"
-        subtitle="思いついたことを貯める場所。書き捨ててOK、育てたければ状態を変える。"
+        description="思いついたことを貯める場所。書き捨ててOK、育てたければ状態を変える。"
       />
 
       {/* 入力 */}
@@ -155,11 +155,11 @@ export function Ideas() {
 
       {/* 一覧 */}
       {loading && ideas.length === 0 ? (
-        <SkeletonRows rows={5} />
+        <SkeletonRows count={5} />
       ) : visible.length === 0 ? (
         <EmptyState
-          title={filter === 'all' ? 'まだアイデアはありません' : '該当するアイデアはありません'}
-          description="上の入力欄に書いてみてください。1行でOK。"
+          icon="💡"
+          message={filter === 'all' ? 'まだアイデアはありません。上の入力欄に書いてみてください。' : '該当するアイデアはありません。'}
         />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -204,7 +204,7 @@ export function Ideas() {
                   {/* tags */}
                   <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                     {idea.tags.map((t) => (
-                      <Tag key={t}>#{t}</Tag>
+                      <Tag key={t}>{`#${t}`}</Tag>
                     ))}
                     {tagEditId === idea.id ? (
                       <input
