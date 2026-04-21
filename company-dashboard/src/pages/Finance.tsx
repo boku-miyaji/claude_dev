@@ -992,6 +992,209 @@ function FinTax() {
 }
 
 // ============================================================
+// Rules Tab (経費ルール・日々の処理フロー)
+// ============================================================
+
+type PaymentMethod = 'biz_card' | 'personal_card' | 'paypay' | 'cash' | 'bank_transfer'
+type ReceiptForm = 'electronic' | 'paper' | 'none'
+type Frequency = 'one_time' | 'recurring'
+
+const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+  biz_card: '事業用クレカ',
+  personal_card: '個人用クレカ',
+  paypay: 'PayPay',
+  cash: '現金',
+  bank_transfer: '銀行振込',
+}
+const RECEIPT_LABELS: Record<ReceiptForm, string> = {
+  electronic: '電子（PDF/メール/サイトDL）',
+  paper: '紙レシート',
+  none: '領収書なし',
+}
+const FREQ_LABELS: Record<Frequency, string> = { one_time: '単発', recurring: '定期（月次/年次）' }
+
+interface QuickRow { method: PaymentMethod; ledger: string; receipt: string; note: string }
+
+const QUICK_TABLE: QuickRow[] = [
+  { method: 'biz_card', ledger: '自動連携', receipt: '電子PDF保存', note: 'ほぼ放置OK。月次でカテゴリのみ確認' },
+  { method: 'personal_card', ledger: '手動', receipt: '電子PDF保存', note: '「事業主借」で仕訳。月次まとめが楽' },
+  { method: 'paypay', ledger: '連携可（要設定）', receipt: 'アプリ履歴DL + CSV保存', note: 'MFでPayPay連携を有効化。領収書はアプリから取得' },
+  { method: 'cash', ledger: '手動（出納帳）', receipt: 'レシート撮影（AI-OCR）', note: '7日以内処理。原本は7年保管' },
+  { method: 'bank_transfer', ledger: '自動連携', receipt: '電子明細PDF保存', note: '振込明細をMFに連携。手動入力不要' },
+]
+
+interface JudgeAction { label: string; severity: 'ok' | 'action' | 'warn' }
+
+function judgeActions(method: PaymentMethod, receipt: ReceiptForm, freq: Frequency): JudgeAction[] {
+  const a: JudgeAction[] = []
+
+  // 帳簿入力
+  if (method === 'biz_card' || method === 'bank_transfer') {
+    a.push({ label: 'MFクラウドが自動取込 → カテゴリと勘定科目だけ確認', severity: 'ok' })
+  } else if (method === 'personal_card') {
+    a.push({ label: 'MFクラウドで「事業主借」として手動仕訳を入力', severity: 'action' })
+    a.push({ label: '事業用カードに切り替えられないか都度検討', severity: 'warn' })
+  } else if (method === 'paypay') {
+    a.push({ label: 'MFクラウドのPayPay連携で自動取込（未設定なら設定）', severity: 'action' })
+  } else if (method === 'cash') {
+    a.push({ label: 'MFクラウドの現金出納帳に手動入力（日付・金額・摘要）', severity: 'action' })
+  }
+
+  // 証憑保管
+  if (receipt === 'electronic') {
+    a.push({ label: 'PDF/メールを証憑フォルダに保存（例: 2026-04-22_取引先_金額.pdf）', severity: 'action' })
+    a.push({ label: '電帳法: 電子取引データは電子保存義務。印刷保存は不可', severity: 'warn' })
+  } else if (receipt === 'paper') {
+    a.push({ label: 'MFクラウドアプリでレシート撮影 → AI-OCRで自動仕訳候補', severity: 'action' })
+    a.push({ label: '紙原本は7年保管（スキャナ保存の真実性要件を満たせば破棄可）', severity: 'warn' })
+  } else {
+    a.push({ label: '出金伝票を作成: 日付・金額・摘要・相手先を記録', severity: 'warn' })
+  }
+
+  // 定期
+  if (freq === 'recurring') {
+    a.push({ label: 'focus-you の「固定費」タブにも登録（月次支出を可視化）', severity: 'action' })
+  }
+
+  return a
+}
+
+function SeverityBadge({ severity }: { severity: JudgeAction['severity'] }) {
+  const map = {
+    ok: { bg: 'rgba(34,197,94,0.12)', fg: '#22c55e', label: 'OK' },
+    action: { bg: 'rgba(99,102,241,0.12)', fg: '#6366f1', label: 'やる' },
+    warn: { bg: 'rgba(245,158,11,0.14)', fg: '#f59e0b', label: '注意' },
+  } as const
+  const s = map[severity]
+  return (
+    <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: s.bg, color: s.fg, letterSpacing: 0.5, minWidth: 40, textAlign: 'center' }}>
+      {s.label}
+    </span>
+  )
+}
+
+function ChoiceRow<T extends string>({ value, setValue, options, labels }: { value: T; setValue: (v: T) => void; options: readonly T[]; labels: Record<T, string> }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      {options.map(opt => (
+        <button
+          key={opt}
+          onClick={() => setValue(opt)}
+          style={{
+            padding: '8px 14px',
+            fontSize: 12,
+            fontWeight: 500,
+            borderRadius: 8,
+            border: `1px solid ${value === opt ? 'var(--accent)' : 'var(--border)'}`,
+            background: value === opt ? 'var(--accent)' : 'var(--surface2)',
+            color: value === opt ? '#fff' : 'var(--text)',
+            cursor: 'pointer',
+            transition: 'all .15s',
+            fontFamily: 'var(--font)',
+          }}
+        >
+          {labels[opt]}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function FinRules() {
+  const [method, setMethod] = useState<PaymentMethod>('biz_card')
+  const [receipt, setReceipt] = useState<ReceiptForm>('electronic')
+  const [freq, setFreq] = useState<Frequency>('one_time')
+  const actions = judgeActions(method, receipt, freq)
+
+  const paymentOpts = ['biz_card', 'personal_card', 'paypay', 'cash', 'bank_transfer'] as const
+  const receiptOpts = ['electronic', 'paper', 'none'] as const
+  const freqOpts = ['one_time', 'recurring'] as const
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* 1. クイック早見表 */}
+      <section style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>早見表: 支払い方法別にやること</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text3)' }}>基本原則 — MFクラウドをマスター帳簿に、証憑は電子で一括保管、月末に締める</p>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse', minWidth: 560 }}>
+            <thead>
+              <tr>
+                {['支払い手段', '帳簿入力', '証憑保管', '特記事項'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text3)', fontWeight: 500, whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {QUICK_TABLE.map(row => (
+                <tr key={row.method} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '10px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>{PAYMENT_LABELS[row.method]}</td>
+                  <td style={{ padding: '10px 12px', color: 'var(--text2)', whiteSpace: 'nowrap' }}>{row.ledger}</td>
+                  <td style={{ padding: '10px 12px', color: 'var(--text2)', whiteSpace: 'nowrap' }}>{row.receipt}</td>
+                  <td style={{ padding: '10px 12px', color: 'var(--text3)', lineHeight: 1.6 }}>{row.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* 2. 判定ウィザード */}
+      <section style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>判定: いま何すべき？</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text3)' }}>条件を3つ選ぶと、今日やることが出ます</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', marginBottom: 8, letterSpacing: 0.3 }}>支払い方法</div>
+            <ChoiceRow value={method} setValue={setMethod} options={paymentOpts} labels={PAYMENT_LABELS} />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', marginBottom: 8, letterSpacing: 0.3 }}>領収書の形式</div>
+            <ChoiceRow value={receipt} setValue={setReceipt} options={receiptOpts} labels={RECEIPT_LABELS} />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', marginBottom: 8, letterSpacing: 0.3 }}>頻度</div>
+            <ChoiceRow value={freq} setValue={setFreq} options={freqOpts} labels={FREQ_LABELS} />
+          </div>
+        </div>
+
+        <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', marginBottom: 10, letterSpacing: 0.3 }}>やることリスト</div>
+          <ol style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {actions.map((a, i) => (
+              <li key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: 'var(--text2)', lineHeight: 1.55 }}>
+                <SeverityBadge severity={a.severity} />
+                <span>{a.label}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* 3. 電帳法ミニガイド */}
+      <section style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>電子帳簿保存法（電帳法）の最低ライン</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text3)' }}>2024年1月から完全適用。MFクラウド パーソナルプランの証憑保管機能で要件は満たせる</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+          {[
+            { t: '電子取引は電子保存', d: 'ネット通販・クレカ明細・PayPay領収書など。印刷して紙保存は不可' },
+            { t: '検索性3点セット', d: '日付・金額・取引先で検索できる状態にしておく' },
+            { t: '保管期間', d: '7年間（青色で欠損金繰越する場合は10年）' },
+            { t: '真実性の確保', d: 'タイムスタンプ付与 or 訂正削除履歴が残るシステムで保管（MFは対応）' },
+          ].map(item => (
+            <div key={item.t} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '14px 16px' }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>{item.t}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.55 }}>{item.d}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}
+
+// ============================================================
 // ApiCosts (embedded shortcut)
 // ============================================================
 
@@ -1001,16 +1204,21 @@ import { ApiCosts } from './ApiCosts'
 // Main Finance Component
 // ============================================================
 
-const TABS = ['overview', 'subscriptions', 'wishlist', 'api-costs', 'projects', 'invoices', 'expenses', 'tax'] as const
+const TABS = ['overview', 'rules', 'subscriptions', 'wishlist', 'api-costs', 'projects', 'invoices', 'expenses', 'tax'] as const
 type TabId = typeof TABS[number]
-const TAB_LABELS: Record<TabId, string> = { overview: '概要', subscriptions: '固定費', wishlist: 'ほしい物', 'api-costs': 'APIコスト', projects: '案件', invoices: '請求書', expenses: '経費', tax: '税金' }
+const TAB_LABELS: Record<TabId, string> = { overview: '概要', rules: '経費ルール', subscriptions: '固定費', wishlist: 'ほしい物', 'api-costs': 'APIコスト', projects: '案件', invoices: '請求書', expenses: '経費', tax: '税金' }
 
 export function Finance() {
-  const [activeTab, setActiveTab] = useState<TabId>('overview')
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    const qs = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+    const q = qs?.get('tab')
+    return (q && (TABS as readonly string[]).includes(q) ? (q as TabId) : 'overview')
+  })
 
   const renderTab = () => {
     switch (activeTab) {
       case 'overview': return <FinOverview />
+      case 'rules': return <FinRules />
       case 'subscriptions': return <FinSubscriptions />
       case 'wishlist': return <FinWishlist />
       case 'api-costs': return <ApiCosts />
