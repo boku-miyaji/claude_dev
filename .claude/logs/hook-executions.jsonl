@@ -16940,3 +16940,6 @@
 {"ts":"2026-04-21T10:22:31+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-21T10:22:31+09:00","hook":"tool-collector","tool":"Glob","status":"ok"}
 {"ts":"2026-04-21T10:22:32+09:00","hook":"tool-collector","tool":"Grep","status":"ok"}
+{"ts":"2026-04-21T10:22:37+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-21T10:22:46+09:00","hook":"tool-collector","tool":"TodoWrite","status":"ok"}
+{"ts":"2026-04-21T10:23:43+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
