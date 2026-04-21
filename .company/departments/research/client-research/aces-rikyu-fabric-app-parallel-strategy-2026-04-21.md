@@ -482,6 +482,67 @@ Chad Sanderson らの **"Data Contracts: Developing Production-Grade Pipelines a
 
 ---
 
+## 16. 並行開発を成功させる条件 — "作り直し" を避ける地雷リスト
+
+§3 の再利用マトリクスは **「DAL が抽象化されている」「Data Contract が合意されている」等の前提** に依存している。この前提が崩れると、実際に大規模書き換えが発生する。Phase 0 の設計レビューで以下を確認すること。
+
+### 16.1 最重要 — 外すと確実に書き直し
+
+| # | 地雷 | 起きる事故 | 対策 |
+|---|------|----------|------|
+| 1 | **DAL（データアクセス層）の抽象化不足** | データソース差し替え時に呼び出し箇所を全書き換え | Repository パターンを**最初の1行目から徹底**。`sql.query('SELECT ...')` 直書きは禁止 |
+| 2 | **ID 採番に auto_increment / SERIAL** | 分散・統合時に衝突、Mirroring 後に別 ID を振り直す羽目 | **UUIDv7 / ULID / GUID を最初から**。Azure SQL / Cosmos 共通で |
+| 3 | **タイムゾーン混在** | JST / UTC 混在で時刻ズレ、後修正不可能 | **全て UTC 保存、表示時のみ JST 変換**。列型は `DATETIMEOFFSET` |
+| 4 | **曖昧なデータ型・命名規則** | Fabric Mirroring 型マッピング失敗、Silver/Gold 破綻 | **英語スネークケース、型厳密指定**（`DECIMAL(18,4)` 等）。Fabric supported types 事前確認 |
+| 5 | **Data Contract の口頭合意** | NTTデータ側 schema 変更でアプリ側が壊れる / 責任論争 | **書面化**（SemVer、事前レビュー期間、deprecation 期限を含む変更プロセス） |
+
+### 16.2 重要 — 見落とすとコスト／コンプライアンス事故
+
+| # | 地雷 | 起きる事故 | 対策 |
+|---|------|----------|------|
+| 6 | **個人情報削除フロー未設計** | GDPR / 個人情報保護法の削除要求に対応不能 | 個人情報列は Mirroring 対象外 or ハッシュ化。削除伝搬プロセスを Phase 0 で設計 |
+| 7 | **BLOB・ベクトルを DB に格納** | Mirroring 対象外 or 型マッピング失敗 | バイナリは Blob Storage、ベクトルは Azure AI Search。DB にはポインタだけ |
+| 8 | **権限マッピング後回し** | Bronze 層が全件見える状態 = 情報漏洩 | Phase 0 から OneSecurity 設計。センシティブ列は Mirroring 除外 / 列マスキング |
+| 9 | **リアルタイム要件と Mirroring 遅延の混同** | 秒未満レイテンシ要件を Fabric 経由で満たそうとして失敗 | リアルタイム系は Eventstream / Reflex、分析系は Mirroring で住み分け |
+| 10 | **Fabric Capacity コスト Cap なし** | 想定外クエリで Throttling / 請求ショック | Capacity モニタリング + コスト Cap を Phase 0 で設定 |
+
+### 16.3 AI / エージェント特有
+
+| # | 地雷 | 起きる事故 | 対策 |
+|---|------|----------|------|
+| 11 | **会話ログを Message オブジェクトのまま保存** | `tool_use` / `tool_result` / `thinking` の入れ子構造を後で展開する作業が地獄 | 最初からイベント単位にフラット化（Event Sourcing 風）。`user_message`, `llm_response`, `tool_call`, `tool_result` を個別レコード |
+| 12 | **Azure OpenAI ↔ Fabric AI の役割分担曖昧** | プロンプト資産が分散、二重投資 | プロンプト・ツール定義は Git で一元管理。モデル選択は実行時切替 |
+| 13 | **RAG インデックスのロックイン** | Fabric Vector（プレビュー）に移行しにくい | 当面 Azure AI Search で本番運用、Fabric Vector 移行は GA 後 1-2年の検討事項 |
+
+### 16.4 組織・プロセス
+
+| # | 地雷 | 起きる事故 | 対策 |
+|---|------|----------|------|
+| 14 | **NTTデータとの連携フレーム不在** | Phase 1 の Mirroring 接続時に schema ズレ・責任論争 | 週次/隔週 schema review、四半期 roadmap 同期を Phase 0 で取り決め |
+| 15 | **テスト環境のズレ（dev / staging / prod）** | マージ時に予期せぬ障害 | Fabric Deployment Pipelines で同数環境分離を Phase 0 で |
+
+### 16.5 Phase 0 で絶対に守る5箇条（チェックリスト）
+
+以下をチェックリストとして Phase 0 設計レビューで確認:
+
+- [ ] **① Repository パターンで DAL を抽象化**（`sql.query` 直書き禁止）
+- [ ] **② ID は UUID/ULID、時刻は UTC、命名は英語スネークケース、型は厳密指定**
+- [ ] **③ 個人情報の削除フローと権限マッピング計画を Phase 0 で文書化**
+- [ ] **④ バイナリ・ベクトルは DB 外（Blob Storage / Azure AI Search）**
+- [ ] **⑤ Data Contract を NTTデータと書面で合意**（schema 変更プロセス含む）
+
+→ **この5箇条を Phase 0 で確認できれば、「作り直し」は発生しない**。逆にここを軽視すると、並行開発のメリットが崩れて反対派の警告通りに書き換えになる。
+
+### 16.6 社長が説明時に使うロジック
+
+反対派の「作り直しになる」には **条件付きで正しい** と認めたうえで、その条件を明示する:
+
+> 「作り直しが発生するのは事実です。ただしそれは `① DAL 抽象化を怠る`、`② 採番戦略を間違える`、`③ Data Contract を合意しない` 等の **設計ミスをした場合のみ**。
+> これらを Phase 0 で規律として入れれば、作り直しは発生しません。
+> 基盤完成を待つのは時間の問題、設計規律を欠くのは品質の問題。**時間を失う代わりに品質を捨てるのは合理的ではありません**」
+
+---
+
 # handoff
 handoff:
   - to: 資料制作部
