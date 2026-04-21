@@ -15,6 +15,7 @@ import type { TimelineItem } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
 import { StoryArcCard } from '@/components/StoryArcCard'
 import { FutureYouChat } from '@/components/FutureYouChat'
+import { MorningQuoteCard } from '@/components/MorningQuoteCard'
 import { useDataStore } from '@/stores/data'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
 import type { TimeMode } from '@/lib/timeMode'
@@ -1303,6 +1304,9 @@ export function Today() {
 
   return (
     <div className="page">
+      {/* ── 朝イチの一節 (受動表示・最上部固定) ── */}
+      <MorningQuoteCard />
+
       {/* ── L1 やること (action required) ── */}
       {Greeting}
       <PendingUpdatesBanner />
