@@ -345,7 +345,8 @@
       "Bash(ps -p 3833923 3833924 3833925 3828687 -o pid=,etime=)",
       "Bash(nohup ./.venv/bin/python -u scripts/magentic_pipeline.py --company \"伊藤園\" --scenario itoen-magentic-v3-standard-fixed --extraction-only --model-agenda gpt-5.4-2026-03-05 --effort low)",
       "Bash(ps -p 3841351 -o pid=,etime=)",
-      "Bash(ps -o pid,ppid,command -p 3848237,3903419)"
+      "Bash(ps -o pid,ppid,command -p 3848237,3903419)",
+      "Bash(awk '/^```\\(python|sql|bash|typescript\\)/{if\\(in_block\\){print prev_start\"-\"NR-1\": \"NR-prev_start-1\" lines\"}else{in_block=1;prev_start=NR}} /^```$/{if\\(in_block\\){print prev_start\"-\"NR\": \"NR-prev_start-1\" lines\";in_block=0}}' docs/mvp-ai-deep-dive-2.md)"
     ],
     "deny": [
       "Read(**/.env)",

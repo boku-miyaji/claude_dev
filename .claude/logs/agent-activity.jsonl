@@ -170,3 +170,4 @@
 {"ts":"2026-04-21T20:36:19+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"System dev deep-dive: Edge Function + SSE + DB","model":"default","background":false}
 {"ts":"2026-04-21T20:42:58+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"AI-1: Combiner + Critics prompt","model":"default","background":false}
 {"ts":"2026-04-21T20:46:02+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"AI-3: U3 U6 algorithm","model":"default","background":false}
+{"ts":"2026-04-21T20:49:26+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"AI-2: Checkpoint + ai_tier config","model":"default","background":false}
