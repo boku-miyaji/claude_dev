@@ -340,7 +340,8 @@
       "Bash(ps -p 3828574 3828575 3828576 3828687 -o pid=,etime=)",
       "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 5)",
       "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 6)",
-      "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 7)"
+      "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 7)",
+      "Bash(ps -p 3830572 3830573 3830574 3828687 -o pid=,etime=)"
     ],
     "deny": [
       "Read(**/.env)",
