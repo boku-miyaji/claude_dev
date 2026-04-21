@@ -342,7 +342,8 @@
       "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 6)",
       "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 7)",
       "Bash(ps -p 3830572 3830573 3830574 3828687 -o pid=,etime=)",
-      "Bash(ps -p 3833923 3833924 3833925 3828687 -o pid=,etime=)"
+      "Bash(ps -p 3833923 3833924 3833925 3828687 -o pid=,etime=)",
+      "Bash(nohup ./.venv/bin/python -u scripts/magentic_pipeline.py --company \"伊藤園\" --scenario itoen-magentic-v3-standard-fixed --extraction-only --model-agenda gpt-5.4-2026-03-05 --effort low)"
     ],
     "deny": [
       "Read(**/.env)",
