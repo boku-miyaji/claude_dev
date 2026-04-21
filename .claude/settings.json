@@ -351,7 +351,8 @@
       "/workspace",
       "/workspace/aces-rikyu-sales-proposals-poc/server/.next/dev",
       "/workspace/polaris-circuit-diagram/backend/data/curve_crops",
-      "/workspace/scratch/design/focus-you"
+      "/workspace/scratch/design/focus-you",
+      "/workspace/.company-focus-you/ai-dev"
     ]
   },
   "hooks": {
