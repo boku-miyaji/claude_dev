@@ -426,7 +426,7 @@ function TabOverview() {
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--green)' }}>自動メンテナンス（/company 起動時に検出→修復）</div>
-        <P>freshness-policy.yaml で定義（14データソース）。stale検出→人間の操作なしでClaude Codeが自動修復。</P>
+        <P>freshness-policy.yaml で定義（19データソース）。stale検出→人間の操作なしでClaude Codeが自動修復。registry_consistency / ceo_insights / knowledge_base / evaluations / prep_log_feedback / intelligence_feedback / preferences_decay / security_audit / security_scan / intelligence_reports / diary_analysis / growth_events / knowledge_promotion / claude_md_size / design_docs_sync / knowledge_lint / impl_docs_sync / dept_knowledge_refresh / harness_research の19項目。</P>
         <Tbl headers={['データ', '検出条件', '自動修復アクション']} rows={[
           ['harness_research', '最終調査7日超', '情報収集部(最新記事) ∥ 運営改善部(GAP分析) → 改善提案更新'],
           ['dept_knowledge_refresh', '最終更新14日超', 'ローテーションで2部署選定 → 情報収集(調査) ∥ ops(GAP分析) → 社長承認で更新'],
@@ -499,7 +499,7 @@ Context Compaction 発生時
   ├→ knowledge_base 読み込み（active ルール取得）
   ├→ 未処理コメント確認
   ├→ カレンダー取得（今日+明日）
-  └→ データ鮮度チェック（14データソース, freshness-policy.yaml）
+  └→ データ鮮度チェック（19データソース, freshness-policy.yaml）
        └→ harness_research 7日超? → 情報収集部 ∥ 運営改善部 → 改善提案更新
 
 /company 起動時の自動メンテナンス
@@ -890,7 +890,7 @@ function TabExperienceDesign() {
           ['感情分析', '投稿後、画面を見ている', 'gpt-5.4-mini', 'OpenAI', '3秒以内。mini精度で十分'],
           ['AIコメント', 'Today画面を見ている', 'gpt-5.4', 'OpenAI', '自然な日本語が必要。品質重視'],
           ['Moment Detector', '投稿後、画面を見ている', 'gpt-5.4-nano', 'OpenAI', '感情分析直後。軽い判定'],
-          ['チャット応答', '送信後、待っている', '6段階ルーティング', 'OpenAI', 'SSEストリーミングで体感確保'],
+          ['チャット応答', '送信後、待っている', 'gpt-5.4 統一 + reasoning 6段階', 'OpenAI', 'モデルは gpt-5.4 固定、effort で品質/コスト調整。SSEストリーミングで体感確保'],
           ['自己分析', 'ボタン押下後、待っている', 'gpt-5.4', 'OpenAI', '深い分析。品質重視'],
           ['ニュース収集', '誰も待っていない(バッチ)', 'gpt-5.4-mini', 'OpenAI (pg_cron)', 'web_searchにmini必要'],
           ['Arc Reader', '誰も待っていない(毎朝9時JST cron、週1スパン)', 'claude-opus-4-7', 'Anthropic (narrator-update)', '物語解釈。品質重視。ブラウザは story_memory を読むだけ'],
@@ -925,7 +925,7 @@ function TabExperienceDesign() {
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>現状の問題点</div>
         <Tbl headers={['問題', '詳細']} rows={[
-          ['ナビゲーション過多', '21ルート×13セクション。初見はどこに何があるかわからない'],
+          ['ナビゲーション過多', '27ルート×13セクション（2026-04-21 現在）。初期提案時(21ルート)から増えており、初見はどこに何があるかわからない。サイドバー再構成案のベースラインを更新する必要あり'],
           ['Todayからの動線が弱い', 'Journal/SelfAnalysis/Weeklyへは直接行けない。サイドバーを探す必要'],
           ['時間帯で動線が変わらない', '朝はCalendarへの動線、夜はJournal/Weeklyへの動線が欲しいが、常に同じ'],
           ['データ蓄積の通知がない', '日記30件でArc Reader解放されてもユーザーは気づかない'],
@@ -945,7 +945,7 @@ function TabExperienceDesign() {
           ['Plan', 'Dreams & Goals / Habits / Calendar', '常に表示（3項目）'],
           ['More（折りたたみ）', 'Finance / News / Growth / Organization / Knowledge 等', '折りたたみ内（使用頻度低）'],
         ]} />
-        <P>初日は7項目、3ヶ月後は10項目。現状の21項目から大幅削減。</P>
+        <P>初日は7項目、3ヶ月後は10項目。現状の27ルートから大幅削減（提案時点21→実装27に膨張したため再整理が必要）。</P>
       </Section>
     </>
   )
@@ -1333,7 +1333,7 @@ function TabAiFeatures() {
           name="1. 感情分析"
           trigger="日記を投稿したとき（自動）"
           input="日記本文テキスト"
-          model="gpt-5.4-nano (completion mode)"
+          model="gpt-5.4-mini (completion mode)"
           pipeline="日記テキスト → system: Plutchik 8感情+Russell+PERMA+V の分析指示 → JSON応答 → パース → DB保存"
           output="Plutchik 8感情(0-100), Russell valence/arousal(-1~1), PERMA+V(0-10), WBI(0-10), summary(1文)"
           storage="emotion_analysis テーブル + diary_entries.wbi を更新"
@@ -1342,12 +1342,12 @@ function TabAiFeatures() {
 
         <AiFeatureCard
           name="2. AI Partner コメント（日記中心パーソナライズ）"
-          trigger="Today画面表示時 + 日記投稿後に自動再生成"
-          input="【主役】日記(3件,生テキスト) + 感情傾向 + WBI推移 → 【空気】天気・時刻 → 【補足(直接言及しない)】カレンダー, タスク → 【傾向】CEOインサイト, 夢, 連続記録"
-          model="gpt-5.4-nano (completion mode)"
-          pipeline="データ並列取得 → 日記を最重要、予定・タスクは補足として構造化 → 時間帯別プロンプト(朝/昼/夜) → AI生成 → 表示"
-          output="1-2文、80字以内。「わかってる人がボソッと言う一言」。行動指示・数字・データ読み上げ・汎用語は禁止"
-          storage="Zustand in-memory（キャッシュキー: 日付_timeMode、日記投稿で無効化）"
+          trigger="Today画面表示時 + 時間帯切替で再生成（日記投稿では再生成しない）"
+          input="【主役】日記(3件,生テキスト) + 感情傾向 + WBI推移 → 【空気】天気・時刻 → 【補足(直接言及しない)】カレンダー, タスク → 【傾向】CEOインサイト, 夢, 連続記録 + 過去3件の出力（同じ表現回避）"
+          model="claude-opus-4-7 (Anthropic)"
+          pipeline="データ並列取得 → 日記を最重要、予定・タスクは補足として構造化 → 時間帯別プロンプト(朝/昼/夜) → 能動/受動境界⑪ に沿って受動生成は想起誘導のみ → SILENT返却も許容 → 表示"
+          output="1-2文、80字以内。「わかってる人がボソッと言う一言」。行動指示・数字・データ読み上げ・汎用語は禁止。価値ある一言がなければSILENTで非表示"
+          storage="Zustand in-memory（キャッシュキー: 日付_timeMode、時間帯変更で無効化）"
           hook="useMorningBriefing.ts"
         />
 
@@ -1364,10 +1364,10 @@ function TabAiFeatures() {
 
         <AiFeatureCard
           name="4. 週次ナラティブ"
-          trigger="Weeklyページで「生成」ボタン押下"
+          trigger="Weeklyページ初回表示で先週分未生成なら自動（手動「生成」ボタンは再生成用に残存）"
           input="1週間分の日記, 感情分析, 完了タスク, ゴール進捗, 習慣達成率"
-          model="gpt-5.4-nano (completion mode)"
-          pipeline="週の全データ並列取得 → 統計算出(平均WBI, 優勢感情, 習慣達成率) → AI生成(200-300字ナラティブ) → DB保存"
+          model="claude-opus-4-7 (Anthropic)"
+          pipeline="週の全データ並列取得 → 統計算出(平均WBI, 優勢感情, 習慣達成率) → Opus 4.7 で物語生成(200-300字ナラティブ) → DB保存"
           output="200-300字の振り返りナラティブ + stats(diary_count, task_count, avg_wbi, dominant_emotion)"
           storage="weekly_narratives テーブル"
           hook="useWeeklyNarrative.ts"
@@ -1377,8 +1377,8 @@ function TabAiFeatures() {
           name="5. 自己分析（5種類 + 統合まとめ）"
           trigger="Self Analysisページで再分析ボタン押下（日記20件以上でアンロック）"
           input="ハイブリッド方式: 初回=全データ / 更新=前回結果+核心引用+統計スナップショット+新データのみ。データソース5種（日記=本音, AIチャット=自然な会話, Claude Code指示=関心テーマのみ, タスク/スケジュール, 夢リスト）。各ソースにデータ文脈ガイド付き"
-          model="gpt-5.4-nano (completion mode, jsonMode)"
-          pipeline="ハイブリッド収集(前回analysis_context+差分データ) → データソース文脈プリアンブル → 初回/更新モード切替 → 構造化プロンプト → JSON応答 → analysis_context生成・保存 → 統合まとめタブ + 個別タブ"
+          model="claude-opus-4-7 (Anthropic, jsonMode)"
+          pipeline="ハイブリッド収集(前回analysis_context+差分データ) → データソース文脈プリアンブル → 初回/更新モード切替 → 構造化プロンプト → Opus 4.7 で深い推論 → JSON応答 → analysis_context生成・保存 → 統合まとめタブ + 個別タブ"
           output="MBTI(core_insight/daily_patterns/strengths_in_action/growth_edges/advice), Big5(profile_narrative/trait_insights/trait_interactions/advice), SF(synergy/blind_spot/action_plan), Values(tension/alignment/life_question) + 統合まとめ"
           storage="self_analysis テーブル(analysis_type, result JSON, summary, data_count, analysis_context JSONB)"
           hook="useSelfAnalysis.ts"
@@ -1474,24 +1474,6 @@ function TabAiFeatures() {
         </div>
 
         <Principle title="詳細設計" body="docs/design/life-companion-evolution.md に全体設計書。story_memory / story_moments / shared_stories テーブル設計、コスト見積もり、実装フェーズを含む。" color="var(--green)" />
-      </Section>
-
-      <Section title="AIチャットのツール一覧">
-        <P>エージェントループで使えるツール。LLMが自律的に選択・実行する。</P>
-        <Tbl headers={['ツール', '機能', 'データソース']} rows={[
-          ['tasks_search', 'タスク検索（status, company, keyword）', 'tasks テーブル'],
-          ['tasks_create', 'タスク新規作成', 'tasks テーブル'],
-          ['artifacts_read', '成果物の内容取得', 'artifacts テーブル'],
-          ['artifacts_list', '成果物一覧', 'artifacts テーブル'],
-          ['knowledge_search', 'ナレッジ検索（カテゴリ, scope）', 'knowledge_base テーブル'],
-          ['company_info', 'PJ会社情報・部署構成', 'companies + departments テーブル'],
-          ['prompt_history', '直近のプロンプト履歴検索', 'prompt_log テーブル'],
-          ['insights_read', 'CEOインサイト（日記ベース内面分析+prompt_log関心分析）', 'ceo_insights テーブル'],
-          ['activity_search', 'アクティビティログ検索', 'activity_log テーブル'],
-          ['intelligence_read', '最新ニュース/レポート', 'news_items テーブル'],
-          ['web_search', 'Web検索（外部API）', 'Brave Search API'],
-        ]} />
-        <P>安全設計: web_search 使用後は write系ツール(tasks_create)をブロック。間接プロンプトインジェクション対策。</P>
       </Section>
 
       <Section title="AIチャット — reasoning effort 6段階自動ルーティング">
@@ -1649,7 +1631,7 @@ function TabHarness() {
           ['Hooks', 'ライフサイクル制御', '決定論的（確実に実行される）', '高', '.claude/hooks/ に42スクリプト'],
           ['Permissions', '安全制御', '強制的（bypass不可）', '最高', 'settings.json の allow/deny リスト'],
           ['MCP', 'ツール拡張', '外部サービス接続', '—', 'Google Calendar, Supabase, Serena, Context7'],
-          ['Sub-agents', 'コンテキスト分離', '独立メモリ・最小権限', '—', 'Agent tool で10部署を委譲'],
+          ['Sub-agents', 'コンテキスト分離', '独立メモリ・最小権限', '—', 'Agent tool で11部署を委譲（+リファクタリング部で計12。.claude/agents/dept-*.md 定義）'],
           ['Skills', 'ナレッジ注入', 'オンデマンドロード', '—', '/company, /diary 等のスキル'],
         ]} />
 
@@ -1767,8 +1749,8 @@ function TabHarness() {
         <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>実装済み（強み）</div>
         <Tbl headers={['領域', '実装内容']} rows={[
           ['Hook活用（42スクリプト）', 'prompt-log, config-sync, freshness-check, auto-pull/push, bash-guard, tool-collector, docs-sync-guard, pre/post-compact, permission-guard, skill-usage-log, work-rhythm-update, chat-effectiveness-weekly, weekly-insights, artifact-auto-sync, dept-eval-trigger, pipeline-resume, daily-analysis-batch, knowledge-lint 等'],
-          ['Freshness Policy', '14データソースの鮮度管理。stale検出→自動修復'],
-          ['部署CLAUDE.md分離', '10部署 × 独立仕様書。Sub-agent に近い設計'],
+          ['Freshness Policy', '19データソースの鮮度管理。stale検出→自動修復（harness_research / dept_knowledge_refresh / claude_md_size / design_docs_sync / impl_docs_sync / security_scan / preferences_decay 等を含む）'],
+          ['部署CLAUDE.md分離', '11部署（+リファクタリング部で計12） × 独立仕様書。Sub-agent に近い設計'],
           ['ナレッジ昇格パイプライン', 'memory → knowledge_base → CLAUDE.md。confidence による自動昇格'],
           ['3層データ管理', 'ファイル（即時）→ Git（バージョン管理）→ Supabase（永続・分析）'],
         ]} />
