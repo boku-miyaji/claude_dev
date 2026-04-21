@@ -312,7 +312,10 @@
       "Bash(rm -rf /workspace/.playwright-mcp/)",
       "Bash(rm -f /workspace/scratch/calendar-week-view.png)",
       "Bash(rm -rf output/itoen-magentic-v3-standard/_telemetry.json output/itoen-magentic-v3-standard/customer_agendas.json)",
-      "Bash(nohup /workspace/aces-rikyu-sales-proposals-poc/.venv/bin/python -u /workspace/aces-rikyu-sales-proposals-poc/scripts/magentic_pipeline.py --company \"伊藤園\" --scenario itoen-magentic-v3-standard --extraction-only --model-agenda gpt-5.4-2026-03-05 --effort low)"
+      "Bash(nohup /workspace/aces-rikyu-sales-proposals-poc/.venv/bin/python -u /workspace/aces-rikyu-sales-proposals-poc/scripts/magentic_pipeline.py --company \"伊藤園\" --scenario itoen-magentic-v3-standard --extraction-only --model-agenda gpt-5.4-2026-03-05 --effort low)",
+      "Bash(node_modules/.bin/tsc --noEmit --noResolve --target es2022 --module esnext --moduleResolution bundler --skipLibCheck --allowImportingTsExtensions --isolatedModules --strict false supabase/functions/ai-agent/index.ts)",
+      "Bash(/workspace/company-dashboard/node_modules/.bin/tsc --noEmit --noResolve --target es2022 --module esnext --moduleResolution bundler --skipLibCheck --isolatedModules --strict false ./index.ts)",
+      "Bash(/workspace/company-dashboard/node_modules/.bin/tsc --noEmit --noResolve --target es2022 --module esnext --moduleResolution bundler --skipLibCheck --isolatedModules --strict ./index.ts)"
     ],
     "deny": [
       "Read(**/.env)",

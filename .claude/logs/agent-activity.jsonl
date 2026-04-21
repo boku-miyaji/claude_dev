@@ -157,3 +157,5 @@
 {"ts":"2026-04-21T11:13:06+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"実装残り: フロント/CI/Blueprint","model":"default","background":false}
 {"ts":"2026-04-21T11:30:41+09:00","event":"agent_dispatch","dept":"Explore","desc":"Check AI partner diary search capability","model":"default","background":false}
 {"ts":"2026-04-21T11:44:03+09:00","event":"agent_dispatch","dept":"Explore","desc":"Edge Function 棚卸し","model":"default","background":false}
+{"ts":"2026-04-21T11:45:06+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"Design partner_chat diary_search integration","model":"default","background":false}
+{"ts":"2026-04-21T11:53:16+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Implement partner_chat tool use","model":"default","background":false}

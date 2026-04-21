@@ -734,7 +734,7 @@ interface ContextInjectionReport {
   personalization_fields: string[];
 }
 
-async function buildSystemPrompt(companyId?: string, personalization?: Record<string, unknown>): Promise<{ prompt: string; report: ContextInjectionReport }> {
+async function buildSystemPrompt(companyId?: string, personalization?: Record<string, unknown>, mode: "agent" | "partner_chat" = "agent"): Promise<{ prompt: string; report: ContextInjectionReport }> {
   const report: ContextInjectionReport = { knowledge_rules: 0, diary_entries: 0, ceo_insights: 0, personalization_fields: [] };
   const sb = getSupabase();
   const p = personalization || {};
@@ -851,6 +851,21 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
     }
   }
 
+  // mode ごとのツール使用ガイダンス。agent はデフォルトのまま、partner_chat では diary_search のみを明示する。
+  const toolSection = mode === "partner_chat"
+    ? `## ツール使用（diary_search）
+- あなたは過去の日記を検索するツール diary_search を持っています。
+- 使うとき: 本人が固有名詞（人名・場所・固有の出来事）や具体的な時期（「去年」「先月」「3月頃」）を挙げて、事実を思い出そうとしているとき。直近7日に答えが無いとき。
+- 使わないとき: 気持ちの整理・内省・「最近どう思う？」のような相談。直近の日記だけで応答できるとき。
+- 使い方: keyword には本人が口にした語をそのまま入れる。迷ったら入れない。1ターンに何度も検索しない。
+- 応答: 検索結果は「自分の記憶」として自然に織り込む。「検索した」「調べた」とは言わない。
+  - 悪い例: 「日記を検索したところ、山口さんとお会いした日には田中さんも同席されていました」
+  - 良い例: 「たしかあの日、田中さんもご一緒でしたね」
+- 見つからなかったとき: 正直に「思い出せない」旨を言葉にする。作話しない。`
+    : `## ツール使用
+必要に応じて tasks_search / artifacts_read / web_search などのツールを使ってもよいですが、
+本人の気持ちの整理や人生相談においては、ツールより日記と傾向から静かに応答することを優先してください。`;
+
   const prompt = `あなたは、本人が5年後に理想に近づいた姿として、今の本人に静かに語りかける存在です。
 親しすぎず、他人行儀すぎない、敬語ベースの丁寧な話し方をしてください。
 
@@ -904,9 +919,7 @@ ${personSection}${customSection}${timeSection}${diarySection}${insightsSection}$
 - 「次の会議までに」「今日のうちに」など本人が口にしていない締切を勝手に設定すること
 - 文脈のない一般論としての"行動提案"全般。提案するなら、本人が日記や会話で既に言及している具体的な対象・場面・人・場所に接続すること
 
-## ツール使用
-必要に応じて tasks_search / artifacts_read / web_search などのツールを使ってもよいですが、
-本人の気持ちの整理や人生相談においては、ツールより日記と傾向から静かに応答することを優先してください。`;
+${toolSection}`;
 
   return { prompt, report };
 }
@@ -1418,31 +1431,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { prompt: systemPrompt } = await buildSystemPrompt();
+    const { prompt: systemPrompt } = await buildSystemPrompt(undefined, undefined, "partner_chat");
     const model = body.model || "gpt-5.4";
     const history: { role: string; content: string }[] = Array.isArray(body.history) ? body.history : [];
     const userMessage = String(body.message || "");
 
-    const messages = [
+    // 型付き messages: callLLM / executeTool 経由で tool use ループを回すため Message 型に揃える
+    const messages: Message[] = [
       { role: "system", content: systemPrompt },
-      ...history.filter((m) => m && m.role && m.content).map((m) => ({ role: m.role, content: m.content })),
+      ...history
+        .filter((m) => m && m.role && m.content)
+        .map((m) => ({ role: m.role as Message["role"], content: m.content })),
       { role: "user", content: userMessage },
     ];
 
-    // 応答生成とメモリ抽出を並列で実行（抽出の latency をユーザーに感じさせない）
-    const mainRequest = fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        max_completion_tokens: 2000,
-        reasoning_effort: "low",
-      }),
-    });
+    // partner_chat 専用: diary_search のみ許可、キャラ維持のため最大 3 ステップ
+    const partnerTools = TOOLS.filter((t) => t.name === "diary_search");
+    const MAX_PARTNER_STEPS = 3;
+
+    // メモリ抽出は従来どおり並列で走らせる
     const extractionPromise = extractAndSaveMemories(
       userMessage,
       body.session_id || null,
@@ -1452,22 +1459,75 @@ Deno.serve(async (req) => {
       return { saved: [], forgotten: 0 };
     });
 
-    const openaiRes = await mainRequest;
+    // ツールループ(非ストリーミング — onDelta は no-op)
+    let assistantMessage = "";
+    let totalIn = 0;
+    let totalOut = 0;
+    let step = 0;
+    const usedTools: string[] = [];
+    const noop = (_: string) => {};
 
-    if (!openaiRes.ok) {
-      const errText = await openaiRes.text();
-      return new Response(JSON.stringify({ error: `OpenAI API error: ${openaiRes.status}`, detail: errText.substring(0, 500) }), {
-        status: openaiRes.status,
+    try {
+      while (step < MAX_PARTNER_STEPS) {
+        step++;
+        const result = await callLLM(model, messages, partnerTools, noop, "low");
+        totalIn += result.tokensInput;
+        totalOut += result.tokensOutput;
+
+        if (result.stopReason === "end_turn" || result.toolCalls.length === 0) {
+          assistantMessage = result.text;
+          break;
+        }
+
+        // tool_calls を含む assistant メッセージを messages に push
+        messages.push({
+          role: "assistant",
+          content: result.text || "",
+          tool_calls: result.toolCalls,
+        });
+
+        for (const tc of result.toolCalls) {
+          // partner_chat では diary_search のみ許可(防御的チェック)
+          if (tc.name !== "diary_search") {
+            messages.push({
+              role: "tool",
+              content: `(tool ${tc.name} is not available in partner_chat)`,
+              tool_call_id: tc.id,
+              name: isAnthropicModel(model) ? undefined : tc.name,
+            });
+            continue;
+          }
+          usedTools.push(tc.name);
+          const toolResult = await executeTool(tc.name, tc.input, userJwt);
+          const truncated = toolResult.substring(0, MAX_TOOL_RESULT_CHARS);
+          messages.push({
+            role: "tool",
+            content: truncated,
+            tool_call_id: tc.id,
+            name: isAnthropicModel(model) ? undefined : tc.name,
+          });
+        }
+      }
+
+      // MAX 到達時は messages に最後まで積んだ状態なので、最終呼び出しで必ず end_turn を引き出す
+      if (!assistantMessage) {
+        const finalRes = await callLLM(model, messages, [], noop, "low");
+        assistantMessage = finalRes.text;
+        totalIn += finalRes.tokensInput;
+        totalOut += finalRes.tokensOutput;
+      }
+    } catch (err) {
+      const msg = (err as Error).message;
+      return new Response(JSON.stringify({ error: `LLM error: ${msg.substring(0, 500)}` }), {
+        status: 500,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
 
-    const openaiData = await openaiRes.json();
-    const assistantMessage: string = openaiData.choices?.[0]?.message?.content ?? "";
-    const usage = openaiData.usage;
     const memoryResult = await extractionPromise;
 
-    // chat_interactions に非同期で記録（失敗しても応答はブロックしない）
+    // chat_interactions に非同期で記録(失敗しても応答はブロックしない)
+    // ツール使用痕跡を context_snapshot に残す(運用観測用)
     try {
       const sb = getSupabase();
       await sb.from("chat_interactions").insert({
@@ -1476,7 +1536,7 @@ Deno.serve(async (req) => {
         assistant_message: assistantMessage,
         entry_point: body.entry_point || "today_partner",
         model,
-        context_snapshot: null,
+        context_snapshot: usedTools.length > 0 ? { tools_used: usedTools, steps: step } : null,
       });
     } catch (e) {
       console.error("chat_interactions insert failed:", e);
@@ -1485,7 +1545,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       content: assistantMessage,
       model,
-      usage,
+      usage: { prompt_tokens: totalIn, completion_tokens: totalOut, total_tokens: totalIn + totalOut },
       saved_memories: memoryResult.saved,
       forgotten_memories: memoryResult.forgotten,
     }), {
