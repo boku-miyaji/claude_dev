@@ -803,7 +803,11 @@ async function buildSystemPrompt(companyId?: string, personalization?: Record<st
   if (p.chat_memory_enabled !== false) {
     const { data: analyses } = await sb.from("diary_analysis").select("period_type,period_start,period_end,highlights,topic_summary").order("period_end", { ascending: false }).limit(3);
     if (analyses && analyses.length > 0) {
-      analysisSection = "\n## 最近の振り返り要約（週次・月次の大局的傾向）\n" + analyses.map(a => `### ${a.period_type} ${a.period_start}〜${a.period_end}\n${(a.topic_summary || a.highlights || "").substring(0, 300)}`).join("\n") + "\n";
+      analysisSection = "\n## 最近の振り返り要約（週次・月次の大局的傾向）\n" + analyses.map(a => {
+        const raw = a.topic_summary ?? a.highlights ?? "";
+        const str = typeof raw === "string" ? raw : JSON.stringify(raw);
+        return `### ${a.period_type} ${a.period_start}〜${a.period_end}\n${str.substring(0, 300)}`;
+      }).join("\n") + "\n";
     }
   }
 
@@ -1471,7 +1475,7 @@ Deno.serve(async (req) => {
     try {
       while (step < MAX_PARTNER_STEPS) {
         step++;
-        const result = await callLLM(model, messages, partnerTools, noop, "low");
+        const result = await callLLM(model, messages, partnerTools, noop);
         totalIn += result.tokensInput;
         totalOut += result.tokensOutput;
 
@@ -1512,7 +1516,7 @@ Deno.serve(async (req) => {
 
       // MAX 到達時は messages に最後まで積んだ状態なので、最終呼び出しで必ず end_turn を引き出す
       if (!assistantMessage) {
-        const finalRes = await callLLM(model, messages, [], noop, "low");
+        const finalRes = await callLLM(model, messages, [], noop);
         assistantMessage = finalRes.text;
         totalIn += finalRes.tokensInput;
         totalOut += finalRes.tokensOutput;
