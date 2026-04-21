@@ -17257,3 +17257,8 @@
 {"ts":"2026-04-21T10:50:31+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-21T10:50:42+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-21T10:50:52+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T10:51:13+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T10:51:17+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T10:51:30+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T10:51:47+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T10:52:07+09:00","hook":"tool-collector","tool":"TodoWrite","status":"ok"}
