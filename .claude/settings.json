@@ -336,7 +336,11 @@
       "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 2)",
       "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 3)",
       "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 4)",
-      "Bash(nohup .venv/bin/python -u scripts/magentic_full_pipeline.py --company itoen --scenario itoen-magentic-full-v10)"
+      "Bash(nohup .venv/bin/python -u scripts/magentic_full_pipeline.py --company itoen --scenario itoen-magentic-full-v10)",
+      "Bash(ps -p 3828574 3828575 3828576 3828687 -o pid=,etime=)",
+      "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 5)",
+      "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 6)",
+      "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 7)"
     ],
     "deny": [
       "Read(**/.env)",
