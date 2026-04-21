@@ -23,6 +23,7 @@ import { ApiCosts } from '@/pages/ApiCosts'
 import { Career } from '@/pages/Career'
 import { Journal } from '@/pages/Journal'
 import { Dreams } from '@/pages/Dreams'
+import { Ideas } from '@/pages/Ideas'
 import { SelfAnalysis } from '@/pages/SelfAnalysis'
 import { Manual } from '@/pages/Manual'
 import { Goals } from '@/pages/Goals'
@@ -92,6 +93,7 @@ export function App() {
           <Route path="/" element={<Today />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/dreams" element={<Dreams />} />
+          <Route path="/ideas" element={<Ideas />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/me" element={<SelfAnalysis />} />
           <Route path="/manual" element={<Manual />} />

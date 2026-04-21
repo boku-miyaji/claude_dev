@@ -8,6 +8,7 @@ import { useMomentDetector } from '@/hooks/useMomentDetector'
 import { useDiaryExtraction, type DiaryExtractionResult } from '@/hooks/useDiaryExtraction'
 import { DiaryExtractionResultCard } from '@/components/DiaryExtractionResultCard'
 import { PendingUpdatesBanner } from '@/components/PendingUpdatesBanner'
+import { TodayIdeasCard } from '@/components/TodayIdeasCard'
 import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
@@ -1306,6 +1307,7 @@ export function Today() {
       {Greeting}
       <PendingUpdatesBanner />
       {Diary}
+      <TodayIdeasCard />
       {HabitsSection}
 
       {/* ── L2 緊急 (urgency — deadlines & calendar) ── */}
