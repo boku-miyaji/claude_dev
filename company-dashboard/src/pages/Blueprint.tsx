@@ -1331,7 +1331,7 @@ function TabAiFeatures() {
         <Tbl headers={['ツール名', '機能', '検索方式', '用途']} rows={[
           ['tasks_search', 'タスク検索', 'Supabase filter (status/company/keyword)', 'タスク状況の確認・一覧表示'],
           ['tasks_create', 'タスク作成', '—', '会話からタスクを直接作成'],
-          ['diary_search', '日記検索（Hybrid）', 'PGroonga キーワード + pgvector 感情類似 + gpt-nano reranking', '関連する過去の日記を発見しLLMコンテキストに注入'],
+          ['diary_search', '日記検索（Hybrid）', 'PGroonga キーワード + pgvector 感情類似 + gpt-nano reranking', '関連する過去の日記を発見しLLMコンテキストに注入。agent / partner_chat の両モードで使用（partner_chat は max 3 step、メタ発言禁止）'],
           ['artifacts_read', '成果物読み取り', 'Supabase (id/path)', '保存された成果物の内容取得'],
           ['artifacts_list', '成果物一覧', 'Supabase filter', '成果物の一覧表示'],
           ['knowledge_search', 'ナレッジ検索', 'Supabase filter (category/scope)', 'ルール・ガイドライン・学習の検索'],
@@ -2251,6 +2251,7 @@ function TabRoadmap() {
             ['2026-04-21', 'Arc/Theme/Foresight はバッチ Opus 一本化', 'ブラウザ側 useArcReader / useThemeFinder / useForesight は LLM を叩かず story_memory を読み取るだけの責務に変更。夜間バッチ（narrator-update、claude-opus-4-7）を唯一の生成経路にする'],
             ['2026-04-21', 'Blueprint と実装の整合化', 'Hook 42スクリプト / 19データソース / 11部署(+リファクタで12) / 27ルート / AI Features 4カード(#1 #2 #4 #5)のモデル記述を実装に合わせる。社長判断で「Blueprint を実装に合わせる」方針を確定'],
             ['2026-04-21', '朝イチの一節機能を追加', '前日の日記からキーワード・感情・テーマを複数観点で抽出 → Web検索 → スコアリングで1つ選出 → Today 最上部に受動表示（装飾ゼロ、本文17px主役）。AI PaRTner（FutureYouChat）は存続・別機能として残す。quotes / user_quote_deliveries / user_quote_favorites の3テーブル、お気に入りはハート1タップ（トースト・モーダルなし）、一覧は Journal タブ。バッチは Claude CLI（`claude --print` + WebSearch）、API課金ゼロ（定額 Claude Code 経由）、GitHub Actions 06:30 JST cron。日記0件の日はセクション非表示（スターター名言プールなし）'],
+            ['2026-04-21', 'AI PaRTner に diary_search を解放', 'partner_chat モードに tool use ループを追加。直近7日の静的注入は残しつつ、固有名詞・時期指定の事実質問では diary_search を動的に叩く。「検索した」というメタ発言を禁止し、記憶として自然に織り込ませる。内省・相談では検索しない（⑪ Active vs Passive 準拠）。MAX_PARTNER_STEPS=3、diary_search のみ許可。付随バグ修正: diary_analysis jsonb を string 扱いしていた既存 TypeError / gpt-5.4 + tools + reasoning_effort が OpenAI 400 を返す問題。検証「山口さんと会った日のもう一人」→ 正しく「内田さん」を想起'],
           ]}
         />
       </Section>

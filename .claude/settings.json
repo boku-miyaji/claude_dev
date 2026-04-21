@@ -323,7 +323,10 @@
       "Bash(nohup .venv/bin/python -u scripts/magentic_full_pipeline.py --company itoen --scenario itoen-magentic-full-v9)",
       "Bash(ps -p 3742535 3782012 -o pid,etime,stat)",
       "Bash(ps -p 3742535 -o pid=,etime=,rss=)",
-      "Bash(ps -p 3782012 -o pid=,etime=,rss=)"
+      "Bash(ps -p 3782012 -o pid=,etime=,rss=)",
+      "Bash(.venv/bin/python -c \"import json; d=json.load\\(open\\('output/itoen-magentic-v2/customer_profile.json'\\)\\); print\\(json.dumps\\({k: \\(type\\(v\\).__name__, len\\(v\\) if hasattr\\(v,'__len__'\\) else v\\) for k,v in d.items\\(\\)}, indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(.venv/bin/python -c \"import json; d=json.load\\(open\\('output/itoen-magentic-v3-standard/customer_profile.json'\\)\\); print\\(json.dumps\\({k: \\(type\\(v\\).__name__, len\\(v\\) if hasattr\\(v,'__len__'\\) else v\\) for k,v in d.items\\(\\)}, indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(.venv/bin/python -c \"import json; d=json.load\\(open\\('/home/node/workspace/output/itoen/customer_profile.json'\\)\\); print\\(json.dumps\\({k: \\(type\\(v\\).__name__, len\\(v\\) if hasattr\\(v,'__len__'\\) else v\\) for k,v in d.items\\(\\)}, indent=2, ensure_ascii=False\\)\\)\")"
     ],
     "deny": [
       "Read(**/.env)",
