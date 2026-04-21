@@ -164,3 +164,5 @@
 {"ts":"2026-04-21T15:45:45+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"並行開発ベストプラクティス調査","model":"default","background":false}
 {"ts":"2026-04-21T19:18:42+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"polaris-demo プロトタイプ実装","model":"default","background":true}
 {"ts":"2026-04-21T19:28:39+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"polaris-circuit 推薦Agent改修実装","model":"default","background":true}
+{"ts":"2026-04-21T20:15:24+09:00","event":"agent_dispatch","dept":"PM部","desc":"PM deep-dive: Sprint分解 + 実装順序 + 横展開","model":"default","background":false}
+{"ts":"2026-04-21T20:20:34+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"UX deep-dive: Phase 1/2 段階表示 + ai_tier UI","model":"default","background":false}
