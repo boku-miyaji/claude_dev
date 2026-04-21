@@ -6,6 +6,7 @@ import { syncTaskToGoogle, syncTaskComplete, syncTaskReopen } from '@/lib/google
 import type { Dream } from '@/types/dreams'
 import type { Goal } from '@/types/goals'
 import type { Habit, HabitLog } from '@/types/habits'
+import type { Idea } from '@/types/ideas'
 
 /** Cache TTL in milliseconds (5 minutes) */
 const CACHE_TTL = 5 * 60 * 1000
@@ -19,6 +20,7 @@ interface DataStore {
   goals: Goal[]
   habits: Habit[]
   habitLogs: HabitLog[]
+  ideas: Idea[]
   apiKey: string | null
   apiKeyFetched: boolean
 
@@ -36,6 +38,7 @@ interface DataStore {
   fetchGoals: (options?: { forceRefresh?: boolean }) => Promise<void>
   fetchHabits: (options?: { forceRefresh?: boolean }) => Promise<void>
   fetchHabitLogs: (options?: { days?: number; forceRefresh?: boolean }) => Promise<void>
+  fetchIdeas: (options?: { forceRefresh?: boolean }) => Promise<void>
   fetchApiKey: () => Promise<string | null>
 
   // --- Actions: Mutations ---
@@ -68,6 +71,9 @@ interface DataStore {
   updateHabit: (id: number, data: Partial<Habit>) => Promise<void>
   deleteHabit: (id: number) => Promise<void>
   toggleHabitLog: (habit: Habit, todayStr: string) => Promise<void>
+  addIdea: (idea: Partial<Idea>) => Promise<Idea | null>
+  updateIdea: (id: string, data: Partial<Idea>) => Promise<void>
+  deleteIdea: (id: string) => Promise<void>
 
   // --- Invalidation ---
   invalidate: (key: string) => void
@@ -92,6 +98,7 @@ export const useDataStore = create<DataStore>((set, get) => ({
   goals: [],
   habits: [],
   habitLogs: [],
+  ideas: [],
   apiKey: null,
   apiKeyFetched: false,
   loading: {},
@@ -178,6 +185,24 @@ export const useDataStore = create<DataStore>((set, get) => ({
       dreams: (data as Dream[]) ?? [],
       loading: { ...s.loading, dreams: false },
       lastFetched: { ...s.lastFetched, dreams: Date.now() },
+    }))
+  },
+
+  fetchIdeas: async (options) => {
+    const { forceRefresh = false } = options ?? {}
+    if (!forceRefresh && isFresh(get().lastFetched, 'ideas')) return
+
+    set((s) => ({ loading: { ...s.loading, ideas: true } }))
+
+    const { data } = await supabase
+      .from('ideas')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    set((s) => ({
+      ideas: (data as Idea[]) ?? [],
+      loading: { ...s.loading, ideas: false },
+      lastFetched: { ...s.lastFetched, ideas: Date.now() },
     }))
   },
 
@@ -455,6 +480,37 @@ export const useDataStore = create<DataStore>((set, get) => ({
       .eq('id', id)
     if (!error) {
       set((s) => ({ habits: s.habits.filter((h) => h.id !== id) }))
+    }
+  },
+
+  addIdea: async (idea) => {
+    const { data, error } = await supabase
+      .from('ideas')
+      .insert(idea)
+      .select()
+      .single()
+    if (error || !data) return null
+    const newIdea = data as Idea
+    set((s) => ({ ideas: [newIdea, ...s.ideas] }))
+    return newIdea
+  },
+
+  updateIdea: async (id, updates) => {
+    const { error } = await supabase
+      .from('ideas')
+      .update(updates)
+      .eq('id', id)
+    if (!error) {
+      set((s) => ({
+        ideas: s.ideas.map((i) => (i.id === id ? { ...i, ...updates } as Idea : i)),
+      }))
+    }
+  },
+
+  deleteIdea: async (id) => {
+    const { error } = await supabase.from('ideas').delete().eq('id', id)
+    if (!error) {
+      set((s) => ({ ideas: s.ideas.filter((i) => i.id !== id) }))
     }
   },
 
