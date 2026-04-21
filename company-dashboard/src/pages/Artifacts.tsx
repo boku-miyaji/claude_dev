@@ -8,10 +8,10 @@ import { renderMarkdownSafe } from '@/lib/markdown'
 // ============================================================
 
 // Markdown body: sanitized by renderMarkdownSafe which strips script tags and on* handlers
-function MarkdownBody({ text }: { text: string }) {
+function MarkdownBody({ text, isFullscreen = false }: { text: string; isFullscreen?: boolean }) {
   const html = useMemo(() => renderMarkdownSafe(text), [text])
   // eslint-disable-next-line react/no-danger -- sanitized by renderMarkdownSafe
-  return <div className="md-body" style={{ fontSize: 14, lineHeight: 1.7, overflow: 'auto', maxHeight: 'calc(100vh - 280px)', padding: '0 4px' }} dangerouslySetInnerHTML={{ __html: html }} />
+  return <div className="md-body" style={{ fontSize: 14, lineHeight: 1.7, overflow: 'auto', maxHeight: isFullscreen ? 'calc(100dvh - 80px)' : 'calc(100dvh - 280px)', padding: '0 4px' }} dangerouslySetInnerHTML={{ __html: html }} />
 }
 
 interface Company { id: string; name: string }
@@ -159,29 +159,36 @@ function ArtifactDetail({ artifact: initialArtifact, onBack }: { artifact: Artif
       iframe.contentDocument?.write(content)
       iframe.contentDocument?.close()
     }
-  }, [artifact.file_type, artifact.content])
+  }, [artifact.file_type, artifact.content, fullscreen])
 
-  const renderContent = () => {
+  const renderContent = (isFullscreen: boolean = false) => {
     if (!artifact.content) return <div className="empty">未同期。次のセッション起動時に自動同期されます。</div>
     if (artifact.file_type === 'html') {
-      return <iframe ref={iframeRef} style={{ width: '100%', height: 'calc(100vh - 200px)', minHeight: 400, border: 'none', background: '#fff', borderRadius: 8 }} />
+      return <iframe ref={iframeRef} style={{ width: '100%', height: isFullscreen ? 'calc(100dvh - 80px)' : 'calc(100dvh - 200px)', minHeight: 400, border: 'none', background: '#fff', borderRadius: 8 }} />
     }
     if (artifact.file_type === 'md') {
-      return <MarkdownBody text={artifact.content} />
+      return <MarkdownBody text={artifact.content} isFullscreen={isFullscreen} />
     }
-    return <pre style={{ fontSize: 12, overflow: 'auto', maxHeight: 'calc(100vh - 280px)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{artifact.content}</pre>
+    return <pre style={{ fontSize: 12, overflow: 'auto', maxHeight: isFullscreen ? 'calc(100dvh - 80px)' : 'calc(100dvh - 280px)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{artifact.content}</pre>
   }
 
   return (
     <div>
       {/* Fullscreen overlay */}
       {fullscreen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'var(--bg)', overflow: 'auto', padding: 24 }}>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 500,
+          background: 'var(--bg)', overflow: 'auto',
+          paddingTop: 'max(16px, env(safe-area-inset-top))',
+          paddingRight: 'max(16px, env(safe-area-inset-right))',
+          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+          paddingLeft: 'max(16px, env(safe-area-inset-left))',
+        }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <span style={{ fontWeight: 600, fontSize: 15 }}>{artifact.title}</span>
             <button className="btn" style={{ fontSize: 12 }} onClick={() => setFullscreen(false)}>✕ 閉じる</button>
           </div>
-          {renderContent()}
+          {renderContent(true)}
         </div>
       )}
 
@@ -202,7 +209,7 @@ function ArtifactDetail({ artifact: initialArtifact, onBack }: { artifact: Artif
       </div>
 
       <div className="card" style={{ marginBottom: 20, overflow: 'auto' }}>
-        {renderContent()}
+        {!fullscreen && renderContent()}
       </div>
 
       {/* Comments */}
