@@ -137,6 +137,70 @@ function ArtifactDetail({ artifact: initialArtifact, onBack }: { artifact: Artif
     loadComments()
   }
 
+  const sanitizeFilename = (name: string) => name.replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_').slice(0, 120) || 'artifact'
+
+  const triggerDownload = (content: string, filename: string, mime: string) => {
+    const blob = new Blob([content], { type: `${mime};charset=utf-8` })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  const escapeHtmlAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+  const downloadMd = () => {
+    if (!artifact.content) return
+    triggerDownload(artifact.content, `${sanitizeFilename(artifact.title)}.md`, 'text/markdown')
+  }
+
+  const downloadHtml = () => {
+    if (!artifact.content) return
+    let htmlContent: string
+    if (artifact.file_type === 'html') {
+      htmlContent = artifact.content
+    } else {
+      const body = renderMarkdownSafe(artifact.content)
+      htmlContent = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtmlAttr(artifact.title)}</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN",sans-serif;max-width:860px;margin:2em auto;padding:0 1em;line-height:1.7;color:#222}
+  h1,h2,h3,h4{margin-top:1.5em;line-height:1.3}
+  h1{border-bottom:1px solid #eee;padding-bottom:0.3em}
+  h2{border-bottom:1px solid #eee;padding-bottom:0.2em}
+  pre{background:#f6f8fa;padding:1em;overflow-x:auto;border-radius:6px;font-size:90%}
+  code{background:#f6f8fa;padding:0.15em 0.35em;border-radius:3px;font-family:"SF Mono",Consolas,Monaco,monospace;font-size:90%}
+  pre code{background:transparent;padding:0}
+  table{border-collapse:collapse;margin:1em 0;display:block;overflow-x:auto}
+  th,td{border:1px solid #d0d7de;padding:0.5em 0.9em;text-align:left;vertical-align:top}
+  th{background:#f6f8fa;font-weight:600}
+  blockquote{border-left:4px solid #d0d7de;margin:0 0 1em;padding:0.3em 1em;color:#57606a;background:#f6f8fa}
+  a{color:#0969da;text-decoration:none}
+  a:hover{text-decoration:underline}
+  hr{border:none;border-top:1px solid #d0d7de;margin:2em 0}
+  ul,ol{padding-left:1.8em}
+  img{max-width:100%;height:auto}
+</style>
+</head>
+<body>
+${body}
+</body>
+</html>`
+    }
+    triggerDownload(htmlContent, `${sanitizeFilename(artifact.title)}.html`, 'text/html')
+  }
+
+  const canDownloadMd = artifact.content && artifact.file_type === 'md'
+  const canDownloadHtml = artifact.content && (artifact.file_type === 'md' || artifact.file_type === 'html')
+
   const coName = artifact.companies ? (Array.isArray(artifact.companies) ? artifact.companies[0]?.name : artifact.companies.name) ?? 'HD' : 'HD'
   const filtered = showResolved ? comments : comments.filter(c => c.status === 'open')
   const resolvedCount = comments.filter(c => c.status !== 'open').length
@@ -184,17 +248,23 @@ function ArtifactDetail({ artifact: initialArtifact, onBack }: { artifact: Artif
           paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
           paddingLeft: 'max(16px, env(safe-area-inset-left))',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
             <span style={{ fontWeight: 600, fontSize: 15 }}>{artifact.title}</span>
-            <button className="btn" style={{ fontSize: 12 }} onClick={() => setFullscreen(false)}>✕ 閉じる</button>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {canDownloadMd && <button className="btn" style={{ fontSize: 12 }} onClick={downloadMd}>↓ .md</button>}
+              {canDownloadHtml && <button className="btn" style={{ fontSize: 12 }} onClick={downloadHtml}>↓ .html</button>}
+              <button className="btn" style={{ fontSize: 12 }} onClick={() => setFullscreen(false)}>✕ 閉じる</button>
+            </div>
           </div>
           {renderContent(true)}
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <button className="btn" style={{ fontSize: 12 }} onClick={onBack}>← 一覧に戻る</button>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {canDownloadMd && <button className="btn" style={{ fontSize: 12 }} onClick={downloadMd} title="Markdown ファイルとしてダウンロード">↓ .md</button>}
+          {canDownloadHtml && <button className="btn" style={{ fontSize: 12 }} onClick={downloadHtml} title="HTML ファイルとしてダウンロード（印刷・共有向け）">↓ .html</button>}
           <button className="btn" style={{ fontSize: 12 }} onClick={() => setFullscreen(true)}>全画面</button>
           <button className="btn" style={{ fontSize: 12 }} disabled={reloading} onClick={reload}>{reloading ? '更新中...' : '↻ 更新'}</button>
           <button className="btn" style={{ fontSize: 12, color: 'var(--red)' }} onClick={archive}>アーカイブ（追跡停止）</button>
