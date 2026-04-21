@@ -1431,6 +1431,7 @@ Deno.serve(async (req) => {
       });
     }
 
+   try {
     const { prompt: systemPrompt } = await buildSystemPrompt(undefined, undefined, "partner_chat");
     const model = body.model || "gpt-5.4";
     const history: { role: string; content: string }[] = Array.isArray(body.history) ? body.history : [];
@@ -1551,6 +1552,18 @@ Deno.serve(async (req) => {
     }), {
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
+   } catch (outerErr) {
+     const e = outerErr as Error;
+     console.error("partner_chat fatal:", e?.message, e?.stack);
+     return new Response(JSON.stringify({
+       error: "partner_chat fatal",
+       detail: String(e?.message || outerErr).substring(0, 1000),
+       stack: String(e?.stack || "").substring(0, 2000),
+     }), {
+       status: 500,
+       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+     });
+   }
   }
 
   if (body.mode === "completion") {
