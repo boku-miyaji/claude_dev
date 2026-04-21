@@ -94,7 +94,12 @@ function TabVision() {
   return (
     <>
       <Section title="このシステムは何か">
-        <Principle title="あなたの人生には、あなたがまだ気づいていない物語がある。" body="このシステムは、日記・感情・夢・目標・習慣・行動のすべてを蓄積し、AIがあなたの人生を「物語」として読み解く。データの集計ではない。あなたの感情の波の意味を解釈し、夢と現実の間にある葛藤を理解し、あなた自身がまだ気づいていない人生のテーマを見つける。" color="var(--accent)" />
+        <Principle title="あなたの人生には、あなたがまだ気づいていない物語がある。" body="3月の第2週、A社の打ち合わせの翌日のあなたを、私は覚えています。あなたが忘れていた範囲の、あなた自身を。このシステムは、日記・感情・夢・目標・習慣・行動のすべてを蓄積し、AIがあなたの人生を物語として読み解く。データの集計ではない。連続データから人間には観測不可能なパターンを発見し、あなた自身がまだ気づいていない人生のテーマを見つける。" color="var(--accent)" />
+        <div className="g3" style={{ marginTop: 12 }}>
+          <MiniCard title="表看板(⑫ 確定 2026-04-21)" body="連続データ × 忘れていた範囲のパターン発見。ナラティブ系(音声会話1チャネル/残す目的)でも、AIジャーナル系(単一テキスト)でも追いつきにくい構造差で立つ。" />
+          <MiniCard title="副看板" body="動けてない日も記録された一日 / 進行中で未完成な物語 / このアプリを使うほど要らなくなる(業界逆張り)" />
+          <MiniCard title="Foresight as Question" body="予言はしない。「今日は2月の第3週と似ています。あの時、あなたはどう動きましたか?」— 問いで閉じる。予言は占いの仕事。" />
+        </div>
       </Section>
 
       <Section title="なぜストーリーなのか">
@@ -119,10 +124,10 @@ function TabVision() {
       <Section title="Narrative Intelligence — 4つのエンジン">
         <P>あなたの人生データを「物語」として読解するAIレイヤー。ルールベースでは不可能なことだけをLLMにやらせる。</P>
         <div className="g2" style={{ marginBottom: 12 }}>
-          <Principle title="Arc Reader（弧を読む）" body="感情の時系列を物語の弧として解釈する。「この低下は疲労ではなく、新しい挑戦への不安だ」と読み解く。去年の同じパターンとの意味の接続もする。" color="var(--accent)" />
-          <Principle title="Theme Finder（テーマを見つける）" body="数ヶ月の日記×夢×行動から、人生の通底テーマを発見する。「つくる人」「意味を問う人」「つなぐ人」。自分では気づけない自分の本質。" color="var(--green)" />
-          <Principle title="Moment Detector（転機を見つける）" body="日記の中から物語の転換点をリアルタイムに検出する。決断、気づき、突破、出会い、挫折。その瞬間を記録し、後から振り返れるようにする。" color="var(--amber)" />
-          <Principle title="Foresight Engine（物語の続きを予感する）" body="過去のパターンから次の展開を予感する。「去年も同じ兆候の後に新しいプロジェクトを始めている。今のあなたなら○○が合うかもしれない」。" color="var(--blue)" />
+          <Principle title="Arc Reader — 感情の弧を読む" body="感情の時系列を物語の弧として解釈する。「この低下は疲労ではなく、新しい挑戦への不安だ」と読み解く。去年の同じパターンとの意味の接続もする。" color="var(--accent)" />
+          <Principle title="Theme Finder — 繰り返されるテーマに気づく" body="数ヶ月の日記×夢×行動から、人生の通底テーマを発見する。「つくる人」「意味を問う人」「つなぐ人」。自分では気づけない自分の本質。" color="var(--green)" />
+          <Principle title="Moment Detector — 転機と気づかなかった日を見つける" body="日記の中から物語の転換点をリアルタイムに検出する。決断、気づき、突破、出会い、挫折。その瞬間を記録し、後から振り返れるようにする。" color="var(--amber)" />
+          <Principle title="Foresight as Question — 過去の似たパターンを引用して問いで閉じる" body="「今日のパターンは2月の第3週と似ています。あの時、あなたはどう動きましたか?」— 予言ではなく兆候としての問い。⑪ Active vs Passive 原則に沿い、受動生成は想起誘導で完結する。(旧 Foresight Engine、2026-04-21 再定義)" color="var(--blue)" />
         </div>
         <P>これらはすべて、ルールベースのif文では実現できない。感情データの時系列を「物語」として解釈し、過去の類似パターンと意味のレベルで接続し、今の自分の位置づけを語る — LLMの深い推論が必要。</P>
       </Section>
@@ -708,9 +713,9 @@ function TabExperienceDesign() {
           ['感情分析', '日記投稿後', 'リアルタイム', '投稿直後にフィードバックが欲しい'],
           ['AIコメント', '日記投稿後', 'リアルタイム', 'フィードバックループの核'],
           ['Moment Detector', '日記投稿後', 'リアルタイム', '書いた直後に転機確認。翌朝では温度差が出る'],
-          ['Arc Reader', '週次（日曜深夜）', 'バッチ', '感情の弧は「線」。1日分では見えない。週次レビューで消費'],
-          ['Theme Finder', '月次（月末深夜）', 'バッチ', '大量データ横断分析。コスト大。月1回で十分'],
-          ['Foresight Engine', '週次（Arc Reader後）', 'バッチ', 'Arc Readerの出力に依存。即座に不要'],
+          ['Arc Reader', '毎朝9時JST cron(週1スパン)', 'バッチ(claude-opus-4-7)', '感情の弧は「線」。1日分では見えない。週次レビューで消費。ブラウザは story_memory を読むだけ'],
+          ['Theme Finder', '毎朝9時JST cron(月1スパン)', 'バッチ(claude-opus-4-7)', '大量データ横断分析。コスト大。月1回で十分。ブラウザは読み取り専用'],
+          ['Foresight as Question', '毎朝9時JST cron(週1スパン)', 'バッチ(claude-opus-4-7)', 'Arc/Theme 出力に依存。旧 Foresight Engine (⑫で再定義)。ブラウザは読み取り専用'],
           ['Chapter生成', '四半期', 'バッチ', '長期的な物語。急がない'],
           ['Weekly Narrative', '月曜早朝', 'バッチ', '月曜朝に先週の物語を読む体験'],
           ['習慣ストリーク', '毎日深夜0:05', 'バッチ', '日付変更直後に確定。日付境界問題を回避'],
@@ -724,7 +729,7 @@ function TabExperienceDesign() {
           ['「先月と今月で気分の流れが全然違う」と気づく', 'Arc Reader', 'Story: 感情の弧ビジュアル'],
           ['「自分はこういう人間なんだ」という発見', 'Theme Finder', 'Self Analysis: テーマバッジ（3つまで）'],
           ['日記を書いた直後に「これは大きな出来事ですね」', 'Moment Detector', 'Today: インラインカード（モーダルではない）'],
-          ['「去年の同じ時期にも...」と過去との接続', 'Foresight Engine', 'AIコメント / チャット内に自然に溶け込む'],
+          ['「去年の同じ時期にも…あの時どう動きましたか?」と過去との接続を問いで閉じる', 'Foresight as Question(旧 Foresight Engine)', 'AIコメント / チャット内に自然に溶け込む。予言はしない'],
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Moment Detector — 転機の確認UI</div>
@@ -817,7 +822,7 @@ function TabExperienceDesign() {
           ['日記 14件', 'Weekly Narrative', '「2週間書き続けてくれましたね。最初の物語をお届けします」'],
           ['日記 30件', 'Arc Reader（感情の弧）', '「1ヶ月分の物語が見えてきました」'],
           ['日記 90件', 'Theme Finder', '「3ヶ月のデータから、あなたの人生のテーマが浮かび上がりました」'],
-          ['日記 180件', 'Foresight Engine', '「あなたの物語のパターンから、次の展開が見え始めます」'],
+          ['日記 180件', 'Foresight as Question', '「あなたの物語のパターンが、今日の問いを返してくれます。あの時どう動きましたか?」'],
         ]} />
         <Principle title="Day 0 の最重要ポイント" body="日記を1行書いたら即座にAIが反応する。白紙に書いて放置される日記帳ではないと伝える。翌日、AIが昨日の日記に触れる — 「覚えている」ことがDay 1の定着トリガー。" color="var(--green)" />
       </Section>
@@ -888,9 +893,9 @@ function TabExperienceDesign() {
           ['チャット応答', '送信後、待っている', '6段階ルーティング', 'OpenAI', 'SSEストリーミングで体感確保'],
           ['自己分析', 'ボタン押下後、待っている', 'gpt-5.4', 'OpenAI', '深い分析。品質重視'],
           ['ニュース収集', '誰も待っていない(バッチ)', 'gpt-5.4-mini', 'OpenAI (pg_cron)', 'web_searchにmini必要'],
-          ['Arc Reader', '誰も待っていない(週次)', 'gpt-5.4', 'OpenAI (Edge Function)', '物語解釈。品質重視'],
-          ['Theme Finder', '誰も待っていない(月次)', 'gpt-5.4', 'OpenAI (Edge Function)', '人生テーマ検出。品質重視'],
-          ['Foresight Engine', '誰も待っていない(週次)', 'gpt-5.4', 'OpenAI', 'Arc Reader出力の解釈。深い推論'],
+          ['Arc Reader', '誰も待っていない(毎朝9時JST cron、週1スパン)', 'claude-opus-4-7', 'Anthropic (narrator-update)', '物語解釈。品質重視。ブラウザは story_memory を読むだけ'],
+          ['Theme Finder', '誰も待っていない(毎朝9時JST cron、月1スパン)', 'claude-opus-4-7', 'Anthropic (narrator-update)', '人生テーマ検出。品質重視。ブラウザは読み取り専用'],
+          ['Foresight as Question', '誰も待っていない(毎朝9時JST cron、週1スパン)', 'claude-opus-4-7', 'Anthropic (narrator-update)', '過去の類似パターンを引用して問いで閉じる(旧 Foresight Engine、⑫で再定義)'],
           ['Chapter生成', '誰も待っていない(四半期)', 'Claude CLI', 'Claude (無料)', '最長・最深の分析'],
           ['Weekly Narrative', '誰も待っていない(月曜早朝)', 'Claude CLI', 'Claude (無料)', '物語生成。品質重視'],
           ['WBI集計/ストリーク', '誰も待っていない', 'LLM不要(SQL)', '—', '数値計算にLLMは使わない'],
@@ -1008,7 +1013,7 @@ function TabArchitecture() {
 
       <Section title="自動化 — Hook + スキル + スクリプト">
         <Tbl headers={['種類', '代表例', '特性']} rows={[
-          ['Hook (32個)', 'prompt-log(LLM分類), growth-detector(LLM検出), session-summary-periodic, bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, knowledge-lint, edge-function-deploy', '決定論的制御。SessionStop依存を排除し、クラッシュ耐性を確保'],
+          ['Hook (42個)', 'prompt-log(LLM分類), growth-detector(キーワード検出), session-summary-periodic, bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, knowledge-lint, edge-function-deploy, skill-usage-log, work-rhythm-update, chat-effectiveness-weekly, weekly-insights, artifact-auto-sync, tool-collector, dept-eval-trigger, pipeline-resume, daily-analysis-batch 等', '決定論的制御。SessionStop依存を排除し、クラッシュ耐性を確保'],
           ['スキル', '/company, /diary, /deploy', '必要時に呼び出し。判断を伴う処理'],
           ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期'],
           ['スキル同期', 'sync-slash-commands.sh', 'SessionStart時にSKILL.md全文をslash_commandsに同期（skill_content含む）'],
@@ -1439,11 +1444,12 @@ function TabAiFeatures() {
         <Principle title="Mirror → Narrator" body="現在のシステムはデータを映す「鏡」。次の進化は、あなたの人生データを「物語」として読み解き、語り、導く「語り手」になること。ルールベースの提案（WBI低い→休めば？）ではなく、LLMの深い推論で物語の弧を読む。" color="var(--accent)" />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>4つのエンジン</div>
-        <Tbl headers={['エンジン', '役割', 'モデル', '更新頻度']} rows={[
-          ['Arc Reader', '感情の時系列を「物語の弧」として解釈。今のフェーズを読み取る', 'gpt-5.4', '週次'],
-          ['Theme Finder', '数ヶ月の日記×夢×行動から人生の通底テーマを発見', 'gpt-5.4', '月次'],
-          ['Moment Detector', '日記から転機（決断/気づき/突破/挫折）をリアルタイム検出', 'gpt-5.4-nano', '日記書き込み毎'],
-          ['Foresight Engine', '過去のパターンから物語の続きを予感し、提案する', 'gpt-5.4', '随時'],
+        <P>2026-04-21 以降、受動生成(バッチ)は claude-opus-4-7 に一本化。ブラウザ hook(useArcReader / useThemeFinder / useForesight)は LLM を叩かず story_memory を読み取るだけの責務。⑫ Positioning Focus と ⑪ Active vs Passive Boundary の整合。</P>
+        <Tbl headers={['エンジン', '役割', 'モデル(バッチ)', '更新頻度', 'ブラウザ側']} rows={[
+          ['Arc Reader', '感情の時系列を「物語の弧」として解釈。今のフェーズを読み取る', 'claude-opus-4-7', '毎朝9時JST cron(週1スパン判定)', '読み取り専用(useArcReader)'],
+          ['Theme Finder', '数ヶ月の日記×夢×行動から人生の通底テーマを発見', 'claude-opus-4-7', '毎朝9時JST cron(月1スパン判定)', '読み取り専用(useThemeFinder)'],
+          ['Moment Detector', '日記から転機(決断/気づき/突破/挫折)をリアルタイム検出', 'claude-opus-4-7', '日記書き込み毎', 'useMomentDetector(日記投稿で発火)'],
+          ['Foresight as Question', '過去の似たパターンを引用して問いで閉じる(予言ではない)', 'claude-opus-4-7', '毎朝9時JST cron(週1スパン判定)', '読み取り専用(useForesight)'],
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>Narrative Memory（3層構造）</div>
@@ -1637,7 +1643,7 @@ function TabHarness() {
         <P>Claude Code のハーネスは6つの構成要素から成る。それぞれの性質の違いが重要。</P>
         <Tbl headers={['構成要素', '役割', '性質', '遵守保証', 'focus-youでの実装']} rows={[
           ['CLAUDE.md', '方針・規約の宣言', '助言的（読んでも無視されうる）', '低〜中', '.claude/CLAUDE.md + .company/CLAUDE.md + 部署CLAUDE.md'],
-          ['Hooks', 'ライフサイクル制御', '決定論的（確実に実行される）', '高', '.claude/hooks/ に25スクリプト'],
+          ['Hooks', 'ライフサイクル制御', '決定論的（確実に実行される）', '高', '.claude/hooks/ に42スクリプト'],
           ['Permissions', '安全制御', '強制的（bypass不可）', '最高', 'settings.json の allow/deny リスト'],
           ['MCP', 'ツール拡張', '外部サービス接続', '—', 'Google Calendar, Supabase, Serena, Context7'],
           ['Sub-agents', 'コンテキスト分離', '独立メモリ・最小権限', '—', 'Agent tool で10部署を委譲'],
@@ -1811,7 +1817,7 @@ const PROPOSALS: Proposal[] = [
     id: 'IMP-001',
     priority: 'P0',
     title: 'CLAUDE.md の60行以下への剪定',
-    problem: 'HD CLAUDE.md 208行（200行閾値超え済み）。公式推奨は60行以下。部署CLAUDE.mdは計1,004行（UXデザイン237行が最大、AI開発30行が最小）。指示が埋もれ遵守率が低下。freshness-policyのclaude_md_sizeチェックが blocking: false で警告止まり。',
+    problem: '(起案時 2026-04-06) HD CLAUDE.md 208行(200行閾値超え済み)。公式推奨は60行以下。部署CLAUDE.mdは計1,004行(UXデザイン237行が最大、AI開発30行が最小)。指示が埋もれ遵守率が低下。freshness-policyのclaude_md_sizeチェックが blocking: false で警告止まり。 / 現在 2026-04-21: HD CLAUDE.md 30行、.company/CLAUDE.md 69行、部署CLAUDE.md 合計1,677行(intelligence 391行が最大、sys-dev 45行が最小、refactoring/ux-design/marketing 等が増加)。剪定は達成、以降は部署CLAUDE.mdの適正サイズ維持が課題。',
     solution: '即時: Hook責務分離表(15行)をrules/hook-responsibilities.mdに移動、MCPプロファイル管理(4行)をrules/に移動。部署は完了条件+入出力仕様に圧縮。claude_md_sizeのblocking: trueに変更し200行超で強制分離。',
     harnessPart: 'CLAUDE.md',
     effort: '2時間',
@@ -1987,7 +1993,7 @@ function TabProposals() {
   return (
     <>
       <Section title="改善提案サマリー">
-        <P>情報収集部（最新ハーネス記事調査）× 運営改善部（現行システム分析）の協議結果。全提案はハーネスエンジニアリングの6構成要素に紐づく。HD CLAUDE.md: 208行 / 部署CLAUDE.md合計: 1,004行 / Hook: 25スクリプト / Freshness Policy: 13データソース。最終調査日: 2026-04-06</P>
+        <P>情報収集部（最新ハーネス記事調査）× 運営改善部（現行システム分析）の協議結果。全提案はハーネスエンジニアリングの6構成要素に紐づく。現在(2026-04-21): HD CLAUDE.md 30行 / .company/CLAUDE.md 69行 / 部署CLAUDE.md合計 1,677行(12部署、intelligence 391行が最大、sys-dev 45行が最小) / Hook 42スクリプト / Freshness Policy 19データソース。最終調査日: 2026-04-21</P>
         <div className="g3" style={{ marginBottom: 16 }}>
           <Principle title={`P0: Critical — ${p0Count}件`} body="やらないと品質・信頼性に直結するリスク。CLAUDE.md肥大化、ハンドオフ漏れ、ルール無視。" color="var(--red)" />
           <Principle title={`P1: Important — ${p1Count}件`} body="やると品質・効率が大幅に向上。Compaction対策、最小権限、昇格ゲート。" color="var(--amber)" />

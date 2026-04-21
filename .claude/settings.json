@@ -305,7 +305,8 @@
       "Bash(ps -p 3274785 -o pid,etime,%cpu,cmd)",
       "Bash(ps -p 3282070 -o pid,etime,%cpu,cmd)",
       "Bash(nohup /workspace/aces-rikyu-sales-proposals-poc/.venv/bin/python -u /workspace/aces-rikyu-sales-proposals-poc/scripts/magentic_full_pipeline.py --company itoen --scenario itoen-magentic-full)",
-      "Bash(nohup /workspace/aces-rikyu-sales-proposals-poc/.venv/bin/python -u /workspace/aces-rikyu-sales-proposals-poc/scripts/magentic_pipeline.py --company \"伊藤園\" --scenario itoen-magentic-v3-standard --model-agenda gpt-5.4-2026-03-05 --effort medium)"
+      "Bash(nohup /workspace/aces-rikyu-sales-proposals-poc/.venv/bin/python -u /workspace/aces-rikyu-sales-proposals-poc/scripts/magentic_pipeline.py --company \"伊藤園\" --scenario itoen-magentic-v3-standard --model-agenda gpt-5.4-2026-03-05 --effort medium)",
+      "Bash(awk '{print $2, $10}')"
     ],
     "deny": [
       "Read(**/.env)",
@@ -342,7 +343,8 @@
       "/workspace/.company/departments/investigation",
       "/workspace/aces-rikyu-sales-proposals-poc/scripts",
       "/workspace",
-      "/workspace/aces-rikyu-sales-proposals-poc/server/.next/dev"
+      "/workspace/aces-rikyu-sales-proposals-poc/server/.next/dev",
+      "/workspace/polaris-circuit-diagram/backend/data/curve_crops"
     ]
   },
   "hooks": {

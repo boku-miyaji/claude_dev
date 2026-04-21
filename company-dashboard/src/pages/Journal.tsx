@@ -147,21 +147,39 @@ export function Journal() {
       const result = await aiCompletion(
         `今週の感情データ:\n${plutchikSummary}\n\nPERMA+V:\n${permaSummary}`,
         {
-          systemPrompt: `感情データから、この人が気づいていないパターンや傾向を見つけて示唆として返す。
+          systemPrompt: `感情データから、本人の気づきを呼び起こす「事実 + 問い」を返す。
+
+## 受動生成の制約（design-philosophy ⑪ Active vs Passive Response Boundary）
+これはユーザーからの質問・相談への回答ではなく、Journal 画面を開いたら自動で表示されます。
+focus-you のターゲットは「行動はわかっているが、一歩が出ない層」。答えは本人の記録の中に既にあります。
+**AI が一般化した "示唆" や "解釈" の押し付けは禁止。** 本人の過去の記述と問いで、本人自身に想起させてください。
+
+許される形式は次のいずれか:
+1. **事実（データの傾向）+ 問い（本人に想起させる）** のセット
+2. **本人の過去の記述・行動への接続** で想起を誘う
+3. **SILENT** （問いも引用も思いつかない時は空配列を返す）
 
 ## 原則
-- 事実（データの傾向）→ 示唆（だから何が言えるか）のセットで書く
+- 「〜のパターンです」「〜している時期です」等の**AIからの一般化・示唆は禁止**
 - 数字をそのまま見せない。「期待が51」ではなく「何かを楽しみにしている気持ちが今週一番強い」
-- 抽象ラベル禁止。「飛躍のフェーズ」「探索期」のような空虚な言葉は使わない
-- 各示唆は1〜2文。です・ます調
+- 抽象ラベル禁止。「飛躍のフェーズ」「探索期」「〜の時期」のような空虚な言葉は使わない
+- 各示唆は1〜2文、**必ず問いで閉じる**（問いは疑問形で終わる）。です・ます調
 
-## 良い例
-["今週は期待と喜びが強い一方で、不安も残ってます。新しいことに踏み出そうとしてる時によくあるパターンです。", "人間関係のスコアが他より低めです。ここ最近、誰かとじっくり話す時間が減っていませんか。"]
+## 沈黙の選択（design-philosophy ⑩）
+本人に想起させる問いも、具体的な引用も思いつかない時は **空配列 [] を返してください**。
+無難な一般化を絞り出すくらいなら、何も表示しないほうが誠実です。
 
-## 悪い例
-["Anticipationが51で突出しています"（数字を見せてるだけ）, "飛躍のフェーズに入っています"（抽象ラベル）, "素敵な一週間でしたね"（中身がない）]
+## 良い例（事実 + 問いで閉じる）
+["今週は期待と喜びが強めで、不安も残っています。何か新しいことに向かおうとしていますか？", "人間関係のスコアが他より低めです。誰かとじっくり話した最後の日はいつでしたか？"]
 
-2〜3個の示唆をJSON配列で返してください。`,
+## 悪い例（全部NG）
+× "今週は期待と喜びが強い一方で、不安も残ってます。新しいことに踏み出そうとしてる時によくあるパターンです。"（AIが一般化して示唆）
+× "Anticipationが51で突出しています"（数字を見せてるだけ）
+× "飛躍のフェーズに入っています"（抽象ラベル）
+× "素敵な一週間でしたね"（中身がない）
+× "〜について考えてみてはどうでしょう"（アドバイス）
+
+問いで閉じる insight を 2〜3個、または沈黙の場合は空配列 [] を JSON で返してください。`,
           jsonMode: true,
           temperature: 0.7,
           maxTokens: 300,
@@ -170,6 +188,8 @@ export function Journal() {
       )
       const parsed = JSON.parse(result.content)
       const items = Array.isArray(parsed) ? parsed : parsed.insights || parsed.items || []
+      // design-philosophy ⑩ Silence over Noise: empty array = model chose silence.
+      // Existing UI at line 293 (`insights.length > 0`) already hides the section for empty arrays.
       setInsights(items)
       sessionStorage.setItem(`insights:${insightsCacheKey}`, JSON.stringify(items))
     } catch {
