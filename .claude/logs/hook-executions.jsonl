@@ -18023,3 +18023,7 @@
 {"ts":"2026-04-21T17:09:24+09:00","hook":"tool-collector","tool":"Skill:register","status":"ok"}
 {"ts":"2026-04-21T17:09:25+09:00","hook":"skill-usage-log","skill":"register","status":"ok"}
 {"ts":"2026-04-21T17:11:54+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T17:14:02+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T17:14:37+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T17:15:39+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-21T17:15:42+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
