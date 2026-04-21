@@ -46,17 +46,18 @@
 | Agent | ファイル | キーワード |
 |-------|---------|-----------|
 | AI開発部署 | `.claude/agents/dept-ai-dev.md` | ai-dev |
-| 情報収集部 | `.claude/agents/dept-intelligence.md` | intelligence |
+| 情報収集部 | `.claude/agents/dept-intelligence.md` | キーワード検索・X監視・Web巡回で最新情報を収集し、CEO向けブリーフィングレポートを生成するエージェント。 |
 | 調査部 | `.claude/agents/dept-investigation.md` | investigation |
-| マーケティング部 | — | marketing |
+| マーケティング部 | `.claude/agents/dept-marketing.md` | marketing |
 | 資料制作部署 | `.claude/agents/dept-materials.md` | materials |
-| 運営改善部 | — | ops |
+| 運営改善部 | `.claude/agents/dept-ops.md` | ops |
 | PM | `.claude/agents/dept-pm.md` | pm |
+| リファクタリング部署 | `.claude/agents/dept-refactoring.md` | refactoring |
 | リサーチ部署 | `.claude/agents/dept-research.md` | research |
-| セキュリティ部 | — | security |
+| セキュリティ部 | `.claude/agents/dept-security.md` | security |
 | システム開発部署 | `.claude/agents/dept-sys-dev.md` | sys-dev |
+| ux | — | ux |
 | UXデザイン部 | `.claude/agents/dept-ux-design.md` | ux-design |
-| リファクタリング部 | — | refactoring |
 <!-- GENERATED:AGENT_TABLE:END -->
 
 ## 人事部

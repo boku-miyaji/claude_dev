@@ -1763,7 +1763,7 @@ function TabHarness() {
 
         <div className="section-title" style={{ fontSize: 13, marginBottom: 8 }}>実装済み（強み）</div>
         <Tbl headers={['領域', '実装内容']} rows={[
-          ['Hook活用（25スクリプト）', 'prompt-log, config-sync, freshness-check, auto-pull/push, bash-guard, tool-collector, docs-sync-guard, pre/post-compact, permission-guard 等'],
+          ['Hook活用（42スクリプト）', 'prompt-log, config-sync, freshness-check, auto-pull/push, bash-guard, tool-collector, docs-sync-guard, pre/post-compact, permission-guard, skill-usage-log, work-rhythm-update, chat-effectiveness-weekly, weekly-insights, artifact-auto-sync, dept-eval-trigger, pipeline-resume, daily-analysis-batch, knowledge-lint 等'],
           ['Freshness Policy', '14データソースの鮮度管理。stale検出→自動修復'],
           ['部署CLAUDE.md分離', '10部署 × 独立仕様書。Sub-agent に近い設計'],
           ['ナレッジ昇格パイプライン', 'memory → knowledge_base → CLAUDE.md。confidence による自動昇格'],

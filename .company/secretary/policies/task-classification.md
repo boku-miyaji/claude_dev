@@ -22,13 +22,16 @@
 |------|------|
 | `dept:ai-dev` | AI開発部署 |
 | `dept:intelligence` | 情報収集部 |
+| `dept:investigation` | 調査部 |
 | `dept:marketing` | マーケティング部 |
 | `dept:materials` | 資料制作部署 |
 | `dept:ops` | 運営改善部 |
 | `dept:pm` | PM |
+| `dept:refactoring` | リファクタリング部署 |
 | `dept:research` | リサーチ部署 |
 | `dept:security` | セキュリティ部 |
 | `dept:sys-dev` | システム開発部署 |
+| `dept:ux` | ux |
 | `dept:ux-design` | UXデザイン部 |
 | `dept:hr` | 人事 |
 | `dept:secretary` | 秘書室 |
