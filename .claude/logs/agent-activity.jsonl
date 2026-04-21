@@ -148,3 +148,6 @@
 {"ts":"2026-04-20T13:11:56+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"CEO向けブリーフィング再実行","model":"default","background":false}
 {"ts":"2026-04-21T07:56:07+09:00","event":"agent_dispatch","dept":"Explore","desc":"ブリーフィングのダッシュボード連携調査","model":"default","background":false}
 {"ts":"2026-04-21T08:19:45+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"示唆をSupabaseに登録","model":"default","background":false}
+{"ts":"2026-04-21T08:54:45+09:00","event":"agent_dispatch","dept":"general-purpose","desc":"Blueprint vs 実装の差分調査","model":"default","background":false}
+{"ts":"2026-04-21T09:02:26+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"Narrator 受動生成プロンプト点検","model":"default","background":true}
+{"ts":"2026-04-21T09:09:28+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"ナラティブAI競合の立ち位置調査","model":"default","background":true}

@@ -302,7 +302,10 @@
       "Bash(py-spy dump *)",
       "Bash(.venv/bin/py-spy dump *)",
       "Bash(ps -p 2979790 -o pid,etime,%cpu)",
-      "Bash(ps -p 3274785 -o pid,etime,%cpu,cmd)"
+      "Bash(ps -p 3274785 -o pid,etime,%cpu,cmd)",
+      "Bash(ps -p 3282070 -o pid,etime,%cpu,cmd)",
+      "Bash(nohup /workspace/aces-rikyu-sales-proposals-poc/.venv/bin/python -u /workspace/aces-rikyu-sales-proposals-poc/scripts/magentic_full_pipeline.py --company itoen --scenario itoen-magentic-full)",
+      "Bash(nohup /workspace/aces-rikyu-sales-proposals-poc/.venv/bin/python -u /workspace/aces-rikyu-sales-proposals-poc/scripts/magentic_pipeline.py --company \"伊藤園\" --scenario itoen-magentic-v3-standard --model-agenda gpt-5.4-2026-03-05 --effort medium)"
     ],
     "deny": [
       "Read(**/.env)",
