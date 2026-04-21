@@ -1388,7 +1388,7 @@ function TabAiFeatures() {
           name="6. AI チャット（エージェントループ）"
           trigger="AI Chatページでメッセージ送信"
           input="ユーザーメッセージ + 会話履歴(50件) + パーソナライゼーション(KB,日記,インサイト) + ファイル抽出テキスト"
-          model="6段階自動ルーティング（casual→nano, factual→nano, lookup→mini, creative→mini, analytical→mini, strategic→gpt-5）。Precision ONで gpt-5+high固定"
+          model="gpt-5.4 固定 + reasoning effort 6段階自動ルーティング（casual/factual→none, lookup/creative→low, analytical→medium, strategic→high）。Precision ONで effort:high に固定"
           pipeline="SSEストリーミング。while(tool_call)ループ: LLM応答→ツール実行→結果をLLMに返す→繰り返し。中間assistant(tool_calls)もDB保存"
           output="ストリーミングテキスト + ツール実行結果（タスク検索/作成, ナレッジ検索, Web検索 等）"
           storage="conversations + messages テーブル。cost_tracking でトークン消費記録"
@@ -1494,19 +1494,22 @@ function TabAiFeatures() {
         <P>安全設計: web_search 使用後は write系ツール(tasks_create)をブロック。間接プロンプトインジェクション対策。</P>
       </Section>
 
-      <Section title="AIチャット — 6段階自動ルーティング">
-        <P>ユーザーのメッセージをgpt-5.4-nanoで分類し、質問の種類に最適なモデルとreasoning effortを自動選択する。</P>
-        <Tbl headers={['分類', 'モデル', '推論レベル', '質問の例']} rows={[
-          ['casual（雑談）', 'gpt-5.4-nano', 'none', '「こんにちは」「ありがとう」「はい」'],
-          ['factual（事実）', 'gpt-5.4-nano', 'none', '「東京タワーの高さは？」「Pythonの最新バージョンは？」'],
-          ['lookup（検索）', 'gpt-5.4-mini', 'low', '「今日の天気は？」「オープンのタスク何件？」「最新ニュースは？」'],
-          ['creative（創作）', 'gpt-5.4-mini', 'low', '「メールの文面を考えて」「この文を要約して」「名前を提案して」'],
-          ['analytical（分析）', 'gpt-5.4-mini', 'medium', '「このコードのバグを直して」「AとBの違いは？」「PDFの内容を分析して」'],
+      <Section title="AIチャット — reasoning effort 6段階自動ルーティング">
+        <P>ユーザーのメッセージを gpt-5.4-nano で分類し、<strong>モデルは gpt-5.4 に統一</strong>した上で reasoning_effort だけを6段階で自動選択する。モデル差による出力揺らぎを抑えつつ、推論深度だけをコスト最適化する設計。</P>
+        <Tbl headers={['分類', 'モデル', 'reasoning_effort', '質問の例']} rows={[
+          ['casual（雑談）', 'gpt-5.4', 'none', '「こんにちは」「ありがとう」「はい」'],
+          ['factual（事実）', 'gpt-5.4', 'none', '「東京タワーの高さは？」「Pythonの最新バージョンは？」'],
+          ['lookup（検索）', 'gpt-5.4', 'low', '「今日の天気は？」「オープンのタスク何件？」「最新ニュースは？」'],
+          ['creative（創作）', 'gpt-5.4', 'low', '「メールの文面を考えて」「この文を要約して」「名前を提案して」'],
+          ['analytical（分析）', 'gpt-5.4', 'medium', '「このコードのバグを直して」「AとBの違いは？」「PDFの内容を分析して」'],
           ['strategic（戦略）', 'gpt-5.4', 'high', '「事業計画を立てて」「アーキテクチャを設計して」「競合分析して」'],
         ]} />
         <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
-          <MiniCard title="Precision Mode" body="ONにすると分類を無視して gpt-5 + reasoning: high + 最大20ステップ に固定。コスト上限 $0.50/リクエスト。最高品質だがコストも最大。" />
-          <MiniCard title="コスト目安" body="casual: ~0.02円, lookup: ~0.2円, analytical: ~0.5円, strategic: ~2円, precision: ~5円。月100メッセージで約50-200円。" />
+          <MiniCard title="Precision Mode" body="ONにすると分類を無視して gpt-5.4 + reasoning_effort: high に固定（従来の gpt-5 から gpt-5.4 に統一）。品質最重視の深掘り用途。" />
+          <MiniCard title="設計意図" body="以前の『モデル6段階 (nano→mini→gpt-5)』から、2026-04 以降は『モデル1段階 + reasoning 6段階』に変更。品質の安定性と運用単純化を優先。コスト差は effort で吸収。" />
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8, lineHeight: 1.6 }}>
+          実装: <code>supabase/functions/ai-agent/index.ts</code> の <code>MODEL_MAP</code>（全キー=gpt-5.4）と <code>REASONING_MAP</code>（none/low/medium/high）。ルーティング判定は gpt-5.4-nano + effort:low で軽量に実行。
         </div>
       </Section>
 
