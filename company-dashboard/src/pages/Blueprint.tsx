@@ -2146,18 +2146,23 @@ function TabRoadmap() {
         <P>オンボーディングではこの5シーンを紹介し、本人が「あ、あの時のやつだ」と思い出せる状態を作る。通知・導線もこの5点に紐づけて設計する。</P>
       </Section>
 
-      <Section title="ポジション: ブルーオーシャン">
-        <P>「感情分析 × ナラティブ知性 × 長期記憶」を統合した競合はゼロ。Mindsera（Plutchik+Big5）が最も近いが「物語」軸を持たない。</P>
+      <Section title="ポジション: 連続データ × 忘れていた範囲のパターン発見（2026-04-21 再定義）">
+        <P>「未来予見（Foresight）」を表看板から外し、<strong>連続データの多チャネル統合 × 忘れていた範囲のパターン発見</strong>を主軸に再定義（⑫ Positioning Focus、<code>scratch/research/narrative-ai-competitors-2026-04-21.md</code> の調査に基づく）。業界が predictive wellness に向かう中、差別化軸としての「未来予見」は Rosebud Wrapped や MIT Future You 等と正面衝突するため脆い。</P>
         <Tbl
-          headers={['カテゴリ', '代表的プロダクト', 'Narratorレベル']}
+          headers={['軸', 'focus-you', 'ナラティブ系（StoriedLife / Life Story AI / Autobiographer）', 'AIジャーナル系（Rosebud / Stoic / Reflection.app）']}
           rows={[
-            ['AIジャーナリング', 'Rosebud ($12.99/月), Mindsera ($14.99/月)', '低〜中低: 感情分析あるが物語なし'],
-            ['メンタルヘルス', 'Woebot, Wysa (FDA認定)', 'なし: 治療ツール'],
-            ['ライフログ', 'Daylio, Exist.io', 'なし: 記録・相関分析のみ'],
-            ['ナラティブ系', 'StoriedLife, Life Story AI', '中: 過去の回顧録のみ。進行中の物語ではない'],
-            ['Focus You', '—', '唯一: 感情分析×ナラティブ×長期記憶×リアルタイム×未来予見'],
+            ['入力チャネル', '日記+感情(Plutchik/Russell/PERMA+V)+カレンダー+タスク+習慣+夢+自己分析（多チャネル統合）', '音声会話 or 週次テキスト（単一チャネル）', 'テキスト日記（単一チャネル）'],
+            ['観測範囲', '<strong>ユーザーが忘れていた範囲</strong>（連続データから検出）', 'ユーザーが思い出せる範囲（インタビューで引き出す）', '日々の入力範囲（Wrapped で年次集約）'],
+            ['主出力', '今日見る日次ダッシュボード（消費）', '印刷書籍 or デジタル自叙伝PDF（保存・ギフト）', 'ダッシュボード + Wrapped/章構造'],
+            ['目的関数', '今日どう動くか（past → now decision）', '次世代に残す（past → future legacy）', '自己成長（生産性志向）'],
+            ['動けない日の扱い', '<strong>記録された一日として肯定</strong>（責めない設計 ⑪）', '記録されない（書籍には載らない）', '生産性低下扱い（ストリーク途切れなど）'],
+            ['未来の扱い', 'Foresight as Question（予言ではなく過去の類似パターンを引用して問いで閉じる）', 'なし（過去中心）', '△ intention tracking / Wrapped で部分的に予見'],
           ]}
         />
+        <Principle title="独自性の中核" body="ナラティブ系の「音声会話1チャネル × 保存目的」にも、AIジャーナル系の「単一テキスト × 生産性志向」にも追いつきにくい構造差。『あなたが忘れていた3月の、あなた自身の姿を覚えています。』— これが表看板。" color="var(--accent)" />
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 12, lineHeight: 1.6 }}>
+          参考: <a href="https://www.storiedlife.ai" target="_blank" rel="noopener noreferrer">StoriedLife</a> / <a href="https://life-story.ai/" target="_blank" rel="noopener noreferrer">Life Story AI</a> / <a href="https://www.rosebud.app/" target="_blank" rel="noopener noreferrer">Rosebud</a>（Wrapped 2025: archetype/arcs/moments は Narrator 4エンジンと機能名重複） / <a href="https://www.getstoic.com/blog/stoic-foundation-model-ai-features" target="_blank" rel="noopener noreferrer">Stoic iOS26</a>（on-device Foundation Model で themes/chapter 化）
+        </div>
       </Section>
 
       <Section title="フェーズ別ロードマップ">
@@ -2237,6 +2242,10 @@ function TabRoadmap() {
             ['2026-04-13', '「背中を押してほしい」は②のみ狙う', '①行動不明 はコーチング領域で勝てない。②一歩が出ない を主戦場にする。本人の記録から答えを呼び起こす設計'],
             ['2026-04-13', '利用シーン5種すべて狙う', '朝/夜/決断前/良いことの後/モヤッと後。単一シーン特化ではなく"他人に話すには重い中間領域"として統合'],
             ['2026-04-13', '未来のあなたプロンプト: 汎用アドバイス禁止', '「1つだけ書く」「散歩して整理」等の誰もやらないテンプレ提案を明示的に禁止。本人の文脈に紐づかない示唆は出さない'],
+            ['2026-04-21', '⑪ Active vs Passive Response Boundary', '能動チャットは相談されたらアドバイスOK、受動生成（Narrator / 未来の自分から / 週次ナラティブ / ブリーフィング）は想起誘導のみ。design-philosophy ⑪ / Narrator プロンプト全修正'],
+            ['2026-04-21', '⑫ Positioning Focus 確定', '表看板を「連続データ × 忘れていた範囲のパターン発見」に確定。Foresight Engine は「Foresight as Question」に再定義（予言ではなく兆候の問い）。競合調査で Rosebud Wrapped と機能名レベルで重複していることが判明したため、予言軸は捨てる'],
+            ['2026-04-21', 'Arc/Theme/Foresight はバッチ Opus 一本化', 'ブラウザ側 useArcReader / useThemeFinder / useForesight は LLM を叩かず story_memory を読み取るだけの責務に変更。夜間バッチ（narrator-update、claude-opus-4-7）を唯一の生成経路にする'],
+            ['2026-04-21', 'Blueprint と実装の整合化', 'Hook 42スクリプト / 19データソース / 11部署(+リファクタで12) / 27ルート / AI Features 4カード(#1 #2 #4 #5)のモデル記述を実装に合わせる。社長判断で「Blueprint を実装に合わせる」方針を確定'],
           ]}
         />
       </Section>
