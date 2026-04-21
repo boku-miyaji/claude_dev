@@ -316,7 +316,11 @@
       "Bash(node_modules/.bin/tsc --noEmit --noResolve --target es2022 --module esnext --moduleResolution bundler --skipLibCheck --allowImportingTsExtensions --isolatedModules --strict false supabase/functions/ai-agent/index.ts)",
       "Bash(/workspace/company-dashboard/node_modules/.bin/tsc --noEmit --noResolve --target es2022 --module esnext --moduleResolution bundler --skipLibCheck --isolatedModules --strict false ./index.ts)",
       "Bash(/workspace/company-dashboard/node_modules/.bin/tsc --noEmit --noResolve --target es2022 --module esnext --moduleResolution bundler --skipLibCheck --isolatedModules --strict ./index.ts)",
-      "Bash(ps -p 3742535 -o pid,etime,stat,rss,comm)"
+      "Bash(ps -p 3742535 -o pid,etime,stat,rss,comm)",
+      "WebFetch(domain:blog.fabric.microsoft.com)",
+      "Bash(LLM_AZURE_OPENAI_GPT5_1_ENDPOINT=x LLM_AZURE_OPENAI_GPT5_1_API_KEY=x LLM_AZURE_OPENAI_GPT5_1_MODEL_NAME=x LLM_AZURE_OPENAI_GPT5_NANO_ENDPOINT=x LLM_AZURE_OPENAI_GPT5_NANO_API_KEY=x LLM_AZURE_OPENAI_GPT5_NANO_MODEL_NAME=x python -c \"import logging; logging.basicConfig\\(level=logging.INFO\\); from project_rikyu.io.llm.base_openai_client import BaseOpenAIClient; print\\('OK'\\)\")",
+      "Bash(LLM_AZURE_OPENAI_GPT5_1_ENDPOINT=x LLM_AZURE_OPENAI_GPT5_1_API_KEY=x LLM_AZURE_OPENAI_GPT5_1_MODEL_NAME=x LLM_AZURE_OPENAI_GPT5_NANO_ENDPOINT=x LLM_AZURE_OPENAI_GPT5_NANO_API_KEY=x LLM_AZURE_OPENAI_GPT5_NANO_MODEL_NAME=x .venv/bin/python -c \"import logging; logging.basicConfig\\(level=logging.INFO\\); from project_rikyu.io.llm.base_openai_client import BaseOpenAIClient; print\\('OK'\\)\")",
+      "Bash(nohup .venv/bin/python -u scripts/magentic_full_pipeline.py --company itoen --scenario itoen-magentic-full-v9)"
     ],
     "deny": [
       "Read(**/.env)",
