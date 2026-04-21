@@ -310,7 +310,9 @@
       "Bash(ps -p 3287857 -o pid,etime,%cpu,cmd)",
       "Bash(rm -f /workspace/*.png)",
       "Bash(rm -rf /workspace/.playwright-mcp/)",
-      "Bash(rm -f /workspace/scratch/calendar-week-view.png)"
+      "Bash(rm -f /workspace/scratch/calendar-week-view.png)",
+      "Bash(rm -rf output/itoen-magentic-v3-standard/_telemetry.json output/itoen-magentic-v3-standard/customer_agendas.json)",
+      "Bash(nohup /workspace/aces-rikyu-sales-proposals-poc/.venv/bin/python -u /workspace/aces-rikyu-sales-proposals-poc/scripts/magentic_pipeline.py --company \"伊藤園\" --scenario itoen-magentic-v3-standard --extraction-only --model-agenda gpt-5.4-2026-03-05 --effort low)"
     ],
     "deny": [
       "Read(**/.env)",
