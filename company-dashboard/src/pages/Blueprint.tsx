@@ -335,11 +335,11 @@ function TabOverview() {
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--green)' }}>自動更新（人間の操作不要）</div>
         <Tbl headers={['データ', '更新タイミング', '仕組み', '連鎖先']} rows={[
-          ['prompt_log', '毎回のユーザー入力', 'Hook (UserPromptSubmit) — キーワード分類のみ、LLM分類はバッチ', 'CEO分析の材料、生活リズム分析'],
+          ['prompt_log', '毎回のユーザー入力', 'Hook (UserPromptSubmit) — skill:/intent: キーワード分類のみ。pj/dept/cat の LLM分類は daily-analysis-batch にオフロード', 'CEO分析の材料、生活リズム分析'],
           ['設定/MCP/CLAUDE.md同期', 'セッション開始', 'Hook (SessionStart, async)', 'ダッシュボードSettings反映'],
           ['git pull (最新コード)', 'セッション開始', 'Hook (SessionStart, async)', '全ファイルが最新に'],
           ['git push', 'セッション終了', 'Hook (SessionStop)', '他サーバーに変更が伝播'],
-          ['セッション状態保存', 'Context Compaction直前', 'Hook (PreCompact)', '.session-state.json に退避'],
+          ['セッション状態保存', 'Context Compaction直前', 'Hook (PreCompact)', '.company/secretary/.session-state.json に退避'],
           ['コンテキスト再注入', 'Context Compaction直後', 'Hook (PostCompact)', 'additionalContext で重要情報を再注入'],
           ['CLAUDE.md肥大化警告', 'CLAUDE.mdへの書き込み後', 'Hook (PostToolUse)', '200行超で自動警告。60行以下推奨'],
           ['Hook実行ログ', '全ツール実行後', 'Hook (PostToolUse)', '~/.claude/logs/hook-executions.jsonl に記録'],
@@ -347,6 +347,12 @@ function TabOverview() {
           ['部署稼働ログ', 'Agent起動時', 'Hook (PostToolUse) — Supabase activity_log INSERT', 'dept_dispatch + metadata.dept で集計可能'],
           ['部署評価リマインド', 'セッション開始', 'Hook (SessionStart) — 14日超で警告', '評価サイクルの自動維持'],
           ['Session Log (Managed Agents)', 'Agent起動時', 'Hook (PostToolUse) → agent_sessions INSERT', 'append-only イベントログ。パイプライン復旧の基盤'],
+          ['スキル使用ログ', 'Skill 実行時', 'Hook (PostToolUse: Skill) — skill-usage-log.sh', 'スキル稼働率・進化候補の材料'],
+          ['稼働リズム更新', 'セッション開始', 'Hook (SessionStart) — work-rhythm-update.sh', 'prompt_log のタイムスタンプから集中時間帯・深夜作業率を更新 → ceo_insights.work_rhythm'],
+          ['チャット有効性（週次）', 'セッション開始（週次トリガ）', 'Hook (SessionStart) — chat-effectiveness-weekly.sh', 'AIチャットの採用/却下統計を週次でスコア化'],
+          ['週次インサイト', 'セッション開始（週次トリガ）', 'Hook (SessionStart) — weekly-insights.sh', '一週間の行動・インサイトを ceo_insights.weekly で要約'],
+          ['Artifacts 自動同期', '成果物書き込み時', 'Hook (PostToolUse: Write) — artifact-auto-sync.sh', '条件（5KB以上/.md等）満たす成果物を artifacts テーブルに自動登録'],
+          ['Tool Collector', 'ツール実行時', 'Hook (PostToolUse) — tool-collector.sh', '使用ツール・引数・所要時間を収集。ハーネス改善の材料'],
           ['Pipeline State', 'パイプライン開始/完了時', 'pipeline_state テーブル更新', 'DAG進捗の永続化。セッション復旧可能に'],
           ['パイプライン復旧検出', 'セッション開始', 'Hook (SessionStart) — pipeline_state チェック', '中断パイプラインを自動検出・復旧提案'],
           ['感情ベクトル検索', '日記投稿後', 'pgvector + emotion_vector(8) on emotion_analysis', '類似感情パターンの自動発見'],
@@ -492,7 +498,7 @@ Today画面で習慣操作
   └→ config-sync.sh（async — settings/MCP/CLAUDE.md → Supabase）
 
 Context Compaction 発生時
-  ├→ PreCompact: セッション状態を .session-state.json に退避
+  ├→ PreCompact: セッション状態を .company/secretary/.session-state.json に退避
   └→ PostCompact: additionalContext で重要情報を再注入
 
 /company 起動
@@ -542,7 +548,7 @@ Edge Function (ai-agent/index.ts) を編集
 
 プロンプトを入力
   └→ UserPromptSubmit Hook（3つ並列実行）:
-       ├→ prompt-log.sh: LLM分類（gpt-5.4-nano）→ pj/intent/dept/cat タグ → prompt_log INSERT
+       ├→ prompt-log.sh: キーワード分類（skill:/intent:）→ prompt_log INSERT（pj/dept/cat の LLM タグ付けはバッチ側 daily-analysis-batch.sh で実行）
        ├→ growth-detector.sh: 失敗シグナル検出（キーワードベース、LLM不要）
        │    └→ bug_report/correction/frustration/missed/repeated をキーワードで検出
        │    └→ ~/.claude/logs/growth-signals.jsonl に永続保存
@@ -591,7 +597,7 @@ function TabExperienceDesign() {
         <Tbl headers={['#', '体験', '具体的な瞬間', '設計への影響']} rows={[
           ['E1', '「覚えてくれている」', 'AIが昨日の日記に触れる。先月の転機を引用する', '記憶設計（4層）、Narrative Memory'],
           ['E2', '「自分でも気づかなかった」', '3ヶ月の日記から人生テーマを発見される', 'Theme Finder、データ蓄積→体験変化'],
-          ['E3', '「今の自分の位置がわかる」', '感情の弧で「今は沈黙期、でもいつも跳躍の前」と知る', 'Arc Reader、Foresight Engine'],
+          ['E3', '「今の自分の位置がわかる」', '感情の弧で「今は沈黙期、でもいつも跳躍の前」と知る', 'Arc Reader、Foresight as Question'],
           ['E4', '「書いたら反応がある」', '日記を書いた直後にAIが共感してくれる', 'フィードバックループ、即時性'],
           ['E5', '「この場所は安全だ」', '本音を書いても評価されない。データは自分だけのもの', 'プライバシー設計、トーン設計'],
         ]} />
@@ -692,7 +698,7 @@ function TabExperienceDesign() {
           ['事実', '検証可能（予定、タスク数、日付）', 'データソースから直接取得。LLMに生成させない'],
           ['分析', 'データに基づく解釈（感情傾向）', 'LLMが生成するが、根拠データへのリンクを添える'],
           ['洞察', '深い推論（テーマ発見、物語解釈）', 'LLMの核心的価値。「私はこう読みました」と一人称で'],
-          ['予測', '未来の推論（Foresight）', '必ず「予感」「かもしれません」の語調。断言しない'],
+          ['問い（Foresight as Question）', '過去パターンの引用 + 問いで閉じる（予言ではない）', '「あの時あなたはどう動きましたか?」の形式で必ず本人に返す。断言せず、⑪ 受動生成は想起誘導のみ'],
         ]} />
       </Section>
 
@@ -864,7 +870,7 @@ function TabExperienceDesign() {
           ['1', '今すぐ', 'フィードバックループ強化、時間帯別セクション順序、エラーフォールバック、日記ローカル保存', '日次の体験品質に直結。新機能より既存の磨き込みが先'],
           ['2', '1ヶ月', 'Weekly Narrative改善、Moment Detector、習慣マイクロインタラクション、感情バッジ強化', 'Moment Detectorのデータ蓄積は複利で効く。早く始めるほど将来の精度が上がる'],
           ['3', '3ヶ月', 'Arc Reader、Storyページ、Theme Finder', '3ヶ月分のデータで初回の感動を最大化。Theme Finderは待つことで質を担保'],
-          ['4', '6ヶ月', 'Foresight Engine、Chapter生成、Narrative Memoryチャット注入', '全エンジン出力が揃ってから。部分的注入は中途半端'],
+          ['4', '6ヶ月', 'Foresight as Question、Chapter生成、Narrative Memoryチャット注入', '全エンジン出力が揃ってから。部分的注入は中途半端（予言ではなく「問いで閉じる」設計で実装）'],
           ['5', '一般公開時', 'コールドスタート完全設計、段階的開示ナビ、Courage Board、プッシュ通知', '現在は唯一のユーザーが十分なデータを持っているため不要'],
         ]} />
         <Principle title="なぜTier 1が「フィードバックループ強化」なのか" body="日記を書く→AIが反応する→もっと書きたくなる。このループがfocus-youの生命線。ループが途切れる瞬間（AI応答失敗、遅延、的外れ）は致命的。既に動いている核心的ループの品質を磨くことが、新機能追加より価値が高い。" color="var(--accent)" />
@@ -977,7 +983,7 @@ function TabArchitecture() {
       </Section>
 
       <Section title="LLM Wiki 思想 — 知識コンパイラとしてのAI">
-        <Principle title="Karpathy LLM Wiki (2026-04)" body="RAGの根本的限界「毎回ゼロから発見し直す」を克服するアーキテクチャ。LLMを検索エンジンではなく知識コンパイラとして使い、Markdownファイル群を生きた百科事典として育てる。focus-youは約80%一致済み。" color="var(--accent)" />
+        <Principle title="Karpathy LLM Wiki (2026-04)" body="RAGの根本的限界「毎回ゼロから発見し直す」を克服するアーキテクチャ。LLMを検索エンジンではなく知識コンパイラとして使い、Markdownファイル群を生きた百科事典として育てる。focus-you の実装カバレッジ: Ingest（取り込み）と Lint（品質チェック）は実装済み、Query（検索回答の還流）は未実装の 2/3（約67%）。残る Query 還流を実装すると index/log/schema の三位一体が完成する。" color="var(--accent)" />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>3つのキーファイルとfocus-youの対応</div>
         <Tbl headers={['Karpathyの概念', '役割', 'focus-youの対応物']} rows={[
@@ -1014,7 +1020,7 @@ function TabArchitecture() {
       <Section title="自動化 — Hook + スキル + スクリプト">
         <Tbl headers={['種類', '代表例', '特性']} rows={[
           ['Hook (42個)', 'prompt-log(LLM分類), growth-detector(キーワード検出), session-summary-periodic, bash-guard, claude-md-size-guard, pre/post-compact, docs-sync-guard, knowledge-lint, edge-function-deploy, skill-usage-log, work-rhythm-update, chat-effectiveness-weekly, weekly-insights, artifact-auto-sync, tool-collector, dept-eval-trigger, pipeline-resume, daily-analysis-batch 等', '決定論的制御。SessionStop依存を排除し、クラッシュ耐性を確保'],
-          ['スキル', '/company, /diary, /deploy', '必要時に呼び出し。判断を伴う処理'],
+          ['スキル', '/company, /diary, /auto-prep, /weekly-digest, /invoice, /register, /review-pr, /devil-advocate, /no-edit, /permission, /pptx-rikyu, /pptx-aces-rikyu, /supabase-preflight, /webapp-demo-generator, /design-principles 等（14+）', '必要時に呼び出し。判断を伴う処理。詳細は Operations タブ'],
           ['スクリプト', 'sync-skills.sh, sync-registry.sh', 'SSOT → 派生の一方向同期'],
           ['スキル同期', 'sync-slash-commands.sh', 'SessionStart時にSKILL.md全文をslash_commandsに同期（skill_content含む）'],
           ['スキル進化', 'skill-evolution-batch.sh', '/company起動時（24h間隔）にprompt_logからパターン検出→候補蓄積'],
@@ -1128,13 +1134,23 @@ function TabOperations() {
           ['「セキュリティ監査」', 'E', 'セキュリティ ∥ リサーチ → 修正 → QA'],
         ]} />
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>/company コマンド</div>
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>主要スラッシュコマンド（スキル）</div>
         <Tbl headers={['コマンド', '機能']} rows={[
           ['/company', 'HD秘書起動（ブリーフィング + タスク管理）'],
           ['/company {name}', 'PJ会社の秘書起動'],
-          ['/company:diary', '日記の分析・壁打ち'],
-          ['/company:auto-prep', 'MTG準備の自動化'],
-          ['/company:weekly-digest', '週次CEOレポート'],
+          ['/diary', '日記の分析・壁打ち'],
+          ['/auto-prep', 'MTG準備の自動化（カレンダーから準備が必要なMTG検出→最新情報収集→事前分析）'],
+          ['/weekly-digest', '週次CEOレポート（時間配分 vs 予定密度、改善提案）'],
+          ['/invoice', '財務管理（売上・経費・稼働時間・税金、請求書解析、Google Calendar 稼働同期）'],
+          ['/register', '成果物ファイルを Artifacts に登録'],
+          ['/review-pr', 'PR レビュー（内容把握要約 + 重要度分類 Critical/High/Medium/Low）'],
+          ['/devil-advocate', '6視点多角的分析（反論・質問・盲点検出）'],
+          ['/pptx-rikyu / /pptx-aces-rikyu', 'PowerPoint 資料生成（テンプレートベース、通常版+詳細版の2バージョン）'],
+          ['/supabase-preflight', 'RLS/CHECK/型を一括取得して安全な curl テンプレ生成'],
+          ['/webapp-demo-generator', 'Playwright ベースのデモ動画・字幕・ナレーション生成'],
+          ['/design-principles', 'Linear/Notion/Stripe 調の UI デザインシステム適用'],
+          ['/no-edit', '読み取り専用モード（調査・回答のみ）'],
+          ['/permission', 'Claude Code のパーミッションレベル切替（full/safe/strict）'],
         ]} />
       </Section>
 
@@ -1325,6 +1341,9 @@ function TabAiFeatures() {
         ]} />
         <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8, lineHeight: 1.6 }}>
           diary_search のパイプライン: PGroonga キーワード検索 → pgvector 感情ベクトル cosine 類似検索 → 結果マージ・重複排除 → gpt-nano でリランキング → 上位K件をメイン LLM に注入
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginTop: 12 }}>
+          安全設計: web_search 使用後は write 系ツール(tasks_create)をブロック。間接プロンプトインジェクション対策。
         </div>
       </Section>
 
@@ -1630,7 +1649,7 @@ function TabHarness() {
           ['CLAUDE.md', '方針・規約の宣言', '助言的（読んでも無視されうる）', '低〜中', '.claude/CLAUDE.md + .company/CLAUDE.md + 部署CLAUDE.md'],
           ['Hooks', 'ライフサイクル制御', '決定論的（確実に実行される）', '高', '.claude/hooks/ に42スクリプト'],
           ['Permissions', '安全制御', '強制的（bypass不可）', '最高', 'settings.json の allow/deny リスト'],
-          ['MCP', 'ツール拡張', '外部サービス接続', '—', 'Google Calendar, Supabase, Serena, Context7'],
+          ['MCP / Plugins', 'ツール拡張', '外部サービス接続 + Plugin 拡張', '—', '11プラグイン有効: document-skills, frontend-design, context7, serena, pr-review-toolkit, github, code-review, security-guidance, supabase, commit-commands, company（うち MCP は Google Calendar / Supabase / Serena / Context7）'],
           ['Sub-agents', 'コンテキスト分離', '独立メモリ・最小権限', '—', 'Agent tool で11部署を委譲（+リファクタリング部で計12。.claude/agents/dept-*.md 定義）'],
           ['Skills', 'ナレッジ注入', 'オンデマンドロード', '—', '/company, /diary 等のスキル'],
         ]} />
@@ -1662,7 +1681,7 @@ function TabHarness() {
         <Tbl headers={['イベント', 'タイミング', '用途', 'focus-youでの活用']} rows={[
           ['SessionStart', 'セッション開始 / compact後', 'コンテキスト再注入、環境セットアップ', 'auto-pull, config-sync, supabase-status, knowledge-lint(日次)'],
           ['SessionStop', 'セッション終了', 'クリーンアップ、レポート', 'auto-push, session-summary'],
-          ['UserPromptSubmit', 'ユーザー入力時', 'LLM分類+ログ記録', 'prompt-log（gpt-5.4-nanoでタグ自動分類→Supabase記録）'],
+          ['UserPromptSubmit', 'ユーザー入力時', 'キーワード分類+ログ記録', 'prompt-log（キーワードで skill:/intent: タグ付け→Supabase記録。Claude Code プロンプトの LLM 分類はコスト抑制のためバッチ側 daily-analysis-batch で実行）'],
           ['PreToolUse', 'ツール実行前', 'ブロック / 入力書き換え / ポリシーガード', 'bash-guard（危険コマンドのブロック+監査ログ）'],
           ['PostToolUse', 'ツール実行後', 'バリデーション、自動デプロイ、ログ', 'docs-sync-guard, edge-function-deploy(即時), agent-activity-log, tool-collector'],
           ['Stop', 'エージェント応答完了', 'タスク完了確認、自動テスト', 'タスク完了時の品質検証（IMP-007）'],
@@ -1691,18 +1710,20 @@ function TabHarness() {
         </div>
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>focus-you部署 = Sub-agent としての設計</div>
-        <P>各部署は Agent tool で起動される Sub-agent。この視点で見ると、部署設計の良し悪しは Sub-agent のプロンプト品質に直結する。</P>
-        <Tbl headers={['部署', '仕様レベル', '完了条件', '課題']} rows={[
-          ['UXデザイン部', '最高（5原則+心理学）', '明確', '良好。他部署の模範'],
-          ['セキュリティ部', '最高（8ルール+SLA）', '明確', 'SLA追跡の自動化なし'],
-          ['AI開発部', '中（柔軟フロー）', 'やや曖昧', 'QAバイパス条件が不明確'],
-          ['システム開発部', '中（QAゲートあり）', '明確', 'コードレビュープロトコル未記載'],
-          ['リサーチ部', '高（3段構成+URL必須）', '明確', 'フィードバックループなし'],
-          ['PM部', '低（基本ワークフロー）', '曖昧', 'ハンドオフ検出が手動パース'],
-          ['資料制作部', '中（10原則）', '曖昧', '品質ルーブリック不在'],
-          ['情報収集部', '高（スコアリング）', '明確', 'キーワード抽出スクリプト未実装'],
-          ['マーケティング部', '低（3柱）', '曖昧', '分類ゲートなし'],
-          ['運営改善部', '高（メタ観察）', '明確', '閾値未定義'],
+        <P>各部署は Agent tool で起動される Sub-agent（<code>.claude/agents/dept-*.md</code>）。この視点で見ると、部署設計の良し悪しは Sub-agent のプロンプト品質に直結する。2026-04-21 時点で全11部署（+リファクタリング部）の Agent 定義ファイルが揃った。</P>
+        <Tbl headers={['部署', '仕様レベル', '完了条件', 'Agent定義', '残課題']} rows={[
+          ['UXデザイン部', '最高（5原則+心理学）', '明確', 'dept-ux-design.md', '良好。他部署の模範'],
+          ['セキュリティ部', '最高（8ルール+SLA）', '明確', 'dept-security.md (2026-04-21 新設)', 'SLA追跡の自動化なし'],
+          ['AI開発部', '中（柔軟フロー）', 'やや曖昧', 'dept-ai-dev.md', 'QAバイパス条件が不明確'],
+          ['システム開発部', '中（QAゲートあり）', '明確', 'dept-sys-dev.md', 'コードレビュープロトコル未記載'],
+          ['リサーチ部', '高（3段構成+URL必須）', '明確', 'dept-research.md', 'フィードバックループなし'],
+          ['PM部', '低（基本ワークフロー）', '曖昧', 'dept-pm.md', 'ハンドオフ検出が手動パース'],
+          ['資料制作部', '中（10原則）', '曖昧', 'dept-materials.md', '品質ルーブリック不在'],
+          ['情報収集部', '高（スコアリング）', '明確', 'dept-intelligence.md', 'キーワード抽出スクリプト未実装'],
+          ['マーケティング部', '低（3柱）', '曖昧', 'dept-marketing.md (2026-04-21 新設)', '分類ゲートなし'],
+          ['運営改善部', '高（メタ観察）', '明確', 'dept-ops.md (2026-04-21 新設)', '閾値未定義'],
+          ['調査部', '中（5 Whys + 3層対策）', '明確', 'dept-investigation.md', '内部障害専任、再発防止の定量化が課題'],
+          ['リファクタリング部', '高（Rule of Two）', '明確', 'dept-refactoring.md (2026-04-21 新設)', '登録が registry.md 未反映'],
         ]} />
       </Section>
 
@@ -2184,7 +2205,7 @@ function TabRoadmap() {
 
       <Section title="MVP機能リスト">
         <P><strong>Must Have</strong>: 日記入力(時間帯適応) / 感情分析(Plutchik+Russell+PERMA+V) / 感情カレンダー / AIパートナーの一言 / Weekly Narrative / Arc Reader / Storyページ / ユーザー認証+RLS / PWA / 段階的アンロック / 通知</P>
-        <P><strong>Should Have</strong>: Theme Finder / Moment Detector / Self-Analysis / Foresight Engine / 夢リスト+進捗検出 / Chapter自動生成 / データエクスポート</P>
+        <P><strong>Should Have</strong>: Theme Finder / Moment Detector / Self-Analysis / Foresight as Question（予言ではなく問いで閉じる） / 夢リスト+進捗検出 / Chapter自動生成 / データエクスポート</P>
         <P><strong>Won't (MVP外)</strong>: Apple Watch / 家族版 / セラピスト連携 / ネイティブアプリ(Phase 2) / リアルタイム生体データ</P>
       </Section>
 
