@@ -332,7 +332,11 @@
       "Bash(.venv/bin/python -c \"import json; d=json.load\\(open\\('/home/node/workspace/output/itoen/customer_profile.json'\\)\\); print\\(len\\(d.get\\('company',{}\\)\\), 'company fields'\\); print\\(len\\(d.get\\('keypersons',[]\\)\\), 'keypersons'\\); print\\(len\\(d.get\\('recent_developments',[]\\)\\), 'recent_developments'\\); print\\(len\\(d.get\\('major_brands',[]\\)\\), 'major_brands'\\); print\\(len\\(d.get\\('source',[]\\)\\), 'sources'\\)\")",
       "Bash(.venv/bin/python -c \"import json; d=json.load\\(open\\('output/itoen/customer_profile.json'\\)\\); print\\(len\\(d.get\\('company',{}\\)\\), 'company fields'\\); print\\(len\\(d.get\\('keypersons',[]\\)\\), 'keypersons'\\); print\\(len\\(d.get\\('recent_developments',[]\\)\\), 'recent_developments'\\); print\\(len\\(d.get\\('major_brands',[]\\)\\), 'major_brands'\\); print\\(len\\(d.get\\('source',[]\\)\\), 'sources'\\)\")",
       "Bash(.venv/bin/python -c \"import json; d=json.load\\(open\\('output/itoen/customer_agendas.json'\\)\\); print\\(type\\(d\\).__name__\\); print\\('keys:', list\\(d.keys\\(\\)\\) if isinstance\\(d,dict\\) else 'list of', len\\(d\\) if isinstance\\(d,list\\) else '?'\\); print\\('agendas:', len\\(d.get\\('agendas',[]\\)\\) if isinstance\\(d,dict\\) else 'N/A'\\)\")",
-      "Bash(.venv/bin/python -c \"import json; d=json.load\\(open\\('output/itoen-magentic-v2/customer_agendas.json'\\)\\); print\\('agendas:', len\\(d.get\\('agendas',[]\\)\\) if isinstance\\(d,dict\\) else 'N/A'\\)\")"
+      "Bash(.venv/bin/python -c \"import json; d=json.load\\(open\\('output/itoen-magentic-v2/customer_agendas.json'\\)\\); print\\('agendas:', len\\(d.get\\('agendas',[]\\)\\) if isinstance\\(d,dict\\) else 'N/A'\\)\")",
+      "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 2)",
+      "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 3)",
+      "Bash(nohup .venv/bin/python -u scripts/agenda_debug_standalone.py --pattern 4)",
+      "Bash(nohup .venv/bin/python -u scripts/magentic_full_pipeline.py --company itoen --scenario itoen-magentic-full-v10)"
     ],
     "deny": [
       "Read(**/.env)",
