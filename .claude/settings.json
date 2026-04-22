@@ -356,7 +356,8 @@
       "Bash(/workspace/.claude/hooks/api/sb.sh query *)",
       "WebFetch(domain:zenn.dev)",
       "Bash(sed -n '405,415p' security/page.tsx)",
-      "Bash(sed -n '505,515p' security/page.tsx)"
+      "Bash(sed -n '505,515p' security/page.tsx)",
+      "Edit(~/.claude/skills/tax-advisor/**)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -397,7 +398,8 @@
       "/workspace/polaris-circuit-diagram/backend/data/curve_crops",
       "/workspace/scratch/design/focus-you",
       "/workspace/.company-focus-you/ai-dev",
-      "/workspace/scripts"
+      "/workspace/scripts",
+      "/home/node/.claude/skills"
     ]
   },
   "hooks": {
