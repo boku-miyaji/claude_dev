@@ -245,9 +245,12 @@ print('[]')
       else
         # Build payload; ensure PJ tag + source tag
         PAYLOAD=$(echo "$EVENTS_JSON" | python3 -c "
-import sys, json
+import sys, json, re
 events = json.load(sys.stdin)
 PROJ = {'claude-dev','focus-you','polaris-circuit','rikyu','agent-harness'}
+def clean(s):
+    if s is None: return None
+    return re.sub(r'\x00', '', str(s))
 out = []
 for e in events:
     tags = e.get('tags') or []
@@ -261,11 +264,11 @@ for e in events:
         'event_type': e.get('event_type', 'failure'),
         'category': e.get('category', 'process'),
         'severity': e.get('severity', 'medium'),
-        'title': (e.get('title') or 'untitled')[:120],
-        'what_happened': e.get('what_happened') or '',
-        'root_cause': e.get('root_cause'),
-        'countermeasure': e.get('countermeasure'),
-        'result': e.get('result'),
+        'title': clean((e.get('title') or 'untitled')[:120]),
+        'what_happened': clean(e.get('what_happened') or ''),
+        'root_cause': clean(e.get('root_cause')),
+        'countermeasure': clean(e.get('countermeasure')),
+        'result': clean(e.get('result')),
         'tags': tags,
         'source': 'detector',
         'status': 'active',
