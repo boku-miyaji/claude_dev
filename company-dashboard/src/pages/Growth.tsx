@@ -13,8 +13,20 @@ interface GrowthEvent {
 const TYPE_CONFIG: Record<string, { label: string; icon: string; color: string }> = {
   failure: { label: 'FAILURE', icon: '✕', color: 'var(--red)' },
   countermeasure: { label: 'COUNTERMEASURE', icon: '◆', color: 'var(--amber)' },
+  decision: { label: 'DECISION', icon: '◉', color: 'var(--accent)' },
   milestone: { label: 'MILESTONE', icon: '★', color: 'var(--green)' },
 }
+
+const PROJECT_TAGS = [
+  { key: 'all', label: 'すべて' },
+  { key: 'claude-dev', label: 'claude-dev' },
+  { key: 'focus-you', label: 'focus-you' },
+  { key: 'polaris-circuit', label: 'polaris-circuit' },
+  { key: 'rikyu', label: 'rikyu' },
+  { key: 'agent-harness', label: 'agent-harness' },
+  { key: 'unclassified', label: '未分類' },
+]
+const PROJECT_KEYS = new Set(['claude-dev','focus-you','polaris-circuit','rikyu','agent-harness'])
 
 const CAT_ICONS: Record<string, string> = {
   security: '🛡', architecture: '🏗', devops: '⚙', automation: '🤖',
@@ -27,7 +39,9 @@ const SEV_COLORS: Record<string, string> = {
 
 const FILTERS = [
   { key: 'all', label: 'All' }, { key: 'failure', label: 'Failures' },
-  { key: 'countermeasure', label: 'Countermeasures' }, { key: 'milestone', label: 'Milestones' },
+  { key: 'countermeasure', label: 'Countermeasures' },
+  { key: 'decision', label: 'Decisions' },
+  { key: 'milestone', label: 'Milestones' },
   { key: 'security', label: 'Security' }, { key: 'architecture', label: 'Architecture' },
   { key: 'devops', label: 'DevOps' }, { key: 'automation', label: 'Automation' },
   { key: 'tooling', label: 'Tooling' }, { key: 'organization', label: 'Organization' },

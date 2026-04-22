@@ -19,6 +19,13 @@ PROMPT=$(echo "$INPUT" | jq -r '.prompt // empty' 2>/dev/null || true)
 # Skip short prompts (confirmations, greetings)
 [ ${#PROMPT} -lt 15 ] && exit 0
 
+# Skip system-generated prompts (daily-analysis-batch / ceo-insights LLM inputs)
+# これらは UserPromptSubmit のように流れてくるが、実体は内部LLM呼び出しであり
+# 誤って correction シグナル化すると自己再帰ループの原因になる。
+if echo "$PROMPT" | head -c 200 | grep -qE '^(Classify each prompt|Analyze these failure signals|Evaluate HD organization|Analyze this pipeline|あなたは.{0,30}アナリスト|あなたは claude_dev|日記エントリの下処理|仮説検証アナリスト|JSON formatで返|JSON形式で返)'; then
+  exit 0
+fi
+
 GROWTH_DIR="/tmp/claude-growth-signals"
 mkdir -p "$GROWTH_DIR" 2>/dev/null || true
 

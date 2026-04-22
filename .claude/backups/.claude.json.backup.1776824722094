@@ -733,7 +733,7 @@
       "timestamp": 1776752725058
     }
   },
-  "clientDataCache": {},
+  "clientDataCache": null,
   "additionalModelOptionsCache": [],
   "penguinModeOrgEnabled": false,
   "claudeAiMcpEverConnected": [
@@ -743,8 +743,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 83,
-      "lastUsedAt": 1776782873677
+      "usageCount": 86,
+      "lastUsedAt": 1776820067168
     },
     "register": {
       "usageCount": 13,
@@ -775,8 +775,8 @@
       "lastUsedAt": 1775909419013
     },
     "update-config": {
-      "usageCount": 2,
-      "lastUsedAt": 1776560143962
+      "usageCount": 3,
+      "lastUsedAt": 1776820332753
     }
   },
   "overageCreditUpsellSeenCount": 2,
