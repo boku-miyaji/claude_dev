@@ -156,3 +156,11 @@
 {"ts":"2026-04-22T21:09:06+09:00","signal":"raw_prompt","prompt":"backendの依存ライブラリをインストールをちゃんと書いて。\n"}
 {"ts":"2026-04-22T21:09:06+09:00","signal":"raw_prompt","prompt":"backendの依存ライブラリをインストールをちゃんと書いて。\n"}
 {"ts":"2026-04-22T21:11:49+09:00","signal":"raw_prompt","prompt":"Error: Failed to run sql query: Connection terminated due to connection timeout\n\nNote: A limit of 100 was applied to your query. If this was the cause of a syntax error, try selecting \"No limit\" instead and re-run the query.\n"}
+{"ts":"2026-04-22T21:11:49+09:00","signal":"raw_prompt","prompt":"Error: Failed to run sql query: Connection terminated due to connection timeout\n\nNote: A limit of 100 was applied to your query. If this was the cause of a syntax error, try selecting \"No limit\" instead and re-run the query.\n"}
+{"ts":"2026-04-22T21:17:44+09:00","signal":"raw_prompt","prompt":"わかりにくすぎる。もっと上流から整理して、何故この設計になっているのかもわかるように。上流から下流まで分かるようにして。\nsupabaseを使わないとか当たり前の事欠かないで。azureで検討しているんだから。\nConceptual Breadcrumbとはよくわからない言葉も使わないで。日本語で書いて。\n各機能のデータに関して、customer_profile (Azure SQL JSON 列) + 7 collector 中間結果は transien\n"}
+{"ts":"2026-04-22T21:19:30+09:00","signal":"raw_prompt","prompt":"書いてなくない？\ndemo_knowledge_base.mdにかいてよ。またopenai_api_key不要とかもいらない\n"}
+{"ts":"2026-04-22T21:17:44+09:00","signal":"raw_prompt","prompt":"わかりにくすぎる。もっと上流から整理して、何故この設計になっているのかもわかるように。上流から下流まで分かるようにして。\nsupabaseを使わないとか当たり前の事欠かないで。azureで検討しているんだから。\nConceptual Breadcrumbとはよくわからない言葉も使わないで。日本語で書いて。\n各機能のデータに関して、customer_profile (Azure SQL JSON 列) + 7 collector 中間結果は transien\n"}
+{"ts":"2026-04-22T21:19:30+09:00","signal":"raw_prompt","prompt":"書いてなくない？\ndemo_knowledge_base.mdにかいてよ。またopenai_api_key不要とかもいらない\n"}
+{"ts":"2026-04-22T21:22:41+09:00","signal":"raw_prompt","prompt":"Node.js / Python / uv / bash 4.3+\tREADME の「必要なツール」参照も省略しないで書くとか、リンクを貼るとかして\n"}
+{"ts":"2026-04-22T21:22:41+09:00","signal":"raw_prompt","prompt":"Node.js / Python / uv / bash 4.3+\tREADME の「必要なツール」参照も省略しないで書くとか、リンクを貼るとかして\n"}
+{"ts":"2026-04-22T21:29:47+09:00","signal":"raw_prompt","prompt":"Error: Failed to run sql query: ERROR: 54000: null character not permitted\n"}
