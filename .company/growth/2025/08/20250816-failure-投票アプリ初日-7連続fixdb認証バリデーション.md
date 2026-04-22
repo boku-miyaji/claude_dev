@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, rapid-dev, validation, database
+- **tags**: tooling, rapid-dev, validation, database, claude-dev
 - **commits**: ba06193, 43a5e30, fb1331e, 8effc27, 0aa9b21, a27a5b6, 320c0c1
 
 ## what_happened

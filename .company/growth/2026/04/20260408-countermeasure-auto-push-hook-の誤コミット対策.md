@@ -5,7 +5,7 @@
 - **category**: security / **severity**: critical
 - **status**: active
 - **source**: backfill
-- **tags**: auto-push, secrets, hook-safety
+- **tags**: auto-push, secrets, hook-safety, claude-dev
 - **commits**: e416c0b, 4bdb1b7
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, calendar, modal, responsive, task-linking
+- **tags**: tooling, calendar, modal, responsive, task-linking, claude-dev
 - **commits**: 9c2be94, fe4863e
 
 ## what_happened

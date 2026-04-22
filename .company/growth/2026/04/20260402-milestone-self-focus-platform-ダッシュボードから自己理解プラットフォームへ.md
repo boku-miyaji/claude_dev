@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, vision, self-focus, product-strategy
+- **tags**: architecture, vision, self-focus, product-strategy, focus-you
 - **commits**: 5148eca, c1999b0, b965291, b99a46d
 
 ## what_happened

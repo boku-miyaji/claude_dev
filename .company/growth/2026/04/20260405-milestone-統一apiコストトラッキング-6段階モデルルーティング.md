@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: ai-cost, model-routing, finance
+- **tags**: ai-cost, model-routing, finance, claude-dev
 - **commits**: 6447830, d035d9c, 13576aa, 6e83495, 683a2ba
 
 ## what_happened

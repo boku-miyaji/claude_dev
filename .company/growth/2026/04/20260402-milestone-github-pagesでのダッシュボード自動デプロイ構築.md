@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: ci, github-pages, cache
+- **tags**: ci, github-pages, cache, claude-dev
 - **commits**: c6b26f6, 8cd4d16
 
 ## what_happened

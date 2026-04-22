@@ -5,7 +5,7 @@
 - **category**: process / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: process, handoff, yaml, department-coordination, IMP-002
+- **tags**: process, handoff, yaml, department-coordination, IMP-002, claude-dev
 - **commits**: 68c1e51
 
 ## what_happened

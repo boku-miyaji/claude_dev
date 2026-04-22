@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: plugins, skills, document-skills, tooling
+- **tags**: plugins, skills, document-skills, tooling, agent-harness
 - **commits**: 930cdde
 
 ## what_happened

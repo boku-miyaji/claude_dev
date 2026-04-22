@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, zustand, state-management, data-fetching
+- **tags**: architecture, zustand, state-management, data-fetching, claude-dev
 - **commits**: 660f103
 
 ## what_happened

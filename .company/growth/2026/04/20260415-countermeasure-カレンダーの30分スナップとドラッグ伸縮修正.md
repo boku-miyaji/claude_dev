@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: low
 - **status**: active
 - **source**: daily-digest
-- **tags**: calendar, ux-fix
+- **tags**: calendar, ux-fix, claude-dev
 - **commits**: 2e53d69
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, dashboard, iframe, postMessage, artifacts, security
+- **tags**: tooling, dashboard, iframe, postMessage, artifacts, security, claude-dev
 - **commits**: fe52cff, 06e6742, 6cc9d43
 
 ## what_happened

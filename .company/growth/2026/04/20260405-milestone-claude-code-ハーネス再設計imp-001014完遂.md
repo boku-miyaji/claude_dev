@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: harness, claude-code, refactor, organization
+- **tags**: harness, claude-code, refactor, organization, agent-harness
 - **commits**: 7ca29a0, fc34479, 8494e4a, 1b4eb85, d27a611, ce94a42
 
 ## what_happened

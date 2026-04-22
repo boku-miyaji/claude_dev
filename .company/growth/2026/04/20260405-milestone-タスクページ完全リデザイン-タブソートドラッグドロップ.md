@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, dashboard, tasks, ux, drag-and-drop
+- **tags**: tooling, dashboard, tasks, ux, drag-and-drop, focus-you
 - **commits**: 4b9c37d, fdd0b13, 5daf25e, 7553fff, 020056e
 
 ## what_happened

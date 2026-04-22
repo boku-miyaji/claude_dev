@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: daily-digest
-- **tags**: timeline, gcal, tasks, integration
+- **tags**: timeline, gcal, tasks, integration, claude-dev
 - **commits**: 6668b7a
 
 ## what_happened

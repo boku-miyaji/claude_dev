@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: skill, playwright, demo, automation
+- **tags**: skill, playwright, demo, automation, agent-harness
 - **commits**: 90f95f3
 
 ## what_happened

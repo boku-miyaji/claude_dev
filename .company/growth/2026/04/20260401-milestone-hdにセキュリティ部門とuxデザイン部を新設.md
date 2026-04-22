@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: organization, security, ux
+- **tags**: organization, security, ux, focus-you
 - **commits**: e636238, 398cb9f, 4e99fd0, cb349fe
 
 ## what_happened

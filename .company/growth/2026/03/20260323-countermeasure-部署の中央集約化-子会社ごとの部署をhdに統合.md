@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: organization, architecture, dry, centralization
+- **tags**: organization, architecture, dry, centralization, polaris-circuit
 - **commits**: f72958d, 3f97d7a
 
 ## what_happened

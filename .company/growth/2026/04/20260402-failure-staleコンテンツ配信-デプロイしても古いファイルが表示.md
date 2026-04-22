@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: low
 - **status**: resolved
 - **source**: manual
-- **tags**: devops, cache, vercel, cdn, deployment
+- **tags**: devops, cache, vercel, cdn, deployment, claude-dev
 - **commits**: 8cd4d16
 
 ## what_happened

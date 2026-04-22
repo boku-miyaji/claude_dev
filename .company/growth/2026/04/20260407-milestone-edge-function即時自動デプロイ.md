@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: edge-function, hooks, devops
+- **tags**: edge-function, hooks, devops, claude-dev
 - **commits**: 38a6b53, 2f0b5f9
 
 ## what_happened

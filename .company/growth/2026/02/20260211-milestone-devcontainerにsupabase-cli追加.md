@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: low
 - **status**: active
 - **source**: backfill
-- **tags**: devcontainer, supabase, expo
+- **tags**: devcontainer, supabase, expo, claude-dev
 - **commits**: ec66ad3
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: slash-command, setup, scaffolding
+- **tags**: slash-command, setup, scaffolding, claude-dev
 - **commits**: dfe6ba9, f150515
 
 ## what_happened

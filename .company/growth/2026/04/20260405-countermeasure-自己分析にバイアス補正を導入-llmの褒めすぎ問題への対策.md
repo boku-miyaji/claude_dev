@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: quality, self-analysis, bias-correction, multi-source, radar-chart
+- **tags**: quality, self-analysis, bias-correction, multi-source, radar-chart, focus-you
 - **commits**: b9244ee, 9a26f94, b368017, c7abc83
 
 ## what_happened

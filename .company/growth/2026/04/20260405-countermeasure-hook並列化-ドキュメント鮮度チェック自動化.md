@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: devops, hooks, parallelization, freshness-check, IMP-010, IMP-011
+- **tags**: devops, hooks, parallelization, freshness-check, IMP-010, IMP-011, agent-harness
 - **commits**: fc34479, 42a5ea6
 
 ## what_happened

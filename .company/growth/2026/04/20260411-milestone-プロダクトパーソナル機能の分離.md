@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: product-separation, navigation, commercialization
+- **tags**: product-separation, navigation, commercialization, claude-dev
 - **commits**: 245c557, 5e13644, 00897e3
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: critical
 - **status**: resolved
 - **source**: manual
-- **tags**: quality, ai-chat, debugging, tool-calling, history, context-loss
+- **tags**: quality, ai-chat, debugging, tool-calling, history, context-loss, focus-you
 - **commits**: ac536f4, 9adf4b6, 00b326f, 5a880ee, a005725, 3f13b89, 0361eab, d5da859, 3cf2313
 
 ## what_happened

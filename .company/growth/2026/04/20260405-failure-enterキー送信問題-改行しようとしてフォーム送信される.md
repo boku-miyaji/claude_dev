@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: quality, ux, keyboard, enter-key, form
+- **tags**: quality, ux, keyboard, enter-key, form, claude-dev
 - **commits**: f790eeb
 
 ## what_happened

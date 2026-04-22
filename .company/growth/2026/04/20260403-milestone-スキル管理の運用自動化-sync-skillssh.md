@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: devops, skills, automation, sync-script
+- **tags**: devops, skills, automation, sync-script, claude-dev
 - **commits**: 041bbcf
 
 ## what_happened

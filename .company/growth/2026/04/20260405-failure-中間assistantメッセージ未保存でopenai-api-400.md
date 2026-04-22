@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: ai-chat, tool-calls
+- **tags**: ai-chat, tool-calls, claude-dev
 
 ## what_happened
 tool_calls含むassistantがDB未保存→orphaned tool messages→API reject

@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, ux, page-consolidation, refactor
+- **tags**: architecture, ux, page-consolidation, refactor, focus-you
 - **commits**: 35396ad, 42d1e1f, 462da9c, af0a6ee, 9c3845b, 1d1071c
 
 ## what_happened

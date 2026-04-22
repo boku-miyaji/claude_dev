@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: organization, refactor, departments, intelligence
+- **tags**: organization, refactor, departments, intelligence, polaris-circuit
 - **commits**: f72958d
 
 ## what_happened

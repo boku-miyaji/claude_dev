@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: ai-chat, agent-loop, opencode, dashboard
+- **tags**: ai-chat, agent-loop, opencode, dashboard, focus-you
 - **commits**: 70cc2bb, 3eaf414, 87a461a, e26a948, 83f4d06
 
 ## what_happened

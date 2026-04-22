@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: devops, vercel, env, deployment
+- **tags**: devops, vercel, env, deployment, claude-dev
 - **commits**: cf1a079, 5f47c5b, 1523a55
 
 ## what_happened

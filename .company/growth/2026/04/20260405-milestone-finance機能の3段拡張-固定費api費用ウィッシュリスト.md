@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, finance, subscription, api-costs, wishlist, jpy
+- **tags**: tooling, finance, subscription, api-costs, wishlist, jpy, claude-dev
 - **commits**: 56b1335, 13576aa, 6e83495, 6447830, 683a2ba, 7d3ff7a
 
 ## what_happened

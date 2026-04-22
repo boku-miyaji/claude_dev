@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: critical
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, harness-engineering, stanford-hai, research
+- **tags**: architecture, harness-engineering, stanford-hai, research, agent-harness
 - **commits**: a2842bc, 1796521, 08e03f0, 7bf75d4
 
 ## what_happened

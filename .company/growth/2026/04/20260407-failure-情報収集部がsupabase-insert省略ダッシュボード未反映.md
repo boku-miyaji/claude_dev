@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: intelligence, sub-agent
+- **tags**: intelligence, sub-agent, claude-dev
 
 ## what_happened
 ファイル保存のみでsecretary_notes+news_items未登録

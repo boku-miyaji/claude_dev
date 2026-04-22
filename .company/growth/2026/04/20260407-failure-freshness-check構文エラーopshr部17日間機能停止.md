@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: freshness, silent-failure
+- **tags**: freshness, silent-failure, claude-dev
 
 ## what_happened
 forループ構文エラー+additionalContext未返却→鮮度チェック未実行

@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: low
 - **status**: active
 - **source**: backfill
-- **tags**: devcontainer, zsh, powerlevel10k, DX
+- **tags**: devcontainer, zsh, powerlevel10k, DX, claude-dev
 - **commits**: d6b7fe6, c42d943, b32eeca, 6e373aa, cdb5ef5
 
 ## what_happened

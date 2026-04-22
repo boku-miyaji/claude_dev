@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: finance, invoice, skill
+- **tags**: finance, invoice, skill, claude-dev
 - **commits**: 3475c48
 
 ## what_happened

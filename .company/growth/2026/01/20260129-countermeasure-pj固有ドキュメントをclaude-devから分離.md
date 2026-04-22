@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: repository-boundary, gitignore, revert, project-rikyu
+- **tags**: repository-boundary, gitignore, revert, project-rikyu, rikyu
 - **commits**: 33e8662, ccabbe6, 4ce2d86
 
 ## what_happened

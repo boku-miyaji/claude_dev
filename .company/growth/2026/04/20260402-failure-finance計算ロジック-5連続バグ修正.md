@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, finance, calculation, data-modeling
+- **tags**: tooling, finance, calculation, data-modeling, claude-dev
 - **commits**: ccffbb3, 06dd65d, 61388ee, 9576550, 1553b55
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: devcontainer, gpu, docker, 開発環境
+- **tags**: devcontainer, gpu, docker, 開発環境, claude-dev
 - **commits**: fd6a463
 
 ## what_happened

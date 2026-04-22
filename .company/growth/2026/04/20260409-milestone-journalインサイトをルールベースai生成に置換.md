@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: ai, journal, insight
+- **tags**: ai, journal, insight, claude-dev
 - **commits**: 4c0cd87, e4c741b
 
 ## what_happened

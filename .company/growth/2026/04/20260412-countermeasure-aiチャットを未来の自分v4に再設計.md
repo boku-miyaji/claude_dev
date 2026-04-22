@@ -5,7 +5,7 @@
 - **category**: communication / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: ai-partner, ux, tone
+- **tags**: ai-partner, ux, tone, focus-you
 - **commits**: 4569a5c, f969918
 
 ## what_happened

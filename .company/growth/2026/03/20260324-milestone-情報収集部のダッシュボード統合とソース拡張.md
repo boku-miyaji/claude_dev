@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: intelligence, dashboard, feedback-loop
+- **tags**: intelligence, dashboard, feedback-loop, claude-dev
 - **commits**: 7573ea2, 735261f, e413833, a71eea7, 4a75a0f
 
 ## what_happened

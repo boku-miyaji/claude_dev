@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: refactoring, organization, shared-module
+- **tags**: refactoring, organization, shared-module, claude-dev
 - **commits**: e9bf31f, b403847, deee582, 05b4fc2
 
 ## what_happened

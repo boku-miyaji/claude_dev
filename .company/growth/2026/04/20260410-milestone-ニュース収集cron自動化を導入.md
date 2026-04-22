@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: cron, intelligence, github-actions, sse
+- **tags**: cron, intelligence, github-actions, sse, claude-dev
 - **commits**: 121e716, cf781ff
 
 ## what_happened

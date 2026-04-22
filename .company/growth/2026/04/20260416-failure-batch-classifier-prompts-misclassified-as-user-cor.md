@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: auto-detected, daily-batch
+- **tags**: auto-detected, daily-batch, claude-dev
 
 ## what_happened
 A growth/correction detector repeatedly flagged automated batch prompts (prompt classification and failure-signal analysis) as user 'correction' signals, producing 31 duplicate false-positive entries.

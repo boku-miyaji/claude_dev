@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: critical
 - **status**: resolved
 - **source**: manual
-- **tags**: ai-chat, migration
+- **tags**: ai-chat, migration, focus-you
 
 ## what_happened
 SELECT tool_call_id FROM messagesがエラー。全会話でhistory_count=0

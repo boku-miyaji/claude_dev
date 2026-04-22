@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: self-focus, product-vision, phases
+- **tags**: self-focus, product-vision, phases, claude-dev
 - **commits**: 5148eca, c1999b0, b965291, b99a46d, 2e21291
 
 ## what_happened

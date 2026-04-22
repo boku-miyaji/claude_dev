@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: low
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, news, legacy, dom-manipulation
+- **tags**: tooling, news, legacy, dom-manipulation, claude-dev
 - **commits**: ff44531, 313d8c7, 1f94f45
 
 ## what_happened

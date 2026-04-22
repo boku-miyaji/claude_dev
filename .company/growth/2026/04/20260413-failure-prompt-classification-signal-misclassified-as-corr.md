@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: auto-detected, daily-batch
+- **tags**: auto-detected, daily-batch, claude-dev
 
 ## what_happened
 A batch prompt-tagging instruction ('Classify each prompt... output JSON with id and tags') was repeatedly logged as a [correction] failure signal 218 times, polluting the failure analysis pipeline.

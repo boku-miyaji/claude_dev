@@ -5,7 +5,7 @@
 - **category**: process / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: claude-md, harness
+- **tags**: claude-md, harness, agent-harness
 
 ## what_happened
 手順的記述を全てCLAUDE.mdに直書き→指示が埋もれ遵守率低下

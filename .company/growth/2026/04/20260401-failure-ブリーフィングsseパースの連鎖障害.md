@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: devops, sse, jwt, edge-function, error-handling
+- **tags**: devops, sse, jwt, edge-function, error-handling, claude-dev
 - **commits**: 3145ebe, 036f624, c9379ae, 5f45b1a, 75c3665
 
 ## what_happened

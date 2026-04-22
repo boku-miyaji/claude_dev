@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: growth-chronicle, llm-classification, hooks
+- **tags**: growth-chronicle, llm-classification, hooks, claude-dev
 - **commits**: 05aaa4c, 5511b7f, cba2202
 
 ## what_happened

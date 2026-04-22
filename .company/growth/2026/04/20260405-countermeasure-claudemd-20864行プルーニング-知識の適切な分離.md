@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: critical
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, claude-md, pruning, context-optimization, IMP-001
+- **tags**: architecture, claude-md, pruning, context-optimization, IMP-001, claude-dev
 - **commits**: fc34479
 
 ## what_happened

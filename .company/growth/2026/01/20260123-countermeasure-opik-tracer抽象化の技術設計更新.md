@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: low
 - **status**: active
 - **source**: backfill
-- **tags**: Opik, tracer, 評価基盤, 抽象化
+- **tags**: Opik, tracer, 評価基盤, 抽象化, claude-dev
 - **commits**: 7dfa3e1
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: supabase, network, hooks
+- **tags**: supabase, network, hooks, claude-dev
 - **commits**: 8e92057
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: GNN, 回路図生成, V3パイプライン, 粒度設計
+- **tags**: GNN, 回路図生成, V3パイプライン, 粒度設計, polaris-circuit
 - **commits**: b688a54
 
 ## what_happened

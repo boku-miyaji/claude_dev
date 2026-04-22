@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, dashboard, home, news, schedule
+- **tags**: tooling, dashboard, home, news, schedule, claude-dev
 - **commits**: 333ea66, 8a0241b, 98d0979
 
 ## what_happened

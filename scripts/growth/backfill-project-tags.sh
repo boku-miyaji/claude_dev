@@ -109,45 +109,42 @@ print(f\"... total {len(ups)} updates\")
   exit 0
 fi
 
-# Apply updates via Management API in batches
-echo "[backfill] applying updates..."
+# Apply updates via REST API PATCH (one-by-one, safer)
+echo "[backfill] applying updates via REST PATCH..."
 
 UPDATES_FILE="$UPDATES_FILE" python3 <<'PYEOF'
-import json, os, subprocess, urllib.request
+import json, os, urllib.request
 
 updates = json.load(open(os.environ['UPDATES_FILE']))
 SUPABASE_URL = os.environ['SUPABASE_URL']
-TOKEN = os.environ['SUPABASE_ACCESS_TOKEN']
+ANON = os.environ['SUPABASE_ANON_KEY']
+INGEST = os.environ.get('SUPABASE_INGEST_KEY', '')
 
-# Use Management API batch with a single SQL that unions CASE expressions
-# Simpler: issue one SQL with multiple UPDATEs separated by ;
-BATCH = 40
 total_done = 0
-for i in range(0, len(updates), BATCH):
-    chunk = updates[i:i+BATCH]
-    stmts = []
-    for u in chunk:
-        # Quote tags array for PostgreSQL ARRAY literal
-        tags_sql = "ARRAY[" + ",".join(f"'{t}'" for t in u['tags']) + "]::text[]"
-        stmts.append(f"UPDATE growth_events SET tags = {tags_sql} WHERE id = '{u['id']}';")
-    sql = "\n".join(stmts)
-    body = json.dumps({'query': sql}).encode('utf-8')
+total_failed = 0
+for i, u in enumerate(updates, 1):
+    url = f"{SUPABASE_URL}/rest/v1/growth_events?id=eq.{u['id']}"
+    body = json.dumps({'tags': u['tags']}).encode('utf-8')
     req = urllib.request.Request(
-        f'https://api.supabase.com/v1/projects/akycymnahqypmtsfqhtr/database/query',
-        data=body,
+        url, data=body, method='PATCH',
         headers={
-            'Authorization': f'Bearer {TOKEN}',
+            'apikey': ANON,
+            'Authorization': f'Bearer {ANON}',
+            'x-ingest-key': INGEST,
             'Content-Type': 'application/json',
-        },
-        method='POST'
+            'Prefer': 'return=minimal',
+        }
     )
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:
             resp.read()
-        total_done += len(chunk)
-        print(f"  batch {i//BATCH + 1}: +{len(chunk)} (total {total_done}/{len(updates)})")
+        total_done += 1
+        if i % 20 == 0:
+            print(f"  progress {i}/{len(updates)}")
     except Exception as e:
-        print(f"  batch {i//BATCH + 1} FAILED: {e}")
+        total_failed += 1
+        if total_failed <= 5:
+            print(f"  [{u['id']}] FAILED: {e}")
 
-print(f"[backfill] done: {total_done}/{len(updates)} updated")
+print(f"[backfill] done: {total_done}/{len(updates)} updated, {total_failed} failed")
 PYEOF

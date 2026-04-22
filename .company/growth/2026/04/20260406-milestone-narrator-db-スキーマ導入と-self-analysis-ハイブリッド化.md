@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: narrator, self-analysis, schema, product-vision
+- **tags**: narrator, self-analysis, schema, product-vision, focus-you
 - **commits**: 011c977, bb13c57, ea69a5f, e0b3a64, 04546db, fc285d1
 
 ## what_happened

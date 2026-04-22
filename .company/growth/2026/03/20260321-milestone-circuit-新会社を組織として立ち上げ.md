@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: company, circuit, 組織設計
+- **tags**: company, circuit, 組織設計, polaris-circuit
 - **commits**: a3b7ec0
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: auto-detected, daily-batch
+- **tags**: auto-detected, daily-batch, claude-dev
 
 ## what_happened
 A batch classification prompt (tagging prompts with pj/category) was repeatedly logged as a 'correction' failure signal 77 times, polluting the failure-signal stream.

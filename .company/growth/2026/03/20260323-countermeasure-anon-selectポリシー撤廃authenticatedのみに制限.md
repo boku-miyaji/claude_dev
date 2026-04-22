@@ -5,7 +5,7 @@
 - **category**: security / **severity**: critical
 - **status**: active
 - **source**: backfill
-- **tags**: security, rls, supabase
+- **tags**: security, rls, supabase, claude-dev
 - **commits**: 0cc70aa
 
 ## what_happened

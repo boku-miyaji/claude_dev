@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: daily-digest
-- **tags**: growth, automation, hook, self-reflection
+- **tags**: growth, automation, hook, self-reflection, focus-you
 - **commits**: 571bef2
 
 ## what_happened

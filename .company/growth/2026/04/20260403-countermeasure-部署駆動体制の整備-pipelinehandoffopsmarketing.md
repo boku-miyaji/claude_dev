@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: pipeline, handoff, departments, skills
+- **tags**: pipeline, handoff, departments, skills, claude-dev
 - **commits**: 2f1fe10, cb19f79, eb08814, 022d78f, 05b6ae8, 041bbcf
 
 ## what_happened

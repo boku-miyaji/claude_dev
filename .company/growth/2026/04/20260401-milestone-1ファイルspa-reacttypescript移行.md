@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: critical
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, react, typescript, migration, vite
+- **tags**: architecture, react, typescript, migration, vite, claude-dev
 - **commits**: dcad590, 7bccee5, b834c30, 6989f6f, df8c71d, d050954
 
 ## what_happened

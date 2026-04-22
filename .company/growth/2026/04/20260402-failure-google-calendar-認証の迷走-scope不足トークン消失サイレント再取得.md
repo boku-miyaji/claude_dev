@@ -5,7 +5,7 @@
 - **category**: security / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: security, oauth, google-calendar, token-management
+- **tags**: security, oauth, google-calendar, token-management, claude-dev
 - **commits**: d212066, 6dd5699
 
 ## what_happened

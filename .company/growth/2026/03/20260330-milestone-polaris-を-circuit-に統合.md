@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: refactor, organization, company
+- **tags**: refactor, organization, company, polaris-circuit
 - **commits**: 41a9ffa
 
 ## what_happened

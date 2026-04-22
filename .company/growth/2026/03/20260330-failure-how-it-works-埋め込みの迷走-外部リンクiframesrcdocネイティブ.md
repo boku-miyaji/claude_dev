@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: low
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, iframe, security-headers, spa
+- **tags**: tooling, iframe, security-headers, spa, claude-dev
 - **commits**: 0718690, 635ccd1, fd10f20, 9ada1d8, 6d402e3
 
 ## what_happened

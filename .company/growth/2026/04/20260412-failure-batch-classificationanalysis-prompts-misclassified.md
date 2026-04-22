@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: auto-detected, daily-batch
+- **tags**: auto-detected, daily-batch, claude-dev
 
 ## what_happened
 Automated batch prompts (prompt classifier and failure-signal analyzer) are being logged as [correction] signals, flooding the failure signal buffer with 386 entries that are actually normal system invocations.

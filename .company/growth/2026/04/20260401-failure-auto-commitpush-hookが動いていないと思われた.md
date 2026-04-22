@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: hook, auto-save
+- **tags**: hook, auto-save, claude-dev
 
 ## what_happened
 commit+pushして→hookで自動化されているはずなのに手動確認を求められた

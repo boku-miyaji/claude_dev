@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: legacy, vite
+- **tags**: legacy, vite, focus-you
 
 ## what_happened
 ViteビルドでmarkedがESモジュール化→グローバル未公開→プレーンテキスト表示

@@ -5,7 +5,7 @@
 - **category**: communication / **severity**: low
 - **status**: active
 - **source**: backfill
-- **tags**: pptx, 資料制作, scotch-care
+- **tags**: pptx, 資料制作, scotch-care, claude-dev
 - **commits**: 748f984, c5837fd, 8693e68
 
 ## what_happened

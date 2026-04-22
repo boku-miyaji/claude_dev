@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, chat, edge-function, data-quality
+- **tags**: architecture, chat, edge-function, data-quality, focus-you
 - **commits**: 5351385
 
 ## what_happened

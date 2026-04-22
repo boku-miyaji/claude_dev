@@ -5,6 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: manual
+- **tags**: agent-harness
 
 ## what_happened
 pipeline_runs + correction_log テーブル作成、/company スキル Step 5 に必須記録を組み込み、How It Works に思想を反映

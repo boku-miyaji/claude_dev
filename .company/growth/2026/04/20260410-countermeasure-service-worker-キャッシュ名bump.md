@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: low
 - **status**: active
 - **source**: daily-digest
-- **tags**: pwa, service-worker, cache
+- **tags**: pwa, service-worker, cache, claude-dev
 - **commits**: 722ae71
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, dreams, goals, wishlist, ui-iteration, auto-classification
+- **tags**: tooling, dreams, goals, wishlist, ui-iteration, auto-classification, claude-dev
 - **commits**: 42bdfe6, 1e76dcf, 128ed5e, d9c3f9d, e0f8dd0, c66ef6c, e5bce26, 38d4d29, 5f8e438, 3cbce4e, 3554149
 
 ## what_happened

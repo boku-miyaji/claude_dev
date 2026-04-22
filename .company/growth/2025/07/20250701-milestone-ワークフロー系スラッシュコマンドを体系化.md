@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: workflow, slash-commands, standardization
+- **tags**: workflow, slash-commands, standardization, claude-dev
 - **commits**: 3d5695d
 
 ## what_happened

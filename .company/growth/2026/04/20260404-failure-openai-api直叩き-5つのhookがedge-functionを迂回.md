@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, security, edge-function, openai, api-pattern
+- **tags**: architecture, security, edge-function, openai, api-pattern, focus-you
 - **commits**: f6bdc22
 
 ## what_happened

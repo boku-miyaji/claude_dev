@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: 見積もり, 計測, hook
+- **tags**: 見積もり, 計測, hook, claude-dev
 - **commits**: 8086659, aee75a2, afe2ab9
 
 ## what_happened

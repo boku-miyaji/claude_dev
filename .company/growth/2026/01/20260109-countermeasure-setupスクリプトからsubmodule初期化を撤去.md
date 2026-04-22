@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: low
 - **status**: active
 - **source**: backfill
-- **tags**: submodule, cleanup
+- **tags**: submodule, cleanup, claude-dev
 - **commits**: 89a6c50, 1adcc2f
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: freshness, automation, company, hook
+- **tags**: freshness, automation, company, hook, agent-harness
 - **commits**: 32b8029, ad048d3, 45633bb
 
 ## what_happened

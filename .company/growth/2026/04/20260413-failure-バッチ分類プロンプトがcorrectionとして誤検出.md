@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: auto-detected, daily-batch
+- **tags**: auto-detected, daily-batch, claude-dev
 
 ## what_happened
 バッチ処理用の分類プロンプト(Classify each prompt...)とfailure分析プロンプト自身が、failure signal収集機構により[correction]シグナルとして大量に誤記録されている

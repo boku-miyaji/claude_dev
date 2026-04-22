@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: skills, refactor, workflow
+- **tags**: skills, refactor, workflow, claude-dev
 - **commits**: 4db27b1, 4bf80f4
 
 ## what_happened

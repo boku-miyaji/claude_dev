@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: security, edge-function, openai
+- **tags**: security, edge-function, openai, claude-dev
 - **commits**: f6bdc22, 5351385
 
 ## what_happened

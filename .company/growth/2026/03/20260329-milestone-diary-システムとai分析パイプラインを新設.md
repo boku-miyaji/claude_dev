@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: diary, ai-analysis, supabase
+- **tags**: diary, ai-analysis, supabase, focus-you
 - **commits**: ae50518, eac37dd
 
 ## what_happened

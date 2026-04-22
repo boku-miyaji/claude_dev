@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: daily-digest
-- **tags**: agent-design, design-principles, 知見取り込み
+- **tags**: agent-design, design-principles, 知見取り込み, agent-harness
 - **commits**: 9a07abe
 
 ## what_happened

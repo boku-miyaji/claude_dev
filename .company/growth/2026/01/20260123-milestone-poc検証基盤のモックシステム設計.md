@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: PoC, mock, API設計, base_framework
+- **tags**: PoC, mock, API設計, base_framework, claude-dev
 - **commits**: 86d275f, ff4527e, d755ea5
 
 ## what_happened

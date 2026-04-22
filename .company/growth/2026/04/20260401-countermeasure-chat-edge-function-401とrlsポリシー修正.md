@@ -5,7 +5,7 @@
 - **category**: security / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: security, auth, rls
+- **tags**: security, auth, rls, claude-dev
 - **commits**: 75c3665, 769df04, 0a5cb49
 
 ## what_happened

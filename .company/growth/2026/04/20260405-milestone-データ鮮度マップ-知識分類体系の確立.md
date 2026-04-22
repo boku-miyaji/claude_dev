@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, freshness, knowledge-taxonomy, tacit-knowledge, update-chain
+- **tags**: architecture, freshness, knowledge-taxonomy, tacit-knowledge, update-chain, rikyu
 - **commits**: 526b0d9, e50dcd8
 
 ## what_happened

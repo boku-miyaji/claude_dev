@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: auto-detected, daily-batch
+- **tags**: auto-detected, daily-batch, claude-dev
 
 ## what_happened
 Hookのfailure-signal検出器が、バッチ処理で呼ばれるプロンプト分類・成長記録アナリストのシステムプロンプトを「修正フィードバック」として279件も記録している。実際はユーザーからの修正ではなく、claude --print経由のバッチLLM呼び出しのプロンプト本文。

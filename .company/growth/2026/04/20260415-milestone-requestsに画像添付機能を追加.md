@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: active
 - **source**: daily-digest
-- **tags**: requests, attachments, supabase
+- **tags**: requests, attachments, supabase, claude-dev
 - **commits**: 29d5ee9, 1ed573e
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: medium
 - **status**: active
 - **source**: daily-digest
-- **tags**: ai-partner, プロンプト改善, 日本語品質, Edge Function
+- **tags**: ai-partner, プロンプト改善, 日本語品質, Edge Function, claude-dev
 - **commits**: 45bac51
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: slash-command, workflow, fix
+- **tags**: slash-command, workflow, fix, claude-dev
 - **commits**: 3bb5b57, 50f8bab, faaed08, dadc702
 
 ## what_happened

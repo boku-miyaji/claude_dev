@@ -5,7 +5,7 @@
 - **category**: process / **severity**: low
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, ui, yagni, sidebar
+- **tags**: architecture, ui, yagni, sidebar, claude-dev
 
 ## what_happened
 サイドバーに「全社（HD）」の会社切替セレクターが表示されていたが、どのページでもactiveCompanyIdを参照しておらず、選択しても何も起きない状態だった。

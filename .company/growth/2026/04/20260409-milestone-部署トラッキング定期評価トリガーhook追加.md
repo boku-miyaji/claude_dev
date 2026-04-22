@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: hook, organization, dept-tracking
+- **tags**: hook, organization, dept-tracking, agent-harness
 - **commits**: 779dee6, f2ed764
 
 ## what_happened

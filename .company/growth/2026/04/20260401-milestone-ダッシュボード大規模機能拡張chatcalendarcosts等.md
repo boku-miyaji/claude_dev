@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: dashboard, gpt-5, ai-chat
+- **tags**: dashboard, gpt-5, ai-chat, focus-you
 - **commits**: 364ecb3, 4947cbf, d1e099a, 1998b98, a5992b7, a515f44
 
 ## what_happened

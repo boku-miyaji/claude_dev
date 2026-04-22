@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: blueprint, ops, doc-freshness
+- **tags**: blueprint, ops, doc-freshness, claude-dev
 - **commits**: 893efd4, c94c509, f924a69
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, ai-chat, pdf, file-extraction, pdfjs, vite
+- **tags**: tooling, ai-chat, pdf, file-extraction, pdfjs, vite, focus-you
 - **commits**: bc528b2, e04a856, b2be99e, 3578da3, bd0e78e
 
 ## what_happened

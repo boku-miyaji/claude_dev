@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: intelligence, feedback-loop, personalization
+- **tags**: intelligence, feedback-loop, personalization, claude-dev
 - **commits**: f302aef, f126ace
 
 ## what_happened

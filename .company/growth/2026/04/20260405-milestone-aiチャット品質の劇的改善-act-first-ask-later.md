@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: quality, ai-chat, system-prompt, ux
+- **tags**: quality, ai-chat, system-prompt, ux, focus-you
 - **commits**: 49f9221, d5da859
 
 ## what_happened

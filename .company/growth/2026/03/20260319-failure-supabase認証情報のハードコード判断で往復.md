@@ -5,7 +5,7 @@
 - **category**: security / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: learning, supabase, anon-key, rls
+- **tags**: learning, supabase, anon-key, rls, claude-dev
 - **commits**: 9389f17, e5daec3
 
 ## what_happened

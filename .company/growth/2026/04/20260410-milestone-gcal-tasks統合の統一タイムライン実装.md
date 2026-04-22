@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: timeline, gcal, google-tasks, dashboard
+- **tags**: timeline, gcal, google-tasks, dashboard, claude-dev
 - **commits**: 6668b7a
 
 ## what_happened

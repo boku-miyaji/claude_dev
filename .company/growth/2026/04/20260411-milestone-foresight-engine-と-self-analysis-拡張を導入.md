@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: foresight, self-analysis, narrator, diary-rhythm
+- **tags**: foresight, self-analysis, narrator, diary-rhythm, focus-you
 - **commits**: e778c28, a48e09b, 9e40669
 
 ## what_happened

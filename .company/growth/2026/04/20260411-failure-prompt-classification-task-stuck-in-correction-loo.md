@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: auto-detected, daily-batch
+- **tags**: auto-detected, daily-batch, claude-dev
 
 ## what_happened
 A prompt classification task ('[correction] Classify each prompt...') fired repeatedly (13+ times) without successful completion, followed by recursive analysis requests

@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: prep-log, secretary, learning-loop
+- **tags**: prep-log, secretary, learning-loop, polaris-circuit
 - **commits**: 203878a, 54e8d08
 
 ## what_happened

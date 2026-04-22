@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: react, vite, migration, dashboard, zustand
+- **tags**: react, vite, migration, dashboard, zustand, focus-you
 - **commits**: dcad590, 7bccee5, b834c30, 6989f6f, df8c71d, d050954, 660f103
 
 ## what_happened

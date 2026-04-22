@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: governance, git, rules
+- **tags**: governance, git, rules, claude-dev
 - **commits**: 5ff67f7
 
 ## what_happened

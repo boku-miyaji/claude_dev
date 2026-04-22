@@ -5,7 +5,7 @@
 - **category**: communication / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: calendar, knowledge
+- **tags**: calendar, knowledge, claude-dev
 
 ## what_happened
 GCalのカレンダーIDをprimaryではなくyuta.miyaji@acesinc.co.jpにする指示を繰り返し

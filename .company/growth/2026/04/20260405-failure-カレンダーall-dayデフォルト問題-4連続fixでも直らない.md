@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: quality, calendar, ux, event-delegation, dom, boolean-attributes
+- **tags**: quality, calendar, ux, event-delegation, dom, boolean-attributes, claude-dev
 - **commits**: 6cded13, 6da0811, a8e7f2f, 8cf2851, f0a37c4, 80c3528
 
 ## what_happened

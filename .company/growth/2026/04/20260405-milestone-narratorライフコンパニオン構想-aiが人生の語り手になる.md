@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, narrator, life-companion, vision, diary, dreams
+- **tags**: architecture, narrator, life-companion, vision, diary, dreams, focus-you
 - **commits**: 3663866
 
 ## what_happened

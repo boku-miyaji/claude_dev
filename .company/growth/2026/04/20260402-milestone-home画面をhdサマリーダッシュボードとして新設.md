@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: dashboard, home, briefing, gpt-5-nano
+- **tags**: dashboard, home, briefing, gpt-5-nano, focus-you
 - **commits**: e49f96c, bc02f38, cadb005
 
 ## what_happened

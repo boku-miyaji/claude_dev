@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: devil-advocate, command, 意思決定支援
+- **tags**: devil-advocate, command, 意思決定支援, claude-dev
 - **commits**: 115e286, 039f539
 
 ## what_happened

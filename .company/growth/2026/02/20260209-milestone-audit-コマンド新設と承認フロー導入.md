@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: audit, approval-gate, docs-consistency
+- **tags**: audit, approval-gate, docs-consistency, claude-dev
 - **commits**: 98084b0, 49e7796
 
 ## what_happened

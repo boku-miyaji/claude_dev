@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: ロードマップ, デモ, GNN
+- **tags**: ロードマップ, デモ, GNN, polaris-circuit
 
 ## what_happened
 精度向上方針の議論を経て、最終ゴールを「GNNを使った仕様書からの回路図生成・編集デモ」と定め、対応IC種類の拡大・実データ検証を優先度順に整理した。

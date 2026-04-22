@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: mobile, pwa, react-hooks, bugfix
+- **tags**: mobile, pwa, react-hooks, bugfix, claude-dev
 - **commits**: 85b5d9d, 5adbbcd, 2bc37b2, 12f56a7
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: ux, simplification
+- **tags**: ux, simplification, claude-dev
 - **commits**: d9a68a9, c4beb90
 
 ## what_happened

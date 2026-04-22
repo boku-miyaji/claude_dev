@@ -5,7 +5,7 @@
 - **category**: security / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: rls, security, multi-tenant, supabase
+- **tags**: rls, security, multi-tenant, supabase, claude-dev
 - **commits**: 6336036, dd84012, 45cbdc4
 
 ## what_happened

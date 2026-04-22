@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: 部署運営, CLAUDE.md, 実行プロトコル
+- **tags**: 部署運営, CLAUDE.md, 実行プロトコル, polaris-circuit
 - **commits**: f3e1d86
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, calendar, timezone, utc, jst
+- **tags**: tooling, calendar, timezone, utc, jst, claude-dev
 - **commits**: 3111f2a, b1ac1d3, 0a275a7, eb5b6f9, 784576d
 
 ## what_happened

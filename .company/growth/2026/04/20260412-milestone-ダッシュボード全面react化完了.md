@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: daily-digest
-- **tags**: react, refactor, dashboard, legacy-removal
+- **tags**: react, refactor, dashboard, legacy-removal, claude-dev
 - **commits**: 12d99cf, 0f96274, 637761d, 3f34489, 3d36b97, 2cbb6ba, 779f5a1, 69b87c2
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: narrator, db, migration, dashboard
+- **tags**: narrator, db, migration, dashboard, focus-you
 - **commits**: 011c977
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: artifacts, skills, dashboard
+- **tags**: artifacts, skills, dashboard, claude-dev
 - **commits**: 2bd7f5b, cb054ca
 
 ## what_happened

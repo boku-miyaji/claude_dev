@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, claude-code, context-optimization, meta-design
+- **tags**: architecture, claude-code, context-optimization, meta-design, agent-harness
 - **commits**: ee00235
 
 ## what_happened

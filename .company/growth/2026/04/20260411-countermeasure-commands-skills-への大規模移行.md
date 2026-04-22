@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: active
 - **source**: daily-digest
-- **tags**: skills, refactor, harness
+- **tags**: skills, refactor, harness, agent-harness
 - **commits**: 4db27b1, 4bf80f4
 
 ## what_happened

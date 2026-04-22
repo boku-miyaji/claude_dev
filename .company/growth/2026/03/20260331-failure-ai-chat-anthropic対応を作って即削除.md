@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: low
 - **status**: resolved
 - **source**: manual
-- **tags**: architecture, ai, anthropic, yagni, cors
+- **tags**: architecture, ai, anthropic, yagni, cors, claude-dev
 - **commits**: 83f4d06
 
 ## what_happened

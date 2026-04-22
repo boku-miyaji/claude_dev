@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: UX, Today, time-adaptive
+- **tags**: UX, Today, time-adaptive, claude-dev
 - **commits**: 2dfa168, ec3cd80, 8055ad8
 
 ## what_happened

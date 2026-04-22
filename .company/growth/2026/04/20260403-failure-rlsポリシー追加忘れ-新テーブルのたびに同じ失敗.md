@@ -5,7 +5,7 @@
 - **category**: security / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: security, rls, checklist, migration-template
+- **tags**: security, rls, checklist, migration-template, claude-dev
 - **commits**: 1b034f3, dbf46b3, 769df04, 725d88e, bdd8e81, 44d5c36
 
 ## what_happened

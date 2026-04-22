@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: process, ai, persona, tone, prompt-engineering
+- **tags**: process, ai, persona, tone, prompt-engineering, claude-dev
 - **commits**: 8b3e5ef, 45635a7
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: resolved
 - **source**: manual
-- **tags**: calendar, auth, デグレ, 設計判断
+- **tags**: calendar, auth, デグレ, 設計判断, claude-dev
 
 ## what_happened
 legacy→React移行時、Edge Function proxy認証がうまく動かず、GIS popup+localStorageに戻した。1時間でトークンが切れる既知の問題を再発させた。

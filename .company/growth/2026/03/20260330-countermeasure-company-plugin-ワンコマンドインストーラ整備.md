@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: plugin, install, devops
+- **tags**: plugin, install, devops, agent-harness
 - **commits**: 2e1f726, 151394f, 52769d4, c77d7a2, 66019dc
 
 ## what_happened

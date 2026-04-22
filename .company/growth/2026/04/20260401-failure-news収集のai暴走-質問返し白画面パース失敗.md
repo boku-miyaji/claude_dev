@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, llm, news, json-output, prompt-engineering
+- **tags**: tooling, llm, news, json-output, prompt-engineering, claude-dev
 - **commits**: 848a82c, 7f505d0, 9e5f982
 
 ## what_happened

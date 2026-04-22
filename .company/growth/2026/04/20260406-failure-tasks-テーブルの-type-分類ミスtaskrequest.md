@@ -5,6 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
+- **tags**: claude-dev
 
 ## what_happened
 アーキ改善の10タスクを全て type=task で登録。宮路さんが実施するもの以外は request にすべきだった

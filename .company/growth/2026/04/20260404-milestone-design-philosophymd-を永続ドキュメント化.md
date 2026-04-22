@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: design-philosophy, documentation
+- **tags**: design-philosophy, documentation, claude-dev
 - **commits**: f85aff4, 82a13be
 
 ## what_happened

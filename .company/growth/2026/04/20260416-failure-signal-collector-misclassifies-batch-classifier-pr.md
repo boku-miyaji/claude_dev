@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: auto-detected, daily-batch
+- **tags**: auto-detected, daily-batch, claude-dev
 
 ## what_happened
 The failure-signal pipeline repeatedly ingested its own batch prompt-classifier and failure-analyzer invocations as [correction] signals, creating a feedback loop of 167 near-duplicate entries.

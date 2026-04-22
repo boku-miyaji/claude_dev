@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, dashboard, sidebar, mobile, chat-ux
+- **tags**: tooling, dashboard, sidebar, mobile, chat-ux, focus-you
 - **commits**: f0ff16b, 4aaf853, f4059d7, ce94a42
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: supabase, multi-server, plugin-cache
+- **tags**: supabase, multi-server, plugin-cache, claude-dev
 - **commits**: 010b20f, c21d072, cc2f9d8, ae238e1
 
 ## what_happened

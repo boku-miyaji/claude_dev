@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: low
 - **status**: active
 - **source**: backfill
-- **tags**: skill, demo-generator, template
+- **tags**: skill, demo-generator, template, claude-dev
 - **commits**: 486ea85
 
 ## what_happened

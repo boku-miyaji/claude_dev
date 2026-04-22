@@ -5,7 +5,7 @@
 - **category**: quality / **severity**: medium
 - **status**: active
 - **source**: daily-digest
-- **tags**: bugfix, constraint, build
+- **tags**: bugfix, constraint, build, focus-you
 - **commits**: a417754, 7f38151
 
 ## what_happened

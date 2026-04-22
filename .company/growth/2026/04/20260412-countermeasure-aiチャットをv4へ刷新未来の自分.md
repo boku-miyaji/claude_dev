@@ -5,7 +5,7 @@
 - **category**: communication / **severity**: medium
 - **status**: active
 - **source**: daily-digest
-- **tags**: ai-partner, tone, product-vision, chat
+- **tags**: ai-partner, tone, product-vision, chat, focus-you
 - **commits**: 4569a5c, 9f80d4e, 243a66d, 20b3028, 6fdb1b0, c14dfe6, f969918
 
 ## what_happened

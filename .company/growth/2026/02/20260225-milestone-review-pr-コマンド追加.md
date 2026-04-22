@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: low
 - **status**: active
 - **source**: backfill
-- **tags**: slash-command, pr-review, automation
+- **tags**: slash-command, pr-review, automation, claude-dev
 - **commits**: 814f25c
 
 ## what_happened

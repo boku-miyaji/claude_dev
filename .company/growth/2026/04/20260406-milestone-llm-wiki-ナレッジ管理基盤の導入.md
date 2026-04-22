@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: knowledge-management, hooks, lint
+- **tags**: knowledge-management, hooks, lint, claude-dev
 - **commits**: 0197514, f1a0d20, 15a0323
 
 ## what_happened

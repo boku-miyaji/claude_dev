@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: high
 - **status**: active
 - **source**: daily-digest
-- **tags**: supabase, edge-function, auth, rules
+- **tags**: supabase, edge-function, auth, rules, claude-dev
 - **commits**: 3b1eefc
 
 ## what_happened

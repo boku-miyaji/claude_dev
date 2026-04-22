@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: tooling, ai, model-migration, configuration
+- **tags**: tooling, ai, model-migration, configuration, claude-dev
 - **commits**: 075a0a5, 364ecb3, 8aa04e5
 
 ## what_happened

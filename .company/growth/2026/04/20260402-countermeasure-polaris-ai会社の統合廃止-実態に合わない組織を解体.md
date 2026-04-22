@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: organization, yagni, company-lifecycle
+- **tags**: organization, yagni, company-lifecycle, polaris-circuit
 - **commits**: 41a9ffa, 42d1e1f, ec09237
 
 ## what_happened

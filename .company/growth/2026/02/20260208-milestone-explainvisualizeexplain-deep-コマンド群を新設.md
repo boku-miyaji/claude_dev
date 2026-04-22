@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: slash-command, explain, visualize, documentation
+- **tags**: slash-command, explain, visualize, documentation, claude-dev
 - **commits**: 5297bab, 0cf7681, 37fb95b
 
 ## what_happened

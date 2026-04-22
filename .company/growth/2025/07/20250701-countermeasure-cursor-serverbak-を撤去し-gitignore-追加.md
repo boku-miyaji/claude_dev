@@ -5,7 +5,7 @@
 - **category**: devops / **severity**: low
 - **status**: active
 - **source**: backfill
-- **tags**: gitignore, cleanup, repo-hygiene
+- **tags**: gitignore, cleanup, repo-hygiene, claude-dev
 - **commits**: 6c8017f, 2abe79e
 
 ## what_happened

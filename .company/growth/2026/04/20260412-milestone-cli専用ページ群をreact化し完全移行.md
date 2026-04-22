@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: react, refactor, dashboard, legacy-removal
+- **tags**: react, refactor, dashboard, legacy-removal, claude-dev
 - **commits**: 779f5a1, 3d36b97, 3f34489, 637761d, 0f96274, 12d99cf, 2cbb6ba, 69b87c2
 
 ## what_happened

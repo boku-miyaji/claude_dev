@@ -5,7 +5,7 @@
 - **category**: organization / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: hd, claude-code, orgchart, refactor
+- **tags**: hd, claude-code, orgchart, refactor, agent-harness
 - **commits**: ee00235, 4b4304c, af0a6ee, 88a28ef, 42d1e1f, 35a9a42
 
 ## what_happened

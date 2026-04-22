@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: github-actions, intelligence, dashboard, supabase
+- **tags**: github-actions, intelligence, dashboard, supabase, claude-dev
 - **commits**: 7104dcf, 21e6321, f8c3d98
 
 ## what_happened

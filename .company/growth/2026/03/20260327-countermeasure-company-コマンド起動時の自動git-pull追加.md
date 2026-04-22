@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: hooks, company, sync
+- **tags**: hooks, company, sync, agent-harness
 - **commits**: f2fc805
 
 ## what_happened

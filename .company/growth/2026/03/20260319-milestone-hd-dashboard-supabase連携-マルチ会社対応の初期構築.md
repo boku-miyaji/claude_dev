@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: HD, dashboard, supabase, plugin, multi-company
+- **tags**: HD, dashboard, supabase, plugin, multi-company, claude-dev
 - **commits**: dc4631a, edf55c2, bbc3418, ca16a4d, 1a069ab
 
 ## what_happened

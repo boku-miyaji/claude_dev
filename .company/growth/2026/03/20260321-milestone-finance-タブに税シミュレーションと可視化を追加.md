@@ -5,7 +5,7 @@
 - **category**: tooling / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: finance, dashboard, 可視化, 税シミュレーション
+- **tags**: finance, dashboard, 可視化, 税シミュレーション, claude-dev
 - **commits**: 13c013b, 4e48b8d, 259211b, 81e71b4, b7a4f8e, a23860a
 
 ## what_happened

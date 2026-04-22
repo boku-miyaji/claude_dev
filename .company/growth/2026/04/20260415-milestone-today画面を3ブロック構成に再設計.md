@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: medium
 - **status**: active
 - **source**: daily-digest
-- **tags**: today, ux, refactor
+- **tags**: today, ux, refactor, claude-dev
 - **commits**: fb01d88, 128391f
 
 ## what_happened

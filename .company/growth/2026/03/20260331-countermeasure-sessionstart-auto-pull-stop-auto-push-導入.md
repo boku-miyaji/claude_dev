@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: hooks, git-automation, workflow
+- **tags**: hooks, git-automation, workflow, claude-dev
 - **commits**: b67e612
 
 ## what_happened

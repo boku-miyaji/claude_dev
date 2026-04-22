@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: active
 - **source**: backfill
-- **tags**: hooks, docs-sync, automation
+- **tags**: hooks, docs-sync, automation, claude-dev
 - **commits**: 0c06975, 42bdfe6, 42a5ea6, 1fd2a93
 
 ## what_happened

@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: pipeline, orchestration, process
+- **tags**: pipeline, orchestration, process, agent-harness
 - **commits**: 388d5ea, dbf07a2
 
 ## what_happened

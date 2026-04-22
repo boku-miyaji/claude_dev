@@ -5,7 +5,7 @@
 - **category**: security / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: RLS, supabase, secrets, auth
+- **tags**: RLS, supabase, secrets, auth, claude-dev
 - **commits**: 2698445, d6581b0, 9eafc54, 986b4ec, cfaede8
 
 ## what_happened

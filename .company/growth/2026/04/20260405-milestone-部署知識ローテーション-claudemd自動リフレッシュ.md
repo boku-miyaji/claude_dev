@@ -5,7 +5,7 @@
 - **category**: automation / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: automation, department, knowledge-rotation, claude-md, maintenance
+- **tags**: automation, department, knowledge-rotation, claude-md, maintenance, claude-dev
 - **commits**: cb66f2e
 
 ## what_happened

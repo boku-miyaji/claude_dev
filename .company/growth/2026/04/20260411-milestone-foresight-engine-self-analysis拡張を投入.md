@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: daily-digest
-- **tags**: foresight, narrator, self-analysis, product-vision
+- **tags**: foresight, narrator, self-analysis, product-vision, focus-you
 - **commits**: e778c28, a48e09b
 
 ## what_happened

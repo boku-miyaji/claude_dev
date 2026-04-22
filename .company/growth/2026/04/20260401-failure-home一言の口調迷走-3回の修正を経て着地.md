@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: resolved
 - **source**: manual
-- **tags**: process, llm, prompt-engineering, guardrails
+- **tags**: process, llm, prompt-engineering, guardrails, claude-dev
 - **commits**: f3a8da3, 13b5d9d, fa5f761, 29692a5, 837c3a9, 18f3344
 
 ## what_happened

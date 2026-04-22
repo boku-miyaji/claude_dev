@@ -5,7 +5,7 @@
 - **category**: architecture / **severity**: high
 - **status**: active
 - **source**: backfill
-- **tags**: voting-app, initial-setup, sqlite
+- **tags**: voting-app, initial-setup, sqlite, claude-dev
 - **commits**: 5e05e3d, 101310c, ba06193
 
 ## what_happened
