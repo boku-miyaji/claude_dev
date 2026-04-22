@@ -29,7 +29,7 @@ interface ReportNewsItem {
   collected_at: string | null
 }
 
-type Tab = 'research' | 'news' | 'sources'
+type Tab = 'research' | 'news' | 'sources' | 'interests'
 
 export function Reports() {
   const initialTab = window.location.hash === '#sources' ? 'sources' : 'research'
@@ -40,7 +40,7 @@ export function Reports() {
       <PageHeader title="Reports" description="調査レポート・ニュース" />
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', paddingBottom: 0 }}>
-        {([['research', '調査レポート'], ['news', 'ニュース'], ['sources', 'ソース設定']] as const).map(([id, label]) => (
+        {([['research', '調査レポート'], ['news', 'ニュース'], ['interests', '気になった記事'], ['sources', 'ソース設定']] as const).map(([id, label]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
@@ -57,7 +57,7 @@ export function Reports() {
         ))}
       </div>
 
-      {tab === 'research' ? <ResearchReports /> : tab === 'news' ? <NewsFeed /> : <SourceSettings />}
+      {tab === 'research' ? <ResearchReports /> : tab === 'news' ? <NewsFeed /> : tab === 'interests' ? <InterestArticles /> : <SourceSettings />}
     </div>
   )
 }
@@ -501,6 +501,219 @@ function NewsFeed() {
               </div>
             )
           })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================
+// Interest Articles
+// ============================================================
+
+interface InterestArticle {
+  id: string
+  url: string
+  title: string | null
+  notes: string | null
+  tags: string[]
+  source_domain: string | null
+  created_at: string
+  analyzed: boolean
+  gap_reason: string | null
+  gap_type: string | null
+  added_to_sources: boolean
+}
+
+function GapBadge({ article }: { article: InterestArticle }) {
+  if (!article.analyzed) {
+    return (
+      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--surface2)', color: 'var(--text3)' }}>
+        未分析
+      </span>
+    )
+  }
+  if (article.gap_type === 'already_covered') {
+    return (
+      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--green-bg, #e6f4ea)', color: 'var(--green)' }}>
+        収集済み
+      </span>
+    )
+  }
+  if (article.gap_type === 'missing_domain') {
+    if (article.added_to_sources) {
+      return (
+        <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--accent-bg)', color: 'var(--accent)' }}>
+          ソース追加済み
+        </span>
+      )
+    }
+    return (
+      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--red-bg)', color: 'var(--red)' }}>
+        ドメイン未登録
+      </span>
+    )
+  }
+  if (article.gap_type === 'missing_keyword') {
+    return (
+      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#fff3e0', color: '#e65100' }}>
+        キーワード追加
+      </span>
+    )
+  }
+  if (article.gap_type === 'missing_x_account') {
+    return (
+      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--surface2)', color: 'var(--text3)' }}>
+        Xアカウント未登録
+      </span>
+    )
+  }
+  return null
+}
+
+function InterestArticles() {
+  const [articles, setArticles] = useState<InterestArticle[]>([])
+  const [loading, setLoading] = useState(true)
+  const [url, setUrl] = useState('')
+  const [title, setTitle] = useState('')
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const load = useCallback(async () => {
+    try {
+      const { data } = await supabase
+        .from('interest_articles')
+        .select('*')
+        .order('created_at', { ascending: false })
+      setArticles((data as InterestArticle[]) || [])
+    } catch {
+      setArticles([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function handleSave() {
+    if (!url.trim()) return
+    setSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data } = await supabase
+        .from('interest_articles')
+        .insert({
+          url: url.trim(),
+          title: title.trim() || null,
+          notes: notes.trim() || null,
+          user_id: user?.id ?? null,
+        })
+        .select()
+        .single()
+      if (data) {
+        setArticles((prev) => [data as InterestArticle, ...prev])
+        supabase.from('activity_log').insert({
+          action: 'interest_article_added',
+          metadata: { url: url.trim(), title: title.trim() || null },
+        })
+        setUrl('')
+        setTitle('')
+        setNotes('')
+      }
+    } catch (e) {
+      console.error('[InterestArticles] save error:', e)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    await supabase.from('interest_articles').delete().eq('id', id)
+    setArticles((prev) => prev.filter((a) => a.id !== id))
+  }
+
+  if (loading) return <SkeletonRows count={4} />
+
+  return (
+    <div>
+      {/* 登録フォーム */}
+      <div className="card" style={{ padding: 16, marginBottom: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <input
+            className="input"
+            placeholder="URL（必須）"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <input
+            className="input"
+            placeholder="タイトル（任意）"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <textarea
+            className="input"
+            placeholder="メモ（任意）"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            style={{ minHeight: 60, resize: 'vertical' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              className="btn btn-p btn-sm"
+              onClick={handleSave}
+              disabled={!url.trim() || saving}
+            >
+              {saving ? '保存中...' : '保存'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 記事一覧 */}
+      {articles.length === 0 ? (
+        <EmptyState icon="🔖" message="気になった記事を登録すると、情報収集部が自動的に学習します" />
+      ) : (
+        <div>
+          {articles.map((a) => (
+            <div key={a.id} className="card" style={{ marginBottom: 10, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>
+                    {a.title || a.source_domain || a.url}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+                      {a.url}
+                    </a>
+                  </div>
+                  {a.notes && (
+                    <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 6, lineHeight: 1.5 }}>
+                      {a.notes}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <GapBadge article={a} />
+                    {a.gap_reason && (
+                      <span style={{ fontSize: 10, color: 'var(--text3)' }}>{a.gap_reason}</span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+                    {new Date(a.created_at).toLocaleDateString('ja-JP')}
+                  </span>
+                  <button
+                    onClick={() => handleDelete(a.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--text3)', padding: '2px 4px' }}
+                    title="削除"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
