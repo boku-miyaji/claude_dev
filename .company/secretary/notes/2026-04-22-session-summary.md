@@ -923,3 +923,29 @@
 - /workspace/.company/departments/intelligence/CLAUDE.md
 - /workspace/.company/secretary/notes/2026-04-22-session-summary.md
 
+
+---
+## Session 2026-04-22T22:24:42
+
+### 変更ファイル
+- /workspace/.company/growth/README.md
+- /workspace/.company/growth/by-project/polaris-circuit.md
+- /workspace/.company/growth/by-project/rikyu.md
+- /workspace/.company/growth/by-project/focus-you.md
+- /workspace/.company/growth/by-project/claude-dev.md
+- /workspace/.company/growth/by-project/agent-harness.md
+- /workspace/.company/growth/2025/12/20251209-milestone-gpu対応devcontainer環境の追加.md
+- /workspace/.company/growth/2025/08/20250816-failure-投票アプリ初日-7連続fixdb認証バリデーション.md
+- /workspace/.company/growth/2025/08/20250816-countermeasure-投票方式を3-2-1法に固定してui簡素化.md
+- /workspace/.company/growth/2025/08/20250816-milestone-投票アプリの初期実装を完了.md
+- /workspace/.company/growth/2025/07/20250701-milestone-ワークフロー系スラッシュコマンドを体系化.md
+- /workspace/.company/growth/2025/07/20250701-countermeasure-cursor-serverbak-を撤去し-gitignore-追加.md
+- /workspace/.company/growth/2026/02/20260225-milestone-アルゴ側成果物テンプレートを4層構造で設計.md
+- /workspace/.company/growth/2026/02/20260211-milestone-devcontainerにsupabase-cli追加.md
+- /workspace/.company/growth/2026/02/20260211-milestone-fix-コマンド導入とワークフロー整理.md
+- /workspace/.company/growth/2026/02/20260219-failure-全体設計テンプレート-6回の修正で前提ゴール計画成果に収束.md
+- /workspace/.company/growth/2026/02/20260225-milestone-review-pr-コマンド追加.md
+- /workspace/.company/growth/2026/02/20260208-milestone-explainvisualizeexplain-deep-コマンド群を新設.md
+- /workspace/.company/growth/2026/02/20260209-milestone-audit-コマンド新設と承認フロー導入.md
+- /workspace/.company/growth/2026/02/20260207-milestone-devil-advocate-コマンド追加.md
+
