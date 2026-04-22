@@ -172,3 +172,4 @@
 {"ts":"2026-04-21T20:46:02+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"AI-3: U3 U6 algorithm","model":"default","background":false}
 {"ts":"2026-04-21T20:49:26+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"AI-2: Checkpoint + ai_tier config","model":"default","background":false}
 {"ts":"2026-04-22T17:28:24+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集部 - 4/19以降の最新AI情報収集","model":"default","background":false}
+{"ts":"2026-04-22T17:50:25+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"システム開発部 - interest_articles UI + migration","model":"default","background":false}

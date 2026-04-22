@@ -286,6 +286,44 @@ def main():
 
     print(f"[{date_str}] 情報収集を開始します...")
 
+    # ── Step 0: ギャップ分析（interest_articles → sources.yaml 自動更新）────
+    # ユーザーが「気になった記事」として登録したものを分析し、
+    # 漏れていたドメイン/キーワードを sources.yaml に反映してから収集に入る。
+    print("[collect] Step 0: ギャップ分析を実行...")
+    gap_script = Path(__file__).parent / "gap-analysis.py"
+    if gap_script.exists():
+        import subprocess
+        try:
+            result = subprocess.run(
+                [sys.executable, str(gap_script)],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if result.stdout:
+                print(result.stdout, end="" if result.stdout.endswith("\n") else "\n")
+            if result.returncode != 0 and result.stderr:
+                print(
+                    f"[collect] gap-analysis 警告: {result.stderr[:500]}",
+                    file=sys.stderr,
+                )
+        except subprocess.TimeoutExpired:
+            print(
+                "[collect] gap-analysis タイムアウト（60秒）。スキップして続行",
+                file=sys.stderr,
+            )
+        except Exception as e:
+            print(
+                f"[collect] gap-analysis 実行エラー: {e}。スキップして続行",
+                file=sys.stderr,
+            )
+    else:
+        print(
+            "[collect] gap-analysis.py が見つかりません。スキップ。",
+            file=sys.stderr,
+        )
+    print("[collect] Step 0 完了。収集を開始します。")
+
     # ソースと設定を読み込み
     sources = load_sources()
     preferences = load_preferences()
