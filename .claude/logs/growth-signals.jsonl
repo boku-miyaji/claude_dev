@@ -127,3 +127,9 @@
 {"ts":"2026-04-22T17:44:02+09:00","signal":"raw_prompt","prompt":"focus youに興味あった記事を登録できる画面を用意してくれない？\nそこから情報収集部がなぜその情報を取得できなかったのか考えて、次回から私が興味あるのを自動で取得できるようにアップデートしてから情報収集するようにして。まず、私の興味ある記事をみて、アップデートしてから情報収集をする習慣にしてほしい\n"}
 {"ts":"2026-04-22T18:11:35+09:00","signal":"raw_prompt","prompt":"クレカ出払った経費もすべて領収書が必要？\n"}
 {"ts":"2026-04-22T18:11:35+09:00","signal":"raw_prompt","prompt":"クレカ出払った経費もすべて領収書が必要？\n"}
+{"ts":"2026-04-22T18:16:02+09:00","signal":"raw_prompt","prompt":"これもfocus youにかいて\n"}
+{"ts":"2026-04-22T18:20:46+09:00","signal":"raw_prompt","prompt":"DB側の問題ではないです。接続の仕方とか他の可能性を探ってください。\n"}
+{"ts":"2026-04-22T18:16:02+09:00","signal":"raw_prompt","prompt":"これもfocus youにかいて\n"}
+{"ts":"2026-04-22T18:20:46+09:00","signal":"raw_prompt","prompt":"DB側の問題ではないです。接続の仕方とか他の可能性を探ってください。\n"}
+{"ts":"2026-04-22T20:44:59+09:00","signal":"raw_prompt","prompt":"polaris-circuitの動作環境をちゃんと書いて欲しい。\ndev-all.shが動く環境。他の人にも立ち上げられる？\n"}
+{"ts":"2026-04-22T20:47:49+09:00","signal":"raw_prompt","prompt":"Error [TurbopackInternalError]: Unable to watch /workspace/aces-rikyu-sales-proposals-poc/server/node_modules/.pnpm/next@16.1.6_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/compiled/react-refresh\n\nCaused by:\n- OS file watch limit reached. about [\"/workspace/aces-rikyu-sales-proposals-poc/server/node_modules/.pnpm/next@16.1.6_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/compiled/react-refresh\"]\n\nDebug info:\n- Execution of get_written_endpoint_with_issue\n"}

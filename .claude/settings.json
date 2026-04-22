@@ -357,7 +357,13 @@
       "WebFetch(domain:zenn.dev)",
       "Bash(sed -n '405,415p' security/page.tsx)",
       "Bash(sed -n '505,515p' security/page.tsx)",
-      "Edit(~/.claude/skills/tax-advisor/**)"
+      "Edit(~/.claude/skills/tax-advisor/**)",
+      "Bash(psql --version)",
+      "Bash(host db.akycymnahqypmtsfqhtr.supabase.co)",
+      "Bash(host akycymnahqypmtsfqhtr.supabase.co)",
+      "Bash(host aws-0-ap-northeast-1.pooler.supabase.com)",
+      "Read(//proc/sys/fs/inotify/**)",
+      "Bash(sudo sysctl *)"
     ],
     "deny": [
       "Read(**/.env)",
