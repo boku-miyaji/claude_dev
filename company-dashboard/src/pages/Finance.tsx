@@ -848,7 +848,7 @@ function FinTax() {
             ['基礎控除', '48万円'],
             ['所得税率', '累進課税 5%〜45%'],
             ['住民税', '課税所得 × 10% + 均等割 5,000円'],
-            ['個人事業税', '（事業所得 - 290万円）× 5%'],
+            ['個人事業税', '（事業所得 - 290万円）× 5%（準委任契約のみなら非課税の可能性あり）'],
             ['年間売上の予測', `請求書データ ${monthsWithData}ヶ月分から12ヶ月に按分（${fmtYen(actualRevQ)} ÷ ${monthsWithData} × 12）`],
             ['注意', 'あくまで概算です。正確な税額は税理士にご確認ください'],
           ].map(([k, v]) => (
@@ -923,6 +923,16 @@ function FinTax() {
             <div style={{ fontSize: 16, fontWeight: 600, color: k.color }}>{k.val}</div>
           </div>
         ))}
+      </div>
+
+      {/* 事業税：準委任注記 */}
+      <div style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(139,92,246,.07)', border: '1px solid rgba(139,92,246,.2)', fontSize: 12, color: '#8b5cf6', display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 16 }}>
+        <span style={{ fontWeight: 700, fontSize: 10, padding: '2px 6px', borderRadius: 3, background: 'rgba(139,92,246,.15)', whiteSpace: 'nowrap', marginTop: 1 }}>事業税</span>
+        <span style={{ lineHeight: 1.6 }}>
+          準委任契約のみの場合、請負業（第1種事業）に該当せず<strong>非課税の可能性</strong>があります。
+          確定申告書の「事業の種類」欄は <strong>「業務委託（準委任型）コンサルティング」</strong> と記載し、
+          準委任であることが明記された契約書を保管しておいてください。所得が290万円以下なら確実に¥0です。
+        </span>
       </div>
 
       {/* Collapsible detail */}
