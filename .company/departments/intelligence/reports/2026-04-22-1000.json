@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-04-22T10:00:00+09:00",
+  "period": {
+    "from": "2026-04-20",
+    "to": "2026-04-22"
+  },
+  "previous_report": "2026-04-19-briefing.md",
+  "items": [
+    {
+      "category": "company",
+      "company": "Anthropic",
+      "title": "営業高年率 $30B 突破",
+      "date": "2026-04-20",
+      "url": "https://x.com/AnthropicAI/status/2041275563466502560"
+    },
+    {
+      "category": "tools",
+      "company": "Cursor",
+      "title": "Cursor 3.0 大型リリース — Agent-First インターフェース",
+      "date": "2026-04-21",
+      "url": "https://www.infoq.com/news/2026/04/cursor-3-agent-first-interface/"
+    },
+    {
+      "category": "governance",
+      "company": "MetaComp",
+      "title": "AI Agent Governance Framework 発表",
+      "date": "2026-04-21",
+      "url": "https://www.prnewswire.com/apac/news-releases/metacomp-launches-the-worlds-first-ai-agent-governance-framework-for-regulated-financial-services-302748422.html"
+    },
+    {
+      "category": "arxiv",
+      "title": "Structured Graph Harness (SGH) — Agent実行のスケジューラ理論",
+      "date": "2026-04-13",
+      "arxiv_id": "2604.11378",
+      "url": "https://arxiv.org/abs/2604.11378"
+    },
+    {
+      "category": "arxiv",
+      "title": "GAM: Hierarchical Graph-based Agentic Memory",
+      "date": "2026-04-14",
+      "arxiv_id": "2604.12285",
+      "url": "https://arxiv.org/abs/2604.12285"
+    },
+    {
+      "category": "arxiv",
+      "title": "PAGENT: Program Analysis Guided LLM Agent",
+      "date": "2026-04-08",
+      "arxiv_id": "2604.07624",
+      "url": "https://arxiv.org/abs/2604.07624"
+    },
+    {
+      "category": "security",
+      "title": "npm 36悪質パッケージ + Axios attack継続",
+      "date": "2026-04-10",
+      "url": "https://thehackernews.com/2026/04/36-malicious-npm-packages-exploited.html"
+    },
+    {
+      "category": "ecosystem",
+      "title": "MCP 400+ サーバー登録 / v2.1 標準化確定",
+      "date": "2026-04-22",
+      "url": "https://qiita.com/shatolin/items/ca1810e419fee5fd963b"
+    }
+  ],
+  "suggestions": [
+    {
+      "title": "Multi-Agent Coordination UI（Cursor 3 参考）",
+      "priority": "high",
+      "effort": "medium",
+      "category": "design"
+    },
+    {
+      "title": "Structured Graph Harness による Task DAG 可視化",
+      "priority": "high",
+      "effort": "medium",
+      "category": "architecture"
+    },
+    {
+      "title": "GAM inspired Memory Consolidation",
+      "priority": "medium",
+      "effort": "large",
+      "category": "algorithm"
+    },
+    {
+      "title": "MCP v2.1 × focus-you agent exposure",
+      "priority": "medium",
+      "effort": "medium",
+      "category": "architecture"
+    },
+    {
+      "title": "npm/pip security audit 自動化",
+      "priority": "high",
+      "effort": "small",
+      "category": "architecture"
+    }
+  ],
+  "supabase_status": "skipped_timeout"
+}
