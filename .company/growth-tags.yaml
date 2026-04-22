@@ -1,0 +1,55 @@
+# growth_events で使う標準タグの辞書
+#
+# - 新規追加は社長承認のうえここに追記して commit する
+# - scripts/growth/record.sh はこのファイルを参照してタグ妥当性をチェック
+# - 未登録タグは warning（ブロックはしない）
+#
+# 境界判定: 「このPJが消滅したら消える知識か？」
+#   YES → PJ 固有タグ（focus-you, polaris-circuit, rikyu）
+#   NO  → 横断タグ（claude-dev, agent-harness）
+
+project:
+  description: "PJ タグ。1レコードに必ず1つ"
+  required: true
+  multi: false
+  values:
+    claude-dev:
+      description: "PJ横断・運営基盤・Hook・Supabase基盤・/companyスキル"
+    focus-you:
+      description: "個人ダッシュボード（日記・growth可視化・感情分析・Narrator）"
+    polaris-circuit:
+      description: "回路図PJ（部品データシート熟読→最適部品推薦Agent）"
+    rikyu:
+      description: "りそな向けコンサル提案・法人戦略資料"
+    agent-harness:
+      description: "Claude Code / エージェント harness 設計自体の意思決定"
+
+domain:
+  description: "領域タグ。0〜N個"
+  required: false
+  multi: true
+  values:
+    supabase: "Supabase全般（DB / RLS / Edge Function / Auth）"
+    edge-function: "Supabase Edge Function"
+    rls: "Row Level Security"
+    hook: "Claude Code Hook（SessionStart / PostToolUse / Stop等）"
+    llm-prompt: "LLMプロンプト設計"
+    cost: "コスト最適化・課金分離"
+    ui: "UI / UX"
+    frontend: "フロントエンド実装（React / Vite）"
+    backend: "バックエンド実装"
+    auth: "認証・認可"
+    ci-cd: "CI / CD / GitHub Actions"
+    testing: "テスト"
+    documentation: "ドキュメント運用"
+    migration: "DBマイグレーション"
+    security: "セキュリティ"
+    operations: "運用手順・自動化"
+
+# 予約タグ（自動検知バッチが付与。手動で付けない）
+reserved:
+  - auto-detected
+  - daily-batch
+  - daily-digest
+  - backfill
+  - manual-record
