@@ -733,7 +733,7 @@
       "timestamp": 1776752725058
     }
   },
-  "clientDataCache": null,
+  "clientDataCache": {},
   "additionalModelOptionsCache": [],
   "penguinModeOrgEnabled": false,
   "claudeAiMcpEverConnected": [
