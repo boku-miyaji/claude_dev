@@ -946,14 +946,14 @@ function TabExperienceDesign() {
           <MiniCard title="3. データが動線を作る" body="日記7件→「感情推移が見えます」→Journal。30件→「物語の弧が…」→Story。マイルストーン通知で新体験への誘導。" />
         </div>
 
-        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>サイドバー再構成案</div>
-        <Tbl headers={['カテゴリ', '項目', '表示条件']} rows={[
-          ['常時表示', 'Home / AI Chat / Journal / Tasks', '常に表示（4項目）'],
-          ['Discover', 'Weekly / Self Analysis / Story', 'データ蓄積で段階的出現（日記14件/20件/30件）'],
-          ['Plan', 'Dreams & Goals / Habits / Calendar', '常に表示（3項目）'],
-          ['More（折りたたみ）', 'Finance / News / Growth / Organization / Knowledge 等', '折りたたみ内（使用頻度低）'],
+        <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8 }}>サイドバー構成（実装済み）</div>
+        <Tbl headers={['セクション', '項目', '表示条件']} rows={[
+          ['常時', 'Home / Journal', '全ユーザー'],
+          ['Plan', 'Dreams & Goals / Habits / Calendar / Manual', '全ユーザー（Manual = Layer2→3橋渡し）'],
+          ['Know Yourself', 'Story / Roots / Patterns (Insights) / Frameworks (Self-Analysis)', '全ユーザー（日記ベース自己理解）'],
+          ['Claude Code', 'News / Growth / Organization / Finance / Prompts / Knowledge / Artifacts / API Costs / Career / Requests / Commands / Blueprint', 'claude_settings にデータがある場合のみ表示'],
         ]} />
-        <P>初日は7項目、3ヶ月後は10項目。現状の27ルートから大幅削減（提案時点21→実装27に膨張したため再整理が必要）。</P>
+        <P>PRODUCT_NAV（全ユーザー）= 10項目。CLI_NAV（Claude Code ユーザーのみ）= 12項目。News・Growth は claude_dev の出力物（情報収集部レポート・growth_events）なので CLI 側に分離。Suggestions タブは News（Reports）ページ内に統合。</P>
       </Section>
     </>
   )
