@@ -136,70 +136,178 @@ else
 fi
 
 # ============================================================
-# Task 2: 失敗シグナル要約（growth signals → growth_events）
+# Task 2: Growth シグナル LLM 分類（raw_prompt → growth_events）
 # ============================================================
-echo "--- [2/6] Growth Signal Summary ---"
+# 2026-04-22 仕様変更: keyword ベースの単一 failure 要約から、
+# Claude CLI による multi-event 分類（failure/countermeasure/decision/milestone）に移行。
+# プロンプトごとに意味を LLM が判断し、記録すべきものだけ INSERT する。
+# noise（雑談・確認）は捨てる。
+echo "--- [2/6] Growth Signal LLM Classification ---"
 
 GROWTH_LOG="$HOME/.claude/logs/growth-signals.jsonl"
-if [ -f "$GROWTH_LOG" ] && [ -s "$GROWTH_LOG" ]; then
-  SIGNAL_COUNT=$(wc -l < "$GROWTH_LOG" | tr -d ' ')
-  if [ "$SIGNAL_COUNT" -gt 0 ]; then
-    SIGNAL_TEXT=$(python3 -c "
-import json,sys
-lines = [json.loads(l) for l in open('$GROWTH_LOG') if l.strip()]
-for l in lines[-20:]:
-    print(f'[{l.get(\"signal\",\"?\")}] {l.get(\"prompt\",\"\")[:100]}')
-" 2>/dev/null)
+PROCESSED_MARKER="$SCRIPT_DIR/.growth-signals-last-processed"
 
-    if [ -n "$SIGNAL_TEXT" ]; then
-      SUMMARY=$(echo "Analyze these failure signals from a Claude Code session and respond with ONLY valid JSON:
-{\"title\": \"concise title\", \"what_happened\": \"what went wrong\", \"root_cause\": \"likely cause\", \"countermeasure\": \"suggested fix\"}
+if [ ! -f "$GROWTH_LOG" ] || [ ! -s "$GROWTH_LOG" ]; then
+  echo "  No growth signals"
+else
+  TOTAL_LINES=$(wc -l < "$GROWTH_LOG" | tr -d ' ')
+  LAST_PROCESSED=0
+  [ -f "$PROCESSED_MARKER" ] && LAST_PROCESSED=$(cat "$PROCESSED_MARKER" 2>/dev/null || echo 0)
+  [ "$LAST_PROCESSED" -gt "$TOTAL_LINES" ] && LAST_PROCESSED=0
 
-Signals (${SIGNAL_COUNT} total, showing last 20):
-${SIGNAL_TEXT}" | claude --print --model opus 2>/dev/null)
+  NEW_LINES=$((TOTAL_LINES - LAST_PROCESSED))
 
-      # Extract JSON and insert to growth_events
-      GROWTH_JSON=$(echo "$SUMMARY" | python3 -c "
-import sys,json,re
-text = sys.stdin.read()
-m = re.search(r'\{.*\}', text, re.DOTALL)
+  if [ "$NEW_LINES" -le 0 ]; then
+    echo "  No new signals (processed: ${LAST_PROCESSED}/${TOTAL_LINES})"
+  else
+    BATCH_SIZE=100
+    TO_PROCESS=$NEW_LINES
+    [ "$TO_PROCESS" -gt "$BATCH_SIZE" ] && TO_PROCESS=$BATCH_SIZE
+    echo "  ${NEW_LINES} new signals → classifying ${TO_PROCESS}..."
+
+    tail -n "$TO_PROCESS" "$GROWTH_LOG" | python3 -c "
+import json, sys, re
+for i, line in enumerate(sys.stdin, 1):
+    try:
+        d = json.loads(line)
+        p = re.sub(r'\s+', ' ', d.get('prompt', '') or '').strip()[:250]
+        if p:
+            print(f'[{i}] ({d.get(\"ts\",\"\")[:10]}) {p}')
+    except Exception:
+        pass
+" > /tmp/growth_signals_batch.txt
+
+    # LLM に渡す指示
+    cat > /tmp/growth_classify_instruct.txt <<'INSTRUCT'
+あなたは Claude Code の成長記録アナリスト。以下のユーザープロンプト群を分析し、
+growth_events に記録すべきイベント（意味のある意思決定・失敗・対策・達成）を抽出する。
+
+会話フローの中で1つの意思決定や失敗は複数プロンプトに跨るため、関連するものは1件にまとめる。
+質問・雑談・確認・単純な作業依頼（bug/fix なし）は記録しない。
+
+event_type の基準:
+- failure:        バグ・障害・ミスが起きた事実の報告（「動かない」「おかしい」「落ちた」等）
+- countermeasure: 失敗を受けた対策決定（「〜しないようにした」「〜を直した」等）
+- decision:       前向きな意思決定（「〜で行く」「〜にする」「〜を採用」等）
+- milestone:      達成・完了（「〜完了」「リリース」「動いた」等）
+
+severity: critical(本番影響) / high(動作阻害) / medium(改善必要) / low(些細)
+category: security / architecture / devops / automation / tooling / organization / process / quality / communication
+
+tags ルール:
+- PJタグを必ず1つ先頭に: claude-dev(PJ横断) / focus-you(ダッシュボード) / polaris-circuit(回路PJ) / rikyu(りそな案件) / agent-harness(Claude Code harness)
+- 判定: 「このPJが消滅したら消える知識か?」YES→PJ固有 / NO→claude-dev
+- 領域タグ（任意）: supabase, edge-function, hook, llm-prompt, cost, ui, ...
+
+出力は JSON 配列のみ（最大5件。該当なしなら [] を返す）:
+[
+  {
+    "event_type": "failure|countermeasure|decision|milestone",
+    "title": "簡潔なタイトル（40文字以内）",
+    "what_happened": "何が起きたか（100-200字）",
+    "root_cause": "原因 または null",
+    "countermeasure": "対策 または null",
+    "result": "結果 または null",
+    "severity": "critical|high|medium|low",
+    "category": "process|architecture|quality|...",
+    "tags": ["claude-dev", "..."]
+  }
+]
+
+他の文字（説明、コードフェンス等）は一切含めない。JSON 配列のみ。
+INSTRUCT
+
+    RESP=$(cat /tmp/growth_signals_batch.txt | claude --print --model opus --append-system-prompt "$(cat /tmp/growth_classify_instruct.txt)" 2>/dev/null)
+
+    if [ -z "$RESP" ]; then
+      echo "  Classification failed (empty response)"
+    else
+      # Extract JSON array
+      EVENTS_JSON=$(echo "$RESP" | python3 -c "
+import sys, re, json
+t = sys.stdin.read()
+m = re.search(r'\[[\s\S]*\]', t)
 if m:
     try:
-        c = json.loads(m.group())
-        print(json.dumps({
-            'event_date': '$(date +%Y-%m-%d)',
-            'event_type': 'failure',
-            'category': 'process',
-            'severity': 'medium',
-            'phase': 'resolve',
-            'title': c.get('title','session failure')[:200],
-            'what_happened': c.get('what_happened','')[:500],
-            'root_cause': c.get('root_cause','')[:500],
-            'countermeasure': c.get('countermeasure','')[:500],
-            'tags': ['auto-detected', 'daily-batch'],
-            'status': 'active'
-        }))
-    except: pass
+        parsed = json.loads(m.group(0))
+        if isinstance(parsed, list):
+            print(json.dumps(parsed, ensure_ascii=False))
+            sys.exit(0)
+    except Exception:
+        pass
+print('[]')
 " 2>/dev/null)
 
-      if [ -n "$GROWTH_JSON" ]; then
-        curl -4 -s -o /dev/null \
-          -X POST "${SUPABASE_URL}/rest/v1/growth_events" \
-          -H "apikey: ${SUPABASE_ANON_KEY}" \
-          -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-          -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
-          -H "Content-Type: application/json" \
-          -H "Prefer: return=minimal" \
-          -d "$GROWTH_JSON" \
-          --max-time 10 2>/dev/null || true
-        echo "  Summarized ${SIGNAL_COUNT} signals → growth_events"
-        # Archive processed signals
-        mv "$GROWTH_LOG" "${GROWTH_LOG}.$(date +%Y%m%d)" 2>/dev/null || true
+      EVENT_COUNT=$(echo "$EVENTS_JSON" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo 0)
+
+      if [ "$EVENT_COUNT" = "0" ]; then
+        echo "  LLM judged: nothing worth recording (all noise)"
+      else
+        # Build payload; ensure PJ tag + source tag
+        PAYLOAD=$(echo "$EVENTS_JSON" | python3 -c "
+import sys, json
+events = json.load(sys.stdin)
+PROJ = {'claude-dev','focus-you','polaris-circuit','rikyu','agent-harness'}
+out = []
+for e in events:
+    tags = e.get('tags') or []
+    if not any(t in PROJ for t in tags):
+        tags = ['claude-dev'] + tags
+    for m in ('auto-detected', 'daily-batch', 'llm-classified'):
+        if m not in tags:
+            tags.append(m)
+    out.append({
+        'event_date': '$(date +%Y-%m-%d)',
+        'event_type': e.get('event_type', 'failure'),
+        'category': e.get('category', 'process'),
+        'severity': e.get('severity', 'medium'),
+        'title': (e.get('title') or 'untitled')[:120],
+        'what_happened': e.get('what_happened') or '',
+        'root_cause': e.get('root_cause'),
+        'countermeasure': e.get('countermeasure'),
+        'result': e.get('result'),
+        'tags': tags,
+        'source': 'detector',
+        'status': 'active',
+    })
+print(json.dumps(out, ensure_ascii=False))
+" 2>/dev/null)
+
+        if [ -n "$PAYLOAD" ] && [ "$PAYLOAD" != "[]" ]; then
+          # Dedup by title within last 7 days
+          INSERTED=0
+          echo "$PAYLOAD" | python3 -c "
+import sys, json
+events = json.load(sys.stdin)
+for e in events:
+    print(json.dumps(e, ensure_ascii=False))
+" | while IFS= read -r row; do
+            TITLE=$(echo "$row" | python3 -c "import sys,json; print(json.load(sys.stdin)['title'])")
+            T_ENC=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$TITLE")
+            SINCE=$(date -d "7 days ago" +%Y-%m-%d)
+            DUP=$(curl -4 -s "${SUPABASE_URL}/rest/v1/growth_events?title=eq.${T_ENC}&event_date=gte.${SINCE}&select=id" \
+              -H "apikey: ${SUPABASE_ANON_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+              -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" --max-time 5 2>/dev/null)
+            if [ "$DUP" = "[]" ] || [ -z "$DUP" ]; then
+              curl -4 -s -o /dev/null -X POST "${SUPABASE_URL}/rest/v1/growth_events" \
+                -H "apikey: ${SUPABASE_ANON_KEY}" \
+                -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+                -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
+                -H "Content-Type: application/json" \
+                -H "Prefer: return=minimal" \
+                -d "$row" --max-time 10 2>/dev/null || true
+            fi
+          done
+          echo "  Classified ${EVENT_COUNT} events → growth_events (dedup applied)"
+        fi
       fi
+
+      # Advance processed marker
+      NEW_PROCESSED=$((LAST_PROCESSED + TO_PROCESS))
+      echo "$NEW_PROCESSED" > "$PROCESSED_MARKER"
     fi
   fi
-else
-  echo "  No pending signals"
 fi
 
 # ============================================================

@@ -57,9 +57,19 @@ bash scripts/growth/record.sh <event_type> <project_tag> "<title>" \
 
 ### 自動記録（バッチ）
 
-- `.claude/hooks/daily-growth-digest.sh` が毎日 `scripts/growth/generate-growth-for-day.sh` を呼び、git log + prompt_log から抽出
-- `source='daily-digest'` で INSERT される
-- 秘書が手動で確認・補強する責務を持つ
+2経路:
+
+1. **LLM ベース分類**（`daily-analysis-batch.sh [2]`）— 全プロンプト経由
+   - `UserPromptSubmit` Hook の `growth-detector.sh` が全ユーザープロンプトを raw で `~/.claude/logs/growth-signals.jsonl` に蓄積（確認・挨拶などだけ事前除外）
+   - Daily batch が Claude CLI (opus) で各プロンプトを分類: `failure / countermeasure / decision / milestone / noise`
+   - noise 以外を `source='detector'` で INSERT（title 重複は 7日以内でスキップ）
+   - キーワード判定は廃止（見逃しが多いため LLM 判定に一本化: 2026-04-22）
+
+2. **コミット+プロンプト要約**（`daily-growth-digest.sh` → `generate-growth-for-day.sh`）— git log ベース
+   - 1日分の git log + prompt_log を Claude CLI (opus) で解析
+   - `source='daily-digest'` で INSERT
+
+いずれも秘書が必要に応じて確認・補強する責務を持つ。
 
 ### Markdown ミラー生成（毎日）
 
