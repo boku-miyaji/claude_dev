@@ -19560,3 +19560,15 @@
 {"ts":"2026-04-22T21:48:59+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
 {"ts":"2026-04-22T21:49:05+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
 {"ts":"2026-04-22T21:49:09+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-22T22:01:16+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-22T22:01:16+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-22T22:01:19+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-22T22:01:20+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-22T22:01:23+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-22T22:01:27+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-22T22:01:37+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-22T22:01:37+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-22T22:01:41+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-22T22:01:42+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-22T22:02:02+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-22T22:02:02+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
