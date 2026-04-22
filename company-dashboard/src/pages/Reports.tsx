@@ -1,7 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { PageHeader, EmptyState, SkeletonRows } from '@/components/ui'
 import { marked } from 'marked'
+import {
+  adoptSuggestion,
+  checkSuggestion,
+  dismissSuggestion,
+  markImplemented,
+  rejectSuggestion,
+} from '@/lib/intelligenceSuggestions'
+import type {
+  IntelligenceSuggestion,
+  SuggestionPriority,
+  SuggestionStatus,
+} from '@/types/intelligence'
 
 interface Report {
   id: number
@@ -29,7 +41,7 @@ interface ReportNewsItem {
   collected_at: string | null
 }
 
-type Tab = 'research' | 'news' | 'sources' | 'interests'
+type Tab = 'research' | 'news' | 'interests' | 'suggestions' | 'sources'
 
 export function Reports() {
   const initialTab = window.location.hash === '#sources' ? 'sources' : 'research'
@@ -37,15 +49,15 @@ export function Reports() {
 
   return (
     <div className="page">
-      <PageHeader title="Reports" description="調査レポート・ニュース" />
+      <PageHeader title="News" description="調査レポート・ニュース・示唆" />
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', paddingBottom: 0 }}>
-        {([['research', '調査レポート'], ['news', 'ニュース'], ['interests', '気になった記事'], ['sources', 'ソース設定']] as const).map(([id, label]) => (
+        {([['research', 'レポート'], ['news', 'ニュース'], ['interests', '気になった'], ['suggestions', 'Suggestions'], ['sources', 'ソース']] as const).map(([id, label]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
             style={{
-              background: 'none', border: 'none', padding: '10px 20px', fontSize: 13,
+              background: 'none', border: 'none', padding: '10px 16px', fontSize: 13,
               fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)',
               color: tab === id ? 'var(--accent)' : 'var(--text3)',
               borderBottom: tab === id ? '2px solid var(--accent)' : '2px solid transparent',
@@ -57,7 +69,7 @@ export function Reports() {
         ))}
       </div>
 
-      {tab === 'research' ? <ResearchReports /> : tab === 'news' ? <NewsFeed /> : tab === 'interests' ? <InterestArticles /> : <SourceSettings />}
+      {tab === 'research' ? <ResearchReports /> : tab === 'news' ? <NewsFeed /> : tab === 'interests' ? <InterestArticles /> : tab === 'suggestions' ? <SuggestionsTab /> : <SourceSettings />}
     </div>
   )
 }
