@@ -354,7 +354,9 @@
       "Read(//workspace/=== TypeScript/**)",
       "Bash(/workspace/.claude/hooks/api/sb.sh help *)",
       "Bash(/workspace/.claude/hooks/api/sb.sh query *)",
-      "WebFetch(domain:zenn.dev)"
+      "WebFetch(domain:zenn.dev)",
+      "Bash(sed -n '405,415p' security/page.tsx)",
+      "Bash(sed -n '505,515p' security/page.tsx)"
     ],
     "deny": [
       "Read(**/.env)",
