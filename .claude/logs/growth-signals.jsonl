@@ -151,3 +151,4 @@
 {"ts":"2026-04-22T21:04:54+09:00","signal":"raw_prompt","prompt":"どうやったらヘルシーになるの？何もしなかったら変わらない。\n\n127.0.0.1 - anon [22/Apr/2026:04:07:51 +0000] \"GET /growth_events?event_date=eq.2026-03-28&source=eq.llm-retroactive&select=id&limit=1 HTTP/1.1\" 500 100 \"\" \"curl/7.88.1\"\n{\"code\":\"57014\",\"details\":null,\"hint\":null,\"message\":\"canceling statement due to statement timeout\"}\n127.0.0.1 - anon [22/Apr/2026:04:03:47 +0000] \"PATCH /artifacts?id=eq.121 HTTP/1.1\" 500 100 \"\" \"curl/7.88.1\"\n{\"code\":\"57014\",\"details\":null,\n"}
 {"ts":"2026-04-22T21:06:51+09:00","signal":"raw_prompt","prompt":"system-spec野どれから読んでレビューするのがいい？\n"}
 {"ts":"2026-04-22T21:06:51+09:00","signal":"raw_prompt","prompt":"system-spec野どれから読んでレビューするのがいい？\n"}
+{"ts":"2026-04-22T21:07:48+09:00","signal":"raw_prompt","prompt":"windows, linux, macで動く？\n"}
