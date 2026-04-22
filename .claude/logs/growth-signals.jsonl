@@ -139,3 +139,5 @@
 {"ts":"2026-04-22T20:51:20+09:00","signal":"raw_prompt","prompt":"windowsの人は？\n"}
 {"ts":"2026-04-22T20:50:38+09:00","signal":"raw_prompt","prompt":"unhealthyになっている\nconnection authorized: user=postgres database=postgres application_name=mgmt-api SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)\nconnection authenticated: identity=\"postgres\" method=scram-sha-256 (/etc/postgresql/pg_hba.conf:94)\nconnection received: host=2406:da18:96a:8200:b3f5:5be8:12d:de10 port=38978\nconnection authenticated: user=\"authenticator\" method=trust (/etc/postgresql/pg_hba.conf:85)\nconnection authorized: user=authenticator database=\n"}
 {"ts":"2026-04-22T20:51:20+09:00","signal":"raw_prompt","prompt":"windowsの人は？\n"}
+{"ts":"2026-04-22T20:57:10+09:00","signal":"raw_prompt","prompt":"まだunhealthyです\n"}
+{"ts":"2026-04-22T20:58:07+09:00","signal":"raw_prompt","prompt":"pnpm dev\n\n> rikyu-mvp@0.1.0 dev /workspace/aces-rikyu-sales-proposals-poc/server\n> next dev --no-turbo\n\nerror: unknown option '--no-turbo'\n(Did you mean --turbo?)\n ELIFECYCLE  Command failed with exit code 1.\n"}

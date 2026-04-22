@@ -1,8 +1,8 @@
 {
-  "saved_at": "2026-04-22T20:48:35+09:00",
+  "saved_at": "2026-04-22T20:57:17+09:00",
   "today": "2026-04-22",
   "work_dir": "/workspace",
-  "git_last_commit": "14b936eaa9b8a6660b906c440dcb10a4e1651fe4 feat(finance): add クレカ経費の領収書ガイドセクション",
+  "git_last_commit": "6aaf02926a550225caf0154e69e872100471a429 chore: auto-save session changes",
   "active_tasks": [],
   "note": "Context Compaction により古い会話が圧縮されました。以下の情報を確認してください。",
   "reminders": [
