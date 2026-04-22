@@ -141,3 +141,5 @@
 {"ts":"2026-04-22T20:51:20+09:00","signal":"raw_prompt","prompt":"windowsの人は？\n"}
 {"ts":"2026-04-22T20:57:10+09:00","signal":"raw_prompt","prompt":"まだunhealthyです\n"}
 {"ts":"2026-04-22T20:58:07+09:00","signal":"raw_prompt","prompt":"pnpm dev\n\n> rikyu-mvp@0.1.0 dev /workspace/aces-rikyu-sales-proposals-poc/server\n> next dev --no-turbo\n\nerror: unknown option '--no-turbo'\n(Did you mean --turbo?)\n ELIFECYCLE  Command failed with exit code 1.\n"}
+{"ts":"2026-04-22T20:57:10+09:00","signal":"raw_prompt","prompt":"まだunhealthyです\n"}
+{"ts":"2026-04-22T20:58:07+09:00","signal":"raw_prompt","prompt":"pnpm dev\n\n> rikyu-mvp@0.1.0 dev /workspace/aces-rikyu-sales-proposals-poc/server\n> next dev --no-turbo\n\nerror: unknown option '--no-turbo'\n(Did you mean --turbo?)\n ELIFECYCLE  Command failed with exit code 1.\n"}
