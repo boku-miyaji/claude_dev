@@ -154,3 +154,5 @@
 {"ts":"2026-04-22T21:07:48+09:00","signal":"raw_prompt","prompt":"windows, linux, macで動く？\n"}
 {"ts":"2026-04-22T21:07:48+09:00","signal":"raw_prompt","prompt":"windows, linux, macで動く？\n"}
 {"ts":"2026-04-22T21:09:06+09:00","signal":"raw_prompt","prompt":"backendの依存ライブラリをインストールをちゃんと書いて。\n"}
+{"ts":"2026-04-22T21:09:06+09:00","signal":"raw_prompt","prompt":"backendの依存ライブラリをインストールをちゃんと書いて。\n"}
+{"ts":"2026-04-22T21:11:49+09:00","signal":"raw_prompt","prompt":"Error: Failed to run sql query: Connection terminated due to connection timeout\n\nNote: A limit of 100 was applied to your query. If this was the cause of a syntax error, try selecting \"No limit\" instead and re-run the query.\n"}
