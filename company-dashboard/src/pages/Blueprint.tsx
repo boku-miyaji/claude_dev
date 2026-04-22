@@ -418,15 +418,15 @@ function TabOverview() {
           ['habits (追加)', 'Today画面の + ボタン → Enter', 'インラインCRUD', '即追加。Habitsページで詳細編集'],
           ['weekly_narratives', '週1 自動（Weeklyページ初回表示時に先週分が無ければ自動生成）', 'フロント auto-trigger', 'DB保存。手動「生成」ボタンは再生成用に残存。model=claude-opus-4-7'],
           ['self_analysis', 'タイプ別に自動再分析（MBTI/Big5/ストレス=30日、ストレングス/コミュ=60日、価値観=90日）', 'フロント auto-trigger（SelfAnalysis初回表示時にstale検出→順次バックグラウンド実行）', 'ハイブリッド方式: 初回=全データ分析→analysis_context保存、更新=前回context+差分データで効率的更新。model=claude-opus-4-7。手動「再分析」ボタンも維持'],
-          ['dream_detected', '毎朝9時（narrator-update cron内、前回から7日未満ならskip）', 'GitHub Actions → Edge Function', '過去7日の日記と active dreams を Opus 4.7 で照合→ activity_log にINSERT → Dreams画面「最近の気づき」に表示'],
-          ['narrator (Arc/Theme/Chapter)', '毎朝9時（週/月/四半期スパンで内部スキップ判定）', 'GitHub Actions → narrator-update Edge Function', 'Arc=週1、Theme=月1、Chapter=四半期1。model=claude-opus-4-7。Storyページで表示'],
+          ['dream_detected', '毎朝9時（narrator-update cron内、前回から7日未満ならskip）', 'GitHub Actions → Claude CLI (scripts/narrator/_dream_detection.py)', '過去7日の日記と active dreams を Opus 4.7 で照合→ activity_log にINSERT → Dreams画面「最近の気づき」に表示'],
+          ['narrator (Arc/Theme/Chapter)', '毎朝9時（週/月/四半期スパンで内部スキップ判定）', 'GitHub Actions → Claude CLI (scripts/narrator/run.sh)', 'Arc=週1、Theme=月1、Chapter=四半期1。model=claude-opus-4-7（Claude CLI 定額プラン）。Storyページで表示'],
           ['ai_partner (時間帯別メッセージ)', '朝/昼/夕/夜の時間帯変化でキャッシュ再生成', 'useMorningBriefing（ページ表示時）', '日記投稿では再生成しない（冗長回避）。model=claude-opus-4-7。過去3件の出力をプロンプト注入して同じ表現を避ける'],
-          ['news_items', 'Today/Reportsで「収集」ボタン + 06:00/18:00 JST cron', 'Edge Function news-collect（6ソース並列）+ news-enrich（LLM日本語要約）', 'Google News RSS + arXiv API + Hacker News API + GitHub Releases + 公式ブログRSS + tech記事 → DB保存 + クリック追跡。arXiv は catch-all(5カテゴリ/3日) + keyword-filtered(11キーワード/7日) の二段構成で取りこぼし防止（sources.yaml と同期、CI で検証）。news-enrich は title_ja/summary を gpt-5.4-nano で生成'],
+          ['news_items', 'Today/Reportsで「収集」ボタン + 06:00/18:00 JST cron', 'Edge Function news-collect（6ソース並列）+ scripts/news/enrich.sh（Claude CLI で日本語要約）', 'Google News RSS + arXiv API + Hacker News API + GitHub Releases + 公式ブログRSS + tech記事 → DB保存 + クリック追跡。arXiv は catch-all(5カテゴリ/3日) + keyword-filtered(11キーワード/7日) の二段構成で取りこぼし防止（sources.yaml と同期、CI で検証）。enrich は title_ja/summary を claude-opus-4-7 (Claude CLI 定額プラン) で生成'],
           ['calendar_events (読み取り)', 'Calendar/Todayページ', 'Edge Function proxy (GET /events)', 'google-calendar-proxy経由。Authorization Code Flow + 暗号化refresh token。maxResults=250 + nextPageTokenページングで取りこぼし防止、失敗カレンダーは failed_calendars[] で警告バッジ表示'],
           ['calendar_events (作成/編集/削除)', 'Calendarページ「+ 予定」ボタン or 既存予定クリック', 'Edge Function proxy (POST/PATCH/DELETE /events)', 'focus-you内で完結。Googleカレンダー画面を別で開く必要なし。EventModalでsummary/日付/開始終了/calendarId編集可能。ドラッグ移動も PATCH で Google に反映'],
           ['life_story_entries', 'Rootsページで質問に答える', 'Edge Function life-story (POST next_question/answer/summarize/coverage)', 'Opus 4.7で過去回答を踏まえて質問生成→ステージ×軸(幼少期/小/中/高/大学/社会人初期/中期/最近 × 価値観/家庭/嬉しかった/苦しかった/転機/仕事/人間関係)のカバレッジをDBに蓄積。再実行ほど手薄エリアを聞く。セッション終了でsummarize→テーマ/言語化/次回候補を返す'],
           ['pending_updates (承認フロー)', 'AI生成後、ユーザー承認まで待機', 'useUserManual / narrator-update runManualRefresh', '全ての AI 生成提案を pending_updates に蓄積 (source=manual_seed 等)。ユーザーはTodayバナー→該当ページで [承認] / [却下] / [後で]。承認時のみ本体テーブル (user_manual_cards) に反映。Today上部のPendingUpdatesBannerが合計件数を表示'],
-          ['user_manual_cards 更新候補', '30日経過判定 (毎朝9時JST cron)', 'narrator-update/runManualRefresh', 'Opus 4.7 + 日記60件 + Theme Finder + Roots 120件から種カード生成 → pending_updates に保存 (本体を直接書き換えない)。カテゴリ別 [このカテゴリだけ再生成] ボタンも有。evidence (日記・Rootsからの引用) 併記'],
+          ['user_manual_cards 更新候補', '30日経過判定 (毎朝9時JST cron)', 'scripts/narrator/_manual_refresh.py (Claude CLI)', 'Opus 4.7 + 日記60件 + Theme Finder + Roots 120件から種カード生成 → pending_updates に保存 (本体を直接書き換えない)。カテゴリ別 [このカテゴリだけ再生成] ボタンも有。evidence (日記・Rootsからの引用) 併記'],
           ['google_tasks', 'タスク作成/更新/完了時', 'data.ts → syncTaskToGoogle', 'Supabase tasks→Google Tasks一方向同期。日付ありタスクのみ。google_task_idでリンク。lib/googleTasksApi.ts'],
           ['goals / dreams', '各ページで追加・更新', 'ユーザー操作', 'goal完了 → dream statusの自動更新連鎖'],
         ]} />
@@ -458,7 +458,7 @@ function TabOverview() {
         <Tbl headers={['処理場所', '使用モデル', 'コスト', '用途']} rows={[
           ['ダッシュボード（構造化/タグ付け系）', 'gpt-5.4-nano / gpt-5.4-mini', 'OpenAI API従量課金（低）', '感情分析(mini)、夢分類(nano)、検索rerank(nano)、ルーティング判定(nano)、Moment Detector(nano)'],
           ['ダッシュボード（自己理解系）', 'claude-opus-4-7', 'Anthropic API従量課金（高精度）', '時間帯別メッセージ、Self-Analysis(MBTI/Big5/等)、Weekly Narrative'],
-          ['Edge Function（バッチ・narrator-update）', 'claude-opus-4-7', 'Anthropic API従量課金', 'Arc Reader(週1) / Theme Finder(月1) / Chapter Generator(四半期) / Dream Detection(週1)。毎朝9時JST GitHub Actions cron で起動'],
+          ['GitHub Actions バッチ（narrator-update）', 'claude-opus-4-7 (Claude CLI)', 'Claude 定額プラン（追加費用なし）', 'Arc Reader(週1) / Theme Finder(月1) / Chapter Generator(四半期) / Dream Detection(週1) / Manual Refresh(30日)。毎朝9時JST GitHub Actions cron で scripts/narrator/run.sh を実行（2026-04-22: Edge Function 経由→Claude CLI 直叩きに移行）'],
           ['Claude Code（バッチ）', 'Claude CLI opus', 'サブスク内（追加費用なし）', 'プロンプト分類、成長分析、スキル進化、部署評価'],
           ['Edge Function（バッチ分析）', 'gpt-5.4-mini', 'OpenAI API（月$0.1以下）', 'CEOインサイト3層分析（日記+prompt_log）、フィードバック蒸留'],
           ['Claude Code（Hook）', 'なし（キーワードのみ）', 'ゼロ', 'prompt-log タグ付け、growth-detector シグナル検出'],
@@ -899,9 +899,9 @@ function TabExperienceDesign() {
           ['チャット応答', '送信後、待っている', 'gpt-5.4 統一 + reasoning 6段階', 'OpenAI', 'モデルは gpt-5.4 固定、effort で品質/コスト調整。SSEストリーミングで体感確保'],
           ['自己分析', 'ボタン押下後、待っている', 'gpt-5.4', 'OpenAI', '深い分析。品質重視'],
           ['ニュース収集', '誰も待っていない(バッチ)', 'gpt-5.4-mini', 'OpenAI (pg_cron)', 'web_searchにmini必要'],
-          ['Arc Reader', '誰も待っていない(毎朝9時JST cron、週1スパン)', 'claude-opus-4-7', 'Anthropic (narrator-update)', '物語解釈。品質重視。ブラウザは story_memory を読むだけ'],
-          ['Theme Finder', '誰も待っていない(毎朝9時JST cron、月1スパン)', 'claude-opus-4-7', 'Anthropic (narrator-update)', '人生テーマ検出。品質重視。ブラウザは読み取り専用'],
-          ['Foresight as Question', '誰も待っていない(毎朝9時JST cron、週1スパン)', 'claude-opus-4-7', 'Anthropic (narrator-update)', '過去の類似パターンを引用して問いで閉じる(旧 Foresight Engine、⑫で再定義)'],
+          ['Arc Reader', '誰も待っていない(毎朝9時JST cron、週1スパン)', 'claude-opus-4-7', 'Claude CLI (定額 / narrator-update)', '物語解釈。品質重視。ブラウザは story_memory を読むだけ'],
+          ['Theme Finder', '誰も待っていない(毎朝9時JST cron、月1スパン)', 'claude-opus-4-7', 'Claude CLI (定額 / narrator-update)', '人生テーマ検出。品質重視。ブラウザは読み取り専用'],
+          ['Foresight as Question', '誰も待っていない(毎朝9時JST cron、週1スパン)', 'claude-opus-4-7', 'Claude CLI (定額 / narrator-update)', '過去の類似パターンを引用して問いで閉じる(旧 Foresight Engine、⑫で再定義)'],
           ['Chapter生成', '誰も待っていない(四半期)', 'Claude CLI', 'Claude (無料)', '最長・最深の分析'],
           ['Weekly Narrative', '誰も待っていない(月曜早朝)', 'Claude CLI', 'Claude (無料)', '物語生成。品質重視'],
           ['WBI集計/ストリーク', '誰も待っていない', 'LLM不要(SQL)', '—', '数値計算にLLMは使わない'],
@@ -1422,8 +1422,8 @@ function TabAiFeatures() {
           name="7. ニュース収集"
           trigger="Today画面「最新を取得」ボタン / Reportsページ「手動収集」ボタン / 06:00・18:00 JST cron (news-collect.yml)"
           input="intelligence_sources テーブル（enabled source）+ ARXIV_KEYWORDS/CATEGORIES（sources.yaml と同期）"
-          model="gpt-5.4-nano (news-enrich で日本語翻訳のみ。収集自体はLLM不使用)"
-          pipeline="intelligence_sources 読み込み → 6ソース並列fetch (keyword/web_source/tech_article/hacker_news/github_release + arXiv built-in) → URL でdedupe → news_items に INSERT → news-enrich で title_ja/summary 生成"
+          model="claude-opus-4-7 (news-enrich; Claude CLI 定額プラン。収集自体はLLM不使用)"
+          pipeline="intelligence_sources 読み込み → 6ソース並列fetch (keyword/web_source/tech_article/hacker_news/github_release + arXiv built-in) → URL でdedupe → news_items に INSERT → scripts/news/enrich.sh (Claude CLI) で title_ja/summary 生成"
           output="arXiv 1回あたり 30-50件（catch-all 5カテゴリ/3日 + keyword 11語/7日）"
           storage="news_items テーブル（Single Source of Truth）"
           hook="lib/newsCollect.ts ← Today.tsx / Reports.tsx / scripts/news/collect.sh ← CI。arxiv 取りこぼし防止: check-arxiv-sync.sh + 回収率モニタ(>=5)"
