@@ -122,3 +122,5 @@
 {"ts":"2026-04-22T17:30:01+09:00","signal":"raw_prompt","prompt":"rikyuの話の続きをしたい。system-specをアップデートした？私はなにをすべき？\n"}
 {"ts":"2026-04-22T17:30:01+09:00","signal":"raw_prompt","prompt":"rikyuの話の続きをしたい。system-specをアップデートした？私はなにをすべき？\n"}
 {"ts":"2026-04-22T17:36:19+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /home/node/.claude/skills/tax-advisor/SKILL.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\n再試行して\n"}
+{"ts":"2026-04-22T17:36:19+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /home/node/.claude/skills/tax-advisor/SKILL.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\n再試行して\n"}
+{"ts":"2026-04-22T17:44:02+09:00","signal":"raw_prompt","prompt":"focus youに興味あった記事を登録できる画面を用意してくれない？\nそこから情報収集部がなぜその情報を取得できなかったのか考えて、次回から私が興味あるのを自動で取得できるようにアップデートしてから情報収集するようにして。まず、私の興味ある記事をみて、アップデートしてから情報収集をする習慣にしてほしい\n"}
