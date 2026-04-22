@@ -21,20 +21,20 @@ const PRODUCT_NAV: NavEntry[] = [
   { type: 'item', page: 'dreams', icon: '🌟', label: 'Dreams & Goals' },
   { type: 'item', page: 'habits', icon: '🌱', label: 'Habits' },
   { type: 'item', page: 'calendar', icon: '📅', label: 'Calendar' },
-  // Understand
-  { type: 'label', label: 'Understand' },
+  { type: 'item', page: 'manual', icon: '📘', label: 'Manual' },
+  // Know Yourself
+  { type: 'label', label: 'Know Yourself' },
   { type: 'item', page: 'story', icon: '📖', label: 'Story' },
   { type: 'item', page: 'roots', icon: '🕰', label: 'Roots' },
-  { type: 'item', page: 'manual', icon: '📘', label: 'Manual' },
-  { type: 'item', page: 'insights', icon: '📊', label: 'Insights' },
-  { type: 'item', page: 'me', icon: '🧬', label: 'Self-Analysis' },
-  { type: 'item', page: 'intelligence', icon: '📄', label: 'News' },
-  { type: 'item', page: 'growth', icon: '↗', label: 'Growth' },
+  { type: 'item', page: 'insights', icon: '📊', label: 'Patterns' },
+  { type: 'item', page: 'me', icon: '🧬', label: 'Frameworks' },
 ]
 
 // CLI-only tabs: Claude Code 依存
 const CLI_NAV: NavEntry[] = [
   { type: 'label', label: 'Claude Code' },
+  { type: 'item', page: 'intelligence', icon: '📰', label: 'News', cli: true },
+  { type: 'item', page: 'growth', icon: '↗', label: 'Growth', cli: true },
   { type: 'item', page: 'companies', icon: '◫', label: 'Organization', cli: true },
   { type: 'item', page: 'finance', icon: '¥', label: 'Finance', cli: true },
   { type: 'item', page: 'prompts', icon: '▷', label: 'Prompts', cli: true },

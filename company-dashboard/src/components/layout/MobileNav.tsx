@@ -15,12 +15,12 @@ const MAIN_TABS: MobileNavItem[] = [
 
 const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
   {
-    label: 'Core',
+    label: 'Personal',
     items: [
       { page: 'dreams', icon: '🌟', label: 'Dreams' },
       { page: 'habits', icon: '🌱', label: 'Habits' },
-      { page: 'insights', icon: '📊', label: 'Insights' },
-      { page: 'intelligence', icon: '📄', label: 'Reports' },
+      { page: 'insights', icon: '📊', label: 'Patterns' },
+      { page: 'manual', icon: '📘', label: 'Manual' },
     ],
   },
   {
@@ -36,9 +36,9 @@ const MORE_ITEMS: { label: string; items: MobileNavItem[] }[] = [
     label: 'More',
     items: [
       { page: 'artifacts', icon: '📄', label: 'Artifacts' },
+      { page: 'intelligence', icon: '📰', label: 'News' },
       { page: 'growth', icon: '↗', label: 'Growth' },
       { page: 'settings', icon: '⚙', label: 'Settings' },
-      { page: 'blueprint', icon: '◇', label: 'Blueprint' },
     ],
   },
 ]
