@@ -164,3 +164,5 @@
 {"ts":"2026-04-22T21:22:41+09:00","signal":"raw_prompt","prompt":"Node.js / Python / uv / bash 4.3+\tREADME の「必要なツール」参照も省略しないで書くとか、リンクを貼るとかして\n"}
 {"ts":"2026-04-22T21:22:41+09:00","signal":"raw_prompt","prompt":"Node.js / Python / uv / bash 4.3+\tREADME の「必要なツール」参照も省略しないで書くとか、リンクを貼るとかして\n"}
 {"ts":"2026-04-22T21:29:47+09:00","signal":"raw_prompt","prompt":"Error: Failed to run sql query: ERROR: 54000: null character not permitted\n"}
+{"ts":"2026-04-22T21:29:47+09:00","signal":"raw_prompt","prompt":"Error: Failed to run sql query: ERROR: 54000: null character not permitted\n"}
+{"ts":"2026-04-22T21:32:35+09:00","signal":"raw_prompt","prompt":"１はうごいた\n\n２でエラー\nFailed to run sql query: ERROR:  42883: operator does not exist: bytea @> bytea\nLINE 2: WHERE title::bytea @> '\\x00'::bytea\n                           ^\nHINT:  No operator matches the given name and argument types. You might need to add explicit type casts.\nNote: A limit of 100 was applied to your query. If this was the cause of a syntax error, try selecting \"No limit\" instead and re-run the query.\n"}
