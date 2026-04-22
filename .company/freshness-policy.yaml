@@ -222,21 +222,24 @@ data_sources:
 
   growth_unresolved:
     priority: 9.2
-    max_age_days: 14
+    max_age_days: 2
     auto_update: false
     blocking: false
     check_method: script
     check_script: "bash /workspace/scripts/growth/check-unresolved.sh"
     stale_condition: |
-      以下のいずれかが存在:
-      - failure で status='active' のまま14日超過かつ countermeasure が紐づかない
-      - countermeasure で status='active' のまま14日超過かつ milestone/result 未記録
+      severity別の閾値を超過した failure/countermeasure が存在:
+      - critical / high severity → 2日超で対策未決
+      - medium severity         → 5日超で対策未決
+      - low severity            → 10日超で対策未決
+      countermeasure は milestone/result 未記録なら同様の閾値で警告
     update_action: |
-      1. scripts/growth/check-unresolved.sh の出力を読む
-      2. 未解決の failure に対して対策を検討:
+      1. scripts/growth/check-unresolved.sh の出力を /company ブリーフィングに含める
+      2. 社長に severity 別で提示（critical/high は即、medium は今週中、low は10日以内）
+      3. 未解決の failure に対して:
          a) 既に対策済みなら: scripts/growth/record.sh countermeasure <proj> "..." --parent-id=<failure_id>
-         b) 対策未済なら: 社長に対応を相談（リマインド）
-      3. 書き換えは行わない。parent_id で紐づけて続きを追記する
+         b) 対策未済なら: 社長に対応を相談（高 severity は強調リマインド）
+      4. 書き換えは行わない。parent_id で紐づけて続きを追記する
 
   # ── 優先度10: ナレッジ昇格チェック ──
 

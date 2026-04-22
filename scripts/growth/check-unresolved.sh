@@ -23,28 +23,41 @@ source ~/.claude/hooks/supabase.env 2>/dev/null || {
 JSON_OUT=""
 [ "${1:-}" = "--json" ] && JSON_OUT=1
 
-# ------------- Query 1: active failures older than 14 days -------------
-FOURTEEN_AGO=$(date -d "14 days ago" +%Y-%m-%d)
+# ------------- Severity-based thresholds -------------
+# critical / high → 2日超で警告
+# medium          → 5日超
+# low / null      → 10日超
+TWO_AGO=$(date -d "2 days ago" +%Y-%m-%d)
+FIVE_AGO=$(date -d "5 days ago" +%Y-%m-%d)
+TEN_AGO=$(date -d "10 days ago" +%Y-%m-%d)
 
+# ------------- Query 1: stale active failures (severity-based) -------------
 QUERY_1="
-SELECT id, event_date, title, tags, severity
+SELECT id, event_date, title, tags, severity,
+  (CURRENT_DATE - event_date) AS age_days
 FROM growth_events
 WHERE event_type = 'failure'
   AND status = 'active'
-  AND event_date < '$FOURTEEN_AGO'
   AND NOT EXISTS (
     SELECT 1 FROM growth_events c
     WHERE c.parent_id = growth_events.id
       AND c.event_type = 'countermeasure'
   )
-ORDER BY event_date ASC
+  AND (
+    (severity IN ('critical','high') AND event_date < '$TWO_AGO')
+    OR (severity = 'medium' AND event_date < '$FIVE_AGO')
+    OR ((severity = 'low' OR severity IS NULL) AND event_date < '$TEN_AGO')
+  )
+ORDER BY
+  CASE severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
+  event_date ASC
 LIMIT 50
 "
 
-# ------------- Query 2: failures without any countermeasure (any age) -------------
+# ------------- Query 2: failures without any countermeasure (any age, limited) -------------
 QUERY_2="
 SELECT f.id, f.event_date, f.title, f.tags, f.severity,
-  EXISTS(SELECT 1 FROM growth_events c WHERE c.parent_id = f.id AND c.event_type = 'countermeasure') as has_countermeasure
+  (CURRENT_DATE - f.event_date) AS age_days
 FROM growth_events f
 WHERE f.event_type = 'failure'
   AND f.status = 'active'
@@ -56,18 +69,23 @@ ORDER BY f.event_date DESC
 LIMIT 30
 "
 
-# ------------- Query 3: countermeasures without milestone (result not recorded) -------------
+# ------------- Query 3: countermeasures without milestone (severity-based) -------------
 QUERY_3="
-SELECT c.id, c.event_date, c.title, c.tags
+SELECT c.id, c.event_date, c.title, c.tags, c.severity,
+  (CURRENT_DATE - c.event_date) AS age_days
 FROM growth_events c
 WHERE c.event_type = 'countermeasure'
   AND c.status = 'active'
-  AND c.event_date < '$FOURTEEN_AGO'
   AND NOT EXISTS (
     SELECT 1 FROM growth_events m
     WHERE m.parent_id = c.id AND m.event_type = 'milestone'
   )
   AND c.result IS NULL
+  AND (
+    (c.severity IN ('critical','high') AND c.event_date < '$TWO_AGO')
+    OR (c.severity = 'medium' AND c.event_date < '$FIVE_AGO')
+    OR ((c.severity = 'low' OR c.severity IS NULL) AND c.event_date < '$TEN_AGO')
+  )
 ORDER BY c.event_date ASC
 LIMIT 30
 "
@@ -118,14 +136,16 @@ for r in data:
     tags = r.get('tags') or []
     proj = next((t for t in tags if t in ('claude-dev','focus-you','polaris-circuit','rikyu','agent-harness')), '-')
     sev = r.get('severity') or '-'
-    print(f\"  [{r.get('event_date')}] [{proj}/{sev}] {r.get('title','')}\")
-    print(f\"    id: {r.get('id')}\")
+    age = r.get('age_days', '?')
+    marker = '🔥' if sev in ('critical','high') else ('⚠' if sev == 'medium' else '·')
+    print(f\"  {marker} [{r.get('event_date')} / {age}d ago] [{proj}/{sev}] {r.get('title','')}\")
+    print(f\"     id: {r.get('id')}\")
 "
 }
 
-print_section "14日超・対策未決の failure" "$R1"
-print_section "countermeasure が紐づかない failure（全期間）" "$R2"
-print_section "14日超・結果未記録の countermeasure" "$R3"
+print_section "対策未決 failure（high: 2日超 / medium: 5日超 / low: 10日超）" "$R1"
+print_section "countermeasure が紐づかない failure（全期間、参考）" "$R2"
+print_section "結果未記録 countermeasure（同じ severity 閾値）" "$R3"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
