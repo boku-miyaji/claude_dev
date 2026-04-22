@@ -1028,16 +1028,19 @@ interface JudgeAction { label: string; severity: 'ok' | 'action' | 'warn' }
 function judgeActions(method: PaymentMethod, receipt: ReceiptForm, freq: Frequency): JudgeAction[] {
   const a: JudgeAction[] = []
 
-  // 帳簿入力
+  // 帳簿入力（青色65万控除前提）
   if (method === 'biz_card' || method === 'bank_transfer') {
-    a.push({ label: 'MFクラウドが自動取込 → カテゴリと勘定科目だけ確認', severity: 'ok' })
+    a.push({ label: 'MFクラウドが自動取込 → カテゴリと勘定科目を確認', severity: 'ok' })
+    a.push({ label: '青色65万のため、毎月10日までに前月分を仕訳確定', severity: 'warn' })
   } else if (method === 'personal_card') {
-    a.push({ label: 'MFクラウドで「事業主借」として手動仕訳を入力', severity: 'action' })
-    a.push({ label: '事業用カードに切り替えられないか都度検討', severity: 'warn' })
+    a.push({ label: 'MFクラウドで「経費科目 / 事業主借」として手動仕訳', severity: 'action' })
+    a.push({ label: '月末に事業主借の累計を集計 → 翌月に事業用口座へ振替も検討', severity: 'warn' })
   } else if (method === 'paypay') {
     a.push({ label: 'MFクラウドのPayPay連携で自動取込（未設定なら設定）', severity: 'action' })
+    a.push({ label: '個人PayPay決済なら「経費科目 / 事業主借」で仕訳', severity: 'warn' })
   } else if (method === 'cash') {
-    a.push({ label: 'MFクラウドの現金出納帳に手動入力（日付・金額・摘要）', severity: 'action' })
+    a.push({ label: '個人財布から払ったなら「経費科目 / 事業主借」で仕訳', severity: 'action' })
+    a.push({ label: '事業用現金箱から払ったなら「経費科目 / 現金」で仕訳', severity: 'action' })
   }
 
   // 証憑保管
@@ -1049,11 +1052,13 @@ function judgeActions(method: PaymentMethod, receipt: ReceiptForm, freq: Frequen
     a.push({ label: '紙原本は7年保管（スキャナ保存の真実性要件を満たせば破棄可）', severity: 'warn' })
   } else {
     a.push({ label: '出金伝票を作成: 日付・金額・摘要・相手先を記録', severity: 'warn' })
+    a.push({ label: '会食なら参加者名と人数も明記（1人1万円以下は会議費）', severity: 'warn' })
   }
 
   // 定期
   if (freq === 'recurring') {
     a.push({ label: 'focus-you の「固定費」タブにも登録（月次支出を可視化）', severity: 'action' })
+    a.push({ label: '年間契約の SaaS は「前払費用」計上を検討（節税効果）', severity: 'warn' })
   }
 
   return a
@@ -1097,6 +1102,140 @@ function ChoiceRow<T extends string>({ value, setValue, options, labels }: { val
         </button>
       ))}
     </div>
+  )
+}
+
+// ---- Opening year &青色運用データ ----
+
+interface OpeningNote { title: string; body: string; tone: 'critical' | 'info' | 'tip' }
+
+const OPENING_NOTES: OpeningNote[] = [
+  { title: '開業日の仕訳（最重要）', body: '個人→事業用口座の資金投入は「普通預金 / 事業主借」。PCを事業転用したら「工具器具備品 / 事業主借」。開業日(2026/2/X)に全部計上する', tone: 'critical' },
+  { title: '開業費の計上', body: '開業前に使った名刺・HP制作費・書籍・セミナー代などは「開業費（繰延資産）」として計上可。最長5年で任意償却できるので、黒字年に経費化して節税', tone: 'tip' },
+  { title: '青色承認申請書の期限', body: '開業日から2ヶ月以内（最遅3/15）までに提出必須。提出済みなら2026年分から65万控除適用可', tone: 'info' },
+  { title: '白色→青色の切り替え', body: '2025年は白色（雑所得 or 白色事業所得）で申告済み。2026年から青色で、MFクラウドの帳簿は2026/1/1開始で新規セット、開業日(2/X)から仕訳スタート', tone: 'info' },
+  { title: '家事按分の設定', body: '自宅で仕事するなら家賃・光熱費・通信費を事業分と個人分で按分。MFクラウドの「各種設定 → 家事按分」で比率を登録しておくと自動按分される', tone: 'tip' },
+  { title: 'インボイス登録の判断', body: '年商1000万以下なら任意。法人取引が多いなら登録推奨（先方の仕入税額控除のため）。登録すると消費税申告が必要になるのでトレードオフ', tone: 'info' },
+]
+
+interface ChecklistItem { id: string; label: string; priority: 'critical' | 'high' | 'medium' | 'low'; hint?: string }
+
+const OPENING_CHECKLIST: ChecklistItem[] = [
+  { id: 'kaigyou_todoke', label: '開業届を税務署に提出', priority: 'critical', hint: '提出済み（2026年）' },
+  { id: 'aoiro_shinsei', label: '青色申告承認申請書を提出', priority: 'critical', hint: '提出済み（2026年）' },
+  { id: 'kaigyou_date', label: 'MFクラウドで2026年度を選択・開業日を登録', priority: 'critical', hint: '各種設定 → 事業者情報' },
+  { id: 'kaigyou_shiwake', label: '開業日の仕訳を入力（事業主借で資産投入）', priority: 'high', hint: '普通預金・工具器具備品など' },
+  { id: 'kouza_link', label: '事業用口座をMFクラウドに連携', priority: 'high', hint: 'データ連携 → 金融機関追加' },
+  { id: 'card_link', label: '事業用クレカをMFクラウドに連携', priority: 'high' },
+  { id: 'paypay_link', label: 'PayPay連携（使うなら）', priority: 'medium' },
+  { id: 'kaigyou_hi', label: '開業費を「繰延資産」として計上', priority: 'medium', hint: '開業前の準備費用。領収書を集める' },
+  { id: 'kaji_anbun', label: '家事按分の比率を決めて登録', priority: 'medium', hint: '家賃・通信費・電気代など' },
+  { id: 'denchou_rule', label: '証憑保管ルールを決定（命名規則・保存先）', priority: 'medium' },
+  { id: 'invoice_check', label: 'インボイス登録の要否を判断', priority: 'medium', hint: '取引先が法人中心なら登録推奨' },
+  { id: 'prev_expense', label: '2025年分MFデータは放置（白色のため税務影響なし）', priority: 'low' },
+]
+
+interface RoutineTask { when: string; task: string }
+
+const MONTHLY_ROUTINES: RoutineTask[] = [
+  { when: '毎月10日まで', task: '前月分の仕訳を確定（MF自動取込を確認・カテゴリ修正）' },
+  { when: '月末', task: 'レシート・証憑の整理（命名規則で保存・MF添付）' },
+  { when: '月末', task: '売上請求書の発行・送付・入金確認' },
+  { when: '月末', task: '個人カード経費の集計（事業主借の累計確認）' },
+]
+const QUARTERLY_ROUTINES: RoutineTask[] = [
+  { when: '四半期末', task: '売上・経費の進捗確認 → 税金シミュレーション更新' },
+  { when: '四半期末', task: '家事按分の比率を見直し（実態と乖離していないか）' },
+  { when: '四半期末', task: '未入金請求書の督促確認' },
+]
+const ANNUAL_ROUTINES: RoutineTask[] = [
+  { when: '12月末', task: '棚卸し（在庫あれば）' },
+  { when: '12月末', task: '固定資産の減価償却確認' },
+  { when: '1月〜2月', task: '支払調書の受領・確認、年間データ締め' },
+  { when: '3/15まで', task: '確定申告の提出（e-Taxで65万控除）' },
+  { when: '3/31まで', task: '消費税申告（課税事業者のみ）' },
+  { when: '6月', task: '住民税1期・個人事業税の納付' },
+  { when: '7月', task: '所得税の予定納税1期' },
+  { when: '11月', task: '所得税の予定納税2期' },
+]
+
+const CHECKLIST_KEY = 'finance_rules_opening_checklist_v1'
+const PRIO_COLOR: Record<ChecklistItem['priority'], string> = {
+  critical: '#ef4444', high: '#f59e0b', medium: '#6366f1', low: 'var(--text3)',
+}
+const PRIO_LABEL: Record<ChecklistItem['priority'], string> = {
+  critical: '最優先', high: '高', medium: '中', low: '低',
+}
+
+function ChecklistSection() {
+  const [done, setDone] = useState<Record<string, boolean>>(() => {
+    if (typeof window === 'undefined') return {}
+    try { return JSON.parse(localStorage.getItem(CHECKLIST_KEY) || '{}') } catch { return {} }
+  })
+  const toggle = (id: string) => {
+    setDone(prev => {
+      const next = { ...prev, [id]: !prev[id] }
+      try { localStorage.setItem(CHECKLIST_KEY, JSON.stringify(next)) } catch { /* noop */ }
+      return next
+    })
+  }
+  const completedCount = OPENING_CHECKLIST.filter(it => done[it.id]).length
+  const pct = Math.round((completedCount / OPENING_CHECKLIST.length) * 100)
+  // 未完了を上、完了済みを下に
+  const sorted = [...OPENING_CHECKLIST].sort((a, b) => {
+    const ad = done[a.id] ? 1 : 0, bd = done[b.id] ? 1 : 0
+    if (ad !== bd) return ad - bd
+    const order = { critical: 0, high: 1, medium: 2, low: 3 }
+    return order[a.priority] - order[b.priority]
+  })
+
+  return (
+    <section style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>今チェックすべきこと（開業初期）</h3>
+        <div style={{ fontSize: 12, color: 'var(--text3)', fontVariantNumeric: 'tabular-nums' }}>{completedCount}/{OPENING_CHECKLIST.length} ・ {pct}%</div>
+      </div>
+      <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text3)' }}>2026/2開業・青色申告切替に必要な初期設定。進捗はブラウザに保存されます</p>
+
+      <div style={{ height: 4, background: 'var(--bg2)', borderRadius: 999, marginBottom: 16, overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: pct === 100 ? '#22c55e' : 'var(--accent)', transition: 'width .3s' }} />
+      </div>
+
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {sorted.map(item => {
+          const isDone = !!done[item.id]
+          return (
+            <li key={item.id}
+              onClick={() => toggle(item.id)}
+              style={{
+                display: 'flex', gap: 12, alignItems: 'flex-start',
+                padding: '10px 12px', borderRadius: 8,
+                background: isDone ? 'var(--bg2)' : 'transparent',
+                border: '1px solid var(--border)',
+                cursor: 'pointer', transition: 'all .15s',
+                opacity: isDone ? 0.55 : 1,
+              }}>
+              <div style={{
+                width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                border: `1.5px solid ${isDone ? '#22c55e' : 'var(--text3)'}`,
+                background: isDone ? '#22c55e' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontSize: 12, fontWeight: 700, marginTop: 1,
+              }}>{isDone && '✓'}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500, textDecoration: isDone ? 'line-through' : 'none' }}>{item.label}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: `${PRIO_COLOR[item.priority]}22`, color: PRIO_COLOR[item.priority], letterSpacing: 0.3 }}>
+                    {PRIO_LABEL[item.priority]}
+                  </span>
+                </div>
+                {item.hint && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, lineHeight: 1.5 }}>{item.hint}</div>}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 
@@ -1186,6 +1325,58 @@ function FinRules() {
             <div key={item.t} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '14px 16px' }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>{item.t}</div>
               <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.55 }}>{item.d}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. 開業年の特殊処理 */}
+      <section style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>開業年の特殊処理（2026年 / 白色→青色切替）</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text3)' }}>2026/2開業・青色申告1年目の人だけが気にすればいいポイント</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {OPENING_NOTES.map(note => {
+            const toneColor = note.tone === 'critical' ? '#ef4444' : note.tone === 'tip' ? '#22c55e' : '#6366f1'
+            const toneLabel = note.tone === 'critical' ? '重要' : note.tone === 'tip' ? 'Tip' : 'Info'
+            return (
+              <div key={note.title} style={{ background: 'var(--bg2)', border: `1px solid var(--border)`, borderLeft: `3px solid ${toneColor}`, borderRadius: 8, padding: '14px 16px' }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 4, background: `${toneColor}22`, color: toneColor, letterSpacing: 0.5 }}>{toneLabel}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{note.title}</span>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.65 }}>{note.body}</div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* 5. 開業初期チェックリスト */}
+      <ChecklistSection />
+
+      {/* 6. 青色運用サイクル */}
+      <section style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>運用サイクル（青色申告65万控除キープ）</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text3)' }}>月次で締める→四半期で見直す→年次で申告。サボると2月末〜3月の自分が泣く</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
+          {[
+            { title: '月次ルーチン', tasks: MONTHLY_ROUTINES, color: '#6366f1' },
+            { title: '四半期ルーチン', tasks: QUARTERLY_ROUTINES, color: '#f59e0b' },
+            { title: '年次ルーチン', tasks: ANNUAL_ROUTINES, color: '#22c55e' },
+          ].map(block => (
+            <div key={block.title} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, padding: '14px 16px' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ width: 8, height: 8, borderRadius: 999, background: block.color }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{block.title}</span>
+              </div>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {block.tasks.map((t, i) => (
+                  <li key={i} style={{ fontSize: 12, lineHeight: 1.55 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: block.color, letterSpacing: 0.3, marginBottom: 2 }}>{t.when}</div>
+                    <div style={{ color: 'var(--text2)' }}>{t.task}</div>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>

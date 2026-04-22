@@ -1,33 +1,32 @@
 # growth_events — `unclassified`
 
-Total: **193**
+Total: **192**
 
 | date | type | status | title |
 |---|---|---|---|
-| 2026-04-21 | `failure` | active | [Prompt classification hook stuck in infinite retry loop](../2026/04/20260421-failure-prompt-classification-hook-stuck-in-infinite-retry.md) |
-| 2026-04-21 | `failure` | active | [Prompt classification instruction repeated twice](../2026/04/20260421-failure-prompt-classification-instruction-repeated-twice.md) |
-| 2026-04-21 | `failure` | active | [Hook内プロンプト分類が無限ループ](../2026/04/20260421-failure-hook内プロンプト分類が無限ループ.md) |
-| 2026-04-21 | `failure` | active | [Hook infinite retry loop on correction signals](../2026/04/20260421-failure-hook-infinite-retry-loop-on-correction-signals.md) |
+| 2026-04-21 | `failure` | recurring | [Prompt classification hook stuck in infinite retry loop](../2026/04/20260421-failure-prompt-classification-hook-stuck-in-infinite-retry.md) |
+| 2026-04-21 | `failure` | recurring | [Prompt classification instruction repeated twice](../2026/04/20260421-failure-prompt-classification-instruction-repeated-twice.md) |
+| 2026-04-21 | `failure` | recurring | [Hook内プロンプト分類が無限ループ](../2026/04/20260421-failure-hook内プロンプト分類が無限ループ.md) |
+| 2026-04-21 | `failure` | recurring | [Hook infinite retry loop on correction signals](../2026/04/20260421-failure-hook-infinite-retry-loop-on-correction-signals.md) |
 | 2026-04-19 | `milestone` | active | [Claude Code論文からAI Agent設計原則を体系化](../2026/04/20260419-milestone-claude-code論文からai-agent設計原則を体系化.md) |
-| 2026-04-19 | `failure` | active | [Hook自己再帰ループ（growth-detector）](../2026/04/20260419-failure-hook自己再帰ループgrowth-detector.md) |
-| 2026-04-19 | `failure` | active | [Hook infinite loop: correction signals repeating themselves](../2026/04/20260419-failure-hook-infinite-loop-correction-signals-repeating-th.md) |
-| 2026-04-19 | `failure` | active | [Hook自己再帰ループ（分類・分析プロンプトの無限反復）](../2026/04/20260419-failure-hook自己再帰ループ分類分析プロンプトの無限反復.md) |
-| 2026-04-19 | `failure` | active | [Prompt classification hook stuck in retry loop](../2026/04/20260419-failure-prompt-classification-hook-stuck-in-retry-loop.md) |
-| 2026-04-19 | `failure` | active | [Hook分類・分析プロンプトの無限再帰ループ](../2026/04/20260419-failure-hook分類分析プロンプトの無限再帰ループ.md) |
-| 2026-04-19 | `failure` | active | [Hook recursive loop: classify/analyze hooks re-triggering themselves](../2026/04/20260419-failure-hook-recursive-loop-classifyanalyze-hooks-re-trigg.md) |
-| 2026-04-19 | `failure` | active | [Hook recursive loop: classifier/analyzer re-triggering itself](../2026/04/20260419-failure-hook-recursive-loop-classifieranalyzer-re-triggeri.md) |
-| 2026-04-19 | `failure` | active | [Hook recursive loop: correction signals feed back into themselves](../2026/04/20260419-failure-hook-recursive-loop-correction-signals-feed-back-i.md) |
-| 2026-04-17 | `failure` | active | [Hook infinite retry loop on classification prompt](../2026/04/20260417-failure-hook-infinite-retry-loop-on-classification-prompt.md) |
-| 2026-04-17 | `failure` | active | [Prompt分類Hookが無限リトライループ](../2026/04/20260417-failure-prompt分類hookが無限リトライループ.md) |
+| 2026-04-19 | `failure` | recurring | [Hook自己再帰ループ（growth-detector）](../2026/04/20260419-failure-hook自己再帰ループgrowth-detector.md) |
+| 2026-04-19 | `failure` | recurring | [Hook infinite loop: correction signals repeating themselves](../2026/04/20260419-failure-hook-infinite-loop-correction-signals-repeating-th.md) |
+| 2026-04-19 | `failure` | recurring | [Hook自己再帰ループ（分類・分析プロンプトの無限反復）](../2026/04/20260419-failure-hook自己再帰ループ分類分析プロンプトの無限反復.md) |
+| 2026-04-19 | `failure` | recurring | [Prompt classification hook stuck in retry loop](../2026/04/20260419-failure-prompt-classification-hook-stuck-in-retry-loop.md) |
+| 2026-04-19 | `failure` | recurring | [Hook分類・分析プロンプトの無限再帰ループ](../2026/04/20260419-failure-hook分類分析プロンプトの無限再帰ループ.md) |
+| 2026-04-19 | `failure` | recurring | [Hook recursive loop: classify/analyze hooks re-triggering themselves](../2026/04/20260419-failure-hook-recursive-loop-classifyanalyze-hooks-re-trigg.md) |
+| 2026-04-19 | `failure` | recurring | [Hook recursive loop: classifier/analyzer re-triggering itself](../2026/04/20260419-failure-hook-recursive-loop-classifieranalyzer-re-triggeri.md) |
+| 2026-04-19 | `failure` | recurring | [Hook recursive loop: correction signals feed back into themselves](../2026/04/20260419-failure-hook-recursive-loop-correction-signals-feed-back-i.md) |
+| 2026-04-17 | `failure` | recurring | [Hook infinite retry loop on classification prompt](../2026/04/20260417-failure-hook-infinite-retry-loop-on-classification-prompt.md) |
+| 2026-04-17 | `failure` | recurring | [Prompt分類Hookが無限リトライループ](../2026/04/20260417-failure-prompt分類hookが無限リトライループ.md) |
 | 2026-04-16 | `countermeasure` | active | [AI Partnerの不自然な日本語をプロンプトで防止](../2026/04/20260416-countermeasure-ai-partnerの不自然な日本語をプロンプトで防止.md) |
-| 2026-04-16 | `failure` | active | [Prompt classification batch job flooding correction signals](../2026/04/20260416-failure-prompt-classification-batch-job-flooding-correctio.md) |
+| 2026-04-16 | `failure` | recurring | [Prompt classification batch job flooding correction signals](../2026/04/20260416-failure-prompt-classification-batch-job-flooding-correctio.md) |
 | 2026-04-16 | `failure` | active | [Batch classifier prompts misclassified as user corrections](../2026/04/20260416-failure-batch-classifier-prompts-misclassified-as-user-cor.md) |
-| 2026-04-16 | `failure` | active | [バッチ分類/成長分析プロンプトのJSON出力が不安定](../2026/04/20260416-failure-バッチ分類成長分析プロンプトのjson出力が不安定.md) |
+| 2026-04-16 | `failure` | recurring | [バッチ分類/成長分析プロンプトのJSON出力が不安定](../2026/04/20260416-failure-バッチ分類成長分析プロンプトのjson出力が不安定.md) |
 | 2026-04-16 | `failure` | active | [Signal collector misclassifies batch classifier prompts as corrections](../2026/04/20260416-failure-signal-collector-misclassifies-batch-classifier-pr.md) |
-| 2026-04-15 | `countermeasure` | active | [カレンダーの30分スナップとドラッグ伸縮修正](../2026/04/20260415-countermeasure-カレンダーの30分スナップとドラッグ伸縮修正.md) |
-| 2026-04-15 | `milestone` | active | [Requestsに画像添付機能を追加](../2026/04/20260415-milestone-requestsに画像添付機能を追加.md) |
 | 2026-04-15 | `milestone` | active | [Today画面を3ブロック構成に再設計](../2026/04/20260415-milestone-today画面を3ブロック構成に再設計.md) |
-| 2026-04-15 | `failure` | active | [Prompt分類バッチの誤検知ループ](../2026/04/20260415-failure-prompt分類バッチの誤検知ループ.md) |
+| 2026-04-15 | `milestone` | active | [Requestsに画像添付機能を追加](../2026/04/20260415-milestone-requestsに画像添付機能を追加.md) |
+| 2026-04-15 | `countermeasure` | active | [カレンダーの30分スナップとドラッグ伸縮修正](../2026/04/20260415-countermeasure-カレンダーの30分スナップとドラッグ伸縮修正.md) |
 | 2026-04-14 | `countermeasure` | active | [Edge Function verify_jwt=false を原則化](../2026/04/20260414-countermeasure-edge-function-verify-jwtfalse-を原則化.md) |
 | 2026-04-14 | `failure` | active | [weekly-insights save エラーとビルド欠落](../2026/04/20260414-failure-weekly-insights-save-エラーとビルド欠落.md) |
 | 2026-04-13 | `failure` | active | [バッチ分類プロンプトが[correction]として誤検出](../2026/04/20260413-failure-バッチ分類プロンプトがcorrectionとして誤検出.md) |
@@ -61,41 +60,25 @@ Total: **193**
 | 2026-04-08 | `countermeasure` | active | [リファクタリング部署/調査部の新設と共通化](../2026/04/20260408-countermeasure-リファクタリング部署調査部の新設と共通化.md) |
 | 2026-04-08 | `countermeasure` | active | [auto-push hook の誤コミット対策](../2026/04/20260408-countermeasure-auto-push-hook-の誤コミット対策.md) |
 | 2026-04-08 | `milestone` | active | [動的パイプライン計画への移行](../2026/04/20260408-milestone-動的パイプライン計画への移行.md) |
-| 2026-04-07 | `countermeasure` | active | [Growth検出をgrep→LLM分類に置換](../2026/04/20260407-countermeasure-growth検出をgrepllm分類に置換.md) |
-| 2026-04-07 | `milestone` | active | [Edge Function即時自動デプロイ](../2026/04/20260407-milestone-edge-function即時自動デプロイ.md) |
 | 2026-04-07 | `milestone` | active | [運営改善部がHow It Works品質を所管](../2026/04/20260407-milestone-運営改善部がhow-it-works品質を所管.md) |
+| 2026-04-07 | `milestone` | active | [Edge Function即時自動デプロイ](../2026/04/20260407-milestone-edge-function即時自動デプロイ.md) |
+| 2026-04-07 | `countermeasure` | active | [Growth検出をgrep→LLM分類に置換](../2026/04/20260407-countermeasure-growth検出をgrepllm分類に置換.md) |
 | 2026-04-07 | `failure` | resolved | [情報収集部がSupabase INSERT省略→ダッシュボード未反映](../2026/04/20260407-failure-情報収集部がsupabase-insert省略ダッシュボード未反映.md) |
 | 2026-04-07 | `failure` | resolved | [markedグローバル未公開→AIチャットmarkdown非表示](../2026/04/20260407-failure-markedグローバル未公開aiチャットmarkdown非表示.md) |
 | 2026-04-07 | `failure` | resolved | [freshness-check構文エラー→ops/HR部17日間機能停止](../2026/04/20260407-failure-freshness-check構文エラーopshr部17日間機能停止.md) |
+| 2026-04-06 | `milestone` | active | [Narrator DB スキーマ導入と Self-Analysis ハイブリッド化](../2026/04/20260406-milestone-narrator-db-スキーマ導入と-self-analysis-ハイブリッド化.md) |
 | 2026-04-06 | `countermeasure` | active | [モバイルUX全面改善とReact hookバグ修正](../2026/04/20260406-countermeasure-モバイルux全面改善とreact-hookバグ修正.md) |
 | 2026-04-06 | `milestone` | active | [LLM Wiki ナレッジ管理基盤の導入](../2026/04/20260406-milestone-llm-wiki-ナレッジ管理基盤の導入.md) |
-| 2026-04-06 | `milestone` | active | [Narrator DB スキーマ導入と Self-Analysis ハイブリッド化](../2026/04/20260406-milestone-narrator-db-スキーマ導入と-self-analysis-ハイブリッド化.md) |
 | 2026-04-06 | `milestone` | active | [AlphaEvolve進化ループの計装基盤完成](../2026/04/20260406-milestone-alphaevolve進化ループの計装基盤完成.md) |
 | 2026-04-06 | `failure` | active | [ハンドオフ自動処理の漏れ](../2026/04/20260406-failure-ハンドオフ自動処理の漏れ.md) |
 | 2026-04-06 | `failure` | active | [tasks テーブルの type 分類ミス（task/request）](../2026/04/20260406-failure-tasks-テーブルの-type-分類ミスtaskrequest.md) |
 | 2026-04-06 | `milestone` | active | [Narrator DB基盤構築（story_memory/story_moments/shared_stories）](../2026/04/20260406-milestone-narrator-db基盤構築story-memorystory-momentsshared-sto.md) |
 | 2026-04-05 | `milestone` | active | [Claude Code ハーネス再設計（IMP-001〜014完遂）](../2026/04/20260405-milestone-claude-code-ハーネス再設計imp-001014完遂.md) |
-| 2026-04-05 | `milestone` | active | [統一APIコストトラッキング + 6段階モデルルーティング](../2026/04/20260405-milestone-統一apiコストトラッキング-6段階モデルルーティング.md) |
 | 2026-04-05 | `countermeasure` | active | [実装↔ドキュメント同期の自動強制](../2026/04/20260405-countermeasure-実装ドキュメント同期の自動強制.md) |
+| 2026-04-05 | `milestone` | active | [統一APIコストトラッキング + 6段階モデルルーティング](../2026/04/20260405-milestone-統一apiコストトラッキング-6段階モデルルーティング.md) |
 | 2026-04-05 | `failure` | resolved | [CLAUDE.md 208行に肥大化（推奨60行の3倍）](../2026/04/20260405-failure-claudemd-208行に肥大化推奨60行の3倍.md) |
 | 2026-04-05 | `failure` | resolved | [中間assistantメッセージ未保存でOpenAI API 400](../2026/04/20260405-failure-中間assistantメッセージ未保存でopenai-api-400.md) |
 | 2026-04-05 | `failure` | resolved | [AIチャットhistory常に0件 — tool_call_idカラム不在](../2026/04/20260405-failure-aiチャットhistory常に0件-tool-call-idカラム不在.md) |
-| 2026-04-05 | `milestone` | resolved | [14件の改善提案を1セッションで全完了 — 組織改善の爆速実行](../2026/04/20260405-milestone-14件の改善提案を1セッションで全完了-組織改善の爆速実行.md) |
-| 2026-04-05 | `countermeasure` | resolved | [構造化ハンドオフYAML — Markdown正規表現の限界を超える](../2026/04/20260405-countermeasure-構造化ハンドオフyaml-markdown正規表現の限界を超える.md) |
-| 2026-04-05 | `countermeasure` | resolved | [Hook並列化 + ドキュメント鮮度チェック自動化](../2026/04/20260405-countermeasure-hook並列化-ドキュメント鮮度チェック自動化.md) |
-| 2026-04-05 | `countermeasure` | resolved | [CLAUDE.md 208→64行プルーニング — 知識の適切な分離](../2026/04/20260405-countermeasure-claudemd-20864行プルーニング-知識の適切な分離.md) |
-| 2026-04-05 | `milestone` | resolved | [ハーネスエンジニアリング調査 — 「プロンプトより環境が重要」の発見](../2026/04/20260405-milestone-ハーネスエンジニアリング調査-プロンプトより環境が重要の発見.md) |
-| 2026-04-05 | `countermeasure` | resolved | [自己分析にバイアス補正を導入 — LLMの「褒めすぎ」問題への対策](../2026/04/20260405-countermeasure-自己分析にバイアス補正を導入-llmの褒めすぎ問題への対策.md) |
-| 2026-04-05 | `milestone` | resolved | [Narrator（ライフコンパニオン）構想 — AIが人生の語り手になる](../2026/04/20260405-milestone-narratorライフコンパニオン構想-aiが人生の語り手になる.md) |
-| 2026-04-05 | `milestone` | resolved | [部署知識ローテーション — CLAUDE.md自動リフレッシュ](../2026/04/20260405-milestone-部署知識ローテーション-claudemd自動リフレッシュ.md) |
-| 2026-04-05 | `milestone` | resolved | [Today→Home リネーム + ニュース統合でホームページ化](../2026/04/20260405-milestone-todayhome-リネーム-ニュース統合でホームページ化.md) |
-| 2026-04-05 | `failure` | resolved | [Enterキー送信問題 — 改行しようとしてフォーム送信される](../2026/04/20260405-failure-enterキー送信問題-改行しようとしてフォーム送信される.md) |
-| 2026-04-05 | `milestone` | resolved | [感情分析バックフィル — 254日記エントリーの一括分析](../2026/04/20260405-milestone-感情分析バックフィル-254日記エントリーの一括分析.md) |
-| 2026-04-05 | `milestone` | resolved | [データ鮮度マップ + 知識分類体系の確立](../2026/04/20260405-milestone-データ鮮度マップ-知識分類体系の確立.md) |
-| 2026-04-05 | `milestone` | resolved | [サイドバー折りたたみ + ChatGPTスタイル編集/コピーボタン](../2026/04/20260405-milestone-サイドバー折りたたみ-chatgptスタイル編集コピーボタン.md) |
-| 2026-04-05 | `failure` | resolved | [iframe内アーティファクトリンク問題 — 3回の試行錯誤](../2026/04/20260405-failure-iframe内アーティファクトリンク問題-3回の試行錯誤.md) |
-| 2026-04-05 | `milestone` | resolved | [実装↔ドキュメント同期の3層エンフォースメント](../2026/04/20260405-milestone-実装ドキュメント同期の3層エンフォースメント.md) |
-| 2026-04-05 | `milestone` | resolved | [Finance機能の3段拡張 — 固定費・API費用・ウィッシュリスト](../2026/04/20260405-milestone-finance機能の3段拡張-固定費api費用ウィッシュリスト.md) |
 | 2026-04-05 | `milestone` | resolved | [Dreams & Goals UIの3回リデザイン — タブ→統合→単一ビュー](../2026/04/20260405-milestone-dreams-goals-uiの3回リデザイン-タブ統合単一ビュー.md) |
 | 2026-04-05 | `milestone` | resolved | [カレンダーイベントモーダル刷新 — レスポンシブ + @タスクリンク](../2026/04/20260405-milestone-カレンダーイベントモーダル刷新-レスポンシブ-タスクリンク.md) |
 | 2026-04-05 | `failure` | resolved | [カレンダーall-dayデフォルト問題 — 4連続fixでも直らない](../2026/04/20260405-failure-カレンダーall-dayデフォルト問題-4連続fixでも直らない.md) |
@@ -104,34 +87,50 @@ Total: **193**
 | 2026-04-05 | `milestone` | resolved | [AIチャット品質の劇的改善 — act first, ask later](../2026/04/20260405-milestone-aiチャット品質の劇的改善-act-first-ask-later.md) |
 | 2026-04-05 | `failure` | resolved | [AIチャット会話履歴の安定化 — tool_call_id問題との6時間の格闘](../2026/04/20260405-failure-aiチャット会話履歴の安定化-tool-call-id問題との6時間の格闘.md) |
 | 2026-04-05 | `milestone` | resolved | [AIチャットにPDF/Excel/Word/PPTX読み取り機能を追加](../2026/04/20260405-milestone-aiチャットにpdfexcelwordpptx読み取り機能を追加.md) |
-| 2026-04-04 | `milestone` | active | [Today画面を時間帯適応型にリデザイン](../2026/04/20260404-milestone-today画面を時間帯適応型にリデザイン.md) |
+| 2026-04-05 | `milestone` | resolved | [14件の改善提案を1セッションで全完了 — 組織改善の爆速実行](../2026/04/20260405-milestone-14件の改善提案を1セッションで全完了-組織改善の爆速実行.md) |
+| 2026-04-05 | `milestone` | resolved | [データ鮮度マップ + 知識分類体系の確立](../2026/04/20260405-milestone-データ鮮度マップ-知識分類体系の確立.md) |
+| 2026-04-05 | `countermeasure` | resolved | [Hook並列化 + ドキュメント鮮度チェック自動化](../2026/04/20260405-countermeasure-hook並列化-ドキュメント鮮度チェック自動化.md) |
+| 2026-04-05 | `countermeasure` | resolved | [CLAUDE.md 208→64行プルーニング — 知識の適切な分離](../2026/04/20260405-countermeasure-claudemd-20864行プルーニング-知識の適切な分離.md) |
+| 2026-04-05 | `milestone` | resolved | [ハーネスエンジニアリング調査 — 「プロンプトより環境が重要」の発見](../2026/04/20260405-milestone-ハーネスエンジニアリング調査-プロンプトより環境が重要の発見.md) |
+| 2026-04-05 | `milestone` | resolved | [感情分析バックフィル — 254日記エントリーの一括分析](../2026/04/20260405-milestone-感情分析バックフィル-254日記エントリーの一括分析.md) |
+| 2026-04-05 | `failure` | resolved | [Enterキー送信問題 — 改行しようとしてフォーム送信される](../2026/04/20260405-failure-enterキー送信問題-改行しようとしてフォーム送信される.md) |
+| 2026-04-05 | `milestone` | resolved | [Today→Home リネーム + ニュース統合でホームページ化](../2026/04/20260405-milestone-todayhome-リネーム-ニュース統合でホームページ化.md) |
+| 2026-04-05 | `milestone` | resolved | [部署知識ローテーション — CLAUDE.md自動リフレッシュ](../2026/04/20260405-milestone-部署知識ローテーション-claudemd自動リフレッシュ.md) |
+| 2026-04-05 | `milestone` | resolved | [Narrator（ライフコンパニオン）構想 — AIが人生の語り手になる](../2026/04/20260405-milestone-narratorライフコンパニオン構想-aiが人生の語り手になる.md) |
+| 2026-04-05 | `countermeasure` | resolved | [構造化ハンドオフYAML — Markdown正規表現の限界を超える](../2026/04/20260405-countermeasure-構造化ハンドオフyaml-markdown正規表現の限界を超える.md) |
+| 2026-04-05 | `milestone` | resolved | [サイドバー折りたたみ + ChatGPTスタイル編集/コピーボタン](../2026/04/20260405-milestone-サイドバー折りたたみ-chatgptスタイル編集コピーボタン.md) |
+| 2026-04-05 | `failure` | resolved | [iframe内アーティファクトリンク問題 — 3回の試行錯誤](../2026/04/20260405-failure-iframe内アーティファクトリンク問題-3回の試行錯誤.md) |
+| 2026-04-05 | `milestone` | resolved | [実装↔ドキュメント同期の3層エンフォースメント](../2026/04/20260405-milestone-実装ドキュメント同期の3層エンフォースメント.md) |
+| 2026-04-05 | `milestone` | resolved | [Finance機能の3段拡張 — 固定費・API費用・ウィッシュリスト](../2026/04/20260405-milestone-finance機能の3段拡張-固定費api費用ウィッシュリスト.md) |
+| 2026-04-05 | `countermeasure` | resolved | [自己分析にバイアス補正を導入 — LLMの「褒めすぎ」問題への対策](../2026/04/20260405-countermeasure-自己分析にバイアス補正を導入-llmの褒めすぎ問題への対策.md) |
 | 2026-04-04 | `countermeasure` | active | [OpenAI API呼び出しを全てEdge Function経由に統一](../2026/04/20260404-countermeasure-openai-api呼び出しを全てedge-function経由に統一.md) |
 | 2026-04-04 | `milestone` | active | [design-philosophy.md を永続ドキュメント化](../2026/04/20260404-milestone-design-philosophymd-を永続ドキュメント化.md) |
-| 2026-04-04 | `failure` | resolved | [会社セレクターの無意味なUI — 機能なしで放置](../2026/04/20260404-failure-会社セレクターの無意味なui-機能なしで放置.md) |
-| 2026-04-04 | `failure` | resolved | [OpenAI API直叩き — 5つのhookがEdge Functionを迂回](../2026/04/20260404-failure-openai-api直叩き-5つのhookがedge-functionを迂回.md) |
+| 2026-04-04 | `milestone` | active | [Today画面を時間帯適応型にリデザイン](../2026/04/20260404-milestone-today画面を時間帯適応型にリデザイン.md) |
 | 2026-04-04 | `failure` | resolved | [チャット履歴汚染 — 自動処理がconversationレコードを量産](../2026/04/20260404-failure-チャット履歴汚染-自動処理がconversationレコードを量産.md) |
+| 2026-04-04 | `failure` | resolved | [OpenAI API直叩き — 5つのhookがEdge Functionを迂回](../2026/04/20260404-failure-openai-api直叩き-5つのhookがedge-functionを迂回.md) |
+| 2026-04-04 | `failure` | resolved | [会社セレクターの無意味なUI — 機能なしで放置](../2026/04/20260404-failure-会社セレクターの無意味なui-機能なしで放置.md) |
 | 2026-04-03 | `countermeasure` | active | [部署駆動体制の整備 — pipeline/handoff/ops/marketing](../2026/04/20260403-countermeasure-部署駆動体制の整備-pipelinehandoffopsmarketing.md) |
 | 2026-04-03 | `milestone` | active | [company-dashboard を Vite+React+TS に全面移行](../2026/04/20260403-milestone-company-dashboard-を-vitereactts-に全面移行.md) |
 | 2026-04-03 | `milestone` | active | [Self-Focus Platform Phase1-3 実装](../2026/04/20260403-milestone-self-focus-platform-phase1-3-実装.md) |
-| 2026-04-03 | `countermeasure` | resolved | [AIペルソナの設計 — 「最高の相棒」→「丁寧だが堅すぎない秘書」](../2026/04/20260403-countermeasure-aiペルソナの設計-最高の相棒丁寧だが堅すぎない秘書.md) |
 | 2026-04-03 | `failure` | resolved | [ブリーフィングのキャッシュ戦略迷走 — 短すぎ→長すぎ→時間ベース](../2026/04/20260403-failure-ブリーフィングのキャッシュ戦略迷走-短すぎ長すぎ時間ベース.md) |
-| 2026-04-03 | `failure` | resolved | [RLSポリシー追加忘れ — 新テーブルのたびに同じ失敗](../2026/04/20260403-failure-rlsポリシー追加忘れ-新テーブルのたびに同じ失敗.md) |
-| 2026-04-03 | `milestone` | resolved | [スキル管理の運用自動化 — sync-skills.sh](../2026/04/20260403-milestone-スキル管理の運用自動化-sync-skillssh.md) |
-| 2026-04-03 | `failure` | resolved | [認証画面フラッシュ — ログイン済みなのにログイン画面が一瞬見える](../2026/04/20260403-failure-認証画面フラッシュ-ログイン済みなのにログイン画面が一瞬見える.md) |
+| 2026-04-03 | `countermeasure` | resolved | [AIペルソナの設計 — 「最高の相棒」→「丁寧だが堅すぎない秘書」](../2026/04/20260403-countermeasure-aiペルソナの設計-最高の相棒丁寧だが堅すぎない秘書.md) |
 | 2026-04-03 | `failure` | resolved | [Vercelデプロイ 3連続失敗 — .env問題](../2026/04/20260403-failure-vercelデプロイ-3連続失敗-env問題.md) |
+| 2026-04-03 | `failure` | resolved | [認証画面フラッシュ — ログイン済みなのにログイン画面が一瞬見える](../2026/04/20260403-failure-認証画面フラッシュ-ログイン済みなのにログイン画面が一瞬見える.md) |
+| 2026-04-03 | `milestone` | resolved | [スキル管理の運用自動化 — sync-skills.sh](../2026/04/20260403-milestone-スキル管理の運用自動化-sync-skillssh.md) |
+| 2026-04-03 | `failure` | resolved | [RLSポリシー追加忘れ — 新テーブルのたびに同じ失敗](../2026/04/20260403-failure-rlsポリシー追加忘れ-新テーブルのたびに同じ失敗.md) |
 | 2026-04-03 | `countermeasure` | resolved | [Zustand による状態管理集約 — データフェッチの一元化](../2026/04/20260403-countermeasure-zustand-による状態管理集約-データフェッチの一元化.md) |
 | 2026-04-02 | `milestone` | active | [GitHub Pagesでのダッシュボード自動デプロイ構築](../2026/04/20260402-milestone-github-pagesでのダッシュボード自動デプロイ構築.md) |
 | 2026-04-02 | `milestone` | active | [Claude Code-aware HD設計とCLAUDE.mdスリム化](../2026/04/20260402-milestone-claude-code-aware-hd設計とclaudemdスリム化.md) |
 | 2026-04-02 | `milestone` | active | [Home画面をHDサマリーダッシュボードとして新設](../2026/04/20260402-milestone-home画面をhdサマリーダッシュボードとして新設.md) |
-| 2026-04-02 | `failure` | resolved | [Newsレポート — クリック展開の3連続バグ](../2026/04/20260402-failure-newsレポート-クリック展開の3連続バグ.md) |
-| 2026-04-02 | `failure` | resolved | [Finance計算ロジック — 5連続バグ修正](../2026/04/20260402-failure-finance計算ロジック-5連続バグ修正.md) |
 | 2026-04-02 | `failure` | resolved | [Google Calendar 認証の迷走 — scope不足→トークン消失→サイレント再取得](../2026/04/20260402-failure-google-calendar-認証の迷走-scope不足トークン消失サイレント再取得.md) |
-| 2026-04-02 | `failure` | resolved | [カレンダー UTC/JST 地獄 — 5連続fix](../2026/04/20260402-failure-カレンダー-utcjst-地獄-5連続fix.md) |
+| 2026-04-02 | `failure` | resolved | [Newsレポート — クリック展開の3連続バグ](../2026/04/20260402-failure-newsレポート-クリック展開の3連続バグ.md) |
 | 2026-04-02 | `countermeasure` | resolved | [Polaris AI会社の統合廃止 — 実態に合わない組織を解体](../2026/04/20260402-countermeasure-polaris-ai会社の統合廃止-実態に合わない組織を解体.md) |
 | 2026-04-02 | `countermeasure` | resolved | [ページ統合の大掃除 — 6つのリファクタ一気実行](../2026/04/20260402-countermeasure-ページ統合の大掃除-6つのリファクタ一気実行.md) |
 | 2026-04-02 | `failure` | resolved | [staleコンテンツ配信 — デプロイしても古いファイルが表示](../2026/04/20260402-failure-staleコンテンツ配信-デプロイしても古いファイルが表示.md) |
-| 2026-04-02 | `milestone` | resolved | [Self-Focus Platform — ダッシュボードから自己理解プラットフォームへ](../2026/04/20260402-milestone-self-focus-platform-ダッシュボードから自己理解プラットフォームへ.md) |
+| 2026-04-02 | `failure` | resolved | [Finance計算ロジック — 5連続バグ修正](../2026/04/20260402-failure-finance計算ロジック-5連続バグ修正.md) |
+| 2026-04-02 | `failure` | resolved | [カレンダー UTC/JST 地獄 — 5連続fix](../2026/04/20260402-failure-カレンダー-utcjst-地獄-5連続fix.md) |
 | 2026-04-02 | `milestone` | resolved | [Claude Code-aware HD設計 — LLM内部構造を踏まえた最適化](../2026/04/20260402-milestone-claude-code-aware-hd設計-llm内部構造を踏まえた最適化.md) |
+| 2026-04-02 | `milestone` | resolved | [Self-Focus Platform — ダッシュボードから自己理解プラットフォームへ](../2026/04/20260402-milestone-self-focus-platform-ダッシュボードから自己理解プラットフォームへ.md) |
 | 2026-04-01 | `milestone` | active | [ダッシュボード大規模機能拡張（Chat/Calendar/Costs等）](../2026/04/20260401-milestone-ダッシュボード大規模機能拡張chatcalendarcosts等.md) |
 | 2026-04-01 | `milestone` | active | [HDにセキュリティ部門とUXデザイン部を新設](../2026/04/20260401-milestone-hdにセキュリティ部門とuxデザイン部を新設.md) |
 | 2026-04-01 | `countermeasure` | active | [Chat Edge Function 401とRLSポリシー修正](../2026/04/20260401-countermeasure-chat-edge-function-401とrlsポリシー修正.md) |

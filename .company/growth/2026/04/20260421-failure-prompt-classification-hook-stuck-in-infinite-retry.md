@@ -3,9 +3,10 @@
 - **type**: `failure`
 - **date**: 2026-04-21
 - **category**: process / **severity**: medium
-- **status**: active
+- **status**: recurring
 - **source**: manual
 - **tags**: auto-detected, daily-batch
+- **parent_id**: `4d092e0e-2ab7-4930-8c5a-766b08114961`
 
 ## what_happened
 The same correction signal — a prompt classification instruction — fired 213 times identically, indicating a hook or batch process is repeatedly failing and retrying the exact same operation without ever succeeding or backing off.

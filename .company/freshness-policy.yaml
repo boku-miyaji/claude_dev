@@ -203,8 +203,40 @@ data_sources:
     update_action: |
       1. git log --oneline --since="{last_growth_date}" | grep -v "auto-save" で直近コミットを取得
       2. fix/refactor/revert が3件以上あれば、パターン分析（連続fix、同じキーワードの繰り返し等）
-      3. 検出したパターンを growth_events テーブルに INSERT（event_type, category, severity, phase, title, what_happened, root_cause, countermeasure, result, related_commits, tags）
+      3. 検出したパターンを scripts/growth/record.sh で INSERT（必ず PJタグを付ける）
+         参照: .claude/rules/growth-events.md / .company/growth-tags.yaml
       4. 件数と内容をブリーフィングで報告
+
+  growth_mirror:
+    priority: 9.1
+    max_age_days: 1
+    auto_update: true
+    blocking: false
+    check_method: file_check
+    check_path: ".company/growth/README.md"
+    stale_condition: "Markdownミラー最終生成から24時間超過"
+    update_action: |
+      bash scripts/growth/export-mirror.sh を実行。
+      growth_events テーブルから .company/growth/ 配下に Markdown を再生成する。
+      このミラーは読み取り専用。手編集しない（次回上書きされる）。
+
+  growth_unresolved:
+    priority: 9.2
+    max_age_days: 14
+    auto_update: false
+    blocking: false
+    check_method: script
+    check_script: "bash /workspace/scripts/growth/check-unresolved.sh"
+    stale_condition: |
+      以下のいずれかが存在:
+      - failure で status='active' のまま14日超過かつ countermeasure が紐づかない
+      - countermeasure で status='active' のまま14日超過かつ milestone/result 未記録
+    update_action: |
+      1. scripts/growth/check-unresolved.sh の出力を読む
+      2. 未解決の failure に対して対策を検討:
+         a) 既に対策済みなら: scripts/growth/record.sh countermeasure <proj> "..." --parent-id=<failure_id>
+         b) 対策未済なら: 社長に対応を相談（リマインド）
+      3. 書き換えは行わない。parent_id で紐づけて続きを追記する
 
   # ── 優先度10: ナレッジ昇格チェック ──
 

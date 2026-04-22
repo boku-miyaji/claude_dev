@@ -3,9 +3,10 @@
 - **type**: `failure`
 - **date**: 2026-04-19
 - **category**: process / **severity**: medium
-- **status**: active
+- **status**: recurring
 - **source**: manual
 - **tags**: auto-detected, daily-batch
+- **parent_id**: `4d092e0e-2ab7-4930-8c5a-766b08114961`
 
 ## what_happened
 158件中大半が同一の「Classify each prompt」「Analyze these failure signals」の繰り返し。Hookが自身の出力をトリガーとして再発火し、correction信号が雪だるま式に増殖している

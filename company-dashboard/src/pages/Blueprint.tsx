@@ -432,11 +432,13 @@ function TabOverview() {
         ]} />
 
         <div className="section-title" style={{ fontSize: 13, marginTop: 16, marginBottom: 8, color: 'var(--green)' }}>自動メンテナンス（/company 起動時に検出→修復）</div>
-        <P>freshness-policy.yaml で定義（19データソース）。stale検出→人間の操作なしでClaude Codeが自動修復。registry_consistency / ceo_insights / knowledge_base / evaluations / prep_log_feedback / intelligence_feedback / preferences_decay / security_audit / security_scan / intelligence_reports / diary_analysis / growth_events / knowledge_promotion / claude_md_size / design_docs_sync / knowledge_lint / impl_docs_sync / dept_knowledge_refresh / harness_research の19項目。</P>
+        <P>freshness-policy.yaml で定義（21データソース）。stale検出→人間の操作なしでClaude Codeが自動修復。registry_consistency / ceo_insights / knowledge_base / evaluations / prep_log_feedback / intelligence_feedback / preferences_decay / security_audit / security_scan / intelligence_reports / diary_analysis / growth_events / growth_mirror / growth_unresolved / knowledge_promotion / claude_md_size / design_docs_sync / knowledge_lint / impl_docs_sync / dept_knowledge_refresh / harness_research の21項目。</P>
         <Tbl headers={['データ', '検出条件', '自動修復アクション']} rows={[
           ['harness_research', '最終調査7日超', '情報収集部(最新記事) ∥ 運営改善部(GAP分析) → 改善提案更新'],
           ['dept_knowledge_refresh', '最終更新14日超', 'ローテーションで2部署選定 → 情報収集(調査) ∥ ops(GAP分析) → 社長承認で更新'],
-          ['growth_events', '失敗シグナル蓄積', 'growth-detector.sh（キーワード検出）→ ファイル蓄積 → daily-analysis-batch.sh（Claude CLI）で要約・INSERT'],
+          ['growth_events', '失敗/対策/決定/達成の統合記録（ADR + post-mortem 統合）', 'growth-detector → daily-analysis-batch で自動INSERT。手動は scripts/growth/record.sh（PJタグ必須・重複検知）'],
+          ['growth_mirror', 'Markdown ミラー 24h 未更新', 'daily-analysis-batch で scripts/growth/export-mirror.sh が DB → .company/growth/ に再生成（読み取り専用）'],
+          ['growth_unresolved', '対策未決 failure が14日超', 'scripts/growth/check-unresolved.sh で検出 → /company ブリーフィングでリマインド（書き換えず parent_id で対策追記）'],
           ['knowledge昇格', 'confidence ≥ 3 の未昇格ルール', 'daily-analysis-batch.sh で検出 → 社長に提示 → 承認後に rules/ 追記'],
           ['CLAUDE.md サイズ', '200行超', '手順的記述をrules/に分離 → CLAUDE.md縮小（Hook でも警告）'],
           ['design-philosophy / Blueprint', '14日未更新 + AI機能変更あり', 'git diff分析 → 該当セクション自動追記'],
@@ -1090,7 +1092,7 @@ function TabDesignPhilosophy() {
         <Tbl headers={['ループ', '仕組み', 'データの場所']} rows={[
           ['日記ループ', '書く→分析→可視化→もっと書きたくなる→データ増→AI精度↑', 'diary_entries + emotion_analysis'],
           ['ナレッジ昇格', '修正指示→memory→2回目でKB→confidence≥3で社長承認→CLAUDE.md/rules/', 'memory/ → knowledge_base → 社長承認 → CLAUDE.md or rules/（自動昇格禁止）'],
-          ['Growth Chronicle', '失敗をLLMが自動検出→シグナル蓄積→3件で自動要約→growth_events INSERT→パターン→ルール化', 'growth_events（自動）+ ~/.claude/logs/growth-signals.jsonl（永続）'],
+          ['Growth Chronicle (ADR + post-mortem 統合)', 'failure→countermeasure→decision→milestone の4種別を parent_id で連鎖。PJタグ（claude-dev/focus-you/polaris-circuit/rikyu/agent-harness）で分類。記録は不変、書き換えず続きを追記。Markdown ミラーで grep 可', 'growth_events（DBマスター）+ .company/growth/（読み取り専用ミラー）+ ~/.claude/logs/growth-signals.jsonl'],
           ['人事部サイクル', '部署作業→評価→CLAUDE.md改善→精度↑', '.company/hr/evaluations/'],
           ['設計思想蓄積', '判断→design-philosophy.md追記→次の判断の土台', '.company/design-philosophy.md'],
         ]} />

@@ -3,9 +3,10 @@
 - **type**: `failure`
 - **date**: 2026-04-19
 - **category**: process / **severity**: medium
-- **status**: active
+- **status**: recurring
 - **source**: manual
 - **tags**: auto-detected, daily-batch
+- **parent_id**: `4d092e0e-2ab7-4930-8c5a-766b08114961`
 
 ## what_happened
 157 correction signals dominated by two repeating patterns: 'Classify each prompt' and 'Analyze failure signals' prompts firing repeatedly. The same hook output is being fed back as input, creating an infinite loop. Two actual user corrections ('Magentic実装やり直し') are buried in noise.

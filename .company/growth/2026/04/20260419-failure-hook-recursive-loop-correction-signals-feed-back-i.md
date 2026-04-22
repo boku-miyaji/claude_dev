@@ -3,9 +3,10 @@
 - **type**: `failure`
 - **date**: 2026-04-19
 - **category**: process / **severity**: medium
-- **status**: active
+- **status**: recurring
 - **source**: manual
 - **tags**: auto-detected, daily-batch
+- **parent_id**: `4d092e0e-2ab7-4930-8c5a-766b08114961`
 
 ## what_happened
 157 correction signals accumulated, dominated by two repeated prompts: 'Classify each prompt...' and 'Analyze these failure signals...'. The same classification/analysis prompt fires repeatedly without producing a usable result, drowning out the 2-3 actual user corrections (Magentic implementation requests).

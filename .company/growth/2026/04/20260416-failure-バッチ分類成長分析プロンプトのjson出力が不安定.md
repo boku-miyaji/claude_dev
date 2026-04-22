@@ -3,9 +3,10 @@
 - **type**: `failure`
 - **date**: 2026-04-16
 - **category**: process / **severity**: medium
-- **status**: active
+- **status**: recurring
 - **source**: manual
 - **tags**: auto-detected, daily-batch
+- **parent_id**: `4d092e0e-2ab7-4930-8c5a-766b08114961`
 
 ## what_happened
 prompt分類と成長イベント抽出のバッチが繰り返し'correction'シグナルを発生させており、期待するJSON構造で返ってこない

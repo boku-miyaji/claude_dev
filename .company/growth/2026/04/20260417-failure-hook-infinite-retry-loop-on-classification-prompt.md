@@ -3,9 +3,10 @@
 - **type**: `failure`
 - **date**: 2026-04-17
 - **category**: process / **severity**: medium
-- **status**: active
+- **status**: recurring
 - **source**: manual
 - **tags**: auto-detected, daily-batch
+- **parent_id**: `4d092e0e-2ab7-4930-8c5a-766b08114961`
 
 ## what_happened
 A hook (likely growth-detector or prompt-log) repeatedly fires the same classification/analysis prompt on every response, generating 25 identical correction signals in a single session

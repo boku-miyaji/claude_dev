@@ -3,9 +3,10 @@
 - **type**: `failure`
 - **date**: 2026-04-19
 - **category**: process / **severity**: medium
-- **status**: active
+- **status**: recurring
 - **source**: manual
 - **tags**: auto-detected, daily-batch
+- **parent_id**: `4d092e0e-2ab7-4930-8c5a-766b08114961`
 
 ## what_happened
 53件中ほぼ全てが同一の[correction]シグナル。'Classify each prompt'と'Analyze these failure signals'の2種類のプロンプトが繰り返し発火し続けている。Hookが自身の出力を入力として再トリガーする再帰ループが発生している。

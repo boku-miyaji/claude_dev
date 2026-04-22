@@ -768,6 +768,30 @@ else
 fi
 
 # ============================================================
+# Task: growth_events Markdown ミラー再生成
+# ============================================================
+echo ""
+echo "[8] Growth Markdown mirror export"
+GROWTH_EXPORT="/workspace/scripts/growth/export-mirror.sh"
+if [ -x "$GROWTH_EXPORT" ]; then
+  bash "$GROWTH_EXPORT" 2>&1 | sed 's/^/    /'
+else
+  echo "    $GROWTH_EXPORT not found, skip"
+fi
+
+# ============================================================
+# Task: growth_events 未解決チェック
+# ============================================================
+echo ""
+echo "[9] Growth unresolved check"
+GROWTH_CHECK="/workspace/scripts/growth/check-unresolved.sh"
+if [ -x "$GROWTH_CHECK" ]; then
+  bash "$GROWTH_CHECK" 2>&1 | sed 's/^/    /'
+else
+  echo "    $GROWTH_CHECK not found, skip"
+fi
+
+# ============================================================
 # 完了
 # ============================================================
 echo ""

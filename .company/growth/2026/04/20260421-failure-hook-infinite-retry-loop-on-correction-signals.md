@@ -3,9 +3,10 @@
 - **type**: `failure`
 - **date**: 2026-04-21
 - **category**: process / **severity**: medium
-- **status**: active
+- **status**: recurring
 - **source**: manual
 - **tags**: auto-detected, daily-batch
+- **parent_id**: `4d092e0e-2ab7-4930-8c5a-766b08114961`
 
 ## what_happened
 A growth-signal or correction-detection hook fired the same 'Classify each prompt' instruction 200+ times in a loop, followed by the 'Analyze failure signals' prompt also looping. The hook never broke out of its retry cycle.

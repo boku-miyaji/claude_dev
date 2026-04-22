@@ -626,6 +626,16 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/growth-reminder.sh",
+            "async": true
+          }
+        ]
       }
     ]
   },

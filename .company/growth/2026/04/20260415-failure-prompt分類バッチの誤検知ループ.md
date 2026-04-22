@@ -5,7 +5,7 @@
 - **category**: process / **severity**: medium
 - **status**: active
 - **source**: manual
-- **tags**: auto-detected, daily-batch
+- **tags**: agent-harness, hook, auto-detected, daily-batch, claude-dev
 
 ## what_happened
 プロンプト分類バッチの内部指示文（'Classify each prompt...'）が206件すべて'correction'信号として誤検知され、失敗シグナルとして蓄積された
