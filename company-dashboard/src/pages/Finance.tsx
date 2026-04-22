@@ -1126,6 +1126,7 @@ const OPENING_NOTES: OpeningNote[] = [
   { title: '白色→青色の切り替え', body: '2025年は白色（雑所得 or 白色事業所得）で申告済み。2026年から青色で、MFクラウドの帳簿は2026/1/1開始で新規セット、開業日(2/X)から仕訳スタート', tone: 'info' },
   { title: '家事按分の設定', body: '自宅で仕事するなら家賃・光熱費・通信費を事業分と個人分で按分。MFクラウドの「各種設定 → 家事按分」で比率を登録しておくと自動按分される', tone: 'tip' },
   { title: 'インボイス登録の判断', body: '年商1000万以下なら任意。法人取引が多いなら登録推奨（先方の仕入税額控除のため）。登録すると消費税申告が必要になるのでトレードオフ', tone: 'info' },
+  { title: '事業税は準委任なら非課税の可能性', body: '準委任契約のみ（成果物責任なし・稼働ベース）なら、請負業（第1種）に当たらず個人事業税が非課税になる可能性がある。①確定申告書の「事業の種類」欄に「業務委託（準委任型）コンサルティング」と記載 ②準委任であることが明記された契約書を全件保管 ③請求書は「業務委託料（〇月分稼働XXh）」形式にする。この3点を押さえておけば、通知が来ても異議申し立てができる', tone: 'tip' },
 ]
 
 interface ChecklistItem { id: string; label: string; priority: 'critical' | 'high' | 'medium' | 'low'; hint?: string }
@@ -1143,6 +1144,7 @@ const OPENING_CHECKLIST: ChecklistItem[] = [
   { id: 'denchou_rule', label: '証憑保管ルールを決定（命名規則・保存先）', priority: 'medium' },
   { id: 'invoice_check', label: 'インボイス登録の要否を判断', priority: 'medium', hint: '取引先が法人中心なら登録推奨' },
   { id: 'prev_expense', label: '2025年分MFデータは放置（白色のため税務影響なし）', priority: 'low' },
+  { id: 'jigyouzei_juinin', label: '契約書が「準委任」であることを確認・保管', priority: 'medium', hint: '確定申告書の事業の種類欄: 「業務委託（準委任型）コンサルティング」と記載' },
 ]
 
 interface RoutineTask { when: string; task: string }
