@@ -331,10 +331,18 @@ function CategoryProgress({ events }: { events: GrowthEvent[] }) {
   )
 }
 
+function matchProject(evt: GrowthEvent, key: string): boolean {
+  if (key === 'all') return true
+  const tags = evt.tags || []
+  if (key === 'unclassified') return !tags.some(t => PROJECT_KEYS.has(t))
+  return tags.includes(key)
+}
+
 export function Growth() {
   const [events, setEvents] = useState<GrowthEvent[]>([])
   const [filter, setFilter] = useState('all')
   const [sourceFilter, setSourceFilter] = useState<string>('all')
+  const [projectFilter, setProjectFilter] = useState<string>('all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -349,17 +357,33 @@ export function Growth() {
 
   const failures = events.filter((e) => e.event_type === 'failure')
   const countermeasures = events.filter((e) => e.event_type === 'countermeasure')
+  const decisions = events.filter((e) => e.event_type === 'decision')
   const milestones = events.filter((e) => e.event_type === 'milestone')
 
   const filtered = events
     .filter(e => filter === 'all' || e.event_type === filter || e.category === filter)
     .filter(e => sourceFilter === 'all' || (e.source || 'manual') === sourceFilter)
+    .filter(e => matchProject(e, projectFilter))
 
   // Source counts for filter buttons
   const sourceCounts: Record<string, number> = { all: events.length }
   events.forEach(e => {
     const s = e.source || 'manual'
     sourceCounts[s] = (sourceCounts[s] || 0) + 1
+  })
+
+  // Project counts
+  const projectCounts: Record<string, number> = { all: events.length, unclassified: 0 }
+  events.forEach(e => {
+    const tags = e.tags || []
+    let matched = false
+    for (const t of tags) {
+      if (PROJECT_KEYS.has(t)) {
+        projectCounts[t] = (projectCounts[t] || 0) + 1
+        matched = true
+      }
+    }
+    if (!matched) projectCounts.unclassified++
   })
 
   // Group by phase
@@ -375,11 +399,17 @@ export function Growth() {
     <div className="page">
       <PageHeader title="Growth Chronicle" description="失敗と進化の記録 — どう壊れ、どう直し、どう成長したか" />
 
-      <div className="g4" style={{ marginBottom: 20 }}>
+      <div className="g4" style={{ marginBottom: 8 }}>
         <KpiCard value={events.length} label="Total Events" />
         <KpiCard value={failures.length} label="Failures" status="bad" />
         <KpiCard value={countermeasures.length} label="Countermeasures" />
         <KpiCard value={milestones.length} label="Milestones" status="good" />
+      </div>
+      <div className="g4" style={{ marginBottom: 20 }}>
+        <KpiCard value={decisions.length} label="Decisions" />
+        <KpiCard value={projectCounts['claude-dev'] || 0} label="claude-dev" />
+        <KpiCard value={projectCounts['focus-you'] || 0} label="focus-you" />
+        <KpiCard value={projectCounts.unclassified || 0} label="未分類" />
       </div>
 
       <WorkIntensityChart />
@@ -391,6 +421,32 @@ export function Growth() {
           <button key={f.key} className={`growth-filter-btn${filter === f.key ? ' active' : ''}`}
             onClick={() => setFilter(f.key)}>{f.label}</button>
         ))}
+      </div>
+
+      {/* Project filter */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8, fontSize: 11 }}>
+        <span style={{ color: 'var(--text3)', alignSelf: 'center', marginRight: 4 }}>PJ:</span>
+        {PROJECT_TAGS.map(p => {
+          const count = projectCounts[p.key] || 0
+          const active = projectFilter === p.key
+          if (p.key !== 'all' && count === 0) return null
+          return (
+            <button key={p.key}
+              onClick={() => setProjectFilter(p.key)}
+              style={{
+                padding: '3px 10px',
+                borderRadius: 4,
+                border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+                background: active ? 'var(--accent)' : 'transparent',
+                color: active ? '#fff' : 'var(--text3)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font)',
+                fontSize: 11,
+              }}>
+              {p.label} ({count})
+            </button>
+          )
+        })}
       </div>
 
       {/* Source filter */}
