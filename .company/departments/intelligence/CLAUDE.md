@@ -22,6 +22,36 @@
 | /company 起動時 | 最新レポート要約 | 直近レポート(.json)を読み込み Claude が要約 |
 | 「情報収集して」 | オンデマンド | `python scripts/intelligence/collect.py` を実行 |
 
+## 収集前の準備習慣（必須）
+
+**情報収集を開始する前に、必ず以下の手順を実行する。**
+
+### Step 0-A: 気になった記事のギャップ分析 → sources.yaml 更新
+
+社長がダッシュボードの「気になった記事」タブに登録した URL を分析し、なぜ自動収集できなかったかを判定して sources.yaml を自動更新する。
+
+```bash
+python scripts/intelligence/gap-analysis.py
+```
+
+`collect.py` はこのスクリプトを自動で呼び出す（Step 0 に組み込み済み）。
+
+#### gap_type の判定ロジック
+
+| gap_type | 意味 | sources.yaml への追記 |
+|---|---|---|
+| `missing_x_account` | X/Twitter URL だがアカウントが未監視 | `x_accounts` に追加 |
+| `missing_keyword` | ドメインはカバー済みだがキーワード未登録 | `keywords` に追加 |
+| `missing_domain` | ドメインがどのセクションにも存在しない | `tech_articles` に追加 |
+| `already_covered` | 既存ソース・キーワードで拾えるはず | 追記なし・要因を記録 |
+
+#### ダッシュボード連携
+
+- ダッシュボードの **Reports → 気になった記事** タブ（`InterestArticles` コンポーネント）から URL を登録
+- Supabase テーブル: `interest_articles`（migration 067）
+- 分析後: `analyzed=true`, `gap_type`, `gap_reason`, `added_to_sources` が更新される
+- 登録した記事は次回 collect.py 実行時に自動分析される
+
 ## 収集対象
 
 ### 0. プロンプト起点キーワード（動的・最優先）

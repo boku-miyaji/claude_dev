@@ -363,7 +363,8 @@
       "Bash(host akycymnahqypmtsfqhtr.supabase.co)",
       "Bash(host aws-0-ap-northeast-1.pooler.supabase.com)",
       "Read(//proc/sys/fs/inotify/**)",
-      "Bash(sudo sysctl *)"
+      "Bash(sudo sysctl *)",
+      "Bash(sudo tee *)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -405,7 +406,8 @@
       "/workspace/scratch/design/focus-you",
       "/workspace/.company-focus-you/ai-dev",
       "/workspace/scripts",
-      "/home/node/.claude/skills"
+      "/home/node/.claude/skills",
+      "/workspace/aces-rikyu-sales-proposals-poc/server"
     ]
   },
   "hooks": {
