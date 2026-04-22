@@ -1342,7 +1342,64 @@ function FinRules() {
         </div>
       </section>
 
-      {/* 4. 開業年の特殊処理 */}
+      {/* 4. クレカ経費の領収書ガイド */}
+      <section style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20 }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>クレカ経費：領収書は必要？</h3>
+        <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text3)' }}>カード明細は有効な証憑。ただし用途によって追加書類が必要なものがある</p>
+        <div style={{ overflowX: 'auto', marginBottom: 16 }}>
+          <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse', minWidth: 500 }}>
+            <thead>
+              <tr>
+                {['用途', '明細だけでOK?', '補足'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text3)', fontWeight: 500, whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { usage: 'コンビニ・消耗品（店頭）', ok: 'ok', note: '明細に店名が出ればOK。レシートは捨ててよい' },
+                { usage: '交通費（ICカード等）', ok: 'ok', note: '利用履歴のDLがあればより確実' },
+                { usage: 'SaaS・ネット購入', ok: 'ng', note: '電子領収書/請求書PDFを別途保存（電帳法義務）' },
+                { usage: 'Amazon・楽天等', ok: 'warn', note: '購入明細ページをPDF保存する。明細だけでは用途不明' },
+                { usage: '会食・接待', ok: 'ng', note: '参加者名・人数・目的を摘要欄に記録（必須）' },
+                { usage: '高額機器（¥10万超）', ok: 'warn', note: '領収書もあると安全。固定資産として証憑が重要' },
+              ].map(row => {
+                const badge = row.ok === 'ok'
+                  ? { bg: 'rgba(34,197,94,.12)', fg: '#22c55e', label: 'OK' }
+                  : row.ok === 'ng'
+                  ? { bg: 'rgba(239,68,68,.12)', fg: '#ef4444', label: '要追加' }
+                  : { bg: 'rgba(245,158,11,.12)', fg: '#f59e0b', label: '推奨' }
+                return (
+                  <tr key={row.usage} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '9px 12px', fontWeight: 500, whiteSpace: 'nowrap' }}>{row.usage}</td>
+                    <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: badge.bg, color: badge.fg }}>{badge.label}</span>
+                    </td>
+                    <td style={{ padding: '9px 12px', color: 'var(--text3)', lineHeight: 1.6 }}>{row.note}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 8, padding: '12px 16px', fontSize: 12, lineHeight: 1.7 }}>
+          <div style={{ fontWeight: 600, color: '#ef4444', marginBottom: 6 }}>会食・接待だけは別扱い</div>
+          <div style={{ color: 'var(--text2)' }}>
+            カード明細に金額が出ていても、目的が分からないと経費として弱い。MFの摘要欄に記録する:
+          </div>
+          <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {[
+              '① 参加者名と人数（例: 〇〇社 田中さん 計2名）',
+              '② 目的（例: 案件打ち合わせ）',
+              '③ 1人¥5,000以下 → 会議費 ／ 超える → 交際費',
+            ].map(s => (
+              <div key={s} style={{ fontSize: 11, color: 'var(--text3)', paddingLeft: 4 }}>{s}</div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. 開業年の特殊処理 */}
       <section style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20 }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>開業年の特殊処理（2026年 / 白色→青色切替）</h3>
         <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text3)' }}>2026/2開業・青色申告1年目の人だけが気にすればいいポイント</p>
@@ -1363,10 +1420,10 @@ function FinRules() {
         </div>
       </section>
 
-      {/* 5. 開業初期チェックリスト */}
+      {/* 6. 開業初期チェックリスト */}
       <ChecklistSection />
 
-      {/* 6. 青色運用サイクル */}
+      {/* 7. 青色運用サイクル */}
       <section style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 10, padding: 20 }}>
         <h3 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>運用サイクル（青色申告65万控除キープ）</h3>
         <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--text3)' }}>月次で締める→四半期で見直す→年次で申告。サボると2月末〜3月の自分が泣く</p>
