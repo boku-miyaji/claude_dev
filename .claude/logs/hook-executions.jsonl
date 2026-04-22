@@ -19325,3 +19325,5 @@
 {"ts":"2026-04-22T18:10:34+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-22T18:11:22+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-22T18:11:39+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-22T18:12:11+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-22T18:14:15+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
