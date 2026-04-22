@@ -780,10 +780,6 @@
     "update-config": {
       "usageCount": 3,
       "lastUsedAt": 1776820332753
-    },
-    "tax-advisor": {
-      "usageCount": 1,
-      "lastUsedAt": 1776846139749
     }
   },
   "overageCreditUpsellSeenCount": 2,
