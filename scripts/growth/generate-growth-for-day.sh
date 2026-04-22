@@ -122,7 +122,7 @@ INPUT=$(cat <<EOF
 出力 schema（JSON 配列のみ、他の文字を含めない）:
 [
   {
-    "event_type": "failure" | "countermeasure" | "milestone",
+    "event_type": "failure" | "countermeasure" | "decision" | "milestone",
     "category": "security" | "architecture" | "devops" | "automation" | "tooling" | "organization" | "process" | "quality" | "communication",
     "severity": "critical" | "high" | "medium" | "low",
     "title": "簡潔なタイトル（40文字以内）",
@@ -131,9 +131,26 @@ INPUT=$(cat <<EOF
     "countermeasure": "どう対処したか（または null）",
     "result": "結果（または null）",
     "related_commits": ["短いhash", "..."],
-    "tags": ["キーワード"]
+    "tags": ["<PJタグ必須1つ>", "<領域タグ0〜N個>"]
   }
 ]
+
+event_type の使い分け:
+- failure         = 失敗・障害・ミス（事実）
+- countermeasure  = 失敗を受けた対策決定（parent_id で failure に紐づけが理想）
+- decision        = 障害を伴わない前向きな意思決定（技術選定・方針）
+- milestone       = 達成・到達・リリース
+
+tags ルール（重要）:
+- **PJタグを必ず1つ**付ける。選択肢（このうち1つを先頭に）:
+    claude-dev       (PJ横断・運営基盤・Hook)
+    focus-you        (個人ダッシュボード)
+    polaris-circuit  (回路図PJ)
+    rikyu            (りそなコンサル案件)
+    agent-harness    (Claude Code / エージェント harness 設計自体)
+- 判定基準: 「このPJが消滅したら消える知識か？」YES → PJ固有タグ / NO → claude-dev or agent-harness
+- 領域タグ（任意）: supabase, edge-function, rls, hook, llm-prompt, cost, ui, frontend, backend, auth, ci-cd, testing, documentation, migration, security, operations
+- `auto-detected` `daily-batch` は自動付与されるので書かない
 
 === 日付: ${DATE} ===
 
@@ -207,8 +224,17 @@ fi
 PAYLOAD=$(echo "$JSON" | python3 -c "
 import sys, json
 events = json.load(sys.stdin)
+STANDARD_PROJECTS = {'claude-dev','focus-you','polaris-circuit','rikyu','agent-harness'}
 out = []
 for e in events:
+    tags = e.get('tags') or []
+    # Ensure a PJ tag exists; default to 'claude-dev' if LLM forgot
+    if not any(t in STANDARD_PROJECTS for t in tags):
+        tags = ['claude-dev'] + tags
+    # Append source markers
+    source_marker = 'daily-digest' if '${SOURCE}' == 'daily-digest' else 'backfill'
+    if 'auto-detected' not in tags: tags.append('auto-detected')
+    if source_marker not in tags: tags.append(source_marker)
     out.append({
         'event_date': '${DATE}',
         'event_type': e.get('event_type', 'milestone'),
@@ -220,7 +246,7 @@ for e in events:
         'countermeasure': e.get('countermeasure'),
         'result': e.get('result'),
         'related_commits': e.get('related_commits') or [],
-        'tags': e.get('tags') or [],
+        'tags': tags,
         'source': '${SOURCE}',
         'status': 'active',
     })
