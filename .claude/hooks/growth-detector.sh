@@ -34,19 +34,22 @@ source "$SCRIPT_DIR/supabase-check.sh" 2>/dev/null || true
 [ "${SUPABASE_AVAILABLE:-false}" = "true" ] || exit 0
 
 # Keyword-based signal detection (no LLM call — batch analysis later)
+# 見逃しを避けるため婉曲・曖昧表現も広めに拾う。誤検知のほうが無検知より安い（後で統合できる）。
 PROMPT_SHORT=$(echo "$PROMPT" | head -c 300)
 SIGNAL="none"
 
-if echo "$PROMPT_SHORT" | grep -qiP 'バグ|壊れ|動かない|エラー|error|broken|crash'; then
+if echo "$PROMPT_SHORT" | grep -qiP 'バグ|壊れ|動かない|動いてない|エラー|error|broken|crash|落ちる|止まる|詰んだ|無限ループ|反応しない|hang'; then
   SIGNAL="bug_report"
-elif echo "$PROMPT_SHORT" | grep -qiP '直して|修正して|なぜ|なんで|fix|why.*not|違う.*やって'; then
+elif echo "$PROMPT_SHORT" | grep -qiP '直して|修正して|なぜ|なんで|fix|why.*not|違う.*やって|違うよ|違くない|そうじゃ|こうして|間違い|ミス|逆|反対|書き直|作り直|やり直'; then
   SIGNAL="correction"
-elif echo "$PROMPT_SHORT" | grep -qiP '意味ない|使えない|ダメ|だめ|やめて|違う$|ちがう'; then
+elif echo "$PROMPT_SHORT" | grep -qiP '意味ない|使えない|ダメ|だめ|やめて|違う$|ちがう|微妙|違和感|うーん|んー|いやぁ|惜しい|雑|浅い|粗い|弱い|薄い|足りない|物足りない|残念|期待.*違|期待と違|不満|しっくりこ'; then
   SIGNAL="frustration"
-elif echo "$PROMPT_SHORT" | grep -qiP 'さっきも|前も|何回も|また同じ|繰り返し'; then
+elif echo "$PROMPT_SHORT" | grep -qiP 'さっきも|前も|何回も|また同じ|繰り返し|この前も|毎回|いつも.*同じ|懲りず'; then
   SIGNAL="repeated_issue"
-elif echo "$PROMPT_SHORT" | grep -qiP 'なぜやらない|なんでやってない|忘れてる|抜けてる'; then
+elif echo "$PROMPT_SHORT" | grep -qiP 'なぜやらない|なんでやってない|忘れてる|抜けてる|やってくれ|ちゃんと|きちんと|勝手に|頼んでない|言ってない|余計|やりすぎ|出しゃば|指示.*違|指示.*外|意図.*違|意図と異な|そうじゃなくて|そういうこと'; then
   SIGNAL="missed_expectation"
+elif echo "$PROMPT_SHORT" | grep -qiP 'もっと|もう少し|もうちょい|もう1回|もう一回|改善|ブラッシュ|磨き|洗練|精度|品質.*上|レベル.*上'; then
+  SIGNAL="request_iteration"
 fi
 
 if [ -n "$SIGNAL" ] && [ "$SIGNAL" != "none" ] && [ "$SIGNAL" != "null" ]; then
@@ -59,9 +62,10 @@ if [ -n "$SIGNAL" ] && [ "$SIGNAL" != "none" ] && [ "$SIGNAL" != "null" ]; then
   mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
   echo "$ENTRY" >> "$LOG_FILE"
 
-  # If 3+ signals accumulated, summarize and INSERT now (don't wait for SessionStop)
+  # 閾値: 1件で即 summarize。見逃すくらいなら記録過多のほうが良い。
+  # 重複は後から parent_id / status='recurring' で整理可能。
   SIGNAL_COUNT=$(wc -l < "$GROWTH_DIR/signals.jsonl" 2>/dev/null | tr -d ' ')
-  if [ "$SIGNAL_COUNT" -ge 3 ]; then
+  if [ "$SIGNAL_COUNT" -ge 1 ]; then
     bash "$SCRIPT_DIR/growth-summarize.sh" &
   fi
 fi
