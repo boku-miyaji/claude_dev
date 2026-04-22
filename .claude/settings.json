@@ -156,6 +156,9 @@
       "Bash(gh auth:*)",
       "Bash(corepack enable:*)",
       "Bash(node_modules/.bin/tsc --noEmit)",
+      "// --- API wrappers (hooks/api/) ---",
+      "Bash(.claude/hooks/api/sb.sh:*)",
+      "Bash(/workspace/.claude/hooks/api/sb.sh:*)",
       "// --- Common Read ---",
       "Read(//home/node/**)",
       "Read(//workspace/company-dashboard/**)",
@@ -350,7 +353,8 @@
       "WebFetch(domain:jakobnielsenphd.substack.com)",
       "Read(//workspace/=== TypeScript/**)",
       "Bash(/workspace/.claude/hooks/api/sb.sh help *)",
-      "Bash(/workspace/.claude/hooks/api/sb.sh query *)"
+      "Bash(/workspace/.claude/hooks/api/sb.sh query *)",
+      "WebFetch(domain:zenn.dev)"
     ],
     "deny": [
       "Read(**/.env)",
