@@ -746,8 +746,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 86,
-      "lastUsedAt": 1776820067168
+      "usageCount": 87,
+      "lastUsedAt": 1776837428233
     },
     "register": {
       "usageCount": 13,
@@ -785,7 +785,7 @@
   "overageCreditUpsellSeenCount": 2,
   "metricsStatusCache": {
     "enabled": true,
-    "timestamp": 1775306414796
+    "timestamp": 1776837409986
   },
   "additionalModelCostsCache": {},
   "oauthAccount": {
