@@ -152,3 +152,5 @@
 {"ts":"2026-04-22T21:06:51+09:00","signal":"raw_prompt","prompt":"system-spec野どれから読んでレビューするのがいい？\n"}
 {"ts":"2026-04-22T21:06:51+09:00","signal":"raw_prompt","prompt":"system-spec野どれから読んでレビューするのがいい？\n"}
 {"ts":"2026-04-22T21:07:48+09:00","signal":"raw_prompt","prompt":"windows, linux, macで動く？\n"}
+{"ts":"2026-04-22T21:07:48+09:00","signal":"raw_prompt","prompt":"windows, linux, macで動く？\n"}
+{"ts":"2026-04-22T21:09:06+09:00","signal":"raw_prompt","prompt":"backendの依存ライブラリをインストールをちゃんと書いて。\n"}
