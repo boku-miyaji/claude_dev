@@ -20,6 +20,7 @@
 | `knowledge-accumulation.md` | ナレッジ蓄積・昇格ルール |
 | `skill-management.md` | スキル追加・同期・整合性チェックのルール |
 | `scratch-workspace.md` | モックアップ・壁打ち資料は必ず `scratch/` に置く（git管理外） |
+| `prefer-native-tools.md` | Bash合成コマンドの前に Read/Glob/Grep で代替できないか確認 |
 
 ## Compact Instructions
 
