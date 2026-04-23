@@ -20175,3 +20175,7 @@
 {"ts":"2026-04-23T15:20:33+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-23T15:20:36+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-23T15:20:42+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-23T15:20:42+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-23T15:20:45+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-23T15:21:38+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-23T15:21:38+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
