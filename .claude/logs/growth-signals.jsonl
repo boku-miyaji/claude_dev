@@ -359,3 +359,9 @@
 {"ts":"2026-04-23T16:06:21+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/.claude/agents/dept-intelligence.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\nFocus You — Runtime Error\ne.source_urls.map is not a function\nTypeError: e.source_urls.map is not a function\n    at hp (https://claude-dev-virid.vercel.app/assets/index-BhiArnJT.js:287:3994)\n    at wo (https://claude-dev-virid.vercel.app/assets/index-BhiArnJT.js:8:47582)\n    at fc (https://claude-dev-virid.vercel.app/assets/i\n"}
 {"ts":"2026-04-23T16:12:32+09:00","signal":"raw_prompt","prompt":"この具体を知りたいとなったときにリンクなどが欲しい。もとのサーベイのところなのか論文なのか、両方できれば貼っておいてほしい\n"}
 {"ts":"2026-04-23T16:13:26+09:00","signal":"raw_prompt","prompt":"4ページは何を作った？\n"}
+{"ts":"2026-04-23T16:12:32+09:00","signal":"raw_prompt","prompt":"この具体を知りたいとなったときにリンクなどが欲しい。もとのサーベイのところなのか論文なのか、両方できれば貼っておいてほしい\n"}
+{"ts":"2026-04-23T16:13:26+09:00","signal":"raw_prompt","prompt":"4ページは何を作った？\n"}
+{"ts":"2026-04-23T16:14:28+09:00","signal":"raw_prompt","prompt":"konnpone-to \nなにか作業をしたときは実施内容・懸念点等を最後にまとめて報告してほしい。\n"}
+{"ts":"2026-04-23T16:14:44+09:00","signal":"raw_prompt","prompt":"コンポーネントとエラー状態のカードがないですなぜ？\nなにか作業をしたときは実施内容・懸念点等を最後にまとめて報告してほしい。\n"}
+{"ts":"2026-04-23T16:14:28+09:00","signal":"raw_prompt","prompt":"konnpone-to \nなにか作業をしたときは実施内容・懸念点等を最後にまとめて報告してほしい。\n"}
+{"ts":"2026-04-23T16:14:44+09:00","signal":"raw_prompt","prompt":"コンポーネントとエラー状態のカードがないですなぜ？\nなにか作業をしたときは実施内容・懸念点等を最後にまとめて報告してほしい。\n"}
