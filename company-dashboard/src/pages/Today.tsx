@@ -12,7 +12,6 @@ import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
-import { StoryArcCard } from '@/components/StoryArcCard'
 import { FutureYouChat } from '@/components/FutureYouChat'
 import { MorningQuoteCard } from '@/components/MorningQuoteCard'
 import { useDataStore } from '@/stores/data'
@@ -924,9 +923,7 @@ export function Today() {
   /* ── [3] 未来のあなたから（クリックで対話展開） ── */
 
   const Briefing = (
-    <FutureYouChat entryPoint="today_partner">
-      <StoryArcCard />
-    </FutureYouChat>
+    <FutureYouChat entryPoint="today_partner" />
   )
 
   /* ── [News] ── */
