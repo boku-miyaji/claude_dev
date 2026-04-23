@@ -219,7 +219,7 @@ function SuggestionCard({
         )}
       </div>
 
-      {s.source_urls && s.source_urls.length > 0 && (
+      {Array.isArray(s.source_urls) && s.source_urls.length > 0 && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, fontSize: 11 }}>
           {s.source_urls.map((url, i) => (
             <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
