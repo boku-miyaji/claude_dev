@@ -3,40 +3,40 @@
 > Supabase `growth_events` テーブルの読み取り専用ミラー。
 > 毎日 `scripts/growth/export-mirror.sh` で再生成される。**手編集しない**（次回上書きされる）。
 
-- 総レコード数: **352**
+- 総レコード数: **380**
 
 ## PJ別
 
 - [agent-harness](by-project/agent-harness.md) — 28件
-- [claude-dev](by-project/claude-dev.md) — 201件
-- [focus-you](by-project/focus-you.md) — 76件
+- [claude-dev](by-project/claude-dev.md) — 214件
+- [focus-you](by-project/focus-you.md) — 83件
 - [polaris-circuit](by-project/polaris-circuit.md) — 26件
-- [rikyu](by-project/rikyu.md) — 21件
+- [rikyu](by-project/rikyu.md) — 29件
 
 ## 最近の20件
 
 | date | type | project | title |
 |---|---|---|---|
-| 2026-04-22 | `countermeasure` | claude-dev | growth-detector に system-generated プロンプトの除外フィルタを追加 |
-| 2026-04-22 | `countermeasure` | claude-dev | Supabase Edge Function 認証は verify_jwt=false + 関数内 getUser() を標準化 |
-| 2026-04-22 | `decision` | focus-you | focus-you プロダクトビジョンは自己理解・幸せ・物語 |
-| 2026-04-22 | `decision` | claude-dev | LLMコスト分離の原則（ダッシュボード/バッチ/Hook で用途別モデル） |
-| 2026-04-21 | `milestone` | claude-dev | llm-retroactive batch marker (2026-04-21) |
-| 2026-04-21 | `decision` | claude-dev | 定額プランでのバッチ実行の是非検討 |
-| 2026-04-21 | `failure` | focus-you | ideasテーブルのマイグレーションが未適用 |
-| 2026-04-21 | `decision` | focus-you | 名言セクションをGrowth示唆から分離 |
-| 2026-04-21 | `failure` | claude-dev | ナラティブAI競合調査Agentがストール |
-| 2026-04-21 | `failure` | agent-harness | Prompt classification hook stuck in infinite retry loop |
-| 2026-04-21 | `failure` | claude-dev | Prompt classification instruction repeated twice |
-| 2026-04-21 | `failure` | claude-dev | Hook内プロンプト分類が無限ループ |
-| 2026-04-21 | `failure` | agent-harness | Hook infinite retry loop on correction signals |
-| 2026-04-20 | `milestone` | claude-dev | llm-retroactive batch marker (2026-04-20) |
-| 2026-04-20 | `decision` | claude-dev | 処理フロー・使用モデルをdocs/README化 |
-| 2026-04-20 | `decision` | rikyu | 共通ナレッジ化はコア抽象化+silver層モジュール化 |
-| 2026-04-20 | `decision` | rikyu | Phase2の3行対応は型活用で工数削減 |
-| 2026-04-20 | `countermeasure` | rikyu | 見積もりは根拠+月単価で説明する |
-| 2026-04-20 | `decision` | rikyu | rikyu 4行対応見積もりを4区分で構造化 |
-| 2026-04-19 | `milestone` | claude-dev | llm-retroactive batch marker (2026-04-19) |
+| 2026-04-23 | `failure` | focus-you | researchタブが画面に表示されない |
+| 2026-04-23 | `failure` | focus-you | focus-youタブが重複・役割不明瞭 |
+| 2026-04-23 | `decision` | rikyu | メタ記号（R-12/G-1等）の廃止 |
+| 2026-04-23 | `failure` | rikyu | 過去の修正依頼が反映されない |
+| 2026-04-23 | `failure` | claude-dev | 情報収集の鮮度とスコープ不足 |
+| 2026-04-23 | `failure` | claude-dev | カレンダー表示のリグレッション |
+| 2026-04-23 | `countermeasure` | rikyu | system-specドキュメントを上流→下流に再整理 |
+| 2026-04-23 | `decision` | focus-you | focus-youのタブ構成を全体再設計 |
+| 2026-04-23 | `failure` | rikyu | rikyu体験設計の過去修正が反映されていない |
+| 2026-04-23 | `failure` | claude-dev | PR勝手マージの禁止違反 |
+| 2026-04-23 | `failure` | focus-you | ダッシュボードのカレンダー表示が壊れた |
+| 2026-04-23 | `failure` | claude-dev | PRを勝手にマージした |
+| 2026-04-23 | `countermeasure` | rikyu | ドキュメントのメタ情報記号廃止 |
+| 2026-04-23 | `failure` | claude-dev | カレンダー参照が不可に回帰 |
+| 2026-04-23 | `failure` | claude-dev | 情報収集が古く・スコープ狭い |
+| 2026-04-23 | `failure` | focus-you | focus-youタブ重複・分担不明 |
+| 2026-04-23 | `failure` | claude-dev | PR作成後に無断マージ |
+| 2026-04-23 | `decision` | rikyu | メタ記号での説明を禁止、丁寧な表現へ |
+| 2026-04-23 | `failure` | focus-you | カレンダー表示デグレ |
+| 2026-04-23 | `failure` | claude-dev | 情報収集で古い日付の情報を提示 |
 
 ## 運用ルール
 - マスター: Supabase `growth_events`

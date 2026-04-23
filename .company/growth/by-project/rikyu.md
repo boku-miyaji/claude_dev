@@ -1,9 +1,17 @@
 # growth_events — `rikyu`
 
-Total: **21**
+Total: **29**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-23 | `decision` | active | [メタ記号（R-12/G-1等）の廃止](../2026/04/20260423-decision-メタ記号r-12g-1等の廃止.md) |
+| 2026-04-23 | `failure` | active | [過去の修正依頼が反映されない](../2026/04/20260423-failure-過去の修正依頼が反映されない.md) |
+| 2026-04-23 | `countermeasure` | active | [system-specドキュメントを上流→下流に再整理](../2026/04/20260423-countermeasure-system-specドキュメントを上流下流に再整理.md) |
+| 2026-04-23 | `failure` | active | [rikyu体験設計の過去修正が反映されていない](../2026/04/20260423-failure-rikyu体験設計の過去修正が反映されていない.md) |
+| 2026-04-23 | `countermeasure` | active | [ドキュメントのメタ情報記号廃止](../2026/04/20260423-countermeasure-ドキュメントのメタ情報記号廃止.md) |
+| 2026-04-23 | `decision` | active | [メタ記号での説明を禁止、丁寧な表現へ](../2026/04/20260423-decision-メタ記号での説明を禁止丁寧な表現へ.md) |
+| 2026-04-23 | `countermeasure` | active | [ドキュメント内のメタ記号説明を廃止](../2026/04/20260423-countermeasure-ドキュメント内のメタ記号説明を廃止.md) |
+| 2026-04-23 | `failure` | active | [rikyu体験設計の修正依頼が未反映](../2026/04/20260423-failure-rikyu体験設計の修正依頼が未反映.md) |
 | 2026-04-20 | `decision` | active | [共通ナレッジ化はコア抽象化+silver層モジュール化](../2026/04/20260420-decision-共通ナレッジ化はコア抽象化silver層モジュール化.md) |
 | 2026-04-20 | `decision` | active | [Phase2の3行対応は型活用で工数削減](../2026/04/20260420-decision-phase2の3行対応は型活用で工数削減.md) |
 | 2026-04-20 | `countermeasure` | active | [見積もりは根拠+月単価で説明する](../2026/04/20260420-countermeasure-見積もりは根拠月単価で説明する.md) |

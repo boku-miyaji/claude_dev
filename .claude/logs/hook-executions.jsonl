@@ -20226,3 +20226,5 @@
 {"ts":"2026-04-23T15:25:49+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-23T15:25:53+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
 {"ts":"2026-04-23T15:25:54+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-23T15:26:19+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
+{"ts":"2026-04-23T15:26:24+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
