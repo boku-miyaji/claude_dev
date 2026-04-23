@@ -743,7 +743,12 @@
     "claude.ai Context7",
     "claude.ai draw.io",
     "claude.ai Socrates",
-    "claude.ai ACES Meet"
+    "claude.ai ACES Meet",
+    "claude.ai Gmail",
+    "claude.ai Google Drive",
+    "claude.ai Slack",
+    "claude.ai Notion",
+    "claude.ai Figma"
   ],
   "hasVisitedPasses": false,
   "passesLastSeenRemaining": 3,
