@@ -264,3 +264,5 @@
 {"ts":"2026-04-23T12:22:56+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/aces-rikyu-sales-proposals-poc/server/app/system-spec/concept/page.tsx in the IDE. This may or may not be related to the current task.</ide_opened_file>\nclaude codeの開発基盤として何がいい？最新のものも調べて提案して。 cursorを今は使っています。cmux, tmux, terminalなどいろん無物があると思います。それぞれのメリット・デメリットを比較してください。 私が必要なのは\n"}
 {"ts":"2026-04-23T12:23:27+09:00","signal":"raw_prompt","prompt":"claude codeの開発基盤として何がいい？最新のものも調べて提案して。 cursorを今は使っています。cmux, tmux, terminalなどいろん無物があると思います。それぞれのメリット・デメリットを比較してください。 私が必要なのはfileの中身もたまに見ますが、cursorのように全部のファイルをみるというより、編集したfileをみるとかで十分です。またfile追加もしたりしたい。serverで�\n"}
 {"ts":"2026-04-23T12:24:34+09:00","signal":"raw_prompt","prompt":"4/23日です。古くない？4/8の情報をなんで出してきた？\n"}
+{"ts":"2026-04-23T12:24:34+09:00","signal":"raw_prompt","prompt":"4/23日です。古くない？4/8の情報をなんで出してきた？\n"}
+{"ts":"2026-04-23T12:27:05+09:00","signal":"raw_prompt","prompt":"再収集して。新着がないことない。毎日新たな情報がたくさん出ている。なぜそんな情報を収集できない？スコープが狭い？\n"}
