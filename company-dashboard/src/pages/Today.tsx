@@ -13,6 +13,7 @@ import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
 import { FutureYouChat } from '@/components/FutureYouChat'
+import { StoryArcCard } from '@/components/StoryArcCard'
 import { MorningQuoteCard } from '@/components/MorningQuoteCard'
 import { useDataStore } from '@/stores/data'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
@@ -923,7 +924,9 @@ export function Today() {
   /* ── [3] 未来のあなたから（クリックで対話展開） ── */
 
   const Briefing = (
-    <FutureYouChat entryPoint="today_partner" />
+    <FutureYouChat entryPoint="today_partner">
+      <StoryArcCard />
+    </FutureYouChat>
   )
 
   /* ── [News] ── */

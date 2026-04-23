@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Arc Reader (weekly): detect the user's current emotional phase.
+"""Arc Reader (daily): detect the user's current emotional phase.
 
 Ported from company-dashboard/supabase/functions/narrator-update/index.ts
 (runArcReader). Runs via Claude CLI on GitHub Actions (flat-rate).
@@ -35,7 +35,7 @@ def run() -> dict:
         "limit": "1",
     })
 
-    if existing and _lib.days_since(existing["updated_at"]) < 7:
+    if existing and _lib.days_since(existing["updated_at"]) < 1:
         return {"updated": False, "reason": "recent"}
 
     since_iso = _lib.iso_days_ago(14)

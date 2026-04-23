@@ -469,3 +469,7 @@
 {"ts":"2026-04-23T23:15:37+09:00","signal":"raw_prompt","prompt":"最近の変化か。あってもいいかも。これは毎日更新される？\n"}
 {"ts":"2026-04-23T23:16:30+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/company-dashboard/src/hooks/useMorningBriefing.ts in the IDE. This may or may not be related to the current task.</ide_opened_file>\ncontinue\n"}
 {"ts":"2026-04-23T23:16:56+09:00","signal":"raw_prompt","prompt":"Story\n日記から見える自分の流れ — Arc(週1)/Theme(月1)/Chapter(四半期) が毎朝9時に自動更新 これは嘘ってことね。毎朝とかいています\n"}
+{"ts":"2026-04-23T23:16:30+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/company-dashboard/src/hooks/useMorningBriefing.ts in the IDE. This may or may not be related to the current task.</ide_opened_file>\ncontinue\n"}
+{"ts":"2026-04-23T23:16:56+09:00","signal":"raw_prompt","prompt":"Story\n日記から見える自分の流れ — Arc(週1)/Theme(月1)/Chapter(四半期) が毎朝9時に自動更新 これは嘘ってことね。毎朝とかいています\n"}
+{"ts":"2026-04-23T23:17:31+09:00","signal":"raw_prompt","prompt":"毎朝更新して欲しい。\nそして、homeからもみれるようにして欲しい。\n"}
+{"ts":"2026-04-23T23:19:31+09:00","signal":"raw_prompt","prompt":"Entra IDでのSSO\nロールは一旦そう。ただ、営業店ごとにも管理しないといけない。\n複数テナントもいけるように設計して\n"}
