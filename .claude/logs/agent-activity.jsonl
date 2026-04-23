@@ -187,3 +187,4 @@
 {"ts":"2026-04-23T16:07:31+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"algorithms + experience-design legacy cleanup","model":"default","background":false}
 {"ts":"2026-04-23T16:08:36+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"画面遷移マップ + APIエンドポイント仕様ページを作成","model":"default","background":false}
 {"ts":"2026-04-23T16:08:40+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"コンポーネント props 定義 + エラー状態設計ページを作成","model":"default","background":false}
+{"ts":"2026-04-23T16:11:05+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"architecture + knowledge + overview + data + db-browser legacy cleanup","model":"default","background":false}
