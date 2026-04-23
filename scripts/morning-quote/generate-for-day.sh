@@ -41,6 +41,10 @@ else
   : "${SUPABASE_INGEST_KEY:?SUPABASE_INGEST_KEY is required}"
 fi
 
+# RLS 対象テーブルの読み取りにはサービスロールキーが必要。
+# anon key だと diary_entries 等が [] を返してスキップになる。
+READ_KEY="${SUPABASE_SERVICE_ROLE_KEY:-${SUPABASE_ANON_KEY}}"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 YESTERDAY=$(date -d "$DATE - 1 day" +%Y-%m-%d)
@@ -71,9 +75,8 @@ fi
 # 2. 前日の日記を取得
 # ============================================================
 DIARY_JSON=$(curl -s "${SUPABASE_URL}/rest/v1/diary_entries?entry_date=eq.${YESTERDAY}&order=updated_at.desc&limit=1&select=id,body,ai_summary,topics,wbi" \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}")
+  -H "apikey: ${READ_KEY}" \
+  -H "Authorization: Bearer ${READ_KEY}")
 
 if [ -z "$DIARY_JSON" ] || [ "$DIARY_JSON" = "[]" ]; then
   echo "[$DATE] no diary for $YESTERDAY, skip (no starter fallback by spec)"
@@ -112,9 +115,8 @@ fi
 
 # 感情分析（なくても OK）
 EMOTION_JSON=$(curl -s "${SUPABASE_URL}/rest/v1/emotion_analysis?diary_entry_id=eq.${DIARY_ID}&order=created_at.desc&limit=1" \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" 2>/dev/null)
+  -H "apikey: ${READ_KEY}" \
+  -H "Authorization: Bearer ${READ_KEY}" 2>/dev/null)
 EMOTION_JSON="${EMOTION_JSON:-[]}"
 
 # ============================================================

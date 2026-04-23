@@ -39,6 +39,7 @@ jobs:
           # 取得: claude setup-token → GitHub Settings → Secrets に CLAUDE_CODE_OAUTH_TOKEN を登録
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_INGEST_KEY: ${{ secrets.SUPABASE_INGEST_KEY }}
           FOCUS_YOU_USER_ID: ${{ secrets.FOCUS_YOU_USER_ID }}
