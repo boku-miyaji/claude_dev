@@ -276,3 +276,5 @@
 {"ts":"2026-04-23T14:09:56+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/aces-rikyu-sales-proposals-poc/server/app/system-spec/experience-design/page.tsx in the IDE. This may or may not be related to the current task.</ide_opened_file>\ncurosorのほうがいいこと有る？\nvscodeと変わらないのでは？extensionとか。\n"}
 {"ts":"2026-04-23T14:09:56+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/aces-rikyu-sales-proposals-poc/server/app/system-spec/experience-design/page.tsx in the IDE. This may or may not be related to the current task.</ide_opened_file>\ncurosorのほうがいいこと有る？\nvscodeと変わらないのでは？extensionとか。\n"}
 {"ts":"2026-04-23T14:11:12+09:00","signal":"raw_prompt","prompt":"拡張機能は一緒？vscode以外にもなにか代替案ある？\n"}
+{"ts":"2026-04-23T14:11:12+09:00","signal":"raw_prompt","prompt":"拡張機能は一緒？vscode以外にもなにか代替案ある？\n"}
+{"ts":"2026-04-23T14:13:51+09:00","signal":"raw_prompt","prompt":"claude codeがなぜcursorを圧倒している？できることは一緒じゃない？何が差だった？\n"}
