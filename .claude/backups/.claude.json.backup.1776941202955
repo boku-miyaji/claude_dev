@@ -1,5 +1,5 @@
 {
-  "numStartups": 42,
+  "numStartups": 44,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -21,11 +21,11 @@
     "todo-list": 34,
     "# for memory": 16,
     "install-github-app": 38,
-    "status-line": 19,
+    "status-line": 44,
     "permissions": 42,
-    "drag-and-drop-images": 29,
+    "drag-and-drop-images": 43,
     "double-esc": 19,
-    "continue": 29,
+    "continue": 44,
     "custom-commands": 34,
     "shift-tab": 29,
     "custom-agents": 34,
@@ -595,7 +595,7 @@
       "lastAPIDuration": 0,
       "lastAPIDurationWithoutRetries": 0,
       "lastToolDuration": 0,
-      "lastDuration": 7378,
+      "lastDuration": 37355,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
       "lastTotalInputTokens": 0,
@@ -603,7 +603,7 @@
       "lastTotalCacheCreationInputTokens": 0,
       "lastTotalCacheReadInputTokens": 0,
       "lastModelUsage": {},
-      "lastSessionId": "234456cb-b574-4442-b27f-b2e22ded081a",
+      "lastSessionId": "3b89f934-5c00-4936-8fac-e5b0248fd947",
       "hasCompletedProjectOnboarding": true,
       "lastSessionMetrics": {
         "frame_duration_ms_count": 467,
@@ -732,7 +732,7 @@
         "amount_minor_units": null,
         "currency": null
       },
-      "timestamp": 1776923264922
+      "timestamp": 1776938271673
     }
   },
   "clientDataCache": null,
@@ -742,7 +742,13 @@
     "claude.ai Google Calendar",
     "claude.ai Context7",
     "claude.ai draw.io",
-    "claude.ai Socrates"
+    "claude.ai Socrates",
+    "claude.ai ACES Meet",
+    "claude.ai Gmail",
+    "claude.ai Google Drive",
+    "claude.ai Slack",
+    "claude.ai Notion",
+    "claude.ai Figma"
   ],
   "hasVisitedPasses": false,
   "passesLastSeenRemaining": 3,
@@ -810,5 +816,6 @@
     "claudeCodeTrialEndsAt": null,
     "claudeCodeTrialDurationDays": null
   },
-  "closedIssuesLastChecked": 1776923264593
+  "closedIssuesLastChecked": 1776923264593,
+  "remoteControlUpsellSeenCount": 1
 }

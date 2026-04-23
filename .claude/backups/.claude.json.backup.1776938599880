@@ -1,5 +1,5 @@
 {
-  "numStartups": 42,
+  "numStartups": 43,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -732,7 +732,7 @@
         "amount_minor_units": null,
         "currency": null
       },
-      "timestamp": 1776923264922
+      "timestamp": 1776938271673
     }
   },
   "clientDataCache": null,

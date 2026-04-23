@@ -420,7 +420,8 @@
       "/workspace/.company-focus-you/ai-dev",
       "/workspace/scripts",
       "/home/node/.claude/skills",
-      "/workspace/aces-rikyu-sales-proposals-poc/server"
+      "/workspace/aces-rikyu-sales-proposals-poc/server",
+      "/workspace/plugins/company/skills"
     ]
   },
   "hooks": {
