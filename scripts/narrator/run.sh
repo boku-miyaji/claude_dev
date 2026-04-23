@@ -44,6 +44,7 @@ MODULES=(
   "_chapter_generator.py"
   "_dream_detection.py"
   "_manual_refresh.py"
+  "_self_analysis.py"
 )
 
 SUMMARY="{"
