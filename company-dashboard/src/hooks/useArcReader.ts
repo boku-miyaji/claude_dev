@@ -16,6 +16,7 @@ import type { ArcReaderResult } from '@/types/narrator'
 export function useArcReader() {
   const [arc, setArc] = useState<ArcReaderResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
 
   const load = useCallback(async (): Promise<ArcReaderResult | null> => {
     setLoading(true)
@@ -31,6 +32,7 @@ export function useArcReader() {
       if (cached?.content) {
         const result = cached.content as unknown as ArcReaderResult
         setArc(result)
+        setUpdatedAt(cached.updated_at ?? null)
         return result
       }
       return null
@@ -50,5 +52,5 @@ export function useArcReader() {
   // refresh() は明示的なユーザーアクション（ボタン起動等）に備えて残す。
   // design-philosophy ⑪: 明示要求は能動扱い。現時点では story_memory の再読み込みだけを行い、
   // 生成が必要な場合は narrator-update の manual_refresh を別途呼び出す設計。
-  return { arc, loading, refresh: load }
+  return { arc, loading, refresh: load, updatedAt }
 }

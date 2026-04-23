@@ -21689,3 +21689,15 @@
 {"ts":"2026-04-23T23:20:22+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-23T23:20:25+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-23T23:20:31+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-23T23:23:32+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-23T23:23:32+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-23T23:23:36+09:00","hook":"tool-collector","tool":"mcp__claude_ai_Figma__use_figma","status":"ok"}
+{"ts":"2026-04-23T23:23:39+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-23T23:23:46+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-23T23:23:50+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-23T23:24:49+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-23T23:24:51+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-23T23:25:06+09:00","hook":"tool-collector","tool":"ToolSearch","status":"ok"}
+{"ts":"2026-04-23T23:25:12+09:00","hook":"tool-collector","tool":"TodoWrite","status":"ok"}
+{"ts":"2026-04-23T23:25:23+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
+{"ts":"2026-04-23T23:25:32+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}

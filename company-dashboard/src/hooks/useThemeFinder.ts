@@ -26,6 +26,7 @@ export function useThemeFinder() {
   const [theme, setTheme] = useState<ThemeFinderResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null)
 
   const load = useCallback(async (): Promise<ThemeFinderResult | null> => {
     setLoading(true)
@@ -42,6 +43,7 @@ export function useThemeFinder() {
         const result = cached.content as unknown as ThemeFinderResult
         setTheme(result)
         setUnlocked(true)
+        setUpdatedAt(cached.updated_at ?? null)
         return result
       }
 
@@ -61,5 +63,5 @@ export function useThemeFinder() {
 
   // refresh() は明示要求（ボタン等）のために残す。ここでは story_memory の再読み込みのみ。
   // 再生成が必要な場合は narrator-update の manual_refresh を別途呼び出す。
-  return { theme, loading, unlocked, refresh: load }
+  return { theme, loading, unlocked, refresh: load, updatedAt }
 }
