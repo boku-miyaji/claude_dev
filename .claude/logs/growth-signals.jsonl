@@ -416,3 +416,4 @@
 {"ts":"2026-04-23T18:53:23+09:00","signal":"raw_prompt","prompt":"いいと思います。お願いします。\n"}
 {"ts":"2026-04-23T18:55:12+09:00","signal":"raw_prompt","prompt":"提案準備でお願いします。\nそれ以外は先程の整理で進めてください\n"}
 {"ts":"2026-04-23T18:56:14+09:00","signal":"raw_prompt","prompt":"tmc rikyu\nzsh: command not found: tmc\n"}
+{"ts":"2026-04-23T18:56:14+09:00","signal":"raw_prompt","prompt":"tmc rikyu\nzsh: command not found: tmc\n"}
