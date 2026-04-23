@@ -190,3 +190,7 @@
 {"ts":"2026-04-23T16:11:05+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"architecture + knowledge + overview + data + db-browser legacy cleanup","model":"default","background":false}
 {"ts":"2026-04-23T18:10:42+09:00","event":"agent_dispatch","dept":"Explore","desc":"実装可能性の調査","model":"default","background":false}
 {"ts":"2026-04-23T18:12:57+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"journey.ts データ集約 + Navigator ページ実装","model":"default","background":false}
+{"ts":"2026-04-23T18:16:44+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Fix ID references in experience-design and screen-flow pages","model":"default","background":false}
+{"ts":"2026-04-23T18:17:10+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Fix ID references in algorithms, page index, and algorithms design-philosophy sections","model":"default","background":false}
+{"ts":"2026-04-23T18:17:14+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Fix ID references in api-spec and mvp-design pages","model":"default","background":false}
+{"ts":"2026-04-23T18:22:39+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Navigator完全リデザイン：1画面完結ビジュアルシステムマップ","model":"default","background":false}
