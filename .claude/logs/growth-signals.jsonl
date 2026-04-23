@@ -304,3 +304,5 @@
 {"ts":"2026-04-23T15:23:28+09:00","signal":"raw_prompt","prompt":"[1] (2026-04-22) [1] (2026-04-10 21:49) web_searchツールを使って、AI/LLM、Claude Code、OpenAI、Google AI、Meta AI、Cursor、MCP の最新ニュースを5件検索してください。各ニュースは以下のJSON配列で返してください: [{\"title\":\"タイトル（日本語）\",\"summary\":\"2-3文の日本語要約。英語の記事や論文も必ず日本語で要約する。何が重要なのか、どう使えるかを含める\",\"url\":\"記事URL\",\"source\":\"ソー\n[2] (2026-04\n"}
 {"ts":"2026-04-23T15:23:30+09:00","signal":"raw_prompt","prompt":"回答はいらないです。\nセッションのメタ情報とユーザーのPromptは紐づいている？\n"}
 {"ts":"2026-04-23T15:23:30+09:00","signal":"raw_prompt","prompt":"回答はいらないです。\nセッションのメタ情報とユーザーのPromptは紐づいている？\n"}
+
+{"ts":"2026-04-23T15:24:01+09:00","signal":"raw_prompt","prompt":"[1] (2026-04-22) [1] (2026-04-13 02:36) databricks, snowflakeで使えるLLMは？ エージェント開発環境はある？ML flow? semantic layer, ontologyはdatabricks, snowflake, awsに機能ある？ [2] (2026-04-13 02:39) データが外に出ないとはどういうこと？同じネットワーク内？ [3] (2026-04-13 02:48) Snowflake のウェアハウスサイズはデータサイズで決まる？それとも同時接続\n[2] (2026-04-22) [1] (2026-04-13 02:36) databricks, snowflake�"}
