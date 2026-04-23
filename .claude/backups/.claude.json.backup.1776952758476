@@ -1,5 +1,5 @@
 {
-  "numStartups": 43,
+  "numStartups": 44,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -21,13 +21,13 @@
     "todo-list": 34,
     "# for memory": 16,
     "install-github-app": 38,
-    "status-line": 19,
+    "status-line": 44,
     "permissions": 42,
     "drag-and-drop-images": 43,
     "double-esc": 19,
-    "continue": 29,
+    "continue": 44,
     "custom-commands": 34,
-    "shift-tab": 29,
+    "shift-tab": 44,
     "custom-agents": 34,
     "plan-mode-for-complex-tasks": 38,
     "shift-enter-setup": 30,
@@ -591,37 +591,55 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0,
-      "lastAPIDuration": 0,
-      "lastAPIDurationWithoutRetries": 0,
-      "lastToolDuration": 0,
-      "lastDuration": 328969,
-      "lastLinesAdded": 0,
-      "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 0,
-      "lastTotalOutputTokens": 0,
-      "lastTotalCacheCreationInputTokens": 0,
-      "lastTotalCacheReadInputTokens": 0,
-      "lastModelUsage": {},
-      "lastSessionId": "1980d47f-4f22-43b0-9c6d-54721020a8d2",
+      "lastCost": 2.5752382499999995,
+      "lastAPIDuration": 340589,
+      "lastAPIDurationWithoutRetries": 340568,
+      "lastToolDuration": 773,
+      "lastDuration": 7757616,
+      "lastLinesAdded": 208,
+      "lastLinesRemoved": 3,
+      "lastTotalInputTokens": 1984,
+      "lastTotalOutputTokens": 19579,
+      "lastTotalCacheCreationInputTokens": 331503,
+      "lastTotalCacheReadInputTokens": 3441550,
+      "lastModelUsage": {
+        "claude-sonnet-4-6": {
+          "inputTokens": 1984,
+          "outputTokens": 19579,
+          "cacheReadInputTokens": 3441550,
+          "cacheCreationInputTokens": 331503,
+          "webSearchRequests": 0,
+          "costUSD": 2.5752382499999995
+        }
+      },
+      "lastSessionId": "354b743c-9dc8-4c08-a8f2-93213df13091",
       "hasCompletedProjectOnboarding": true,
       "lastSessionMetrics": {
-        "frame_duration_ms_count": 467,
-        "frame_duration_ms_min": 0.045424000003549736,
-        "frame_duration_ms_max": 14.387995000000046,
-        "frame_duration_ms_avg": 0.48538386937913425,
-        "frame_duration_ms_p50": 0.4597539999995206,
-        "frame_duration_ms_p95": 0.859651500000291,
-        "frame_duration_ms_p99": 1.3785450000003046,
-        "hook_duration_ms_count": 3,
-        "hook_duration_ms_min": 121,
-        "hook_duration_ms_max": 11256,
-        "hook_duration_ms_avg": 6546,
-        "hook_duration_ms_p50": 8261,
-        "hook_duration_ms_p95": 10956.5,
-        "hook_duration_ms_p99": 11196.1
+        "frame_duration_ms_count": 15307,
+        "frame_duration_ms_min": 0.04387000005226582,
+        "frame_duration_ms_max": 36.06349900003988,
+        "frame_duration_ms_avg": 0.5563863641465656,
+        "frame_duration_ms_p50": 0.5247099999105558,
+        "frame_duration_ms_p95": 0.9024806999717837,
+        "frame_duration_ms_p99": 1.130947449985251,
+        "hook_duration_ms_count": 56,
+        "hook_duration_ms_min": 0,
+        "hook_duration_ms_max": 600027,
+        "hook_duration_ms_avg": 10837.5,
+        "hook_duration_ms_p50": 4,
+        "hook_duration_ms_p95": 62,
+        "hook_duration_ms_p99": 273373.7500000017,
+        "pre_tool_hook_duration_ms_count": 32,
+        "pre_tool_hook_duration_ms_min": 0,
+        "pre_tool_hook_duration_ms_max": 40,
+        "pre_tool_hook_duration_ms_avg": 17.03125,
+        "pre_tool_hook_duration_ms_p50": 24,
+        "pre_tool_hook_duration_ms_p95": 35,
+        "pre_tool_hook_duration_ms_p99": 38.45
       },
-      "lastGracefulShutdown": false
+      "lastGracefulShutdown": true,
+      "lastFpsAverage": 1.96,
+      "lastFpsLow1Pct": 1048.36
     },
     "/workspace/diary": {
       "allowedTools": [],
@@ -754,8 +772,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 90,
-      "lastUsedAt": 1776913769224
+      "usageCount": 93,
+      "lastUsedAt": 1776950697574
     },
     "register": {
       "usageCount": 13,
@@ -817,5 +835,5 @@
     "claudeCodeTrialDurationDays": null
   },
   "closedIssuesLastChecked": 1776923264593,
-  "remoteControlUpsellSeenCount": 1
+  "remoteControlUpsellSeenCount": 2
 }
