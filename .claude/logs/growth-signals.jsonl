@@ -328,3 +328,18 @@
 {"ts":"2026-04-23T15:35:23+09:00","signal":"raw_prompt","prompt":"awaiting_confirmに関しては怪しい。確認しておけなら何も言わずにそのまま終わらせると思うので。ステータスがずっとそのままになる。\nclaude 的に依頼されたことを破ったのかやっていないのかのステータスがいいのかも。人間側は基本的には何もアクションしないです。claude 的にどうなのかという観点で監理したい。\n"}
 {"ts":"2026-04-23T15:35:23+09:00","signal":"raw_prompt","prompt":"awaiting_confirmに関しては怪しい。確認しておけなら何も言わずにそのまま終わらせると思うので。ステータスがずっとそのままになる。\nclaude 的に依頼されたことを破ったのかやっていないのかのステータスがいいのかも。人間側は基本的には何もアクションしないです。claude 的にどうなのかという観点で監理したい。\n"}
 {"ts":"2026-04-23T15:37:17+09:00","signal":"raw_prompt","prompt":"cut_offのステータスになる？ネットが切れたらそのステータスに更新できないのでは？\n"}
+{"ts":"2026-04-23T15:37:17+09:00","signal":"raw_prompt","prompt":"cut_offのステータスになる？ネットが切れたらそのステータスに更新できないのでは？\n"}
+{"ts":"2026-04-23T15:39:45+09:00","signal":"raw_prompt","prompt":"focus youへの示唆だけではなく、claude_devの運営がよくなることに関しても示唆がほしい。宮路HDの運営に関しても良くなる部分も別で整理してほしい。その２観点でまとめて。focus youはそのプロダクトだけ、宮路HDはclaude code使った開発全般、運用的なところに関する示唆です。 suggestionsもその２つでわけてほしい。 チェックしてrequestsに入れるときもどちらに対する改善な�"}
+{"ts":"2026-04-23T15:40:51+09:00","signal":"raw_prompt","prompt":"お願いします。\n"}
+{"ts":"2026-04-23T15:39:45+09:00","signal":"raw_prompt","prompt":"focus youへの示唆だけではなく、claude_devの運営がよくなることに関しても示唆がほしい。宮路HDの運営に関しても良くなる部分も別で整理してほしい。その２観点でまとめて。focus youはそのプロダクトだけ、宮路HDはclaude code使った開発全般、運用的なところに関する示唆です。 suggestionsもその２つでわけてほしい。 チェックしてrequestsに入れるときもどちらに対する改善な�"}
+{"ts":"2026-04-23T15:40:51+09:00","signal":"raw_prompt","prompt":"お願いします。\n"}
+{"ts":"2026-04-23T15:43:32+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/company-dashboard/src/types/intelligence.ts in the IDE. This may or may not be related to the current task.</ide_opened_file>\n各情報がどのタイミングでアップデートされるのかどこかに書いてある？\n渉外担当の動きとシステムのデータのアップデートタイミングの図がほしい。\n"}
+{"ts":"2026-04-23T15:43:32+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/company-dashboard/src/types/intelligence.ts in the IDE. This may or may not be related to the current task.</ide_opened_file>\n各情報がどのタイミングでアップデートされるのかどこかに書いてある？\n渉外担当の動きとシステムのデータのアップデートタイミングの図がほしい。\n"}
+{"ts":"2026-04-23T15:45:54+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /home/node/.claude/CLAUDE.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\nまた情報収集部への依頼で、論文を調べたときはもう少し詳細に説明を入れてほしいのと、ちゃんとリンクを貼ってください。他の記事もちゃんとリンクを張って。気になっても飛べないので困る。。最後に参考リンクとしてまとめるのではなく\n\n現状で正し\n"}
+{"ts":"2026-04-23T15:45:54+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /home/node/.claude/CLAUDE.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\nまた情報収集部への依頼で、論文を調べたときはもう少し詳細に説明を入れてほしいのと、ちゃんとリンクを貼ってください。他の記事もちゃんとリンクを張って。気になっても飛べないので困る。。最後に参考リンクとしてまとめるのではなく\n\n現状で正し\n"}
+{"ts":"2026-04-23T15:48:20+09:00","signal":"raw_prompt","prompt":"繁栄して。田中さんもけして\n"}
+{"ts":"2026-04-23T15:49:27+09:00","signal":"raw_prompt","prompt":"テストとして、再度情報収集して。前と似ていても構わない。\n"}
+{"ts":"2026-04-23T15:48:20+09:00","signal":"raw_prompt","prompt":"繁栄して。田中さんもけして\n"}
+{"ts":"2026-04-23T15:49:27+09:00","signal":"raw_prompt","prompt":"テストとして、再度情報収集して。前と似ていても構わない。\n"}
+{"ts":"2026-04-23T15:53:02+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /home/node/.claude/CLAUDE.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\n各機能の入力出力イメージを入れてほしい。アルゴリズム詳細？\n"}
+{"ts":"2026-04-23T15:55:54+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /home/node/.claude/CLAUDE.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\n今のドキュメントの状態で実際にSEは実装できるレベルまで詳細化できていますか？\n"}

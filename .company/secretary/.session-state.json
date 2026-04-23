@@ -1,8 +1,8 @@
 {
-  "saved_at": "2026-04-23T15:22:34+09:00",
+  "saved_at": "2026-04-23T15:39:51+09:00",
   "today": "2026-04-23",
-  "work_dir": "/workspace",
-  "git_last_commit": "2615d8843cb94c2d233cc6564b7b72593758a041 chore: auto-save session changes",
+  "work_dir": "/workspace/aces-rikyu-sales-proposals-poc",
+  "git_last_commit": "09634e74d8a1d22488a34d3c0a7449f2949b044b chore: auto-save session changes",
   "active_tasks": [],
   "note": "Context Compaction により古い会話が圧縮されました。以下の情報を確認してください。",
   "reminders": [
