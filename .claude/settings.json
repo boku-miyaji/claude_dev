@@ -364,7 +364,12 @@
       "Bash(host aws-0-ap-northeast-1.pooler.supabase.com)",
       "Read(//proc/sys/fs/inotify/**)",
       "Bash(sudo sysctl *)",
-      "Bash(sudo tee *)"
+      "Bash(sudo tee *)",
+      "Bash(awk '/const unifiedKnowledgeTable/,/^]/' /workspace/aces-rikyu-sales-proposals-poc/server/data/data-catalog.ts)",
+      "Bash(awk '/^export const dataSources/,/^export const externalApiReferences/' /workspace/aces-rikyu-sales-proposals-poc/server/data/data-catalog.ts)",
+      "Bash(awk '/^export const dataEntities/,/^export const dataAvailabilityPresets/' /workspace/aces-rikyu-sales-proposals-poc/server/data/data-catalog.ts)",
+      "Bash(awk '/^export const hardcodeMappings/,/^export const featureMap/' /workspace/aces-rikyu-sales-proposals-poc/server/data/data-catalog.ts)",
+      "Bash(awk '/^export const unifiedKnowledgeTable/,0' /workspace/aces-rikyu-sales-proposals-poc/server/data/data-catalog.ts)"
     ],
     "deny": [
       "Read(**/.env)",

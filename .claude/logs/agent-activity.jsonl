@@ -174,3 +174,4 @@
 {"ts":"2026-04-22T17:28:24+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集部 - 4/19以降の最新AI情報収集","model":"default","background":false}
 {"ts":"2026-04-22T17:50:25+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"システム開発部 - interest_articles UI + migration","model":"default","background":false}
 {"ts":"2026-04-22T21:27:17+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"rikyu system-spec mvp-design ページ全面改訂","model":"default","background":false}
+{"ts":"2026-04-22T22:43:25+09:00","event":"agent_dispatch","dept":"Explore","desc":"Scan system-spec pages for content audit","model":"default","background":false}
