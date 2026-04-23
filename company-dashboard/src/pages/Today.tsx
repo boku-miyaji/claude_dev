@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { calculateStreak } from '@/lib/streak'
 import { Card } from '@/components/ui'
 import { useEmotionAnalysis } from '@/hooks/useEmotionAnalysis'
-import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { useMomentDetector } from '@/hooks/useMomentDetector'
 import { useDiaryExtraction, type DiaryExtractionResult } from '@/hooks/useDiaryExtraction'
 import { DiaryExtractionResultCard } from '@/components/DiaryExtractionResultCard'
@@ -312,26 +311,6 @@ export function Today() {
   const timeline = useTodayTimeline(allOpenTasks, completedToday)
   const { slots: timelineSlots, todayTasks: timelineTodayTasks, completedUntimedToday, upcomingTasks, tomorrowEvents, recentEventName, loading: timelineLoading, calendarAuthenticated } = timeline
 
-  // Briefing text from timeline data
-  const todayEventsText = useMemo(() => {
-    const events: string[] = []
-    for (const slot of timelineSlots) {
-      for (const item of slot.items) {
-        if (item.type === 'event') events.push(`${formatEventTime(item.startTime)} ${item.title}${item.isPast ? ' (完了)' : ''}`)
-      }
-    }
-    return events.length > 0 ? events.join('\n') : undefined
-  }, [timelineSlots])
-
-  const tomorrowEventsText = useMemo(() => {
-    if (tomorrowEvents.length === 0) return undefined
-    return tomorrowEvents.map((e) => `${formatEventTime(e.startTime)} ${e.title}`).join('\n')
-  }, [tomorrowEvents])
-
-  const weatherText = weather ? `今日の天気: ${weather.today.icon} ${weather.today.tempMax}℃/${weather.today.tempMin}℃、明日: ${weather.tomorrow.icon} ${weather.tomorrow.tempMax}℃/${weather.tomorrow.tempMin}℃` : undefined
-  // Wait until calendar events have loaded before generating the briefing — otherwise
-  // the AI sees an empty schedule and incorrectly tells the user "今日はフリーですね".
-  const { message: briefingMessage, loading: briefingLoading } = useMorningBriefing(timeMode, todayEventsText, tomorrowEventsText, weatherText, !timelineLoading)
 
   const priorityWeight = { high: 0, normal: 1, low: 2 } as const
 
@@ -945,11 +924,7 @@ export function Today() {
   /* ── [3] 未来のあなたから（クリックで対話展開） ── */
 
   const Briefing = (
-    <FutureYouChat
-      openingMessage={briefingMessage || ''}
-      loading={briefingLoading || (timelineLoading && !briefingMessage)}
-      entryPoint="today_partner"
-    >
+    <FutureYouChat entryPoint="today_partner">
       <StoryArcCard />
     </FutureYouChat>
   )

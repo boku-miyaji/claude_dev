@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Card } from '@/components/ui'
 import { aiPartnerChat, type PartnerChatMessage, type SavedMemory } from '@/lib/edgeAi'
-import { useBriefingStore } from '@/stores/briefing'
-import { PartnerFeedbackControls } from '@/components/PartnerFeedbackControls'
 
 interface MessageMeta {
   savedMemories?: SavedMemory[]
@@ -10,23 +8,15 @@ interface MessageMeta {
 }
 
 interface Props {
-  /** 最初に表示される導入の一言（useMorningBriefing の出力など） */
-  openingMessage: string
-  /** 導入が生成中か */
-  loading?: boolean
   /** 呼び出し元の識別（chat_interactions の entry_point に使う） */
   entryPoint?: string
   /** カードの下にさらに表示するチルドレン（例: StoryArcCard） */
   children?: React.ReactNode
 }
 
-/**
- * 未来のあなたからのメッセージカード。クリックで展開し、対話できる。
- * 独立タブの AI Chat の代わりに Today ページに統合されるインライン対話 UI。
- */
-export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_partner', children }: Props) {
+/** AI Partner のインライン対話カード。Today ページに常駐し、クリックで展開して会話できる。 */
+export function FutureYouChat({ entryPoint = 'today_partner', children }: Props) {
   const [expanded, setExpanded] = useState(false)
-  const contextSnapshot = useBriefingStore((s) => s.contextSnapshot)
   const [history, setHistory] = useState<PartnerChatMessage[]>([])
   const [messageMeta, setMessageMeta] = useState<Record<number, MessageMeta>>({})
   const [input, setInput] = useState('')
@@ -55,6 +45,7 @@ export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_par
         sessionId: sessionIdRef.current,
         entryPoint,
       })
+
       const nextAll = [...nextHistory, { role: 'assistant' as const, content }]
       setHistory(nextAll)
       if (savedMemories.length > 0 || forgottenMemories > 0) {
@@ -82,47 +73,22 @@ export function FutureYouChat({ openingMessage, loading, entryPoint = 'today_par
   return (
     <Card style={{ marginBottom: 16, background: 'var(--accent-bg)', border: '1px solid var(--accent-border)' }}>
       <div style={{ fontSize: 11, color: 'var(--accent2)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em' }}>
-        未来のあなたから
+        AI Partner
       </div>
 
-      {loading ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent2)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
-          <span style={{ fontSize: 12, color: 'var(--text3)' }}>考え中...</span>
+      {!expanded && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
+            話したいことあれば
+          </span>
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ fontSize: 11, padding: '4px 10px', textTransform: 'none', letterSpacing: 0 }}
+            onClick={() => setExpanded(true)}
+          >
+            話す →
+          </button>
         </div>
-      ) : openingMessage ? (
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
-          {openingMessage}
-        </div>
-      ) : (
-        // design-philosophy ⑩ Silence over Noise: AI chose to stay silent.
-        // No platitude. Just show the entry point to the user.
-        <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
-          話したいことがあれば。
-        </div>
-      )}
-
-      {!loading && openingMessage && (
-        <PartnerFeedbackControls
-          actualOutput={openingMessage}
-          contextSnapshot={contextSnapshot as Record<string, unknown> | null}
-        />
-      )}
-
-      {!loading && openingMessage && (
-        <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 10, letterSpacing: '.02em' }}>
-          朝/昼/夕/夜で自動更新 — 日記を書いても追加生成はしません
-        </div>
-      )}
-
-      {!expanded && !loading && (
-        <button
-          className="btn btn-ghost btn-sm"
-          style={{ marginTop: 10, fontSize: 11, padding: '4px 10px', textTransform: 'none', letterSpacing: 0 }}
-          onClick={() => setExpanded(true)}
-        >
-          話す →
-        </button>
       )}
 
       {expanded && (

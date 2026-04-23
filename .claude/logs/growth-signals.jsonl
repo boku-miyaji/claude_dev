@@ -456,3 +456,8 @@
 {"ts":"2026-04-23T23:00:26+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/company-dashboard/src/hooks/useMorningBriefing.ts in the IDE. This may or may not be related to the current task.</ide_opened_file>\nあまり意味のない一言、役に立つとか私のこと理解していると思う発言がないです。辞めた方がいいかな？どう思う？どういった時に役立つ？浅い言葉ばかりであまり理解されていると思わない\n"}
 {"ts":"2026-04-23T23:00:26+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/company-dashboard/src/hooks/useMorningBriefing.ts in the IDE. This may or may not be related to the current task.</ide_opened_file>\nあまり意味のない一言、役に立つとか私のこと理解していると思う発言がないです。辞めた方がいいかな？どう思う？どういった時に役立つ？浅い言葉ばかりであまり理解されていると思わない\n"}
 {"ts":"2026-04-23T23:04:44+09:00","signal":"raw_prompt","prompt":"FutureYouChatの入口（「話したいことがあれば。」の表示）だけ残す。\n相談したいことがあればとかにする？\n"}
+{"ts":"2026-04-23T23:04:44+09:00","signal":"raw_prompt","prompt":"FutureYouChatの入口（「話したいことがあれば。」の表示）だけ残す。\n相談したいことがあればとかにする？\n"}
+{"ts":"2026-04-23T23:08:22+09:00","signal":"raw_prompt","prompt":"論点１は１-job-per-customer\n論点２、楽観的ロック。バージョン管理はしっかりしたい。誰がいつ編集したのか。自分以外が編集したところはわかるようにしたい。\n論点３、閲覧中バッジ\n"}
+{"ts":"2026-04-23T23:09:09+09:00","signal":"raw_prompt","prompt":"話したいことあればにします。ラベルはAI partnerとしたい。\n"}
+{"ts":"2026-04-23T23:08:22+09:00","signal":"raw_prompt","prompt":"論点１は１-job-per-customer\n論点２、楽観的ロック。バージョン管理はしっかりしたい。誰がいつ編集したのか。自分以外が編集したところはわかるようにしたい。\n論点３、閲覧中バッジ\n"}
+{"ts":"2026-04-23T23:09:09+09:00","signal":"raw_prompt","prompt":"話したいことあればにします。ラベルはAI partnerとしたい。\n"}
