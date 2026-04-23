@@ -1,5 +1,5 @@
 {
-  "numStartups": 42,
+  "numStartups": 40,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -12,9 +12,9 @@
   "tipsHistory": {
     "new-user-warmup": 1,
     "ide-hotkey": 19,
-    "terminal-setup": 41,
+    "terminal-setup": 29,
     "shift-enter": 19,
-    "memory-command": 41,
+    "memory-command": 25,
     "theme-command": 32,
     "prompt-queue": 29,
     "enter-to-steer-in-relatime": 33,
@@ -22,7 +22,7 @@
     "# for memory": 16,
     "install-github-app": 38,
     "status-line": 19,
-    "permissions": 42,
+    "permissions": 29,
     "drag-and-drop-images": 29,
     "double-esc": 19,
     "continue": 29,
@@ -47,8 +47,7 @@
     "agent-flag": 30,
     "feedback-command": 30,
     "overage-credit": 35,
-    "voice-mode": 40,
-    "remote-control": 41
+    "voice-mode": 40
   },
   "promptQueueUseCount": 6,
   "cachedStatsigGates": {
@@ -591,20 +590,39 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0,
-      "lastAPIDuration": 0,
-      "lastAPIDurationWithoutRetries": 0,
+      "lastCost": 0.34615875000000007,
+      "lastAPIDuration": 10683,
+      "lastAPIDurationWithoutRetries": 10663,
       "lastToolDuration": 0,
-      "lastDuration": 7378,
+      "lastDuration": 50276,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 0,
-      "lastTotalOutputTokens": 0,
-      "lastTotalCacheCreationInputTokens": 0,
+      "lastTotalInputTokens": 343,
+      "lastTotalOutputTokens": 223,
+      "lastTotalCacheCreationInputTokens": 54475,
       "lastTotalCacheReadInputTokens": 0,
-      "lastModelUsage": {},
-      "lastSessionId": "234456cb-b574-4442-b27f-b2e22ded081a",
+      "lastModelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 340,
+          "outputTokens": 12,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.0004
+        },
+        "claude-opus-4-6[1m]": {
+          "inputTokens": 3,
+          "outputTokens": 211,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 54475,
+          "webSearchRequests": 0,
+          "costUSD": 0.34575875000000006
+        }
+      },
+      "lastSessionId": "b52b040f-305b-40f6-95c5-e485bb1f4d56",
       "hasCompletedProjectOnboarding": true,
+      "lastFpsAverage": 9.46,
+      "lastFpsLow1Pct": 703.17,
       "lastSessionMetrics": {
         "frame_duration_ms_count": 467,
         "frame_duration_ms_min": 0.045424000003549736,
@@ -620,8 +638,7 @@
         "hook_duration_ms_p50": 8261,
         "hook_duration_ms_p95": 10956.5,
         "hook_duration_ms_p99": 11196.1
-      },
-      "lastGracefulShutdown": false
+      }
     },
     "/workspace/diary": {
       "allowedTools": [],
@@ -646,14 +663,14 @@
   },
   "hasCompletedOnboarding": true,
   "lastOnboardingVersion": "1.0.39",
-  "changelogLastFetched": 1776923264410,
+  "changelogLastFetched": 1776752724022,
   "subscriptionNoticeCount": 0,
   "hasAvailableSubscription": false,
   "hasIdeOnboardingBeenShown": {
     "cursor": true
   },
   "fallbackAvailableWarningThreshold": 0.2,
-  "lastReleaseNotesSeen": "2.1.118",
+  "lastReleaseNotesSeen": "2.1.104",
   "hasUsedBackslashReturn": true,
   "isQualifiedForDataSharing": false,
   "s1mAccessCache": {
@@ -723,16 +740,6 @@
         "currency": null
       },
       "timestamp": 1776752725058
-    },
-    "15d07b52-c80c-4f58-a454-cc4c7c266140": {
-      "info": {
-        "available": false,
-        "eligible": false,
-        "granted": false,
-        "amount_minor_units": null,
-        "currency": null
-      },
-      "timestamp": 1776923264922
     }
   },
   "clientDataCache": null,
@@ -791,7 +798,7 @@
   "overageCreditUpsellSeenCount": 2,
   "metricsStatusCache": {
     "enabled": true,
-    "timestamp": 1776924040974
+    "timestamp": 1776837409986
   },
   "additionalModelCostsCache": {},
   "oauthAccount": {
@@ -805,11 +812,6 @@
     "displayName": "宮路",
     "organizationRole": "user",
     "workspaceRole": null,
-    "organizationName": "ACES Inc.",
-    "ccOnboardingFlags": {},
-    "claudeCodeTrialEndsAt": null,
-    "claudeCodeTrialDurationDays": null
-  },
-  "closedIssuesLastChecked": 1776923264593,
-  "remoteControlUpsellSeenCount": 1
+    "organizationName": "ACES Inc."
+  }
 }

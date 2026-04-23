@@ -1,5 +1,5 @@
 {
-  "numStartups": 42,
+  "numStartups": 41,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -12,7 +12,7 @@
   "tipsHistory": {
     "new-user-warmup": 1,
     "ide-hotkey": 19,
-    "terminal-setup": 41,
+    "terminal-setup": 29,
     "shift-enter": 19,
     "memory-command": 41,
     "theme-command": 32,
@@ -22,7 +22,7 @@
     "# for memory": 16,
     "install-github-app": 38,
     "status-line": 19,
-    "permissions": 42,
+    "permissions": 29,
     "drag-and-drop-images": 29,
     "double-esc": 19,
     "continue": 29,
@@ -591,20 +591,39 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0,
-      "lastAPIDuration": 0,
-      "lastAPIDurationWithoutRetries": 0,
+      "lastCost": 0.34615875000000007,
+      "lastAPIDuration": 10683,
+      "lastAPIDurationWithoutRetries": 10663,
       "lastToolDuration": 0,
-      "lastDuration": 7378,
+      "lastDuration": 50276,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 0,
-      "lastTotalOutputTokens": 0,
-      "lastTotalCacheCreationInputTokens": 0,
+      "lastTotalInputTokens": 343,
+      "lastTotalOutputTokens": 223,
+      "lastTotalCacheCreationInputTokens": 54475,
       "lastTotalCacheReadInputTokens": 0,
-      "lastModelUsage": {},
-      "lastSessionId": "234456cb-b574-4442-b27f-b2e22ded081a",
+      "lastModelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "inputTokens": 340,
+          "outputTokens": 12,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0.0004
+        },
+        "claude-opus-4-6[1m]": {
+          "inputTokens": 3,
+          "outputTokens": 211,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 54475,
+          "webSearchRequests": 0,
+          "costUSD": 0.34575875000000006
+        }
+      },
+      "lastSessionId": "b52b040f-305b-40f6-95c5-e485bb1f4d56",
       "hasCompletedProjectOnboarding": true,
+      "lastFpsAverage": 9.46,
+      "lastFpsLow1Pct": 703.17,
       "lastSessionMetrics": {
         "frame_duration_ms_count": 467,
         "frame_duration_ms_min": 0.045424000003549736,
@@ -791,7 +810,7 @@
   "overageCreditUpsellSeenCount": 2,
   "metricsStatusCache": {
     "enabled": true,
-    "timestamp": 1776924040974
+    "timestamp": 1776837409986
   },
   "additionalModelCostsCache": {},
   "oauthAccount": {
@@ -810,6 +829,5 @@
     "claudeCodeTrialEndsAt": null,
     "claudeCodeTrialDurationDays": null
   },
-  "closedIssuesLastChecked": 1776923264593,
-  "remoteControlUpsellSeenCount": 1
+  "closedIssuesLastChecked": 1776923264593
 }

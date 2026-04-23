@@ -22,7 +22,7 @@
     "# for memory": 16,
     "install-github-app": 38,
     "status-line": 19,
-    "permissions": 42,
+    "permissions": 29,
     "drag-and-drop-images": 29,
     "double-esc": 19,
     "continue": 29,
@@ -595,7 +595,7 @@
       "lastAPIDuration": 0,
       "lastAPIDurationWithoutRetries": 0,
       "lastToolDuration": 0,
-      "lastDuration": 7378,
+      "lastDuration": 66098,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
       "lastTotalInputTokens": 0,
@@ -603,7 +603,7 @@
       "lastTotalCacheCreationInputTokens": 0,
       "lastTotalCacheReadInputTokens": 0,
       "lastModelUsage": {},
-      "lastSessionId": "234456cb-b574-4442-b27f-b2e22ded081a",
+      "lastSessionId": "6bda13bc-94d3-4b8c-8361-43c4af7e6b2e",
       "hasCompletedProjectOnboarding": true,
       "lastSessionMetrics": {
         "frame_duration_ms_count": 467,
@@ -791,7 +791,7 @@
   "overageCreditUpsellSeenCount": 2,
   "metricsStatusCache": {
     "enabled": true,
-    "timestamp": 1776924040974
+    "timestamp": 1776837409986
   },
   "additionalModelCostsCache": {},
   "oauthAccount": {
@@ -810,6 +810,5 @@
     "claudeCodeTrialEndsAt": null,
     "claudeCodeTrialDurationDays": null
   },
-  "closedIssuesLastChecked": 1776923264593,
-  "remoteControlUpsellSeenCount": 1
+  "closedIssuesLastChecked": 1776923264593
 }

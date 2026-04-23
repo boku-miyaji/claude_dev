@@ -179,3 +179,4 @@
 {"ts":"2026-04-23T12:27:01+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"Claude Code開発基盤ツール比較調査","model":"default","background":false}
 {"ts":"2026-04-23T14:05:32+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集部: 04/23 直近24時間限定・再収集","model":"default","background":false}
 {"ts":"2026-04-23T14:10:27+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集部: 04/23 直近24時間・広範囲再収集","model":"default","background":false}
+{"ts":"2026-04-23T14:24:30+09:00","event":"agent_dispatch","dept":"Explore","desc":"system-spec consistency audit","model":"default","background":false}
