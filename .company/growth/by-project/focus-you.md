@@ -24,8 +24,8 @@ Total: **83**
 | 2026-04-15 | `decision` | active | [requestにスクショ添付機能を追加](../2026/04/20260415-decision-requestにスクショ添付機能を追加.md) |
 | 2026-04-15 | `failure` | active | [カレンダー予定が一部取得できない](../2026/04/20260415-failure-カレンダー予定が一部取得できない.md) |
 | 2026-04-14 | `decision` | active | [Requests.tsxの通知機能をシンプル化](../2026/04/20260414-decision-requeststsxの通知機能をシンプル化.md) |
-| 2026-04-14 | `failure` | active | [weekly-insights save エラーとビルド欠落](../2026/04/20260414-failure-weekly-insights-save-エラーとビルド欠落.md) |
 | 2026-04-14 | `milestone` | active | [週次プロダクト分析バッチ（8分析）新設](../2026/04/20260414-milestone-週次プロダクト分析バッチ8分析新設.md) |
+| 2026-04-14 | `failure` | active | [weekly-insights save エラーとビルド欠落](../2026/04/20260414-failure-weekly-insights-save-エラーとビルド欠落.md) |
 | 2026-04-13 | `decision` | active | [タスクタブ廃止、requestsタブをモバイル対応](../2026/04/20260413-decision-タスクタブ廃止requestsタブをモバイル対応.md) |
 | 2026-04-13 | `decision` | active | [キャラ切替廃止、セルフリフレクション特化](../2026/04/20260413-decision-キャラ切替廃止セルフリフレクション特化.md) |
 | 2026-04-13 | `failure` | active | [モバイル版のタブが機能しない](../2026/04/20260413-failure-モバイル版のタブが機能しない.md) |
@@ -33,8 +33,8 @@ Total: **83**
 | 2026-04-12 | `decision` | active | [AI Partnerを示唆・アドバイス型にポジショニング転換](../2026/04/20260412-decision-ai-partnerを示唆アドバイス型にポジショニング転換.md) |
 | 2026-04-12 | `countermeasure` | active | [AIチャットをv4へ刷新（未来の自分）](../2026/04/20260412-countermeasure-aiチャットをv4へ刷新未来の自分.md) |
 | 2026-04-12 | `milestone` | active | [成長イベント自動記録の仕組み導入](../2026/04/20260412-milestone-成長イベント自動記録の仕組み導入.md) |
-| 2026-04-12 | `countermeasure` | active | [AIチャットを『未来の自分』v4に再設計](../2026/04/20260412-countermeasure-aiチャットを未来の自分v4に再設計.md) |
 | 2026-04-12 | `milestone` | active | [成長記録の自動生成パイプライン追加](../2026/04/20260412-milestone-成長記録の自動生成パイプライン追加.md) |
+| 2026-04-12 | `countermeasure` | active | [AIチャットを『未来の自分』v4に再設計](../2026/04/20260412-countermeasure-aiチャットを未来の自分v4に再設計.md) |
 | 2026-04-11 | `decision` | active | [プロダクト境界: AIチャット/CEO分析/日記/tasksはプロダクト側](../2026/04/20260411-decision-プロダクト境界-aiチャットceo分析日記tasksはプロダクト側.md) |
 | 2026-04-11 | `milestone` | active | [Foresight Engine と Self-Analysis 拡張を導入](../2026/04/20260411-milestone-foresight-engine-と-self-analysis-拡張を導入.md) |
 | 2026-04-11 | `countermeasure` | active | [プロダクト/パーソナル機能を分離](../2026/04/20260411-countermeasure-プロダクトパーソナル機能を分離.md) |
@@ -57,19 +57,19 @@ Total: **83**
 | 2026-04-05 | `failure` | active | [AIチャットが過去会話を理解できない](../2026/04/20260405-failure-aiチャットが過去会話を理解できない.md) |
 | 2026-04-05 | `decision` | active | [tasksとrequestをUI上で明確分離](../2026/04/20260405-decision-tasksとrequestをui上で明確分離.md) |
 | 2026-04-05 | `failure` | resolved | [AIチャットhistory常に0件 — tool_call_idカラム不在](../2026/04/20260405-failure-aiチャットhistory常に0件-tool-call-idカラム不在.md) |
-| 2026-04-05 | `failure` | resolved | [AIチャット会話履歴の安定化 — tool_call_id問題との6時間の格闘](../2026/04/20260405-failure-aiチャット会話履歴の安定化-tool-call-id問題との6時間の格闘.md) |
-| 2026-04-05 | `milestone` | resolved | [Narrator（ライフコンパニオン）構想 — AIが人生の語り手になる](../2026/04/20260405-milestone-narratorライフコンパニオン構想-aiが人生の語り手になる.md) |
 | 2026-04-05 | `milestone` | resolved | [サイドバー折りたたみ + ChatGPTスタイル編集/コピーボタン](../2026/04/20260405-milestone-サイドバー折りたたみ-chatgptスタイル編集コピーボタン.md) |
-| 2026-04-05 | `milestone` | resolved | [感情分析バックフィル — 254日記エントリーの一括分析](../2026/04/20260405-milestone-感情分析バックフィル-254日記エントリーの一括分析.md) |
+| 2026-04-05 | `milestone` | resolved | [Narrator（ライフコンパニオン）構想 — AIが人生の語り手になる](../2026/04/20260405-milestone-narratorライフコンパニオン構想-aiが人生の語り手になる.md) |
+| 2026-04-05 | `failure` | resolved | [AIチャット会話履歴の安定化 — tool_call_id問題との6時間の格闘](../2026/04/20260405-failure-aiチャット会話履歴の安定化-tool-call-id問題との6時間の格闘.md) |
 | 2026-04-05 | `milestone` | resolved | [AIチャット品質の劇的改善 — act first, ask later](../2026/04/20260405-milestone-aiチャット品質の劇的改善-act-first-ask-later.md) |
 | 2026-04-05 | `milestone` | resolved | [AIチャットにPDF/Excel/Word/PPTX読み取り機能を追加](../2026/04/20260405-milestone-aiチャットにpdfexcelwordpptx読み取り機能を追加.md) |
 | 2026-04-05 | `countermeasure` | resolved | [自己分析にバイアス補正を導入 — LLMの「褒めすぎ」問題への対策](../2026/04/20260405-countermeasure-自己分析にバイアス補正を導入-llmの褒めすぎ問題への対策.md) |
 | 2026-04-05 | `milestone` | resolved | [タスクページ完全リデザイン — タブ・ソート・ドラッグ&ドロップ](../2026/04/20260405-milestone-タスクページ完全リデザイン-タブソートドラッグドロップ.md) |
+| 2026-04-05 | `milestone` | resolved | [感情分析バックフィル — 254日記エントリーの一括分析](../2026/04/20260405-milestone-感情分析バックフィル-254日記エントリーの一括分析.md) |
 | 2026-04-04 | `decision` | active | [AIアルゴリズムの全面説明とブラックボックス化防止](../2026/04/20260404-decision-aiアルゴリズムの全面説明とブラックボックス化防止.md) |
 | 2026-04-04 | `decision` | active | [How it worksページにタブ化で情報集約](../2026/04/20260404-decision-how-it-worksページにタブ化で情報集約.md) |
 | 2026-04-04 | `failure` | active | [タスクの期限未表示と即時非表示で達成感なし](../2026/04/20260404-failure-タスクの期限未表示と即時非表示で達成感なし.md) |
-| 2026-04-04 | `failure` | resolved | [チャット履歴汚染 — 自動処理がconversationレコードを量産](../2026/04/20260404-failure-チャット履歴汚染-自動処理がconversationレコードを量産.md) |
 | 2026-04-04 | `failure` | resolved | [OpenAI API直叩き — 5つのhookがEdge Functionを迂回](../2026/04/20260404-failure-openai-api直叩き-5つのhookがedge-functionを迂回.md) |
+| 2026-04-04 | `failure` | resolved | [チャット履歴汚染 — 自動処理がconversationレコードを量産](../2026/04/20260404-failure-チャット履歴汚染-自動処理がconversationレコードを量産.md) |
 | 2026-04-03 | `decision` | active | [LLM出力は段階表示で即時性を優先](../2026/04/20260403-decision-llm出力は段階表示で即時性を優先.md) |
 | 2026-04-03 | `failure` | active | [秘書一言プロンプトが期待通りの出力にならず多回修正](../2026/04/20260403-failure-秘書一言プロンプトが期待通りの出力にならず多回修正.md) |
 | 2026-04-03 | `failure` | active | [localhost起動時にVercel本番URLへ強制リダイレクト](../2026/04/20260403-failure-localhost起動時にvercel本番urlへ強制リダイレクト.md) |

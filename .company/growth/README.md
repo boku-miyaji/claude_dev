@@ -3,12 +3,12 @@
 > Supabase `growth_events` テーブルの読み取り専用ミラー。
 > 毎日 `scripts/growth/export-mirror.sh` で再生成される。**手編集しない**（次回上書きされる）。
 
-- 総レコード数: **380**
+- 総レコード数: **383**
 
 ## PJ別
 
 - [agent-harness](by-project/agent-harness.md) — 28件
-- [claude-dev](by-project/claude-dev.md) — 214件
+- [claude-dev](by-project/claude-dev.md) — 217件
 - [focus-you](by-project/focus-you.md) — 83件
 - [polaris-circuit](by-project/polaris-circuit.md) — 26件
 - [rikyu](by-project/rikyu.md) — 29件
