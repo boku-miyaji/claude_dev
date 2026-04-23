@@ -1371,7 +1371,7 @@ function TabAiFeatures() {
           input="【主役】日記(3件,生テキスト) + 感情傾向 + WBI推移 → 【空気】天気・時刻 → 【補足(直接言及しない)】カレンダー, タスク → 【傾向】CEOインサイト, 夢, 連続記録 + 過去3件の出力（同じ表現回避）"
           model="claude-opus-4-7 (Anthropic)"
           pipeline="データ並列取得 → 日記を最重要、予定・タスクは補足として構造化 → 時間帯別プロンプト(朝/昼/夜) → 能動/受動境界⑪ に沿って受動生成は想起誘導のみ → SILENT返却も許容 → 表示"
-          output="1-2文、80字以内。「わかってる人がボソッと言う一言」。行動指示・数字・データ読み上げ・汎用語は禁止。価値ある一言がなければSILENTで非表示"
+          output="1-2文、80字以内。日記の事実＋感情の輪郭を一段深く言語化する。事実なぞり・「わかります」系共感・人名呼び捨て・抽象語(「空気が上向き」等)は禁止。価値ある一言がなければSILENTで非表示。フィードバックループ(ai_partner_feedback → distilled_lessons → prompt_rules)で継続改善"
           storage="Zustand in-memory（キャッシュキー: 日付_timeMode、時間帯変更で無効化）"
           hook="useMorningBriefing.ts"
         />
