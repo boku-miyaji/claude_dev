@@ -140,6 +140,7 @@ function SuggestionCard({
   onAdopt,
   onReject,
   onImplemented,
+  onGoToReport,
 }: {
   suggestion: IntelligenceSuggestion
   busy: boolean
@@ -148,6 +149,7 @@ function SuggestionCard({
   onAdopt: () => void
   onReject: () => void
   onImplemented: () => void
+  onGoToReport?: () => void
 }) {
   const reportDate = s.source_report_date
     ? new Date(s.source_report_date).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' })
@@ -206,7 +208,20 @@ function SuggestionCard({
           </span>
         )}
         {reportDate && (
-          <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{reportDate}</span>
+          onGoToReport ? (
+            <button
+              onClick={onGoToReport}
+              style={{
+                fontSize: 10, color: 'var(--accent)', fontFamily: 'var(--mono)',
+                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              元レポート {reportDate}
+            </button>
+          ) : (
+            <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{reportDate}</span>
+          )
         )}
         {s.task_id !== null && (
           <a
@@ -250,7 +265,7 @@ function SuggestionCard({
   )
 }
 
-function SuggestionsTab() {
+function SuggestionsTab({ onGoToReport }: { onGoToReport?: () => void }) {
   const [all, setAll] = useState<IntelligenceSuggestion[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -379,6 +394,7 @@ function SuggestionsTab() {
             onAdopt={() => doAction(s.id, adoptSuggestion, '採用')}
             onReject={() => doAction(s.id, rejectSuggestion, '却下')}
             onImplemented={() => doAction(s.id, markImplemented, '実装済み')}
+            onGoToReport={onGoToReport}
           />
         ))
       )}
@@ -416,7 +432,7 @@ export function Reports() {
         ))}
       </div>
 
-      {tab === 'research' ? <ResearchReports /> : tab === 'news' ? <NewsFeed /> : tab === 'interests' ? <InterestArticles /> : tab === 'suggestions' ? <SuggestionsTab /> : <SourceSettings />}
+      {tab === 'research' ? <ResearchReports /> : tab === 'news' ? <NewsFeed /> : tab === 'interests' ? <InterestArticles /> : tab === 'suggestions' ? <SuggestionsTab onGoToReport={() => setTab('research')} /> : <SourceSettings />}
     </div>
   )
 }
