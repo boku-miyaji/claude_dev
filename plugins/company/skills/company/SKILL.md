@@ -182,8 +182,9 @@ category: organization
 
 HD秘書が起動したら、まず以下を自動で行い報告する:
 
-1. **今日の予定を取得**: google-calendar MCP で今日と明日のイベントを取得
-   - `[仕事]` タグ付きイベント → 案件関連として強調表示
+1. **今日の予定を取得**: `sb.sh query` で `calendar_events` テーブルから取得（ブラウザが同期済み）
+   - SQL例: `SELECT summary, start_time, end_time, calendar_type FROM calendar_events WHERE start_time >= 'TODAY_JST' AND start_time < 'TOMORROW_JST' ORDER BY start_time`
+   - `calendar_type = 'work'` のイベント → 案件関連として強調表示
    - その他のイベント → 参考として表示
 2. **未処理タスクを確認**: `tasks` テーブルから `status = 'open'` を取得
 3. **未処理コメント確認**: `comments` テーブルから最新を取得
@@ -305,8 +306,8 @@ PJ会社一覧:
 
 PJ会社の秘書が起動したら:
 
-1. **今日の予定を取得**: google-calendar MCP で今日のイベントを取得し、この PJ に関連するものをフィルター
-   - `[仕事] {client_name}` が一致するイベントを強調
+1. **今日の予定を取得**: `sb.sh query` で `calendar_events` テーブルから取得し、この PJ に関連するものをフィルター
+   - `[仕事] {client_name}` を summary に含むものを強調
 2. **このPJのタスク確認**: `tasks` テーブルから該当 `company_id` のものを取得
 3. **ナレッジ読み込み**: `knowledge_base` から active ルール取得
 
@@ -1052,7 +1053,7 @@ INSERT INTO knowledge_base (
 |------|---------------|--------|
 | プロンプト記録 | 毎回の入力 | Hook (UserPromptSubmit) |
 | settings/MCP/CLAUDE.md 同期 | セッション開始 | Hook (SessionStart) |
-| 今日の予定取得（Calendar） | `/company` 起動時 | company スキル (google-calendar MCP) |
+| 今日の予定取得（Calendar） | `/company` 起動時 | company スキル (`sb.sh query calendar_events`) |
 | ナレッジ読み込み・適用 | `/company` 起動時 | company スキル |
 | 未処理コメント確認 | `/company` 起動時 | company スキル |
 | タスク管理・組織運営 | `/company` 起動時 | company スキル |
