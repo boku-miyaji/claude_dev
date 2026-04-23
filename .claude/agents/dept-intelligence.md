@@ -51,8 +51,17 @@ maxTurns: 30
      python3 /workspace/scripts/intelligence/ingest-suggestions.py <保存した Markdown のフルパス>
      ```
      成功したら `INSERT 件数 == YAML suggestions 件数` を確認する。Markdown を書くだけで終わるのは不可。これをやらないと Insights → Suggestions タブに反映されず、社長が示唆をチェックできない。
-  4. curl や詳細コマンドは `.company/departments/intelligence/CLAUDE.md` の「Supabase連携」セクションを参照
-  5. **ファイル保存だけで終わらない。3つの INSERT が全部通って初めて完了報告してよい。**
+  4. `artifacts` テーブルに **ダッシュボードの レポート タブ表示用に INSERT**（省略禁止）:
+     ```bash
+     FILE=<保存した Markdown のフルパス>
+     HASH=$(sha256sum "$FILE" | cut -c1-16)
+     CONTENT=$(jq -Rs . < "$FILE")
+     /workspace/.claude/hooks/api/sb.sh post artifacts \
+       "{\"title\":\"情報収集: [主要トピック2-3個]（MM/DD）\",\"description\":\"[1行概要120文字以内]\",\"file_path\":\"<reports/ からの相対パス>\",\"file_type\":\"md\",\"content\":$CONTENT,\"content_hash\":\"$HASH\",\"company_id\":null,\"status\":\"active\"}"
+     ```
+     これをやらないとダッシュボードの レポートタブ に表示されない。
+  5. curl や詳細コマンドは `.company/departments/intelligence/CLAUDE.md` の「Supabase連携」セクションを参照
+  6. **ファイル保存だけで終わらない。4つの INSERT が全部通って初めて完了報告してよい。**
 
 ## レポートルール
 
