@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "date": "2026-04-23",
+    "timestamp": "2026-04-23T14:00:00+09:00",
+    "report_period": "2026-04-22T10:00:00+09:00 to 2026-04-23T14:00:00+09:00",
+    "version": "1.0"
+  },
+  "items": [
+    {
+      "id": "anthropic-claude-code-v2.1.118",
+      "date": "2026-04-23",
+      "title": "Claude Code v2.1.118 メジャーリリース",
+      "category": "product-release",
+      "source": "Anthropic",
+      "summary": "Vim visual mode実装、MCP OAuth修正、カスタムテーマ管理、DISABLE_UPDATES環境変数追加。セッション機能強化。",
+      "url": "https://github.com/anthropics/claude-code/releases",
+      "tags": ["Claude Code", "MCP", "release", "feature"]
+    },
+    {
+      "id": "anthropic-mcp-production",
+      "date": "2026-04-22",
+      "title": "Building agents that reach production systems with MCP",
+      "category": "blog-post",
+      "source": "Anthropic",
+      "summary": "エージェントがMCP経由で本番システムに到達する設計パターンと実装ガイドを公開",
+      "url": "https://claude.com/blog",
+      "tags": ["MCP", "agents", "production"]
+    },
+    {
+      "id": "anthropic-claude-mythos",
+      "date": "2026-04-22",
+      "title": "Claude Mythos Preview + Project Glasswing",
+      "category": "product-announcement",
+      "source": "Anthropic",
+      "summary": "セキュリティタスクに特化した新モデル、クリティカルソフトウェア保護のためのProject Glasswing開始",
+      "url": "https://www.anthropic.com/news",
+      "tags": ["Claude", "security", "model-release"]
+    },
+    {
+      "id": "openai-gpt-image-2",
+      "date": "2026-04-21",
+      "title": "ChatGPT Images 2.0（gpt-image-2）リリース",
+      "category": "product-release",
+      "source": "OpenAI",
+      "summary": "Image Arena で初日#1獲得、native reasoning搭載、多言語テキスト生成（日本語含む）対応。メニュー・インフォグラフィック・スライド高精度生成",
+      "url": "https://www.latent.space/p/ainews-openai-launches-gpt-image",
+      "tags": ["OpenAI", "image-generation", "multimodal"]
+    },
+    {
+      "id": "google-gemini-enterprise-agent",
+      "date": "2026-04-22",
+      "title": "Gemini Enterprise Agent Platform",
+      "category": "product-announcement",
+      "source": "Google",
+      "summary": "エージェント向けprojects/canvas、long-running agents、MCP server統合、ファイルサーチ対応で生産性プラットフォーム化",
+      "url": "https://siliconangle.com/2026/04/22/google-puts-gemini-enterprise-heart-new-agentic-taskforce-enterprise-automation/",
+      "tags": ["Google", "Gemini", "agents", "enterprise"]
+    },
+    {
+      "id": "google-docs-gemini-help",
+      "date": "2026-04-22",
+      "title": "Google Docs: Gemini Help me create（新UI）",
+      "category": "feature-update",
+      "source": "Google",
+      "summary": "ファイル・メール・チャット・Web参照で初稿完全自動生成、フォーマット済み出力。Google Workspace/AI plansに段階展開開始",
+      "url": "https://workspaceupdates.googleblog.com/2026/04/",
+      "tags": ["Google Docs", "Gemini", "generative"]
+    },
+    {
+      "id": "arxiv-skillgraph",
+      "date": "2026-04-23",
+      "title": "(2604.19793) SkillGraph: LLM agent tool selection graph",
+      "category": "research-paper",
+      "source": "arXiv",
+      "summary": "エージェント向けツール配列推奨グラフ。どのツール組み合わせを選ぶべきかを学習する表現",
+      "url": "https://arxiv.org/abs/2604.19793",
+      "tags": ["arXiv", "agent", "tool-use"]
+    },
+    {
+      "id": "arxiv-cognis",
+      "date": "2026-04-23",
+      "title": "(2604.19771) Cognis: Context-Aware Memory for Conversational AI Agents",
+      "category": "research-paper",
+      "source": "arXiv",
+      "summary": "会話エージェント向け永続メモリアーキテクチャ。context-aware retrieval with long-term retention",
+      "url": "https://arxiv.org/abs/2604.19771",
+      "tags": ["arXiv", "memory", "agent", "architecture"]
+    },
+    {
+      "id": "arxiv-workflowgen",
+      "date": "2026-04-23",
+      "title": "(2604.19756) WorkflowGen: Adaptive workflow generation from agent trajectories",
+      "category": "research-paper",
+      "source": "arXiv",
+      "summary": "LLMエージェント実行トレースから適応的ワークフロー生成。学習ベース設計",
+      "url": "https://arxiv.org/abs/2604.19756",
+      "tags": ["arXiv", "agent", "workflow", "learning"]
+    },
+    {
+      "id": "arxiv-ttkv",
+      "date": "2026-04-23",
+      "title": "(2604.19769) TTKV: Temporal-Tiered KV Cache for Long-Context LLM",
+      "category": "research-paper",
+      "source": "arXiv",
+      "summary": "人間の記憶システム着想のKVキャッシュ階層化。長文脈推論の高速化",
+      "url": "https://arxiv.org/abs/2604.19769",
+      "tags": ["arXiv", "inference", "kv-cache", "optimization"]
+    },
+    {
+      "id": "mcp-ip-fabric",
+      "date": "2026-04-22",
+      "title": "IP Fabric MCP Server for Enterprise AIOps",
+      "category": "tool-release",
+      "source": "IP Fabric",
+      "summary": "Enterprise AIOps向けMCPサーバ。ネットワーク/インフラ自動化、opt-in security、expert prompt library付属",
+      "url": "https://www.globenewswire.com/news-release/2026/04/22/3279023/0/en/IP-Fabric-MCP-Server-Eliminates-Barriers-to-Enterprise-AIOps-Adoption.html",
+      "tags": ["MCP", "DevOps", "enterprise"]
+    },
+    {
+      "id": "mcp-talon-one",
+      "date": "2026-04-22",
+      "title": "Talon.One MCP Server for marketing automation",
+      "category": "tool-release",
+      "source": "Talon.One",
+      "summary": "マーケティング自動化向けMCPサーバ。キャンペーン・顧客・クーポン・ロイヤリティへのread-only secure access",
+      "url": "https://docs.talon.one/whats-new/2026/04/22",
+      "tags": ["MCP", "marketing", "automation"]
+    },
+    {
+      "id": "security-pgserve-npm",
+      "date": "2026-04-21",
+      "title": "pgserve npm package postinstall injection attack",
+      "category": "security-alert",
+      "source": "npm registry",
+      "summary": "Versions 1.1.11-13で1143行のcredential-harvestingスクリプト注入。npm install実行時に発動。",
+      "url": "https://npm.org",
+      "tags": ["security", "supply-chain", "npm"]
+    },
+    {
+      "id": "claude-code-adoption",
+      "date": "2026-04-22",
+      "title": "Claude Code adoption surge: 18% daily use, 91% CSAT",
+      "category": "market-research",
+      "source": "JetBrains Research",
+      "summary": "認知57% (up from 49% Sep2025), 実装18%, NPS 54 (業界最高), セッション長 4分→23分, multi-agent +1445% YoY",
+      "url": "https://blog.jetbrains.com/research/2026/04/which-ai-coding-tools-do-developers-actually-use-at-work/",
+      "tags": ["Claude Code", "adoption", "market"]
+    },
+    {
+      "id": "spacex-cursor-acquisition",
+      "date": "2026-04-22",
+      "title": "SpaceX to acquire Cursor for $60B (announced)",
+      "category": "m-and-a",
+      "source": "SpaceX/Elon Musk",
+      "summary": "Cursorの計算制約解決のためxAIパートナーシップ。Colossusインフラ活用。AIコーディングツール市場のM&A活発化",
+      "url": "https://www.theweek.in/wire-updates/international/2026/04/22/spacex-says-it-can-buy-ai-coding-tool-cursor-for-usd-60b-later-this-year.html",
+      "tags": ["Cursor", "acquisition", "xAI", "market"]
+    }
+  ]
+}
