@@ -270,3 +270,7 @@
 {"ts":"2026-04-23T14:03:53+09:00","signal":"raw_prompt","prompt":"体験設計\nversioninはいらない。最新のものを見せればいい。\n\n山田さんはいらない。渉外担当と言い換えて。\n\nexcelに戻ることはない。普通に編集できればいい。\n\nアジェンダの初期作成は時間がかかっても問題ない。ただ進捗はわかるようにしたり、できたところから見せるとかは必要。\n\n\nAIと自分の判断が合わない時、悩んで止まるとかはなく、使わなくなるのがただしい\n"}
 {"ts":"2026-04-23T14:07:11+09:00","signal":"raw_prompt","prompt":"tmux をvscode内で簡単に使える機能ある？\n"}
 {"ts":"2026-04-23T14:07:29+09:00","signal":"raw_prompt","prompt":"tmux をvscode内で簡単に使える機能ある？\ncursorよりvscodeのほうがいい？\nサーバーはlinuxです\n"}
+{"ts":"2026-04-23T14:03:53+09:00","signal":"raw_prompt","prompt":"体験設計\nversioninはいらない。最新のものを見せればいい。\n\n山田さんはいらない。渉外担当と言い換えて。\n\nexcelに戻ることはない。普通に編集できればいい。\n\nアジェンダの初期作成は時間がかかっても問題ない。ただ進捗はわかるようにしたり、できたところから見せるとかは必要。\n\n\nAIと自分の判断が合わない時、悩んで止まるとかはなく、使わなくなるのがただしい\n"}
+{"ts":"2026-04-23T14:07:11+09:00","signal":"raw_prompt","prompt":"tmux をvscode内で簡単に使える機能ある？\n"}
+{"ts":"2026-04-23T14:07:29+09:00","signal":"raw_prompt","prompt":"tmux をvscode内で簡単に使える機能ある？\ncursorよりvscodeのほうがいい？\nサーバーはlinuxです\n"}
+{"ts":"2026-04-23T14:09:56+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/aces-rikyu-sales-proposals-poc/server/app/system-spec/experience-design/page.tsx in the IDE. This may or may not be related to the current task.</ide_opened_file>\ncurosorのほうがいいこと有る？\nvscodeと変わらないのでは？extensionとか。\n"}
