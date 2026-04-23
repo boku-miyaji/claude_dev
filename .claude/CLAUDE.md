@@ -22,6 +22,21 @@
 | `scratch-workspace.md` | モックアップ・壁打ち資料は必ず `scratch/` に置く（git管理外） |
 | `prefer-native-tools.md` | Bash合成コマンドの前に Read/Glob/Grep で代替できないか確認 |
 
+## 依頼ステータス報告（必須）
+
+ツール（Read/Edit/Write/Bash等）を1つでも使った応答の最後に、必ず Write ツールで `/tmp/claude-req-status.json` を書くこと。
+
+```json
+{"status": "done",    "summary": "体験設計ページのExcel記述を削除", "pending": []}
+{"status": "partial", "summary": "5件中3件完了",                   "pending": ["versioning削除", "進捗表示追加"]}
+```
+
+- `done`    : 依頼を全て完了した
+- `partial` : 一部完了・残りは pending に列挙
+- Q&A（ツール未使用）: 書かなくてよい（Stop hook が自動で `answered` にする）
+
+**このファイルを書かずに終わると `missed`（見落とし）として記録される。**
+
 ## Compact Instructions
 
 Context Compaction 後に必ず保持すべき情報:

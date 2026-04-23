@@ -538,6 +538,11 @@
             "type": "command",
             "command": "/workspace/.claude/hooks/weekly-insights.sh",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/req-status-cutoff.sh",
+            "async": true
           }
         ]
       }
@@ -558,6 +563,11 @@
           {
             "type": "command",
             "command": "/workspace/.claude/hooks/growth-summarize.sh",
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "/workspace/.claude/hooks/req-status-flush.sh",
             "async": true
           }
         ]
