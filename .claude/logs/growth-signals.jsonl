@@ -429,3 +429,4 @@
 {"ts":"2026-04-23T21:14:43+09:00","signal":"raw_prompt","prompt":"/company このスキル登録して。\nhttps://github.com/google-labs-code/design.md\n"}
 {"ts":"2026-04-23T21:23:06+09:00","signal":"raw_prompt","prompt":"❯ tmuxc\nzsh: command not found: tmuxc\n"}
 {"ts":"2026-04-23T21:23:06+09:00","signal":"raw_prompt","prompt":"❯ tmuxc\nzsh: command not found: tmuxc\n"}
+{"ts":"2026-04-23T21:28:53+09:00","signal":"raw_prompt","prompt":"これは毎回必要？永続化される？devcontainerです。\n"}
