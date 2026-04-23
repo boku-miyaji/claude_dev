@@ -1,8 +1,8 @@
 {
-  "saved_at": "2026-04-23T15:39:51+09:00",
+  "saved_at": "2026-04-23T16:08:40+09:00",
   "today": "2026-04-23",
-  "work_dir": "/workspace/aces-rikyu-sales-proposals-poc",
-  "git_last_commit": "09634e74d8a1d22488a34d3c0a7449f2949b044b chore: auto-save session changes",
+  "work_dir": "/workspace",
+  "git_last_commit": "835d8db67712eaf443247d2c447437d222e4fe61 fix(suggestions): source_urls が配列でない場合の TypeError を修正",
   "active_tasks": [],
   "note": "Context Compaction により古い会話が圧縮されました。以下の情報を確認してください。",
   "reminders": [
