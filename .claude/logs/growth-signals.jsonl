@@ -494,3 +494,21 @@
 {"ts":"2026-04-23T23:48:49+09:00","signal":"raw_prompt","prompt":"work rhythm以外にもたくさんあるじゃないですか？\n今の関心とか、ほかにも\n\nframeworksは日記が10件増えたら自動再実行するバッチをいれてほしい。スキップガードは１週間にしましょう。\n"}
 {"ts":"2026-04-23T23:49:32+09:00","signal":"raw_prompt","prompt":"おk、CSSでいきましょう\n"}
 {"ts":"2026-04-23T23:52:37+09:00","signal":"raw_prompt","prompt":"システムの仕様・設計を包括的に把握するにはどのように情報を整理するのがいいの？\nいろんな情報がバラバラで全体像から詳細まで体系的に把握できない。いいまとめ方が世の中にある？\nそれ用のシステム作る？navigatorのページもまだわかりにくい。網羅的感ない。\nあと、いろんな切り口でしよう・設計を知りたかったりする。それは各ページでいいけど。\nどんな形�"}
+{"ts":"2026-04-23T23:48:49+09:00","signal":"raw_prompt","prompt":"work rhythm以外にもたくさんあるじゃないですか？\n今の関心とか、ほかにも\n\nframeworksは日記が10件増えたら自動再実行するバッチをいれてほしい。スキップガードは１週間にしましょう。\n"}
+{"ts":"2026-04-23T23:49:32+09:00","signal":"raw_prompt","prompt":"おk、CSSでいきましょう\n"}
+{"ts":"2026-04-23T23:52:37+09:00","signal":"raw_prompt","prompt":"システムの仕様・設計を包括的に把握するにはどのように情報を整理するのがいいの？\nいろんな情報がバラバラで全体像から詳細まで体系的に把握できない。いいまとめ方が世の中にある？\nそれ用のシステム作る？navigatorのページもまだわかりにくい。網羅的感ない。\nあと、いろんな切り口でしよう・設計を知りたかったりする。それは各ページでいいけど。\nどんな形�"}
+{"ts":"2026-04-23T23:58:40+09:00","signal":"raw_prompt","prompt":"全体像から詳細まで一つのマップでしめすことはできない？そこでクリックしたら、詳細の画面がモーダルで出るみたいな。その上で、切り口を変えたパターンをいくつか用意しておくとか、\n"}
+{"ts":"2026-04-23T23:58:40+09:00","signal":"raw_prompt","prompt":"全体像から詳細まで一つのマップでしめすことはできない？そこでクリックしたら、詳細の画面がモーダルで出るみたいな。その上で、切り口を変えたパターンをいくつか用意しておくとか、\n"}
+{"ts":"2026-04-24T00:01:59+09:00","signal":"raw_prompt","prompt":"お気に入りの名言っていつどこに出るんだっけ？一回も生成されていない。\n"}
+{"ts":"2026-04-24T00:01:59+09:00","signal":"raw_prompt","prompt":"お気に入りの名言っていつどこに出るんだっけ？一回も生成されていない。\n"}
+{"ts":"2026-04-24T00:13:52+09:00","signal":"raw_prompt","prompt":"ページのマッピングではなく、\nシステムアーキテクチャの全体像・機能/アルゴリズムアーキテクチャ全体像・データアーキテクチャ全体像、画面、などを全部組み合わせた統合アーキテクチャは作れない？かなりでかいアーキテクチャになると思うけど。またそれぞれの要素をクリックしたら詳細モーダルが出るみたいな。\n"}
+{"ts":"2026-04-24T00:13:52+09:00","signal":"raw_prompt","prompt":"ページのマッピングではなく、\nシステムアーキテクチャの全体像・機能/アルゴリズムアーキテクチャ全体像・データアーキテクチャ全体像、画面、などを全部組み合わせた統合アーキテクチャは作れない？かなりでかいアーキテクチャになると思うけど。またそれぞれの要素をクリックしたら詳細モーダルが出るみたいな。\n"}
+{"ts":"2026-04-24T00:27:27+09:00","signal":"raw_prompt","prompt":"思っているのと違う。つながりが見えない。ちゃんと線で繋いだり、枠で区切ったりして表現して。mermaidとかそう入った表現をして欲しい。他にいい表現があればそれでも。添付のようなアーキテクチャ図見たないなイメージ。\n"}
+{"ts":"2026-04-24T00:27:27+09:00","signal":"raw_prompt","prompt":"思っているのと違う。つながりが見えない。ちゃんと線で繋いだり、枠で区切ったりして表現して。mermaidとかそう入った表現をして欲しい。他にいい表現があればそれでも。添付のようなアーキテクチャ図見たないなイメージ。\n"}
+{"ts":"2026-04-24T00:45:56+09:00","signal":"raw_prompt","prompt":"mermaid version 11.13.0\n"}
+{"ts":"2026-04-24T00:45:56+09:00","signal":"raw_prompt","prompt":"mermaid version 11.13.0\n"}
+{"ts":"2026-04-24T08:51:58+09:00","signal":"raw_prompt","prompt":"Homeページでだすのは前回との差分を出して欲しい。\nたとえば、あなたのテーマとか最近の変化で前回のものとの差分を知りたい。大枠はそんなに変わらないと思うので。差分がほぼなければHomeに出さなくていい。それもLLMが判断して。前回との差分チェックLLM。\n"}
+{"ts":"2026-04-24T08:52:53+09:00","signal":"raw_prompt","prompt":"Syntax error in text\nmermaid version 11.13.0\n\nmanifest.json:1 Manifest: Line: 1, column: 1, Syntax error.Understand this error\nintegrated-architecture:1 Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.Understand this error\napi-client.ts:106  GET http://localhost:3000/api/data 404 (Not Found)\nloadData @ api-client.ts:106\n(anonymous) @ store.tsx:91\nreact_stack_bottom_frame @ react-dom-client.development.js:28123\nrunWithFiberInDEV @ react-dom-client.develop\n"}
+{"ts":"2026-04-24T08:51:58+09:00","signal":"raw_prompt","prompt":"Homeページでだすのは前回との差分を出して欲しい。\nたとえば、あなたのテーマとか最近の変化で前回のものとの差分を知りたい。大枠はそんなに変わらないと思うので。差分がほぼなければHomeに出さなくていい。それもLLMが判断して。前回との差分チェックLLM。\n"}
+{"ts":"2026-04-24T08:52:53+09:00","signal":"raw_prompt","prompt":"Syntax error in text\nmermaid version 11.13.0\n\nmanifest.json:1 Manifest: Line: 1, column: 1, Syntax error.Understand this error\nintegrated-architecture:1 Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.Understand this error\napi-client.ts:106  GET http://localhost:3000/api/data 404 (Not Found)\nloadData @ api-client.ts:106\n(anonymous) @ store.tsx:91\nreact_stack_bottom_frame @ react-dom-client.development.js:28123\nrunWithFiberInDEV @ react-dom-client.develop\n"}
+{"ts":"2026-04-24T08:56:34+09:00","signal":"raw_prompt","prompt":"LLMは何を使っている？プロンプトは？\n"}
