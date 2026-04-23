@@ -394,3 +394,7 @@
 {"ts":"2026-04-23T18:37:34+09:00","signal":"raw_prompt","prompt":"いまvscodeの拡張機能でclaude codeを実行しています。その状態でPCを閉じても続けてほしい。\nちなみにvscode, remotessh , devcontainer内でclaude code実行している\n"}
 {"ts":"2026-04-23T18:37:34+09:00","signal":"raw_prompt","prompt":"いまvscodeの拡張機能でclaude codeを実行しています。その状態でPCを閉じても続けてほしい。\nちなみにvscode, remotessh , devcontainer内でclaude code実行している\n"}
 {"ts":"2026-04-23T18:39:16+09:00","signal":"raw_prompt","prompt":"vscodeのclaude code拡張機能では無理？この状態です。\n"}
+{"ts":"2026-04-23T18:39:16+09:00","signal":"raw_prompt","prompt":"vscodeのclaude code拡張機能では無理？この状態です。\n"}
+{"ts":"2026-04-23T18:41:44+09:00","signal":"raw_prompt","prompt":"tmuxに移行する簡単な操作できない？いちいちtmux開いてウンタラカンタラするの面倒。楽にできる方法ない？基本はvscodeの拡張機能で操作している前提で\n"}
+{"ts":"2026-04-23T18:42:05+09:00","signal":"raw_prompt","prompt":"他に壁打ちすることは？\n"}
+{"ts":"2026-04-23T18:42:10+09:00","signal":"raw_prompt","prompt":"データ更新タイミングとかで朝のニュースは大事です。日本時間の何時ごろでバッチ処理すると新しい情報が取り込んで朝から作業しやすいかを考えてバッチ処理して。早すぎると最新の情報がないし、遅すぎると出勤の際に情報がアップデートされていなくて使えないです。\n"}
