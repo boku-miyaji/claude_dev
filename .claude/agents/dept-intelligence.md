@@ -39,9 +39,12 @@ maxTurns: 30
 
 - JSON → `.company/departments/intelligence/reports/YYYY-MM-DD-HHMM.json`
 - Markdown → `.company/departments/intelligence/reports/YYYY-MM-DD-HHMM.md`
-- **Markdown 末尾に必須セクション**:
-  - `## 💡 focus-you への示唆` — 本文に「取り入れるべき / 検討に値する / 現状で正しいと確認できたもの」の3分類で記述
-  - その直後に機械可読 YAML ブロック（`# suggestions` コメント始まり、各項目に title/description/priority/effort/category/source_urls）。詳細フォーマットは `.company/departments/intelligence/CLAUDE.md` の「構造化 YAML ブロックの追加（必須）」参照
+- **Markdown 末尾に必須セクション（2つ）**:
+  - `## 💡 focus-you への示唆` — プロダクト本体（日記・感情・ダッシュボード）への示唆。3分類で記述
+  - `## 💡 宮路HD 運営への示唆` — Claude Code 運用・Hook・バッチ・MCP・エージェント基盤への示唆。3分類で記述
+  - その直後に機械可読 YAML ブロック（`# suggestions` コメント始まり、各項目に title/description/priority/effort/category/**target**/source_urls）
+  - **`target` フィールド必須**: `focus-you`（プロダクト）/ `hd-ops`（運営）/ `both`（両方）で区別
+  - 詳細フォーマットは `.company/departments/intelligence/CLAUDE.md` の「示唆セクション（2つ・必須）」参照
 - **IMPORTANT: Supabase INSERT（必須・省略禁止・ワンセット）**:
   1. `secretary_notes` に type='intelligence_report' でレポート全文を INSERT
   2. `news_items` に各ニュースアイテムを個別 INSERT（title, summary, url, source, topic, published_date）

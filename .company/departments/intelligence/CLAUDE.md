@@ -341,24 +341,24 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/artifacts?on_conflict=file_path" \
 
 セルフチェックを通過しないレポートは出さない。
 
-### focus-you への示唆（必須セクション）
+### 示唆セクション（2つ・必須）
 
-**全レポートの末尾に `## 💡 focus-you への示唆` セクションを必ず設ける。**
+**全レポートの末尾に以下 2 つのセクションを必ず設ける。両方とも「示唆なし」は不可。**
 
-収集した情報を「ただ伝える」だけでなく、focus-you（ダッシュボード + HD運営基盤）の設計・アルゴリズム・実装にどう活かせるかを分析する。
+#### セクション 1: focus-you への示唆
 
-#### 分析の視点
+`focus-you` = 日記・感情・自己分析・ダッシュボードのプロダクト本体に関する改善。
+
+分析視点:
 
 | 視点 | 問い | 例 |
 |------|------|-----|
-| **設計思想** | 今の設計方針を変えるべきか？ | 「脳と手の分離」→ Hook/company分離は正しい |
-| **アルゴリズム** | 感情分析・ナラティブ・自己分析のロジックを改善できるか？ | Memory Intelligence Agent → knowledge_base の進化ルール改善 |
-| **アーキテクチャ** | 技術スタック・構成を変えるべきか？ | Managed Agents → Edge Function の延長で実装可能 |
-| **コスト** | コスト効率を改善できるか？ | Advisor Strategy → Opus+Sonnet構成でコスト-85% |
+| **設計思想** | 今の設計方針を変えるべきか？ | Hook/company分離は正しいか |
+| **アルゴリズム** | 感情分析・ナラティブ・自己分析のロジックを改善できるか？ | Memory Intelligence Agent の改善 |
+| **アーキテクチャ** | 技術スタック・構成を変えるべきか？ | Managed Agents → Edge Function で実装可能 |
+| **コスト** | コスト効率を改善できるか？ | Advisor Strategy → Opus+Sonnet構成 |
 | **UX** | ユーザー体験を改善できるか？ | 新しいUI/操作パターンの参考 |
 | **競合** | 他社プロダクトと差別化できるか？ | focus-youにしかない強みは何か |
-
-#### 出力フォーマット
 
 ```markdown
 ## 💡 focus-you への示唆
@@ -375,11 +375,41 @@ curl -4 -s "${SUPABASE_URL}/rest/v1/artifacts?on_conflict=file_path" \
 - **[情報タイトル]** → [当社の何が正しいか]
 ```
 
-**「示唆なし」は許容しない。** どんな情報でも focus-you の文脈で解釈する。それが情報収集部の付加価値。
+#### セクション 2: 宮路HD 運営への示唆
+
+`hd-ops` = Claude Code を使った開発全般・運用フロー・エージェント運営・Hook/バッチ設計に関する改善。**focus-you プロダクトの話ではなく、開発基盤・運用仕組みの話。**
+
+分析視点:
+
+| 視点 | 問い | 例 |
+|------|------|-----|
+| **エージェント設計** | 部署・パイプライン構成を改善できるか？ | Multi-agent coordination の新パターン |
+| **Claude Code 活用** | Claude Code の新機能を運営に取り込めるか？ | Vim mode, カスタムテーマ, plugin versioning |
+| **Hook/バッチ** | 自動化フローを改善できるか？ | 新しい Hook trigger やバッチ設計パターン |
+| **MCP連携** | MCP server を運営基盤に統合できるか？ | 社内ナレッジをMCP化して複数agent から参照 |
+| **セキュリティ** | サプライチェーン・依存関係のリスクがあるか？ | npm/PyPI 汚染パッケージの検知 |
+| **開発生産性** | ワークフロー全体の効率を上げられるか？ | 新しいCLIパターン・IDE統合 |
+
+```markdown
+## 💡 宮路HD 運営への示唆
+
+### 取り入れるべき
+- **[情報タイトル]** → [具体的に何を変えるか]
+  - 対象: [ファイル/ルール/Hook名]
+  - 工数: [小/中/大]
+
+### 検討に値する
+- **[情報タイトル]** → [検討理由と判断ポイント]
+
+### 現状で正しいと確認できたもの
+- **[情報タイトル]** → [当社の何が正しいか]
+```
+
+**「示唆なし」は不可。** どんな情報でも両視点で解釈する。それが情報収集部の付加価値。
 
 #### 構造化 YAML ブロックの追加（必須）
 
-`## 💡 focus-you への示唆` の Markdown セクション本文に加えて、その直後（または報告末尾）に機械可読な YAML ブロックを必ず追加する。`intelligence_suggestions` テーブルへの自動 INSERT に使われる。
+2 つの Markdown セクションに加えて、レポート末尾に機械可読 YAML ブロックを **1 つ** 追加する。`target` フィールドで対象を区別する。
 
 ````markdown
 ```yaml
@@ -390,12 +420,24 @@ suggestions:
     priority: high|medium|low
     effort: small|medium|large
     category: algorithm|architecture|ux|cost|competition|design|other
+    target: focus-you   # focus-you | hd-ops | both
     source_urls:
       - https://...
+  - title: "..."
+    ...
+    target: hd-ops
+  - title: "..."
+    ...
+    target: both        # 両方に関わる場合
 ```
 ````
 
-Markdown セクションと YAML の内容は同期させる（同じ示唆を2表現で書く）。YAML ブロックの最初の行は `# suggestions` というコメントを必ず入れる。
+`target` の選び方:
+- `focus-you` … 日記・感情分析・ダッシュボード UI/UX/アルゴリズムの改善
+- `hd-ops` … Claude Code 運用・Hook・バッチ・MCP・エージェント基盤の改善
+- `both` … 両方に直接影響する（例: コスト削減策、認証方式変更など）
+
+Markdown セクションと YAML の内容は同期させる（同じ示唆を 2 表現で書く）。YAML ブロックの最初の行は `# suggestions` というコメントを必ず入れる。
 
 ### レポート生成後の自動 INSERT
 

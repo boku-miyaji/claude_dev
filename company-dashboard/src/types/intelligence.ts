@@ -29,6 +29,8 @@ export type SuggestionCategory =
   | 'other'
   | string
 
+export type SuggestionTarget = 'focus-you' | 'hd-ops' | 'both'
+
 export interface IntelligenceSuggestion {
   id: string
   title: string
@@ -36,6 +38,7 @@ export interface IntelligenceSuggestion {
   priority: SuggestionPriority | null
   effort: SuggestionEffort | null
   category: SuggestionCategory | null
+  target: SuggestionTarget
   source_report_path: string | null
   source_report_date: string | null
   source_urls: string[]

@@ -13,6 +13,7 @@ import type {
   IntelligenceSuggestion,
   SuggestionPriority,
   SuggestionStatus,
+  SuggestionTarget,
 } from '@/types/intelligence'
 
 interface Report {
@@ -49,6 +50,17 @@ const PRIORITY_COLORS: Record<SuggestionPriority, string> = {
   high: 'var(--red)',
   medium: 'var(--amber)',
   low: 'var(--text3)',
+}
+
+const TARGET_LABELS: Record<SuggestionTarget, string> = {
+  'focus-you': 'focus-you',
+  'hd-ops': 'HD運営',
+  'both': '共通',
+}
+const TARGET_COLORS: Record<SuggestionTarget, string> = {
+  'focus-you': 'var(--accent)',
+  'hd-ops': 'var(--blue)',
+  'both': 'var(--green)',
 }
 
 const STATUS_LABELS: Record<SuggestionStatus, string> = {
@@ -183,6 +195,16 @@ function SuggestionCard({
             {s.category}
           </span>
         )}
+        {s.target && (
+          <span style={{
+            fontSize: 10, padding: '1px 7px', borderRadius: 3,
+            background: TARGET_COLORS[s.target] + '22',
+            color: TARGET_COLORS[s.target],
+            fontWeight: 600,
+          }}>
+            {TARGET_LABELS[s.target]}
+          </span>
+        )}
         {reportDate && (
           <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{reportDate}</span>
         )}
@@ -236,6 +258,7 @@ function SuggestionsTab() {
   const [priorityFilter, setPriorityFilter] = useState<Set<SuggestionPriority>>(new Set())
   const [categoryFilter, setCategoryFilter] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState<Set<SuggestionStatus>>(new Set())
+  const [targetFilter, setTargetFilter] = useState<Set<SuggestionTarget>>(new Set())
 
   const load = async () => {
     const { data } = await supabase
@@ -260,9 +283,16 @@ function SuggestionsTab() {
       if (priorityFilter.size > 0 && (!s.priority || !priorityFilter.has(s.priority))) return false
       if (categoryFilter.size > 0 && (!s.category || !categoryFilter.has(s.category))) return false
       if (statusFilter.size > 0 && !statusFilter.has(s.status)) return false
+      if (targetFilter.size > 0) {
+        const t = s.target || 'focus-you'
+        const matches = Array.from(targetFilter).some(
+          (f) => t === f || t === 'both'
+        )
+        if (!matches) return false
+      }
       return true
     })
-  }, [all, showArchived, priorityFilter, categoryFilter, statusFilter])
+  }, [all, showArchived, priorityFilter, categoryFilter, statusFilter, targetFilter])
 
   const counts = useMemo(() => {
     const c: Record<SuggestionStatus, number> = {
@@ -305,6 +335,11 @@ function SuggestionsTab() {
       </div>
 
       <div className="card" style={{ padding: 12, marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <FilterGroup label="対象">
+          {(['focus-you', 'hd-ops', 'both'] as const).map((t) => (
+            <FilterChip key={t} active={targetFilter.has(t)} onClick={() => toggle(targetFilter, t, setTargetFilter)} color={TARGET_COLORS[t]}>{TARGET_LABELS[t]}</FilterChip>
+          ))}
+        </FilterGroup>
         <FilterGroup label="優先度">
           {(['high', 'medium', 'low'] as const).map((p) => (
             <FilterChip key={p} active={priorityFilter.has(p)} onClick={() => toggle(priorityFilter, p, setPriorityFilter)} color={PRIORITY_COLORS[p]}>{p}</FilterChip>

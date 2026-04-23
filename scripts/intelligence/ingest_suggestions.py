@@ -51,6 +51,7 @@ ALLOWED_CATEGORIES = {
     "design",
     "other",
 }
+ALLOWED_TARGETS = {"focus-you", "hd-ops", "both"}
 
 # ```yaml ... ``` コードフェンスを抽出する正規表現
 # - 開始: ```yaml（または ``` yaml）
@@ -143,6 +144,14 @@ def _normalize_suggestion(raw: dict[str, Any]) -> dict[str, Any] | None:
         if category not in ALLOWED_CATEGORIES:
             category = "other"
 
+    target = raw.get("target")
+    if target is not None:
+        target = str(target).lower().strip()
+        if target not in ALLOWED_TARGETS:
+            target = "focus-you"
+    else:
+        target = "focus-you"  # デフォルト: 既存レポートとの後方互換
+
     source_urls_raw = raw.get("source_urls") or []
     if isinstance(source_urls_raw, str):
         source_urls = [source_urls_raw]
@@ -157,6 +166,7 @@ def _normalize_suggestion(raw: dict[str, Any]) -> dict[str, Any] | None:
         "priority": priority,
         "effort": effort,
         "category": category,
+        "target": target,
         "source_urls": source_urls,
     }
 
@@ -306,6 +316,7 @@ def build_insert_payload(
         "priority": suggestion["priority"],
         "effort": suggestion["effort"],
         "category": suggestion["category"],
+        "target": suggestion.get("target", "focus-you"),
         "source_urls": suggestion["source_urls"],
         "source_report_path": source_report_path,
         "status": "new",
