@@ -1,13 +1,13 @@
 {
-  "saved_at": "2026-04-22T22:43:25+09:00",
-  "today": "2026-04-22",
+  "saved_at": "2026-04-23T14:04:00+09:00",
+  "today": "2026-04-23",
   "work_dir": "/workspace",
-  "git_last_commit": "e8f5b1dc18b6c04e6b9ee2709144ce4cb2ce83c6 chore: auto-save session changes",
+  "git_last_commit": "5023a3799943a3569ff5e1866d5208643dc05c08 chore: auto-save session changes",
   "active_tasks": [],
   "note": "Context Compaction により古い会話が圧縮されました。以下の情報を確認してください。",
   "reminders": [
     "タスク状態は Supabase tasks テーブルで確認",
-    "直近の決定事項は secretary/notes/2026-04-22-decisions.md で確認",
+    "直近の決定事項は secretary/notes/2026-04-23-decisions.md で確認",
     "パイプライン進捗があれば secretary/notes/ の最新ファイルで確認",
     "active_tasks フィールドに処理中タスクが記録されています（Supabase接続時のみ）"
   ]
