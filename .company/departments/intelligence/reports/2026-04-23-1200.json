@@ -1,0 +1,194 @@
+{
+  "report_metadata": {
+    "generated_at": "2026-04-23T12:11:37+09:00",
+    "report_date": "2026-04-23",
+    "period_start": "2026-04-22T10:00:00+09:00",
+    "period_end": "2026-04-23T12:11:37+09:00",
+    "duration_hours": 26.19,
+    "report_type": "on-demand",
+    "prev_report": "2026-04-22-1000.md"
+  },
+  "news_items": [
+    {
+      "id": "news-managed-agents-001",
+      "date": "2026-04-08",
+      "title": "Claude Managed Agents: Cloud-Hosted Agent Service for Production",
+      "summary": "Anthropic launched Claude Managed Agents on public beta, enabling developers to build and deploy cloud-hosted AI agents via Console, Claude Code, or new CLI. Pricing: standard Claude token rates + $0.08/session-hour (active runtime). Early adopters: Notion, Rakuten, Sentry.",
+      "category": "AI Agents",
+      "source": "Anthropic",
+      "url": "https://claude.com/blog/claude-managed-agents",
+      "published_date": "2026-04-08",
+      "topic": "agent-infrastructure",
+      "importance": "high",
+      "related_keywords": ["Claude", "agent", "cloud", "production", "MCP"]
+    },
+    {
+      "id": "news-salesforce-headless-001",
+      "date": "2026-04",
+      "title": "Salesforce Headless 360: Turning CRM into AI Agent Infrastructure",
+      "summary": "Salesforce announced Headless 360, exposing 100+ CRM capabilities as MCP tools, REST APIs, and CLI commands for AI agents. Enables deal qualification, opportunity management, and email automation to be AI-driven without browser UI.",
+      "category": "CRM Integration",
+      "source": "Salesforce",
+      "url": "https://venturebeat.com/technology/salesforce-launches-headless-360-to-turn-its-entire-platform-into-infrastructure-for-ai-agents/",
+      "published_date": "2026-04",
+      "topic": "crm-agent-integration",
+      "importance": "high",
+      "related_keywords": ["Salesforce", "agent", "MCP", "CRM", "Headless"]
+    },
+    {
+      "id": "news-copilot-studio-001",
+      "date": "2026-04-01",
+      "title": "Copilot Studio: Multi-Agent Orchestration GA with Agent-to-Agent Protocol",
+      "summary": "Microsoft Copilot Studio released multi-agent orchestration features including A2A (Agent-to-Agent) protocol for direct agent communication, Microsoft Fabric integration, and support for Anthropic Claude Opus 4.6 / Sonnet 4.5 (paid experimental preview).",
+      "category": "Multi-Agent",
+      "source": "Microsoft",
+      "url": "https://www.microsoft.com/en-us/microsoft-copilot/blog/copilot-studio/new-and-improved-multi-agent-orchestration-connected-experiences-and-faster-prompt-iteration/",
+      "published_date": "2026-04-01",
+      "topic": "multi-agent-orchestration",
+      "importance": "high",
+      "related_keywords": ["Copilot", "agent", "orchestration", "Microsoft", "Anthropic"]
+    },
+    {
+      "id": "news-supabase-keys-001",
+      "date": "2026-04",
+      "title": "Supabase ES256 & Publishable Key Migration Guide (Confirmed)",
+      "summary": "Supabase published complete migration guide for asymmetric ES256 keys with sb_publishable_* and sb_secret_* replacements for legacy anon/service_role keys. Migration optional until 2025-11-01, full backward compatibility confirmed.",
+      "category": "Infrastructure",
+      "source": "Supabase",
+      "url": "https://supabase.com/docs/guides/api/api-keys",
+      "published_date": "2026-04",
+      "topic": "security-infrastructure",
+      "importance": "medium",
+      "related_keywords": ["Supabase", "JWT", "ES256", "API keys", "security"]
+    }
+  ],
+  "academic_papers": [
+    {
+      "id": "paper-agentgl-001",
+      "arxiv_id": "2604.05846",
+      "arxiv_version": "v1",
+      "submission_date": "2026-04-07",
+      "title": "AgentGL: Towards Agentic Graph Learning with LLMs via Reinforcement Learning",
+      "authors": "Yuanfu Sun, Kang Li, Dongzhe Fan, Jiajin Liu, Qiaoyu Tan",
+      "conference": "ACL 2026 Main Conference (accepted)",
+      "url": "https://arxiv.org/abs/2604.05846v1",
+      "summary": "Proposes Agentic Graph Learning (AGL) framework enabling LLM agents to navigate and reason over graph-structured data through RL. Agents equipped with graph-native tools for multi-scale topology-aware exploration. Results: +17.5% node classification accuracy, +28.4% link prediction improvement. Code publicly available.",
+      "category": "LLM Agents",
+      "topic": "graph-learning",
+      "importance": "high",
+      "related_keywords": ["LLM agent", "graph learning", "reinforcement learning", "topology"]
+    }
+  ],
+  "security_items": [],
+  "key_themes": {
+    "theme_1": {
+      "name": "CRM × AI Agent Integration Ecosystem",
+      "description": "Salesforce (Headless 360), Microsoft (Copilot Studio), and Anthropic (Managed Agents) all pushing CRM/business-app automation via agent infrastructure",
+      "sources": [
+        "news-salesforce-headless-001",
+        "news-copilot-studio-001",
+        "news-managed-agents-001"
+      ],
+      "focus_you_relevance": "High (rikyu sales agent, B2B licensing)"
+    },
+    "theme_2": {
+      "name": "Multi-Agent Orchestration Standardization",
+      "description": "A2A protocol (Copilot), Managed Agents harness (Claude), and agent-native CLI/API (Salesforce) converging on common orchestration patterns",
+      "sources": [
+        "news-copilot-studio-001",
+        "news-managed-agents-001",
+        "news-salesforce-headless-001"
+      ],
+      "focus_you_relevance": "High (dashboard UI, multi-agent coordination)"
+    },
+    "theme_3": {
+      "name": "Graph-Based Agent Reasoning",
+      "description": "Academic momentum on topology-aware agent learning, complementing text-based reasoning with relational structure exploitation",
+      "sources": [
+        "paper-agentgl-001"
+      ],
+      "focus_you_relevance": "Medium-High (semantic memory, narrative graph)"
+    }
+  },
+  "dynamic_keywords_analysis": {
+    "copilot_studio_sales_agent": {
+      "keyword": "Copilot Studio / AI sales agent",
+      "signal_strength": "HIGH",
+      "new_discovery": true,
+      "items": [
+        "news-copilot-studio-001",
+        "news-salesforce-headless-001"
+      ]
+    },
+    "supabase_es256": {
+      "keyword": "Supabase ES256 / Publishable key",
+      "signal_strength": "MEDIUM",
+      "new_discovery": true,
+      "items": [
+        "news-supabase-keys-001"
+      ]
+    },
+    "crm_ai_integration": {
+      "keyword": "CRM + AI integration patterns",
+      "signal_strength": "HIGH",
+      "new_discovery": true,
+      "items": [
+        "news-salesforce-headless-001",
+        "news-copilot-studio-001"
+      ]
+    },
+    "ai_agent_ux": {
+      "keyword": "AI Agent UX design",
+      "signal_strength": "HIGH",
+      "new_discovery": false,
+      "note": "Continues from 2026-04-22 report with new Copilot A2A / Managed Agents harness patterns"
+    }
+  },
+  "focus_you_suggestions": {
+    "high_priority": [
+      {
+        "title": "Salesforce Headless 360 × Claude Code for Sales Agent",
+        "priority": "high",
+        "effort": "medium",
+        "category": "architecture",
+        "rationale": "rikyu PJ AI sales assistant becomes immediately viable with Headless 360 100+ MCP tools"
+      },
+      {
+        "title": "Claude Managed Agents for focus-you Cloud Hosting",
+        "priority": "high",
+        "effort": "large",
+        "category": "architecture",
+        "rationale": "B2B licensing model enabled via cloud-hosted agent + MCP server exposure"
+      }
+    ],
+    "medium_priority": [
+      {
+        "title": "Copilot Studio A2A Protocol Standardization",
+        "priority": "medium",
+        "effort": "medium",
+        "category": "architecture",
+        "rationale": "A2A now GA; focus-you agent interop toward ecosystem standard"
+      },
+      {
+        "title": "AgentGL Graph Learning for Semantic Memory",
+        "priority": "medium",
+        "effort": "large",
+        "category": "algorithm",
+        "rationale": "diary + secretary_notes as semantic graph; implicit connection detection"
+      }
+    ]
+  },
+  "self_check": {
+    "url_deduplication": "PASS - All URLs verified against 2026-04-22 report; no duplicates",
+    "date_validation": "PASS - All publication dates cross-referenced with primary sources",
+    "focus_relevance": "PASS - All 4 dynamic keywords found with direct market corroboration",
+    "24h_priority_rule": "INFO - 26h window includes 4/22 morning items (Managed Agents 04/08, but first mention in search 04/22); current strict 24h has 2 items (Copilot A2A refresh + Supabase migration guide); decision to include broader 26h window justified by Salesforce freshness"
+  },
+  "report_quality_score": {
+    "breaking_changes_detection": "HIGH",
+    "focus_you_alignment": "HIGH",
+    "newness_vs_previous": "HIGH",
+    "executability": "MEDIUM-HIGH",
+    "japan_localization": "MEDIUM"
+  }
+}

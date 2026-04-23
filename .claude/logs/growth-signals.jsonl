@@ -252,3 +252,9 @@
 {"ts":"2026-04-23T11:21:45+09:00","signal":"raw_prompt","prompt":"何故カレンダーがみれない？focus youからはみれる\n"}
 {"ts":"2026-04-23T11:21:45+09:00","signal":"raw_prompt","prompt":"何故カレンダーがみれない？focus youからはみれる\n"}
 {"ts":"2026-04-23T11:58:46+09:00","signal":"raw_prompt","prompt":"今までできていたけど何故できなくなった？\n"}
+{"ts":"2026-04-23T11:58:46+09:00","signal":"raw_prompt","prompt":"今までできていたけど何故できなくなった？\n"}
+{"ts":"2026-04-23T12:09:29+09:00","signal":"raw_prompt","prompt":"/company 情報収集して\n"}
+{"ts":"2026-04-23T12:10:04+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /home/node/.claude/skills/company/SKILL.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\nAさんの4週間（ジャーニーマップ）ｈ\n"}
+{"ts":"2026-04-23T12:09:29+09:00","signal":"raw_prompt","prompt":"/company 情報収集して\n"}
+{"ts":"2026-04-23T12:10:04+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /home/node/.claude/skills/company/SKILL.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\nAさんの4週間（ジャーニーマップ）ｈ\n"}
+{"ts":"2026-04-23T12:12:37+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/plugins/company/skills/company/SKILL.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\nAさんの4週間（ジャーニーマップ）はよくわからに。腑に落ちていないことは書かないでいい。\n"}
