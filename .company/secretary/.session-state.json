@@ -1,8 +1,8 @@
 {
-  "saved_at": "2026-04-23T23:18:45+09:00",
+  "saved_at": "2026-04-23T23:52:06+09:00",
   "today": "2026-04-23",
-  "work_dir": "/workspace/company-dashboard",
-  "git_last_commit": "47d00a7db8d36df155fdae2b7143e6d0ff3a4df0 chore: auto-save session changes",
+  "work_dir": "/workspace",
+  "git_last_commit": "0f3995b53f281324c5b635d80c75fdae30c5c82f chore: auto-save session changes",
   "active_tasks": [],
   "note": "Context Compaction により古い会話が圧縮されました。以下の情報を確認してください。",
   "reminders": [
