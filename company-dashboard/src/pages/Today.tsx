@@ -13,7 +13,7 @@ import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
 import { FutureYouChat } from '@/components/FutureYouChat'
-import { StoryArcCard } from '@/components/StoryArcCard'
+import { StoryUpdateBanner } from '@/components/StoryUpdateBanner'
 import { MorningQuoteCard } from '@/components/MorningQuoteCard'
 import { useDataStore } from '@/stores/data'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
@@ -924,9 +924,7 @@ export function Today() {
   /* ── [3] 未来のあなたから（クリックで対話展開） ── */
 
   const Briefing = (
-    <FutureYouChat entryPoint="today_partner">
-      <StoryArcCard />
-    </FutureYouChat>
+    <FutureYouChat entryPoint="today_partner" />
   )
 
   /* ── [News] ── */
@@ -1281,6 +1279,9 @@ export function Today() {
     <div className="page">
       {/* ── 朝イチの一節 (受動表示・最上部固定) ── */}
       <MorningQuoteCard />
+
+      {/* ── Story 更新通知 (Arc/Theme 更新時のみ表示、チェックで消える) ── */}
+      <StoryUpdateBanner />
 
       {/* ── L1 やること (action required) ── */}
       {Greeting}
