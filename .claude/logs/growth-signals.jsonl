@@ -449,3 +449,4 @@
 {"ts":"2026-04-23T22:32:57+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/company-dashboard/src/hooks/useMorningBriefing.ts in the IDE. This may or may not be related to the current task.</ide_opened_file>\nvscodeのclaude codeのextensionでallow edit fileの認証の時に勝手にタブが切り替わって編集しようとしているファイルにフォーカスがいってしまいめんどうです。どうにかできないですか？\n"}
 {"ts":"2026-04-23T22:57:24+09:00","signal":"raw_prompt","prompt":"auto mode, edit automaticallyどっちがいい？\n"}
 {"ts":"2026-04-23T22:57:24+09:00","signal":"raw_prompt","prompt":"auto mode, edit automaticallyどっちがいい？\n"}
+{"ts":"2026-04-23T22:58:24+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/company-dashboard/src/hooks/useMorningBriefing.ts in the IDE. This may or may not be related to the current task.</ide_opened_file>\nはい\n"}
