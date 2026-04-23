@@ -70,7 +70,7 @@ export function Story() {
 
   return (
     <div className="page">
-      <PageHeader title="Story" description="日記から見える自分の流れ — Arc(週1)/Theme(月1)/Chapter(四半期) が毎朝9時に自動更新" />
+      <PageHeader title="Story" description="日記から見える自分の流れ — Arc(週1更新)/Theme(月1更新)/Chapter(四半期更新)" />
 
       {/* Current Arc */}
       {arc && (
