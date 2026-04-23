@@ -430,3 +430,5 @@
 {"ts":"2026-04-23T21:23:06+09:00","signal":"raw_prompt","prompt":"❯ tmuxc\nzsh: command not found: tmuxc\n"}
 {"ts":"2026-04-23T21:23:06+09:00","signal":"raw_prompt","prompt":"❯ tmuxc\nzsh: command not found: tmuxc\n"}
 {"ts":"2026-04-23T21:28:53+09:00","signal":"raw_prompt","prompt":"これは毎回必要？永続化される？devcontainerです。\n"}
+{"ts":"2026-04-23T21:28:53+09:00","signal":"raw_prompt","prompt":"これは毎回必要？永続化される？devcontainerです。\n"}
+{"ts":"2026-04-23T22:07:15+09:00","signal":"raw_prompt","prompt":"推奨でいい。\nただ、再度もっと初心者にわかるように説明してください。説明してから決めてください。\n"}
