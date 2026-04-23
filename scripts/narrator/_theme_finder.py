@@ -20,7 +20,8 @@ SYSTEM_PROMPT = """長期の日記から人生テーマを発見。
 SILENT 時の出力: {"silent": true}
 
 ## 通常の出力
-{"identity":"テーマ","emotionalDNA":{"joyTriggers":["3つ"],"energySources":["2-3つ"],"recoveryStyle":"傾向"},"aspirations":"志向1-2文"}"""
+前回のテーマと比べて有意な変化がある場合のみ更新する。その際 change_summary に「何が前回と変わったか」を1-2文で書く（前回がない場合は change_summary を省略）。
+{"identity":"テーマ","emotionalDNA":{"joyTriggers":["3つ"],"energySources":["2-3つ"],"recoveryStyle":"傾向"},"aspirations":"志向1-2文","change_summary":"前回は〇〇だったが、今回は△△が加わった"}"""
 
 
 def run() -> dict:

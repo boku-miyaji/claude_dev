@@ -57,13 +57,21 @@ export function StoryUpdateBanner() {
             <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent2)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>
               あなたのテーマ
             </div>
-            <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6, fontWeight: 500 }}>
-              {theme.identity}
-            </div>
-            {theme.aspirations && (
-              <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4, lineHeight: 1.5 }}>
-                {theme.aspirations}
+            {theme.change_summary ? (
+              <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6, fontWeight: 500 }}>
+                {theme.change_summary}
               </div>
+            ) : (
+              <>
+                <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6, fontWeight: 500 }}>
+                  {theme.identity}
+                </div>
+                {theme.aspirations && (
+                  <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 4, lineHeight: 1.5 }}>
+                    {theme.aspirations}
+                  </div>
+                )}
+              </>
             )}
           </div>
           <button
@@ -91,7 +99,7 @@ export function StoryUpdateBanner() {
               最近の変化
             </div>
             <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6 }}>
-              {arc.narrative}
+              {arc.change_summary ?? arc.narrative}
             </div>
           </div>
           <button

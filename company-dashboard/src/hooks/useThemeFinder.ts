@@ -9,6 +9,7 @@ interface ThemeFinderResult {
     recoveryStyle: string    // 回復スタイル
   }
   aspirations: string        // 志向性の要約
+  change_summary?: string    // 前回との差分（バッチが生成、Homeバナーに表示）
 }
 
 /**

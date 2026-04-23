@@ -32,4 +32,5 @@ export interface ArcReaderResult {
   phase: ArcPhase
   narrative: string // 1-2 sentence interpretation
   confidence: number // 0-1
+  change_summary?: string // diff from previous (batch-generated, shown in Home banner)
 }
