@@ -181,3 +181,5 @@
 {"ts":"2026-04-23T14:10:27+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集部: 04/23 直近24時間・広範囲再収集","model":"default","background":false}
 {"ts":"2026-04-23T14:24:30+09:00","event":"agent_dispatch","dept":"Explore","desc":"system-spec consistency audit","model":"default","background":false}
 {"ts":"2026-04-23T15:25:25+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Remove all version labels from system-spec pages","model":"default","background":false}
+{"ts":"2026-04-23T15:30:40+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Continue version-label cleanup in remaining system-spec files","model":"default","background":false}
+{"ts":"2026-04-23T15:32:31+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"SendMessage to continue remaining cleanup","model":"default","background":false}
