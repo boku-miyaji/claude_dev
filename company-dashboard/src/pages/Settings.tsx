@@ -344,6 +344,91 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
 }
 
 // ============================================================
+// AI Model Config Section
+// ============================================================
+
+const MODEL_OPTIONS: [string, string][] = [
+  ['claude-opus-4-7',          'Claude Opus 4.7（最高精度・低速）'],
+  ['claude-sonnet-4-6',        'Claude Sonnet 4.6（バランス）'],
+  ['claude-haiku-4-5-20251001', 'Claude Haiku 4.5（高速・低コスト）'],
+]
+
+interface AppConfigRow {
+  key: string
+  value: string
+  label: string
+  description: string
+}
+
+function AIModelSection() {
+  const [rows, setRows] = useState<AppConfigRow[]>([])
+  const [form, setForm] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('app_config')
+      .select('key, value, label, description')
+      .like('key', 'batch.%')
+      .order('key')
+      .then(({ data }) => {
+        const items = (data || []) as AppConfigRow[]
+        setRows(items)
+        const initial: Record<string, string> = {}
+        for (const r of items) initial[r.key] = r.value
+        setForm(initial)
+        setLoading(false)
+      })
+  }, [])
+
+  const save = async () => {
+    const updates = rows.map((r) =>
+      supabase.from('app_config').update({ value: form[r.key], updated_at: new Date().toISOString() }).eq('key', r.key)
+    )
+    await Promise.all(updates)
+    toast('モデル設定を保存しました')
+  }
+
+  if (loading) return <div className="skeleton-card" style={{ height: 80 }} />
+
+  return (
+    <>
+      <div className="gradient-line" />
+      <div className="section-title">AI モデル設定</div>
+      <Card style={{ marginBottom: 24 }}>
+        <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.7 }}>
+          バッチ処理で使用する LLM モデルを設定します。変更は次回のバッチ実行から反映されます。
+        </p>
+        {rows.map((r) => (
+          <div key={r.key} style={{ marginBottom: 18 }}>
+            <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{r.label}</div>
+            {r.description && (
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 6 }}>{r.description}</div>
+            )}
+            <select
+              className="input"
+              value={form[r.key] || ''}
+              onChange={(e) => setForm((f) => ({ ...f, [r.key]: e.target.value }))}
+              style={{ fontSize: 13 }}
+            >
+              {MODEL_OPTIONS.map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+        ))}
+        {rows.length === 0 && (
+          <div className="empty">設定が見つかりません。マイグレーション 068 を適用してください。</div>
+        )}
+        {rows.length > 0 && (
+          <button className="btn btn-primary btn-sm" onClick={save}>保存</button>
+        )}
+      </Card>
+    </>
+  )
+}
+
+// ============================================================
 // Main Page
 // ============================================================
 
@@ -379,6 +464,7 @@ export function Settings() {
       <PersonalizationSection settings={userSettings} userId={userId} />
       <PartnerFeedbackSettings />
       <ApiKeysSection settings={userSettings} userId={userId} />
+      <AIModelSection />
       <DataExportSection />
       {isCliMode && <ClaudeCodeSection settings={claudeSettings} />}
     </div>

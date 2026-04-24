@@ -25,10 +25,11 @@ if [ -z "$INPUT" ]; then
   exit 0
 fi
 
-# Claude CLI を opus で呼び、最大2回リトライ
+# Claude CLI を呼び、最大2回リトライ。モデルは env var で上書き可能
+CLI_MODEL="${MORNING_QUOTE_CLI_MODEL:-opus}"
 RESP=""
 for attempt in 1 2; do
-  RESP=$(echo "$INPUT" | claude --print --model opus 2>/dev/null)
+  RESP=$(echo "$INPUT" | claude --print --model "$CLI_MODEL" 2>/dev/null)
   if [ -n "$RESP" ]; then
     break
   fi

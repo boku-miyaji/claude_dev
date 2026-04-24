@@ -23,6 +23,15 @@ SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 SUPABASE_INGEST_KEY = os.environ.get("SUPABASE_INGEST_KEY", "")
 
+# Mapping: app_config value (API model ID) → Claude CLI shortname
+_MODEL_CLI_MAP: dict[str, str] = {
+    "claude-opus-4-7":          "opus",
+    "claude-sonnet-4-6":        "sonnet",
+    "claude-haiku-4-5-20251001": "haiku",
+}
+
+_config_cache: dict[str, str] = {}
+
 
 def _auth_headers() -> dict[str, str]:
     """Prefer service-role for write-heavy batch; fall back to anon + ingest-key."""
@@ -114,13 +123,27 @@ def sb_update(path: str, filter_params: dict, patch: dict) -> bool:
     return False
 
 
-def claude_opus_json(system_prompt: str, user_message: str,
-                     timeout_seconds: int = 180) -> dict | None:
-    """Invoke claude CLI (opus) and parse the first JSON object from stdout.
+def get_app_config(key: str, default: str = "") -> str:
+    """Read a value from the app_config table, with in-process caching."""
+    if key in _config_cache:
+        return _config_cache[key]
+    row = sb_get_one("app_config", {"key": f"eq.{key}", "select": "value"})
+    val = (row or {}).get("value") or default
+    _config_cache[key] = val
+    return val
 
+
+def claude_opus_json(system_prompt: str, user_message: str,
+                     timeout_seconds: int = 180,
+                     config_key: str = "batch.narrator_model") -> dict | None:
+    """Invoke claude CLI and parse the first JSON object from stdout.
+
+    Model is read from app_config (config_key), defaulting to claude-opus-4-7.
     Matches the original Edge Function's llmJson() contract. Returns None on
     any failure so callers can skip gracefully.
     """
+    model_id = get_app_config(config_key, "claude-opus-4-7")
+    cli_model = _MODEL_CLI_MAP.get(model_id, "opus")
     prompt = (
         f"{system_prompt}\n\n"
         "必ず JSON オブジェクトのみを返してください。前後に説明文を付けない。\n\n"
@@ -128,7 +151,7 @@ def claude_opus_json(system_prompt: str, user_message: str,
     )
     try:
         r = subprocess.run(
-            ["claude", "--print", "--model", "opus"],
+            ["claude", "--print", "--model", cli_model],
             input=prompt,
             capture_output=True,
             text=True,

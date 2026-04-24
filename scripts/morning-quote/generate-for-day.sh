@@ -47,6 +47,22 @@ READ_KEY="${SUPABASE_SERVICE_ROLE_KEY:-${SUPABASE_ANON_KEY}}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# app_config からモーニングクォート用モデルを読み込む。
+# Python で _lib.get_app_config() を直接呼ぶのが最短。失敗時は opus にフォールバック。
+MQ_MODEL_ID=$(python3 -c "
+import sys; sys.path.insert(0, '${SCRIPT_DIR}/../narrator')
+import _lib
+print(_lib.get_app_config('batch.morning_quote_model', 'claude-opus-4-7'))
+" 2>/dev/null || echo "claude-opus-4-7")
+
+# API モデル ID → CLI ショートネーム変換
+case "$MQ_MODEL_ID" in
+  *opus*)   export MORNING_QUOTE_CLI_MODEL="opus" ;;
+  *sonnet*) export MORNING_QUOTE_CLI_MODEL="sonnet" ;;
+  *haiku*)  export MORNING_QUOTE_CLI_MODEL="haiku" ;;
+  *)        export MORNING_QUOTE_CLI_MODEL="opus" ;;
+esac
+
 YESTERDAY=$(date -d "$DATE - 1 day" +%Y-%m-%d)
 
 echo "[$DATE] user=$USER_ID: generating morning quote (yesterday=$YESTERDAY)..."

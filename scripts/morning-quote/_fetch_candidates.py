@@ -196,8 +196,9 @@ def call_claude_websearch(prompt: str) -> list[dict[str, Any]]:
         # 最大2回リトライ
         for attempt in range(2):
             try:
+                cli_model = os.environ.get("MORNING_QUOTE_CLI_MODEL", "opus")
                 proc = subprocess.run(
-                    ["claude", "--print", "--model", "opus", "--allowedTools", "WebSearch"],
+                    ["claude", "--print", "--model", cli_model, "--allowedTools", "WebSearch"],
                     input=prompt,
                     capture_output=True,
                     text=True,
