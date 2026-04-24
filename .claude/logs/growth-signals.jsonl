@@ -671,3 +671,12 @@
 {"ts":"2026-04-24T16:30:22+09:00","signal":"raw_prompt","prompt":"その辺りです。また商品DBでニーズと商品のソリューションが一致するかとか\n\n実装フロー系（これがないとコードが書けない）\n\nContainer Apps ↔ Functions の連携方法\nAzure Functions がジョブを受け取って Container Apps に渡すとき、HTTP 直接呼び出し？ Azure Service Bus (Queue)？Storage Queue？ 方式によって再試行・タイムアウト設計が変わる\n\nSSE の出し方\nContainer Apps が直接 SSE を Client に�"}
 {"ts":"2026-04-24T17:36:13+09:00","signal":"raw_prompt","prompt":"pgvectorは十分？AI search使わなくていい？\n本当にポーリングで大丈夫？本番運用想定しています。MVPといいつつも。\nresearch_bundleとは？\n他はそれでいい。\n"}
 {"ts":"2026-04-24T17:36:42+09:00","signal":"raw_prompt","prompt":"どれを確認すればいい？\n"}
+{"ts":"2026-04-24T17:36:13+09:00","signal":"raw_prompt","prompt":"pgvectorは十分？AI search使わなくていい？\n本当にポーリングで大丈夫？本番運用想定しています。MVPといいつつも。\nresearch_bundleとは？\n他はそれでいい。\n"}
+{"ts":"2026-04-24T17:36:42+09:00","signal":"raw_prompt","prompt":"どれを確認すればいい？\n"}
+{"ts":"2026-04-24T17:39:49+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/scratch/design/focus-you-design-spec.html in the IDE. This may or may not be related to the current task.</ide_opened_file>\n機能がもれていないか確認して。モバイルのTODAY画面がひどい。\n"}
+{"ts":"2026-04-24T17:40:56+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/scratch/design/focus-you-design-spec.html in the IDE. This may or may not be related to the current task.</ide_opened_file>\nはいお願いします\n"}
+{"ts":"2026-04-24T17:46:51+09:00","signal":"raw_prompt","prompt":"/company 今あるスキルって何がある？なにかHD運用している中でスキル化されたものってあるっけ？\n"}
+{"ts":"2026-04-24T17:39:49+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/scratch/design/focus-you-design-spec.html in the IDE. This may or may not be related to the current task.</ide_opened_file>\n機能がもれていないか確認して。モバイルのTODAY画面がひどい。\n"}
+{"ts":"2026-04-24T17:40:56+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/scratch/design/focus-you-design-spec.html in the IDE. This may or may not be related to the current task.</ide_opened_file>\nはいお願いします\n"}
+{"ts":"2026-04-24T17:46:51+09:00","signal":"raw_prompt","prompt":"/company 今あるスキルって何がある？なにかHD運用している中でスキル化されたものってあるっけ？\n"}
+{"ts":"2026-04-24T17:47:50+09:00","signal":"raw_prompt","prompt":"どちらからでも進めましょう。早く終わる方から\n"}
