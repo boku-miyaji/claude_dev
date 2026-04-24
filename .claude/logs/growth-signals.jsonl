@@ -515,3 +515,12 @@
 {"ts":"2026-04-24T08:56:34+09:00","signal":"raw_prompt","prompt":"LLMは何を使っている？プロンプトは？\n"}
 {"ts":"2026-04-24T08:57:11+09:00","signal":"raw_prompt","prompt":"まだエラーが出る。\n"}
 {"ts":"2026-04-24T08:59:33+09:00","signal":"raw_prompt","prompt":"プロダクトかを目指しているが、claude cliでいい？まだ編集とかはしないで\n"}
+{"ts":"2026-04-24T08:57:11+09:00","signal":"raw_prompt","prompt":"まだエラーが出る。\n"}
+{"ts":"2026-04-24T08:59:33+09:00","signal":"raw_prompt","prompt":"プロダクトかを目指しているが、claude cliでいい？まだ編集とかはしないで\n"}
+{"ts":"2026-04-24T09:03:13+09:00","signal":"raw_prompt","prompt":"Parse error on line 95: ...hNode click S01 openArchNode ----------------------^ Expecting 'DIR', 'AMP', 'COLON', 'STR', 'DOWN', 'CALLBACKNAME', 'HREF', 'NUM', 'COMMA', 'NODE_STRING', 'BRKT', 'MINUS', 'MULT', 'UNICODE_TEXT', got 'SPACE'\n"}
+{"ts":"2026-04-24T09:03:13+09:00","signal":"raw_prompt","prompt":"Parse error on line 95: ...hNode click S01 openArchNode ----------------------^ Expecting 'DIR', 'AMP', 'COLON', 'STR', 'DOWN', 'CALLBACKNAME', 'HREF', 'NUM', 'COMMA', 'NODE_STRING', 'BRKT', 'MINUS', 'MULT', 'UNICODE_TEXT', got 'SPACE'\n"}
+{"ts":"2026-04-24T09:19:29+09:00","signal":"raw_prompt","prompt":"This page contains the following errors:\nerror on line 1 at column 16314: Opening and ending tag mismatch: br line 1 and p\nBelow is a rendering of the page up to the first error.\n"}
+{"ts":"2026-04-24T09:19:29+09:00","signal":"raw_prompt","prompt":"This page contains the following errors:\nerror on line 1 at column 16314: Opening and ending tag mismatch: br line 1 and p\nBelow is a rendering of the page up to the first error.\n"}
+{"ts":"2026-04-24T09:22:44+09:00","signal":"raw_prompt","prompt":"この画面が見やすいですか？zoomできたり引くことができたりしてほしい。また配置も考えて欲しい。縦長すぎる。\n"}
+{"ts":"2026-04-24T09:28:16+09:00","signal":"raw_prompt","prompt":"すぐうごkさせる\n"}
+{"ts":"2026-04-24T09:28:51+09:00","signal":"raw_prompt","prompt":"すぐ動かせる準備はしておきたい。\nmorning quoteとは？\n"}
