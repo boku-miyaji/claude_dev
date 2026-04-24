@@ -22438,3 +22438,4 @@
 {"ts":"2026-04-24T13:46:29+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
 {"ts":"2026-04-24T13:47:55+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
 {"ts":"2026-04-24T13:48:03+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-24T14:22:32+09:00","hook":"tool-collector","tool":"ToolSearch","status":"ok"}
