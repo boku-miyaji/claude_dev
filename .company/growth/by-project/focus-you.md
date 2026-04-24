@@ -1,9 +1,14 @@
 # growth_events — `focus-you`
 
-Total: **83**
+Total: **88**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-24 | `decision` | active | [日記→タスク候補で日時/種別を推論](../2026/04/20260424-decision-日記タスク候補で日時種別を推論.md) |
+| 2026-04-24 | `countermeasure` | active | [focus-you: 気分入力はコンセプト違反](../2026/04/20260424-countermeasure-focus-you-気分入力はコンセプト違反.md) |
+| 2026-04-24 | `decision` | active | [system-specをレイヤー構造で再構成](../2026/04/20260424-decision-system-specをレイヤー構造で再構成.md) |
+| 2026-04-24 | `countermeasure` | active | [tasks/requests混同の再発防止](../2026/04/20260424-countermeasure-tasksrequests混同の再発防止.md) |
+| 2026-04-23 | `decision` | active | [focus-you タブ構成の全体再設計](../2026/04/20260423-decision-focus-you-タブ構成の全体再設計.md) |
 | 2026-04-23 | `failure` | active | [researchタブが画面に表示されない](../2026/04/20260423-failure-researchタブが画面に表示されない.md) |
 | 2026-04-23 | `failure` | active | [focus-youタブが重複・役割不明瞭](../2026/04/20260423-failure-focus-youタブが重複役割不明瞭.md) |
 | 2026-04-23 | `decision` | active | [focus-youのタブ構成を全体再設計](../2026/04/20260423-decision-focus-youのタブ構成を全体再設計.md) |
@@ -16,8 +21,8 @@ Total: **83**
 | 2026-04-21 | `decision` | active | [名言セクションをGrowth示唆から分離](../2026/04/20260421-decision-名言セクションをgrowth示唆から分離.md) |
 | 2026-04-19 | `decision` | active | [タスクに作業時間と締切を分離した設計](../2026/04/20260419-decision-タスクに作業時間と締切を分離した設計.md) |
 | 2026-04-19 | `failure` | active | [focus-you 日記タスク追加ボタンが機能せず](../2026/04/20260419-failure-focus-you-日記タスク追加ボタンが機能せず.md) |
-| 2026-04-19 | `milestone` | active | [focus-you/roots: 自然文入力+時系列タイムラインUI](../2026/04/20260419-milestone-focus-youroots-自然文入力時系列タイムラインui.md) |
 | 2026-04-19 | `milestone` | active | [silence-first AI設計原則の確立とNarrator実装](../2026/04/20260419-milestone-silence-first-ai設計原則の確立とnarrator実装.md) |
+| 2026-04-19 | `milestone` | active | [focus-you/roots: 自然文入力+時系列タイムラインUI](../2026/04/20260419-milestone-focus-youroots-自然文入力時系列タイムラインui.md) |
 | 2026-04-17 | `decision` | active | [AI機能の精度要件とコスト分離ポリシー](../2026/04/20260417-decision-ai機能の精度要件とコスト分離ポリシー.md) |
 | 2026-04-15 | `milestone` | active | [request #118 の修正完了](../2026/04/20260415-milestone-request-118-の修正完了.md) |
 | 2026-04-15 | `decision` | active | [部署CLAUDE.mdをOrganization画面で閲覧可能に](../2026/04/20260415-decision-部署claudemdをorganization画面で閲覧可能に.md) |
@@ -31,10 +36,10 @@ Total: **83**
 | 2026-04-13 | `failure` | active | [モバイル版のタブが機能しない](../2026/04/20260413-failure-モバイル版のタブが機能しない.md) |
 | 2026-04-12 | `decision` | active | [AIチャットをlegacy HTMLからReactへ移植](../2026/04/20260412-decision-aiチャットをlegacy-htmlからreactへ移植.md) |
 | 2026-04-12 | `decision` | active | [AI Partnerを示唆・アドバイス型にポジショニング転換](../2026/04/20260412-decision-ai-partnerを示唆アドバイス型にポジショニング転換.md) |
-| 2026-04-12 | `countermeasure` | active | [AIチャットをv4へ刷新（未来の自分）](../2026/04/20260412-countermeasure-aiチャットをv4へ刷新未来の自分.md) |
 | 2026-04-12 | `milestone` | active | [成長イベント自動記録の仕組み導入](../2026/04/20260412-milestone-成長イベント自動記録の仕組み導入.md) |
-| 2026-04-12 | `milestone` | active | [成長記録の自動生成パイプライン追加](../2026/04/20260412-milestone-成長記録の自動生成パイプライン追加.md) |
+| 2026-04-12 | `countermeasure` | active | [AIチャットをv4へ刷新（未来の自分）](../2026/04/20260412-countermeasure-aiチャットをv4へ刷新未来の自分.md) |
 | 2026-04-12 | `countermeasure` | active | [AIチャットを『未来の自分』v4に再設計](../2026/04/20260412-countermeasure-aiチャットを未来の自分v4に再設計.md) |
+| 2026-04-12 | `milestone` | active | [成長記録の自動生成パイプライン追加](../2026/04/20260412-milestone-成長記録の自動生成パイプライン追加.md) |
 | 2026-04-11 | `decision` | active | [プロダクト境界: AIチャット/CEO分析/日記/tasksはプロダクト側](../2026/04/20260411-decision-プロダクト境界-aiチャットceo分析日記tasksはプロダクト側.md) |
 | 2026-04-11 | `milestone` | active | [Foresight Engine と Self-Analysis 拡張を導入](../2026/04/20260411-milestone-foresight-engine-と-self-analysis-拡張を導入.md) |
 | 2026-04-11 | `countermeasure` | active | [プロダクト/パーソナル機能を分離](../2026/04/20260411-countermeasure-プロダクトパーソナル機能を分離.md) |
@@ -57,14 +62,14 @@ Total: **83**
 | 2026-04-05 | `failure` | active | [AIチャットが過去会話を理解できない](../2026/04/20260405-failure-aiチャットが過去会話を理解できない.md) |
 | 2026-04-05 | `decision` | active | [tasksとrequestをUI上で明確分離](../2026/04/20260405-decision-tasksとrequestをui上で明確分離.md) |
 | 2026-04-05 | `failure` | resolved | [AIチャットhistory常に0件 — tool_call_idカラム不在](../2026/04/20260405-failure-aiチャットhistory常に0件-tool-call-idカラム不在.md) |
-| 2026-04-05 | `milestone` | resolved | [サイドバー折りたたみ + ChatGPTスタイル編集/コピーボタン](../2026/04/20260405-milestone-サイドバー折りたたみ-chatgptスタイル編集コピーボタン.md) |
-| 2026-04-05 | `milestone` | resolved | [Narrator（ライフコンパニオン）構想 — AIが人生の語り手になる](../2026/04/20260405-milestone-narratorライフコンパニオン構想-aiが人生の語り手になる.md) |
-| 2026-04-05 | `failure` | resolved | [AIチャット会話履歴の安定化 — tool_call_id問題との6時間の格闘](../2026/04/20260405-failure-aiチャット会話履歴の安定化-tool-call-id問題との6時間の格闘.md) |
-| 2026-04-05 | `milestone` | resolved | [AIチャット品質の劇的改善 — act first, ask later](../2026/04/20260405-milestone-aiチャット品質の劇的改善-act-first-ask-later.md) |
-| 2026-04-05 | `milestone` | resolved | [AIチャットにPDF/Excel/Word/PPTX読み取り機能を追加](../2026/04/20260405-milestone-aiチャットにpdfexcelwordpptx読み取り機能を追加.md) |
 | 2026-04-05 | `countermeasure` | resolved | [自己分析にバイアス補正を導入 — LLMの「褒めすぎ」問題への対策](../2026/04/20260405-countermeasure-自己分析にバイアス補正を導入-llmの褒めすぎ問題への対策.md) |
 | 2026-04-05 | `milestone` | resolved | [タスクページ完全リデザイン — タブ・ソート・ドラッグ&ドロップ](../2026/04/20260405-milestone-タスクページ完全リデザイン-タブソートドラッグドロップ.md) |
+| 2026-04-05 | `milestone` | resolved | [Narrator（ライフコンパニオン）構想 — AIが人生の語り手になる](../2026/04/20260405-milestone-narratorライフコンパニオン構想-aiが人生の語り手になる.md) |
+| 2026-04-05 | `milestone` | resolved | [AIチャット品質の劇的改善 — act first, ask later](../2026/04/20260405-milestone-aiチャット品質の劇的改善-act-first-ask-later.md) |
+| 2026-04-05 | `milestone` | resolved | [AIチャットにPDF/Excel/Word/PPTX読み取り機能を追加](../2026/04/20260405-milestone-aiチャットにpdfexcelwordpptx読み取り機能を追加.md) |
+| 2026-04-05 | `milestone` | resolved | [サイドバー折りたたみ + ChatGPTスタイル編集/コピーボタン](../2026/04/20260405-milestone-サイドバー折りたたみ-chatgptスタイル編集コピーボタン.md) |
 | 2026-04-05 | `milestone` | resolved | [感情分析バックフィル — 254日記エントリーの一括分析](../2026/04/20260405-milestone-感情分析バックフィル-254日記エントリーの一括分析.md) |
+| 2026-04-05 | `failure` | resolved | [AIチャット会話履歴の安定化 — tool_call_id問題との6時間の格闘](../2026/04/20260405-failure-aiチャット会話履歴の安定化-tool-call-id問題との6時間の格闘.md) |
 | 2026-04-04 | `decision` | active | [AIアルゴリズムの全面説明とブラックボックス化防止](../2026/04/20260404-decision-aiアルゴリズムの全面説明とブラックボックス化防止.md) |
 | 2026-04-04 | `decision` | active | [How it worksページにタブ化で情報集約](../2026/04/20260404-decision-how-it-worksページにタブ化で情報集約.md) |
 | 2026-04-04 | `failure` | active | [タスクの期限未表示と即時非表示で達成感なし](../2026/04/20260404-failure-タスクの期限未表示と即時非表示で達成感なし.md) |

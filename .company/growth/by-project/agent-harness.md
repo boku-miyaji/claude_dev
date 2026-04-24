@@ -22,13 +22,13 @@ Total: **28**
 | 2026-04-06 | `milestone` | active | [AlphaEvolve進化ループの計装基盤完成](../2026/04/20260406-milestone-alphaevolve進化ループの計装基盤完成.md) |
 | 2026-04-05 | `milestone` | active | [Claude Code ハーネス再設計（IMP-001〜014完遂）](../2026/04/20260405-milestone-claude-code-ハーネス再設計imp-001014完遂.md) |
 | 2026-04-05 | `failure` | resolved | [CLAUDE.md 208行に肥大化（推奨60行の3倍）](../2026/04/20260405-failure-claudemd-208行に肥大化推奨60行の3倍.md) |
+| 2026-04-05 | `milestone` | resolved | [実装↔ドキュメント同期の3層エンフォースメント](../2026/04/20260405-milestone-実装ドキュメント同期の3層エンフォースメント.md) |
 | 2026-04-05 | `milestone` | resolved | [ハーネスエンジニアリング調査 — 「プロンプトより環境が重要」の発見](../2026/04/20260405-milestone-ハーネスエンジニアリング調査-プロンプトより環境が重要の発見.md) |
 | 2026-04-05 | `countermeasure` | resolved | [Hook並列化 + ドキュメント鮮度チェック自動化](../2026/04/20260405-countermeasure-hook並列化-ドキュメント鮮度チェック自動化.md) |
-| 2026-04-05 | `milestone` | resolved | [実装↔ドキュメント同期の3層エンフォースメント](../2026/04/20260405-milestone-実装ドキュメント同期の3層エンフォースメント.md) |
 | 2026-04-02 | `milestone` | active | [Claude Code-aware HD設計とCLAUDE.mdスリム化](../2026/04/20260402-milestone-claude-code-aware-hd設計とclaudemdスリム化.md) |
 | 2026-04-02 | `milestone` | resolved | [Claude Code-aware HD設計 — LLM内部構造を踏まえた最適化](../2026/04/20260402-milestone-claude-code-aware-hd設計-llm内部構造を踏まえた最適化.md) |
-| 2026-03-30 | `countermeasure` | active | [company plugin ワンコマンドインストーラ整備](../2026/03/20260330-countermeasure-company-plugin-ワンコマンドインストーラ整備.md) |
 | 2026-03-30 | `milestone` | active | [/company 起動時の鮮度自動チェック導入](../2026/03/20260330-milestone-company-起動時の鮮度自動チェック導入.md) |
+| 2026-03-30 | `countermeasure` | active | [company plugin ワンコマンドインストーラ整備](../2026/03/20260330-countermeasure-company-plugin-ワンコマンドインストーラ整備.md) |
 | 2026-03-27 | `countermeasure` | active | [/company コマンド起動時の自動git pull追加](../2026/03/20260327-countermeasure-company-コマンド起動時の自動git-pull追加.md) |
 | 2026-03-15 | `milestone` | active | [webapp-demo-generator スキル追加](../2026/03/20260315-milestone-webapp-demo-generator-スキル追加.md) |
 | 2026-01-08 | `milestone` | active | [プラグイン・スキル群の大規模導入](../2026/01/20260108-milestone-プラグインスキル群の大規模導入.md) |

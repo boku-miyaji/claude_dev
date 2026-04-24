@@ -4,16 +4,19 @@
 - **date**: 2026-04-23
 - **category**: communication / **severity**: medium
 - **status**: active
-- **source**: detector
-- **tags**: rikyu, documentation, ux, auto-detected, daily-batch, llm-classified
+- **source**: daily-digest
+- **tags**: claude-dev, documentation, auto-detected, daily-digest
 
 ## what_happened
-R-12, G-1, M1, U等のメタ情報記号をドキュメント内で説明なしに使っていた。社長が「なんのことかわからない」と指摘。
+社長から『R-12, G-1, M1, U などのメタ記号で説明されても何のことかわからない。丁寧に説明して』と指摘があり、関連ドキュメントから記号による短縮表現を削除し、平易な説明に置き換えるルールを確立。
 
 ## root_cause
-内部管理用の記号を対外ドキュメントに流出させていた。
+内部設計用の記号をそのまま社長向けドキュメントにも使ってしまい、読み手の理解を妨げていた
 
 ## countermeasure
-メタ情報記号は使わず、もっと丁寧に自然言語で説明する。ドキュメント内を修正。
+メタ記号での説明を禁止し、丁寧な表現に統一するルールを決定
 
-<!-- id: 6b14cbe3-749a-4036-9fa6-5fae7d92e5c5 -->
+## result
+ドキュメントの可読性が向上
+
+<!-- id: 17663d7d-04a2-4844-848a-7585f140686a -->

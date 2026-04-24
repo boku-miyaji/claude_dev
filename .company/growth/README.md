@@ -3,20 +3,28 @@
 > Supabase `growth_events` テーブルの読み取り専用ミラー。
 > 毎日 `scripts/growth/export-mirror.sh` で再生成される。**手編集しない**（次回上書きされる）。
 
-- 総レコード数: **383**
+- 総レコード数: **391**
 
 ## PJ別
 
 - [agent-harness](by-project/agent-harness.md) — 28件
-- [claude-dev](by-project/claude-dev.md) — 217件
-- [focus-you](by-project/focus-you.md) — 83件
+- [claude-dev](by-project/claude-dev.md) — 219件
+- [focus-you](by-project/focus-you.md) — 88件
 - [polaris-circuit](by-project/polaris-circuit.md) — 26件
-- [rikyu](by-project/rikyu.md) — 29件
+- [rikyu](by-project/rikyu.md) — 30件
 
 ## 最近の20件
 
 | date | type | project | title |
 |---|---|---|---|
+| 2026-04-24 | `decision` | focus-you | 日記→タスク候補で日時/種別を推論 |
+| 2026-04-24 | `countermeasure` | focus-you | focus-you: 気分入力はコンセプト違反 |
+| 2026-04-24 | `decision` | focus-you | system-specをレイヤー構造で再構成 |
+| 2026-04-24 | `decision` | rikyu | rikyu: Supabase不使用+Python+Azure構成 |
+| 2026-04-24 | `countermeasure` | focus-you | tasks/requests混同の再発防止 |
+| 2026-04-23 | `milestone` | claude-dev | 依頼ステータス追跡システムを実装 |
+| 2026-04-23 | `decision` | focus-you | focus-you タブ構成の全体再設計 |
+| 2026-04-23 | `countermeasure` | claude-dev | ドキュメント内のメタ記号説明を廃止 |
 | 2026-04-23 | `failure` | focus-you | researchタブが画面に表示されない |
 | 2026-04-23 | `failure` | focus-you | focus-youタブが重複・役割不明瞭 |
 | 2026-04-23 | `decision` | rikyu | メタ記号（R-12/G-1等）の廃止 |
@@ -29,14 +37,6 @@
 | 2026-04-23 | `failure` | claude-dev | PR勝手マージの禁止違反 |
 | 2026-04-23 | `failure` | focus-you | ダッシュボードのカレンダー表示が壊れた |
 | 2026-04-23 | `failure` | claude-dev | PRを勝手にマージした |
-| 2026-04-23 | `countermeasure` | rikyu | ドキュメントのメタ情報記号廃止 |
-| 2026-04-23 | `failure` | claude-dev | カレンダー参照が不可に回帰 |
-| 2026-04-23 | `failure` | claude-dev | 情報収集が古く・スコープ狭い |
-| 2026-04-23 | `failure` | focus-you | focus-youタブ重複・分担不明 |
-| 2026-04-23 | `failure` | claude-dev | PR作成後に無断マージ |
-| 2026-04-23 | `decision` | rikyu | メタ記号での説明を禁止、丁寧な表現へ |
-| 2026-04-23 | `failure` | focus-you | カレンダー表示デグレ |
-| 2026-04-23 | `failure` | claude-dev | 情報収集で古い日付の情報を提示 |
 
 ## 運用ルール
 - マスター: Supabase `growth_events`
