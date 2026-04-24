@@ -22501,3 +22501,4 @@
 {"ts":"2026-04-24T15:33:42+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-24T15:35:06+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-24T15:35:07+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-24T15:37:30+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
