@@ -22326,3 +22326,6 @@
 {"ts":"2026-04-24T12:33:33+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
 {"ts":"2026-04-24T12:33:34+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
 {"ts":"2026-04-24T12:35:22+09:00","hook":"tool-collector","tool":"Agent:Explore","status":"ok"}
+{"ts":"2026-04-24T12:38:35+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-24T12:56:11+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
+{"ts":"2026-04-24T12:56:20+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
