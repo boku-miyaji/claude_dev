@@ -5,6 +5,12 @@
 - **事業**: AI開発、受託開発コンサル、フリーランス
 - **目標**: 複数PJ一元管理、生産性向上、事業拡大、成果物の質向上
 
+## 戦略的優先事項
+
+**Memory Intelligence は最高優先度の externalization 対象。**
+
+focus-you の Diary + Memory Intelligence Agent は単なる機能ではなく、ユーザーの記憶・文脈・成長を外部化する戦略的資産。ByteRover / Mnemonic Sovereignty / Memory Survey の各論文が「記憶が agent capability の中核」を実証済み。実装・設計の意思決定では Memory 関連を最優先に扱う。
+
 ## 設計原則
 
 | 原則 | 実践 |
