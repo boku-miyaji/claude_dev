@@ -9,6 +9,7 @@ import {
   markImplemented,
   rejectSuggestion,
 } from '@/lib/intelligenceSuggestions'
+import { useDataStore } from '@/stores/data'
 import type {
   IntelligenceSuggestion,
   SuggestionPriority,
@@ -64,9 +65,9 @@ const TARGET_COLORS: Record<SuggestionTarget, string> = {
 }
 
 const STATUS_LABELS: Record<SuggestionStatus, string> = {
-  new: '未チェック',
-  checked: 'チェック済',
-  adopted: '採用',
+  new: '未対応',
+  checked: 'Request追加済',
+  adopted: '実装確定',
   rejected: '却下',
   implemented: '実装済',
   dismissed: 'スキップ',
@@ -225,11 +226,11 @@ function SuggestionCard({
         )}
         {s.task_id !== null && (
           <a
-            href={`#/tasks?id=${s.task_id}`}
+            href="#/requests"
             style={{ fontSize: 10, color: 'var(--accent)', textDecoration: 'none' }}
-            onClick={(e) => { e.preventDefault(); window.location.hash = `#/tasks?id=${s.task_id}` }}
+            onClick={(e) => { e.preventDefault(); window.location.hash = '#/requests' }}
           >
-            → タスク #{s.task_id}
+            → Requests #{s.task_id}
           </a>
         )}
       </div>
@@ -247,14 +248,14 @@ function SuggestionCard({
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
         {s.status === 'new' && (
           <>
-            <button className="btn btn-g btn-sm" onClick={onDismiss} disabled={busy}>削除</button>
-            <button className="btn btn-p btn-sm" onClick={onCheck} disabled={busy}>チェック</button>
+            <button className="btn btn-g btn-sm" onClick={onDismiss} disabled={busy}>スキップ</button>
+            <button className="btn btn-p btn-sm" onClick={onCheck} disabled={busy}>Requestsに追加</button>
           </>
         )}
         {s.status === 'checked' && (
           <>
             <button className="btn btn-g btn-sm" onClick={onReject} disabled={busy}>却下</button>
-            <button className="btn btn-p btn-sm" onClick={onAdopt} disabled={busy}>採用</button>
+            <button className="btn btn-p btn-sm" onClick={onAdopt} disabled={busy}>実装する</button>
           </>
         )}
         {s.status === 'adopted' && (
@@ -266,6 +267,7 @@ function SuggestionCard({
 }
 
 function SuggestionsTab({ onGoToReport }: { onGoToReport?: () => void }) {
+  const { invalidate } = useDataStore()
   const [all, setAll] = useState<IntelligenceSuggestion[]>([])
   const [loading, setLoading] = useState(true)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -317,11 +319,12 @@ function SuggestionsTab({ onGoToReport }: { onGoToReport?: () => void }) {
     return c
   }, [all])
 
-  async function doAction(id: string, action: (id: string) => Promise<unknown>, errorLabel: string) {
+  async function doAction(id: string, action: (id: string) => Promise<unknown>, errorLabel: string, onSuccess?: () => void) {
     setBusyId(id)
     try {
       await action(id)
       await load()
+      onSuccess?.()
     } catch (e) {
       console.error(`[SuggestionsTab] ${errorLabel} failed:`, e)
       alert(`${errorLabel}に失敗しました: ${(e as Error).message || e}`)
@@ -389,9 +392,9 @@ function SuggestionsTab({ onGoToReport }: { onGoToReport?: () => void }) {
             key={s.id}
             suggestion={s}
             busy={busyId === s.id}
-            onCheck={() => doAction(s.id, checkSuggestion, 'チェック')}
-            onDismiss={() => doAction(s.id, dismissSuggestion, '削除')}
-            onAdopt={() => doAction(s.id, adoptSuggestion, '採用')}
+            onCheck={() => doAction(s.id, checkSuggestion, 'Requestsに追加', () => invalidate('tasks'))}
+            onDismiss={() => doAction(s.id, dismissSuggestion, 'スキップ')}
+            onAdopt={() => doAction(s.id, adoptSuggestion, '実装する')}
             onReject={() => doAction(s.id, rejectSuggestion, '却下')}
             onImplemented={() => doAction(s.id, markImplemented, '実装済み')}
             onGoToReport={onGoToReport}
