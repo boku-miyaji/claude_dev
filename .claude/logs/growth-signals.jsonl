@@ -666,3 +666,5 @@
 {"ts":"2026-04-24T16:25:04+09:00","signal":"raw_prompt","prompt":"/tax-advisor @untracked/tax 配下の画像でそれぞれ経費にできるものは？それぞれの設定まで丁寧に。なるべく多くを経費にしたいと思っています。\n"}
 {"ts":"2026-04-24T16:26:05+09:00","signal":"raw_prompt","prompt":"外部開発者が「詰まる」6つのブロッカー\nインフラ設定がない — Azure リソース定義 (Bicep/Terraform) も Docker 構成もない\nバックエンドフレームワーク未定 — Node.js / .NET / Python のどれか一言もない\nLLMプロンプトテンプレートがない — AG1〜AG4 のシステムプロンプトが完全に欠落\nRAG/ナレッジベース構築手順がない — 埋め込みモデル・チャンク設定・ベクトルDBが未記載\nDB DDL S\n"}
 {"ts":"2026-04-24T16:29:09+09:00","signal":"raw_prompt","prompt":"exportできないの？MF cloudです\n"}
+{"ts":"2026-04-24T16:29:09+09:00","signal":"raw_prompt","prompt":"exportできないの？MF cloudです\n"}
+{"ts":"2026-04-24T16:30:22+09:00","signal":"raw_prompt","prompt":"その辺りです。また商品DBでニーズと商品のソリューションが一致するかとか\n\n実装フロー系（これがないとコードが書けない）\n\nContainer Apps ↔ Functions の連携方法\nAzure Functions がジョブを受け取って Container Apps に渡すとき、HTTP 直接呼び出し？ Azure Service Bus (Queue)？Storage Queue？ 方式によって再試行・タイムアウト設計が変わる\n\nSSE の出し方\nContainer Apps が直接 SSE を Client に�"}
