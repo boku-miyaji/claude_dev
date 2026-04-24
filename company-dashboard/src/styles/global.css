@@ -15,6 +15,18 @@
   --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
   --shadow-lg: 0 4px 16px rgba(0,0,0,.08);
 }
+[data-theme="dark"] {
+  --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a; --surface3: #2a2f45;
+  --border: #2e3350; --border2: #3a4060;
+  --text: #e8eaf0; --text2: #9aa3b8; --text3: #5e6780;
+  --accent: #7c6cff; --accent2: #9b8fff; --accent-bg: rgba(124,108,255,.10); --accent-border: rgba(124,108,255,.25);
+  --green: #34d399; --green-bg: rgba(52,211,153,.08); --green-border: rgba(52,211,153,.22);
+  --amber: #fbbf24; --amber-bg: rgba(251,191,36,.08); --amber-border: rgba(251,191,36,.22);
+  --red: #f87171; --red-bg: rgba(248,113,113,.08); --red-border: rgba(248,113,113,.22);
+  --blue: #60a5fa; --blue-bg: rgba(96,165,250,.08); --blue-border: rgba(96,165,250,.22);
+  --shadow: 0 1px 3px rgba(0,0,0,.30), 0 1px 2px rgba(0,0,0,.20);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,.40);
+}
 *{margin:0;padding:0;box-sizing:border-box}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-overflow-scrolling:touch}

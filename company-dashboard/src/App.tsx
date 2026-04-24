@@ -33,6 +33,7 @@ import { Story } from '@/pages/Story'
 import { LifeHistory } from '@/pages/LifeHistory'
 import { GoogleAuthCallback } from '@/pages/GoogleAuthCallback'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { useTheme } from '@/hooks/useTheme'
 import { ShortcutHelp } from '@/components/ShortcutHelp'
 import { Component, type ReactNode, type ErrorInfo } from 'react'
 
@@ -59,6 +60,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
 
 export function App() {
   useAuth()
+  useTheme()
   const { loading, appReady, user } = useAuthStore()
   const { showHelp, setShowHelp } = useKeyboardShortcuts()
 
