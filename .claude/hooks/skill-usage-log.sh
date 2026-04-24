@@ -34,16 +34,7 @@ PAYLOAD=$(jq -n \
   --argjson metadata "$METADATA" \
   '{action: $action, description: $description, metadata: $metadata}')
 
-curl -4 -s -o /dev/null -w "" \
-  "${SUPABASE_URL}/rest/v1/activity_log" \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-  -H "Content-Type: application/json" \
-  -H "Prefer: return=minimal" \
-  -d "$PAYLOAD" \
-  --connect-timeout 10 \
-  --max-time 15 \
-  2>/dev/null || true
+"$SCRIPT_DIR/api/sb.sh" post activity_log "$PAYLOAD" >/dev/null 2>&1 || true
 
 LOG_DIR="$HOME/.claude/logs"
 mkdir -p "$LOG_DIR" 2>/dev/null || true
