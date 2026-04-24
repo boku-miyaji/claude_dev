@@ -646,3 +646,4 @@
 {"ts":"2026-04-24T15:58:43+09:00","signal":"raw_prompt","prompt":"MAFで活用した方がいいところある？ハイブリッド的なところ。コンテキストの渡し方を工夫すればいい？それでもmagentic_pipeline.pyのほうがいい？\n"}
 {"ts":"2026-04-24T15:59:55+09:00","signal":"raw_prompt","prompt":"WBIの情報が分散したりしている。まだちゃんと考えきれていないのでは？\n"}
 {"ts":"2026-04-24T16:02:46+09:00","signal":"raw_prompt","prompt":"最後に一つだけ質問\nmagentic_pipeline.pyはオーケストレーションがない？それが決定的な違い？\nまた、magentic_pipeline.pyはエージェントを使っている？\n"}
+{"ts":"2026-04-24T16:02:46+09:00","signal":"raw_prompt","prompt":"最後に一つだけ質問\nmagentic_pipeline.pyはオーケストレーションがない？それが決定的な違い？\nまた、magentic_pipeline.pyはエージェントを使っている？\n"}
