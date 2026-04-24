@@ -203,3 +203,4 @@
 {"ts":"2026-04-24T13:07:21+09:00","event":"agent_dispatch","dept":"Explore","desc":"system-spec 全ページの横断レビュー（内容の整合性・抜け穴・設計上の問題点）","model":"default","background":false}
 {"ts":"2026-04-24T14:31:21+09:00","event":"agent_dispatch","dept":"Explore","desc":"system-spec 全ページの構築可能性評価（開発者視点での完全性チェック）","model":"default","background":false}
 {"ts":"2026-04-24T16:29:04+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"focus-you 全ページ UX設計（design spec HTML作成）","model":"default","background":false}
+{"ts":"2026-04-24T18:28:06+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"Manual + Frameworks モック追加設計","model":"default","background":true}
