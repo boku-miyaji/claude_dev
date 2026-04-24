@@ -13,6 +13,7 @@ import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import type { TimelineItem } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
 import { FutureYouChat } from '@/components/FutureYouChat'
+import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { StoryUpdateBanner } from '@/components/StoryUpdateBanner'
 import { MorningQuoteCard } from '@/components/MorningQuoteCard'
 import { useDataStore } from '@/stores/data'
@@ -309,7 +310,29 @@ export function Today() {
 
   // Timeline: merges calendar events + time-bound tasks into 30-min slots
   const timeline = useTodayTimeline(allOpenTasks, completedToday)
-  const { slots: timelineSlots, todayTasks: timelineTodayTasks, completedUntimedToday, upcomingTasks, tomorrowEvents, recentEventName, loading: timelineLoading, calendarAuthenticated } = timeline
+  const { slots: timelineSlots, todayTasks: timelineTodayTasks, completedUntimedToday, upcomingTasks, todayCalEvents, tomorrowEvents, recentEventName, loading: timelineLoading, calendarAuthenticated } = timeline
+
+  // Build event text for AI Partner briefing (title + JST time)
+  const todayEventsText = todayCalEvents.length > 0
+    ? todayCalEvents.map((e) => {
+        const time = e.startTime.includes('T')
+          ? new Date(e.startTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo' })
+          : '終日'
+        return `${time} ${e.title}`
+      }).join('\n')
+    : undefined
+  const tomorrowEventsText = tomorrowEvents.length > 0
+    ? tomorrowEvents.map((e) => e.title).join('、')
+    : undefined
+  const weatherText = weather ? `${weather.today.icon} ${weather.today.tempMax}℃` : undefined
+
+  const { message: briefingMessage } = useMorningBriefing(
+    timeMode,
+    todayEventsText,
+    tomorrowEventsText,
+    weatherText,
+    !timelineLoading,
+  )
 
 
   const priorityWeight = { high: 0, normal: 1, low: 2 } as const
@@ -924,7 +947,7 @@ export function Today() {
   /* ── [3] 未来のあなたから（クリックで対話展開） ── */
 
   const Briefing = (
-    <FutureYouChat entryPoint="today_partner" />
+    <FutureYouChat entryPoint="today_partner" briefingMessage={briefingMessage} />
   )
 
   /* ── [News] ── */

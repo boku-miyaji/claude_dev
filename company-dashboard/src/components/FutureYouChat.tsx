@@ -12,10 +12,12 @@ interface Props {
   entryPoint?: string
   /** カードの下にさらに表示するチルドレン（例: StoryArcCard） */
   children?: React.ReactNode
+  /** AI Partner の自動生成コメント。あれば collapsed 状態に表示する */
+  briefingMessage?: string | null
 }
 
 /** AI Partner のインライン対話カード。Today ページに常駐し、クリックで展開して会話できる。 */
-export function FutureYouChat({ entryPoint = 'today_partner', children }: Props) {
+export function FutureYouChat({ entryPoint = 'today_partner', children, briefingMessage }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [history, setHistory] = useState<PartnerChatMessage[]>([])
   const [messageMeta, setMessageMeta] = useState<Record<number, MessageMeta>>({})
@@ -78,12 +80,18 @@ export function FutureYouChat({ entryPoint = 'today_partner', children }: Props)
 
       {!expanded && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.6, fontStyle: 'italic' }}>
-            話したいことあれば
+          <span style={{
+            flex: 1,
+            fontSize: briefingMessage ? 13 : 12,
+            color: briefingMessage ? 'var(--text)' : 'var(--text3)',
+            lineHeight: 1.6,
+            fontStyle: briefingMessage ? 'normal' : 'italic',
+          }}>
+            {briefingMessage ?? '話したいことあれば'}
           </span>
           <button
             className="btn btn-ghost btn-sm"
-            style={{ fontSize: 11, padding: '4px 10px', textTransform: 'none', letterSpacing: 0 }}
+            style={{ fontSize: 11, padding: '4px 10px', textTransform: 'none', letterSpacing: 0, flexShrink: 0 }}
             onClick={() => setExpanded(true)}
           >
             話す →

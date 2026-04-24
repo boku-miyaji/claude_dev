@@ -44,6 +44,8 @@ export interface TodayTimeline {
   completedUntimedToday: Task[]
   /** Tasks with deadline in next 7 days (not today) */
   upcomingTasks: Task[]
+  /** Calendar events for today (passed to AI Partner briefing) */
+  todayCalEvents: TimelineEvent[]
   /** Calendar events for tomorrow (kept for briefing) */
   tomorrowEvents: TimelineEvent[]
   /** Most recently ended event name */
@@ -260,6 +262,6 @@ export function useTodayTimeline(allTasks: Task[], completedToday: Task[]): Toda
         }),
       }))
 
-    return { slots, todayTasks, completedUntimedToday, upcomingTasks, tomorrowEvents, recentEventName, loading, calendarAuthenticated }
+    return { slots, todayTasks, completedUntimedToday, upcomingTasks, todayCalEvents: calEvents, tomorrowEvents, recentEventName, loading, calendarAuthenticated }
   }, [calEvents, allTasks, completedToday, tomorrowEvents, recentEventName, loading, calendarAuthenticated, now, todayStr])
 }
