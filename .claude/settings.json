@@ -699,5 +699,6 @@
   },
   "skipDangerousModePermissionPrompt": false,
   "preferredNotifChannel": "terminal_bell",
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "effortLevel": "max"
 }
