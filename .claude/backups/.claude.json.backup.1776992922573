@@ -1,5 +1,5 @@
 {
-  "numStartups": 47,
+  "numStartups": 45,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -44,8 +44,8 @@
     "guest-passes": 38,
     "frontend-design-plugin": 30,
     "color-when-multi-clauding": 45,
-    "agent-flag": 46,
-    "feedback-command": 47,
+    "agent-flag": 30,
+    "feedback-command": 30,
     "overage-credit": 35,
     "voice-mode": 40,
     "remote-control": 41
@@ -568,19 +568,28 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0,
-      "lastAPIDuration": 0,
-      "lastAPIDurationWithoutRetries": 0,
-      "lastToolDuration": 0,
-      "lastDuration": 12060,
-      "lastLinesAdded": 0,
-      "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 0,
-      "lastTotalOutputTokens": 0,
-      "lastTotalCacheCreationInputTokens": 0,
-      "lastTotalCacheReadInputTokens": 0,
-      "lastModelUsage": {},
-      "lastSessionId": "e83c55c0-da64-4a03-b401-3563cad0af72",
+      "lastCost": 3.3214355999999996,
+      "lastAPIDuration": 354015,
+      "lastAPIDurationWithoutRetries": 353985,
+      "lastToolDuration": 961,
+      "lastDuration": 36863174,
+      "lastLinesAdded": 209,
+      "lastLinesRemoved": 3,
+      "lastTotalInputTokens": 1989,
+      "lastTotalOutputTokens": 20019,
+      "lastTotalCacheCreationInputTokens": 520996,
+      "lastTotalCacheReadInputTokens": 3538162,
+      "lastModelUsage": {
+        "claude-sonnet-4-6": {
+          "inputTokens": 1989,
+          "outputTokens": 20019,
+          "cacheReadInputTokens": 3538162,
+          "cacheCreationInputTokens": 520996,
+          "webSearchRequests": 0,
+          "costUSD": 3.3214355999999996
+        }
+      },
+      "lastSessionId": "354b743c-9dc8-4c08-a8f2-93213df13091",
       "hasCompletedProjectOnboarding": true,
       "lastSessionMetrics": {
         "frame_duration_ms_count": 629,
@@ -605,7 +614,9 @@
         "pre_tool_hook_duration_ms_p95": 31.7,
         "pre_tool_hook_duration_ms_p99": 31.939999999999998
       },
-      "lastGracefulShutdown": false
+      "lastGracefulShutdown": true,
+      "lastFpsAverage": 0.02,
+      "lastFpsLow1Pct": 384.85
     },
     "/workspace/diary": {
       "allowedTools": [],
@@ -630,14 +641,14 @@
   },
   "hasCompletedOnboarding": true,
   "lastOnboardingVersion": "1.0.39",
-  "changelogLastFetched": 1776992922963,
+  "changelogLastFetched": 1776923264410,
   "subscriptionNoticeCount": 0,
   "hasAvailableSubscription": false,
   "hasIdeOnboardingBeenShown": {
     "cursor": true
   },
   "fallbackAvailableWarningThreshold": 0.2,
-  "lastReleaseNotesSeen": "2.1.119",
+  "lastReleaseNotesSeen": "2.1.118",
   "hasUsedBackslashReturn": true,
   "isQualifiedForDataSharing": false,
   "s1mAccessCache": {
@@ -688,7 +699,7 @@
   "cachedExtraUsageDisabledReason": null,
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
-  "migrationVersion": 12,
+  "migrationVersion": 11,
   "passesUpsellSeenCount": 3,
   "effortCalloutV2Dismissed": true,
   "groveConfigCache": {
@@ -716,7 +727,7 @@
         "amount_minor_units": null,
         "currency": null
       },
-      "timestamp": 1776992923187
+      "timestamp": 1776959220212
     }
   },
   "clientDataCache": null,
@@ -738,8 +749,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 95,
-      "lastUsedAt": 1776993025290
+      "usageCount": 94,
+      "lastUsedAt": 1776992697251
     },
     "register": {
       "usageCount": 13,
@@ -801,8 +812,5 @@
     "claudeCodeTrialDurationDays": null
   },
   "closedIssuesLastChecked": 1776923264593,
-  "remoteControlUpsellSeenCount": 2,
-  "hasResetAutoModeOptInForDefaultOffer": true,
-  "lastPlanModeUse": 1776992977083,
-  "autoPermissionsNotificationCount": 2
+  "remoteControlUpsellSeenCount": 2
 }
