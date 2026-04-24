@@ -1,5 +1,11 @@
 # Supabase アクセスルール
 
+## 将来方針: MCP server 移行（次 quarter）
+
+> Claude Code v2.1.119 の MCP parallelization で 67% 起動時間削減が実証された。
+> Hook の `sb.sh` → Supabase MCP server 移行が次 quarter のフォーカス（詳細: `hd-operations.md`）。
+> 現在は `sb.sh` を使い続ける。移行設計が固まり次第このセクションを更新する。
+
 ## 原則: `sb.sh` ラッパー経由で叩く
 
 **CLI / Hook / バッチから Supabase を叩くときは、必ず `/workspace/.claude/hooks/api/sb.sh` を使う。** `source supabase.env && curl ...` を直接書かない。

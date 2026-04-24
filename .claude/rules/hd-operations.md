@@ -1,5 +1,26 @@
 # HD運営詳細ルール
 
+## MCP移行ロードマップ（次 quarter フォーカス）
+
+**背景**: Claude Code v2.1.119 の MCP parallelization により、MCP server 経由のツール呼び出しで 67% の起動時間削減が実証された。
+
+| フェーズ | 対象 | 現状 | 移行先 | 優先度 |
+|---------|------|------|--------|--------|
+| Phase 1 | Supabase 読み書き | `.claude/hooks/api/sb.sh`（curl） | `.mcp-servers/supabase`（MCP server） | **次 quarter** |
+| Phase 2 | GitHub API | Hook 内 curl | GitHub MCP server | 来期 |
+| Phase 3 | カレンダー | Edge Function proxy | Google Calendar MCP | 来期 |
+
+**移行方針**:
+- Hook は「軽量イベント記録」のみに留め、データアクセス・集計は MCP server に移管する
+- MCP server 化により、Claude が複数データソースを並列取得できる（ブリーフィング高速化）
+- `sb.sh` は移行完了まで維持する。廃止前に全 Hook を移行確認してから削除
+
+**移行しない Hook**（記録系は軽量なので現状維持）:
+- `prompt-log.sh`、`growth-detector.sh`（書き込み専用・超軽量）
+- `auto-push.sh`（git 操作、MCP化不要）
+
+---
+
 ## Hook・/company・Batch の責務分離
 
 | 責務 | 実行者 | 特性 |
