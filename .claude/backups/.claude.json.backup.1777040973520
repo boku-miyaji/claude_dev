@@ -1,5 +1,5 @@
 {
-  "numStartups": 48,
+  "numStartups": 50,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -574,7 +574,7 @@
       "lastAPIDuration": 0,
       "lastAPIDurationWithoutRetries": 0,
       "lastToolDuration": 0,
-      "lastDuration": 2101,
+      "lastDuration": 9245,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
       "lastTotalInputTokens": 0,
@@ -582,27 +582,27 @@
       "lastTotalCacheCreationInputTokens": 0,
       "lastTotalCacheReadInputTokens": 0,
       "lastModelUsage": {},
-      "lastSessionId": "790c87c0-89ef-4ffc-bf50-5c868e69c1ea",
+      "lastSessionId": "402fee9f-017a-4298-9f28-4b494e92de2b",
       "hasCompletedProjectOnboarding": true,
       "lastSessionMetrics": {
-        "frame_duration_ms_count": 20,
-        "frame_duration_ms_min": 0.07862600000021303,
-        "frame_duration_ms_max": 3.846002999999996,
-        "frame_duration_ms_avg": 0.7021440000000126,
-        "frame_duration_ms_p50": 0.15633149999990792,
-        "frame_duration_ms_p95": 3.4853307500001454,
-        "frame_duration_ms_p99": 3.7738685500000253,
+        "frame_duration_ms_count": 50,
+        "frame_duration_ms_min": 0.0773300000000745,
+        "frame_duration_ms_max": 10.639065000000073,
+        "frame_duration_ms_avg": 0.9429514000000222,
+        "frame_duration_ms_p50": 0.37760149999985515,
+        "frame_duration_ms_p95": 3.3612228499996486,
+        "frame_duration_ms_p99": 7.241766619999941,
         "hook_duration_ms_count": 1,
-        "hook_duration_ms_min": 98,
-        "hook_duration_ms_max": 98,
-        "hook_duration_ms_avg": 98,
-        "hook_duration_ms_p50": 98,
-        "hook_duration_ms_p95": 98,
-        "hook_duration_ms_p99": 98
+        "hook_duration_ms_min": 101,
+        "hook_duration_ms_max": 101,
+        "hook_duration_ms_avg": 101,
+        "hook_duration_ms_p50": 101,
+        "hook_duration_ms_p95": 101,
+        "hook_duration_ms_p99": 101
       },
-      "lastGracefulShutdown": true,
-      "lastFpsAverage": 14.61,
-      "lastFpsLow1Pct": 260.01
+      "lastGracefulShutdown": false,
+      "lastFpsAverage": 5.94,
+      "lastFpsLow1Pct": 93.99
     },
     "/workspace/diary": {
       "allowedTools": [],
@@ -626,7 +626,7 @@
     }
   },
   "hasCompletedOnboarding": true,
-  "lastOnboardingVersion": "1.0.39",
+  "lastOnboardingVersion": "2.1.119",
   "changelogLastFetched": 1776992922963,
   "subscriptionNoticeCount": 0,
   "hasAvailableSubscription": false,
@@ -805,5 +805,6 @@
     "organizationRole": "admin",
     "workspaceRole": null,
     "organizationName": "yumzzz.my6223@gmail.com's Organization"
-  }
+  },
+  "shiftEnterKeyBindingInstalled": true
 }
