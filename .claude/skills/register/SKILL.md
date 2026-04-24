@@ -1,15 +1,34 @@
 ---
 name: register
-description: 成果物ファイルをArtifactsに登録。ダッシュボードで確認・コメント可能になる。
-user_invocable: true
+description: >
+  成果物ファイルをArtifactsに登録。ダッシュボードで確認・コメント可能になる。
+  【自動実行】パイプライン完了後、以下の条件を全て満たすファイルが存在する場合、
+  ユーザーに言われなくても自動でこのスキルを実行する:
+  (1) .company/departments/, docs/final_output/, secretary/archive/ 配下のファイル
+  (2) ファイルサイズ 5KB 以上
+  (3) 拡張子が .md / .html / .pptx / .pdf
+  (4) ファイル名が temp- / wip- / draft- で始まらない
+  手動実行は `/register path/to/file.md` または `/register path/to/dir/`。
 ---
 
-# /register — 成果物ファイル登録
+# register — 成果物ファイル登録
 
-## いつ使うか
+## 自動実行トリガー（ユーザー指示不要）
 
-- `/register path/to/file.md` を実行したとき
-- `/register path/to/file.html タイトル` でタイトル付きで登録
+パイプライン完了後に以下を自動チェックし、条件を満たすファイルを登録する:
+
+1. パスが登録対象（`.company/departments/`, `docs/final_output/`, `secretary/archive/` 等）
+2. ファイルサイズが 5KB 以上
+3. 拡張子が `.md`, `.html`, `.pptx`, `.pdf`
+4. ファイル名が `temp-`, `wip-`, `draft-` で始まらない
+
+**複数ファイルが対象なら一括登録する。**
+
+## 手動実行
+
+- `/register path/to/file.md` — ファイルを1件登録
+- `/register path/to/file.html タイトル` — タイトル付きで登録
+- `/register path/to/dir/` — ディレクトリ内を一覧して選択登録
 
 ## 実行手順
 

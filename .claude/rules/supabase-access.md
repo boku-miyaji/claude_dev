@@ -71,6 +71,14 @@ sb.sh help
 
 `sb.sh get` + anon key は「ダッシュボードからの認証付きクライアント」を想定したパスで、CLI/Hook からは原則使わない。書き込みで `x-ingest-key` を付ける場合は `sb.sh post/patch/delete` を使う（自動付与される）。
 
+## 初めてのテーブルへのアクセス前（必須）
+
+過去に RLS 構造を確認していないテーブルに `sb.sh get/post/patch/delete` でアクセスする前に、
+`supabase-preflight` スキルを実行する（`sb.sh query` のみなら不要）。
+
+- CHECK constraint 違反（42514）や RLS 違反（42501）を事前に防ぐ
+- `[]` が返る原因（RLS ブロックか本当にデータなしか）を判定できる
+
 ## Edge Functions（ユーザー認証が必要なもの）
 
 ### 原則: `verify_jwt = false` + 関数内検証
