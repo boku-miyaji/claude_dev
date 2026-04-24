@@ -691,3 +691,9 @@
 {"ts":"2026-04-24T18:13:09+09:00","signal":"raw_prompt","prompt":"skillはエージェントに毎回渡される？どのスキルがあるのかとかちゃんと伝わる？\n"}
 {"ts":"2026-04-24T18:21:53+09:00","signal":"raw_prompt","prompt":"A + Cで。\ngoals -> Dreams & Goalsでは？\n項目が今のfocus-youと違うがなんで？どういうこと？\n"}
 {"ts":"2026-04-24T18:22:47+09:00","signal":"raw_prompt","prompt":"簡単なやつから\n"}
+{"ts":"2026-04-24T18:21:53+09:00","signal":"raw_prompt","prompt":"A + Cで。\ngoals -> Dreams & Goalsでは？\n項目が今のfocus-youと違うがなんで？どういうこと？\n"}
+{"ts":"2026-04-24T18:22:47+09:00","signal":"raw_prompt","prompt":"簡単なやつから\n"}
+{"ts":"2026-04-24T18:24:38+09:00","signal":"raw_prompt","prompt":"全面的に見直して。skill。\n使っていないのは無効化したい。\n"}
+{"ts":"2026-04-24T18:24:38+09:00","signal":"raw_prompt","prompt":"全面的に見直して。skill。\n使っていないのは無効化したい。\n"}
+{"ts":"2026-04-24T18:26:18+09:00","signal":"raw_prompt","prompt":"お願いします。\nまた機能の対応表を全部比較して。ちゃんと移行されているかを丁寧に確認して欲しい。各画面ごとに\n"}
+{"ts":"2026-04-24T18:26:32+09:00","signal":"raw_prompt","prompt":"次に簡単なものから\n"}
