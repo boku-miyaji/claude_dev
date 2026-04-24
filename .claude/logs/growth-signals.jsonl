@@ -665,3 +665,4 @@
 {"ts":"2026-04-24T16:26:05+09:00","signal":"raw_prompt","prompt":"外部開発者が「詰まる」6つのブロッカー\nインフラ設定がない — Azure リソース定義 (Bicep/Terraform) も Docker 構成もない\nバックエンドフレームワーク未定 — Node.js / .NET / Python のどれか一言もない\nLLMプロンプトテンプレートがない — AG1〜AG4 のシステムプロンプトが完全に欠落\nRAG/ナレッジベース構築手順がない — 埋め込みモデル・チャンク設定・ベクトルDBが未記載\nDB DDL S\n"}
 {"ts":"2026-04-24T16:25:04+09:00","signal":"raw_prompt","prompt":"/tax-advisor @untracked/tax 配下の画像でそれぞれ経費にできるものは？それぞれの設定まで丁寧に。なるべく多くを経費にしたいと思っています。\n"}
 {"ts":"2026-04-24T16:26:05+09:00","signal":"raw_prompt","prompt":"外部開発者が「詰まる」6つのブロッカー\nインフラ設定がない — Azure リソース定義 (Bicep/Terraform) も Docker 構成もない\nバックエンドフレームワーク未定 — Node.js / .NET / Python のどれか一言もない\nLLMプロンプトテンプレートがない — AG1〜AG4 のシステムプロンプトが完全に欠落\nRAG/ナレッジベース構築手順がない — 埋め込みモデル・チャンク設定・ベクトルDBが未記載\nDB DDL S\n"}
+{"ts":"2026-04-24T16:29:09+09:00","signal":"raw_prompt","prompt":"exportできないの？MF cloudです\n"}
