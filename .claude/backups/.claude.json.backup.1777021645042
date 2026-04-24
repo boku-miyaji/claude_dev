@@ -1,5 +1,5 @@
 {
-  "numStartups": 50,
+  "numStartups": 47,
   "installMethod": "global",
   "autoUpdates": true,
   "preferredNotifChannel": "terminal_bell",
@@ -570,39 +570,55 @@
         "version": null,
         "packageManager": null
       },
-      "lastCost": 0,
-      "lastAPIDuration": 0,
-      "lastAPIDurationWithoutRetries": 0,
-      "lastToolDuration": 0,
-      "lastDuration": 9245,
-      "lastLinesAdded": 0,
-      "lastLinesRemoved": 0,
-      "lastTotalInputTokens": 0,
-      "lastTotalOutputTokens": 0,
-      "lastTotalCacheCreationInputTokens": 0,
-      "lastTotalCacheReadInputTokens": 0,
-      "lastModelUsage": {},
-      "lastSessionId": "402fee9f-017a-4298-9f28-4b494e92de2b",
+      "lastCost": 1.56745185,
+      "lastAPIDuration": 222836,
+      "lastAPIDurationWithoutRetries": 222792,
+      "lastToolDuration": 21515,
+      "lastDuration": 5301023,
+      "lastLinesAdded": 85,
+      "lastLinesRemoved": 11,
+      "lastTotalInputTokens": 451,
+      "lastTotalOutputTokens": 15040,
+      "lastTotalCacheCreationInputTokens": 105777,
+      "lastTotalCacheReadInputTokens": 3146117,
+      "lastModelUsage": {
+        "claude-sonnet-4-6": {
+          "inputTokens": 451,
+          "outputTokens": 15040,
+          "cacheReadInputTokens": 3146117,
+          "cacheCreationInputTokens": 105777,
+          "webSearchRequests": 0,
+          "costUSD": 1.56745185
+        }
+      },
+      "lastSessionId": "90dd3f97-99da-4657-a1d4-6d11d824d2df",
       "hasCompletedProjectOnboarding": true,
       "lastSessionMetrics": {
-        "frame_duration_ms_count": 50,
-        "frame_duration_ms_min": 0.0773300000000745,
-        "frame_duration_ms_max": 10.639065000000073,
-        "frame_duration_ms_avg": 0.9429514000000222,
-        "frame_duration_ms_p50": 0.37760149999985515,
-        "frame_duration_ms_p95": 3.3612228499996486,
-        "frame_duration_ms_p99": 7.241766619999941,
-        "hook_duration_ms_count": 1,
-        "hook_duration_ms_min": 101,
-        "hook_duration_ms_max": 101,
-        "hook_duration_ms_avg": 101,
-        "hook_duration_ms_p50": 101,
-        "hook_duration_ms_p95": 101,
-        "hook_duration_ms_p99": 101
+        "frame_duration_ms_count": 4501,
+        "frame_duration_ms_min": 0.061410000002069864,
+        "frame_duration_ms_max": 68.96983800000089,
+        "frame_duration_ms_avg": 0.6206544770049431,
+        "frame_duration_ms_p50": 0.5004350000017439,
+        "frame_duration_ms_p95": 0.9711894500013158,
+        "frame_duration_ms_p99": 1.4368160000097077,
+        "hook_duration_ms_count": 54,
+        "hook_duration_ms_min": 0,
+        "hook_duration_ms_max": 6012,
+        "hook_duration_ms_avg": 236.61111111111111,
+        "hook_duration_ms_p50": 5,
+        "hook_duration_ms_p95": 64.39999999999964,
+        "hook_duration_ms_p99": 6004.05,
+        "pre_tool_hook_duration_ms_count": 31,
+        "pre_tool_hook_duration_ms_min": 0,
+        "pre_tool_hook_duration_ms_max": 44,
+        "pre_tool_hook_duration_ms_avg": 17.29032258064516,
+        "pre_tool_hook_duration_ms_p50": 24,
+        "pre_tool_hook_duration_ms_p95": 39.5,
+        "pre_tool_hook_duration_ms_p99": 43.4
       },
-      "lastGracefulShutdown": false,
-      "lastFpsAverage": 5.94,
-      "lastFpsLow1Pct": 93.99
+      "lastGracefulShutdown": true,
+      "lastFpsAverage": 0.85,
+      "lastFpsLow1Pct": 369.44
     },
     "/workspace/diary": {
       "allowedTools": [],
@@ -626,7 +642,7 @@
     }
   },
   "hasCompletedOnboarding": true,
-  "lastOnboardingVersion": "2.1.119",
+  "lastOnboardingVersion": "1.0.39",
   "changelogLastFetched": 1776992922963,
   "subscriptionNoticeCount": 0,
   "hasAvailableSubscription": false,
@@ -675,14 +691,14 @@
         "currency": "USD"
       },
       "remaining_passes": 0,
-      "timestamp": 1777021662004
+      "timestamp": 1776836868544
     }
   },
   "feedbackSurveyState": {
     "lastShownTime": 1767439030982
   },
   "opusProMigrationComplete": true,
-  "cachedExtraUsageDisabledReason": "org_level_disabled",
+  "cachedExtraUsageDisabledReason": null,
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 12,
@@ -691,7 +707,7 @@
   "groveConfigCache": {
     "0e3bd740-e45a-41f7-9a8e-dea96899ee97": {
       "grove_enabled": true,
-      "timestamp": 1777021660600
+      "timestamp": 1776836866571
     }
   },
   "overageCreditGrantCache": {
@@ -703,7 +719,7 @@
         "amount_minor_units": null,
         "currency": null
       },
-      "timestamp": 1777021661177
+      "timestamp": 1776752725058
     },
     "15d07b52-c80c-4f58-a454-cc4c7c266140": {
       "info": {
@@ -785,7 +801,7 @@
     "timestamp": 1777011125545
   },
   "additionalModelCostsCache": {},
-  "closedIssuesLastChecked": 1777021660762,
+  "closedIssuesLastChecked": 1776923264593,
   "remoteControlUpsellSeenCount": 3,
   "hasResetAutoModeOptInForDefaultOffer": true,
   "lastPlanModeUse": 1776992977083,
@@ -805,6 +821,5 @@
     "organizationRole": "admin",
     "workspaceRole": null,
     "organizationName": "yumzzz.my6223@gmail.com's Organization"
-  },
-  "shiftEnterKeyBindingInstalled": true
+  }
 }

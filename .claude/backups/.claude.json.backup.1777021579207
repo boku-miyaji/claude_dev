@@ -751,8 +751,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 97,
-      "lastUsedAt": 1777003122126
+      "usageCount": 98,
+      "lastUsedAt": 1777020411028
     },
     "register": {
       "usageCount": 13,
@@ -787,8 +787,8 @@
       "lastUsedAt": 1776952758475
     },
     "tax-advisor": {
-      "usageCount": 1,
-      "lastUsedAt": 1776846139749
+      "usageCount": 2,
+      "lastUsedAt": 1777015503923
     },
     "design-md": {
       "usageCount": 1,

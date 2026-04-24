@@ -698,7 +698,7 @@
     }
   },
   "skipDangerousModePermissionPrompt": false,
+  "theme": "dark",
   "preferredNotifChannel": "terminal_bell",
-  "skipAutoPermissionPrompt": true,
-  "effortLevel": "max"
+  "skipAutoPermissionPrompt": true
 }
