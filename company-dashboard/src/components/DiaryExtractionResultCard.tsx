@@ -362,12 +362,30 @@ interface NewTaskRowProps {
   onSave: (form: NewTaskForm) => Promise<void>
 }
 
+function formatDateHint(date: string | null, time: string | null, mode: TaskTimeMode): string {
+  if (!date || mode === 'none') return ''
+  const todayYmd = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
+  const tomorrowYmd = new Date(Date.now() + 86400000).toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
+  const dateLabel =
+    date === todayYmd ? '今日'
+    : date === tomorrowYmd ? '明日'
+    : new Date(`${date}T00:00:00+09:00`).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short', timeZone: 'Asia/Tokyo' })
+  if (mode === 'scheduled') {
+    return time ? `${dateLabel} ${time}` : dateLabel
+  }
+  if (mode === 'deadline') {
+    return time ? `${dateLabel} ${time}` : dateLabel
+  }
+  return ''
+}
+
 function NewTaskRow({ suggestion, expanded, pending, onToggleExpand, onSave }: NewTaskRowProps) {
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tokyo' })
   const [title, setTitle] = useState(suggestion.title)
   const [mode, setMode] = useState<TaskTimeMode>(suggestion.suggested_mode)
-  const [date, setDate] = useState(suggestion.suggested_date ?? today)
-  const [time, setTime] = useState(suggestion.suggested_time ?? '10:00')
+  // For 'none' mode, don't pre-fill date — let user pick when they switch to another mode.
+  const [date, setDate] = useState(suggestion.suggested_date ?? (suggestion.suggested_mode !== 'none' ? today : ''))
+  const [time, setTime] = useState(suggestion.suggested_time ?? (suggestion.suggested_mode === 'scheduled' ? '10:00' : ''))
   const [minutes, setMinutes] = useState(suggestion.suggested_minutes ?? 30)
 
   const modeLabel: Record<TaskTimeMode, string> = {
@@ -380,6 +398,8 @@ function NewTaskRow({ suggestion, expanded, pending, onToggleExpand, onSave }: N
     if (!title.trim() || pending) return
     onSave({ title: title.trim(), mode, date, time, minutes })
   }
+
+  const dateHint = formatDateHint(suggestion.suggested_date, suggestion.suggested_time, suggestion.suggested_mode)
 
   return (
     <div
@@ -404,10 +424,14 @@ function NewTaskRow({ suggestion, expanded, pending, onToggleExpand, onSave }: N
               padding: '1px 6px',
               background: 'var(--bg)',
               borderRadius: 10,
-              color: 'var(--text3)',
+              color: suggestion.suggested_mode === 'none' ? 'var(--text3)' : 'var(--accent)',
             }}
           >
-            推奨: {modeLabel[suggestion.suggested_mode]}
+            {modeLabel[suggestion.suggested_mode]}
+            {dateHint && <span style={{ marginLeft: 4 }}>{dateHint}</span>}
+            {suggestion.suggested_mode === 'scheduled' && suggestion.suggested_minutes && (
+              <span style={{ marginLeft: 4, opacity: 0.7 }}>{suggestion.suggested_minutes}分</span>
+            )}
           </span>
         </span>
         {suggestion.quote && <span style={{ fontSize: 10, color: 'var(--text3)' }}>「{suggestion.quote}」</span>}
@@ -445,7 +469,12 @@ function NewTaskRow({ suggestion, expanded, pending, onToggleExpand, onSave }: N
               <button
                 key={m}
                 type="button"
-                onClick={() => setMode(m)}
+                onClick={() => {
+                  setMode(m)
+                  // Fill in sensible defaults when switching from 'none' to a timed mode
+                  if (m !== 'none' && !date) setDate(today)
+                  if (m === 'scheduled' && !time) setTime('10:00')
+                }}
                 style={{
                   flex: 1,
                   fontSize: 11,
