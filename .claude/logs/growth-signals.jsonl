@@ -600,3 +600,6 @@
 {"ts":"2026-04-24T14:25:23+09:00","signal":"raw_prompt","prompt":"https://www.airbnb.jp/rooms/1406110484125312611?adults=4&children=0&infants=0&pets=0&wishlist_item_id=11006229312570&check_in=2026-05-08&check_out=2026-05-09&source_impression_id=p3_1777008234_P3oez93UkAWvdkV-&previous_page_section_name=1000\nこれは？ログインしていなくても見えます\n"}
 {"ts":"2026-04-24T14:25:23+09:00","signal":"raw_prompt","prompt":"https://www.airbnb.jp/rooms/1406110484125312611?adults=4&children=0&infants=0&pets=0&wishlist_item_id=11006229312570&check_in=2026-05-08&check_out=2026-05-09&source_impression_id=p3_1777008234_P3oez93UkAWvdkV-&previous_page_section_name=1000\nこれは？ログインしていなくても見えます\n"}
 {"ts":"2026-04-24T14:27:04+09:00","signal":"raw_prompt","prompt":"枠あった方がいいかも。もともとの感じ\n"}
+{"ts":"2026-04-24T14:27:04+09:00","signal":"raw_prompt","prompt":"枠あった方がいいかも。もともとの感じ\n"}
+{"ts":"2026-04-24T14:28:08+09:00","signal":"raw_prompt","prompt":"これを上から読んでいったらこのシステムを完全に理解・構築することができる？\nまだ不足部分がある？また詰めた方がいいところある？\n"}
+{"ts":"2026-04-24T14:29:28+09:00","signal":"raw_prompt","prompt":"内容を精緻化しよう。24日連続とかが複数箇所に現れていたり、元と元出ていた情報が消えていたり、他にこの画面で表示した方がいいことないかとかもチェックしたい。\nちゃんとプロダクトとして成立するのかとか、体験がいいかとか売れるのか、モバイル対応できるかとかも考えて\n"}
