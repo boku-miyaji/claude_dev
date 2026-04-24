@@ -512,3 +512,6 @@
 {"ts":"2026-04-24T08:51:58+09:00","signal":"raw_prompt","prompt":"Homeページでだすのは前回との差分を出して欲しい。\nたとえば、あなたのテーマとか最近の変化で前回のものとの差分を知りたい。大枠はそんなに変わらないと思うので。差分がほぼなければHomeに出さなくていい。それもLLMが判断して。前回との差分チェックLLM。\n"}
 {"ts":"2026-04-24T08:52:53+09:00","signal":"raw_prompt","prompt":"Syntax error in text\nmermaid version 11.13.0\n\nmanifest.json:1 Manifest: Line: 1, column: 1, Syntax error.Understand this error\nintegrated-architecture:1 Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.Understand this error\napi-client.ts:106  GET http://localhost:3000/api/data 404 (Not Found)\nloadData @ api-client.ts:106\n(anonymous) @ store.tsx:91\nreact_stack_bottom_frame @ react-dom-client.development.js:28123\nrunWithFiberInDEV @ react-dom-client.develop\n"}
 {"ts":"2026-04-24T08:56:34+09:00","signal":"raw_prompt","prompt":"LLMは何を使っている？プロンプトは？\n"}
+{"ts":"2026-04-24T08:56:34+09:00","signal":"raw_prompt","prompt":"LLMは何を使っている？プロンプトは？\n"}
+{"ts":"2026-04-24T08:57:11+09:00","signal":"raw_prompt","prompt":"まだエラーが出る。\n"}
+{"ts":"2026-04-24T08:59:33+09:00","signal":"raw_prompt","prompt":"プロダクトかを目指しているが、claude cliでいい？まだ編集とかはしないで\n"}
