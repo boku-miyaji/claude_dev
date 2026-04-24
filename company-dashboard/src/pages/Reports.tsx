@@ -3,11 +3,8 @@ import { supabase } from '@/lib/supabase'
 import { PageHeader, EmptyState, SkeletonRows } from '@/components/ui'
 import { marked } from 'marked'
 import {
-  adoptSuggestion,
   checkSuggestion,
   dismissSuggestion,
-  markImplemented,
-  rejectSuggestion,
 } from '@/lib/intelligenceSuggestions'
 import { useDataStore } from '@/stores/data'
 import type {
@@ -138,18 +135,12 @@ function SuggestionCard({
   busy,
   onCheck,
   onDismiss,
-  onAdopt,
-  onReject,
-  onImplemented,
   onGoToReport,
 }: {
   suggestion: IntelligenceSuggestion
   busy: boolean
   onCheck: () => void
   onDismiss: () => void
-  onAdopt: () => void
-  onReject: () => void
-  onImplemented: () => void
   onGoToReport?: () => void
 }) {
   const reportDate = s.source_report_date
@@ -245,23 +236,12 @@ function SuggestionCard({
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-        {s.status === 'new' && (
-          <>
-            <button className="btn btn-g btn-sm" onClick={onDismiss} disabled={busy}>スキップ</button>
-            <button className="btn btn-p btn-sm" onClick={onCheck} disabled={busy}>Requestsに追加</button>
-          </>
-        )}
-        {s.status === 'checked' && (
-          <>
-            <button className="btn btn-g btn-sm" onClick={onReject} disabled={busy}>却下</button>
-            <button className="btn btn-p btn-sm" onClick={onAdopt} disabled={busy}>実装する</button>
-          </>
-        )}
-        {s.status === 'adopted' && (
-          <button className="btn btn-p btn-sm" onClick={onImplemented} disabled={busy}>実装済みにする</button>
-        )}
-      </div>
+      {s.status === 'new' && (
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button className="btn btn-g btn-sm" onClick={onDismiss} disabled={busy}>スキップ</button>
+          <button className="btn btn-p btn-sm" onClick={onCheck} disabled={busy}>Requestsに追加</button>
+        </div>
+      )}
     </div>
   )
 }
@@ -394,9 +374,6 @@ function SuggestionsTab({ onGoToReport }: { onGoToReport?: () => void }) {
             busy={busyId === s.id}
             onCheck={() => doAction(s.id, checkSuggestion, 'Requestsに追加', () => invalidate('tasks'))}
             onDismiss={() => doAction(s.id, dismissSuggestion, 'スキップ')}
-            onAdopt={() => doAction(s.id, adoptSuggestion, '実装する')}
-            onReject={() => doAction(s.id, rejectSuggestion, '却下')}
-            onImplemented={() => doAction(s.id, markImplemented, '実装済み')}
             onGoToReport={onGoToReport}
           />
         ))
