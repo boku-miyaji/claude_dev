@@ -544,3 +544,14 @@
 {"ts":"2026-04-24T10:08:55+09:00","signal":"raw_prompt","prompt":"両方実施して\n"}
 {"ts":"2026-04-24T10:10:25+09:00","signal":"raw_prompt","prompt":"/company 日記からタスク候補出す時に締め切りなのか作業ブロックなのか、日時も含めて推論できるのであればやってほしい。もし推定できたらその設定をデフォルトとして表示して欲しい。無理やりやる必要はないが。これも過去の設定とかスケジュールとかも見ながら精度が上がるようにして行って欲しい。\n"}
 {"ts":"2026-04-24T10:16:18+09:00","signal":"raw_prompt","prompt":"ッシュボードの Reports タブからも確認できます。軽井沢移動の合間にでも覗いてみてください！\nこのコメントめっちゃいいね\n"}
+{"ts":"2026-04-24T10:16:18+09:00","signal":"raw_prompt","prompt":"ッシュボードの Reports タブからも確認できます。軽井沢移動の合間にでも覗いてみてください！\nこのコメントめっちゃいいね\n"}
+{"ts":"2026-04-24T10:18:22+09:00","signal":"raw_prompt","prompt":"お願いします。ただ、カレンダーの情報を出せばいいというものではないのは注意して。ちゃんとコンテキストに会っていればというだけです\n"}
+{"ts":"2026-04-24T10:18:22+09:00","signal":"raw_prompt","prompt":"お願いします。ただ、カレンダーの情報を出せばいいというものではないのは注意して。ちゃんとコンテキストに会っていればというだけです\n"}
+{"ts":"2026-04-24T11:41:27+09:00","signal":"raw_prompt","prompt":"<div className=\"rounded-xl border bg-card p-4\n  hover:shadow-md transition-shadow cursor-pointer\">\n  <div className=\"flex justify-between items-start mb-2\">\n    <h3 className=\"font-semibold text-sm\">{company.name}</h3>\n    <GenerationStatusChip status={status} />\n  </div>\n  <AgendaScoreBadge score={agendaScore} />\n  <div className=\"flex gap-2 mt-2 text-xs text-muted-foreground\">\n    <PhaseBadge phase={phase} />\n    <span>{confidence}%</span>\n  </div>\n</div>\nとかを表示して欲しいわけ�\n"}
+{"ts":"2026-04-24T11:43:07+09:00","signal":"raw_prompt","prompt":"/company requestsの内容を確認・修正して\n"}
+{"ts":"2026-04-24T11:41:27+09:00","signal":"raw_prompt","prompt":"<div className=\"rounded-xl border bg-card p-4\n  hover:shadow-md transition-shadow cursor-pointer\">\n  <div className=\"flex justify-between items-start mb-2\">\n    <h3 className=\"font-semibold text-sm\">{company.name}</h3>\n    <GenerationStatusChip status={status} />\n  </div>\n  <AgendaScoreBadge score={agendaScore} />\n  <div className=\"flex gap-2 mt-2 text-xs text-muted-foreground\">\n    <PhaseBadge phase={phase} />\n    <span>{confidence}%</span>\n  </div>\n</div>\nとかを表示して欲しいわけ�\n"}
+{"ts":"2026-04-24T11:43:07+09:00","signal":"raw_prompt","prompt":"/company requestsの内容を確認・修正して\n"}
+{"ts":"2026-04-24T11:49:09+09:00","signal":"raw_prompt","prompt":"system-specの各ドキュメントが多い。全部必要？重複あって実質意味ないものとかある？\nレイヤーで分けて欲しい。全体像把握とか詳細を各観点で整理したものとか背景的なところとか\nmock-> AIは少なくとも消していい。\n"}
+{"ts":"2026-04-24T11:49:09+09:00","signal":"raw_prompt","prompt":"system-specの各ドキュメントが多い。全部必要？重複あって実質意味ないものとかある？\nレイヤーで分けて欲しい。全体像把握とか詳細を各観点で整理したものとか背景的なところとか\nmock-> AIは少なくとも消していい。\n"}
+{"ts":"2026-04-24T11:53:56+09:00","signal":"raw_prompt","prompt":"requestsに詰むか積まないかだけでいい。\n採用はいらない。\n"}
+{"ts":"2026-04-24T11:53:56+09:00","signal":"raw_prompt","prompt":"requestsに詰むか積まないかだけでいい。\n採用はいらない。\n"}
