@@ -680,3 +680,5 @@
 {"ts":"2026-04-24T17:40:56+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/scratch/design/focus-you-design-spec.html in the IDE. This may or may not be related to the current task.</ide_opened_file>\nはいお願いします\n"}
 {"ts":"2026-04-24T17:46:51+09:00","signal":"raw_prompt","prompt":"/company 今あるスキルって何がある？なにかHD運用している中でスキル化されたものってあるっけ？\n"}
 {"ts":"2026-04-24T17:47:50+09:00","signal":"raw_prompt","prompt":"どちらからでも進めましょう。早く終わる方から\n"}
+{"ts":"2026-04-24T17:47:50+09:00","signal":"raw_prompt","prompt":"どちらからでも進めましょう。早く終わる方から\n"}
+{"ts":"2026-04-24T17:54:03+09:00","signal":"raw_prompt","prompt":"私の開発においてあまり skillは大事じゃない？hook, rulesの方が大事だったりする？逆にskillもっと活用した方がいい？\n"}
