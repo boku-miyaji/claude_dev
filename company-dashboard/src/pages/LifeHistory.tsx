@@ -2,9 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Card, PageHeader } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 
-type Mode = 'quick' | 'medium' | 'deep'
-const MODE_LIMITS: Record<Mode, number> = { quick: 5, medium: 15, deep: 30 }
-const MODE_LABELS: Record<Mode, string> = { quick: 'Quick (5問 / 約5分)', medium: 'Medium (15問 / 約20分)', deep: 'Deep (30問 / じっくり)' }
+// Mode = 棚卸し対話の深さ（spec: 2択。「さっと」と「じっくり」のみ）
+type Mode = 'quick' | 'medium'
+const MODE_LIMITS: Record<Mode, number> = { quick: 5, medium: 12 }
+const MODE_LABELS: Record<Mode, string> = {
+  quick: '🌱 さっと（3〜5問で軽く）',
+  medium: '🌳 じっくり（12問で深く掘る）',
+}
 
 // Fallback labels for entries that reference stages no longer in user_stages.
 const PRESET_LABELS: Record<string, string> = {
@@ -602,7 +606,7 @@ export function LifeHistory() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-          {(['quick', 'medium', 'deep'] as Mode[]).map((m) => (
+          {(['quick', 'medium'] as Mode[]).map((m) => (
             <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: `1px solid ${mode === m ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 6, cursor: 'pointer', background: mode === m ? 'rgba(75, 120, 98,0.08)' : 'transparent' }}>
               <input type="radio" name="mode" checked={mode === m} onChange={() => setMode(m)} />
               <span style={{ fontSize: 13, color: 'var(--text)' }}>{MODE_LABELS[m]}</span>
