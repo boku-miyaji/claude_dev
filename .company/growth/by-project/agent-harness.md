@@ -1,9 +1,10 @@
 # growth_events — `agent-harness`
 
-Total: **28**
+Total: **29**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-24 | `decision` | active | [skill→rule/hook変換 + スキル10個削除](../2026/04/20260424-decision-skillrulehook変換-スキル10個削除.md) |
 | 2026-04-21 | `failure` | recurring | [Prompt classification hook stuck in infinite retry loop](../2026/04/20260421-failure-prompt-classification-hook-stuck-in-infinite-retry.md) |
 | 2026-04-21 | `failure` | recurring | [Hook infinite retry loop on correction signals](../2026/04/20260421-failure-hook-infinite-retry-loop-on-correction-signals.md) |
 | 2026-04-19 | `milestone` | active | [Claude Code論文からAI Agent設計原則を体系化](../2026/04/20260419-milestone-claude-code論文からai-agent設計原則を体系化.md) |

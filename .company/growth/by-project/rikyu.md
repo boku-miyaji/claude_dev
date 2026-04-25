@@ -1,9 +1,26 @@
 # growth_events — `rikyu`
 
-Total: **30**
+Total: **47**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-25 | `failure` | active | [rikyu外部開発者向け仕様の6ブロッカー](../2026/04/20260425-failure-rikyu外部開発者向け仕様の6ブロッカー.md) |
+| 2026-04-25 | `decision` | active | [MAFとmagentic_pipelineのオーケストレーション差分を分析](../2026/04/20260425-decision-mafとmagentic-pipelineのオーケストレーション差分を分析.md) |
+| 2026-04-25 | `failure` | active | [rikyu外部開発者向け6つの仕様ブロッカーが発覚](../2026/04/20260425-failure-rikyu外部開発者向け6つの仕様ブロッカーが発覚.md) |
+| 2026-04-25 | `failure` | active | [WBI情報が分散し設計が固まらない](../2026/04/20260425-failure-wbi情報が分散し設計が固まらない.md) |
+| 2026-04-25 | `decision` | active | [MAF vs magentic_pipeline.py 用途切り分け議論](../2026/04/20260425-decision-maf-vs-magentic-pipelinepy-用途切り分け議論.md) |
+| 2026-04-25 | `failure` | active | [rikyu PJ仕様に外部開発者向け6ブロッカー検出](../2026/04/20260425-failure-rikyu-pj仕様に外部開発者向け6ブロッカー検出.md) |
+| 2026-04-25 | `failure` | active | [rikyu仕様書に外部開発者向け6つのブロッカー](../2026/04/20260425-failure-rikyu仕様書に外部開発者向け6つのブロッカー.md) |
+| 2026-04-25 | `failure` | active | [rikyu仕様書に外部開発者ブロッカー6件](../2026/04/20260425-failure-rikyu仕様書に外部開発者ブロッカー6件.md) |
+| 2026-04-25 | `decision` | active | [rikyu 外部開発者6ブロッカーの壁打ち優先順位](../2026/04/20260425-decision-rikyu-外部開発者6ブロッカーの壁打ち優先順位.md) |
+| 2026-04-25 | `decision` | active | [アジェンダ生成はmagentic_pipeline型、AIチャットはdynamic型](../2026/04/20260425-decision-アジェンダ生成はmagentic-pipeline型aiチャットはdynamic型.md) |
+| 2026-04-25 | `failure` | active | [rikyu仕様書に外部開発者向け6ブロッカー](../2026/04/20260425-failure-rikyu仕様書に外部開発者向け6ブロッカー.md) |
+| 2026-04-25 | `failure` | active | [rikyu 外部開発者の6ブロッカー特定](../2026/04/20260425-failure-rikyu-外部開発者の6ブロッカー特定.md) |
+| 2026-04-25 | `decision` | active | [rikyu アーキ判断: pgvector/Functions連携/SSE](../2026/04/20260425-decision-rikyu-アーキ判断-pgvectorfunctions連携sse.md) |
+| 2026-04-25 | `failure` | active | [rikyu 外部開発者ブロッカー6点未整備](../2026/04/20260425-failure-rikyu-外部開発者ブロッカー6点未整備.md) |
+| 2026-04-25 | `failure` | active | [rikyu PJ仕様の6ブロッカー判明](../2026/04/20260425-failure-rikyu-pj仕様の6ブロッカー判明.md) |
+| 2026-04-25 | `failure` | active | [rikyu 外部開発者向け仕様の6ブロッカー](../2026/04/20260425-failure-rikyu-外部開発者向け仕様の6ブロッカー.md) |
+| 2026-04-25 | `decision` | active | [アジェンダ生成とAIチャットの実装方式分離](../2026/04/20260425-decision-アジェンダ生成とaiチャットの実装方式分離.md) |
 | 2026-04-24 | `decision` | active | [rikyu: Supabase不使用+Python+Azure構成](../2026/04/20260424-decision-rikyu-supabase不使用pythonazure構成.md) |
 | 2026-04-23 | `decision` | active | [メタ記号（R-12/G-1等）の廃止](../2026/04/20260423-decision-メタ記号r-12g-1等の廃止.md) |
 | 2026-04-23 | `failure` | active | [過去の修正依頼が反映されない](../2026/04/20260423-failure-過去の修正依頼が反映されない.md) |
