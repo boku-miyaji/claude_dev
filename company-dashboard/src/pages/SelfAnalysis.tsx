@@ -81,7 +81,7 @@ function PentagonRadar({ scores, labels, size = 300 }: PentagonRadarProps) {
       {/* Data polygon */}
       <polygon
         points={dataPolygonPoints()}
-        fill="rgba(99,102,241,0.15)"
+        fill="rgba(75, 120, 98,0.15)"
         stroke="var(--accent)"
         strokeWidth={2}
       />

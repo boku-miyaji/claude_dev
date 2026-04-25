@@ -207,7 +207,7 @@ function PendingProposalCard({
       style={{
         padding: 14,
         marginBottom: 10,
-        background: 'rgba(99, 102, 241, 0.05)',
+        background: 'rgba(75, 120, 98, 0.05)',
         borderLeft: '3px solid var(--accent)',
       }}
     >

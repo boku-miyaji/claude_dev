@@ -440,15 +440,15 @@ export function LifeHistory() {
     const count = c?.count ?? 0
     const depth = c?.maxDepth ?? 0
     const bg = count === 0 ? 'var(--surface2)'
-      : count <= 2 ? 'rgba(99, 102, 241, 0.18)'
-      : count <= 5 ? 'rgba(99, 102, 241, 0.38)'
-      : 'rgba(99, 102, 241, 0.62)'
+      : count <= 2 ? 'rgba(75, 120, 98, 0.18)'
+      : count <= 5 ? 'rgba(75, 120, 98, 0.38)'
+      : 'rgba(75, 120, 98, 0.62)'
     const text = count === 0 ? 'var(--text3)' : count >= 3 ? 'var(--text)' : 'var(--text2)'
     return {
       width: 32, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: 10, color: text, background: bg,
       borderRadius: 4, fontFamily: 'var(--mono)',
-      border: depth >= 4 ? '1px solid rgba(99, 102, 241, 0.6)' : '1px solid transparent',
+      border: depth >= 4 ? '1px solid rgba(75, 120, 98, 0.6)' : '1px solid transparent',
     }
   }
 
@@ -461,7 +461,7 @@ export function LifeHistory() {
 
         <Card>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--accent2)', padding: '2px 8px', background: 'rgba(99,102,241,0.12)', borderRadius: 12 }}>
+            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--accent2)', padding: '2px 8px', background: 'rgba(75, 120, 98,0.12)', borderRadius: 12 }}>
               {currentQ.stage_label}
             </span>
             <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text2)', padding: '2px 8px', background: 'var(--surface2)', borderRadius: 12 }}>
@@ -603,7 +603,7 @@ export function LifeHistory() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
           {(['quick', 'medium', 'deep'] as Mode[]).map((m) => (
-            <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: `1px solid ${mode === m ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 6, cursor: 'pointer', background: mode === m ? 'rgba(99,102,241,0.08)' : 'transparent' }}>
+            <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', border: `1px solid ${mode === m ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 6, cursor: 'pointer', background: mode === m ? 'rgba(75, 120, 98,0.08)' : 'transparent' }}>
               <input type="radio" name="mode" checked={mode === m} onChange={() => setMode(m)} />
               <span style={{ fontSize: 13, color: 'var(--text)' }}>{MODE_LABELS[m]}</span>
             </label>
@@ -639,7 +639,7 @@ export function LifeHistory() {
           人生の軌跡（{totalEntries}件の記録）
         </div>
         {!birthYear && (
-          <Card style={{ marginBottom: 12, background: 'rgba(99,102,241,0.06)', border: '1px dashed var(--accent)' }}>
+          <Card style={{ marginBottom: 12, background: 'rgba(75, 120, 98,0.06)', border: '1px dashed var(--accent)' }}>
             <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.6 }}>
               誕生年を設定すると、各時期の<strong>西暦と年齢</strong>が自動で表示されます。
               <a href="/profile" style={{ color: 'var(--accent)', marginLeft: 6, textDecoration: 'underline' }}>基本情報で設定する →</a>
@@ -668,7 +668,7 @@ export function LifeHistory() {
                   position: 'absolute', left: -21 - (isCustom ? 16 : 0), top: 22, width: 16, height: 16,
                   borderRadius: '50%',
                   background: isEmpty ? 'var(--surface2)' : (isCustom ? 'var(--accent2)' : 'var(--accent)'),
-                  border: '2px solid var(--surface)', boxShadow: isEmpty ? 'none' : '0 0 0 2px rgba(99,102,241,0.15)',
+                  border: '2px solid var(--surface)', boxShadow: isEmpty ? 'none' : '0 0 0 2px rgba(75, 120, 98,0.15)',
                 }} />
                 <Card style={{ opacity: isEmpty ? 0.5 : 1 }}>
                   {/* 時系列メタ: 年号 + 年齢 + ラベル */}
@@ -950,7 +950,7 @@ export function LifeHistory() {
                         display: 'flex', gap: 10, padding: 12,
                         border: `1px solid ${splitChecked[p.key] ? 'var(--accent)' : 'var(--border)'}`,
                         borderRadius: 8, cursor: 'pointer',
-                        background: splitChecked[p.key] ? 'rgba(99,102,241,0.05)' : 'transparent',
+                        background: splitChecked[p.key] ? 'rgba(75, 120, 98,0.05)' : 'transparent',
                       }}
                     >
                       <input

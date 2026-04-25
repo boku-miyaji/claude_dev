@@ -52,8 +52,8 @@ export function PendingUpdatesBanner() {
       style={{
         display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         padding: '10px 14px', marginBottom: 16,
-        background: 'rgba(99, 102, 241, 0.08)',
-        border: '1px solid rgba(99, 102, 241, 0.25)',
+        background: 'rgba(75, 120, 98, 0.08)',
+        border: '1px solid rgba(75, 120, 98, 0.25)',
         borderRadius: 8,
       }}
     >

@@ -50,7 +50,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
           <h2 style={{ color: '#fff', marginBottom: 12 }}>Focus You — Runtime Error</h2>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, lineHeight: 1.6 }}>{this.state.error.message}</pre>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 11, color: '#888', marginTop: 16 }}>{this.state.error.stack}</pre>
-          <button onClick={() => { this.setState({ error: null }); window.location.reload() }} style={{ marginTop: 20, padding: '8px 16px', background: '#5046e5', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Reload</button>
+          <button onClick={() => { this.setState({ error: null }); window.location.reload() }} style={{ marginTop: 20, padding: '8px 16px', background: '#4B7862', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Reload</button>
         </div>
       )
     }
