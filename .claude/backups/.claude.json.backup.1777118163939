@@ -677,7 +677,7 @@
     "lastShownTime": 1767439030982
   },
   "opusProMigrationComplete": true,
-  "cachedExtraUsageDisabledReason": "org_level_disabled",
+  "cachedExtraUsageDisabledReason": null,
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 12,
