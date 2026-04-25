@@ -677,7 +677,7 @@
     "lastShownTime": 1767439030982
   },
   "opusProMigrationComplete": true,
-  "cachedExtraUsageDisabledReason": null,
+  "cachedExtraUsageDisabledReason": "org_level_disabled",
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 12,
@@ -799,7 +799,11 @@
     "displayName": "yuta",
     "organizationRole": "admin",
     "workspaceRole": null,
-    "organizationName": "yumzzz.my6223@gmail.com's Organization"
+    "organizationName": "yumzzz.my6223@gmail.com's Organization",
+    "organizationType": "claude_max",
+    "organizationRateLimitTier": "default_claude_max_20x",
+    "userRateLimitTier": null,
+    "seatTier": null
   },
   "shiftEnterKeyBindingInstalled": true
 }
