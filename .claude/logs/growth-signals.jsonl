@@ -940,3 +940,7 @@
 {"ts":"2026-04-26T08:38:01+09:00","signal":"raw_prompt","prompt":"branch変えて作業している？\n"}
 {"ts":"2026-04-26T08:39:28+09:00","signal":"raw_prompt","prompt":"ナレッジをRAG資産にするのか、考え方にするのかがあると思う。そこにちゃんと繋がる？\n"}
 {"ts":"2026-04-26T08:39:28+09:00","signal":"raw_prompt","prompt":"ナレッジをRAG資産にするのか、考え方にするのかがあると思う。そこにちゃんと繋がる？\n"}
+{"ts":"2026-04-26T08:43:15+09:00","signal":"raw_prompt","prompt":"今回だけpush force許します。\n"}
+{"ts":"2026-04-26T08:43:47+09:00","signal":"raw_prompt","prompt":"effort levelをxhighをdefaultにしてほしい。\n"}
+{"ts":"2026-04-26T08:45:41+09:00","signal":"raw_prompt","prompt":"MVP時点でそこまで自動化したくない。\n考え方はシステムの設計やLLMの出力フォーマット固定とかでやったりいろんな方法があると思う。\nどのようにしたら良いかを提案して、人間が改めて設計・反映をするようにしたい\n"}
+{"ts":"2026-04-26T08:46:22+09:00","signal":"raw_prompt","prompt":"extra highじゃない？xhighのままでいい？\n"}
