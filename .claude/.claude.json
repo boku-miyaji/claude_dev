@@ -799,7 +799,11 @@
     "displayName": "yuta",
     "organizationRole": "admin",
     "workspaceRole": null,
-    "organizationName": "yumzzz.my6223@gmail.com's Organization"
+    "organizationName": "yumzzz.my6223@gmail.com's Organization",
+    "organizationType": "claude_max",
+    "organizationRateLimitTier": "default_claude_max_20x",
+    "userRateLimitTier": null,
+    "seatTier": null
   },
   "shiftEnterKeyBindingInstalled": true
 }
