@@ -398,7 +398,7 @@ export function Today() {
     })
   }, [habits, habitLogs, todayStr, weekStartStr, monthStartStr])
   // Habits progress — only count daily habits for all-done check
-  const dailyHabits = todayHabits.filter((h) => h.frequency === 'daily' || h.frequency === 'weekdays')
+  const dailyHabits = todayHabits.filter((h) => h.frequency === 'daily')
   const dailyHabitsCompleted = dailyHabits.filter((h) => h.completed).length
   const habitsAllDone = dailyHabits.length > 0 && dailyHabitsCompleted === dailyHabits.length
 
