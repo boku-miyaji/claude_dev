@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Focus You</title>
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#5046e5">
+  <meta name="theme-color" content="#4B7862">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Focus You">
@@ -21,8 +21,20 @@
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
   <script>
+    // dev (http://localhost) では SW を登録しない（古いキャッシュで開発ループが詰まる）。
+    // 既存の SW は unregister + Cache Storage もクリア。
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'))
+      var isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'http:'
+      if (isDev) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (r) { r.unregister() })
+        })
+        if ('caches' in window) {
+          caches.keys().then(function (keys) { keys.forEach(function (k) { caches.delete(k) }) })
+        }
+      } else {
+        window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js') })
+      }
     }
   </script>
 </body>
