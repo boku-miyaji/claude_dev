@@ -118,7 +118,8 @@ export function DiaryExtractionResultCard({ result, onDismiss, onChanged }: Prop
     result.done_tasks.some((d) => d.confidence !== 'high') ||
     result.done_habits.some((d) => d.confidence !== 'high') ||
     result.new_tasks.length > 0 ||
-    result.new_habit_suggestions.length > 0
+    result.new_habit_suggestions.length > 0 ||
+    (result.new_dream_suggestions?.length ?? 0) > 0
 
   if (!hasAuto && !hasSuggestions) return null
 
@@ -131,10 +132,11 @@ export function DiaryExtractionResultCard({ result, onDismiss, onChanged }: Prop
   const confirmTasks = result.done_tasks.filter((d) => d.confidence !== 'high')
   const confirmHabits = result.done_habits.filter((d) => d.confidence !== 'high')
   const hasConfirm = confirmTasks.length > 0 || confirmHabits.length > 0
-  // セクション 3: 新しい候補 (タスク / 習慣 / 移動 / 気分)
+  // セクション 3: 新しい候補 (タスク / 習慣 / 夢 / 移動 / 気分)
   const newTaskItems = result.new_tasks.filter((n) => !addedTasks.has(n.title))
+  const newDreamItems = result.new_dream_suggestions ?? []
   const hasNew = newTaskItems.length > 0 || result.new_habit_suggestions.length > 0
-    || result.trip_lookups.length > 0 || result.mood_suggestions.length > 0
+    || newDreamItems.length > 0 || result.trip_lookups.length > 0 || result.mood_suggestions.length > 0
 
   return (
     <Card style={{ marginTop: 12, padding: '14px 16px' }}>
@@ -290,7 +292,19 @@ export function DiaryExtractionResultCard({ result, onDismiss, onChanged }: Prop
               key={`new-habit-${n.title}`}
               kind="habit"
               text={n.title}
+              quote={n.quote}
               hint="Habits ページから登録できます"
+              confidence="low"
+              action={null}
+            />
+          ))}
+          {newDreamItems.map((n) => (
+            <ItemRow
+              key={`new-dream-${n.title}`}
+              kind="dream"
+              text={n.title}
+              quote={n.quote}
+              hint="Dreams & Goals ページから種として登録できます"
               confidence="low"
               action={null}
             />
