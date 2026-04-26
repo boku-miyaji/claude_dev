@@ -130,23 +130,40 @@ export function Sidebar() {
       <button
         className="sidebar-toggle"
         onClick={() => setSidebarHidden(false)}
-        title="メニューを開く"
+        title="サイドバーを開く"
+        aria-label="サイドバーを開く"
       >
-        &#9776;
+        {/* spec: 左の縦線 + 右向き chevron — 「右に展開する」感 */}
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M3 2.5 L3 13.5" />
+          <path d="M6.5 5 L9.5 8 L6.5 11" />
+        </svg>
       </button>
     )}
     <nav className={`sidebar${sidebarHidden ? ' collapsed' : ''}`}>
       <div className="logo" style={{ justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/icon.svg" alt="Focus You" width={28} height={28} style={{ borderRadius: 7 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <img src="/icon.svg" alt="Focus You" width={24} height={24} style={{ borderRadius: 6 }} />
           Focus You
         </div>
         <button
           onClick={() => setSidebarHidden(true)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text3)', padding: '2px 6px', borderRadius: 4 }}
-          title="メニューを閉じる"
+          aria-label="サイドバーを畳む"
+          title="サイドバーを畳む"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text3)', padding: '4px 6px', borderRadius: 4,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'color .15s, background .15s',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.background = 'var(--surface2)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.background = 'none' }}
         >
-          &#x2715;
+          {/* spec: 左の縦線 + 左向き chevron — 「左に畳む」感 */}
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 2.5 L3 13.5" />
+            <path d="M9.5 5 L6.5 8 L9.5 11" />
+          </svg>
         </button>
       </div>
 
