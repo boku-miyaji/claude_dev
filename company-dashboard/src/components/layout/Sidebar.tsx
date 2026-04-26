@@ -133,11 +133,7 @@ export function Sidebar() {
         title="サイドバーを開く"
         aria-label="サイドバーを開く"
       >
-        {/* spec: 左の縦線 + 右向き chevron — 「右に展開する」感 */}
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M3 2.5 L3 13.5" />
-          <path d="M6.5 5 L9.5 8 L6.5 11" />
-        </svg>
+        &#9776;
       </button>
     )}
     <nav className={`sidebar${sidebarHidden ? ' collapsed' : ''}`}>
