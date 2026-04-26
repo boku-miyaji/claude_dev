@@ -19,20 +19,12 @@ function getDaysInRange(start: Date, count: number): string[] {
   return days
 }
 
-/** Check if a habit is applicable on a given date based on its frequency */
-function isHabitApplicable(frequency: string, dateStr: string): boolean {
-  if (frequency === 'daily') return true
-  if (frequency === 'weekly') {
-    // weekly は週の最終日（日曜）のみ applicable（週1回カウント）
-    const d = new Date(dateStr + 'T00:00:00')
-    return d.getDay() === 0 // Sunday = end of week
-  }
-  if (frequency === 'monthly') {
-    // monthly は月末日のみ applicable
-    const d = new Date(dateStr + 'T00:00:00')
-    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()
-    return d.getDate() === lastDay
-  }
+/** Check if a habit is applicable on a given date based on its frequency.
+ *  spec 方針 (β): 週N回・月N回は曜日固定せず、その期間内ならいつでも記録可能。
+ *  達成判定は getPeriodCount + target_count で行う。 */
+function isHabitApplicable(_frequency: string, _dateStr: string): boolean {
+  // 全頻度で常に applicable（その日に記録できる）。
+  // 「週N回」なら週内 N 回達成すれば目標達成という運用。
   return true
 }
 
@@ -925,7 +917,7 @@ export function Habits() {
           </div>
 
           <div>
-            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target / {{ daily: 'day', weekdays: 'weekday', weekly: 'week', monthly: 'month' }[formFrequency]}</label>
+            <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>Target / {{ daily: 'day', weekly: 'week', monthly: 'month' }[formFrequency]}</label>
             <input
               className="input"
               type="number"

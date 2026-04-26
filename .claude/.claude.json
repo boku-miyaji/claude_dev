@@ -730,8 +730,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 98,
-      "lastUsedAt": 1777020411028
+      "usageCount": 99,
+      "lastUsedAt": 1777162380446
     },
     "register": {
       "usageCount": 13,
@@ -762,8 +762,8 @@
       "lastUsedAt": 1775909419013
     },
     "update-config": {
-      "usageCount": 4,
-      "lastUsedAt": 1776952758475
+      "usageCount": 5,
+      "lastUsedAt": 1777160641524
     },
     "tax-advisor": {
       "usageCount": 2,
@@ -772,6 +772,10 @@
     "design-md": {
       "usageCount": 1,
       "lastUsedAt": 1777003284668
+    },
+    "document-skills:webapp-testing": {
+      "usageCount": 1,
+      "lastUsedAt": 1777161870255
     }
   },
   "overageCreditUpsellSeenCount": 2,

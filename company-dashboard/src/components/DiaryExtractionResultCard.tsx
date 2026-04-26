@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Card } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/components/ui/Toast'
@@ -122,189 +122,283 @@ export function DiaryExtractionResultCard({ result, onDismiss, onChanged }: Prop
 
   if (!hasAuto && !hasSuggestions) return null
 
+  // ── Section grouping for spec-aligned layout ────────────────────────
+  // セクション 1: 自動チェック候補 (高 confidence)
+  const autoCheckedTasks = result.done_tasks.filter((d) => d.confidence === 'high')
+  const autoCheckedHabits = result.done_habits.filter((d) => d.confidence === 'high')
+  const hasAutoChecked = autoCheckedTasks.length > 0 || autoCheckedHabits.length > 0
+  // セクション 2: 確認が必要 (中・低 confidence)
+  const confirmTasks = result.done_tasks.filter((d) => d.confidence !== 'high')
+  const confirmHabits = result.done_habits.filter((d) => d.confidence !== 'high')
+  const hasConfirm = confirmTasks.length > 0 || confirmHabits.length > 0
+  // セクション 3: 新しい候補 (タスク / 習慣 / 移動 / 気分)
+  const newTaskItems = result.new_tasks.filter((n) => !addedTasks.has(n.title))
+  const hasNew = newTaskItems.length > 0 || result.new_habit_suggestions.length > 0
+    || result.trip_lookups.length > 0 || result.mood_suggestions.length > 0
+
   return (
-    <Card style={{ marginTop: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-          🤖 日記から検出
+    <Card style={{ marginTop: 12, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 10, borderBottom: '1px dashed var(--border)' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.10em' }}>
+          日記から抽出した内容
         </div>
         <button
           onClick={onDismiss}
           style={{ fontSize: 11, color: 'var(--text3)', background: 'none', border: 'none', cursor: 'pointer' }}
         >
-          閉じる
+          閉じる ✕
         </button>
       </div>
 
-      {/* Auto-checked tasks (high confidence) */}
-      {result.done_tasks.filter((d) => d.confidence === 'high').map((d) => {
-        const key = `undo-task-${d.task_id}`
-        return (
-          <div key={key} style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 6, display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ color: 'var(--green)' }}>✓ 自動</span>
-            <span style={{ flex: 1 }}>タスク「{d.task_title}」を完了にしました</span>
-            {d.quote && <span style={{ fontSize: 10, color: 'var(--text3)' }}>「{d.quote}」</span>}
-            <button
-              className="btn btn-g btn-sm"
-              disabled={pendingIds.has(key)}
-              onClick={() => undoTask(d.task_id, d.task_title)}
-              style={{ fontSize: 10, padding: '2px 8px' }}
-            >
-              戻す
-            </button>
-          </div>
-        )
-      })}
+      {/* ── Section 1: 自動チェック候補（完了したもの） ── */}
+      {hasAutoChecked && (
+        <div style={{ marginBottom: 14 }}>
+          <SectionLabel>✅ 自動チェック候補（完了したもの）</SectionLabel>
+          {autoCheckedTasks.map((d) => {
+            const key = `undo-task-${d.task_id}`
+            return (
+              <ItemRow
+                key={key}
+                kind="task"
+                text={d.task_title}
+                quote={d.quote}
+                confidence="high"
+                action={
+                  <button
+                    className="btn btn-g btn-sm"
+                    disabled={pendingIds.has(key)}
+                    onClick={() => undoTask(d.task_id, d.task_title)}
+                    style={{ fontSize: 10, padding: '3px 9px' }}
+                  >
+                    戻す
+                  </button>
+                }
+              />
+            )
+          })}
+          {autoCheckedHabits.map((d) => {
+            const key = `undo-habit-${d.habit_id}`
+            return (
+              <ItemRow
+                key={key}
+                kind="habit"
+                text={d.habit_title}
+                quote={d.quote}
+                confidence="high"
+                action={
+                  <button
+                    className="btn btn-g btn-sm"
+                    disabled={pendingIds.has(key)}
+                    onClick={() => undoHabit(d.habit_id, d.habit_title)}
+                    style={{ fontSize: 10, padding: '3px 9px' }}
+                  >
+                    戻す
+                  </button>
+                }
+              />
+            )
+          })}
+        </div>
+      )}
 
-      {/* Auto-checked habits (high confidence) */}
-      {result.done_habits.filter((d) => d.confidence === 'high').map((d) => {
-        const key = `undo-habit-${d.habit_id}`
-        return (
-          <div key={key} style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 6, display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ color: 'var(--green)' }}>✓ 自動</span>
-            <span style={{ flex: 1 }}>習慣「{d.habit_title}」を記録しました</span>
-            {d.quote && <span style={{ fontSize: 10, color: 'var(--text3)' }}>「{d.quote}」</span>}
-            <button
-              className="btn btn-g btn-sm"
-              disabled={pendingIds.has(key)}
-              onClick={() => undoHabit(d.habit_id, d.habit_title)}
-              style={{ fontSize: 10, padding: '2px 8px' }}
-            >
-              戻す
-            </button>
-          </div>
-        )
-      })}
+      {/* ── Section 2: 確認待ち（中・低 confidence） ── */}
+      {hasConfirm && (
+        <div style={{ marginBottom: 14 }}>
+          <SectionLabel>💡 確認が必要</SectionLabel>
+          {confirmTasks.map((d) => {
+            const key = `confirm-task-${d.task_id}`
+            return (
+              <ItemRow
+                key={key}
+                kind="task"
+                text={d.task_title}
+                quote={d.quote}
+                confidence={d.confidence}
+                action={
+                  <button
+                    className="btn btn-p btn-sm"
+                    disabled={pendingIds.has(key)}
+                    onClick={() => confirmDoneTask(d.task_id, d.task_title)}
+                    style={{ fontSize: 10, padding: '3px 9px' }}
+                  >
+                    完了に
+                  </button>
+                }
+              />
+            )
+          })}
+          {confirmHabits.map((d) => {
+            const key = `confirm-habit-${d.habit_id}`
+            return (
+              <ItemRow
+                key={key}
+                kind="habit"
+                text={d.habit_title}
+                quote={d.quote}
+                confidence={d.confidence}
+                action={
+                  <button
+                    className="btn btn-p btn-sm"
+                    disabled={pendingIds.has(key)}
+                    onClick={() => confirmDoneHabit(d.habit_id, d.habit_title)}
+                    style={{ fontSize: 10, padding: '3px 9px' }}
+                  >
+                    記録
+                  </button>
+                }
+              />
+            )
+          })}
+        </div>
+      )}
 
-      {/* Medium-confidence task completions (confirm or ignore) */}
-      {result.done_tasks.filter((d) => d.confidence !== 'high').map((d) => {
-        const key = `confirm-task-${d.task_id}`
-        return (
-          <div key={key} style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 6, display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ color: 'var(--amber)' }}>💡</span>
-            <span style={{ flex: 1 }}>タスク「{d.task_title}」を完了にしますか？</span>
-            {d.quote && <span style={{ fontSize: 10, color: 'var(--text3)' }}>「{d.quote}」</span>}
-            <button
-              className="btn btn-p btn-sm"
-              disabled={pendingIds.has(key)}
-              onClick={() => confirmDoneTask(d.task_id, d.task_title)}
-              style={{ fontSize: 10, padding: '2px 8px' }}
-            >
-              完了に
-            </button>
-          </div>
-        )
-      })}
-
-      {/* Medium-confidence habit completions */}
-      {result.done_habits.filter((d) => d.confidence !== 'high').map((d) => {
-        const key = `confirm-habit-${d.habit_id}`
-        return (
-          <div key={key} style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 6, display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ color: 'var(--amber)' }}>💡</span>
-            <span style={{ flex: 1 }}>習慣「{d.habit_title}」を記録しますか？</span>
-            {d.quote && <span style={{ fontSize: 10, color: 'var(--text3)' }}>「{d.quote}」</span>}
-            <button
-              className="btn btn-p btn-sm"
-              disabled={pendingIds.has(key)}
-              onClick={() => confirmDoneHabit(d.habit_id, d.habit_title)}
-              style={{ fontSize: 10, padding: '2px 8px' }}
-            >
-              記録
-            </button>
-          </div>
-        )
-      })}
-
-      {/* New task suggestions (with expandable time/mode editor) */}
-      {result.new_tasks.filter((n) => !addedTasks.has(n.title)).map((n) => {
-        const expanded = expandedNewTask === n.title
-        const pendingKey = `new-task-${n.title}`
-        return (
-          <NewTaskRow
-            key={`new-task-${n.title}`}
-            suggestion={n}
-            expanded={expanded}
-            pending={pendingIds.has(pendingKey)}
-            onToggleExpand={() => setExpandedNewTask(expanded ? null : n.title)}
-            onSave={async (form) => {
-              mark(pendingKey)
-              try {
-                const created = await addTaskToStore(buildTaskPayload(form))
+      {/* ── Section 3: 新しい候補（タスク / 習慣 / 移動 / 気分） ── */}
+      {hasNew && (
+        <div style={{ marginBottom: 0 }}>
+          <SectionLabel>✨ 新しい候補</SectionLabel>
+          {newTaskItems.map((n) => {
+            const expanded = expandedNewTask === n.title
+            const pendingKey = `new-task-${n.title}`
+            return (
+              <NewTaskRow
+                key={`new-task-${n.title}`}
+                suggestion={n}
+                expanded={expanded}
+                pending={pendingIds.has(pendingKey)}
+                onToggleExpand={() => setExpandedNewTask(expanded ? null : n.title)}
+                onSave={async (form) => {
+                  mark(pendingKey)
+                  try {
+                    const created = await addTaskToStore(buildTaskPayload(form))
+                    if (!created) {
+                      toast('追加に失敗しました')
+                      return
+                    }
+                    setAddedTasks((s) => new Set(s).add(n.title))
+                    setExpandedNewTask(null)
+                    toast(`タスク「${form.title}」を追加しました`)
+                    onChanged()
+                  } finally {
+                    unmark(pendingKey)
+                  }
+                }}
+              />
+            )
+          })}
+          {result.new_habit_suggestions.map((n) => (
+            <ItemRow
+              key={`new-habit-${n.title}`}
+              kind="habit"
+              text={n.title}
+              hint="Habits ページから登録できます"
+              confidence="low"
+              action={null}
+            />
+          ))}
+          {result.trip_lookups.map((trip, i) => (
+            <TripLookupRow
+              key={`trip-${i}-${trip.destination}`}
+              trip={trip}
+              onAddTask={async (routeDescription, departureIso) => {
+                const date = departureIso ? departureIso.substring(0, 10) : null
+                const time = departureIso ? new Date(departureIso).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo' }) : null
+                const created = await addTaskToStore({
+                  title: `${trip.destination}へ`,
+                  description: routeDescription,
+                  type: 'task',
+                  priority: 'normal',
+                  source: 'auto:diary-extract',
+                  due_date: date,
+                  scheduled_at: date && time ? `${date}T${time}:00+09:00` : null,
+                })
                 if (!created) {
                   toast('追加に失敗しました')
                   return
                 }
-                setAddedTasks((s) => new Set(s).add(n.title))
-                setExpandedNewTask(null)
-                toast(`タスク「${form.title}」を追加しました`)
+                toast(`「${trip.destination}へ」をタスクに追加しました`)
                 onChanged()
-              } finally {
-                unmark(pendingKey)
-              }
-            }}
-          />
-        )
-      })}
-
-      {/* Trip lookups (concrete transit info via Google Routes) */}
-      {result.trip_lookups.map((trip, i) => (
-        <TripLookupRow
-          key={`trip-${i}-${trip.destination}`}
-          trip={trip}
-          onAddTask={async (routeDescription, departureIso) => {
-            const date = departureIso ? departureIso.substring(0, 10) : null
-            const time = departureIso ? new Date(departureIso).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo' }) : null
-            const created = await addTaskToStore({
-              title: `${trip.destination}へ`,
-              description: routeDescription,
-              type: 'task',
-              priority: 'normal',
-              source: 'auto:diary-extract',
-              due_date: date,
-              scheduled_at: date && time ? `${date}T${time}:00+09:00` : null,
-            })
-            if (!created) {
-              toast('追加に失敗しました')
-              return
-            }
-            toast(`「${trip.destination}へ」をタスクに追加しました`)
-            onChanged()
-          }}
-        />
-      ))}
-
-      {/* Mood suggestions (emotion-driven candidates) */}
-      {result.mood_suggestions.map((m, i) => (
-        <MoodSuggestionRow
-          key={`mood-${i}-${m.topic}`}
-          suggestion={m}
-          onAddTask={async (candidate) => {
-            const created = await addTaskToStore({
-              title: candidate.title,
-              description: candidate.description,
-              type: 'task',
-              priority: 'normal',
-              source: 'auto:diary-extract',
-            })
-            if (!created) {
-              toast('追加に失敗しました')
-              return
-            }
-            toast(`「${candidate.title}」をタスクに追加しました`)
-            onChanged()
-          }}
-        />
-      ))}
-
-      {/* New habit suggestions (only surface; don't create — habits have metadata) */}
-      {result.new_habit_suggestions.length > 0 && (
-        <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-          習慣候補: {result.new_habit_suggestions.map((n) => `「${n.title}」`).join('、')}
-          <span style={{ marginLeft: 8 }}>— Habitsページから正式登録できます</span>
+              }}
+            />
+          ))}
+          {result.mood_suggestions.map((m, i) => (
+            <MoodSuggestionRow
+              key={`mood-${i}-${m.topic}`}
+              suggestion={m}
+              onAddTask={async (candidate) => {
+                const created = await addTaskToStore({
+                  title: candidate.title,
+                  description: candidate.description,
+                  type: 'task',
+                  priority: 'normal',
+                  source: 'auto:diary-extract',
+                })
+                if (!created) {
+                  toast('追加に失敗しました')
+                  return
+                }
+                toast(`「${candidate.title}」をタスクに追加しました`)
+                onChanged()
+              }}
+            />
+          ))}
         </div>
       )}
     </Card>
+  )
+}
+
+/** Spec準拠の小さなセクション見出し */
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ fontSize: 11, color: 'var(--text2)', fontWeight: 500, marginBottom: 8 }}>
+      {children}
+    </div>
+  )
+}
+
+/** タスク / 習慣 / 夢 を横断する行。spec の ed-kind ラベルを行頭に置く。 */
+function ItemRow({
+  kind,
+  text,
+  quote,
+  hint,
+  confidence,
+  action,
+}: {
+  kind: 'task' | 'habit' | 'dream'
+  text: string
+  quote?: string | null
+  hint?: string
+  confidence: 'high' | 'medium' | 'low'
+  action: ReactNode
+}) {
+  const kindStyle: Record<typeof kind, { label: string; bg: string; color: string }> = {
+    task: { label: 'タスク', bg: 'var(--accent-bg)', color: 'var(--accent)' },
+    habit: { label: '習慣', bg: 'rgba(75,120,98,.16)', color: 'var(--accent2)' },
+    dream: { label: '夢', bg: 'var(--amber-bg)', color: 'var(--amber)' },
+  }
+  const confStyle: Record<typeof confidence, { label: string; bg: string; color: string }> = {
+    high: { label: '確度 高', bg: 'rgba(75,120,98,.20)', color: 'var(--accent)' },
+    medium: { label: '確度 中', bg: 'rgba(255,165,0,.20)', color: 'var(--amber)' },
+    low: { label: '確度 低', bg: 'var(--surface2)', color: 'var(--text3)' },
+  }
+  const k = kindStyle[kind]
+  const c = confStyle[confidence]
+  return (
+    <div style={{ fontSize: 12, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0' }}>
+      <span style={{ fontSize: 10, padding: '1px 8px', borderRadius: 3, background: k.bg, color: k.color, fontFamily: 'var(--mono)', fontWeight: 600, flexShrink: 0 }}>
+        {k.label}
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        {text}
+        {hint && <span style={{ fontSize: 10, color: 'var(--text3)', marginLeft: 8 }}>— {hint}</span>}
+      </span>
+      {quote && <span style={{ fontSize: 10, color: 'var(--text3)' }}>「{quote}」</span>}
+      <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 2, background: c.bg, color: c.color, fontFamily: 'var(--mono)', fontWeight: 600, flexShrink: 0 }}>
+        {c.label}
+      </span>
+      {action}
+    </div>
   )
 }
 

@@ -15,4 +15,11 @@ export default defineConfig({
     sourcemap: true,
     copyPublicDir: true,
   },
+  // Remote SSH / devcontainer 経由でアクセスできるよう全 interface で listen
+  // localhost のみだとコンテナ外部（ホストの Mac）から届かず真っ白になる
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
+  },
 })

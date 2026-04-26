@@ -6,6 +6,7 @@ import { useThemeFinder } from '@/hooks/useThemeFinder'
 import { aiCompletion } from '@/lib/edgeAi'
 import { supabase } from '@/lib/supabase'
 import { archiveStoryMemoryByType } from '@/lib/storyMemoryArchive'
+import { StoryArchiveSection } from '@/components/StoryArchiveSection'
 import { fetchCalendarEvents } from '@/lib/calendarApi'
 import type { CalendarEvent } from '@/types/calendar'
 
@@ -191,6 +192,9 @@ export function Story() {
 
       {/* Growth Story (#68 + #50) */}
       <GrowthStorySection diaryCount={wbiTimeline.length} />
+
+      {/* Story Archive — 過去のアーク・テーマ・チャプター履歴（折りたたみ） */}
+      <StoryArchiveSection />
 
       {isLoading && wbiTimeline.length === 0 && !arc && (
         <Card style={{ textAlign: 'center', padding: 40 }}>

@@ -398,7 +398,7 @@ export function Today() {
     })
   }, [habits, habitLogs, todayStr, weekStartStr, monthStartStr])
   // Habits progress — only count daily habits for all-done check
-  const dailyHabits = todayHabits.filter((h) => h.frequency === 'daily' || h.frequency === 'weekdays')
+  const dailyHabits = todayHabits.filter((h) => h.frequency === 'daily')
   const dailyHabitsCompleted = dailyHabits.filter((h) => h.completed).length
   const habitsAllDone = dailyHabits.length > 0 && dailyHabitsCompleted === dailyHabits.length
 
@@ -1044,6 +1044,34 @@ export function Today() {
         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && (text.trim() || pendingImages.length > 0) && !saving && !analyzing) { e.preventDefault(); saveEntry(text) } }}
         style={{ minHeight: timeMode === 'evening' ? 100 : 44, width: '100%', boxSizing: 'border-box', marginBottom: 8 }}
       />
+      {/* Similar past entry — live suggestion while typing */}
+      {text.trim().length >= 8 && similarPast.length > 0 && (
+        <div
+          onClick={() => navigate(`/journal#entry-${similarPast[0].id}`)}
+          style={{
+            margin: '4px 0 10px', padding: '10px 14px',
+            background: 'var(--accent-bg)',
+            border: '1px dashed var(--accent-border)',
+            borderRadius: 'var(--r)',
+            display: 'flex', alignItems: 'flex-start', gap: 10,
+            cursor: 'pointer', fontSize: 12,
+          }}
+          title="タップで開く"
+        >
+          <span style={{ color: 'var(--accent)', fontSize: 13, flexShrink: 0, marginTop: 2 }}>✦</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: 'var(--accent)',
+              textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 3,
+            }}>
+              書きながら浮かんできた、似ている過去の記録
+            </div>
+            <div style={{ color: 'var(--text2)', lineHeight: 1.55, fontSize: 12 }}>
+              {new Date(similarPast[0].entry_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}{' '}— {similarPast[0].body.slice(0, 60)}{similarPast[0].body.length > 60 ? '…' : ''}
+            </div>
+          </div>
+        </div>
+      )}
       {pendingImagePreviews.length > 0 && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
           {pendingImagePreviews.map((src, i) => (
@@ -1067,13 +1095,20 @@ export function Today() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <label
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px',
-              fontSize: 11, color: 'var(--text3)', cursor: 'pointer', borderRadius: 'var(--r)',
-              border: '1px solid var(--border)', background: 'var(--bg2)',
+              display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+              fontSize: 12, color: 'var(--text2)', cursor: 'pointer', borderRadius: 6,
+              border: '1px solid var(--border)', background: 'transparent',
+              whiteSpace: 'nowrap', lineHeight: 1.2, fontWeight: 500,
             }}
-            title="画像を添付"
+            title="写真を添付"
           >
-            <span style={{ fontSize: 13 }}>📷</span> 画像
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+              strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <rect x="2" y="4" width="12" height="9" rx="1.2"/>
+              <circle cx="8" cy="8.5" r="2.2"/>
+              <path d="M5.5 4 L6.5 2.5 L9.5 2.5 L10.5 4"/>
+            </svg>
+            写真
             <input
               type="file"
               accept="image/*"
@@ -1082,16 +1117,17 @@ export function Today() {
               style={{ display: 'none' }}
             />
           </label>
-          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
-            {saving ? (uploadingImages ? '画像アップロード中...' : '保存中...') : saved ? '保存しました' : analyzing ? '感情分析中...' : ''}
+          <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+            {saving ? (uploadingImages ? '画像アップロード中…' : '保存中…') : saved ? '保存しました ✓' : analyzing ? '感情分析中…' : text.trim() ? `${text.trim().length}文字 · 自動保存済み ✓` : ''}
           </span>
         </div>
         <button
-          className="btn btn-p btn-sm"
+          className="btn btn-p"
           onClick={() => saveEntry(text)}
           disabled={(!text.trim() && pendingImages.length === 0) || saving || analyzing}
+          style={{ padding: '7px 16px', fontSize: 13, whiteSpace: 'nowrap', minHeight: 36 }}
         >
-          {analyzing ? '分析中...' : '記録する'}
+          {analyzing ? '分析中…' : '保存'}
         </button>
       </div>
       {emotionError && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 4 }}>{emotionError}</div>}

@@ -1,5 +1,5 @@
 export type HabitCategory = 'life' | 'work' | 'health' | 'learning' | 'mindfulness'
-export type HabitFrequency = 'daily' | 'weekdays' | 'weekly' | 'monthly'
+export type HabitFrequency = 'daily' | 'weekly' | 'monthly'
 
 export interface Habit {
   id: number
