@@ -1335,31 +1335,57 @@ export function Today() {
      ════════════════════════════════════════════ */
 
   return (
-    <div className="page">
-      {/* ── 朝イチの一節 (受動表示・最上部固定) ── */}
-      <MorningQuoteCard />
+    <div className="page today-2col">
+      {/* ════════ Writing 列 (左主) — design-spec.html の .writing 準拠 ════════ */}
+      <div className="today-writing">
+        {/* Story 更新通知 (Arc/Theme 更新時のみ。Life 列が見えないモバイルで特に重要) */}
+        <StoryUpdateBanner />
 
-      {/* ── Story 更新通知 (Arc/Theme 更新時のみ表示、チェックで消える) ── */}
-      <StoryUpdateBanner />
+        {/* 日付・天気・挨拶 */}
+        {Greeting}
 
-      {/* ── L1 やること (action required) ── */}
-      {Greeting}
-      <PendingUpdatesBanner />
-      {Diary}
-      <TodayIdeasCard />
-      {HabitsSection}
+        {/* AI が用意した「今日のひと言」(MorningBriefing) */}
+        {Briefing}
 
-      {/* ── L2 緊急 (urgency — deadlines & calendar) ── */}
-      {DeadlinesSection}
-      {TimelineSection}
-      {Tomorrow}
+        {/* 朝の名言 (受動表示) */}
+        <MorningQuoteCard />
 
-      {/* ── L3 有益 (informative — briefing, news, analysis) ── */}
-      {Briefing}
-      {NewsSection}
-      {Backlog}
-      {Fragments}
-      {StatusBar}
+        {/* 未処理の AI 提案 (Pending updates) */}
+        <PendingUpdatesBanner />
+
+        {/* 今日締切アラート — 書く前に「気にすべきこと」を脳にセット */}
+        {DeadlinesSection}
+
+        {/* 日記入力（プロンプト + textarea + similar-while-writing + save + extraction-detail） */}
+        {Diary}
+
+        {/* 今日の断片 (past) — 書きためた今日のエントリ */}
+        {Fragments}
+      </div>
+
+      {/* ════════ Life 列 (右副) — design-spec.html の .life 準拠 ════════ */}
+      <div className="today-life">
+        {/* WBI + Streak (life-head 相当) */}
+        {StatusBar}
+
+        {/* Habits 5件 + 進捗 */}
+        {HabitsSection}
+
+        {/* Schedule */}
+        {TimelineSection}
+
+        {/* Tomorrow preview (予定が無ければ表示) */}
+        {Tomorrow}
+
+        {/* Tasks (締切順) */}
+        {Backlog}
+
+        {/* キャプチャ (raw idea を溜める入口) */}
+        <TodayIdeasCard />
+
+        {/* News */}
+        {NewsSection}
+      </div>
     </div>
   )
 }
