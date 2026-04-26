@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Card } from '@/components/ui'
 import { toast } from '@/components/ui/Toast'
 import { useDataStore } from '@/stores/data'
 
@@ -40,18 +39,15 @@ export function TodayIdeasCard() {
   }, [text, saving, addIdea])
 
   return (
-    <Card style={{ marginBottom: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <div style={{ fontSize: 12, color: 'var(--text3)', letterSpacing: 0.5 }}>IDEAS</div>
-        <Link
-          to="/ideas"
-          style={{ fontSize: 11, color: 'var(--text3)', textDecoration: 'none' }}
-        >
-          すべて見る{ideas.length > 0 ? ` (${ideas.length})` : ''} →
+    <div className="ls">
+      <div className="ls-title-row">
+        <span className="ls-title">キャプチャ</span>
+        <Link to="/ideas" className="ls-link" style={{ textDecoration: 'none' }}>
+          すべて{ideas.length > 0 ? ` (${ideas.length})` : ''} →
         </Link>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: recent.length > 0 ? 10 : 0 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: recent.length > 0 ? 8 : 0 }}>
         <input
           className="input"
           placeholder="思いついたこと…"
@@ -63,20 +59,21 @@ export function TodayIdeasCard() {
               onSubmit()
             }
           }}
-          style={{ flex: 1, fontSize: 13 }}
+          style={{ flex: 1, fontSize: 12, padding: '5px 8px' }}
         />
         <button
-          className="btn btn-primary btn-sm"
+          className="btn btn-p"
           onClick={onSubmit}
           disabled={!text.trim() || saving}
           title="Cmd/Ctrl+Enter でも保存"
+          style={{ fontSize: 12, padding: '5px 10px' }}
         >
           ＋
         </button>
       </div>
 
       {recent.length > 0 && (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column' }}>
           {recent.map((idea) => (
             <li
               key={idea.id}
@@ -85,8 +82,8 @@ export function TodayIdeasCard() {
                 justifyContent: 'space-between',
                 alignItems: 'baseline',
                 gap: 8,
-                fontSize: 13,
-                padding: '4px 0',
+                fontSize: 12,
+                padding: '5px 0',
                 borderTop: '1px solid var(--border)',
                 opacity: idea.status === 'rejected' ? 0.45 : 1,
               }}
@@ -101,13 +98,13 @@ export function TodayIdeasCard() {
               >
                 {idea.content}
               </span>
-              <span style={{ fontSize: 10, color: 'var(--text3)', flexShrink: 0 }}>
+              <span style={{ fontSize: 9, color: 'var(--text3)', flexShrink: 0, fontFamily: 'var(--mono)' }}>
                 {formatWhen(idea.created_at)}
               </span>
             </li>
           ))}
         </ul>
       )}
-    </Card>
+    </div>
   )
 }

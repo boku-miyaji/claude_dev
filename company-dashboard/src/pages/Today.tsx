@@ -558,23 +558,6 @@ export function Today() {
   // News state — must be before any conditional return to satisfy Rules of Hooks
   const [newsItems, setNewsItems] = useState<Array<{ id?: string; title: string; title_ja?: string | null; summary: string; url: string | null; source: string; source_type?: string | null; topic: string; published_date?: string | null }>>([])
   const [newsCollecting, setNewsCollecting] = useState(false)
-  const [translatingNewsId, setTranslatingNewsId] = useState<string | null>(null)
-
-  const handleTranslateNews = async (id: string) => {
-    setTranslatingNewsId(id)
-    try {
-      const { translateNewsItem } = await import('@/lib/newsCollect')
-      const updated = await translateNewsItem(id)
-      if (updated) {
-        setNewsItems((prev) => prev.map((n) => (n.id === id ? { ...n, title_ja: updated.title_ja, summary: updated.summary } : n)))
-      }
-    } catch (e) {
-      console.error('[Today] translate news error:', e)
-    } finally {
-      setTranslatingNewsId(null)
-    }
-  }
-
   useEffect(() => {
     import('@/lib/newsCollect').then(({ loadNews, recordImpressions }) =>
       loadNews().then((items) => {
@@ -795,66 +778,47 @@ export function Today() {
     setNewsCollecting(false)
   }
 
+  // spec: Life 列の News — .ls + 軽量リスト。Life 幅 320px に収める
   const NewsSection = (
-    <Card style={{ marginBottom: 16 }}>
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>ニュース</span>
-        <button className="btn btn-g btn-sm" style={{ fontSize: 10 }} onClick={handleCollectNews} disabled={newsCollecting}>
-          {newsCollecting ? '収集中...' : '最新を取得'}
-        </button>
+    <div className="ls">
+      <div className="ls-title-row">
+        <span className="ls-title">News</span>
+        <span className="ls-link" onClick={() => navigate('/news')}>すべて →</span>
       </div>
       {newsItems.length === 0 ? (
-        <div style={{ fontSize: 12, color: 'var(--text3)', padding: '8px 0' }}>ニュースはまだありません</div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', padding: '4px 0' }}>ニュースはまだありません</div>
       ) : (
-        newsItems.map((n) => (
-          <div key={n.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        newsItems.slice(0, 4).map((n) => (
+          <div key={n.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%', flexShrink: 0, marginTop: 6,
+                background: n.source_type === 'arxiv' ? '#b91c1c' : n.source_type === 'hackernews' ? '#ea580c' : n.source_type === 'rss_feed' ? 'var(--green)' : 'var(--accent)',
+              }} />
               {n.url ? (
-                <a href={n.url} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 500, color: 'var(--text)', textDecoration: 'none' }}
+                <a href={n.url} target="_blank" rel="noopener noreferrer"
+                  style={{ fontWeight: 500, color: 'var(--text)', textDecoration: 'none', lineHeight: 1.45, flex: 1 }}
                   onClick={() => { if (n.id) import('@/lib/newsCollect').then(({ recordClick }) => recordClick(n.id!)) }}
                 >{n.title_ja || n.title}</a>
               ) : (
-                <span style={{ fontWeight: 500 }}>{n.title_ja || n.title}</span>
+                <span style={{ fontWeight: 500, flex: 1 }}>{n.title_ja || n.title}</span>
               )}
             </div>
-            {n.summary && <div style={{ color: 'var(--text3)', marginTop: 2, fontSize: 11 }}>{n.summary}</div>}
-            <div style={{ display: 'flex', gap: 6, marginTop: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-              {n.published_date && <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{n.published_date.substring(5)}</span>}
-              {n.source && <span style={{ fontSize: 10, color: 'var(--text3)' }}>{n.source}</span>}
-              {n.source_type && (
-                <span style={{
-                  fontSize: 9, padding: '1px 4px', borderRadius: 3, fontWeight: 600, fontFamily: 'var(--mono)',
-                  color: n.source_type === 'arxiv' ? '#b91c1c' : n.source_type === 'hackernews' ? '#ea580c' : n.source_type === 'rss_feed' ? 'var(--green)' : 'var(--accent)',
-                  background: n.source_type === 'arxiv' ? '#fef2f2' : n.source_type === 'hackernews' ? '#fff7ed' : n.source_type === 'rss_feed' ? 'var(--green-bg)' : 'var(--accent-bg)',
-                }}>
-                  {n.source_type === 'google_news' ? 'NEWS' : n.source_type === 'arxiv' ? 'PAPER' : n.source_type === 'hackernews' ? 'HN' : n.source_type === 'rss_feed' ? 'BLOG' : n.source_type}
-                </span>
-              )}
-              {n.topic && <span style={{ fontSize: 10, color: 'var(--accent2)' }}>{n.topic}</span>}
-              {n.id && (
-                <button
-                  className="btn btn-g btn-sm"
-                  style={{ fontSize: 9, padding: '1px 6px', marginLeft: 'auto' }}
-                  disabled={translatingNewsId === n.id}
-                  onClick={(e) => { e.stopPropagation(); handleTranslateNews(n.id!) }}
-                  title={n.title_ja ? '日本語要約を再生成' : '日本語に翻訳'}
-                >
-                  {translatingNewsId === n.id ? '翻訳中' : n.title_ja ? '再翻訳' : '日本語訳'}
-                </button>
-              )}
+            <div style={{ display: 'flex', gap: 6, marginTop: 4, marginLeft: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              {n.published_date && <span style={{ fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{n.published_date.substring(5)}</span>}
+              {n.source && <span style={{ fontSize: 9, color: 'var(--text3)' }}>{n.source}</span>}
             </div>
           </div>
         ))
       )}
-      <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-        <button className="btn btn-g btn-sm" style={{ fontSize: 10 }} onClick={() => navigate('/news')}>
-          もっと見る →
-        </button>
-        <button className="btn btn-g btn-sm" style={{ fontSize: 10 }} onClick={() => navigate('/news#sources')}>
-          ソース設定
-        </button>
-      </div>
-    </Card>
+      {newsItems.length > 0 && (
+        <div style={{ marginTop: 8, fontSize: 10 }}>
+          <span className="ls-link" onClick={handleCollectNews}>
+            {newsCollecting ? '収集中…' : '🔄 最新を取得'}
+          </span>
+        </div>
+      )}
+    </div>
   )
 
   /* ── [4] Diary ── */
