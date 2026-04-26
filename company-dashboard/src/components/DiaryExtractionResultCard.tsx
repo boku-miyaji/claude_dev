@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Card } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/components/ui/Toast'
@@ -348,7 +348,7 @@ export function DiaryExtractionResultCard({ result, onDismiss, onChanged }: Prop
 }
 
 /** Spec準拠の小さなセクション見出し */
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <div style={{ fontSize: 11, color: 'var(--text2)', fontWeight: 500, marginBottom: 8 }}>
       {children}
@@ -370,7 +370,7 @@ function ItemRow({
   quote?: string | null
   hint?: string
   confidence: 'high' | 'medium' | 'low'
-  action: React.ReactNode
+  action: ReactNode
 }) {
   const kindStyle: Record<typeof kind, { label: string; bg: string; color: string }> = {
     task: { label: 'タスク', bg: 'var(--accent-bg)', color: 'var(--accent)' },
