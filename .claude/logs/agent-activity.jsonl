@@ -204,3 +204,8 @@
 {"ts":"2026-04-24T14:31:21+09:00","event":"agent_dispatch","dept":"Explore","desc":"system-spec 全ページの構築可能性評価（開発者視点での完全性チェック）","model":"default","background":false}
 {"ts":"2026-04-24T16:29:04+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"focus-you 全ページ UX設計（design spec HTML作成）","model":"default","background":false}
 {"ts":"2026-04-24T18:28:06+09:00","event":"agent_dispatch","dept":"UXデザイン部","desc":"Manual + Frameworks モック追加設計","model":"default","background":true}
+{"ts":"2026-04-26T09:27:20+09:00","event":"agent_dispatch","dept":"Explore","desc":"Audit overview/experience pages","model":"default","background":false}
+{"ts":"2026-04-26T09:27:37+09:00","event":"agent_dispatch","dept":"Explore","desc":"Audit data/DB pages","model":"default","background":false}
+{"ts":"2026-04-26T09:27:43+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"Run intelligence collection","model":"default","background":false}
+{"ts":"2026-04-26T09:28:08+09:00","event":"agent_dispatch","dept":"Explore","desc":"Audit AI/algorithm pages","model":"default","background":false}
+{"ts":"2026-04-26T09:28:17+09:00","event":"agent_dispatch","dept":"Explore","desc":"Audit impl/infra pages","model":"default","background":false}
