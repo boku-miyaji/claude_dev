@@ -714,10 +714,10 @@ export function Today() {
   )
 
   const TimelineSection = (
-    <div className="section">
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>今日の予定</span>
-        <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/calendar')}>カレンダー</button>
+    <div className="ls">
+      <div className="ls-title-row">
+        <span className="ls-title">Schedule</span>
+        <span className="ls-link" onClick={() => navigate('/calendar')}>カレンダー →</span>
       </div>
       {timelineLoading ? (
         <Card>
@@ -1320,18 +1320,34 @@ export function Today() {
 
   /* ── [7] Backlog (other open tasks, shown only if relevant) ── */
 
+  // spec: Life 列の Tasks セクション — .ls + .t-item でコンパクトに
   const Backlog = otherOpenTasks.length > 0 ? (
-    <div className="section">
-      <div className="section-title">バックログ</div>
-      <Card>
-        {otherOpenTasks.slice(0, 3).map((t) => (
-          <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text2)' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text3)', flexShrink: 0 }} />
-            {t.title}
+    <div className="ls">
+      <div className="ls-title-row">
+        <span className="ls-title">Tasks</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="ls-progress">{otherOpenTasks.length}件</span>
+          <span className="ls-link" onClick={() => navigate('/calendar')}>すべて →</span>
+        </div>
+      </div>
+      {otherOpenTasks.slice(0, 4).map((t) => {
+        const due = formatDueDate(t.due_date, todayStr)
+        return (
+          <div
+            key={t.id}
+            className="t-item"
+            style={{ cursor: 'pointer' }}
+            onClick={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }}
+          >
+            <div className="t-sq" />
+            <div className="t-name">{t.title}</div>
+            {due && <span className={`t-due ${due.color === 'var(--red)' ? 'r' : due.color === 'var(--amber)' ? 'a' : 'n'}`}>{due.label}</span>}
           </div>
-        ))}
-        {otherOpenTasks.length > 3 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {otherOpenTasks.length - 3}件</div>}
-      </Card>
+        )
+      })}
+      {otherOpenTasks.length > 4 && (
+        <div style={{ fontSize: 10, color: 'var(--text3)', padding: '5px 0 0', fontFamily: 'var(--mono)' }}>他 {otherOpenTasks.length - 4}件</div>
+      )}
     </div>
   ) : null
 
