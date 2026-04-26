@@ -30,9 +30,9 @@ const PRODUCT_NAV: NavEntry[] = [
   { type: 'item', page: 'me', icon: '🧬', label: 'Frameworks' },
 ]
 
-// CLI-only tabs: Claude Code 依存
+// CLI-only tabs: Claude Code 依存。デフォルト折りたたみ。
 const CLI_NAV: NavEntry[] = [
-  { type: 'label', label: 'Claude Code' },
+  { type: 'collapsible-start', label: 'Claude Code', groupKey: 'cli' },
   { type: 'item', page: 'intelligence', icon: '📰', label: 'News', cli: true },
   { type: 'item', page: 'growth', icon: '↗', label: 'Growth', cli: true },
   { type: 'item', page: 'companies', icon: '◫', label: 'Organization', cli: true },
@@ -84,7 +84,8 @@ export function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  // デフォルト: CLI セクションは折りたたみ
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ cli: true })
   const [isCliMode, setIsCliMode] = useState(false)
   const currentPage = location.pathname.replace('/', '') || ''
 
@@ -170,14 +171,14 @@ export function Sidebar() {
                   fontSize: 9,
                   fontWeight: 600,
                   textTransform: 'uppercase',
-                  letterSpacing: '.12em',
+                  letterSpacing: '.10em',
                   color: 'var(--text3)',
-                  padding: '16px 20px 6px',
+                  padding: '10px 14px 4px',
                   opacity: 0.7,
                 }}
               >
                 {section.label}
-                <span style={{ fontSize: 10, opacity: 0.6, transition: 'transform .2s', transform: isCollapsed ? 'rotate(-90deg)' : 'none' }}>
+                <span style={{ fontSize: 9, opacity: 0.6, transition: 'transform .2s', transform: isCollapsed ? 'rotate(-90deg)' : 'none' }}>
                   ▾
                 </span>
               </button>

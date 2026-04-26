@@ -36,7 +36,8 @@ a{color:var(--accent2);text-decoration:none}
 
 /* Layout */
 .app{display:flex;min-height:100vh}
-.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;flex-shrink:0;display:flex;flex-direction:column;transition:width .2s ease,margin .2s ease}
+/* spec準拠: 180px に縮小 (元 240) — Today の Writing/Life 列に余裕を作る */
+.sidebar{width:180px;background:var(--surface);border-right:1px solid var(--border);padding:16px 0;flex-shrink:0;display:flex;flex-direction:column;transition:width .2s ease,margin .2s ease}
 .sidebar.collapsed{width:0;padding:0;overflow:hidden;border-right:none}
 .sidebar-toggle{position:fixed;top:12px;left:12px;z-index:50;background:var(--surface);border:1px solid var(--border);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3);transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .sidebar-toggle:hover{background:var(--surface2);color:var(--text)}
@@ -136,18 +137,19 @@ a{color:var(--accent2);text-decoration:none}
 
 .emotion-badge{font-size:9px;font-weight:600;padding:1px 6px;border-radius:10px;color:#fff;opacity:.85;display:inline-block}
 
-/* Sidebar */
-.sidebar .logo{padding:0 20px 20px;font-size:15px;font-weight:700;border-bottom:1px solid var(--border);margin-bottom:12px;display:flex;align-items:center;gap:10px;letter-spacing:-.02em}
-.sidebar .logo .logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:700}
-.sidebar .logo-sub{color:var(--text3);font-weight:400;font-size:12px;margin-left:auto}
-.nav-item{display:flex;align-items:center;gap:12px;padding:9px 20px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:var(--font);font-weight:500;border-radius:0;position:relative}
+/* Sidebar (180px slim) */
+.sidebar .logo{padding:0 14px 14px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;gap:8px;letter-spacing:-.02em}
+.sidebar .logo .logo-icon{width:24px;height:24px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:700}
+.sidebar .logo-sub{color:var(--text3);font-weight:400;font-size:11px;margin-left:auto}
+.nav-item{display:flex;align-items:center;gap:9px;padding:6px 14px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:var(--font);font-weight:500;border-radius:0;position:relative;line-height:1.4}
 .nav-item:hover{color:var(--text);background:var(--surface2)}
 .nav-item.active{color:var(--accent);background:var(--accent-bg)}
-.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0}
-.nav-icon{width:18px;text-align:center;font-size:15px;opacity:.7}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-icon{width:16px;text-align:center;font-size:13px;opacity:.7;flex-shrink:0}
 .nav-item.active .nav-icon{opacity:1}
-.nav-spacer{flex:1}
-.nav-user{padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:var(--mono);letter-spacing:-.02em}
+.nav-spacer{flex:1;min-height:8px}
+.nav-user{padding:10px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:-.02em}
+.nav-group-label{font-size:9px !important;padding:10px 14px 4px !important;letter-spacing:.10em !important}
 
 /* Mobile nav */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:100;padding:6px 0 env(safe-area-inset-bottom)}
