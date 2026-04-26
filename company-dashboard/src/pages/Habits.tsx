@@ -614,14 +614,26 @@ export function Habits() {
                         {doneToday ? '\u2713' : ''}
                       </div>
 
-                      {/* Title + count */}
+                      {/* Title + count + freq-badge */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{
                           fontSize: 13, fontWeight: 500,
                           color: 'var(--text)',
+                          display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
                         }}>
-                          {habit.icon} {habit.title}
-                          {completed && <span style={{ fontSize: 10, color: 'var(--green)', marginLeft: 6, fontWeight: 600 }}>達成</span>}
+                          <span>{habit.icon} {habit.title}</span>
+                          {/* spec準拠の freq-badge — 「毎日 / 週N回 / 月N回」 */}
+                          <span style={{
+                            fontSize: 10, padding: '1px 7px', borderRadius: 3,
+                            background: habit.frequency === 'daily' ? 'var(--surface2)' : 'rgba(75,120,98,.15)',
+                            color: habit.frequency === 'daily' ? 'var(--text3)' : 'var(--accent)',
+                            fontFamily: 'var(--mono)', fontWeight: 500, lineHeight: 1.4,
+                          }}>
+                            {habit.frequency === 'daily' && '毎日'}
+                            {habit.frequency === 'weekly' && (habit.target_count === 1 ? '週1回' : `週${habit.target_count}回`)}
+                            {habit.frequency === 'monthly' && (habit.target_count === 1 ? '月1回' : `月${habit.target_count}回`)}
+                          </span>
+                          {completed && <span style={{ fontSize: 10, color: 'var(--green)', fontWeight: 600 }}>達成</span>}
                         </div>
                         <div style={{ fontSize: 10, color: completed ? 'var(--green)' : 'var(--text3)', marginTop: 1 }}>
                           {periodCount}/{habit.target_count}

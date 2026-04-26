@@ -369,6 +369,49 @@ export function Dreams() {
         </div>
       )}
 
+      {/* Wishlist グリッド (spec準拠: 金額・優先度バッジ・カテゴリ) */}
+      {wishlist.length > 0 && (
+        <div className="section" style={{ marginBottom: 20 }}>
+          <div className="section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>ほしい物 (Wishlist)</span>
+            <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
+              合計 <strong style={{ color: 'var(--text2)', fontWeight: 600 }}>{fmtYen(stats.wishTotal)}</strong> · {wishlist.length}件
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+            {wishlist.map((w) => {
+              const priorityLabel = w.priority === 'high' ? '高' : w.priority === 'low' ? '低' : '中'
+              const priorityStyle = w.priority === 'high'
+                ? { background: 'var(--amber-bg)', color: 'var(--amber)' }
+                : { background: 'var(--surface2)', color: 'var(--text3)' }
+              return (
+                <Card key={w.id} style={{ padding: '12px 14px', minHeight: 100, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                    {w.category || 'その他'}
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', lineHeight: 1.45, flex: 1 }}>
+                    {w.title}
+                  </span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, gap: 6 }}>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>
+                      {fmtYen(w.amount)}
+                    </span>
+                    <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 3, fontFamily: 'var(--mono)', fontWeight: 600, ...priorityStyle }}>
+                      {priorityLabel}
+                    </span>
+                  </div>
+                  {w.url && (
+                    <a href={w.url} target="_blank" rel="noreferrer" style={{ fontSize: 10, color: 'var(--accent2)', textDecoration: 'underline', textUnderlineOffset: 2 }}>
+                      リンク →
+                    </a>
+                  )}
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="filter-bar" style={{ marginBottom: 16 }}>
         <button className={`btn btn-sm ${kindFilter === 'all' ? 'btn-p' : 'btn-g'}`} onClick={() => setKindFilter('all')}>全て</button>
