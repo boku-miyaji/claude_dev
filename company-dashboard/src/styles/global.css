@@ -46,7 +46,7 @@ a{color:var(--accent2);text-decoration:none}
 
 /* Today: 2 カラム (Writing + Life) — design-spec.html の .inner-today を本体に移植 */
 .today-2col{display:grid;grid-template-columns:minmax(0, 1fr) 320px;gap:32px;align-items:flex-start}
-.today-writing{min-width:0;max-width:720px}
+.today-writing{min-width:0;max-width:760px}
 .today-life{display:flex;flex-direction:column;gap:18px;min-width:0;position:sticky;top:24px}
 .today-life .section{margin-bottom:0}
 .today-life .card{padding:14px 16px}

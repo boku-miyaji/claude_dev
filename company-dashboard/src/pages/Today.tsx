@@ -17,6 +17,7 @@ import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { StoryUpdateBanner } from '@/components/StoryUpdateBanner'
 import { MorningQuoteCard } from '@/components/MorningQuoteCard'
 import { useDataStore } from '@/stores/data'
+import { useAuthStore } from '@/stores/auth'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
 import type { TimeMode } from '@/lib/timeMode'
 import type { DiaryEntry } from '@/types/diary'
@@ -610,10 +611,18 @@ export function Today() {
 
   /* ── [0] Greeting ── */
 
+  // ユーザー名 (Greeting に「〜さん」と添える)
+  const userMeta = useAuthStore.getState().user?.user_metadata
+  const userName = (userMeta?.full_name || userMeta?.user_name || userMeta?.name) as string | undefined
+  const displayName = userName ? userName.split(' ')[0].split('@')[0] : null
+
   const Greeting = (
     <div style={{ marginBottom: 18 }}>
       {/* spec: .heading は 32px / weight 300 / accent 強調 */}
-      <h1 className="heading">{getGreeting(timeMode)}</h1>
+      <h1 className="heading">
+        {getGreeting(timeMode)}
+        {displayName && <>、<strong>{displayName}さん。</strong></>}
+      </h1>
       <div className="date-line">
         {formatToday()}
         {weather && <span className="weather-chip">{weather.today.icon} {weather.today.tempMax}℃ / {weather.today.tempMin}℃</span>}
@@ -1024,14 +1033,17 @@ export function Today() {
   /* ── [4] Diary ── */
 
   const Diary = (
-    <Card style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: 16 }}>
+      {/* spec: .prompt-text — 斜体 + accent 縦線で「今日の問い」を独立表示 */}
+      <p className="prompt-text">「{diaryPrompt}」</p>
+      <Card>
       <textarea
         className="input"
-        placeholder={diaryPrompt}
+        placeholder="思ったままに書いてみましょう。"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && (text.trim() || pendingImages.length > 0) && !saving && !analyzing) { e.preventDefault(); saveEntry(text) } }}
-        style={{ minHeight: timeMode === 'evening' ? 100 : 44, width: '100%', boxSizing: 'border-box', marginBottom: 8 }}
+        style={{ minHeight: timeMode === 'evening' ? 120 : 140, width: '100%', boxSizing: 'border-box', marginBottom: 8 }}
       />
       {/* Similar past entry — live suggestion while typing */}
       {text.trim().length >= 8 && similarPast.length > 0 && (
@@ -1178,7 +1190,8 @@ export function Today() {
           </div>
         </div>
       )}
-    </Card>
+      </Card>
+    </div>
   )
 
   /* ── [5] Fragments ── */
