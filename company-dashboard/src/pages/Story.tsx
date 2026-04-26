@@ -71,7 +71,7 @@ export function Story() {
 
   return (
     <div className="page">
-      <PageHeader title="Story" description="日記から見える自分の流れ — Arc(毎日更新)/Theme(月1更新)/Chapter(四半期更新)" />
+      <PageHeader title={<>あなたの<strong>物語</strong></>} description="毎日の記録が紡ぐ、あなたの歩み。" />
 
       {/* Current Arc */}
       {arc && (

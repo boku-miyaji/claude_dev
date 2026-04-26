@@ -320,7 +320,7 @@ export function Dreams() {
 
   const isLoading = loading.dreams || loading.goals
   if (isLoading && dreams.length === 0 && goals.length === 0) {
-    return <div className="page"><PageHeader title="Dreams & Goals" /><div style={{ color: 'var(--text3)' }}>Loading...</div></div>
+    return <div className="page"><PageHeader title={<>夢を<strong>育てる</strong></>} /><div style={{ color: 'var(--text3)' }}>Loading...</div></div>
   }
 
   const todayStr = new Date().toISOString().substring(0, 10)
@@ -328,8 +328,8 @@ export function Dreams() {
   return (
     <div className="page">
       <PageHeader
-        title="Dreams & Goals"
-        description="期限なし = 夢。期限あり = 目標。気づきは毎朝9時に過去7日の日記から自動検出"
+        title={<>夢を<strong>育てる</strong></>}
+        description="想いは種から始まる。少しずつ水をやれば育つ。"
         actions={
           <div style={{ display: 'flex', gap: 8 }}>
             {dreams.length >= 3 && (

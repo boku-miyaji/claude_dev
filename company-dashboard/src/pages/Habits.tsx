@@ -476,7 +476,7 @@ export function Habits() {
   if (isLoading && habits.length === 0) {
     return (
       <div className="page">
-        <PageHeader title="Habits" />
+        <PageHeader title={<>習慣を<strong>育てる</strong></>} />
         <div style={{ color: 'var(--text3)' }}>Loading...</div>
       </div>
     )
@@ -486,7 +486,7 @@ export function Habits() {
 
   return (
     <div className="page">
-      <PageHeader title="Habits" description="Small steps, big changes" />
+      <PageHeader title={<>習慣を<strong>育てる</strong></>} description="小さな1日の積み重ねが、自分を形作る。" />
 
       {/* ─── [A] Hero: Streak + Today Progress ─── */}
       {habits.length > 0 && (

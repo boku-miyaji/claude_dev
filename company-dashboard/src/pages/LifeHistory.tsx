@@ -461,7 +461,7 @@ export function LifeHistory() {
     const total = MODE_LIMITS[mode]
     return (
       <div className="page">
-        <PageHeader title="Roots — 人生の棚卸し" description={`${questionCount + 1} / ${total}問目`} />
+        <PageHeader title={<>自分の<strong>ルーツ</strong></>} description={`${questionCount + 1} / ${total}問目`} />
 
         <Card>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -537,7 +537,7 @@ export function LifeHistory() {
   if (summary) {
     return (
       <div className="page">
-        <PageHeader title="Roots — セッション完了" description={`${summary.total_entries}件の回答を整理しました`} />
+        <PageHeader title={<>自分の<strong>ルーツ</strong></>} description={`セッション完了 — ${summary.total_entries}件の回答を整理しました`} />
 
         {summary.themes.length > 0 && (
           <div className="section">
