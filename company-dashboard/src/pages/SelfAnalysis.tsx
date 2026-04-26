@@ -1502,7 +1502,7 @@ export function SelfAnalysis() {
   if (loading) {
     return (
       <div className="page">
-        <PageHeader title="Self-Analysis" />
+        <PageHeader title={<>自己理解の<strong>型</strong></>} />
         <div style={{ color: 'var(--text3)' }}>Loading...</div>
       </div>
     )

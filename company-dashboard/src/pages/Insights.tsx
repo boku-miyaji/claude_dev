@@ -366,7 +366,7 @@ function OverviewTab() {
 export function Insights() {
   return (
     <div className="page">
-      <PageHeader title="Patterns" description="日記から見えてくるあなたの行動パターン" />
+      <PageHeader title={<>パターンを<strong>知る</strong></>} description="日記から見えてくる、あなたの行動と感情のリズム。" />
       <OverviewTab />
     </div>
   )

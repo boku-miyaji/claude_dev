@@ -596,8 +596,8 @@ export function LifeHistory() {
   return (
     <div className="page">
       <PageHeader
-        title="Roots — 人生の棚卸し"
-        description="日記では補えない過去・価値観・家庭環境を、質問に答える or 自然文で書き起こすかたちで言語化します"
+        title={<>自分の<strong>ルーツ</strong></>}
+        description="いま、ここに至った道のりを、ゆっくり眺める。"
       />
 
       <Card>
