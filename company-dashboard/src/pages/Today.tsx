@@ -942,9 +942,15 @@ export function Today() {
     </div>
   ) : null
 
-  /* ── [3] 未来のあなたから（クリックで対話展開） ── */
+  /* ── [3] MorningBriefing — spec の .morning-briefing (1行・accent縦線) ── */
 
-  const Briefing = (
+  const Briefing = briefingMessage ? (
+    <div className="morning-briefing">{briefingMessage}</div>
+  ) : null
+
+  /* ── [3-2] FutureYouChat — Diary 後の「未来の自分」導線 ── */
+
+  const FutureYouSection = (
     <FutureYouChat entryPoint="today_partner" briefingMessage={briefingMessage} />
   )
 
@@ -1265,17 +1271,38 @@ export function Today() {
   /* ── Deadlines section — overdue / today / tomorrow / this week ── */
 
   const DeadlinesSection = hasDeadlineAlert ? (
-    <div className="section">
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>締切</span>
-        <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
-          {deadlineBuckets.overdue.length > 0 && (
-            <span style={{ color: 'var(--red)', marginRight: 8 }}>遅延 {deadlineBuckets.overdue.length}</span>
-          )}
-          今日 {deadlineBuckets.dueToday.length} / 明日 {deadlineBuckets.dueTomorrow.length} / 今週 {deadlineBuckets.dueThisWeek.length}
-        </span>
-      </div>
-      <Card>
+    <div style={{ marginBottom: 18 }}>
+      {/* spec: .deadline-alert は赤バナー1行（バッジ+テキスト）。今日締切と遅延を強調 */}
+      {deadlineBuckets.overdue.slice(0, 2).map((t) => (
+        <div key={t.id} className="deadline-alert" style={{ cursor: 'pointer' }}
+          onClick={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }}>
+          <span className="deadline-badge">遅延</span>
+          <span className="deadline-text">{t.title}</span>
+        </div>
+      ))}
+      {deadlineBuckets.dueToday.slice(0, 2).map((t) => (
+        <div key={t.id} className="deadline-alert" style={{ cursor: 'pointer' }}
+          onClick={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }}>
+          <span className="deadline-badge">今日締切</span>
+          <span className="deadline-text">{t.title}</span>
+        </div>
+      ))}
+      {/* 残り（明日・今週中）は控えめにサマリー1行で */}
+      {(deadlineBuckets.dueTomorrow.length > 0 || deadlineBuckets.dueThisWeek.length > 0
+        || deadlineBuckets.overdue.length > 2 || deadlineBuckets.dueToday.length > 2) && (
+        <div style={{ fontSize: 11, color: 'var(--text3)', padding: '4px 14px', cursor: 'pointer' }}
+          onClick={() => navigate('/calendar')}>
+          {deadlineBuckets.overdue.length > 2 && <span style={{ color: 'var(--red)', marginRight: 8 }}>遅延 +{deadlineBuckets.overdue.length - 2}</span>}
+          {deadlineBuckets.dueToday.length > 2 && <span style={{ color: 'var(--red)', marginRight: 8 }}>今日 +{deadlineBuckets.dueToday.length - 2}</span>}
+          {deadlineBuckets.dueTomorrow.length > 0 && <span style={{ color: 'var(--amber)', marginRight: 8 }}>明日 {deadlineBuckets.dueTomorrow.length}</span>}
+          {deadlineBuckets.dueThisWeek.length > 0 && <span>今週 {deadlineBuckets.dueThisWeek.length}</span>}
+          <span style={{ marginLeft: 6, fontSize: 10 }}>→</span>
+        </div>
+      )}
+
+      {/* legacy 詳細（折りたたみ）— 元の Card 表示は将来削除予定 */}
+      {false && (
+      <Card style={{ display: 'none' }}>
         {deadlineBuckets.overdue.length > 0 && (
           <>
             <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--red)', marginTop: 2, marginBottom: 4 }}>
@@ -1328,6 +1355,7 @@ export function Today() {
           </>
         )}
       </Card>
+      )}
     </div>
   ) : null
 
@@ -1395,6 +1423,9 @@ export function Today() {
 
         {/* 日記入力（プロンプト + textarea + similar-while-writing + save + extraction-detail） */}
         {Diary}
+
+        {/* 未来の自分との対話 (FutureYouChat) — spec の future-you-card と同等の能動導線 */}
+        {FutureYouSection}
 
         {/* 今日の断片 (past) — 書きためた今日のエントリ */}
         {Fragments}
