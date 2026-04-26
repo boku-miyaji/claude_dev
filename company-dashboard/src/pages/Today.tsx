@@ -246,7 +246,7 @@ export function Today() {
 
   // Keyboard shortcut listeners
   useEffect(() => {
-    const onAddTask = () => setShowAddTask(true)
+    const onAddTask = () => navigate('/calendar')
     const onFocusDiary = () => {
       const textarea = document.querySelector<HTMLTextAreaElement>('textarea[placeholder]')
       textarea?.focus()
@@ -308,7 +308,7 @@ export function Today() {
 
   // Timeline: merges calendar events + time-bound tasks into 30-min slots
   const timeline = useTodayTimeline(allOpenTasks, completedToday)
-  const { slots: timelineSlots, todayTasks: timelineTodayTasks, completedUntimedToday, upcomingTasks, todayCalEvents, tomorrowEvents, recentEventName, loading: timelineLoading, calendarAuthenticated } = timeline
+  const { slots: timelineSlots, todayTasks: timelineTodayTasks, upcomingTasks, todayCalEvents, tomorrowEvents, recentEventName, loading: timelineLoading, calendarAuthenticated } = timeline
 
   // Build event text for AI Partner briefing (title + JST time)
   const todayEventsText = todayCalEvents.length > 0
@@ -592,16 +592,6 @@ export function Today() {
     })
   }, [])
 
-  // Timeline hooks — must be before any conditional return (Rules of Hooks)
-  const nowMarkerTime = useMemo(() => {
-    const d = new Date()
-    return `${String(d.getHours()).padStart(2, '0')}:${d.getMinutes() < 30 ? '00' : '30'}`
-  }, [])
-
-  // Show all today's slots (past events stay visible but dimmed via item.isPast styling)
-  const filteredSlots = timelineSlots
-
-
   /* ════════════════════════════════════════════
      SECTION BUILDERS
      ════════════════════════════════════════════ */
@@ -704,20 +694,7 @@ export function Today() {
     </div>
   )
 
-  /* ── [2] Timeline — 3 blocks: time-bound / time-undefined / upcoming ── */
-
-  const hasAnyTimelineContent =
-    filteredSlots.length > 0 ||
-    todayTasks.length > 0 ||
-    completedToday.length > 0 ||
-    upcomingTasks.length > 0 ||
-    tomorrowEvents.length > 0
-
-  const ScheduledBlockLabel = ({ label }: { label: string }) => (
-    <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text3)', marginTop: 12, marginBottom: 6 }}>
-      {label}
-    </div>
-  )
+  /* ── [2] Timeline — Life 列の Schedule (e-item) ── */
 
   // spec: Life 列の Schedule — .ls + .e-item でコンパクト表示。詳細は /calendar へ
   const TimelineSection = (
