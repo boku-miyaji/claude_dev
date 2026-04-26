@@ -624,89 +624,77 @@ export function Today() {
 
   /* ── [1] Today's Habits ── */
 
+  // spec: Life 列の Habits セクション — .ls + .h-item でコンパクトに
   const HabitsSection = (
-    <div className="section">
-      <div className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{habitsAllDone ? '今日の習慣 — All done!' : '今日の習慣'}</span>
-        {dailyHabits.length > 0 && (
-          <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
-            {dailyHabitsCompleted}/{dailyHabits.length}
-          </span>
-        )}
+    <div className="ls">
+      <div className="ls-title-row">
+        <span className="ls-title">{habitsAllDone ? 'Habits — All done!' : 'Habits'}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {dailyHabits.length > 0 && (
+            <span className="ls-progress">{dailyHabitsCompleted} / {dailyHabits.length}</span>
+          )}
+          <span className="ls-link" onClick={() => setShowAddHabit((v) => !v)}>＋</span>
+          <span className="ls-link" onClick={() => navigate('/habits')}>詳細 →</span>
+        </div>
       </div>
 
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 8, gap: 4 }}>
-          <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => setShowAddHabit((v) => !v)}>+</button>
-          <button className="btn btn-g btn-sm" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11, padding: '3px 8px' }} onClick={() => navigate('/habits')}>詳細</button>
-        </div>
-        {/* Inline add habit */}
-        {showAddHabit && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-            <input
-              className="input"
-              placeholder="新しい習慣..."
-              value={newHabitTitle}
-              onChange={(e) => setNewHabitTitle(e.target.value)}
-              autoFocus
-              style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
-            />
-            <button
-              className="btn btn-p btn-sm"
-              disabled={!newHabitTitle.trim()}
-              onClick={() => {
-                if (newHabitTitle.trim()) {
-                  addHabit({ title: newHabitTitle.trim() })
-                  setNewHabitTitle('')
-                  setShowAddHabit(false)
-                  toast('習慣を追加しました')
-                }
-              }}
-            >追加</button>
-          </div>
-        )}
-          {(timeMode === 'morning' ? todayHabits : [...todayHabits].sort((a, b) => Number(a.completed) - Number(b.completed))).map((h) => (
-            <div
-              key={h.id}
-              style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-              onClick={() => toggleHabitLog(h, todayStr)}
-            >
-              <span style={{
-                width: 18, height: 18, borderRadius: 4,
-                border: `2px solid ${h.doneToday ? 'var(--green)' : 'var(--border)'}`,
-                background: h.doneToday ? 'var(--green)' : 'transparent',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 10, color: '#fff', flexShrink: 0, transition: 'all .2s',
-              }}>
-                {h.doneToday ? '✓' : ''}
-              </span>
-              <span style={{ color: 'var(--text)', fontWeight: 500, flex: 1 }}>
-                {h.icon} {h.title}
-                {h.completed && <span style={{ fontSize: 9, color: 'var(--green)', marginLeft: 4, fontWeight: 600 }}>達成</span>}
-              </span>
-              {/* Period badge: shown for weekly/monthly habits */}
-              {h.frequency !== 'daily' && (
-                <span style={{
-                  fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3,
-                  color: h.completed ? 'var(--green)' : 'var(--text3)',
-                  background: h.completed ? 'var(--green-bg)' : 'var(--surface2)',
-                  border: `1px solid ${h.completed ? 'var(--green)' : 'var(--border)'}`,
-                  fontFamily: 'var(--mono)',
-                }}>
-                  {h.periodCount}/{h.target_count} {h.frequency === 'weekly' ? '/週' : '/月'}
-                </span>
-              )}
-              {h.frequency === 'daily' && h.target_count > 1 && (
-                <span style={{ fontSize: 10, fontFamily: 'var(--mono)', color: h.completed ? 'var(--green)' : 'var(--text3)' }}>
-                  {h.todayCount}/{h.target_count}
-                </span>
-              )}
-            </div>
+      {/* spec: 進捗 pip バー */}
+      {dailyHabits.length > 0 && (
+        <div className="habits-bar">
+          {dailyHabits.map((h) => (
+            <div key={h.id} className={`habit-pip${h.doneToday ? ' done' : ''}`} />
           ))}
-        {todayHabits.length === 0 && !showAddHabit && (
-          <div style={{ padding: '6px 0', fontSize: 12, color: 'var(--text3)' }}>習慣なし — + で追加</div>
-        )}
-      </Card>
+        </div>
+      )}
+
+      {/* Inline add habit (+ で開く) */}
+      {showAddHabit && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+          <input
+            className="input"
+            placeholder="新しい習慣..."
+            value={newHabitTitle}
+            onChange={(e) => setNewHabitTitle(e.target.value)}
+            autoFocus
+            style={{ flex: 1, fontSize: 12, padding: '5px 8px' }}
+          />
+          <button
+            className="btn btn-p"
+            style={{ fontSize: 11, padding: '5px 10px' }}
+            disabled={!newHabitTitle.trim()}
+            onClick={() => {
+              if (newHabitTitle.trim()) {
+                addHabit({ title: newHabitTitle.trim() })
+                setNewHabitTitle('')
+                setShowAddHabit(false)
+                toast('習慣を追加しました')
+              }
+            }}
+          >追加</button>
+        </div>
+      )}
+
+      {/* 各習慣行: spec の .h-item */}
+      {(timeMode === 'morning' ? todayHabits : [...todayHabits].sort((a, b) => Number(a.completed) - Number(b.completed))).map((h) => (
+        <div key={h.id} className="h-item" style={{ cursor: 'pointer' }} onClick={() => toggleHabitLog(h, todayStr)}>
+          <div className={`h-ck${h.doneToday ? ' done' : ''}`}>{h.doneToday ? '✓' : ''}</div>
+          <div className={`h-name${h.doneToday ? ' done' : ''}`}>
+            {h.icon} {h.title}
+          </div>
+          {/* 期間バッジ: weekly/monthly のみ。daily は省略してシンプルに */}
+          {h.frequency !== 'daily' && (
+            <div className="h-st" style={{ color: h.completed ? 'var(--accent)' : 'var(--text3)' }}>
+              {h.periodCount}/{h.target_count}
+            </div>
+          )}
+          {h.frequency === 'daily' && (
+            h.doneToday ? <div className="h-st">✓</div> : <div className="h-st" style={{ color: 'var(--text3)' }}>—</div>
+          )}
+        </div>
+      ))}
+      {todayHabits.length === 0 && !showAddHabit && (
+        <div style={{ padding: '6px 0', fontSize: 11, color: 'var(--text3)' }}>習慣なし — ＋ で追加</div>
+      )}
     </div>
   )
 
