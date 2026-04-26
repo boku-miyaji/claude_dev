@@ -39,6 +39,19 @@ export interface NewHabitSuggestion {
 }
 
 /**
+ * 日記から検出された「新しい夢の種」候補。
+ * 「〜したい」「〜できたらいいな」「いつか〜」のような中長期の願望が
+ * 繰り返し / 強く語られている時に抽出する。タスクや習慣にできない、
+ * もっと抽象的・長期的なもの。
+ */
+export interface NewDreamSuggestion {
+  title: string
+  quote: string
+  /** life / work / learning / relationship / creative / other */
+  category: string
+}
+
+/**
  * A concrete travel/transit mention that warrants a real-time lookup
  * (departure times, route, fare) via the trip-lookup Edge Function.
  *
@@ -84,6 +97,7 @@ export interface DiaryExtractionResult {
   new_tasks: NewTaskSuggestion[]
   done_habits: HabitDoneDetection[]
   new_habit_suggestions: NewHabitSuggestion[]
+  new_dream_suggestions: NewDreamSuggestion[]
   trip_lookups: TripLookup[]
   mood_suggestions: MoodSuggestion[]
 }
@@ -93,6 +107,7 @@ const EMPTY: DiaryExtractionResult = {
   new_tasks: [],
   done_habits: [],
   new_habit_suggestions: [],
+  new_dream_suggestions: [],
   trip_lookups: [],
   mood_suggestions: [],
 }
@@ -279,6 +294,7 @@ export function useDiaryExtraction(): UseDiaryExtractionReturn {
 - 過剰検出は害。タスクへの単なる言及（「A社の件」）は完了ではない。「A社の件、連絡した」「やった」「終わった」等、完了を示す語が必要
 - 新規タスクは「〜しないと」「明日〜する」など将来のアクションのみ。単なる愚痴や状況描写は除外
 - 習慣は「走った」「ストレッチした」のような実行の明示的記述のみ
+- 新しい夢候補は「いつか〜したい」「〜できたらいいな」のような中長期の願望（タスクより抽象的・遠い時間軸）。日常的願望は除外
 - quote には日記本文の該当箇所を短く引用（10-30字）
 
 ## 新規タスクの時間推論
@@ -358,6 +374,11 @@ export function useDiaryExtraction(): UseDiaryExtractionReturn {
   }],
   "done_habits": [{ "habit_id": 既存ID, "confidence": "high|medium|low", "quote": "日記の該当箇所" }],
   "new_habit_suggestions": [{ "title": "短い習慣名", "quote": "日記の該当箇所" }],
+  "new_dream_suggestions": [{
+    "title": "短い夢のタイトル（〜したい / 〜になりたい）",
+    "quote": "日記の該当箇所",
+    "category": "life|work|learning|relationship|creative|other"
+  }],
   "trip_lookups": [{
     "quote": "日記の該当箇所",
     "origin": "駅名 または null",
@@ -523,11 +544,26 @@ ${calendarList}`
         })
         .filter((m): m is MoodSuggestion => m !== null)
 
+      const validDreamCategories = ['life', 'work', 'learning', 'relationship', 'creative', 'other']
+      const new_dream_suggestions: NewDreamSuggestion[] = ((parsed as Partial<DiaryExtractionResult>).new_dream_suggestions ?? [])
+        .map((n) => {
+          const title = (n?.title ?? '').toString().trim()
+          if (!title) return null
+          const cat = (n?.category ?? 'other').toString().toLowerCase()
+          return {
+            title,
+            quote: (n?.quote ?? '').toString(),
+            category: validDreamCategories.includes(cat) ? cat : 'other',
+          } satisfies NewDreamSuggestion
+        })
+        .filter((n): n is NewDreamSuggestion => n !== null)
+
       const result: DiaryExtractionResult = {
         done_tasks,
         new_tasks,
         done_habits,
         new_habit_suggestions: (parsed.new_habit_suggestions ?? []).map((n) => ({ title: n.title ?? '', quote: n.quote ?? '' })).filter((n) => n.title),
+        new_dream_suggestions,
         trip_lookups,
         mood_suggestions,
       }
