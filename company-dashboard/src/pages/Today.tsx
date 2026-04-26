@@ -10,7 +10,6 @@ import { PendingUpdatesBanner } from '@/components/PendingUpdatesBanner'
 import { TodayIdeasCard } from '@/components/TodayIdeasCard'
 import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodayTimeline } from '@/hooks/useTodayTimeline'
-import type { TimelineItem } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
 import { FutureYouChat } from '@/components/FutureYouChat'
 import { useMorningBriefing } from '@/hooks/useMorningBriefing'
@@ -223,12 +222,10 @@ export function Today() {
     diaryEntries, tasks, dreams, habits, habitLogs,
     fetchDiary, fetchTasks, fetchDreams, fetchHabits, fetchHabitLogs, fetchEmotions,
     addDiaryEntry, toggleHabitLog,
-    addTask, updateTask, addHabit,
+    updateTask, addHabit,
   } = useDataStore()
 
-  // Inline add states
-  const [newTaskTitle, setNewTaskTitle] = useState('')
-  const [showAddTask, setShowAddTask] = useState(false)
+  // Inline add states (Habits のみ — Tasks 追加は /calendar に集約)
   const [newHabitTitle, setNewHabitTitle] = useState('')
   const [showAddHabit, setShowAddHabit] = useState(false)
 
@@ -722,6 +719,7 @@ export function Today() {
     </div>
   )
 
+  // spec: Life 列の Schedule — .ls + .e-item でコンパクト表示。詳細は /calendar へ
   const TimelineSection = (
     <div className="ls">
       <div className="ls-title-row">
@@ -729,199 +727,45 @@ export function Today() {
         <span className="ls-link" onClick={() => navigate('/calendar')}>カレンダー →</span>
       </div>
       {timelineLoading ? (
-        <Card>
-          {[0, 1, 2].map((i) => (
-            <div key={i} style={{ display: 'flex', gap: 10, padding: '8px 0', borderBottom: i < 2 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
-              <div className="skeleton" style={{ width: 42, height: 12, minHeight: 12 }} />
-              <div className="skeleton" style={{ flex: 1, height: 12, minHeight: 12 }} />
-            </div>
-          ))}
-          <div style={{ fontSize: 10, color: 'var(--text3)', textAlign: 'center', marginTop: 6 }}>予定を読み込み中…</div>
-        </Card>
-      ) : !hasAnyTimelineContent ? (
+        <div style={{ fontSize: 11, color: 'var(--text3)', padding: '4px 0' }}>読み込み中…</div>
+      ) : todayCalEvents.length === 0 && timelineTodayTasks.length === 0 ? (
         calendarAuthenticated === false ? (
-          <Card>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, padding: 6 }}>
-              <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>
-                Google Calendar と連携すると、今日の予定がここに表示されます。
-              </div>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={startCalendarAuth}
-                style={{ fontSize: 12, padding: '6px 14px' }}
-              >
-                Sign in with Google
-              </button>
-              <div style={{ fontSize: 10, color: 'var(--text3)' }}>
-                連携を後回しにする場合は <span style={{ textDecoration: 'underline', cursor: 'pointer' }} onClick={() => navigate('/calendar')}>カレンダーページ</span> からも設定できます
-              </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8, lineHeight: 1.55 }}>
+              Google Calendar と連携すると今日の予定が表示されます
             </div>
-          </Card>
+            <button className="btn btn-p" style={{ fontSize: 11, padding: '5px 10px' }} onClick={startCalendarAuth}>
+              Sign in with Google
+            </button>
+          </div>
         ) : (
-          <Card>
-            <div style={{ fontSize: 13, color: 'var(--text3)', padding: 4, marginBottom: 8 }}>今日はフリーです — タスクを追加して一日を組み立てましょう</div>
-            {!showAddTask ? (
-              <button className="btn btn-g btn-sm" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => setShowAddTask(true)}>+ タスクを追加</button>
-            ) : (
-              <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                <input
-                  className="input"
-                  placeholder="新しいタスク..."
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  autoFocus
-                  style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
-                />
-                <button
-                  className="btn btn-p btn-sm"
-                  disabled={!newTaskTitle.trim()}
-                  onClick={() => {
-                    if (newTaskTitle.trim()) {
-                      addTask({ title: newTaskTitle.trim(), due_date: todayStr })
-                      setNewTaskTitle('')
-                      setShowAddTask(false)
-                      toast('タスクを追加しました')
-                    }
-                  }}
-                >追加</button>
-              </div>
-            )}
-          </Card>
+          <div style={{ fontSize: 11, color: 'var(--text3)', padding: '4px 0' }}>今日は予定なし</div>
         )
       ) : (
-        <Card>
-        {/* (a) Time-bound: calendar events + timed tasks in 30-min slots */}
-        {filteredSlots.length > 0 && (
-          <>
-            <ScheduledBlockLabel label="時間指定" />
-        {filteredSlots.map((slot, si) => {
-          const isCurrentSlot = slot.time === nowMarkerTime
-          return (
-            <div key={slot.time}>
-              {/* Now marker */}
-              {isCurrentSlot && (
-                <div style={{ position: 'relative', height: 0, marginBottom: 2 }}>
-                  <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 2, background: 'var(--red)', borderRadius: 1, opacity: 0.7 }} />
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 10, padding: '6px 0', borderBottom: si < filteredSlots.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                <span style={{ fontWeight: 600, fontFamily: 'var(--mono)', color: isCurrentSlot ? 'var(--red)' : 'var(--text3)', minWidth: 42, fontSize: 12, paddingTop: 1 }}>{slot.time}</span>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {slot.items.map((item: TimelineItem) => {
-                    if (item.type === 'event') {
-                      const endTime = formatEventTime(item.endTime)
-                      return (
-                        <div key={item.id} style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, opacity: item.isPast ? 0.5 : 1 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
-                          <span style={{ textDecoration: item.isPast ? 'line-through' : 'none' }}>{item.title}</span>
-                          {endTime && <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>~{endTime}</span>}
-                        </div>
-                      )
-                    }
-                    // Task
-                    return (
-                      <div key={item.id} style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, opacity: item.isPast && item.completed ? 0.5 : 1 }}>
-                        <span
-                          onClick={() => {
-                            const newStatus = item.completed ? 'open' : 'done'
-                            updateTask(item.id, { status: newStatus, completed_at: newStatus === 'done' ? new Date().toISOString() : null })
-                            toast(newStatus === 'done' ? '完了!' : '戻しました')
-                          }}
-                          style={{
-                            width: 16, height: 16, borderRadius: 3, flexShrink: 0, cursor: 'pointer',
-                            border: `2px solid ${item.completed ? 'var(--green)' : 'var(--border)'}`,
-                            background: item.completed ? 'var(--green)' : 'transparent',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 9, color: '#fff', transition: 'all .15s',
-                          }}
-                        >{item.completed ? '✓' : ''}</span>
-                        <span style={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? 'var(--text3)' : 'var(--text)', fontWeight: 500 }}>
-                          {item.title}
-                        </span>
-                        {item.isDeadline && <span style={{ fontSize: 9, color: 'var(--red)', fontWeight: 600, padding: '1px 4px', background: 'var(--red-bg)', borderRadius: 3, border: '1px solid var(--red-border)' }}>〆</span>}
-                        {item.estimatedMinutes && <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{item.estimatedMinutes}min</span>}
-                      </div>
-                    )
-                  })}
-                </div>
+        <>
+          {/* spec の .e-item: 時刻 + dot + タイトル */}
+          {todayCalEvents.slice(0, 5).map((e) => {
+            const time = formatEventTime(e.startTime)
+            return (
+              <div key={e.id} className="e-item" style={{ opacity: e.isPast ? 0.45 : 1 }}>
+                <span className="e-time" style={{ color: e.isPast ? 'var(--text3)' : 'var(--text2)' }}>{time}</span>
+                <span className="e-dot" style={{ background: e.isPast ? 'var(--text3)' : 'var(--accent)' }} />
+                <span className="e-name" style={{ textDecoration: e.isPast ? 'line-through' : 'none' }}>{e.title}</span>
               </div>
+            )
+          })}
+          {todayCalEvents.length > 5 && (
+            <div style={{ fontSize: 10, color: 'var(--text3)', padding: '5px 0 0', fontFamily: 'var(--mono)' }}>他 {todayCalEvents.length - 5}件</div>
+          )}
+          {/* 時間未定タスク (Backlog 補完) */}
+          {timelineTodayTasks.length > 0 && (
+            <div style={{ fontSize: 10, color: 'var(--text3)', padding: '8px 0 4px', fontFamily: 'var(--mono)', borderTop: '1px dashed var(--border)', marginTop: 6 }}>
+              時間未定 {timelineTodayTasks.length}件 — Tasks 参照
             </div>
-          )
-        })}
-          </>
-        )}
-
-        {/* (b) Time-undefined: tasks due today with no specific time */}
-        {(todayTasks.length > 0 || completedUntimedToday.length > 0 || showAddTask) && (
-          <>
-            <ScheduledBlockLabel label="時間未定" />
-            {showAddTask && (
-              <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                <input
-                  className="input"
-                  placeholder="新しいタスク..."
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  autoFocus
-                  style={{ flex: 1, fontSize: 13, padding: '6px 10px' }}
-                />
-                <button
-                  className="btn btn-p btn-sm"
-                  disabled={!newTaskTitle.trim()}
-                  onClick={() => {
-                    if (newTaskTitle.trim()) {
-                      addTask({ title: newTaskTitle.trim(), due_date: todayStr })
-                      setNewTaskTitle('')
-                      setShowAddTask(false)
-                      toast('タスクを追加しました')
-                    }
-                  }}
-                >追加</button>
-              </div>
-            )}
-            {todayTasks.map((t) => (
-              <TaskRow key={t.id} task={t} todayStr={todayStr} done={false} onToggle={() => { updateTask(t.id, { status: 'done', completed_at: new Date().toISOString() }); toast('完了!') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
-            ))}
-            {completedUntimedToday.map((t) => (
-              <TaskRow key={t.id} task={t} todayStr={todayStr} done onToggle={() => { updateTask(t.id, { status: 'open', completed_at: null }); toast('戻しました') }} onUpdate={(id, data) => { updateTask(id, data); toast('更新しました') }} />
-            ))}
-          </>
-        )}
-
-        {/* Inline "+" when there are events but no time-undefined tasks yet */}
-        {!showAddTask && todayTasks.length === 0 && completedToday.length === 0 && filteredSlots.length > 0 && (
-          <div style={{ marginTop: 10 }}>
-            <button className="btn btn-g btn-sm" style={{ fontSize: 11, padding: '3px 10px' }} onClick={() => setShowAddTask(true)}>+ 時間未定のタスクを追加</button>
-          </div>
-        )}
-
-        {/* (c) Upcoming: tomorrow's calendar events + tasks with deadline in next 7 days */}
-        {(upcomingTasks.length > 0 || tomorrowEvents.length > 0) && (
-          <>
-            <ScheduledBlockLabel label="近日（明日〜今週）" />
-            {tomorrowEvents.slice(0, 5).map((e) => (
-              <div key={e.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />
-                <span style={{ flex: 1, color: 'var(--text2)' }}>{e.title}</span>
-                <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3, color: 'var(--accent2)', background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', fontFamily: 'var(--mono)' }}>明日 {formatEventTime(e.startTime)}</span>
-              </div>
-            ))}
-            {tomorrowEvents.length > 5 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {tomorrowEvents.length - 5}件（明日）</div>}
-            {upcomingTasks.slice(0, 5).map((t) => {
-              const due = formatDueDate(t.due_date, todayStr)
-              return (
-                <div key={t.id} style={{ padding: '7px 0', borderBottom: '1px solid var(--border)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text3)', flexShrink: 0 }} />
-                  <span style={{ flex: 1, color: 'var(--text2)' }}>{t.title}</span>
-                  {due && <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 3, color: due.color, background: due.bg, border: `1px solid ${due.border}`, fontFamily: 'var(--mono)' }}>{due.label}</span>}
-                </div>
-              )
-            })}
-            {upcomingTasks.length > 5 && <div style={{ padding: '5px 0', fontSize: 11, color: 'var(--text3)' }}>他 {upcomingTasks.length - 5}件</div>}
-          </>
-        )}
-      </Card>
+          )}
+        </>
       )}
+
     </div>
   )
 
@@ -1202,36 +1046,35 @@ export function Today() {
 
   /* ── [5] Fragments ── */
 
+  // spec: .past — 「今日の断片」を accent border-top でコンパクトに
   const Fragments = fragments.length > 0 ? (
-    <div className="section">
-      <div className="section-title">今日の断片</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {fragments.map((f: DiaryEntry) => {
-          const badges = emotionBadges.get(f.id) || []
-          return (
-            <Card key={f.id} style={{ padding: 14 }}>
-              <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6 }}>{f.body}</div>
-              {f.image_urls && f.image_urls.length > 0 && (
-                <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                  {f.image_urls.map((path, i) => (
-                    <DiaryImageThumb key={i} path={path} size={80} />
-                  ))}
-                </div>
-              )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
-                  {new Date(f.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+    <div className="past">
+      <div className="past-label">今日の断片</div>
+      {fragments.map((f: DiaryEntry) => {
+        const badges = emotionBadges.get(f.id) || []
+        return (
+          <div key={f.id} className="past-item">
+            <div className="past-item-head">
+              <span className="past-time">
+                {new Date(f.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              {badges.map((b) => (
+                <span key={b.key} className="emotion-badge" style={{ background: b.color, color: '#fff' }}>
+                  {b.label} {b.value}
                 </span>
-                {badges.map((b) => (
-                  <span key={b.key} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 10, background: b.color, color: '#fff', fontWeight: 600, opacity: 0.85 }}>
-                    {b.label} {b.value}
-                  </span>
+              ))}
+            </div>
+            <div className="past-text">{f.body}</div>
+            {f.image_urls && f.image_urls.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                {f.image_urls.map((path, i) => (
+                  <DiaryImageThumb key={i} path={path} size={56} />
                 ))}
               </div>
-            </Card>
-          )
-        })}
-      </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   ) : null
 
