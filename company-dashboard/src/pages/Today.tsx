@@ -15,6 +15,7 @@ import { FutureYouChat } from '@/components/FutureYouChat'
 import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { StoryUpdateBanner } from '@/components/StoryUpdateBanner'
 import { MorningQuoteCard } from '@/components/MorningQuoteCard'
+import { ProactivePreludeCard } from '@/components/ProactivePreludeCard'
 import { useDataStore } from '@/stores/data'
 import { useAuthStore } from '@/stores/auth'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
@@ -1195,6 +1196,11 @@ export function Today() {
 
         {/* AI が用意した「今日のひと言」(MorningBriefing) */}
         {Briefing}
+
+        {/* 前奏カード (proactive prelude) — 沈黙/詰まり/パターン再来を検知して
+           前夜に生成された短い差し出し。シグナルが立たない日は表示されない。
+           silence-first × proactive の最初の体験 (arXiv:2604.00842 Pare 4軸) */}
+        <ProactivePreludeCard />
 
         {/* 朝の名言 (受動表示) */}
         <MorningQuoteCard />

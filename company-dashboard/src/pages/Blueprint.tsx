@@ -1067,6 +1067,16 @@ function TabDesignPhilosophy() {
         </div>
       </Section>
 
+      <Section title="silence-first × proactive (2026-04-26)">
+        <Principle title="黙ったまま準備する proactive" body="proactive 体験は「賢く声をかける」ではなく「気づいたら準備されている」。沈黙を壊さずに先回りする。プレッシャー・命令・評価は禁止 — 失敗パターン(プレッシャーフリーズ/先延ばし)に直結するため。論文 Pare (arXiv:2604.00842) の4軸 (context observation / goal inference / intervention timing / multi-app orchestration) のうち intervention timing を silence-first 側に倒した派生型。" color="var(--accent)" />
+        <div className="g2" style={{ marginBottom: 12, marginTop: 12 }}>
+          <MiniCard title="差し出し型 (A: 配信)" body="夜間バッチが翌朝の Today 上部に「前奏 (proactive prelude)」を1件用意。シグナルが立たない日は何も書き込まない。通知・トースト・モーダルなし。ユーザーが開いたときにだけ目に入る。" />
+          <MiniCard title="監査可能 (B: semi-formal premise)" body="介入の判断を premise → trace → conclusion の3点で記録。proactive_preparations.premise/trace/conclusion + agent_sessions(event_type=proactive_intervention) に audit log。なぜ今この前奏を置いたかが後から辿れる。Agentic Code Reasoning (arXiv:2603.01896) の semi-formal pattern を応用。" />
+          <MiniCard title="隙間検知 (C: 4種シグナル)" body="silence_acknowledge=最終日記から≥2日無音 / schedule_softener=当日カレンダー≥4件 / pattern_echo=前夜と直近14日の topics jaccard≥0.4 / gentle_prelude=前夜の日記≥20文字。最初に立ったルールだけ採用、それ以外は完全沈黙。" />
+          <MiniCard title="本文の鉄則" body="日本語1〜2文・最大60文字程度。禁止語=頑張れ/すべき/した方がいい/大丈夫?/心配/遅れている。主語は無主語推奨。装飾・絵文字・引用符を使わない。閉じる×ボタンだけ提供、それ以外でユーザーは何もしなくて良い。" />
+        </div>
+      </Section>
+
       <Section title="データ設計">
         <Tbl headers={['データ', 'キャッシュ', '無効化トリガー']} rows={[
           ['天気', 'localStorage 1時間', 'TTL切れ'],
@@ -1248,6 +1258,10 @@ Step 3 [直列]: システム開発(実装) → QA(テスト)
           ['src/hooks/useMorningQuote.ts', 'AI Features タブ（朝イチの一節データ取得）'],
           ['scripts/morning-quote/*', 'Overview タブ（鮮度マップ・バッチ一覧）+ AI Features タブ（Claude CLI バッチ）'],
           ['.github/workflows/morning-quote.yml', 'Overview タブ（GitHub Actions cron 一覧）'],
+          ['src/components/ProactivePreludeCard.tsx', 'AI Features タブ（11. Proactive Prelude）+ Design Philosophy タブ（silence-first × proactive）'],
+          ['src/hooks/usePrelude.ts', 'AI Features タブ（11. Proactive Prelude データ取得）'],
+          ['scripts/proactive-prep/*', 'AI Features タブ（11. Proactive Prelude）+ Overview タブ（バッチ一覧）'],
+          ['.github/workflows/proactive-prep.yml', 'Overview タブ（GitHub Actions cron 一覧）'],
         ]} />
         <Principle title="教訓: 2026-04-06 useSelfAnalysis.ts 改修時" body="ハイブリッド分析方式を実装したが、対応表に useSelfAnalysis.ts がなかったため Hook が発火せず、社長に指摘されるまで Blueprint が古いまま残った。対応表を7→14ファイルに拡充。新しいAI機能フックを追加したら必ずこの表にも追加すること。" color="var(--amber)" />
         <P>この Hook はハーネスエンジニアリングの「決定論的制御」にあたる。CLAUDE.md に「ドキュメントを更新して」と書いても無視される可能性があるが、Hook は確実に発火する。</P>
@@ -1462,6 +1476,17 @@ function TabAiFeatures() {
           output="タスクカード上のサムネイル + 編集モーダルでのフル表示"
           storage="Supabase Storage: request-attachments（バイナリ）+ tasks.attachments JSONB（メタ）。migration 062 で追加"
           hook="src/lib/requestAttachments.ts / src/components/RequestAttachmentThumb.tsx / src/pages/Requests.tsx / src/stores/data.ts / src/types/tasks.ts (AttachmentMeta)"
+        />
+
+        <AiFeatureCard
+          name="11. Proactive Prelude（silence-first × proactive 前奏）"
+          trigger="夜間バッチ 22:00 JST cron (.github/workflows/proactive-prep.yml) — 翌日分を1件だけ準備。シグナルが立たない日は何も書き込まない"
+          input="diary_entries (last 14 days) / calendar_events (target date) / 前夜の topics (jaccard 比較用)。社長の失敗パターン (プレッシャーフリーズ/先延ばし) を不可侵ルールとして prompt に埋める"
+          model="claude-haiku-4-5（短文生成のみのため軽量モデル。app_config: batch.proactive_prep_model で切替可）"
+          pipeline="シグナル評価 (semi-formal premise) → 4種 kind 判定 (silence_acknowledge / schedule_softener / pattern_echo / gentle_prelude) → どれも立たなければ silent → 立てば Claude CLI で本文生成 (1〜2文・60字以内・禁止語ガード) → proactive_preparations INSERT + agent_sessions audit log"
+          output="Today.tsx 上部の ProactivePreludeCard。装飾ゼロ・通知なし・×ボタンで dismiss のみ。design-philosophy ⑪ 受動表示準拠"
+          storage="proactive_preparations (migration 069) + agent_sessions (event_type=proactive_intervention で監査記録)。UNIQUE(user_id, delivery_date) で1日1件冪等化"
+          hook="scripts/proactive-prep/{run,generate-for-day,_detect_kind,_generate_prelude,_insert_preparation} / src/components/ProactivePreludeCard.tsx / src/hooks/usePrelude.ts / 設計参照: arXiv:2604.00842 (Pare 4軸) + arXiv:2603.01896 (Agentic Code Reasoning, semi-formal pattern)"
         />
       </Section>
 
@@ -2254,6 +2279,7 @@ function TabRoadmap() {
             ['2026-04-21', 'Blueprint と実装の整合化', 'Hook 42スクリプト / 19データソース / 11部署(+リファクタで12) / 27ルート / AI Features 4カード(#1 #2 #4 #5)のモデル記述を実装に合わせる。社長判断で「Blueprint を実装に合わせる」方針を確定'],
             ['2026-04-21', '朝イチの一節機能を追加', '前日の日記からキーワード・感情・テーマを複数観点で抽出 → Web検索 → スコアリングで1つ選出 → Today 最上部に受動表示（装飾ゼロ、本文17px主役）。AI PaRTner（FutureYouChat）は存続・別機能として残す。quotes / user_quote_deliveries / user_quote_favorites の3テーブル、お気に入りはハート1タップ（トースト・モーダルなし）、一覧は Journal タブ。バッチは Claude CLI（`claude --print` + WebSearch）、API課金ゼロ（定額 Claude Code 経由）、GitHub Actions 06:30 JST cron。日記0件の日はセクション非表示（スターター名言プールなし）'],
             ['2026-04-21', 'AI PaRTner に diary_search を解放', 'partner_chat モードに tool use ループを追加。直近7日の静的注入は残しつつ、固有名詞・時期指定の事実質問では diary_search を動的に叩く。「検索した」というメタ発言を禁止し、記憶として自然に織り込ませる。内省・相談では検索しない（⑪ Active vs Passive 準拠）。MAX_PARTNER_STEPS=3、diary_search のみ許可。付随バグ修正: diary_analysis jsonb を string 扱いしていた既存 TypeError / gpt-5.4 + tools + reasoning_effort が OpenAI 400 を返す問題。検証「山口さんと会った日のもう一人」→ 正しく「内田さん」を想起'],
+            ['2026-04-26', 'Proactive Prelude 採用（silence-first × proactive）', '論文 Pare (arXiv:2604.00842, 2026-04-01) の proactive agent 4軸 (context observation / goal inference / intervention timing / multi-app orchestration) を踏まえ、focus-you に proactive 体験を導入。ただし「賢く声をかける」型ではなく「気づいたら準備されている」型に倒す。社長失敗パターン (プレッシャーフリーズ・先延ばし・先のこと気にしすぎ) があるため強い介入は逆効果。設計 = A:差し出し (夜間バッチで Today 上部に1件) + B:監査可能 (semi-formal premise + agent_sessions audit) + C:隙間検知 (沈黙2日/カレンダー4件/topics jaccard 0.4/前夜日記20字)。本文 1〜2文・60字以内・禁止語 (頑張れ/すべき/大丈夫?/心配/遅れている)。MorningQuote と並列で Today 上部に表示。Migration 069 / scripts/proactive-prep / ProactivePreludeCard / usePrelude / .github/workflows/proactive-prep.yml (22:00 JST cron)。情報収集の 04-26 示唆 (Managed Agents Memory audit log + Plan Caching + Agentic Code Reasoning semi-formal) と直接整合'],
           ]}
         />
       </Section>
