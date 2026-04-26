@@ -611,11 +611,12 @@ export function Today() {
   /* ── [0] Greeting ── */
 
   const Greeting = (
-    <div style={{ marginBottom: 20 }}>
-      <div className="page-title" style={{ marginBottom: 4 }}>{getGreeting(timeMode)}</div>
-      <div style={{ fontSize: 13, color: 'var(--text2)' }}>
+    <div style={{ marginBottom: 18 }}>
+      {/* spec: .heading は 32px / weight 300 / accent 強調 */}
+      <h1 className="heading">{getGreeting(timeMode)}</h1>
+      <div className="date-line">
         {formatToday()}
-        {weather && <span style={{ marginLeft: 8 }}>{weather.today.icon} {weather.today.tempMax}℃ / {weather.today.tempMin}℃</span>}
+        {weather && <span className="weather-chip">{weather.today.icon} {weather.today.tempMax}℃ / {weather.today.tempMin}℃</span>}
       </div>
       {weather && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>明日: {weather.tomorrow.icon} {weather.tomorrow.tempMax}℃ / {weather.tomorrow.tempMin}℃</div>}
     </div>
@@ -1229,14 +1230,33 @@ export function Today() {
 
   /* ── [6] Status bar (streak, dreams, WBI) ── */
 
+  // spec: Life 列の冒頭 .life-head — Streak (左) と WBI (右) を baseline で対比
   const StatusBar = (streak > 0 || dreamsCount > 0 || wbi !== null) ? (
-    <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-      {streak > 0 && <span><span style={{ color: '#ff6b35', fontWeight: 600 }}>{streak}</span>日連続記録</span>}
-      {wbi !== null && <span>WBI <span style={{ fontWeight: 600, fontFamily: 'var(--mono)' }}>{wbi.toFixed(1)}</span></span>}
+    <div className="life-head">
+      <div className="life-vitals">
+        <div className="streak-block">
+          {streak > 0 ? (
+            <>
+              <span className="streak-n">{streak}</span>
+              <span className="streak-u">日連続</span>
+            </>
+          ) : (
+            <span style={{ fontSize: 12, color: 'var(--text3)' }}>記録を始めよう</span>
+          )}
+        </div>
+        {wbi !== null && (
+          <div className="wbi-block">
+            <div className="wbi-label">WBI</div>
+            <div className="wbi-row">
+              <span className="wbi-score">{wbi.toFixed(1)}</span>
+            </div>
+          </div>
+        )}
+      </div>
       {dreamsCount > 0 && (
-        <span style={{ cursor: 'pointer' }} onClick={() => navigate('/dreams')}>
-          <span style={{ color: 'var(--accent2)', fontWeight: 600 }}>{dreamsCount}</span> 個の夢が進行中
-        </span>
+        <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text3)', cursor: 'pointer' }} onClick={() => navigate('/dreams')}>
+          🌟 <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{dreamsCount}</span> 個の夢が進行中 →
+        </div>
       )}
     </div>
   ) : null
