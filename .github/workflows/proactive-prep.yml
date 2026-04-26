@@ -1,0 +1,76 @@
+name: Proactive Prelude (Nightly)
+
+# Today 上部に置く「気づいたら準備されている」前奏を夜間に1件用意するバッチ。
+#
+# 設計参照:
+#   - arXiv:2604.00842 (Pare): proactive agent 4軸
+#   - Migration 069: proactive_preparations
+#   - scripts/proactive-prep/: semi-formal premise + 4種シグナル評価 + Claude CLI
+#
+# 哲学:
+#   - silence-first を壊さない。シグナルが立たない日は何も書き込まない
+#   - 夜間に「翌朝の前奏」を準備するイメージ
+#   - 通知は出さない。ユーザーがダッシュボードを開いたときにだけ目に入る
+#
+# コスト: Claude Code 定額 (API 課金なし) — CLAUDE.md コスト分離原則準拠
+
+on:
+  schedule:
+    # 翌日分の前奏を夜のうちに準備
+    # 22:00 JST = 13:00 UTC（前日）
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: '対象日 (YYYY-MM-DD, JST)。未指定時は翌日の JST'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - uses: actions/setup-node@a26af69be951a213d495a4c3e4e4022e16d87065 # v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Resolve target date
+        id: date
+        env:
+          INPUT_TARGET_DATE: ${{ inputs.target_date }}
+        run: |
+          if [ -n "$INPUT_TARGET_DATE" ]; then
+            # 形式チェック (YYYY-MM-DD のみ許可)
+            if [[ ! "$INPUT_TARGET_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+              echo "Invalid target_date format: $INPUT_TARGET_DATE" >&2
+              exit 1
+            fi
+            echo "TARGET_DATE=$INPUT_TARGET_DATE" >> "$GITHUB_OUTPUT"
+          else
+            # 翌日 JST
+            echo "TARGET_DATE=$(TZ=Asia/Tokyo date -d 'tomorrow' +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run proactive prelude preparation
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_INGEST_KEY: ${{ secrets.SUPABASE_INGEST_KEY }}
+          FOCUS_YOU_USER_ID: ${{ secrets.FOCUS_YOU_USER_ID }}
+          TARGET_DATE: ${{ steps.date.outputs.TARGET_DATE }}
+        run: bash scripts/proactive-prep/run.sh
