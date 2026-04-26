@@ -677,7 +677,7 @@
     "lastShownTime": 1767439030982
   },
   "opusProMigrationComplete": true,
-  "cachedExtraUsageDisabledReason": null,
+  "cachedExtraUsageDisabledReason": "org_level_disabled",
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 12,
@@ -730,8 +730,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 98,
-      "lastUsedAt": 1777020411028
+      "usageCount": 99,
+      "lastUsedAt": 1777162380446
     },
     "register": {
       "usageCount": 13,
@@ -762,8 +762,8 @@
       "lastUsedAt": 1775909419013
     },
     "update-config": {
-      "usageCount": 4,
-      "lastUsedAt": 1776952758475
+      "usageCount": 5,
+      "lastUsedAt": 1777160641524
     },
     "tax-advisor": {
       "usageCount": 2,
@@ -772,6 +772,10 @@
     "design-md": {
       "usageCount": 1,
       "lastUsedAt": 1777003284668
+    },
+    "document-skills:webapp-testing": {
+      "usageCount": 1,
+      "lastUsedAt": 1777161870255
     }
   },
   "overageCreditUpsellSeenCount": 2,
@@ -799,7 +803,11 @@
     "displayName": "yuta",
     "organizationRole": "admin",
     "workspaceRole": null,
-    "organizationName": "yumzzz.my6223@gmail.com's Organization"
+    "organizationName": "yumzzz.my6223@gmail.com's Organization",
+    "organizationType": "claude_max",
+    "organizationRateLimitTier": "default_claude_max_20x",
+    "userRateLimitTier": null,
+    "seatTier": null
   },
   "shiftEnterKeyBindingInstalled": true
 }
