@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { completeCalendarAuth, invalidateCalendarAuthCache } from '@/lib/calendarApi'
 
+// Hard redirect instead of react-router navigate. Supabase's session restore
+// and the Google OAuth flow both touch the URL during this page's lifecycle,
+// which previously caused router-level navigation to silently no-op.
+function goToCalendar() {
+  window.location.replace('/calendar')
+}
+
 export function GoogleAuthCallback() {
-  const navigate = useNavigate()
   const [status, setStatus] = useState('Connecting Google Calendar...')
   const called = useRef(false)
 
   useEffect(() => {
-    // Prevent double call in React StrictMode
     if (called.current) return
     called.current = true
 
@@ -18,13 +22,13 @@ export function GoogleAuthCallback() {
 
     if (params.get('error')) {
       setStatus(`Google denied access: ${params.get('error')}`)
-      setTimeout(() => navigate('/calendar', { replace: true }), 3000)
+      setTimeout(goToCalendar, 3000)
       return
     }
 
     if (!code || state !== 'gcal_auth') {
       setStatus('Invalid callback parameters')
-      setTimeout(() => navigate('/calendar', { replace: true }), 3000)
+      setTimeout(goToCalendar, 3000)
       return
     }
 
@@ -32,19 +36,19 @@ export function GoogleAuthCallback() {
       .then((result) => {
         invalidateCalendarAuthCache()
         if (result.ok) {
-          navigate('/calendar', { replace: true })
+          goToCalendar()
         } else {
           console.error('[gcal-callback] Failed:', result.error)
           setStatus(`認証エラー: ${result.error}`)
-          setTimeout(() => navigate('/calendar', { replace: true }), 3000)
+          setTimeout(goToCalendar, 3000)
         }
       })
       .catch((err) => {
         console.error('[gcal-callback] Exception:', err)
         setStatus(`エラー: ${err.message}`)
-        setTimeout(() => navigate('/calendar', { replace: true }), 3000)
+        setTimeout(goToCalendar, 3000)
       })
-  }, [navigate])
+  }, [])
 
   return (
     <div style={{ padding: 40, textAlign: 'center' }}>
