@@ -44,6 +44,10 @@ function loadLayers(): Record<LayerKey, boolean> {
 // ============================================================
 
 const TASK_COLOR = '#8b5cf6'
+// Time-blocked task は Google Calendar 側にも書き込んで枠を物理確保するが、
+// dashboard 上で task と event の二重表示にならないよう、prefix が付く Gcal event は
+// この画面では非表示にする。Gcal を直接見たときは [Task] xxx として現れる。
+const TASK_GCAL_PREFIX = '[Task] '
 
 const DOW = ['日', '月', '火', '水', '木', '金', '土']
 const VIEW_LABELS: Record<ViewMode, string> = { day: '日', week: '週', month: '月' }
@@ -448,7 +452,7 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
   const todayDayIndex = days.findIndex(d => toJSTDateStr(d) === today)
 
   const filteredEvents = useMemo(
-    () => events.filter(e => !hiddenCalendars.has(e.calendar_type)),
+    () => events.filter(e => !hiddenCalendars.has(e.calendar_type) && !(e.summary || '').startsWith(TASK_GCAL_PREFIX)),
     [events, hiddenCalendars]
   )
 
@@ -1119,7 +1123,7 @@ function MonthGrid({ events, date, today, hiddenCalendars, layerMap, layers, tas
   while (cells.length % 7 !== 0) cells.push(null)
 
   const filtered = useMemo(
-    () => events.filter(e => !hiddenCalendars.has(e.calendar_type)),
+    () => events.filter(e => !hiddenCalendars.has(e.calendar_type) && !(e.summary || '').startsWith(TASK_GCAL_PREFIX)),
     [events, hiddenCalendars]
   )
   const eventsFor = (ds: string) => filtered.filter(e => toJSTDateStr(new Date(e.start_time)) === ds)
@@ -1588,7 +1592,7 @@ export function Calendar() {
       <DayDetailDrawer
         dateStr={drawerDate}
         layer={drawerDate ? (layerMap.get(drawerDate) || null) : null}
-        events={drawerDate ? events.filter(e => toJSTDateStr(new Date(e.start_time)) === drawerDate && !hiddenCalendars.has(e.calendar_type)) : []}
+        events={drawerDate ? events.filter(e => toJSTDateStr(new Date(e.start_time)) === drawerDate && !hiddenCalendars.has(e.calendar_type) && !(e.summary || '').startsWith(TASK_GCAL_PREFIX)) : []}
         tasks={drawerDate ? tasks.filter(t => t.due_date === drawerDate) : []}
         onClose={() => setDrawerDate(null)}
       />
@@ -1653,9 +1657,24 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
         scheduled_at: useTime ? `${targetDate}T${startTime}:00+09:00` : null,
         estimated_minutes: minutes,
       })
+      if (!created) {
+        setSaving(false)
+        toast('追加に失敗しました'); return
+      }
+
+      // 時間ブロック型は Google Calendar にも書き込んで、タスク用の枠を物理的に確保する。
+      // 失敗してもタスク本体（Supabase）は残るので best-effort。プレフィックスで識別可能に。
+      if (useTime) {
+        try {
+          await onCreateEvent({ summary: `${TASK_GCAL_PREFIX}${t}`, date: targetDate, startTime, endTime, calendarId })
+          toast('タスクを追加し、Google Calendar に時間を確保しました')
+        } catch {
+          toast('タスクは追加。Google Calendar への書き込みは失敗しました')
+        }
+      } else {
+        toast(isDeadline ? '締切タスクを追加しました' : 'タスクを追加しました')
+      }
       setSaving(false)
-      if (!created) { toast('追加に失敗しました'); return }
-      toast(isDeadline ? '締切タスクを追加しました' : 'タスクを追加しました')
       onCreatedTask()
     } else {
       await onCreateEvent({ summary: t, date, startTime, endTime, calendarId })

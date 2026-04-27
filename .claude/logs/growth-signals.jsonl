@@ -1198,3 +1198,5 @@
 {"ts":"2026-04-27T17:26:55+09:00","signal":"raw_prompt","prompt":"calendarのスケジュールの詳細中身が確認できない。修正して\n"}
 {"ts":"2026-04-27T17:34:14+09:00","signal":"raw_prompt","prompt":"カオスエンジニアリングはFY28本格では遅くない？\nservice busをMVPから導入でいいの？必ず使うサービスだから？\n"}
 {"ts":"2026-04-27T17:34:14+09:00","signal":"raw_prompt","prompt":"カオスエンジニアリングはFY28本格では遅くない？\nservice busをMVPから導入でいいの？必ず使うサービスだから？\n"}
+{"ts":"2026-04-27T19:13:31+09:00","signal":"raw_prompt","prompt":"calendarで作成したtaskがGcalに連携されていない\n"}
+{"ts":"2026-04-27T19:16:25+09:00","signal":"raw_prompt","prompt":"5/1に動くものを作りたい。明日から各日のゴールを設定して欲しい。\n"}
