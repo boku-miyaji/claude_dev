@@ -480,7 +480,7 @@ function SafeMarkdown({
     return () => node.removeEventListener('click', handler)
   }, [trackingContext])
 
-  return <div ref={ref} className="md-body" style={{ fontSize: 13, lineHeight: 1.8, color: 'var(--text2)' }} />
+  return <div ref={ref} className="md-body" style={{ fontSize: 13, lineHeight: 1.8, color: 'var(--text)' }} />
 }
 
 function inferCategoryFromUrl(url: string): string {
@@ -933,15 +933,18 @@ function InterestArticles() {
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('interest_articles')
         .select('*')
         .order('created_at', { ascending: false })
+      if (error) throw error
       setArticles((data as InterestArticle[]) || [])
-    } catch {
+    } catch (e) {
+      console.error('[InterestArticles] load error:', e)
       setArticles([])
     } finally {
       setLoading(false)
@@ -953,9 +956,10 @@ function InterestArticles() {
   async function handleSave() {
     if (!url.trim()) return
     setSaving(true)
+    setErrorMsg(null)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('interest_articles')
         .insert({
           url: url.trim(),
@@ -965,6 +969,7 @@ function InterestArticles() {
         })
         .select()
         .single()
+      if (error) throw error
       if (data) {
         setArticles((prev) => [data as InterestArticle, ...prev])
         supabase.from('activity_log').insert({
@@ -975,8 +980,13 @@ function InterestArticles() {
         setTitle('')
         setNotes('')
       }
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('[InterestArticles] save error:', e)
+      const err = e as { code?: string; message?: string }
+      const msg = err?.code === '42P01'
+        ? 'interest_articles テーブルが存在しません。migration 067 の適用が必要です。'
+        : err?.message || '保存に失敗しました'
+      setErrorMsg(msg)
     } finally {
       setSaving(false)
     }
@@ -1013,6 +1023,11 @@ function InterestArticles() {
             onChange={(e) => setNotes(e.target.value)}
             style={{ minHeight: 60, resize: 'vertical' }}
           />
+          {errorMsg && (
+            <div style={{ fontSize: 12, color: 'var(--red)', background: 'var(--red-bg)', border: '1px solid var(--red-border)', borderRadius: 'var(--r)', padding: '8px 10px' }}>
+              {errorMsg}
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button
               className="btn btn-p btn-sm"
