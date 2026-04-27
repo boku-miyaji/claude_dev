@@ -1383,7 +1383,12 @@ export function Calendar() {
         await updateEvent(editingEvent.calendar_id, editingEvent.id, { summary: form.summary, start, end })
         toast('更新しました')
       } else {
-        const calId = form.calendarId || GCAL_CALENDARS.find(c => c.type === 'primary')?.id || 'primary'
+        // primary type が選ばれている場合は 'primary' リテラルを送る。
+        // Google Calendar API の 'primary' は「認証ユーザー本人の primary calendar」を
+        // 指す特殊エイリアスで、メアドを直書きするより portable（他ユーザーが使っても
+        // 自分のアカウントに書かれる）。
+        const cal = form.calendarId ? GCAL_CALENDARS.find(c => c.id === form.calendarId) : GCAL_CALENDARS.find(c => c.type === 'primary')
+        const calId = cal?.type === 'primary' ? 'primary' : (cal?.id || form.calendarId || 'primary')
         await createEvent(calId, { summary: form.summary, start, end })
         toast('追加しました')
       }
