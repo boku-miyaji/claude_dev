@@ -40,9 +40,13 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="${REPO_DIR:-/workspace}"
 TAGS_YAML="$REPO_DIR/.company/growth-tags.yaml"
 
-source ~/.claude/hooks/supabase.env 2>/dev/null || {
-  echo "Error: supabase.env not found" >&2; exit 2
-}
+# If SUPABASE_URL is already in env (e.g. GitHub Actions secrets injection),
+# skip sourcing the local env file. Otherwise load from ~/.claude/hooks/supabase.env.
+if [ -z "${SUPABASE_URL:-}" ]; then
+  source ~/.claude/hooks/supabase.env 2>/dev/null || {
+    echo "Error: SUPABASE_URL not in env and supabase.env not found" >&2; exit 2
+  }
+fi
 
 usage() { sed -n '2,28p' "$0" | sed 's/^# //; s/^#//'; }
 

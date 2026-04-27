@@ -1,0 +1,32 @@
+name: Workflow Failure Watch
+
+# 直近 ~26h で failure になった他 workflow を growth_events に記録する。
+# silent batch failure（2026-04-21〜26 の morning-quote 連続失敗事案）の再発防止。
+#
+# 起動: 毎日 22:00 UTC = 07:00 JST。社長の朝のブリーフィングに反映される。
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # 07:00 JST daily
+  workflow_dispatch: {}
+
+permissions:
+  actions: read       # gh run list
+  contents: read
+
+jobs:
+  watch:
+    name: detect
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Run failure check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_INGEST_KEY: ${{ secrets.SUPABASE_INGEST_KEY }}
+        run: |
+          bash scripts/growth/check-workflow-failures.sh --hours=26
