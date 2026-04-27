@@ -211,3 +211,4 @@
 {"ts":"2026-04-26T09:28:17+09:00","event":"agent_dispatch","dept":"Explore","desc":"Audit impl/infra pages","model":"default","background":false}
 {"ts":"2026-04-26T09:28:28+09:00","event":"agent_dispatch","dept":"Explore","desc":"Audit security/background pages","model":"default","background":false}
 {"ts":"2026-04-27T09:38:54+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"朝のCEOブリーフィング情報収集","model":"default","background":false}
+{"ts":"2026-04-27T10:22:49+09:00","event":"agent_dispatch","dept":"general-purpose","desc":"Supabase ES256/Publishable移行の調査","model":"default","background":false}
