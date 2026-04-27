@@ -12,7 +12,6 @@ import { useTodayWeather } from '@/hooks/useTodayWeather'
 import { useTodayTimeline } from '@/hooks/useTodayTimeline'
 import { toast } from '@/components/ui'
 import { FutureYouChat } from '@/components/FutureYouChat'
-import { useMorningBriefing } from '@/hooks/useMorningBriefing'
 import { StoryUpdateBanner } from '@/components/StoryUpdateBanner'
 import { MorningQuoteCard } from '@/components/MorningQuoteCard'
 import { ProactivePreludeCard } from '@/components/ProactivePreludeCard'
@@ -310,29 +309,6 @@ export function Today() {
   // Timeline: merges calendar events + time-bound tasks into 30-min slots
   const timeline = useTodayTimeline(allOpenTasks, completedToday)
   const { slots: timelineSlots, todayTasks: timelineTodayTasks, upcomingTasks, todayCalEvents, tomorrowEvents, recentEventName, loading: timelineLoading, calendarAuthenticated } = timeline
-
-  // Build event text for AI Partner briefing (title + JST time)
-  const todayEventsText = todayCalEvents.length > 0
-    ? todayCalEvents.map((e) => {
-        const time = e.startTime.includes('T')
-          ? new Date(e.startTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Tokyo' })
-          : '終日'
-        return `${time} ${e.title}`
-      }).join('\n')
-    : undefined
-  const tomorrowEventsText = tomorrowEvents.length > 0
-    ? tomorrowEvents.map((e) => e.title).join('、')
-    : undefined
-  const weatherText = weather ? `${weather.today.icon} ${weather.today.tempMax}℃` : undefined
-
-  const { message: briefingMessage } = useMorningBriefing(
-    timeMode,
-    todayEventsText,
-    tomorrowEventsText,
-    weatherText,
-    !timelineLoading,
-  )
-
 
   const priorityWeight = { high: 0, normal: 1, low: 2 } as const
 
@@ -747,16 +723,12 @@ export function Today() {
     </div>
   ) : null
 
-  /* ── [3] MorningBriefing — spec の .morning-briefing (1行・accent縦線) ── */
-
-  const Briefing = briefingMessage ? (
-    <div className="morning-briefing">{briefingMessage}</div>
-  ) : null
-
   /* ── [3-2] FutureYouChat — Diary 後の「未来の自分」導線 ── */
+  // AI Partner の受動コメント (briefingMessage) は社長判断で常時非表示
+  // (型A 観察コメントが侮辱的に響くケースが続いたため)
 
   const FutureYouSection = (
-    <FutureYouChat entryPoint="today_partner" briefingMessage={briefingMessage} />
+    <FutureYouChat entryPoint="today_partner" />
   )
 
   /* ── [News] ── */
@@ -1193,9 +1165,6 @@ export function Today() {
 
         {/* 日付・天気・挨拶 */}
         {Greeting}
-
-        {/* AI が用意した「今日のひと言」(MorningBriefing) */}
-        {Briefing}
 
         {/* 前奏カード (proactive prelude) — 沈黙/詰まり/パターン再来を検知して
            前夜に生成された短い差し出し。シグナルが立たない日は表示されない。
