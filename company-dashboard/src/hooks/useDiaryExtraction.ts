@@ -239,7 +239,10 @@ export function useDiaryExtraction(): UseDiaryExtractionReturn {
             const end = new Date(e.end_time)
             const startLabel = start.toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })
             const endLabel = end.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })
-            const typeTag = e.calendar_type === 'work' ? '[仕事]' : '[個人]'
+            // calendar_type は primary/secondary だけになったので、業務判定は summary prefix で。
+            // ハードコード（旧: acesinc.co.jp など）に依存しない portable な判定。
+            const isWork = /^\[仕事\]|^\[Ex|^\[In|^\[in\]/i.test(e.summary || '')
+            const typeTag = isWork ? '[仕事]' : '[個人]'
             return `- ${startLabel}〜${endLabel} ${typeTag} ${e.summary}`
           }).join('\n')
         : '(なし)'

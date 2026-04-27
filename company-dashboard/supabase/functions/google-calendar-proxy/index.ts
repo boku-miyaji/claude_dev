@@ -263,9 +263,14 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
           const startTime = ev.start?.dateTime || ev.start?.date || "";
           const endTime = ev.end?.dateTime || ev.end?.date || "";
           const allDay = !ev.start?.dateTime;
+          // calendar_type は primary calendar かそれ以外かの 2値だけ。
+          // 個別の会社ドメイン判定 (旧 acesinc.co.jp 等) はハードコードになるためやめ、
+          // 「仕事/プライベート」の文脈は summary の prefix 等で別途判定する設計に。
+          const calendarType: string = calId === "primary" ? "primary" : "secondary";
           const eventRow = {
             id: ev.id,
             calendar_id: calId,
+            calendar_type: calendarType,
             summary: ev.summary || "(No title)",
             start_time: startTime,
             end_time: endTime,
@@ -273,18 +278,10 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
             status: ev.status,
             location: ev.location || null,
             hangoutLink: ev.hangoutLink || null,
+            description: ev.description || null,
           };
           allEvents.push(eventRow);
 
-          // 分析バッチで使うために calendar_events テーブルにも upsert 用の行を用意
-          // （calendar_type は仕事/プライベート判定。summary の接頭辞で簡易判定）
-          const summary = ev.summary || "";
-          let calendarType: string = "private";
-          if (calId.includes("acesinc") || /^\[仕事\]|^\[Ex|^\[In|^\[in\]/i.test(summary)) {
-            calendarType = "work";
-          } else if (calId === "primary") {
-            calendarType = "primary";
-          }
           dbRows.push({
             id: ev.id,
             calendar_id: calId,
@@ -618,9 +615,7 @@ Deno.serve(async (req: Request) => {
               const endTime = ev.end?.dateTime || ev.end?.date || "";
               const allDay = !ev.start?.dateTime;
               const summary = ev.summary || "(No title)";
-              let calendarType: string = "private";
-              if (calId.includes("acesinc") || /^\[仕事\]|^\[Ex|^\[In|^\[in\]/i.test(summary)) calendarType = "work";
-              else if (calId === "primary") calendarType = "primary";
+              const calendarType: string = calId === "primary" ? "primary" : "secondary";
               dbRows.push({
                 id: ev.id, calendar_id: calId, summary, start_time: startTime, end_time: endTime,
                 all_day: allDay, location: ev.location || null, description: ev.description || null,

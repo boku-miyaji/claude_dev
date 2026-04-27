@@ -1,5 +1,8 @@
 export type ViewMode = 'day' | 'week' | 'month'
-export type CalendarType = 'primary' | 'secondary' | 'work'
+// Edge Function は primary calendar かそれ以外かの 2値だけ返す。
+// 業務/個人の細分類はハードコード（旧: acesinc 等）を避け、UI 側で色は
+// Google calendarList の backgroundColor を優先利用する。
+export type CalendarType = 'primary' | 'secondary'
 
 export interface CalendarEvent {
   id: string

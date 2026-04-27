@@ -50,10 +50,16 @@ const TASK_GCAL_PREFIX = '[Task] '
 
 const DOW = ['日', '月', '火', '水', '木', '金', '土']
 const VIEW_LABELS: Record<ViewMode, string> = { day: '日', week: '週', month: '月' }
+// Fallback colors used only when Google's calendarList doesn't return a backgroundColor.
 const CAL_BG_COLORS: Record<CalendarType, string> = {
   primary: '#5b5fc7',
   secondary: '#b45309',
-  work: '#1a7f37',
+}
+
+/** Resolve the display color for an event using the calendar's own backgroundColor first. */
+function resolveEventColor(calendarId: string, calendarType: CalendarType, calendars: UserCalendar[]): string {
+  const cal = calendars.find((c) => c.id === calendarId)
+  return cal?.backgroundColor || CAL_BG_COLORS[calendarType] || '#5b5fc7'
 }
 const HOUR_H = 48
 const START_H = 8
@@ -425,8 +431,9 @@ interface DragState {
 // Time Grid (Day / Week view)
 // ============================================================
 
-function TimeGrid({ events, tasks, days, today, hiddenCalendarIds, onRangeCreate, onEventClick, onDragUpdate, onTaskToggle, onTaskClick, onAllDayAdd, activeRange, onActiveRangeChange }: {
+function TimeGrid({ events, tasks, days, today, hiddenCalendarIds, calendars, onRangeCreate, onEventClick, onDragUpdate, onTaskToggle, onTaskClick, onAllDayAdd, activeRange, onActiveRangeChange }: {
   events: CalendarEvent[]; tasks: Task[]; days: Date[]; today: string; hiddenCalendarIds: Set<string>
+  calendars: UserCalendar[]
   onRangeCreate: (date: string, startHour: number, endHour: number) => void
   onEventClick: (evt: CalendarEvent) => void
   onDragUpdate: (ev: CalendarEvent, newStartH: number, newEndH: number, newDayIndex: number) => Promise<void>
@@ -895,10 +902,10 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendarIds, onRangeCreate
 
                 const isPast = toJSTDateStr(new Date(evt.start_time)) === today && new Date(evt.end_time) < now
 
-                // Tooltip label: just show the calendar type since the full list is async-loaded
-                // and not threaded down here. Hover tooltip is informational, not critical.
-                const calLabel = evt.calendar_type
-                const bg = CAL_BG_COLORS[evt.calendar_type] || '#5b5fc7'
+                // Color comes from the user's actual Google calendar (calendarList.backgroundColor),
+                // falling back to a neutral primary/secondary palette only if the list isn't loaded yet.
+                const calLabel = calendars.find((c) => c.id === evt.calendar_id)?.label || evt.calendar_type
+                const bg = resolveEventColor(evt.calendar_id, evt.calendar_type, calendars)
 
                 // Column layout for overlapping events
                 const layout = overlapLayout.get(`evt-${evt.id}`)
@@ -1545,7 +1552,7 @@ export function Calendar() {
               onCellClick={ds => setDrawerDate(ds)}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }}
               onAddEvent={ds => setQuickAdd({ date: ds })} />
-          : <TimeGrid events={events} tasks={tasks} days={days} today={today} hiddenCalendarIds={hiddenCalendarIds}
+          : <TimeGrid events={events} tasks={tasks} days={days} today={today} hiddenCalendarIds={hiddenCalendarIds} calendars={userCalendars}
               onRangeCreate={(ds, startHour, endHour) => setQuickAdd({ date: ds, startHour, endHour })}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }}
               onDragUpdate={handleDragUpdate}
