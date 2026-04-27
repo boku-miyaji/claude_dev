@@ -10,13 +10,42 @@ PROJECT_DIR="${CWD:-/workspace}"
 cd "$PROJECT_DIR" || exit 0
 git remote -v &>/dev/null || exit 0
 
+# push 失敗を /tmp/auto-push-status.json に記録（pre-push gate ブロック等）。
+# 成功したらファイルを消して古い失敗状態をクリア。
+# SessionStart の auto-push-status-check.sh が次セッション開始時に警告を表示する。
+push_with_status() {
+  local push_log push_rc commit_sha unpushed
+  push_log=$(git push origin main 2>&1)
+  push_rc=$?
+  if [ $push_rc -ne 0 ]; then
+    commit_sha=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+    unpushed=$(git log origin/main..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
+    if command -v jq >/dev/null 2>&1; then
+      jq -n \
+        --arg time "$(date -Iseconds)" \
+        --arg error "$push_log" \
+        --arg sha "$commit_sha" \
+        --argjson n "${unpushed:-0}" \
+        '{status:"failed", time:$time, error:$error, commit_sha:$sha, unpushed_count:$n, branch:"main"}' \
+        > /tmp/auto-push-status.json 2>/dev/null
+    else
+      printf '{"status":"failed","time":"%s","commit_sha":"%s","unpushed_count":%s,"branch":"main"}' \
+        "$(date -Iseconds)" "$commit_sha" "${unpushed:-0}" \
+        > /tmp/auto-push-status.json
+    fi
+  else
+    rm -f /tmp/auto-push-status.json
+  fi
+  return $push_rc
+}
+
 # Skip if a commit was made very recently (within 30 seconds)
 # This prevents auto-save from racing with Claude Code's explicit commits
 LAST_COMMIT_TIME=$(git log -1 --format=%ct 2>/dev/null || echo 0)
 NOW=$(date +%s)
 if [ $((NOW - LAST_COMMIT_TIME)) -lt 30 ]; then
   # Recent explicit commit exists — just push it if needed
-  git push origin main 2>/dev/null || true
+  push_with_status || true
   exit 0
 fi
 
@@ -25,7 +54,7 @@ if git diff --quiet HEAD 2>/dev/null && git diff --cached --quiet HEAD 2>/dev/nu
   # No changes to tracked files — still push any unpushed commits
   UNPUSHED=$(git log origin/main..HEAD --oneline 2>/dev/null | wc -l)
   if [ "$UNPUSHED" -gt 0 ]; then
-    git push origin main 2>/dev/null || true
+    push_with_status || true
   fi
   exit 0
 fi
@@ -74,7 +103,7 @@ git commit -m "chore: auto-save session changes
 
 Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>" 2>/dev/null || exit 0
 
-# Push (non-blocking, don't fail the hook)
-git push origin main 2>/dev/null || true
+# Push (non-blocking, don't fail the hook). 失敗は /tmp/auto-push-status.json に記録される
+push_with_status || true
 
 exit 0

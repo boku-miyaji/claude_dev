@@ -20,6 +20,38 @@
 
 `countermeasure` と `decision` の違い: **起点が失敗か前向きか**。「同じ失敗を二度起こさないため」=`countermeasure`、「これで行くと決めた」=`decision`。
 
+## ADR としての書き方（decision 型レコードの規律）
+
+このリポジトリでは ADR ファイルを別途持たず、`decision` 型レコードで ADR を兼ねる（AGENTS.md §3 参照）。そのため、`decision` を記録する時は ADR と等価の情報量を埋める。
+
+| ADR項目 | growth_events フィールド | 書く内容 |
+|---|---|---|
+| **Status** | `event_type='decision'` + `status` | active / superseded / resolved |
+| **Context** | `what_happened` | なぜこの判断が必要だったか、背景・制約・選択肢 |
+| **Decision** | `title` + `countermeasure` | title に短い決定名、countermeasure に「具体的に何を採用するか」 |
+| **Consequences** | `result` | 採用後の影響・トレードオフ・観察された結果（後追い更新可） |
+| **Supersedes** | `parent_id` | 新レコードが旧レコードを指す。旧の `status` は `superseded` に更新する |
+
+### supersedes チェーンの作法
+
+1. 旧 decision はそのまま不変（`title`, `what_happened`, `countermeasure`, `result` を書き換えない）
+2. 新 decision を INSERT し、`parent_id = <旧レコード ID>` をセット
+3. 旧 decision の `status` のみ `'active'` → `'superseded'` に UPDATE
+4. これで「いつ・なぜ・何を・何に置き換えたか」が完全に辿れる
+
+### 「これは ADR レベルか？」の判断基準
+
+以下のどれかに当てはまる判断は `decision` レコード必須:
+
+- 新しい依存関係・ライブラリ・基盤の採用
+- データモデル / スキーマの方針変更
+- アーキテクチャ・モジュール境界の決定
+- セキュリティ・認証方式の決定
+- UI/UX の根本方針（silence-first / Proactive Prelude / Files-first 等）
+- 商用化・プライシング・ターゲット層の決定
+
+逆に、**バグ修正・スタイリング・小さなリファクタリングは ADR 化しない**。
+
 ## PJ タグ選定（必須、1つのみ）
 
 `.company/growth-tags.yaml` の `project.values` から選ぶ。
