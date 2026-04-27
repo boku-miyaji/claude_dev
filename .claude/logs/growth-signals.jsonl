@@ -1309,3 +1309,5 @@
 {"ts":"2026-04-28T08:44:16+09:00","signal":"raw_prompt","prompt":"ものレポにした時に、デプロイは全部いっぺんにされる？少し変更したのにすべてのcontainerが更新されるの？pythonは入ります。\nmonorepoにしない可能性もある？fastAPIのデメリットある？本当に大丈夫？本番に耐えうる？モダン？\nFEだけstatic web appsにするとかはないの？ python beはcontainer appsとか。あとnext.js, node.jsとかの違いもわからないし、何が最適かもわかっていない。\n"}
 {"ts":"2026-04-28T08:44:16+09:00","signal":"raw_prompt","prompt":"ものレポにした時に、デプロイは全部いっぺんにされる？少し変更したのにすべてのcontainerが更新されるの？pythonは入ります。\nmonorepoにしない可能性もある？fastAPIのデメリットある？本当に大丈夫？本番に耐えうる？モダン？\nFEだけstatic web appsにするとかはないの？ python beはcontainer appsとか。あとnext.js, node.jsとかの違いもわからないし、何が最適かもわかっていない。\n"}
 {"ts":"2026-04-28T08:51:51+09:00","signal":"raw_prompt","prompt":"pythonではなく、typescriptのほうがいいとかある？\n A1'-2でいい。\nmonorepoでいい\n"}
+{"ts":"2026-04-28T08:51:51+09:00","signal":"raw_prompt","prompt":"pythonではなく、typescriptのほうがいいとかある？\n A1'-2でいい。\nmonorepoでいい\n"}
+{"ts":"2026-04-28T08:54:26+09:00","signal":"raw_prompt","prompt":"newsがずっとこうしんされていないがなぜ？\n"}
