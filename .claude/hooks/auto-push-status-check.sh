@@ -12,6 +12,23 @@ STATUS_FILE="/tmp/auto-push-status.json"
 # stdin (hook input) を捨てる
 cat > /dev/null
 
+# blocked.json: auto-push.sh が build/cache/巨大ファイルを除外したことを通知
+BLOCKED_FILE="/tmp/auto-push-blocked.json"
+if [ -f "$BLOCKED_FILE" ]; then
+  echo ""
+  echo "⚠️  auto-save が一部ファイルを commit から除外しました"
+  if command -v jq >/dev/null 2>&1; then
+    jq -r '.blocked // empty' "$BLOCKED_FILE" 2>/dev/null | sed 's/^/   /'
+  else
+    grep -o '"blocked":"[^"]*"' "$BLOCKED_FILE" | head -1 | cut -d'"' -f4 | sed 's/^/   /'
+  fi
+  echo ""
+  echo "   理由: GitHub の 100MB 制限超過 / build artifacts (node_modules・.next 等) は履歴に入れない方針"
+  echo "   対処: .gitignore に該当パスを追加してください（既存なら .git のキャッシュを clear）"
+  echo ""
+  rm -f "$BLOCKED_FILE"
+fi
+
 [ -f "$STATUS_FILE" ] || exit 0
 
 # jq が無くても基本動作はするように

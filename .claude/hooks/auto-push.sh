@@ -93,6 +93,46 @@ for pat in "${DANGEROUS_PATTERNS[@]}"; do
   done
 done
 
+# Safety (large files & build artifacts):
+# 過去に node_modules / .next 等が誤って tracked になり、push 時に GitHub の
+# 100MB 制限に引っかかった事例 (2026-04-27 incident) の再発防止。
+# .gitignore で防げない「すでに tracked」のケースを commit 直前で水際ブロック。
+LARGE_FILE_THRESHOLD=$((45 * 1024 * 1024))  # 45MB（GitHub の 50MB 警告ラインの手前）
+BLOCKED_FILES=""
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  block_reason=""
+  case "$f" in
+    */node_modules/*|node_modules/*) block_reason="node_modules" ;;
+    */.next/*|.next/*)               block_reason=".next-build" ;;
+    */dist/*|dist/*)                 block_reason="dist" ;;
+    */build/*|build/*)               block_reason="build" ;;
+    *.tsbuildinfo)                   block_reason="tsbuildinfo" ;;
+    *.log)                           block_reason="log" ;;
+  esac
+  if [ -z "$block_reason" ] && [ -f "$f" ]; then
+    size=$(stat -c%s -- "$f" 2>/dev/null || echo 0)
+    if [ "$size" -gt "$LARGE_FILE_THRESHOLD" ]; then
+      block_reason="oversize:$((size / 1024 / 1024))MB"
+    fi
+  fi
+  if [ -n "$block_reason" ]; then
+    git reset HEAD -- "$f" 2>/dev/null || true
+    BLOCKED_FILES="${BLOCKED_FILES}${f} [${block_reason}]\n"
+  fi
+done < <(git diff --cached --name-only 2>/dev/null)
+
+# blocked があれば /tmp に記録（次セッションで検知できるように）
+if [ -n "$BLOCKED_FILES" ]; then
+  if command -v jq >/dev/null 2>&1; then
+    jq -n \
+      --arg time "$(date -Iseconds)" \
+      --arg blocked "$(printf '%b' "$BLOCKED_FILES")" \
+      '{status:"blocked", time:$time, message:"auto-save が build/cache/巨大ファイルを除外しました。.gitignore 整備を推奨", blocked:$blocked}' \
+      > /tmp/auto-push-blocked.json 2>/dev/null
+  fi
+fi
+
 # Double-check there's something staged
 if git diff --cached --quiet HEAD 2>/dev/null; then
   exit 0

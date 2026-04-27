@@ -812,15 +812,23 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
             pointerEvents: 'none' as const,
           }
 
-          // Compute overlap layout for this day's events
-          const overlapLayout = layoutOverlappingEvents(
-            dayEvts.map(evt => {
+          // Compute overlap layout for this day's events + time-boxed tasks combined.
+          // Events と tasks を別々に layout すると重なって見える bug があったので統合。
+          // ID は接頭辞で衝突回避（"evt-" / "task-"）。
+          const overlapLayout = layoutOverlappingEvents([
+            ...dayEvts.map(evt => {
               let sH = getJSTHours(evt.start_time)
               let eH = getJSTHours(evt.end_time)
               if (evt.all_day) { sH = START_H; eH = START_H + 0.5 }
-              return { id: evt.id, startH: sH, endH: eH }
-            })
-          )
+              return { id: `evt-${evt.id}`, startH: sH, endH: eH }
+            }),
+            ...dayTimedTasks.flatMap(t => {
+              if (!t.scheduled_at) return []
+              const sH = getJSTHours(t.scheduled_at)
+              const durH = (t.estimated_minutes || 30) / 60
+              return [{ id: `task-${t.id}`, startH: sH, endH: sH + durH }]
+            }),
+          ])
 
           return (
             <div key={di} style={colStyle}>
@@ -850,7 +858,7 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
                 const bg = CAL_BG_COLORS[evt.calendar_type] || '#5b5fc7'
 
                 // Column layout for overlapping events
-                const layout = overlapLayout.get(evt.id)
+                const layout = overlapLayout.get(`evt-${evt.id}`)
                 const col = layout?.col ?? 0
                 const totalCols = layout?.totalCols ?? 1
                 const leftPct = isDragging ? 0 : (col / totalCols) * 100
@@ -891,13 +899,21 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
                 const top = (sH - START_H) * HOUR_H
                 const height = Math.max((eH - sH) * HOUR_H, 28)
                 const done = t.status === 'done'
+                // Column layout shared with overlapping events (so a task and an event at
+                // the same time sit side-by-side instead of stacking on top of each other).
+                const tLayout = overlapLayout.get(`task-${t.id}`)
+                const tCol = tLayout?.col ?? 0
+                const tTotal = tLayout?.totalCols ?? 1
+                const tLeftPct = (tCol / tTotal) * 100
+                const tWidthPct = (1 / tTotal) * 100
                 return (
                   <div key={`task-${t.id}`}
                     title={`${fmtTime(t.scheduled_at)} ${t.title}\n☐ タスク`}
                     style={{
                       position: 'absolute',
                       top,
-                      left: 2, right: 2,
+                      left: `calc(${tLeftPct}% + 2px)`,
+                      width: `calc(${tWidthPct}% - 4px)`,
                       height: height - 2,
                       background: 'rgba(139,92,246,.12)',
                       border: `1.5px dashed ${TASK_COLOR}`,
