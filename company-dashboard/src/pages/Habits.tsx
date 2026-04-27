@@ -488,74 +488,65 @@ export function Habits() {
     <div className="page">
       <PageHeader title={<>習慣を<strong>育てる</strong></>} description="小さな1日の積み重ねが、自分を形作る。" />
 
-      {/* ─── [A] Hero: Streak + Today Progress ─── */}
+      {/* ─── [A] KPI row (spec): Today / Streak / Best ─── */}
       {habits.length > 0 && (
-        <Card style={{
-          marginBottom: 20,
-          background: isPerfectToday
-            ? 'linear-gradient(135deg, var(--green-bg), var(--surface))'
-            : undefined,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            {/* Progress Ring */}
-            <ProgressRing completed={todayStats.done} total={todayStats.total} size={76} />
-
-            {/* Streak Info */}
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span style={{
-                  fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 28,
-                  color: streakInfo.current > 0 ? 'var(--green)' : 'var(--text3)',
-                  letterSpacing: '-.03em',
-                }}>
-                  {streakInfo.current}
-                </span>
-                <span style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 500 }}>
-                  days streak
-                </span>
+        <>
+          <div className="habits-kpi-row">
+            <div className="kpi-card">
+              <div className="kpi-label">今日の達成</div>
+              <div className="kpi-val">
+                {todayStats.done} <span style={{ fontSize: 14, color: 'var(--text3)' }}>/ {todayStats.total}</span>
               </div>
-              {streakInfo.best > 0 && (
-                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
-                  Best: {streakInfo.best} days
-                </div>
-              )}
-              {streakInfo.current > 0 && streakInfo.daysToMilestone > 0 && (
-                <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2, fontWeight: 500 }}>
-                  {streakInfo.daysToMilestone} more to {streakInfo.nextMilestone} days
-                </div>
-              )}
-              {streakInfo.current === 0 && streakInfo.best > 0 && (
-                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
-                  {streakInfo.best} days was great. Let's start again.
-                </div>
-              )}
-
-              {/* Today remaining */}
-              {!isPerfectToday && todayStats.total > 0 && (
-                <div style={{
-                  fontSize: 11, color: 'var(--text2)', marginTop: 6,
-                  background: 'var(--surface2)', borderRadius: 4, padding: '3px 8px',
-                  display: 'inline-block',
-                }}>
-                  {todayStats.total - todayStats.done} remaining today
-                </div>
-              )}
-              {isPerfectToday && (
-                <div style={{
-                  fontSize: 11, color: 'var(--green)', marginTop: 6,
-                  fontWeight: 600,
-                }}>
-                  Today: Perfect
-                </div>
-              )}
+              <div className="kpi-sub">
+                {isPerfectToday ? <span style={{ color: 'var(--green)' }}>Perfect ✓</span> :
+                  todayStats.total > 0 ? `あと ${todayStats.total - todayStats.done}件` : '—'}
+              </div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-label">現在のストリーク</div>
+              <div className="kpi-val" style={{ color: streakInfo.current > 0 ? 'var(--green)' : 'var(--text3)' }}>
+                {streakInfo.current}
+              </div>
+              <div className="kpi-sub">
+                {streakInfo.current > 0 && streakInfo.daysToMilestone > 0
+                  ? `次の節目 ${streakInfo.nextMilestone}日まで あと${streakInfo.daysToMilestone}`
+                  : streakInfo.current === 0 && streakInfo.best > 0
+                  ? `Best ${streakInfo.best}日。また始めよう`
+                  : '日連続'}
+              </div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-label">最長ストリーク</div>
+              <div className="kpi-val" style={{ color: 'var(--amber)' }}>{streakInfo.best}</div>
+              <div className="kpi-sub">日 — これまでの記録</div>
             </div>
           </div>
 
-          {/* Milestone Bar */}
+          {/* Milestone Bar (visual progress to next milestone) */}
           {streakInfo.current > 0 && (
-            <MilestoneBar current={streakInfo.current} milestones={MILESTONES} />
+            <div style={{ marginBottom: 20 }}>
+              <MilestoneBar current={streakInfo.current} milestones={MILESTONES} />
+            </div>
           )}
-        </Card>
+
+          {/* Today's progress ring (kept as visual focal point) */}
+          {todayStats.total > 0 && (
+            <div className="habits-today" style={{
+              background: isPerfectToday
+                ? 'linear-gradient(135deg, var(--green-bg), var(--surface))'
+                : undefined,
+            }}>
+              <div className="ht-head">
+                <div>
+                  <div className="ht-title">今日の習慣</div>
+                </div>
+                <div className="ht-progress-ring">
+                  <ProgressRing completed={todayStats.done} total={todayStats.total} size={56} />
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* ─── [B] Today's Habits ─── */}

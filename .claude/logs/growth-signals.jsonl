@@ -1014,3 +1014,6 @@
 {"ts":"2026-04-26T23:58:39+09:00","signal":"raw_prompt","prompt":"残作業すべてお願い。\n"}
 {"ts":"2026-04-26T23:58:39+09:00","signal":"raw_prompt","prompt":"残作業すべてお願い。\n"}
 {"ts":"2026-04-26T23:59:06+09:00","signal":"raw_prompt","prompt":"残作業すべて実施して\n"}
+{"ts":"2026-04-26T23:59:06+09:00","signal":"raw_prompt","prompt":"残作業すべて実施して\n"}
+{"ts":"2026-04-27T09:17:47+09:00","signal":"raw_prompt","prompt":"じゃあ、system-specのページを読んでいけばいい状態になっている？\n"}
+{"ts":"2026-04-27T09:18:11+09:00","signal":"raw_prompt","prompt":"Classify each prompt. For each, output JSON with id and tags.\nTags to assign:\n- pj: project (rikyu/circuit/foundry or null)\n- intent: implement/fix/investigate/design/review/brainstorm/manage/info/chat\n- dept: ai-dev/sys-dev/security/materials/intelligence/research/ux-design/pm/ops/secretary or null\n- cat: feature/infra/docs/quality/ops or null\n\nPrompts: [{\"id\":3078,\"prompt\":\"ハンバーガーがいい\\n他のページも回収しよう\"},{\"id\":3076,\"prompt\":\"実装はすべて完了した？\"}\n"}

@@ -1389,13 +1389,13 @@ export function Calendar() {
         <button className="btn btn-ghost btn-sm" onClick={() => setViewDate(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))}>今日</button>
         <button className="btn btn-ghost btn-sm" onClick={() => nav(1)}>▶</button>
         <span style={{ fontSize: 15, fontWeight: 600, minWidth: 160 }}>{dateLabel(viewDate, viewMode)}</span>
-        <div style={{ display: 'flex', gap: 2, marginLeft: 'auto' }}>
+        <div className="tabs-row" style={{ marginLeft: 'auto', marginBottom: 0, borderBottom: 'none' }}>
           {(['day', 'week', 'month'] as ViewMode[]).map(v => (
-            <button key={v} className="btn btn-sm" onClick={() => setViewMode(v)} style={{
-              fontSize: 12, padding: '4px 12px', border: '1px solid var(--border)',
-              background: v === viewMode ? 'var(--accent)' : 'transparent',
-              color: v === viewMode ? '#fff' : 'var(--text2)', borderRadius: 4,
-            }}>{VIEW_LABELS[v]}</button>
+            <button
+              key={v}
+              className={`tab-btn ${v === viewMode ? 'active' : ''}`}
+              onClick={() => setViewMode(v)}
+            >{VIEW_LABELS[v]}</button>
           ))}
         </div>
         <button className="btn btn-ghost btn-sm" onClick={refetch} style={{ fontSize: 11 }}>↻</button>

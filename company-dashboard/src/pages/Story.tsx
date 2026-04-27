@@ -75,55 +75,47 @@ export function Story() {
 
       {/* Current Arc */}
       {arc && (
-        <div className="section">
-          <div className="section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>最近の変化</span>
-            {!editingArc && (
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ fontSize: 10, padding: '2px 8px', textTransform: 'none', letterSpacing: 0 }}
-                onClick={() => {
-                  setArcDraft(displayedArcNarrative ?? '')
-                  setEditingArc(true)
-                }}
-              >
-                AIの解釈を直す
-              </button>
-            )}
-          </div>
-          <Card>
-            {editingArc ? (
-              <div>
-                <textarea
-                  value={arcDraft}
-                  onChange={(e) => setArcDraft(e.target.value)}
-                  rows={4}
-                  style={{ width: '100%', fontSize: 13, lineHeight: 1.8, padding: 10, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text2)', resize: 'vertical' }}
-                />
-                <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6, lineHeight: 1.5 }}>
-                  AI が読み取ったあなたの物語の今のフェーズです。違うと感じたら自分の言葉で書き換えてください。
-                  あなたの訂正は次の解釈にも影響します。
-                </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button className="btn btn-primary btn-sm" onClick={saveArcOverride} disabled={savingArc || !arcDraft.trim()}>
-                    {savingArc ? '保存中...' : '保存'}
-                  </button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => setEditingArc(false)} disabled={savingArc}>
-                    キャンセル
-                  </button>
-                </div>
+        <div className="arc-card">
+          <div className="arc-eyebrow">今、あなたがいる場所</div>
+          {editingArc ? (
+            <div>
+              <textarea
+                value={arcDraft}
+                onChange={(e) => setArcDraft(e.target.value)}
+                rows={4}
+                style={{ width: '100%', fontSize: 14, lineHeight: 1.85, padding: 10, borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text2)', resize: 'vertical' }}
+              />
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6, lineHeight: 1.5 }}>
+                AI が読み取ったあなたの物語の今のフェーズです。違うと感じたら自分の言葉で書き換えてください。
+                あなたの訂正は次の解釈にも影響します。
               </div>
-            ) : (
-              <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.8 }}>
-                {displayedArcNarrative}
-                {arcOverride && (
-                  <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 8, fontStyle: 'italic' }}>
-                    ✎ あなたが編集した解釈
-                  </div>
-                )}
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button className="btn btn-primary btn-sm" onClick={saveArcOverride} disabled={savingArc || !arcDraft.trim()}>
+                  {savingArc ? '保存中...' : '保存'}
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => setEditingArc(false)} disabled={savingArc}>
+                  キャンセル
+                </button>
               </div>
-            )}
-          </Card>
+            </div>
+          ) : (
+            <>
+              <p className="arc-text">{displayedArcNarrative}</p>
+              <div className="arc-meta">
+                {arcOverride && <span style={{ fontStyle: 'italic' }}>✎ あなたが編集した解釈</span>}
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ fontSize: 10, padding: '2px 8px', textTransform: 'none', letterSpacing: 0, marginLeft: 'auto' }}
+                  onClick={() => {
+                    setArcDraft(displayedArcNarrative ?? '')
+                    setEditingArc(true)
+                  }}
+                >
+                  AIの解釈を直す
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 

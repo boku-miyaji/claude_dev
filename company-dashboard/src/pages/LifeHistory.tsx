@@ -463,22 +463,15 @@ export function LifeHistory() {
       <div className="page">
         <PageHeader title={<>自分の<strong>ルーツ</strong></>} description={`${questionCount + 1} / ${total}問目`} />
 
-        <Card>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--accent2)', padding: '2px 8px', background: 'rgba(75, 120, 98,0.12)', borderRadius: 12 }}>
-              {currentQ.stage_label}
-            </span>
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--text2)', padding: '2px 8px', background: 'var(--surface2)', borderRadius: 12 }}>
-              {currentQ.axis_label}
-            </span>
+        <div className="roots-session">
+          <div className="rs-eyebrow">
+            ROOTS
+            <span className="count">{questionCount + 1} / {total}</span>
           </div>
-          <div style={{ fontSize: 17, lineHeight: 1.6, color: 'var(--text)', marginBottom: 14, fontWeight: 500 }}>
-            {currentQ.question}
-          </div>
+          <div className="rs-stage">{currentQ.stage_label} · {currentQ.axis_label}</div>
+          <div className="rs-q">{currentQ.question}</div>
           {currentQ.rationale && (
-            <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 14, fontStyle: 'italic' }}>
-              なぜ今これを: {currentQ.rationale}
-            </div>
+            <div className="rs-hint">なぜ今これを: {currentQ.rationale}</div>
           )}
           <textarea
             ref={answerRef}
@@ -487,31 +480,28 @@ export function LifeHistory() {
             onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); submitAnswer() } }}
             placeholder="思い出したことを自由に…（Cmd/Ctrl + Enter で送信）"
             rows={6}
-            style={{
-              width: '100%', padding: 12, fontSize: 13, lineHeight: 1.7,
-              border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)',
-              color: 'var(--text)', resize: 'vertical', fontFamily: 'inherit',
-            }}
             disabled={loading}
           />
-          <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
-            <button
-              className="btn btn-p btn-sm"
-              onClick={submitAnswer}
-              disabled={!answer.trim() || loading}
-            >
-              {loading ? '保存中...' : '答える → 次の質問'}
-            </button>
-            <button className="btn btn-g btn-sm" onClick={skipQuestion} disabled={loading}>
-              この質問はスキップ
-            </button>
-            <div style={{ flex: 1 }} />
-            <button className="btn btn-ghost btn-sm" onClick={endSession} disabled={loading}>
-              セッションを終える
-            </button>
+          <div className="rs-actions">
+            <span className="rs-meta">{loading ? '保存中…' : ''}</span>
+            <div className="rs-btns">
+              <button className="btn btn-ghost btn-sm" onClick={endSession} disabled={loading}>
+                セッションを終える
+              </button>
+              <button className="btn btn-g btn-sm" onClick={skipQuestion} disabled={loading}>
+                スキップ
+              </button>
+              <button
+                className="btn btn-p btn-sm"
+                onClick={submitAnswer}
+                disabled={!answer.trim() || loading}
+              >
+                答える → 次の質問
+              </button>
+            </div>
           </div>
           {error && <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 8 }}>{error}</div>}
-        </Card>
+        </div>
 
         {dialogue.length > 0 && (
           <div className="section" style={{ marginTop: 20 }}>
