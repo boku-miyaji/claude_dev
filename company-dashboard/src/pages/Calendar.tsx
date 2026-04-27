@@ -534,8 +534,11 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
   const onCellMouseDown = useCallback((di: number, e: React.MouseEvent) => {
     if (e.button !== 0 || !bodyRef.current) return
     e.preventDefault()
-    const bodyRect = bodyRef.current.getBoundingClientRect()
-    const startY = snapY(e.clientY - bodyRect.top)
+    const body = bodyRef.current
+    const bodyRect = body.getBoundingClientRect()
+    // scrollTop must be added because cal-tg-body has overflow-y:auto;
+    // e.clientY - bodyRect.top is viewport-relative and ignores internal scroll.
+    const startY = snapY(e.clientY - bodyRect.top + body.scrollTop)
     createDragRef.current = { dayIndex: di, startY, currentY: startY, moved: false }
     setCreateDrag({ dayIndex: di, top: startY, height: SNAP_PX })
     setHoverCell(null)
@@ -543,7 +546,7 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
     const onMove = (me: MouseEvent) => {
       const r = createDragRef.current
       if (!r) return
-      const curY = snapY(Math.max(0, Math.min(me.clientY - bodyRect.top, (END_H - START_H) * HOUR_H)))
+      const curY = snapY(Math.max(0, Math.min(me.clientY - bodyRect.top + body.scrollTop, (END_H - START_H) * HOUR_H)))
       if (curY !== r.startY) r.moved = true
       r.currentY = curY
       const top = Math.min(r.startY, curY)
@@ -677,8 +680,9 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
               <div key={di} className="cal-tg-cell" data-day={di} data-hour={h} style={{ position: 'relative' }}
                 onMouseMove={e => {
                   if (createDragRef.current || dragRef.current || activeResizeRef.current || !bodyRef.current) return
-                  const rect = bodyRef.current.getBoundingClientRect()
-                  const y = snapY(Math.max(0, Math.min(e.clientY - rect.top, (END_H - START_H) * HOUR_H - SNAP_PX)))
+                  const body = bodyRef.current
+                  const rect = body.getBoundingClientRect()
+                  const y = snapY(Math.max(0, Math.min(e.clientY - rect.top + body.scrollTop, (END_H - START_H) * HOUR_H - SNAP_PX)))
                   setHoverCell({ dayIndex: di, y })
                 }}
                 onMouseDown={e => { if (!dragRef.current) onCellMouseDown(di, e) }} />
@@ -1558,6 +1562,10 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
   const [calendarId, setCalendarId] = useState(GCAL_CALENDARS.find(c => c.type === 'primary')?.id || GCAL_CALENDARS[0]?.id || 'primary')
   // Time is opt-in for all-day slots (no drag range), auto-on for time-grid slots.
   const [hasTime, setHasTime] = useState(hasRange)
+  // Task subtype: deadline = 期日のみ / timeblock = 時間ブロックを確保
+  // Drag-selected range defaults to timeblock; click-only (all-day) defaults to deadline.
+  const [taskType, setTaskType] = useState<'deadline' | 'timeblock'>(hasRange ? 'timeblock' : 'deadline')
+  const [dueDate, setDueDate] = useState(date)
   const [saving, setSaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -1577,18 +1585,23 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
     if (!t || saving) return
     setSaving(true)
     if (kind === 'task') {
-      const minutes = hasTime ? Math.max(5, timeStrToMinutes(endTime) - timeStrToMinutes(startTime)) : null
+      // deadline = 期日のみ。時間ブロックは確保しない。
+      // timeblock = カレンダー上に時間枠を確保する。
+      const isDeadline = taskType === 'deadline'
+      const useTime = !isDeadline && hasTime
+      const minutes = useTime ? Math.max(5, timeStrToMinutes(endTime) - timeStrToMinutes(startTime)) : null
+      const targetDate = isDeadline ? dueDate : date
       const created = await addTaskToStore({
         title: t,
         type: 'task',
         priority: 'normal',
-        due_date: date,
-        scheduled_at: hasTime ? `${date}T${startTime}:00+09:00` : null,
+        due_date: targetDate,
+        scheduled_at: useTime ? `${targetDate}T${startTime}:00+09:00` : null,
         estimated_minutes: minutes,
       })
       setSaving(false)
       if (!created) { toast('追加に失敗しました'); return }
-      toast('タスクを追加しました')
+      toast(isDeadline ? '締切タスクを追加しました' : 'タスクを追加しました')
       onCreatedTask()
     } else {
       await onCreateEvent({ summary: t, date, startTime, endTime, calendarId })

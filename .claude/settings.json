@@ -705,5 +705,6 @@
   "skipDangerousModePermissionPrompt": false,
   "theme": "dark",
   "preferredNotifChannel": "terminal_bell",
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "model": "sonnet"
 }

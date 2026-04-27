@@ -294,7 +294,7 @@ a{color:var(--accent2);text-decoration:none}
 .dot-archived{background:var(--text3)}
 
 /* Buttons */
-.btn{padding:9px 18px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px;font-family:var(--font);letter-spacing:-.01em}
+.btn{padding:9px 18px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px;font-family:var(--font);letter-spacing:-.01em;white-space:nowrap;flex-shrink:0}
 .btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2);box-shadow:0 2px 8px rgba(80,70,229,.25)}
 .btn-g{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-g:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
 .btn-d{background:transparent;color:var(--red);border:1px solid var(--red-border)}.btn-d:hover{background:var(--red-bg)}
