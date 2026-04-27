@@ -616,7 +616,7 @@ export function Habits() {
                           {/* spec準拠の freq-badge — 「毎日 / 週N回 / 月N回」 */}
                           <span style={{
                             fontSize: 10, padding: '1px 7px', borderRadius: 3,
-                            background: habit.frequency === 'daily' ? 'var(--surface2)' : 'rgba(75,120,98,.15)',
+                            background: habit.frequency === 'daily' ? 'var(--surface2)' : 'rgba(80,70,229,.15)',
                             color: habit.frequency === 'daily' ? 'var(--text3)' : 'var(--accent)',
                             fontFamily: 'var(--mono)', fontWeight: 500, lineHeight: 1.4,
                           }}>

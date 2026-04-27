@@ -388,11 +388,11 @@ function ItemRow({
 }) {
   const kindStyle: Record<typeof kind, { label: string; bg: string; color: string }> = {
     task: { label: 'タスク', bg: 'var(--accent-bg)', color: 'var(--accent)' },
-    habit: { label: '習慣', bg: 'rgba(75,120,98,.16)', color: 'var(--accent2)' },
+    habit: { label: '習慣', bg: 'rgba(80,70,229,.16)', color: 'var(--accent2)' },
     dream: { label: '夢', bg: 'var(--amber-bg)', color: 'var(--amber)' },
   }
   const confStyle: Record<typeof confidence, { label: string; bg: string; color: string }> = {
-    high: { label: '確度 高', bg: 'rgba(75,120,98,.20)', color: 'var(--accent)' },
+    high: { label: '確度 高', bg: 'rgba(80,70,229,.20)', color: 'var(--accent)' },
     medium: { label: '確度 中', bg: 'rgba(255,165,0,.20)', color: 'var(--amber)' },
     low: { label: '確度 低', bg: 'var(--surface2)', color: 'var(--text3)' },
   }

@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Design tokens — derived from focus-you-design-spec.html (Mock G: teal-green + ivory) */
+  /* Design tokens — focus-you brand purple (icon: #5046E5 → #7C6CFF) + ivory */
   --bg: #F7F6F3; --surface: #F0EEE9; --surface2: #E8E5DF; --surface3: #DEDAD3;
   --border: #DEDAD3; --border2: #CAC6BE;
   --text: #1B1A17; --text2: #6A655C; --text3: #A09990;
-  --accent: #4B7862; --accent2: #3D6554; --accent-bg: rgba(75,120,98,.08); --accent-border: rgba(75,120,98,.20);
+  --accent: #5046E5; --accent2: #4030C5; --accent-bg: rgba(80,70,229,.08); --accent-border: rgba(80,70,229,.20);
   --green: #4B7862; --green-bg: rgba(75,120,98,.08); --green-border: rgba(75,120,98,.20);
   --amber: #8A6820; --amber-bg: rgba(138,104,32,.10); --amber-border: rgba(138,104,32,.22);
   --red: #A03020; --red-bg: rgba(160,48,32,.09); --red-border: rgba(160,48,32,.18);
@@ -20,7 +20,7 @@
   --bg: #111110; --surface: #191918; --surface2: #222220; --surface3: #2A2A28;
   --border: #2E2D2A; --border2: #3C3B37;
   --text: #EAE8E2; --text2: #8A8880; --text3: #5A5850;
-  --accent: #6BA890; --accent2: #5A9480; --accent-bg: rgba(107,168,144,.10); --accent-border: rgba(107,168,144,.22);
+  --accent: #9B89FF; --accent2: #7C6CFF; --accent-bg: rgba(155,137,255,.10); --accent-border: rgba(155,137,255,.22);
   --green: #6BA890; --green-bg: rgba(107,168,144,.10); --green-border: rgba(107,168,144,.22);
   --amber: #C09840; --amber-bg: rgba(192,152,64,.10); --amber-border: rgba(192,152,64,.22);
   --red: #C05840; --red-bg: rgba(192,88,64,.10); --red-border: rgba(192,88,64,.22);
@@ -295,7 +295,7 @@ a{color:var(--accent2);text-decoration:none}
 
 /* Buttons */
 .btn{padding:9px 18px;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px;font-family:var(--font);letter-spacing:-.01em}
-.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2);box-shadow:0 2px 8px rgba(75,120,98,.25)}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2);box-shadow:0 2px 8px rgba(80,70,229,.25)}
 .btn-g{background:transparent;color:var(--text2);border:1px solid var(--border)}.btn-g:hover{border-color:var(--border2);color:var(--text);background:var(--surface2)}
 .btn-d{background:transparent;color:var(--red);border:1px solid var(--red-border)}.btn-d:hover{background:var(--red-bg)}
 .btn-sm{padding:6px 12px;font-size:11px}
@@ -422,7 +422,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 /* Auth page */
 .auth-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:linear-gradient(180deg, #f0eeff 0%, var(--bg) 40%)}
 .auth-box{text-align:center;max-width:380px}
-.auth-logo{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:700;margin:0 auto 24px;box-shadow:0 8px 24px rgba(75,120,98,.2)}
+.auth-logo{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:700;margin:0 auto 24px;box-shadow:0 8px 24px rgba(80,70,229,.2)}
 .auth-box h1{font-size:28px;font-weight:700;letter-spacing:-.04em;margin-bottom:6px}
 .auth-box p{color:var(--text2);font-size:14px;margin-bottom:32px}
 .btn-github{background:#1a1d21;color:#fff;padding:14px 32px;font-size:14px;font-weight:600;border-radius:var(--r);border:none;cursor:pointer;display:inline-flex;align-items:center;gap:10px;font-family:var(--font);transition:all .2s;letter-spacing:-.01em}
@@ -495,7 +495,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .fs-comment-item{padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;background:var(--surface2)}
 .fs-comment-item .fc-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .fs-comment-item .fc-body{font-size:13px;white-space:pre-wrap;line-height:1.6}
-.fs-fab{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(75,120,98,.4);z-index:1001;display:none;align-items:center;justify-content:center;transition:transform .15s}
+.fs-fab{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:20px;cursor:pointer;box-shadow:0 4px 12px rgba(80,70,229,.4);z-index:1001;display:none;align-items:center;justify-content:center;transition:transform .15s}
 .fs-fab:hover{transform:scale(1.08)}
 .fs-overlay.active~.fs-fab{display:flex}
 @media(max-width:768px){
@@ -539,7 +539,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 .chat-input-area{border-top:1px solid var(--border);padding:16px 24px 24px;background:var(--bg)}
 .chat-input-wrap{max-width:720px;margin:0 auto;position:relative}
 .chat-input-box{display:flex;align-items:flex-end;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:4px 4px 4px 16px;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:border-color .2s,box-shadow .2s}
-.chat-input-box:focus-within{border-color:var(--accent-border);box-shadow:0 2px 12px rgba(75,120,98,.08)}
+.chat-input-box:focus-within{border-color:var(--accent-border);box-shadow:0 2px 12px rgba(80,70,229,.08)}
 .chat-input-box textarea{flex:1;border:none;outline:none;resize:none;font-size:14px;font-family:var(--font);line-height:1.5;padding:10px 0;max-height:120px;min-height:24px;background:transparent;color:var(--text)}
 .chat-input-box textarea::placeholder{color:var(--text3)}
 .chat-input-btn{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,opacity .15s}
@@ -954,7 +954,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
   font-family: var(--mono);
   font-weight: 500;
 }
-.freq-badge.weekly { background: rgba(75,120,98,.15); color: var(--accent); }
+.freq-badge.weekly { background: rgba(80,70,229,.15); color: var(--accent); }
 
 /* Milestone bar — 習慣の記念日（7/30/100日）の近さを視覚化 */
 .milestones {
@@ -1930,7 +1930,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
   font-family: var(--mono);
   margin-right: 8px;
 }
-.sa-item .sa-type.arc { background: rgba(75,120,98,.18); color: var(--accent); }
+.sa-item .sa-type.arc { background: rgba(80,70,229,.18); color: var(--accent); }
 .sa-item .sa-type.theme { background: rgba(255,165,0,.18); color: var(--amber); }
 .sa-item .sa-title {
   font-size: 13px; font-weight: 500;
@@ -2470,7 +2470,7 @@ label.form-label{font-size:11px;color:var(--text3);margin-bottom:5px;display:blo
 /* Pending proposals banner */
 .manual-pending {
   display: flex; align-items: flex-start; gap: 12px;
-  background: rgba(75,120,98,.06);
+  background: rgba(80,70,229,.06);
   border: 1px solid var(--accent-border);
   border-left: 3px solid var(--accent);
   border-radius: var(--r);
