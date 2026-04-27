@@ -16,6 +16,7 @@ const SUPABASE_PUBLISHABLE_KEY = Deno.env.get("SB_PUBLISHABLE_KEY")
   || Deno.env.get("SUPABASE_ANON_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const OPUS_MODEL = "claude-opus-4-7";
+const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -47,6 +48,31 @@ const AXES = [
   { key: "career",         label: "仕事・キャリア" },
   { key: "relationships",  label: "人間関係" },
 ] as const;
+
+// preset stage の年齢/時期ヒント。質問文と stage 推論で使う。
+const PRESET_AGE_HINTS: Record<string, string> = {
+  childhood:    "0〜6歳ごろ（保育園・幼稚園）",
+  elementary:   "6〜12歳ごろ（小学校時代）",
+  junior_high:  "12〜15歳ごろ（中学校時代）",
+  high_school:  "15〜18歳ごろ（高校時代）",
+  university:   "18〜22歳ごろ（大学・専門学校時代）",
+  early_career: "22〜27歳ごろ（社会人初期・1〜5年目）",
+  mid_career:   "27〜37歳ごろ（社会人中期）",
+  recent:       "ここ数年〜直近",
+};
+
+function stageAgeHint(stage: { key: string; kind: string; label: string; year_start?: number | null; year_end?: number | null }): string {
+  if (stage.kind === "preset" && PRESET_AGE_HINTS[stage.key]) {
+    return PRESET_AGE_HINTS[stage.key];
+  }
+  if (stage.year_start && stage.year_end) {
+    return `${stage.year_start}〜${stage.year_end}年ごろ`;
+  }
+  if (stage.year_start) {
+    return `${stage.year_start}年ごろ〜`;
+  }
+  return stage.label;
+}
 
 type AxisKey = typeof AXES[number]["key"];
 
@@ -88,6 +114,7 @@ async function anthropicJson<T = Record<string, unknown>>(
   userMessage: string,
   temperature: number,
   maxTokens: number,
+  model: string = OPUS_MODEL,
 ): Promise<T | null> {
   if (!ANTHROPIC_API_KEY) {
     console.error("[life-story] ANTHROPIC_API_KEY not set");
@@ -101,9 +128,9 @@ async function anthropicJson<T = Record<string, unknown>>(
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: OPUS_MODEL,
+      model,
       max_tokens: maxTokens,
-      ...(temperature !== undefined && !/opus-4-7|opus-4-8|sonnet-4-7|sonnet-4-8/i.test(OPUS_MODEL)
+      ...(temperature !== undefined && !/opus-4-7|opus-4-8|sonnet-4-7|sonnet-4-8/i.test(model)
         ? { temperature }
         : {}),
       system: `${systemPrompt}\n\n必ず JSON オブジェクトのみを返してください。前後に説明文を付けない。`,
@@ -125,6 +152,83 @@ async function anthropicJson<T = Record<string, unknown>>(
   } catch {
     return null;
   }
+}
+
+// ============================================================
+// stage / axis content-based reclassification (Haiku)
+// ============================================================
+
+/** answer 本文を読んで、最適な stage と axis を推論する。
+ *  - 明確な時期手掛かりや内容のフォーカスがあれば再分類して confident=true で返す
+ *  - 曖昧なら confident=false で originalStage/Axis を維持する想定
+ *  - Haiku で軽量・高速に判定（コスト抑制）。失敗したら null 返却 → 呼び出し側はフォールバック
+ */
+async function inferStageAndAxis(
+  answer: string,
+  question: string,
+  originalStage: string,
+  originalAxis: string,
+  stages: UserStage[],
+): Promise<
+  | { stage: string; axis: AxisKey; confident: boolean; reason: string }
+  | null
+> {
+  const stagesList = stages.map((s) => {
+    const hint = stageAgeHint(s);
+    return `  - ${s.key}: ${s.label}（${hint}）`;
+  }).join("\n");
+  const axesList = AXES.map((a) => `  - ${a.key}: ${a.label}`).join("\n");
+
+  const systemPrompt = `ユーザーの「人生の棚卸し」回答を読み、最も適切な stage と axis を判定してください。
+
+## 質問が想定した分類
+- stage: ${originalStage}
+- axis: ${originalAxis}
+- 質問: ${question}
+
+## 利用可能な stage 一覧
+${stagesList}
+
+## 利用可能な axis 一覧
+${axesList}
+
+## 判定ルール
+1. **回答本文に明確な時期手掛かり（例: 「中学のとき」「中2の」「13歳」「20代後半」「2018年」「1社目」）があれば、それに合う stage を選び confident=true で返す**
+2. 同様に、回答内容のフォーカス（家族の話か / 仕事の話か / 嬉しかったことか）が明示的なら、それに合う axis を選んで confident=true
+3. 手掛かりが曖昧 / 抽象的 / 解釈の余地が大きいなら、質問が想定した stage と axis をそのまま返して confident=false
+4. 質問と回答が大きくずれている場合は confident=true で再分類する（ユーザーの自由度を尊重）
+5. **stage / axis は必ず上記リストの key の中から選ぶ。リストに無いキーは返さない**
+
+## 出力 JSON
+{
+  "stage": "リストの key",
+  "axis": "リストの key",
+  "confident": true | false,
+  "reason": "なぜそう判定したか（30字以内、簡潔に）"
+}`;
+
+  const result = await anthropicJson<{
+    stage: string;
+    axis: string;
+    confident: boolean;
+    reason: string;
+  }>(systemPrompt, `回答本文:\n${answer}`, 0.1, 200, HAIKU_MODEL);
+
+  if (!result) return null;
+
+  // validation: stage / axis がリストに存在することを保証
+  const validStages = new Set(stages.map((s) => s.key));
+  const validAxes = new Set(AXES.map((a) => a.key));
+  if (!validStages.has(result.stage) || !validAxes.has(result.axis)) {
+    return null;
+  }
+
+  return {
+    stage: result.stage,
+    axis: result.axis as AxisKey,
+    confident: !!result.confident,
+    reason: result.reason ?? "",
+  };
 }
 
 // ============================================================
@@ -312,7 +416,9 @@ async function handleNextQuestion(sb: ReturnType<typeof userClient>, userId: str
 
   const coverage = computeCoverage(entries, stages);
   const target = suggestNext(coverage, { stage: body.focus_stage, axis: body.focus_axis });
-  const stageLabel = stages.find((s) => s.key === target.stage)?.label ?? target.stage;
+  const targetStage = stages.find((s) => s.key === target.stage);
+  const stageLabel = targetStage?.label ?? target.stage;
+  const stageHint = targetStage ? stageAgeHint(targetStage) : "";
   const axisLabel = AXES.find((a) => a.key === target.axis)?.label ?? target.axis;
 
   const existingInArea = entries.filter((e) => e.stage === target.stage && e.axis === target.axis);
@@ -320,16 +426,22 @@ async function handleNextQuestion(sb: ReturnType<typeof userClient>, userId: str
   const depthSoFar = existingInArea.length === 0 ? 0 : Math.max(...existingInArea.map((e) => e.depth_level));
 
   const systemPrompt = `ユーザーの人生の棚卸しを手伝う質問者です。
-今回フォーカスする領域: stage="${target.stage}"(${stageLabel}) × axis="${target.axis}"(${axisLabel})
+今回フォーカスする領域: stage="${target.stage}"(${stageLabel}, ${stageHint}) × axis="${target.axis}"(${axisLabel})
 すでにこの領域で聞いた質問がある場合、**同じ質問を繰り返さず、次の深さの質問をしてください**。
 これまでの深度: ${depthSoFar}/5 (0=未着手, 5=深堀り済み)
 
 ## 良い質問の作り方
+- **時期は具体的に書く**: 質問文に必ず「${stageLabel}（${stageHint}）」を含める
+- **曖昧表現は禁止**: 「小さい頃」「昔」「子供のころ」「若いとき」「あの頃」は使わない
+  - ❌「小さい頃に好きだった遊びは？」
+  - ✅「保育園・幼稚園のころ（0〜6歳ごろ）に好きだった遊びは？」
+  - ❌「学生時代の恩師は？」
+  - ✅「中学校時代（12〜15歳ごろ）に印象に残っている先生は？」
 - 具体的なエピソードを引き出す（「どんな時に」「誰と」「どこで」）
 - 感情を含める（「どう感じたか」）
-- ステージ固有の文脈（小学生なら「学校」「友達」「家族」、社会人なら「仕事」「人間関係」「成長」）
+- ステージ固有の文脈（${stageLabel}なら何が話題になりやすいか想像する）
 - 一度に1つだけ聞く（複合質問は避ける）
-- 30〜60字程度、あまり長くしない
+- 30〜80字程度
 - クリシェを避ける（「夢は何でしたか？」のような月並みな質問は NG）
 
 ## 出力JSON
@@ -382,10 +494,37 @@ async function handleAnswer(sb: ReturnType<typeof userClient>, userId: string, b
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   }
+
+  // 回答内容に時期手掛かり / フォーカスがあれば stage / axis を再分類する。
+  // 失敗 or confident=false ならユーザー指定（質問時の分類）をそのまま使う。
+  const stages = await listUserStages(sb, userId);
+  let finalStage = body.stage;
+  let finalAxis = body.axis;
+  let reclassified = false;
+  let reclassifyReason: string | null = null;
+  try {
+    const inference = await inferStageAndAxis(
+      body.answer,
+      body.question,
+      body.stage,
+      body.axis,
+      stages,
+    );
+    if (inference?.confident) {
+      finalStage = inference.stage;
+      finalAxis = inference.axis;
+      reclassified = finalStage !== body.stage || finalAxis !== body.axis;
+      reclassifyReason = inference.reason;
+    }
+  } catch (err) {
+    console.error("[life-story] inferStageAndAxis failed", (err as Error).message);
+    // フォールバック: 元の stage / axis のまま保存
+  }
+
   const { error } = await sb.from("life_story_entries").insert({
     owner_id: userId,
-    stage: body.stage,
-    axis: body.axis,
+    stage: finalStage,
+    axis: finalAxis,
     question: body.question,
     answer: body.answer,
     depth_level: body.depth_level ?? 1,
@@ -397,9 +536,16 @@ async function handleAnswer(sb: ReturnType<typeof userClient>, userId: string, b
       headers: { ...CORS, "Content-Type": "application/json" },
     });
   }
-  return new Response(JSON.stringify({ saved: true }), {
-    headers: { ...CORS, "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({
+      saved: true,
+      stage: finalStage,
+      axis: finalAxis,
+      reclassified,
+      reason: reclassifyReason,
+    }),
+    { headers: { ...CORS, "Content-Type": "application/json" } },
+  );
 }
 
 async function handleCoverage(sb: ReturnType<typeof userClient>, userId: string) {
