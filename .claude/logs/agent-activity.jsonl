@@ -214,3 +214,5 @@
 {"ts":"2026-04-27T10:22:49+09:00","event":"agent_dispatch","dept":"general-purpose","desc":"Supabase ES256/Publishable移行の調査","model":"default","background":false}
 {"ts":"2026-04-27T10:58:25+09:00","event":"agent_dispatch","dept":"general-purpose","desc":"既知バグの現状を一次ソースで確定","model":"default","background":false}
 {"ts":"2026-04-27T11:18:13+09:00","event":"agent_dispatch","dept":"general-purpose","desc":"Phase 0事前準備一式の作成","model":"default","background":false}
+{"ts":"2026-04-27T11:48:22+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"Competitor 10-company survey","model":"default","background":true}
+{"ts":"2026-04-27T11:48:54+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"FISC + bank AI cases survey","model":"default","background":true}
