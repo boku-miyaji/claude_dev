@@ -24,31 +24,37 @@ if [ ! -f "$TS_FILE" ]; then
 fi
 
 # ---- yaml から academic_papers.arxiv の keywords/categories を抽出 ----
+# PyYAML を使って flow / block の両形式に対応する。
+# pip install されてなければ自動インストールする（GitHub Actions runner 用）。
+python3 -c "import yaml" 2>/dev/null || pip install --quiet pyyaml >/dev/null 2>&1
+
 YAML_KEYWORDS=$(python3 - <<PY
-import re, sys
+import sys, yaml
 with open("$YAML_FILE") as f:
-    text = f.read()
-m = re.search(r"^academic_papers:\s*\n((?:[ \t].*\n|\n)+?)(?=^\S|\Z)", text, re.M)
-if not m:
-    sys.exit("academic_papers section not found")
-section = m.group(1)
-terms = re.findall(r'^\s*- term:\s*"([^"]+)"', section, re.M)
+    data = yaml.safe_load(f)
+ap = (data or {}).get("academic_papers") or {}
+arxiv = ap.get("arxiv") or {}
+# keywords は { keywords: [{term: ...}, ...] } の形 or トップレベル keywords どちらでも拾う
+kw_list = arxiv.get("keywords") or ap.get("keywords") or []
+terms = []
+for kw in kw_list:
+    if isinstance(kw, dict) and "term" in kw:
+        terms.append(kw["term"])
+    elif isinstance(kw, str):
+        terms.append(kw)
 print("\n".join(terms))
 PY
 )
 
 YAML_CATEGORIES=$(python3 - <<PY
-import re, sys
+import sys, yaml
 with open("$YAML_FILE") as f:
-    text = f.read()
-m = re.search(r"^academic_papers:\s*\n((?:[ \t].*\n|\n)+?)(?=^\S|\Z)", text, re.M)
-if not m:
-    sys.exit("academic_papers section not found")
-section = m.group(1)
-cat_match = re.search(r'categories:\s*\[(.*?)\]', section)
-if not cat_match:
-    sys.exit("categories list not found")
-cats = [c.strip().strip('"') for c in cat_match.group(1).split(",")]
+    data = yaml.safe_load(f)
+ap = (data or {}).get("academic_papers") or {}
+arxiv = ap.get("arxiv") or {}
+cats = arxiv.get("categories") or ap.get("categories")
+if not cats:
+    sys.exit("categories list not found under academic_papers.arxiv")
 print("\n".join(sorted(cats)))
 PY
 )
