@@ -665,14 +665,14 @@
         "currency": "USD"
       },
       "remaining_passes": 0,
-      "timestamp": 1777215532164
+      "timestamp": 1777302850244
     }
   },
   "feedbackSurveyState": {
     "lastShownTime": 1767439030982
   },
   "opusProMigrationComplete": true,
-  "cachedExtraUsageDisabledReason": null,
+  "cachedExtraUsageDisabledReason": "org_level_disabled",
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 12,
@@ -681,7 +681,7 @@
   "groveConfigCache": {
     "0e3bd740-e45a-41f7-9a8e-dea96899ee97": {
       "grove_enabled": true,
-      "timestamp": 1777215531294
+      "timestamp": 1777302848921
     }
   },
   "overageCreditGrantCache": {
@@ -725,12 +725,12 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 100,
-      "lastUsedAt": 1777249084909
+      "usageCount": 102,
+      "lastUsedAt": 1777252105111
     },
     "register": {
-      "usageCount": 13,
-      "lastUsedAt": 1776759604207
+      "usageCount": 14,
+      "lastUsedAt": 1777252915026
     },
     "pptx-aces-rikyu": {
       "usageCount": 1,
