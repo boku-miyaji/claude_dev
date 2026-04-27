@@ -12,7 +12,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
+const SUPABASE_PUBLISHABLE_KEY = Deno.env.get("SB_PUBLISHABLE_KEY")
+  || Deno.env.get("SUPABASE_ANON_KEY") || "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") || "";
 const OPUS_MODEL = "claude-opus-4-7";
 
@@ -64,7 +65,7 @@ interface UserStage {
 // ============================================================
 
 function userClient(jwt: string) {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: { headers: { Authorization: `Bearer ${jwt}` } },
   });
 }
