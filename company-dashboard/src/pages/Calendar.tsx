@@ -62,8 +62,11 @@ function resolveEventColor(calendarId: string, calendarType: CalendarType, calen
   return cal?.backgroundColor || CAL_BG_COLORS[calendarType] || '#5b5fc7'
 }
 const HOUR_H = 48
-const START_H = 8
-const END_H = 22
+// 0〜23時を全表示。深夜の予定も拾うため24h対応にした。
+// 高さ的には HOUR_H * 24 = 1152px になるので、TimeGrid マウント時に
+// 現在時刻付近まで自動スクロールして空の深夜帯を見せないようにする。
+const START_H = 0
+const END_H = 23
 const SNAP_MIN = 30
 const SNAP_PX = HOUR_H * SNAP_MIN / 60
 const HOURS = Array.from({ length: END_H - START_H + 1 }, (_, i) => i + START_H)
@@ -455,6 +458,18 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendarIds, calendars, on
   const activeResizeRef = useRef<{ startY: number; startEndY: number } | null>(null)
   const now = useMemo(() => new Date(), [])
   const nowH = now.getHours() + now.getMinutes() / 60
+
+  // 24h 表示にしたので、マウント時は現在時刻の 1 時間前を上端に持ってきて
+  // 空の深夜帯を見せず即座に当日のスケジュールが見える状態にする。
+  // 7:00 を最低ラインにして、午前中も多少見える位置に調整。
+  useEffect(() => {
+    const body = bodyRef.current
+    if (!body) return
+    const targetHour = Math.max(7, Math.floor(nowH) - 1)
+    body.scrollTop = (targetHour - START_H) * HOUR_H
+    // マウント時のみ実行（依存配列を空にすると nowH が固定されるが、ここでは初期表示のみ調整したいので意図通り）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const todayDayIndex = days.findIndex(d => toJSTDateStr(d) === today)
 
   const filteredEvents = useMemo(
