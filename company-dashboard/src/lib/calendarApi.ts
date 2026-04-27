@@ -5,7 +5,10 @@ const PROXY_BASE = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/google-cal
 
 // Google OAuth authorization code flow URL
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
-const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks'
+// calendar.events: イベントの読み書き
+// calendar.calendarlist.readonly: ユーザーの登録カレンダー一覧を取得（旧 GCAL_CALENDARS ハードコード廃止のため必須）
+// tasks: Google Tasks
+const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/tasks'
 
 /** Get the Google Client ID from env or constants fallback */
 function getClientId(): string {
