@@ -14,23 +14,30 @@ git remote -v &>/dev/null || exit 0
 # 成功したらファイルを消して古い失敗状態をクリア。
 # SessionStart の auto-push-status-check.sh が次セッション開始時に警告を表示する。
 push_with_status() {
-  local push_log push_rc commit_sha unpushed
-  push_log=$(git push origin main 2>&1)
+  local push_log push_rc commit_sha unpushed branch upstream
+  branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
+  if [ -z "$branch" ]; then
+    return 0
+  fi
+  # Push current branch. -u sets upstream on first push.
+  push_log=$(git push -u origin "$branch" 2>&1)
   push_rc=$?
   if [ $push_rc -ne 0 ]; then
     commit_sha=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-    unpushed=$(git log origin/main..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ')
+    upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "origin/$branch")
+    unpushed=$(git log "$upstream..HEAD" --oneline 2>/dev/null | wc -l | tr -d ' ')
     if command -v jq >/dev/null 2>&1; then
       jq -n \
         --arg time "$(date -Iseconds)" \
         --arg error "$push_log" \
         --arg sha "$commit_sha" \
+        --arg br "$branch" \
         --argjson n "${unpushed:-0}" \
-        '{status:"failed", time:$time, error:$error, commit_sha:$sha, unpushed_count:$n, branch:"main"}' \
+        '{status:"failed", time:$time, error:$error, commit_sha:$sha, unpushed_count:$n, branch:$br}' \
         > /tmp/auto-push-status.json 2>/dev/null
     else
-      printf '{"status":"failed","time":"%s","commit_sha":"%s","unpushed_count":%s,"branch":"main"}' \
-        "$(date -Iseconds)" "$commit_sha" "${unpushed:-0}" \
+      printf '{"status":"failed","time":"%s","commit_sha":"%s","unpushed_count":%s,"branch":"%s"}' \
+        "$(date -Iseconds)" "$commit_sha" "${unpushed:-0}" "$branch" \
         > /tmp/auto-push-status.json
     fi
   else
@@ -51,8 +58,14 @@ fi
 
 # Check for uncommitted changes (tracked files only)
 if git diff --quiet HEAD 2>/dev/null && git diff --cached --quiet HEAD 2>/dev/null; then
-  # No changes to tracked files — still push any unpushed commits
-  UNPUSHED=$(git log origin/main..HEAD --oneline 2>/dev/null | wc -l)
+  # No changes to tracked files — still push any unpushed commits on current branch
+  UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
+  if [ -n "$UPSTREAM" ]; then
+    UNPUSHED=$(git log "$UPSTREAM..HEAD" --oneline 2>/dev/null | wc -l)
+  else
+    # No upstream yet — push to set one
+    UNPUSHED=1
+  fi
   if [ "$UNPUSHED" -gt 0 ]; then
     push_with_status || true
   fi
