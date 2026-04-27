@@ -248,6 +248,7 @@ export function LifeHistory() {
   const requestNextQuestion = useCallback(async (sid: string) => {
     setLoading(true)
     setError(null)
+    setCurrentQ(null)
     try {
       const body: Record<string, unknown> = { action: 'next_question', session_id: sid, mode }
       if (focusStage) body.focus_stage = focusStage
@@ -454,6 +455,21 @@ export function LifeHistory() {
       borderRadius: 4, fontFamily: 'var(--mono)',
       border: depth >= 4 ? '1px solid rgba(75, 120, 98, 0.6)' : '1px solid transparent',
     }
+  }
+
+  // ─── Render: Loading next question ──────────────────────────
+  // submitAnswer/skipQuestion 直後、次の質問を取得中は currentQ=null + loading=true。
+  // このとき前の質問が残らないように専用のロード画面を出す。
+  if (sessionActive && !currentQ && loading) {
+    return (
+      <div className="page">
+        <PageHeader title={<>自分の<strong>ルーツ</strong></>} description="次の質問を準備中…" />
+        <div className="roots-session">
+          <div className="rs-eyebrow">ROOTS</div>
+          <div className="rs-q" style={{ opacity: 0.6 }}>次の問いを考えています…</div>
+        </div>
+      </div>
+    )
   }
 
   // ─── Render: Session active ─────────────────────────────────
