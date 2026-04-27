@@ -725,12 +725,12 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 99,
-      "lastUsedAt": 1777162380446
+      "usageCount": 102,
+      "lastUsedAt": 1777252105111
     },
     "register": {
-      "usageCount": 13,
-      "lastUsedAt": 1776759604207
+      "usageCount": 14,
+      "lastUsedAt": 1777252915026
     },
     "pptx-aces-rikyu": {
       "usageCount": 1,
