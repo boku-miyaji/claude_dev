@@ -1077,6 +1077,305 @@ function ValuesDetail({ result }: { result: Record<string, unknown> }) {
 }
 
 // ---------------------------------------------------------------------------
+// Detail Tab: Stress Resilience
+// ---------------------------------------------------------------------------
+interface StressTrigger { trigger: string; context: string; frequency: string; quote: string }
+interface StressCoping { strategy: string; effectiveness: string; evidence: string }
+interface StressRecovery { speed: string; method: string; narrative: string }
+interface StressGrowth { insight: string; evidence: string }
+interface StressAdvice { title: string; detail: string; when: string }
+interface StressResult {
+  resilience_score: number
+  burnout_risk: string
+  burnout_signals?: string[]
+  stress_triggers?: StressTrigger[]
+  coping_strategies?: StressCoping[]
+  recovery_pattern?: StressRecovery
+  growth_through_stress?: StressGrowth[]
+  advice?: StressAdvice[]
+  profile_narrative?: string
+}
+
+function StressDetail({ result }: { result: Record<string, unknown> }) {
+  const r = result as unknown as StressResult
+  const score = r.resilience_score ?? 0
+  const risk = (r.burnout_risk ?? 'low').toLowerCase()
+  const riskColor = risk === 'high' ? 'red' : risk === 'medium' ? 'amber' : 'green'
+
+  return (
+    <div>
+      {r.profile_narrative && (
+        <div style={{ padding: '20px 24px', background: 'var(--accent-bg)', borderRadius: 12, borderLeft: '4px solid var(--accent)', marginBottom: 20 }}>
+          <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.8, fontWeight: 500 }}>{r.profile_narrative}</div>
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+        <div style={{ padding: '16px 20px', background: 'var(--surface2)', borderRadius: 10, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>Resilience</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--mono)' }}>{score}<span style={{ fontSize: 14, color: 'var(--text3)' }}>/10</span></div>
+        </div>
+        <div style={{ padding: '16px 20px', background: `var(--${riskColor}-bg)`, borderRadius: 10, borderLeft: `3px solid var(--${riskColor})`, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 6 }}>Burnout Risk</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: `var(--${riskColor})`, textTransform: 'uppercase', letterSpacing: '.04em' }}>{risk}</div>
+        </div>
+      </div>
+
+      {r.burnout_signals && r.burnout_signals.length > 0 && (
+        <SectionCard title="Early Warning Signals" color="amber" style={{ marginBottom: 16 }}>
+          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 12, color: 'var(--text2)', lineHeight: 1.8 }}>
+            {r.burnout_signals.map((s, i) => <li key={i}>{s}</li>)}
+          </ul>
+        </SectionCard>
+      )}
+
+      {r.stress_triggers && r.stress_triggers.length > 0 && (
+        <SectionCard title="Stress Triggers" color="red" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {r.stress_triggers.map((t, i) => (
+              <div key={i}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t.trigger}</div>
+                  {t.frequency && <span style={{ fontSize: 10, padding: '1px 6px', background: 'var(--surface2)', borderRadius: 4, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{t.frequency}</span>}
+                </div>
+                {t.context && <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>{t.context}</div>}
+                {t.quote && <QuoteBlock text={t.quote} />}
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {r.coping_strategies && r.coping_strategies.length > 0 && (
+        <SectionCard title="Coping Strategies" color="green" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {r.coping_strategies.map((c, i) => (
+              <div key={i}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{c.strategy}</div>
+                  {c.effectiveness && (
+                    <span style={{
+                      fontSize: 10, padding: '1px 6px', borderRadius: 4, color: 'var(--text3)', fontFamily: 'var(--mono)',
+                      background: c.effectiveness === 'high' ? 'rgba(34,197,94,0.15)' : c.effectiveness === 'medium' ? 'var(--surface2)' : 'rgba(245,158,11,0.15)',
+                    }}>{c.effectiveness}</span>
+                  )}
+                </div>
+                {c.evidence && <QuoteBlock text={c.evidence} />}
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {r.recovery_pattern && r.recovery_pattern.narrative && (
+        <SectionCard title="Recovery Pattern" color="accent" style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 8 }}>{r.recovery_pattern.narrative}</div>
+          <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--text3)' }}>
+            {r.recovery_pattern.speed && <span>速度: <strong style={{ color: 'var(--text2)' }}>{r.recovery_pattern.speed}</strong></span>}
+            {r.recovery_pattern.method && <span>方法: <strong style={{ color: 'var(--text2)' }}>{r.recovery_pattern.method}</strong></span>}
+          </div>
+        </SectionCard>
+      )}
+
+      {r.growth_through_stress && r.growth_through_stress.length > 0 && (
+        <SectionCard title="Growth Through Stress" color="accent" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {r.growth_through_stress.map((g, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{g.insight}</div>
+                {g.evidence && <QuoteBlock text={g.evidence} />}
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      {r.advice && r.advice.length > 0 && (
+        <SectionCard title="Advice" color="green" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {r.advice.map((a, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--mono)', minWidth: 24, textAlign: 'center' }}>{i + 1}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{a.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{a.detail}</div>
+                  {a.when && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, fontStyle: 'italic' }}>使う場面: {a.when}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      <ChangesFromPrevious result={result} />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Detail Tab: Communication Style
+// ---------------------------------------------------------------------------
+type CommStyleKey = 'analytical' | 'driver' | 'expressive' | 'amiable'
+interface CommPreference { preference: string; context: string; evidence: string }
+interface CommConflict { default_response: string; preferred_resolution: string; evidence: string }
+interface CommListening { type: string; evidence: string; blind_spot: string }
+interface CommTeamRole { natural_role: string; what_brings_out_best: string; evidence: string }
+interface CommAdvice { title: string; detail: string; scenario: string }
+interface CommResult {
+  primary_style: CommStyleKey
+  secondary_style?: CommStyleKey
+  style_blend?: Record<CommStyleKey, number>
+  communication_preferences?: CommPreference[]
+  conflict_approach?: CommConflict
+  listening_style?: CommListening
+  team_role?: CommTeamRole
+  ai_interaction_style?: string
+  with_close_others_vs_strangers?: string
+  advice?: CommAdvice[]
+  profile_narrative?: string
+}
+
+const COMM_STYLE_LABELS: Record<CommStyleKey, { ja: string; description: string; color: string }> = {
+  analytical: { ja: 'Analytical', description: 'データ・論理重視、慎重', color: 'var(--blue)' },
+  driver: { ja: 'Driver', description: '結果重視、決断早い', color: 'var(--red)' },
+  expressive: { ja: 'Expressive', description: '感情豊か、巻き込み型', color: 'var(--amber)' },
+  amiable: { ja: 'Amiable', description: '関係重視、調和的', color: 'var(--green)' },
+}
+
+function CommunicationDetail({ result }: { result: Record<string, unknown> }) {
+  const r = result as unknown as CommResult
+  const blend = r.style_blend ?? { analytical: 0, driver: 0, expressive: 0, amiable: 0 }
+  const styles: CommStyleKey[] = ['analytical', 'driver', 'expressive', 'amiable']
+
+  return (
+    <div>
+      {r.profile_narrative && (
+        <div style={{ padding: '20px 24px', background: 'var(--accent-bg)', borderRadius: 12, borderLeft: '4px solid var(--accent)', marginBottom: 20 }}>
+          <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.8, fontWeight: 500 }}>{r.profile_narrative}</div>
+        </div>
+      )}
+
+      {r.primary_style && (
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+          {(['primary', 'secondary'] as const).map(role => {
+            const key = role === 'primary' ? r.primary_style : r.secondary_style
+            if (!key) return null
+            const meta = COMM_STYLE_LABELS[key]
+            if (!meta) return null
+            return (
+              <div key={role} style={{ flex: 1, padding: '16px 20px', background: 'var(--surface2)', borderRadius: 10, borderLeft: `3px solid ${meta.color}` }}>
+                <div style={{ fontSize: 10, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>{role}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: meta.color, marginBottom: 2 }}>{meta.ja}</div>
+                <div style={{ fontSize: 11, color: 'var(--text2)' }}>{meta.description}</div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {r.style_blend && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+          {styles.map(s => {
+            const v = blend[s] ?? 0
+            const meta = COMM_STYLE_LABELS[s]
+            return (
+              <div key={s}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, fontSize: 12 }}>
+                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>{meta.ja}</span>
+                  <span style={{ color: 'var(--text3)', fontFamily: 'var(--mono)' }}>{v}</span>
+                </div>
+                <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${v}%`, background: meta.color, borderRadius: 3 }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {r.communication_preferences && r.communication_preferences.length > 0 && (
+        <SectionCard title="Preferences" color="accent" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {r.communication_preferences.map((p, i) => (
+              <div key={i}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{p.preference}</div>
+                {p.context && <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4 }}>{p.context}</div>}
+                {p.evidence && <QuoteBlock text={p.evidence} />}
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+        {r.conflict_approach && r.conflict_approach.default_response && (
+          <SectionCard title="Conflict" color="red">
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+              <div style={{ marginBottom: 6 }}><strong style={{ color: 'var(--text)' }}>初動: </strong>{r.conflict_approach.default_response}</div>
+              <div><strong style={{ color: 'var(--text)' }}>解決: </strong>{r.conflict_approach.preferred_resolution}</div>
+            </div>
+            {r.conflict_approach.evidence && <QuoteBlock text={r.conflict_approach.evidence} />}
+          </SectionCard>
+        )}
+        {r.listening_style && r.listening_style.type && (
+          <SectionCard title="Listening" color="green">
+            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>
+              <div style={{ marginBottom: 6, color: 'var(--text)', fontWeight: 600 }}>{r.listening_style.type}</div>
+              {r.listening_style.blind_spot && <div style={{ fontSize: 11, color: 'var(--amber)', fontStyle: 'italic' }}>盲点: {r.listening_style.blind_spot}</div>}
+            </div>
+            {r.listening_style.evidence && <QuoteBlock text={r.listening_style.evidence} />}
+          </SectionCard>
+        )}
+      </div>
+
+      {r.team_role && r.team_role.natural_role && (
+        <SectionCard title="Team Role" color="accent" style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{r.team_role.natural_role}</div>
+          {r.team_role.what_brings_out_best && <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>力を発揮する場面: {r.team_role.what_brings_out_best}</div>}
+          {r.team_role.evidence && <QuoteBlock text={r.team_role.evidence} />}
+        </SectionCard>
+      )}
+
+      {(r.ai_interaction_style || r.with_close_others_vs_strangers) && (
+        <SectionCard title="Patterns" color="amber" style={{ marginBottom: 16 }}>
+          {r.ai_interaction_style && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>AI Interaction Style</div>
+              <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{r.ai_interaction_style}</div>
+            </div>
+          )}
+          {r.with_close_others_vs_strangers && (
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Close vs Strangers</div>
+              <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{r.with_close_others_vs_strangers}</div>
+            </div>
+          )}
+        </SectionCard>
+      )}
+
+      {r.advice && r.advice.length > 0 && (
+        <SectionCard title="Advice" color="green" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {r.advice.map((a, i) => (
+              <div key={i} style={{ display: 'flex', gap: 12 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--mono)', minWidth: 24, textAlign: 'center' }}>{i + 1}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{a.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 }}>{a.detail}</div>
+                  {a.scenario && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4, fontStyle: 'italic' }}>使う場面: {a.scenario}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
+      <ChangesFromPrevious result={result} />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Summary Tab: 統合分析
 // ---------------------------------------------------------------------------
 
@@ -1648,6 +1947,8 @@ export function SelfAnalysis() {
                 {activeTab === 'big5' && <Big5Detail result={activeResult.result} />}
                 {activeTab === 'strengths_finder' && <SfDetail result={activeResult.result} />}
                 {activeTab === 'values' && <ValuesDetail result={activeResult.result} />}
+                {activeTab === 'stress_resilience' && <StressDetail result={activeResult.result} />}
+                {activeTab === 'communication_style' && <CommunicationDetail result={activeResult.result} />}
               </Card>
             ) : (
               <Card>
