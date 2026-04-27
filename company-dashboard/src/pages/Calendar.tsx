@@ -260,6 +260,44 @@ function EventModal({ open, onClose, initialDate, initialHour, editEvent, onSave
             <input className="input" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} /></div>
         </div>
 
+        {/* Event detail (read-only) — location / Meet link / description */}
+        {editEvent && (editEvent.location || editEvent.hangoutLink || editEvent.description) && (
+          <div style={{ marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {editEvent.location && (
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 3 }}>場所</div>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(editEvent.location)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: 13, color: 'var(--text)', wordBreak: 'break-word', textDecoration: 'underline', textDecorationColor: 'var(--border2)' }}
+                >{editEvent.location}</a>
+              </div>
+            )}
+            {editEvent.hangoutLink && (
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 3 }}>ビデオ会議</div>
+                <a
+                  href={editEvent.hangoutLink}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: 13, color: 'var(--accent)', wordBreak: 'break-all', textDecoration: 'underline' }}
+                >{editEvent.hangoutLink}</a>
+              </div>
+            )}
+            {editEvent.description && (
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 3 }}>説明</div>
+                <div
+                  style={{
+                    fontSize: 13, color: 'var(--text2)', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6,
+                    padding: '8px 10px', maxHeight: 220, overflowY: 'auto', lineHeight: 1.55,
+                  }}
+                >{editEvent.description}</div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Linked tasks — only available when editing an existing event */}
         {editEvent && (
           <div style={{ marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--border)' }}>

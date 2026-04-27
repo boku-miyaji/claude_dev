@@ -176,6 +176,7 @@ interface ProxyEvent {
   status?: string
   location?: string | null
   hangoutLink?: string | null
+  description?: string | null
 }
 
 export interface FailedCalendar {
@@ -233,6 +234,7 @@ export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<
     status: ev.status,
     location: ev.location,
     hangoutLink: ev.hangoutLink,
+    description: ev.description,
   }))
 
   return {

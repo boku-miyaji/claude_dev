@@ -13,6 +13,7 @@ export interface CalendarEvent {
   response_status?: string | null
   location?: string | null
   hangoutLink?: string | null
+  description?: string | null
 }
 
 export interface GcalCalendar {
