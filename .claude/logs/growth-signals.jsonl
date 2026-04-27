@@ -1302,3 +1302,6 @@
 {"ts":"2026-04-28T08:10:45+09:00","signal":"raw_prompt","prompt":"/company 情報収集して\n"}
 {"ts":"2026-04-28T08:17:28+09:00","signal":"raw_prompt","prompt":"focusyouの日記から自動チェックされたのに、チェックされていないし、チェックできなくなっている。観葉植物の水やり（葉水）です\n"}
 {"ts":"2026-04-28T08:34:10+09:00","signal":"raw_prompt","prompt":"1, yes\n2, monorepoツールとは？azure前提です。　\n3, 本番で動く相当のものであればいい。securityもいいとか、アルゴはpythonで書くけど大丈夫？\n4, static web appだと何がまずいんでしたっけ？next.jsが動かない？違いがあまりわかっていない。container appsとの\n"}
+{"ts":"2026-04-28T08:17:28+09:00","signal":"raw_prompt","prompt":"focusyouの日記から自動チェックされたのに、チェックされていないし、チェックできなくなっている。観葉植物の水やり（葉水）です\n"}
+{"ts":"2026-04-28T08:34:10+09:00","signal":"raw_prompt","prompt":"1, yes\n2, monorepoツールとは？azure前提です。　\n3, 本番で動く相当のものであればいい。securityもいいとか、アルゴはpythonで書くけど大丈夫？\n4, static web appだと何がまずいんでしたっけ？next.jsが動かない？違いがあまりわかっていない。container appsとの\n"}
+{"ts":"2026-04-28T08:41:38+09:00","signal":"raw_prompt","prompt":"2, ものレポにした時に、デプロイは全部いっぺんにされる？少し変更したのにすべてのcontainerが更新されるの？pythonは入ります。\n3, monorepoにしない可能性もある？fastAPIのデメリットある？本当に大丈夫？本番に耐えうる？モダン？\n4, FEだけstatic web appsにするとかはないの？ python beはcontainer appsとか。あとnext.js, node.jsとかの違いもわからないし、何が最適かもわかっていな\n"}
