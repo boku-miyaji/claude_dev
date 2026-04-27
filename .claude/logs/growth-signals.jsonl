@@ -1137,3 +1137,4 @@
 {"ts":"2026-04-27T14:23:49+09:00","signal":"raw_prompt","prompt":"focus-youで下記エラーが出てgoogle calendar と連携できない\ncallback?state=gcal_auth&iss=https://accounts.google.com&code=4/0AeoWuM-rl2GetL5NoR8s0qdSjKyNu3T-Xp…:1 Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.\n"}
 {"ts":"2026-04-27T14:23:49+09:00","signal":"raw_prompt","prompt":"focus-youで下記エラーが出てgoogle calendar と連携できない\ncallback?state=gcal_auth&iss=https://accounts.google.com&code=4/0AeoWuM-rl2GetL5NoR8s0qdSjKyNu3T-Xp…:1 Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.\n"}
 {"ts":"2026-04-27T14:28:17+09:00","signal":"raw_prompt","prompt":"リロードしたらカレンダー連携できました。なぜ？自動遷移しない\n"}
+{"ts":"2026-04-27T14:28:17+09:00","signal":"raw_prompt","prompt":"リロードしたらカレンダー連携できました。なぜ？自動遷移しない\n"}
