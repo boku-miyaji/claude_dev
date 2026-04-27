@@ -1135,3 +1135,5 @@
 {"ts":"2026-04-27T14:17:23+09:00","signal":"raw_prompt","prompt":"1. 警告は一旦いらない。\n2. これはそんな簡単にルールベースでカバレッジを出さなくていい。絶対評価ではなく、先週との差分とか相対評価で。意味不明のカバレッジをだしてもどう解釈していいかわからない\n3. リンクだけでいい\n"}
 {"ts":"2026-04-27T14:17:23+09:00","signal":"raw_prompt","prompt":"1. 警告は一旦いらない。\n2. これはそんな簡単にルールベースでカバレッジを出さなくていい。絶対評価ではなく、先週との差分とか相対評価で。意味不明のカバレッジをだしてもどう解釈していいかわからない\n3. リンクだけでいい\n"}
 {"ts":"2026-04-27T14:23:49+09:00","signal":"raw_prompt","prompt":"focus-youで下記エラーが出てgoogle calendar と連携できない\ncallback?state=gcal_auth&iss=https://accounts.google.com&code=4/0AeoWuM-rl2GetL5NoR8s0qdSjKyNu3T-Xp…:1 Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.\n"}
+{"ts":"2026-04-27T14:23:49+09:00","signal":"raw_prompt","prompt":"focus-youで下記エラーが出てgoogle calendar と連携できない\ncallback?state=gcal_auth&iss=https://accounts.google.com&code=4/0AeoWuM-rl2GetL5NoR8s0qdSjKyNu3T-Xp…:1 Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.\n"}
+{"ts":"2026-04-27T14:28:17+09:00","signal":"raw_prompt","prompt":"リロードしたらカレンダー連携できました。なぜ？自動遷移しない\n"}

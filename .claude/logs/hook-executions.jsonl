@@ -25262,3 +25262,5 @@
 {"ts":"2026-04-27T14:24:30+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
 {"ts":"2026-04-27T14:24:47+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-27T14:24:52+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-27T14:28:37+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-27T14:28:39+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
