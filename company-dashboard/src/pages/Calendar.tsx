@@ -1637,7 +1637,7 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
         }}>
 
         {/* Type toggle */}
-        <div style={{ display: 'flex', gap: 4, padding: 3, background: 'var(--surface2)', borderRadius: 8, marginBottom: 14 }}>
+        <div style={{ display: 'flex', gap: 4, padding: 3, background: 'var(--surface2)', borderRadius: 8, marginBottom: 10 }}>
           <button style={pillStyle(kind === 'task')} onClick={() => setKind('task')}>
             ☐ タスク
           </button>
@@ -1646,10 +1646,37 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
           </button>
         </div>
 
+        {/* Task subtype toggle (deadline vs timeblock) — only when kind=='task' */}
+        {kind === 'task' && (
+          <div style={{ display: 'flex', gap: 4, padding: 3, background: 'var(--surface2)', borderRadius: 8, marginBottom: 14, opacity: 0.92 }}>
+            <button
+              style={{ ...pillStyle(taskType === 'deadline'), fontSize: 11, padding: '5px 10px' }}
+              onClick={() => setTaskType('deadline')}
+              title="期日だけ決める。時間ブロックは確保しない。"
+            >
+              📅 締切日のみ
+            </button>
+            <button
+              style={{ ...pillStyle(taskType === 'timeblock'), fontSize: 11, padding: '5px 10px' }}
+              onClick={() => setTaskType('timeblock')}
+              title="カレンダー上に時間ブロックを確保する。"
+            >
+              ⏱ 時間を確保
+            </button>
+          </div>
+        )}
+
         {/* Context label */}
-        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 10 }}>
-          {isAllDay ? `${date}  終日` : `${date}  ${startTime}〜${endTime}`}
-        </div>
+        {kind === 'task' && taskType === 'deadline' ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <label style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0 }}>締切日</label>
+            <input className="input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ flex: 1 }} />
+          </div>
+        ) : (
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 10 }}>
+            {isAllDay ? `${date}  終日` : `${date}  ${startTime}〜${endTime}`}
+          </div>
+        )}
 
         {/* Title input */}
         <input
@@ -1665,8 +1692,8 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
           }}
         />
 
-        {/* Time inputs — unified for task and event */}
-        {(!isAllDay || kind === 'event') && (
+        {/* Time inputs — for events, or for time-block tasks with a range */}
+        {((kind === 'event' && !isAllDay) || (kind === 'task' && taskType === 'timeblock' && !isAllDay)) && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>開始</label>
@@ -1707,8 +1734,8 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
           </div>
         )}
 
-        {/* All-day task: opt-in time range */}
-        {isAllDay && kind === 'task' && (
+        {/* All-day timeblock task: opt-in time range */}
+        {isAllDay && kind === 'task' && taskType === 'timeblock' && (
           <div style={{ marginBottom: 12 }}>
             <label style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: hasTime ? 6 : 0, cursor: 'pointer' }}>
               <input type="checkbox" checked={hasTime} onChange={e => setHasTime(e.target.checked)} />
@@ -1736,7 +1763,7 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
           </button>
           <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
           <div style={{ flex: 1 }} />
-          <span style={{ fontSize: 10, color: 'var(--text3)' }}>⌘+Enter で確定 · Esc で閉じる</span>
+          <span style={{ fontSize: 10, color: 'var(--text3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>⌘+Enter で確定 · Esc で閉じる</span>
         </div>
       </div>
     </div>

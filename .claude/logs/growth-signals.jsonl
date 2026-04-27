@@ -1155,3 +1155,8 @@
 {"ts":"2026-04-27T16:25:05+09:00","signal":"raw_prompt","prompt":"カレンダー画面から締め切りの設定ができないと思う。\nまた、マウスの位置とカレンダーの選択する時間がずれているなぜ？\n\nボタン部分が改行されていたりする。これはいろんなところでなっているので修正して。\n"}
 {"ts":"2026-04-27T16:27:28+09:00","signal":"raw_prompt","prompt":"１でやろう。\n"}
 {"ts":"2026-04-27T16:28:12+09:00","signal":"raw_prompt","prompt":"devcontainerでCが自動でできるようにならない？\nかきあたりの設定で\n\n ForwardAgent yes\n UseKeychain yes\n AddKeysToAgent yes\n"}
+{"ts":"2026-04-27T16:25:05+09:00","signal":"raw_prompt","prompt":"カレンダー画面から締め切りの設定ができないと思う。\nまた、マウスの位置とカレンダーの選択する時間がずれているなぜ？\n\nボタン部分が改行されていたりする。これはいろんなところでなっているので修正して。\n"}
+{"ts":"2026-04-27T16:27:28+09:00","signal":"raw_prompt","prompt":"１でやろう。\n"}
+{"ts":"2026-04-27T16:28:12+09:00","signal":"raw_prompt","prompt":"devcontainerでCが自動でできるようにならない？\nかきあたりの設定で\n\n ForwardAgent yes\n UseKeychain yes\n AddKeysToAgent yes\n"}
+{"ts":"2026-04-27T16:29:36+09:00","signal":"raw_prompt","prompt":"１でお願いします\n"}
+{"ts":"2026-04-27T16:30:32+09:00","signal":"raw_prompt","prompt":"このような将来的なアーキテクチャをイメージしています。\nユーザーは生成AI共通基盤を通して、APIManagementを通して、どのユーザーグループなのかをもとに各APIを叩いて適切なところにアクセスする。\nまた、将来的に渉外担当者がみる画面は一つにしたく、フロントエンドなどを増やしていきたい。マイクロサービス・マイクロフロントエンドがあるそう。それらを使い\n"}
