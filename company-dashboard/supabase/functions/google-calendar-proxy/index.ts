@@ -331,6 +331,46 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
   });
 }
 
+async function handleGetCalendars(userId: string): Promise<Response> {
+  // ログイン中ユーザーが持つカレンダー一覧を Google から取得して返す。
+  // dashboard 側でメアドハードコード (GCAL_CALENDARS) をやめるためのエンドポイント。
+  const accessToken = await getAccessToken(userId);
+  const res = await calendarFetch(accessToken, "/users/me/calendarList?minAccessRole=writer&showHidden=false");
+  if (!res.ok) {
+    const errText = await res.text();
+    return new Response(JSON.stringify({ error: `Calendar list fetch failed: ${res.status}`, detail: errText.slice(0, 300) }), {
+      status: res.status,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
+  const data = await res.json() as {
+    items?: Array<{
+      id: string;
+      summary?: string;
+      summaryOverride?: string;
+      primary?: boolean;
+      backgroundColor?: string;
+      foregroundColor?: string;
+      accessRole?: string;
+      hidden?: boolean;
+      selected?: boolean;
+    }>;
+  };
+  const calendars = (data.items || [])
+    .filter((c) => !c.hidden)
+    .map((c) => ({
+      id: c.id,
+      label: c.summaryOverride || c.summary || c.id,
+      primary: c.primary === true,
+      backgroundColor: c.backgroundColor || null,
+      foregroundColor: c.foregroundColor || null,
+      access_role: c.accessRole || "reader",
+    }));
+  return new Response(JSON.stringify({ calendars }), {
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
+
 async function handleCreateEvent(req: Request, userId: string): Promise<Response> {
   const { calendar_id, event } = await req.json();
   const accessToken = await getAccessToken(userId);
@@ -644,6 +684,9 @@ Deno.serve(async (req: Request) => {
     }
     if (req.method === "GET" && path === "/auth/check") {
       return await handleCheckAuth(user.id);
+    }
+    if (req.method === "GET" && path === "/calendars") {
+      return await handleGetCalendars(user.id);
     }
     if (req.method === "GET" && path === "/events") {
       return await handleGetEvents(req, user.id);

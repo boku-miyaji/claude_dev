@@ -1,9 +1,8 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { Card, Modal, toast } from '@/components/ui'
-import { useGoogleCalendar } from '@/hooks/useGoogleCalendar'
+import { useGoogleCalendar, type UserCalendar } from '@/hooks/useGoogleCalendar'
 import { startCalendarAuth } from '@/lib/calendarApi'
 import { fetchTasksForEvent, linkTaskToEvent, unlinkTaskFromEvent, type LinkedTaskRow } from '@/lib/taskLinks'
-import { GCAL_CALENDARS } from '@/lib/constants'
 import type { ViewMode, CalendarEvent, CalendarType } from '@/types/calendar'
 import type { Task } from '@/types/tasks'
 import { useCalendarLayers, moodLevel, moodBgColor, moodEmoji, type CalendarLayerMap } from '@/hooks/useCalendarLayers'
@@ -426,8 +425,8 @@ interface DragState {
 // Time Grid (Day / Week view)
 // ============================================================
 
-function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, onEventClick, onDragUpdate, onTaskToggle, onTaskClick, onAllDayAdd, activeRange, onActiveRangeChange }: {
-  events: CalendarEvent[]; tasks: Task[]; days: Date[]; today: string; hiddenCalendars: Set<CalendarType>
+function TimeGrid({ events, tasks, days, today, hiddenCalendarIds, onRangeCreate, onEventClick, onDragUpdate, onTaskToggle, onTaskClick, onAllDayAdd, activeRange, onActiveRangeChange }: {
+  events: CalendarEvent[]; tasks: Task[]; days: Date[]; today: string; hiddenCalendarIds: Set<string>
   onRangeCreate: (date: string, startHour: number, endHour: number) => void
   onEventClick: (evt: CalendarEvent) => void
   onDragUpdate: (ev: CalendarEvent, newStartH: number, newEndH: number, newDayIndex: number) => Promise<void>
@@ -452,8 +451,8 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
   const todayDayIndex = days.findIndex(d => toJSTDateStr(d) === today)
 
   const filteredEvents = useMemo(
-    () => events.filter(e => !hiddenCalendars.has(e.calendar_type) && !(e.summary || '').startsWith(TASK_GCAL_PREFIX)),
-    [events, hiddenCalendars]
+    () => events.filter(e => !hiddenCalendarIds.has(e.calendar_id) && !(e.summary || '').startsWith(TASK_GCAL_PREFIX)),
+    [events, hiddenCalendarIds]
   )
 
   // Group events by day
@@ -896,7 +895,9 @@ function TimeGrid({ events, tasks, days, today, hiddenCalendars, onRangeCreate, 
 
                 const isPast = toJSTDateStr(new Date(evt.start_time)) === today && new Date(evt.end_time) < now
 
-                const calLabel = GCAL_CALENDARS.find(c => c.type === evt.calendar_type)?.label || evt.calendar_type
+                // Tooltip label: just show the calendar type since the full list is async-loaded
+                // and not threaded down here. Hover tooltip is informational, not critical.
+                const calLabel = evt.calendar_type
                 const bg = CAL_BG_COLORS[evt.calendar_type] || '#5b5fc7'
 
                 // Column layout for overlapping events
@@ -1107,8 +1108,8 @@ function WellbeingStrip({ days, layerMap, today, onCellClick }: {
 // Month Grid
 // ============================================================
 
-function MonthGrid({ events, date, today, hiddenCalendars, layerMap, layers, tasks, onCellClick, onEventClick, onAddEvent }: {
-  events: CalendarEvent[]; date: Date; today: string; hiddenCalendars: Set<CalendarType>
+function MonthGrid({ events, date, today, hiddenCalendarIds, layerMap, layers, tasks, onCellClick, onEventClick, onAddEvent }: {
+  events: CalendarEvent[]; date: Date; today: string; hiddenCalendarIds: Set<string>
   layerMap: CalendarLayerMap
   layers: Record<LayerKey, boolean>
   tasks: Task[]
@@ -1123,8 +1124,8 @@ function MonthGrid({ events, date, today, hiddenCalendars, layerMap, layers, tas
   while (cells.length % 7 !== 0) cells.push(null)
 
   const filtered = useMemo(
-    () => events.filter(e => !hiddenCalendars.has(e.calendar_type) && !(e.summary || '').startsWith(TASK_GCAL_PREFIX)),
-    [events, hiddenCalendars]
+    () => events.filter(e => !hiddenCalendarIds.has(e.calendar_id) && !(e.summary || '').startsWith(TASK_GCAL_PREFIX)),
+    [events, hiddenCalendarIds]
   )
   const eventsFor = (ds: string) => filtered.filter(e => toJSTDateStr(new Date(e.start_time)) === ds)
   const tasksFor = (ds: string) => tasks.filter(t => t.due_date === ds)
@@ -1232,13 +1233,17 @@ function MonthGrid({ events, date, today, hiddenCalendars, layerMap, layers, tas
 // Calendar Legend + Filter
 // ============================================================
 
-function CalendarLegend({ hiddenCalendars, onToggle }: {
-  hiddenCalendars: Set<CalendarType>; onToggle: (type: CalendarType) => void
+function CalendarLegend({ calendars, hiddenCalendarIds, onToggle }: {
+  calendars: UserCalendar[]
+  hiddenCalendarIds: Set<string>
+  onToggle: (id: string) => void
 }) {
+  if (calendars.length === 0) return null
   return (
     <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
-      {GCAL_CALENDARS.map(c => {
-        const hidden = hiddenCalendars.has(c.type)
+      {calendars.map(c => {
+        const hidden = hiddenCalendarIds.has(c.id)
+        const swatch = c.backgroundColor || (c.primary ? CAL_BG_COLORS.primary : CAL_BG_COLORS.secondary)
         return (
           <div key={c.id}
             style={{
@@ -1258,8 +1263,8 @@ function CalendarLegend({ hiddenCalendars, onToggle }: {
               textDecoration: hidden ? 'line-through' : 'none',
             }}
             title={hidden ? 'クリックで表示' : 'クリックで非表示'}
-            onClick={() => onToggle(c.type)}>
-            <span style={{ display: 'inline-block', width: 14, height: 14, borderRadius: 3, background: CAL_BG_COLORS[c.type], flexShrink: 0 }} />
+            onClick={() => onToggle(c.id)}>
+            <span style={{ display: 'inline-block', width: 14, height: 14, borderRadius: 3, background: swatch, flexShrink: 0 }} />
             {c.label}
           </div>
         )
@@ -1277,7 +1282,9 @@ export function Calendar() {
   const [viewDate, setViewDate] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()) })
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
-  const [hiddenCalendars, setHiddenCalendars] = useState<Set<CalendarType>>(new Set())
+  // Hide management is by calendar_id now (was calendar_type), so newly-added Google calendars
+  // appear automatically and only the ones the user explicitly hides get filtered out.
+  const [hiddenCalendarIds, setHiddenCalendarIds] = useState<Set<string>>(new Set())
   const allStoreTasks = useDataStore((s) => s.tasks)
   const fetchAllTasks = useDataStore((s) => s.fetchTasks)
   const storeUpdateTask = useDataStore((s) => s.updateTask)
@@ -1286,7 +1293,7 @@ export function Calendar() {
   const [layers, setLayers] = useState<Record<LayerKey, boolean>>(() => loadLayers())
   const [drawerDate, setDrawerDate] = useState<string | null>(null)
 
-  const { events, loading, authenticated, partial, failedCalendars, refetch, createEvent, updateEvent, deleteEvent } = useGoogleCalendar(viewDate, viewMode)
+  const { events, loading, authenticated, partial, failedCalendars, refetch, createEvent, updateEvent, deleteEvent, userCalendars } = useGoogleCalendar(viewDate, viewMode)
   const today = toJSTDateStr(new Date())
 
   // Persist layer toggles
@@ -1383,12 +1390,11 @@ export function Calendar() {
         await updateEvent(editingEvent.calendar_id, editingEvent.id, { summary: form.summary, start, end })
         toast('更新しました')
       } else {
-        // primary type が選ばれている場合は 'primary' リテラルを送る。
-        // Google Calendar API の 'primary' は「認証ユーザー本人の primary calendar」を
-        // 指す特殊エイリアスで、メアドを直書きするより portable（他ユーザーが使っても
-        // 自分のアカウントに書かれる）。
-        const cal = form.calendarId ? GCAL_CALENDARS.find(c => c.id === form.calendarId) : GCAL_CALENDARS.find(c => c.type === 'primary')
-        const calId = cal?.type === 'primary' ? 'primary' : (cal?.id || form.calendarId || 'primary')
+        // primary calendar が選ばれている場合は 'primary' リテラルを送る（Google API の
+        // 特殊エイリアスで「認証ユーザー本人の primary」に解決される）。それ以外は
+        // ユーザーが選んだ calendar id をそのまま渡す。
+        const cal = form.calendarId ? userCalendars.find(c => c.id === form.calendarId) : userCalendars.find(c => c.primary)
+        const calId = cal?.primary ? 'primary' : (cal?.id || form.calendarId || 'primary')
         await createEvent(calId, { summary: form.summary, start, end })
         toast('追加しました')
       }
@@ -1419,10 +1425,10 @@ export function Calendar() {
     } catch { toast('更新に失敗しました') }
   }, [days, updateEvent, refetch])
 
-  const toggleCalendar = useCallback((type: CalendarType) => {
-    setHiddenCalendars(prev => {
+  const toggleCalendar = useCallback((id: string) => {
+    setHiddenCalendarIds(prev => {
       const next = new Set(prev)
-      if (next.has(type)) next.delete(type); else next.add(type)
+      if (next.has(id)) next.delete(id); else next.add(id)
       return next
     })
   }, [])
@@ -1534,12 +1540,12 @@ export function Calendar() {
 
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         {viewMode === 'month'
-          ? <MonthGrid events={events} date={viewDate} today={today} hiddenCalendars={hiddenCalendars}
+          ? <MonthGrid events={events} date={viewDate} today={today} hiddenCalendarIds={hiddenCalendarIds}
               layerMap={layerMap} layers={layers} tasks={tasks}
               onCellClick={ds => setDrawerDate(ds)}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }}
               onAddEvent={ds => setQuickAdd({ date: ds })} />
-          : <TimeGrid events={events} tasks={tasks} days={days} today={today} hiddenCalendars={hiddenCalendars}
+          : <TimeGrid events={events} tasks={tasks} days={days} today={today} hiddenCalendarIds={hiddenCalendarIds}
               onRangeCreate={(ds, startHour, endHour) => setQuickAdd({ date: ds, startHour, endHour })}
               onEventClick={evt => { setEditingEvent(evt); setModalOpen(true) }}
               onDragUpdate={handleDragUpdate}
@@ -1565,7 +1571,7 @@ export function Calendar() {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>{events.length} events</div>
-        <CalendarLegend hiddenCalendars={hiddenCalendars} onToggle={toggleCalendar} />
+        <CalendarLegend calendars={userCalendars} hiddenCalendarIds={hiddenCalendarIds} onToggle={toggleCalendar} />
       </div>
 
       <EventModal open={modalOpen} onClose={() => setModalOpen(false)}
@@ -1577,6 +1583,7 @@ export function Calendar() {
           date={quickAdd.date}
           startHour={quickAdd.startHour}
           endHour={quickAdd.endHour}
+          calendars={userCalendars}
           onClose={() => setQuickAdd(null)}
           onCreatedTask={() => { setQuickAdd(null); refreshTasks() }}
           onCreateEvent={async (form) => {
@@ -1597,7 +1604,7 @@ export function Calendar() {
       <DayDetailDrawer
         dateStr={drawerDate}
         layer={drawerDate ? (layerMap.get(drawerDate) || null) : null}
-        events={drawerDate ? events.filter(e => toJSTDateStr(new Date(e.start_time)) === drawerDate && !hiddenCalendars.has(e.calendar_type) && !(e.summary || '').startsWith(TASK_GCAL_PREFIX)) : []}
+        events={drawerDate ? events.filter(e => toJSTDateStr(new Date(e.start_time)) === drawerDate && !hiddenCalendarIds.has(e.calendar_id) && !(e.summary || '').startsWith(TASK_GCAL_PREFIX)) : []}
         tasks={drawerDate ? tasks.filter(t => t.due_date === drawerDate) : []}
         onClose={() => setDrawerDate(null)}
       />
@@ -1609,8 +1616,9 @@ export function Calendar() {
 // Quick Add Popover — unified task/event creator with toggle
 // ============================================================
 
-function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onCreateEvent }: {
+function QuickAddPopover({ date, startHour, endHour, calendars, onClose, onCreatedTask, onCreateEvent }: {
   date: string; startHour?: number; endHour?: number
+  calendars: UserCalendar[]
   onClose: () => void
   onCreatedTask: () => void
   onCreateEvent: (form: { summary: string; date: string; startTime: string; endTime: string; calendarId?: string }) => Promise<void>
@@ -1622,7 +1630,16 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
   const defaultEnd = hasRange ? hoursToTimeStr(endHour!) : '11:00'
   const [startTime, setStartTime] = useState(defaultStart)
   const [endTime, setEndTime] = useState(defaultEnd)
-  const [calendarId, setCalendarId] = useState(GCAL_CALENDARS.find(c => c.type === 'primary')?.id || GCAL_CALENDARS[0]?.id || 'primary')
+  const [calendarId, setCalendarId] = useState(() => calendars.find(c => c.primary)?.id || calendars[0]?.id || 'primary')
+  // Lock in primary id once calendars load (the initial useState lazy init runs only once
+  // and at that moment the list might still be empty).
+  useEffect(() => {
+    if (!calendarId || calendarId === 'primary') {
+      const next = calendars.find(c => c.primary)?.id || calendars[0]?.id
+      if (next) setCalendarId(next)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calendars])
   // Time is opt-in for all-day slots (no drag range), auto-on for time-grid slots.
   const [hasTime, setHasTime] = useState(hasRange)
   // Task subtype: deadline = 期日のみ / timeblock = 時間ブロックを確保
@@ -1784,30 +1801,34 @@ function QuickAddPopover({ date, startHour, endHour, onClose, onCreatedTask, onC
           </div>
         )}
 
-        {/* Calendar selector (event mode only) */}
-        {kind === 'event' && (
+        {/* Calendar selector — shown for events AND for time-block tasks
+            (so 社長 can drop a task block on a non-primary calendar like 仕事 / acesinc) */}
+        {(kind === 'event' || (kind === 'task' && taskType === 'timeblock')) && calendars.length > 0 && (
           <div style={{ marginBottom: 12 }}>
             <label style={{ fontSize: 11, color: 'var(--text3)', display: 'block', marginBottom: 4 }}>カレンダー</label>
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-              {GCAL_CALENDARS.map(c => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => setCalendarId(c.id)}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '5px 10px', fontSize: 11, fontWeight: 500,
-                    border: '1px solid var(--border)', borderRadius: 6,
-                    background: calendarId === c.id ? CAL_BG_COLORS[c.type] : 'transparent',
-                    color: calendarId === c.id ? '#fff' : 'var(--text2)',
-                    cursor: 'pointer', transition: 'all .15s',
-                    fontFamily: 'var(--font)',
-                  }}
-                >
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: CAL_BG_COLORS[c.type], flexShrink: 0 }} />
-                  {c.label}
-                </button>
-              ))}
+              {calendars.map(c => {
+                const swatch = c.backgroundColor || (c.primary ? CAL_BG_COLORS.primary : CAL_BG_COLORS.secondary)
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCalendarId(c.id)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '5px 10px', fontSize: 11, fontWeight: 500,
+                      border: '1px solid var(--border)', borderRadius: 6,
+                      background: calendarId === c.id ? swatch : 'transparent',
+                      color: calendarId === c.id ? '#fff' : 'var(--text2)',
+                      cursor: 'pointer', transition: 'all .15s',
+                      fontFamily: 'var(--font)',
+                    }}
+                  >
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: swatch, flexShrink: 0 }} />
+                    {c.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}

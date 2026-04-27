@@ -1,14 +1,10 @@
-import type { GcalCalendar } from '@/types/calendar'
 import type { NavItem } from '@/types/common'
 
 export const GCAL_CLIENT_ID = '855851839827-hfijpvgal6m3hgrjgus6bdf8it8ibr9h.apps.googleusercontent.com'
 export const GCAL_SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/tasks'
 
-export const GCAL_CALENDARS: GcalCalendar[] = [
-  { id: 'yumzzz.my6223@gmail.com', label: 'yumzzz.my6223', type: 'primary' },
-  { id: 'yuta.miyaji.xyz@gmail.com', label: 'yuta.miyaji.xyz', type: 'secondary' },
-  { id: 'yuta.miyaji@acesinc.co.jp', label: 'yuta.miyaji@acesinc.co.jp', type: 'work' },
-]
+// Calendar list は ハードコードしない。useUserCalendars hook が Google calendarList から
+// ログイン中ユーザー本人のカレンダー一覧を動的に取得する。
 
 export const NAV_ITEMS: NavItem[] = [
   { page: 'calendar', icon: '\uD83D\uDCC5', label: 'Calendar', group: 'Pages' },

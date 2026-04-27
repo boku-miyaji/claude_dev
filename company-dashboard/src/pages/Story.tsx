@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { archiveStoryMemoryByType } from '@/lib/storyMemoryArchive'
 import { StoryArchiveSection } from '@/components/StoryArchiveSection'
 import { fetchCalendarEvents } from '@/lib/calendarApi'
+import { useUserCalendars } from '@/hooks/useUserCalendars'
 import type { CalendarEvent } from '@/types/calendar'
 
 export function Story() {
@@ -347,6 +348,7 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
   const [diaryByDate, setDiaryByDate] = useState<Record<string, DiaryRow>>({})
   const [eventsByDate, setEventsByDate] = useState<Record<string, CalendarEvent[]>>({})
   const [selectedCell, setSelectedCell] = useState<{ dow: number; slot: number } | null>(null)
+  const { calendars: userCalendars } = useUserCalendars()
 
   // Personal baseline + stddev (for adaptive color scaling)
   const { baseline, stddev } = useMemo(() => {
@@ -361,6 +363,7 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
   // Fetch diary entries + Google Calendar events for emotion range
   useEffect(() => {
     if (entries.length === 0) return
+    if (userCalendars.length === 0) return
     const dates = Array.from(new Set(entries.map(e => e.created_at.substring(0, 10)))).sort()
     const earliest = dates[0]
     const latest = dates[dates.length - 1]
@@ -381,7 +384,7 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
     // Gracefully fail if user isn't authed with Google Calendar
     const timeMin = new Date(earliest + 'T00:00:00+09:00').toISOString()
     const timeMax = new Date(latest + 'T23:59:59+09:00').toISOString()
-    fetchCalendarEvents({ timeMin, timeMax, maxResults: 500 })
+    fetchCalendarEvents({ timeMin, timeMax, maxResults: 500, calendarIds: userCalendars.map(c => c.id) })
       .then(({ events }) => {
         const map: Record<string, CalendarEvent[]> = {}
         events.forEach(ev => {
@@ -394,7 +397,7 @@ function EmotionInsights({ entries }: { entries: EmotionEntry[] }) {
       .catch(() => {
         // Silent fail — Card 4 will just not show if no events
       })
-  }, [entries])
+  }, [entries, userCalendars])
 
   // ============================================================
   // Card 1: 曜日 × 時間帯 ヒートマップ（偏差）

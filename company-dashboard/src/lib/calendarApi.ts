@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase'
-import { GCAL_CALENDARS } from '@/lib/constants'
 import type { CalendarEvent, CalendarType } from '@/types/calendar'
 
 const PROXY_BASE = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/google-calendar-proxy'
@@ -145,7 +144,10 @@ export async function completeCalendarAuth(code: string): Promise<{ ok: boolean;
     body: JSON.stringify({
       code,
       redirect_uri: redirectUri,
-      calendar_ids: GCAL_CALENDARS.map((c) => c.id),
+      // calendar_ids は OAuth callback 時点では取得できない（tokens 保存後に
+      // calendarList API を叩いて初めて分かる）。空で送って Edge Function 側で
+      // 必要なら自分で fetch する設計にする。
+      calendar_ids: [],
     }),
   })
   if (!res.ok) {
@@ -174,6 +176,7 @@ interface ProxyEvent {
   end_time: string
   all_day: boolean
   status?: string
+  calendar_type?: string
   location?: string | null
   hangoutLink?: string | null
   description?: string | null
@@ -190,9 +193,32 @@ export interface FetchCalendarEventsResult {
   partial: boolean
 }
 
+/** Calendar entry as returned from Google's calendarList for the logged-in user */
+export interface UserCalendar {
+  id: string
+  label: string
+  primary: boolean
+  backgroundColor: string | null
+  foregroundColor: string | null
+  access_role: string
+}
+
+/** Fetch the logged-in user's writable calendars from Google via Edge Function. */
+export async function fetchUserCalendars(): Promise<UserCalendar[]> {
+  const res = await authedFetch(`${PROXY_BASE}/calendars`)
+  if (!res.ok) throw new Error(`Calendar list error: ${res.status}`)
+  const data = await res.json() as { calendars?: UserCalendar[] }
+  return data.calendars || []
+}
+
 /** Fetch events from Google Calendar via Edge Function proxy */
 export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<FetchCalendarEventsResult> {
-  const calIds = options.calendarIds || GCAL_CALENDARS.map((c) => c.id)
+  const calIds = options.calendarIds || []
+  if (calIds.length === 0) {
+    // 呼び出し側で userCalendars がまだ未ロードの間は空で返す。Edge Function に
+    // 空 calendar_ids を投げても 400 になるだけなので無駄な往復を避ける。
+    return { events: [], failedCalendars: [], partial: false }
+  }
   const params = new URLSearchParams({
     calendar_ids: calIds.join(','),
     time_min: options.timeMin,
@@ -220,13 +246,12 @@ export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<
     partial?: boolean
   } = await res.json()
 
-  // Map calendar_id to calendar_type
-  const calMap = new Map(GCAL_CALENDARS.map((c) => [c.id, c.type]))
-
+  // calendar_type は Edge Function 側で計算済み (primary / secondary / work / private 等)。
+  // 未指定なら 'primary' を default にして UI が壊れないようにする。
   const events: CalendarEvent[] = data.events.map((ev) => ({
     id: ev.id,
     calendar_id: ev.calendar_id,
-    calendar_type: (calMap.get(ev.calendar_id) || 'primary') as CalendarType,
+    calendar_type: (ev.calendar_type || 'primary') as CalendarType,
     summary: ev.summary,
     start_time: ev.start_time,
     end_time: ev.end_time,

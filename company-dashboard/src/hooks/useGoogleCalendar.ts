@@ -7,10 +7,12 @@ import {
   updateCalendarEvent,
   deleteCalendarEvent,
 } from '@/lib/calendarApi'
-import type { FailedCalendar } from '@/lib/calendarApi'
+import type { FailedCalendar, UserCalendar } from '@/lib/calendarApi'
 import type { CalendarEvent, ViewMode } from '@/types/calendar'
+import { useUserCalendars } from './useUserCalendars'
 
 export function useGoogleCalendar(viewDate: Date, viewMode: ViewMode) {
+  const { calendars: userCalendars, loading: calendarsLoading } = useUserCalendars()
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,12 +49,14 @@ export function useGoogleCalendar(viewDate: Date, viewMode: ViewMode) {
   // Fetch events
   const fetchEvents = useCallback(async () => {
     if (authenticated === false) { setLoading(false); return }
+    if (userCalendars.length === 0) { setLoading(false); return }
     setLoading(true)
     setError(null)
 
     try {
       const [timeMin, timeMax] = getRange()
-      const result = await fetchCalendarEvents({ timeMin, timeMax })
+      const calendarIds = userCalendars.map((c) => c.id)
+      const result = await fetchCalendarEvents({ timeMin, timeMax, calendarIds })
       setEvents(result.events)
       setFailedCalendars(result.failedCalendars)
       setPartial(result.partial)
@@ -64,11 +68,11 @@ export function useGoogleCalendar(viewDate: Date, viewMode: ViewMode) {
       }
     }
     setLoading(false)
-  }, [authenticated, getRange])
+  }, [authenticated, getRange, userCalendars])
 
   useEffect(() => {
-    if (authenticated === true) fetchEvents()
-  }, [authenticated, fetchEvents])
+    if (authenticated === true && !calendarsLoading) fetchEvents()
+  }, [authenticated, calendarsLoading, fetchEvents])
 
   const requestAuth = useCallback(() => {
     startCalendarAuth()
@@ -99,5 +103,9 @@ export function useGoogleCalendar(viewDate: Date, viewMode: ViewMode) {
     createEvent,
     updateEvent: handleUpdateEvent,
     deleteEvent: handleDeleteEvent,
+    /** Logged-in user's writable calendars (Google calendarList). */
+    userCalendars,
   }
 }
+
+export type { UserCalendar }
