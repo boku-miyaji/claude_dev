@@ -26,6 +26,8 @@ interface Report {
   company_id: string | null
   created_at: string
   updated_at: string
+  is_favorite: boolean
+  read_at: string | null
 }
 
 interface ReportNewsItem {
@@ -38,6 +40,7 @@ interface ReportNewsItem {
   topic: string
   published_date: string | null
   collected_at: string | null
+  read_at: string | null
 }
 
 // ============================================================
@@ -506,16 +509,18 @@ function logFeedback(artifactId: number, feedback: string, filePath: string, tag
   })
 }
 
+type ReportFilter = 'all' | 'unread' | 'favorite' | 'archived'
+
 function ResearchReports() {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<number | null>(null)
-  const [showArchived, setShowArchived] = useState(false)
+  const [filter, setFilter] = useState<ReportFilter>('all')
 
   const load = useCallback(() => {
     supabase
       .from('artifacts')
-      .select('id,title,description,file_path,file_type,company_id,tags,status,created_at,updated_at')
+      .select('id,title,description,file_path,file_type,company_id,tags,status,created_at,updated_at,is_favorite,read_at')
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         setReports((data as Report[]) || [])
@@ -525,11 +530,16 @@ function ResearchReports() {
 
   useEffect(() => { load() }, [load])
 
-  // Log view when expanded
+  // Log view + mark read when expanded
   useEffect(() => {
-    if (expanded !== null) {
-      const r = reports.find((x) => x.id === expanded)
-      if (r) logFeedback(r.id, 'viewed', r.file_path, r.tags)
+    if (expanded === null) return
+    const r = reports.find((x) => x.id === expanded)
+    if (!r) return
+    logFeedback(r.id, 'viewed', r.file_path, r.tags)
+    if (!r.read_at) {
+      const now = new Date().toISOString()
+      supabase.from('artifacts').update({ read_at: now }).eq('id', r.id).then(() => {})
+      setReports((prev) => prev.map((x) => x.id === r.id ? { ...x, read_at: now } : x))
     }
   }, [expanded, reports])
 
@@ -546,30 +556,66 @@ function ResearchReports() {
     setReports((prev) => prev.map((x) => x.id === r.id ? { ...x, status: 'active' } : x))
   }
 
+  async function toggleFavorite(e: React.MouseEvent, r: Report) {
+    e.stopPropagation()
+    const next = !r.is_favorite
+    setReports((prev) => prev.map((x) => x.id === r.id ? { ...x, is_favorite: next } : x))
+    await supabase.from('artifacts').update({ is_favorite: next }).eq('id', r.id)
+  }
+
   if (loading) return <SkeletonRows count={4} />
 
   const active = reports.filter((r) => r.status === 'active')
   const archived = reports.filter((r) => r.status === 'archived')
+  const unreadCount = active.filter((r) => !r.read_at).length
+  const favoriteCount = reports.filter((r) => r.is_favorite && r.status === 'active').length
 
-  if (active.length === 0 && !showArchived) return <EmptyState icon="📄" message="レポートはまだありません" />
+  let visible: Report[] = []
+  if (filter === 'all') visible = active
+  else if (filter === 'unread') visible = active.filter((r) => !r.read_at)
+  else if (filter === 'favorite') visible = active.filter((r) => r.is_favorite)
+  else visible = archived
 
   return (
     <div>
-      {/* Company filter chips */}
+      {/* Filter chips: all / unread / favorite / archived */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, color: 'var(--text3)' }}>{active.length}件</span>
-        {archived.length > 0 && (
+        {([
+          ['all', `すべて (${active.length})`],
+          ['unread', `未読 (${unreadCount})`],
+          ['favorite', `★ お気に入り (${favoriteCount})`],
+          ['archived', `アーカイブ (${archived.length})`],
+        ] as const).map(([id, label]) => (
           <button
-            className="btn btn-g btn-sm"
-            style={{ fontSize: 10, padding: '2px 8px', marginLeft: 'auto' }}
-            onClick={() => setShowArchived(!showArchived)}
+            key={id}
+            onClick={() => setFilter(id)}
+            style={{
+              fontSize: 11,
+              padding: '4px 10px',
+              borderRadius: 4,
+              border: '1px solid var(--border)',
+              background: filter === id ? 'var(--accent-bg)' : 'transparent',
+              color: filter === id ? 'var(--accent)' : 'var(--text2)',
+              cursor: 'pointer',
+              fontWeight: filter === id ? 600 : 400,
+            }}
           >
-            {showArchived ? 'アーカイブを隠す' : `アーカイブ (${archived.length})`}
+            {label}
           </button>
-        )}
+        ))}
       </div>
 
-      {active.map((r) => (
+      {visible.length === 0 ? (
+        <EmptyState
+          icon={filter === 'favorite' ? '★' : filter === 'unread' ? '●' : filter === 'archived' ? '🗂' : '📄'}
+          message={
+            filter === 'favorite' ? 'お気に入りのレポートはまだありません' :
+            filter === 'unread' ? '未読のレポートはありません' :
+            filter === 'archived' ? 'アーカイブはありません' :
+            'レポートはまだありません'
+          }
+        />
+      ) : visible.map((r) => (
         <ReportCard key={r.id} r={r} expanded={expanded === r.id}
           onToggle={async () => {
             if (expanded === r.id) { setExpanded(null); return }
@@ -582,22 +628,12 @@ function ResearchReports() {
             }
             setExpanded(r.id)
           }}
-          onArchive={(e) => archiveReport(e, r)}
+          onArchive={r.status === 'active' ? (e) => archiveReport(e, r) : undefined}
+          onRestore={r.status === 'archived' ? (e) => restoreReport(e, r) : undefined}
+          onToggleFavorite={(e) => toggleFavorite(e, r)}
+          isArchived={r.status === 'archived'}
         />
       ))}
-
-      {showArchived && archived.length > 0 && (
-        <>
-          <div className="section-title" style={{ marginTop: 20 }}>Archived ({archived.length})</div>
-          {archived.map((r) => (
-            <ReportCard key={r.id} r={r} expanded={expanded === r.id}
-              onToggle={() => setExpanded(expanded === r.id ? null : r.id)}
-              onRestore={(e) => restoreReport(e, r)}
-              isArchived
-            />
-          ))}
-        </>
-      )}
     </div>
   )
 }
@@ -619,22 +655,27 @@ function extractSummary(content: string | null, maxLen = 120): string | null {
   return null
 }
 
-function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }: {
+function ReportCard({ r, expanded, onToggle, onArchive, onRestore, onToggleFavorite, isArchived }: {
   r: Report; expanded: boolean; onToggle: () => void
   onArchive?: (e: React.MouseEvent) => void
   onRestore?: (e: React.MouseEvent) => void
+  onToggleFavorite?: (e: React.MouseEvent) => void
   isArchived?: boolean
 }) {
   const summary = !expanded ? (r.description || extractSummary(r.content)) : null
+  const isUnread = !r.read_at
 
   return (
     <div className="card" style={{ marginBottom: 12, cursor: 'pointer', opacity: isArchived ? 0.6 : 1 }} onClick={onToggle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
-            {r.title}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: isUnread ? 700 : 500, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isUnread && (
+              <span title="未読" aria-label="未読" style={{ flexShrink: 0, width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />
+            )}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</span>
             {r.company_id && (
-              <span style={{ fontSize: 10, marginLeft: 8, padding: '1px 6px', borderRadius: 4, background: 'var(--accent-bg)', color: 'var(--accent)' }}>
+              <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--accent-bg)', color: 'var(--accent)', flexShrink: 0 }}>
                 {r.company_id}
               </span>
             )}
@@ -655,6 +696,12 @@ function ReportCard({ r, expanded, onToggle, onArchive, onRestore, isArchived }:
           <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'var(--mono)' }}>
             {new Date(r.created_at).toLocaleDateString('ja-JP')}
           </span>
+          {onToggleFavorite && (
+            <button onClick={onToggleFavorite} title={r.is_favorite ? 'お気に入り解除' : 'お気に入り'}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: r.is_favorite ? 'var(--amber)' : 'var(--text3)', padding: '2px 4px', lineHeight: 1 }}>
+              {r.is_favorite ? '★' : '☆'}
+            </button>
+          )}
           {onArchive && (
             <button onClick={onArchive} title="アーカイブ"
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text3)', padding: '2px 4px' }}>
@@ -779,6 +826,7 @@ function NewsFeed() {
           {items.map((item, i) => {
             const isExpanded = expanded === item.id
             const dateLabel = formatNewsDate(item)
+            const isUnread = !item.read_at
             return (
               <div
                 key={item.id}
@@ -787,7 +835,16 @@ function NewsFeed() {
                   borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
                   cursor: 'pointer',
                 }}
-                onClick={() => setExpanded(isExpanded ? null : (item.id || null))}
+                onClick={async () => {
+                  const opening = !isExpanded
+                  setExpanded(isExpanded ? null : (item.id || null))
+                  if (opening && isUnread && item.id) {
+                    const now = new Date().toISOString()
+                    setItems((prev) => prev.map((it) => it.id === item.id ? { ...it, read_at: now } : it))
+                    const { markNewsRead } = await import('@/lib/newsCollect')
+                    markNewsRead(item.id).catch((e) => console.error('[NewsFeed] markRead error:', e))
+                  }
+                }}
               >
                 {/* Header row: date + title */}
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -796,7 +853,10 @@ function NewsFeed() {
                       {dateLabel}
                     </span>
                   )}
-                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', flex: 1 }}>
+                  {isUnread && (
+                    <span title="未読" aria-label="未読" style={{ flexShrink: 0, width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)', alignSelf: 'center' }} />
+                  )}
+                  <span style={{ fontSize: 14, fontWeight: isUnread ? 700 : 500, color: 'var(--text)', flex: 1 }}>
                     {item.title_ja || item.title}
                   </span>
                 </div>
@@ -878,6 +938,8 @@ interface InterestArticle {
   gap_reason: string | null
   gap_type: string | null
   added_to_sources: boolean
+  read_at: string | null
+  zenn_artifact_id: number | null
 }
 
 function GapBadge({ article }: { article: InterestArticle }) {
@@ -1045,15 +1107,31 @@ function InterestArticles() {
         <EmptyState icon="🔖" message="気になった記事を登録すると、情報収集部が自動的に学習します" />
       ) : (
         <div>
-          {articles.map((a) => (
+          {articles.map((a) => {
+            const isUnread = !a.read_at
+            const markRead = async () => {
+              if (!isUnread) return
+              const now = new Date().toISOString()
+              setArticles((prev) => prev.map((x) => x.id === a.id ? { ...x, read_at: now } : x))
+              await supabase.from('interest_articles').update({ read_at: now }).eq('id', a.id)
+            }
+            return (
             <div key={a.id} className="card" style={{ marginBottom: 10, padding: '12px 14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>
-                    {a.title || a.source_domain || a.url}
+                  <div style={{ fontSize: 13, fontWeight: isUnread ? 700 : 500, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {isUnread && (
+                      <span title="未読" aria-label="未読" style={{ flexShrink: 0, width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />
+                    )}
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.title || a.source_domain || a.url}</span>
+                    {a.zenn_artifact_id && (
+                      <span title="Zennまとめに含まれた" style={{ fontSize: 10, padding: '0 6px', borderRadius: 3, background: 'var(--accent-bg)', color: 'var(--accent)', fontFamily: 'var(--mono)', flexShrink: 0 }}>
+                        zenn
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
+                    <a href={a.url} target="_blank" rel="noopener noreferrer" onClick={markRead} style={{ color: 'var(--accent)', textDecoration: 'none' }}>
                       {a.url}
                     </a>
                   </div>
@@ -1083,7 +1161,8 @@ function InterestArticles() {
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

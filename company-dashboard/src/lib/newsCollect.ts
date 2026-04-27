@@ -13,6 +13,18 @@ export interface NewsItem {
   published_date?: string | null
   collected_at?: string | null
   click_count?: number
+  read_at?: string | null
+}
+
+/** Mark a news item as read (idempotent — sets read_at only if NULL). */
+export async function markNewsRead(newsId: string): Promise<void> {
+  const idNum = parseInt(newsId, 10)
+  if (!Number.isFinite(idNum)) return
+  await supabase
+    .from('news_items')
+    .update({ read_at: new Date().toISOString() })
+    .eq('id', idNum)
+    .is('read_at', null)
 }
 
 
@@ -83,7 +95,7 @@ export async function translateNewsItem(newsId: string): Promise<NewsItem | null
 
   const { data, error } = await supabase
     .from('news_items')
-    .select('id,title,title_ja,summary,url,source,source_type,topic,published_date,collected_at')
+    .select('id,title,title_ja,summary,url,source,source_type,topic,published_date,collected_at,read_at')
     .eq('id', idNum)
     .single()
   if (error || !data) return null
@@ -123,7 +135,7 @@ export async function loadNews(limit = 10): Promise<NewsItem[]> {
     // News タブの並びがズレる（NULL バケットの並びが非決定的になる）。
     const { data, error } = await supabase
       .from('news_items')
-      .select('id,title,title_ja,summary,url,source,source_type,topic,published_date,collected_at')
+      .select('id,title,title_ja,summary,url,source,source_type,topic,published_date,collected_at,read_at')
       .gte('collected_at', threshold.toISOString())
       .order('published_date', { ascending: false })
       .order('collected_at', { ascending: false })
