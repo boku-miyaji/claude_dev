@@ -3,13 +3,13 @@
 > Supabase `growth_events` テーブルの読み取り専用ミラー。
 > 毎日 `scripts/growth/export-mirror.sh` で再生成される。**手編集しない**（次回上書きされる）。
 
-- 総レコード数: **482**
+- 総レコード数: **485**
 
 ## PJ別
 
 - [agent-harness](by-project/agent-harness.md) — 29件
 - [claude-dev](by-project/claude-dev.md) — 246件
-- [focus-you](by-project/focus-you.md) — 134件
+- [focus-you](by-project/focus-you.md) — 137件
 - [polaris-circuit](by-project/polaris-circuit.md) — 26件
 - [rikyu](by-project/rikyu.md) — 47件
 
@@ -17,6 +17,9 @@
 
 | date | type | project | title |
 |---|---|---|---|
+| 2026-04-26 | `milestone` | focus-you | focus-you を design-spec 準拠に全面改修 |
+| 2026-04-26 | `milestone` | focus-you | Proactive Prelude 導入 (silence-first × proactive) |
+| 2026-04-26 | `decision` | focus-you | Sidebar を 180px + CLI 折りたたみに整理 |
 | 2026-04-25 | `failure` | rikyu | rikyu外部開発者向け仕様の6ブロッカー |
 | 2026-04-25 | `failure` | focus-you | focus-youモバイルTODAY画面の品質問題 |
 | 2026-04-25 | `decision` | rikyu | MAFとmagentic_pipelineのオーケストレーション差分を分析 |
@@ -34,9 +37,6 @@
 | 2026-04-25 | `decision` | focus-you | focus-youベータは未実装機能を削除してから確認 |
 | 2026-04-25 | `failure` | rikyu | rikyu PJ仕様に外部開発者向け6ブロッカー検出 |
 | 2026-04-25 | `decision` | focus-you | focus-you アルファ実装移行・壁打ちは翌日 |
-| 2026-04-25 | `countermeasure` | claude-dev | Blueprint.tsxはfocus-you限定であることをCLAUDE.mdに明記 |
-| 2026-04-25 | `failure` | rikyu | rikyu仕様書に外部開発者向け6つのブロッカー |
-| 2026-04-25 | `failure` | focus-you | focus-youモバイルTODAY画面のUXが破綻 |
 
 ## 運用ルール
 - マスター: Supabase `growth_events`

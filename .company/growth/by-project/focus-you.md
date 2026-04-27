@@ -1,9 +1,12 @@
 # growth_events — `focus-you`
 
-Total: **134**
+Total: **137**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-26 | `milestone` | active | [focus-you を design-spec 準拠に全面改修](../2026/04/20260426-milestone-focus-you-を-design-spec-準拠に全面改修.md) |
+| 2026-04-26 | `milestone` | active | [Proactive Prelude 導入 (silence-first × proactive)](../2026/04/20260426-milestone-proactive-prelude-導入-silence-first-proactive.md) |
+| 2026-04-26 | `decision` | active | [Sidebar を 180px + CLI 折りたたみに整理](../2026/04/20260426-decision-sidebar-を-180px-cli-折りたたみに整理.md) |
 | 2026-04-25 | `failure` | active | [focus-youモバイルTODAY画面の品質問題](../2026/04/20260425-failure-focus-youモバイルtoday画面の品質問題.md) |
 | 2026-04-25 | `failure` | active | [モバイル TODAY 画面のUX破綻](../2026/04/20260425-failure-モバイル-today-画面のux破綻.md) |
 | 2026-04-25 | `decision` | active | [業務連動設計の早期着手が必要と判断](../2026/04/20260425-decision-業務連動設計の早期着手が必要と判断.md) |
