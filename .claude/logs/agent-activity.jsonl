@@ -216,3 +216,5 @@
 {"ts":"2026-04-27T11:18:13+09:00","event":"agent_dispatch","dept":"general-purpose","desc":"Phase 0事前準備一式の作成","model":"default","background":false}
 {"ts":"2026-04-27T11:48:22+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"Competitor 10-company survey","model":"default","background":true}
 {"ts":"2026-04-27T11:48:54+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"FISC + bank AI cases survey","model":"default","background":true}
+{"ts":"2026-04-28T08:12:59+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"CEO向け最新情報ブリーフィング","model":"default","background":false}
+{"ts":"2026-04-28T08:14:02+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"Register briefing to artifacts","model":"default","background":false}
