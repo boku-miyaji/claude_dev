@@ -1,9 +1,13 @@
 # growth_events — `rikyu`
 
-Total: **47**
+Total: **51**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-28 | `decision` | active | [rikyu: Azure AI Search + PostgreSQL採用](../2026/04/20260428-decision-rikyu-azure-ai-search-postgresql採用.md) |
+| 2026-04-28 | `decision` | active | [rikyu: monorepo構成 + Container Apps採用](../2026/04/20260428-decision-rikyu-monorepo構成-container-apps採用.md) |
+| 2026-04-28 | `decision` | active | [rikyu インフラを Azure monorepo 構成で進める](../2026/04/20260428-decision-rikyu-インフラを-azure-monorepo-構成で進める.md) |
+| 2026-04-28 | `decision` | active | [rikyu アーキテクチャ: monorepo + FE/BE 分離 + TS統一](../2026/04/20260428-decision-rikyu-アーキテクチャ-monorepo-febe-分離-ts統一.md) |
 | 2026-04-25 | `failure` | active | [rikyu外部開発者向け仕様の6ブロッカー](../2026/04/20260425-failure-rikyu外部開発者向け仕様の6ブロッカー.md) |
 | 2026-04-25 | `decision` | active | [MAFとmagentic_pipelineのオーケストレーション差分を分析](../2026/04/20260425-decision-mafとmagentic-pipelineのオーケストレーション差分を分析.md) |
 | 2026-04-25 | `failure` | active | [rikyu外部開発者向け6つの仕様ブロッカーが発覚](../2026/04/20260425-failure-rikyu外部開発者向け6つの仕様ブロッカーが発覚.md) |

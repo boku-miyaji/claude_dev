@@ -1,9 +1,11 @@
 # growth_events — `polaris-circuit`
 
-Total: **26**
+Total: **28**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-28 | `decision` | active | [polaris-circuit: 散らかった開発の整理着手](../2026/04/20260428-decision-polaris-circuit-散らかった開発の整理着手.md) |
+| 2026-04-28 | `decision` | active | [polaris-circuit 検証再開とブランチ整理](../2026/04/20260428-decision-polaris-circuit-検証再開とブランチ整理.md) |
 | 2026-04-17 | `decision` | active | [DIVE流用の回路デモをPoCとして構築](../2026/04/20260417-decision-dive流用の回路デモをpocとして構築.md) |
 | 2026-04-14 | `decision` | active | [部品推薦Agentは仕様書→回路図生成V3の一部と位置付け](../2026/04/20260414-decision-部品推薦agentは仕様書回路図生成v3の一部と位置付け.md) |
 | 2026-04-14 | `decision` | active | [DIVE論文ベースの部品推薦Agent検証設計を精緻化](../2026/04/20260414-decision-dive論文ベースの部品推薦agent検証設計を精緻化.md) |

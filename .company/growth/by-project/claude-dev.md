@@ -1,9 +1,24 @@
 # growth_events — `claude-dev`
 
-Total: **246**
+Total: **261**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-28 | `failure` | active | [情報収集部の出力が古く新規性ゼロ](../2026/04/20260428-failure-情報収集部の出力が古く新規性ゼロ.md) |
+| 2026-04-28 | `countermeasure` | active | [YAML 検証スクリプトは regex でなく PyYAML safe_load で読む（format に依存しない）](../2026/04/20260428-countermeasure-yaml-検証スクリプトは-regex-でなく-pyyaml-safe-load-で読むformat.md) |
+| 2026-04-28 | `failure` | active | [news-collect ワークフローが check-arxiv-sync.sh の YAML format 想定不一致で 5日間 silent failure](../2026/04/20260428-failure-news-collect-ワークフローが-check-arxiv-syncsh-の-yaml-for.md) |
+| 2026-04-27 | `countermeasure` | active | [auto-pushに巨大ファイル/build artifactsガードを追加](../2026/04/20260427-countermeasure-auto-pushに巨大ファイルbuild-artifactsガードを追加.md) |
+| 2026-04-27 | `failure` | active | [巨大ファイルがauto-saveでpush rejectされた](../2026/04/20260427-failure-巨大ファイルがauto-saveでpush-rejectされた.md) |
+| 2026-04-27 | `failure` | active | [[batch failure] News Collection (2026-04-26)](../2026/04/20260427-failure-batch-failure-news-collection-2026-04-26.md) |
+| 2026-04-27 | `failure` | active | [[batch failure] Morning Quote (Daily) (2026-04-26)](../2026/04/20260427-failure-batch-failure-morning-quote-daily-2026-04-26.md) |
+| 2026-04-27 | `failure` | active | [[batch failure] Narrator Update (Daily) (2026-04-27)](../2026/04/20260427-failure-batch-failure-narrator-update-daily-2026-04-27.md) |
+| 2026-04-27 | `failure` | active | [[batch failure] Intelligence Collection (2026-04-27)](../2026/04/20260427-failure-batch-failure-intelligence-collection-2026-04-27.md) |
+| 2026-04-27 | `failure` | active | [[batch failure] News Collection (2026-04-27)](../2026/04/20260427-failure-batch-failure-news-collection-2026-04-27.md) |
+| 2026-04-27 | `failure` | active | [Edge Function /calendars が OAuth スコープ不足で 403](../2026/04/20260427-failure-edge-function-calendars-が-oauth-スコープ不足で-403.md) |
+| 2026-04-27 | `countermeasure` | active | [auto-push.sh に build/cache 水際ブロック + .gitignore 必須項目をルール化](../2026/04/20260427-countermeasure-auto-pushsh-に-buildcache-水際ブロック-gitignore-必須項目をルール.md) |
+| 2026-04-27 | `failure` | active | [auto-save が node_modules / .next を tracked → push 100MB reject](../2026/04/20260427-failure-auto-save-が-node-modules-next-を-tracked-push-100mb.md) |
+| 2026-04-27 | `countermeasure` | active | [全 workflow の actions/setup-node SHA を v4 正規 SHA に修正 + 失敗検知の仕組み導入](../2026/04/20260427-countermeasure-全-workflow-の-actionssetup-node-sha-を-v4-正規-sha-に修正.md) |
+| 2026-04-27 | `failure` | active | [GitHub Actions setup-node が誤って setup-python の SHA を pinning し全バッチ6日連続停止](../2026/04/20260427-failure-github-actions-setup-node-が誤って-setup-python-の-sha-.md) |
 | 2026-04-25 | `countermeasure` | active | [単純な結論を急がず深く分析する原則](../2026/04/20260425-countermeasure-単純な結論を急がず深く分析する原則.md) |
 | 2026-04-25 | `countermeasure` | active | [Blueprint.tsxはfocus-you限定であることをCLAUDE.mdに明記](../2026/04/20260425-countermeasure-blueprinttsxはfocus-you限定であることをclaudemdに明記.md) |
 | 2026-04-25 | `countermeasure` | active | [Blueprint更新ルールをfocus-you限定に修正](../2026/04/20260425-countermeasure-blueprint更新ルールをfocus-you限定に修正.md) |

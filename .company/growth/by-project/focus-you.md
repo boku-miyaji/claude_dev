@@ -1,9 +1,12 @@
 # growth_events — `focus-you`
 
-Total: **137**
+Total: **140**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-28 | `failure` | active | [focus-you: 日記からの自動チェックが反映されない](../2026/04/20260428-failure-focus-you-日記からの自動チェックが反映されない.md) |
+| 2026-04-28 | `failure` | active | [focus-you 観葉植物水やり habit のチェック不能](../2026/04/20260428-failure-focus-you-観葉植物水やり-habit-のチェック不能.md) |
+| 2026-04-27 | `milestone` | active | [focus-you Calendar UIを24時間表示+自動スクロール化](../2026/04/20260427-milestone-focus-you-calendar-uiを24時間表示自動スクロール化.md) |
 | 2026-04-26 | `milestone` | active | [focus-you を design-spec 準拠に全面改修](../2026/04/20260426-milestone-focus-you-を-design-spec-準拠に全面改修.md) |
 | 2026-04-26 | `milestone` | active | [Proactive Prelude 導入 (silence-first × proactive)](../2026/04/20260426-milestone-proactive-prelude-導入-silence-first-proactive.md) |
 | 2026-04-26 | `decision` | active | [Sidebar を 180px + CLI 折りたたみに整理](../2026/04/20260426-decision-sidebar-を-180px-cli-折りたたみに整理.md) |
