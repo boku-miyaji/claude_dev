@@ -228,3 +228,4 @@
 {"ts":"2026-04-28T12:54:22+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"part-recommender-demoのDBレイヤー方針","model":"default","background":false}
 {"ts":"2026-04-28T12:55:03+09:00","event":"agent_dispatch","dept":"調査部","desc":"submodule/未追跡ディレクトリと旧モジュール調査","model":"default","background":false}
 {"ts":"2026-04-28T17:30:31+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Manual カード編集履歴機能の実装","model":"default","background":false}
+{"ts":"2026-04-28T17:34:16+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Manual.tsx の編集UI / 履歴UI 完成","model":"default","background":false}
