@@ -19,19 +19,77 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install Claude Code CLI
+        # CLAUDE.md コスト分離原則: バッチは Claude CLI 定額プラン経由（API課金ゼロ）
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Install Python dependencies
         run: pip install -r scripts/intelligence/requirements.txt
 
       - name: Run intelligence collection
         env:
+          # Flat-rate plan auth (no API billing). Obtain via `claude setup-token`.
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_INGEST_KEY: ${{ secrets.SUPABASE_INGEST_KEY }}
         run: python scripts/intelligence/collect.py
+
+      - name: Verify report quality (fail if low quality)
+        # silent degradation 防止: collect.py が exit 0 でも、
+        # 中身が空 or skeleton だけだと「気付かないまま放置」されるため
+        # 最新レポートの JSON / Markdown を実体検査して品質下限を強制する。
+        run: |
+          set -e
+          REPORTS_DIR=.company/departments/intelligence/reports
+          LATEST_JSON=$(ls -1t "$REPORTS_DIR"/*.json 2>/dev/null | head -1)
+          LATEST_MD=$(ls -1t "$REPORTS_DIR"/*.md 2>/dev/null | head -1)
+          if [ -z "$LATEST_JSON" ] || [ -z "$LATEST_MD" ]; then
+            echo "::error::no report file generated"
+            exit 1
+          fi
+          echo "Latest JSON: $LATEST_JSON"
+          echo "Latest MD:   $LATEST_MD"
+
+          # 1. items_count + window 確認
+          ITEMS=$(python3 -c "import json; d=json.load(open('$LATEST_JSON')); print(d.get('items_count_after_dedupe', d.get('items_count_in_window', -1)))")
+          WINDOW=$(python3 -c "import json; d=json.load(open('$LATEST_JSON')); print(d.get('window_label',''))")
+          echo "items_count_after_dedupe=$ITEMS window=$WINDOW"
+          if [ "$ITEMS" = "0" ] && echo "$WINDOW" | grep -q "新規少なし"; then
+            echo "::warning::2週間遡っても新規 0 件。fetch 経路の劣化を疑う"
+          fi
+
+          # 2. Markdown の最低サイズ。LLM 失敗 + アイテム0件のスケルトンは < 1.5KB
+          MD_SIZE=$(stat -c '%s' "$LATEST_MD")
+          echo "md_size=${MD_SIZE} bytes"
+          if [ "$MD_SIZE" -lt 1500 ]; then
+            echo "::error::report markdown too small (${MD_SIZE} bytes < 1500). LLM compose likely failed."
+            exit 1
+          fi
+
+          # 3. CLAUDE.md 準拠チェック: 必須セクションが含まれているか
+          # 「特筆すべき新規情報なし」レポートは必須セクション免除（正当な空レポート）
+          if grep -q "特筆すべき新規情報なし" "$LATEST_MD"; then
+            echo "OK: 'no new info' report (skeleton allowed)"
+          else
+            MISSING=""
+            grep -q "TL;DR" "$LATEST_MD" || MISSING="$MISSING TL;DR"
+            grep -q "示唆" "$LATEST_MD" || MISSING="$MISSING 示唆"
+            if [ -n "$MISSING" ]; then
+              echo "::error::report missing required sections:$MISSING"
+              exit 1
+            fi
+            echo "OK: required sections present"
+          fi
 
       - name: Commit and push reports
         env:
@@ -40,6 +98,9 @@ jobs:
           git config user.name "intelligence-bot"
           git config user.email "intelligence-bot@users.noreply.github.com"
           git add .company/departments/intelligence/reports/
-          git diff --cached --quiet || \
+          if git diff --cached --quiet; then
+            echo "no report changes to commit"
+          else
             git commit -m "chore(intelligence): auto-collect report [run:${TIMESTAMP}]"
-          git push
+            git push
+          fi
