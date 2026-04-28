@@ -8,6 +8,7 @@ import {
   type ManualCard,
   type ManualCategory,
   type ManualPendingUpdate,
+  type ManualEditLogEntry,
 } from '@/hooks/useUserManual'
 
 const STALE_DAYS = 30
@@ -37,6 +38,8 @@ export function Manual() {
     acceptUpdate,
     rejectUpdate,
     dismissUpdate,
+    editProposalSeed,
+    fetchHistory,
   } = useUserManual()
 
   const grouped = useMemo(() => {
@@ -160,6 +163,7 @@ export function Manual() {
                     onAccept={() => acceptUpdate(p.id)}
                     onReject={() => rejectUpdate(p.id)}
                     onDismiss={() => dismissUpdate(p.id)}
+                    onEditSeed={(idx, t) => editProposalSeed(p.id, idx, t)}
                   />
                 ))}
 
@@ -171,6 +175,7 @@ export function Manual() {
                       onSave={(text) => editCard(card.id, text)}
                       onTogglePin={() => togglePin(card.id, !card.pinned)}
                       onArchive={() => archiveCard(card.id)}
+                      fetchHistory={fetchHistory}
                     />
                   ))}
                   <AddCardInline category={category} onAdd={(text) => addCard(category, text)} />
@@ -191,16 +196,42 @@ function PendingProposalCard({
   onAccept,
   onReject,
   onDismiss,
+  onEditSeed,
 }: {
   proposal: ManualPendingUpdate
   onAccept: () => void
   onReject: () => void
   onDismiss: () => void
+  onEditSeed: (seedIndex: number, newText: string) => void | Promise<void>
 }) {
   const [busy, setBusy] = useState<'accept' | 'reject' | 'dismiss' | null>(null)
+  const [editing, setEditing] = useState<{ idx: number; draft: string } | null>(null)
+  const [savingSeed, setSavingSeed] = useState(false)
+  const [editedSeeds, setEditedSeeds] = useState<Set<number>>(new Set())
   const seeds = proposal.proposed_content?.seeds ?? []
   const currentCards = proposal.current_content?.cards ?? []
   const hasUserEdited = currentCards.some((c) => c.user_edited)
+
+  async function saveSeedEdit() {
+    if (!editing) return
+    const trimmed = editing.draft.trim()
+    if (!trimmed) {
+      setEditing(null)
+      return
+    }
+    setSavingSeed(true)
+    try {
+      await onEditSeed(editing.idx, trimmed)
+      setEditedSeeds((prev) => new Set(prev).add(editing.idx))
+      setEditing(null)
+    } finally {
+      setSavingSeed(false)
+    }
+  }
+
+  function cancelSeedEdit() {
+    setEditing(null)
+  }
 
   return (
     <Card
@@ -227,18 +258,82 @@ function PendingProposalCard({
         )}
       </div>
 
-      {/* Proposed new seeds */}
+      {/* Proposed new seeds — クリックで編集モード */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
-        {seeds.map((s, i) => (
-          <div key={i} style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text)' }}>
-            <div>{s.text}</div>
-            {s.evidence && s.evidence.length > 0 && (
-              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
-                根拠: {s.evidence.slice(0, 2).map((q) => `「${q}」`).join(' ')}
+        {seeds.map((s, i) => {
+          const isEditingThis = editing?.idx === i
+          const wasEdited = editedSeeds.has(i)
+
+          if (isEditingThis) {
+            return (
+              <div
+                key={i}
+                style={{
+                  paddingLeft: 8,
+                  borderLeft: '3px solid var(--accent)',
+                }}
+              >
+                <textarea
+                  className="input"
+                  value={editing.draft}
+                  onChange={(e) => setEditing({ idx: i, draft: e.target.value })}
+                  onKeyDown={(e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                      e.preventDefault()
+                      void saveSeedEdit()
+                    }
+                    if (e.key === 'Escape') {
+                      e.preventDefault()
+                      cancelSeedEdit()
+                    }
+                  }}
+                  autoFocus
+                  rows={3}
+                  style={{ fontSize: 13, width: '100%', lineHeight: 1.6, resize: 'vertical' }}
+                />
+                <div style={{ display: 'flex', gap: 6, marginTop: 6, justifyContent: 'flex-end' }}>
+                  <Button variant="ghost" onClick={cancelSeedEdit} disabled={savingSeed}>
+                    キャンセル
+                  </Button>
+                  <Button onClick={() => void saveSeedEdit()} disabled={savingSeed}>
+                    {savingSeed ? '保存中…' : '保存'}
+                  </Button>
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
+                  Cmd/Ctrl+Enter で保存 · Esc でキャンセル
+                </div>
               </div>
-            )}
-          </div>
-        ))}
+            )
+          }
+
+          return (
+            <div
+              key={i}
+              onClick={() => setEditing({ idx: i, draft: s.text })}
+              title="クリックで編集"
+              style={{
+                fontSize: 13,
+                lineHeight: 1.7,
+                color: 'var(--text)',
+                cursor: 'text',
+                paddingLeft: 8,
+                borderLeft: wasEdited ? '3px solid var(--accent)' : '3px solid transparent',
+              }}
+            >
+              <div>{s.text}</div>
+              {s.evidence && s.evidence.length > 0 && (
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
+                  根拠: {s.evidence.slice(0, 2).map((q) => `「${q}」`).join(' ')}
+                </div>
+              )}
+              {wasEdited && (
+                <div style={{ fontSize: 10, color: 'var(--accent2)', marginTop: 4 }}>
+                  ✓ 自分の言葉に編集済み
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* Current (for diff) */}
@@ -293,20 +388,68 @@ function PendingProposalCard({
 
 /* ── Single card row with inline edit ─────────────────────────── */
 
+const EDIT_TYPE_LABEL: Record<ManualEditLogEntry['edit_type'], string> = {
+  card_edit: '本文を編集',
+  card_create: '手動で追加',
+  card_archive: 'アーカイブ',
+  proposal_seed_edit: '提案を編集',
+  proposal_accept: '提案を承認',
+  proposal_reject: '提案を却下',
+}
+
+function truncateForLog(text: string | null, max = 120): string {
+  if (!text) return '—'
+  const oneLine = text.replace(/\s+/g, ' ').trim()
+  if (oneLine.length <= max) return oneLine
+  return oneLine.slice(0, max) + '…'
+}
+
+function formatLogTimestamp(iso: string): string {
+  const d = new Date(iso)
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mi = String(d.getMinutes()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`
+}
+
 function ManualCardRow({
   card,
   onSave,
   onTogglePin,
   onArchive,
+  fetchHistory,
 }: {
   card: ManualCard
   onSave: (text: string) => void
   onTogglePin: () => void
   onArchive: () => void
+  fetchHistory: (cardId: number) => Promise<ManualEditLogEntry[]>
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(displayText(card))
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [history, setHistory] = useState<ManualEditLogEntry[] | null>(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
   const edited = isEdited(card)
+
+  async function loadHistoryOnce() {
+    if (history !== null || historyLoading) return
+    setHistoryLoading(true)
+    try {
+      const entries = await fetchHistory(card.id)
+      setHistory(entries)
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
+  function toggleHistory() {
+    const next = !historyOpen
+    setHistoryOpen(next)
+    if (next) void loadHistoryOnce()
+  }
 
   function save() {
     onSave(draft)
@@ -398,6 +541,19 @@ function ManualCardRow({
           編集
         </button>
         <button
+          onClick={toggleHistory}
+          style={{
+            fontSize: 11,
+            background: 'transparent',
+            border: 'none',
+            color: historyOpen ? 'var(--text2)' : 'var(--text3)',
+            cursor: 'pointer',
+            padding: '2px 4px',
+          }}
+        >
+          履歴
+        </button>
+        <button
           onClick={() => {
             if (confirm('このカードをアーカイブしますか？')) onArchive()
           }}
@@ -413,6 +569,42 @@ function ManualCardRow({
           ×
         </button>
       </div>
+
+      {historyOpen && (
+        <div
+          style={{
+            marginTop: 10,
+            paddingTop: 10,
+            borderTop: '1px solid var(--border)',
+          }}
+        >
+          {historyLoading ? (
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>読み込み中…</div>
+          ) : history === null || history.length === 0 ? (
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>まだ履歴はありません</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {history.map((entry) => (
+                <div key={entry.id} style={{ fontSize: 11, lineHeight: 1.6, color: 'var(--text2)' }}>
+                  <div style={{ color: 'var(--text3)' }}>
+                    [{formatLogTimestamp(entry.edited_at)}] {EDIT_TYPE_LABEL[entry.edit_type] ?? entry.edit_type}
+                  </div>
+                  <div style={{ paddingLeft: 10, marginTop: 2 }}>
+                    <div>
+                      <span style={{ color: 'var(--text3)' }}>旧: </span>
+                      {truncateForLog(entry.before_text)}
+                    </div>
+                    <div>
+                      <span style={{ color: 'var(--text3)' }}>新: </span>
+                      {truncateForLog(entry.after_text)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   )
 }

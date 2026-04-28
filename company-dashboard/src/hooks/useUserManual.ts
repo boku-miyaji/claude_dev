@@ -78,6 +78,45 @@ export interface ManualPendingUpdate {
   created_at: string
 }
 
+/** 編集履歴 1件 (user_manual_edits 由来) */
+export interface ManualEditLogEntry {
+  id: number
+  edit_type:
+    | 'card_edit'
+    | 'card_create'
+    | 'card_archive'
+    | 'proposal_seed_edit'
+    | 'proposal_accept'
+    | 'proposal_reject'
+  before_text: string | null
+  after_text: string | null
+  edited_at: string
+  seed_index: number | null
+}
+
+/** 編集履歴を記録するヘルパー（fail-soft: log 失敗で UX を壊さない） */
+async function logEdit(params: {
+  cardId?: number | null
+  pendingUpdateId?: number | null
+  seedIndex?: number | null
+  editType: ManualEditLogEntry['edit_type']
+  beforeText?: string | null
+  afterText?: string | null
+}) {
+  try {
+    await supabase.from('user_manual_edits').insert({
+      card_id: params.cardId ?? null,
+      pending_update_id: params.pendingUpdateId ?? null,
+      seed_index: params.seedIndex ?? null,
+      edit_type: params.editType,
+      before_text: params.beforeText ?? null,
+      after_text: params.afterText ?? null,
+    })
+  } catch (err) {
+    console.warn('[useUserManual] logEdit failed', err)
+  }
+}
+
 export function useUserManual() {
   const [cards, setCards] = useState<ManualCard[]>([])
   const [pending, setPending] = useState<ManualPendingUpdate[]>([])
@@ -112,6 +151,10 @@ export function useUserManual() {
   /** ユーザーが本文を編集 */
   const editCard = useCallback(async (id: number, userText: string) => {
     const trimmed = userText.trim()
+    const oldCard = cards.find((c) => c.id === id)
+    const oldDisplay = oldCard ? displayText(oldCard) : ''
+    const newDisplay = trimmed.length > 0 ? trimmed : (oldCard?.seed_text ?? '')
+
     const { error } = await supabase
       .from('user_manual_cards')
       .update({
@@ -119,22 +162,45 @@ export function useUserManual() {
         user_edited_at: trimmed.length > 0 ? new Date().toISOString() : null,
       })
       .eq('id', id)
-    if (!error) await load()
-  }, [load])
+    if (!error) {
+      if (oldDisplay !== newDisplay) {
+        await logEdit({
+          cardId: id,
+          editType: 'card_edit',
+          beforeText: oldDisplay,
+          afterText: newDisplay,
+        })
+      }
+      await load()
+    }
+  }, [cards, load])
 
   /** 新規カードを手動追加 */
   const addCard = useCallback(async (category: ManualCategory, text: string) => {
-    if (!text.trim()) return
-    const { error } = await supabase
+    const trimmed = text.trim()
+    if (!trimmed) return
+    const { data, error } = await supabase
       .from('user_manual_cards')
       .insert({
         category,
-        user_text: text.trim(),
+        user_text: trimmed,
         user_edited_at: new Date().toISOString(),
         source: 'manual',
         confidence: 'medium',
       })
-    if (!error) await load()
+      .select('id')
+      .single()
+    if (!error) {
+      const newId = (data as { id: number } | null)?.id
+      if (newId) {
+        await logEdit({
+          cardId: newId,
+          editType: 'card_create',
+          afterText: trimmed,
+        })
+      }
+      await load()
+    }
   }, [load])
 
   /** ピン留め切り替え */
@@ -145,9 +211,21 @@ export function useUserManual() {
 
   /** アーカイブ */
   const archiveCard = useCallback(async (id: number) => {
-    await supabase.from('user_manual_cards').update({ archived: true }).eq('id', id)
-    await load()
-  }, [load])
+    const oldCard = cards.find((c) => c.id === id)
+    const oldDisplay = oldCard ? displayText(oldCard) : ''
+    const { error } = await supabase
+      .from('user_manual_cards')
+      .update({ archived: true })
+      .eq('id', id)
+    if (!error) {
+      await logEdit({
+        cardId: id,
+        editType: 'card_archive',
+        beforeText: oldDisplay,
+      })
+      await load()
+    }
+  }, [cards, load])
 
   /**
    * Propose seed cards as **pending_updates** rather than writing directly.
@@ -361,6 +439,12 @@ export function useUserManual() {
       .update({ status: 'accepted', decided_at: new Date().toISOString() })
       .eq('id', id)
 
+    await logEdit({
+      pendingUpdateId: id,
+      editType: 'proposal_accept',
+      afterText: seeds.map((s) => s.text).join('\n'),
+    })
+
     await load()
   }, [pending, load])
 
@@ -370,6 +454,10 @@ export function useUserManual() {
       .from('pending_updates')
       .update({ status: 'rejected', decided_at: new Date().toISOString() })
       .eq('id', id)
+    await logEdit({
+      pendingUpdateId: id,
+      editType: 'proposal_reject',
+    })
     await load()
   }, [load])
 
@@ -381,6 +469,58 @@ export function useUserManual() {
       .eq('id', id)
     await load()
   }, [load])
+
+  /**
+   * 承認前に proposal の seed テキストを編集する。
+   * AI の言葉のまま user_manual_cards に入る前に「自分の言葉」に書き換える経路。
+   */
+  const editProposalSeed = useCallback(async (
+    pendingId: number,
+    seedIndex: number,
+    newText: string,
+  ) => {
+    const trimmed = newText.trim()
+    if (!trimmed) return
+
+    const row = pending.find((p) => p.id === pendingId)
+    if (!row) return
+    const seeds = [...(row.proposed_content?.seeds ?? [])]
+    if (seedIndex < 0 || seedIndex >= seeds.length) return
+    const before = seeds[seedIndex].text
+    if (before === trimmed) return
+
+    seeds[seedIndex] = { ...seeds[seedIndex], text: trimmed }
+
+    const { error } = await supabase
+      .from('pending_updates')
+      .update({
+        proposed_content: { ...row.proposed_content, seeds },
+        preview: seeds[0]?.text?.substring(0, 100) ?? null,
+      })
+      .eq('id', pendingId)
+
+    if (!error) {
+      await logEdit({
+        pendingUpdateId: pendingId,
+        seedIndex,
+        editType: 'proposal_seed_edit',
+        beforeText: before,
+        afterText: trimmed,
+      })
+      await load()
+    }
+  }, [pending, load])
+
+  /** カード単位で履歴を取得（最大20件、新しい順） */
+  const fetchHistory = useCallback(async (cardId: number): Promise<ManualEditLogEntry[]> => {
+    const { data } = await supabase
+      .from('user_manual_edits')
+      .select('id, edit_type, before_text, after_text, edited_at, seed_index')
+      .eq('card_id', cardId)
+      .order('edited_at', { ascending: false })
+      .limit(20)
+    return (data as ManualEditLogEntry[]) ?? []
+  }, [])
 
   return {
     cards,
@@ -395,6 +535,8 @@ export function useUserManual() {
     acceptUpdate,
     rejectUpdate,
     dismissUpdate,
+    editProposalSeed,
+    fetchHistory,
     refresh: load,
   }
 }
