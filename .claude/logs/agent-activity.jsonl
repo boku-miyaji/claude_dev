@@ -219,3 +219,7 @@
 {"ts":"2026-04-28T08:12:59+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"CEO向け最新情報ブリーフィング","model":"default","background":false}
 {"ts":"2026-04-28T08:14:02+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"Register briefing to artifacts","model":"default","background":false}
 {"ts":"2026-04-28T12:00:03+09:00","event":"agent_dispatch","dept":"リファクタリング部","desc":"gnn-feedback-loop designs active/archive 分類","model":"default","background":false}
+{"ts":"2026-04-28T12:03:50+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"docs/pipeline/ OVERVIEW/STATUS/ROADMAP 起草","model":"default","background":false}
+{"ts":"2026-04-28T12:05:37+09:00","event":"agent_dispatch","dept":"資料制作部","desc":"Daiquiri 報告会準備状況確認","model":"default","background":false}
+{"ts":"2026-04-28T12:06:17+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"rikyu MVP 現状把握","model":"default","background":false}
+{"ts":"2026-04-28T12:10:37+09:00","event":"agent_dispatch","dept":"general-purpose","desc":"Batch failure 5件 トリアージ","model":"default","background":false}

@@ -279,6 +279,58 @@ def generate_markdown(data: dict) -> str:
     return "\n".join(lines)
 
 
+def _fallback_skeleton_markdown(*, now, window_label: str, items: list[dict]) -> str:
+    """LLM が利用不可 / アイテム0件のときに使う最低限のスケルトン Markdown。
+
+    ハルシ防止のため、LLM が呼べないときは要約や示唆を捏造せず、
+    生のアイテム一覧を出すだけに留める。
+    """
+    day_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][now.weekday()]
+    lines = [
+        f"# 情報収集レポート - {now.strftime('%Y-%m-%d')} ({day_of_week})",
+        "",
+        f"**対象期間**: {window_label}",
+        f"**収集アイテム数**: {len(items)}",
+        "",
+        "_LLM 要約は利用不可のためスケルトンのみ出力。アイテム本体は下記。_",
+        "",
+    ]
+    if not items:
+        lines.append("## 特筆すべき新規情報なし")
+        lines.append("")
+        lines.append("直近の探索範囲で、前回レポート以降の新規情報は確認できませんでした。")
+        return "\n".join(lines)
+
+    by_type: dict[str, list[dict]] = {}
+    for it in items:
+        by_type.setdefault(it.get("source_type", "other"), []).append(it)
+
+    if "official_blog" in by_type:
+        lines.append("## 🏢 各社レポート・発表")
+        lines.append("")
+        for it in by_type["official_blog"]:
+            lines.append(f"### [{it['title']}]({it['url']})")
+            lines.append(f"_{it.get('vendor','')} / {it.get('published_at','')[:10]}_")
+            if it.get("summary"):
+                lines.append("")
+                lines.append(it["summary"])
+            lines.append("")
+
+    if "arxiv" in by_type:
+        lines.append("## 📄 注目論文")
+        lines.append("")
+        for it in by_type["arxiv"]:
+            arxiv_id = (it.get("extra") or {}).get("arxiv_id", "")
+            lines.append(f"### [{it['title']}]({it['url']})")
+            lines.append(f"_({arxiv_id}, arXiv, {it.get('published_at','')[:10]})_")
+            if it.get("summary"):
+                lines.append("")
+                lines.append(it["summary"])
+            lines.append("")
+
+    return "\n".join(lines)
+
+
 def main():
     now = datetime.now(JST)
     timestamp = now.strftime("%Y-%m-%d-%H%M")
@@ -328,38 +380,115 @@ def main():
     sources = load_sources()
     preferences = load_preferences()
 
-    # 収集実行
-    collections = []
+    # ── Step 1: 公式ブログ RSS + arXiv API + 補助 DDG を fetch ──────────
+    # ハルシ防止のため、LLM が知識から URL/日付を捏造しないよう
+    # 一次ソースから事実を取得する（CLAUDE.md「ハルシネーション禁止」原則）。
+    from sources_fetch import (
+        fetch_official_feeds,
+        fetch_arxiv,
+        select_window_with_fallback,
+        dedupe_against_previous,
+    )
+    from llm_compose import (
+        compose_report_markdown,
+        fetch_dynamic_keywords,
+        collect_previous_urls,
+    )
 
-    keywords = sources.get("keywords", [])
-    if keywords:
-        print(f"  キーワード検索: {len(keywords)} 件")
-        collections.extend(search_keywords(keywords, preferences))
+    print("[collect] Step 1a: 公式ブログ RSS 取得...")
+    official = fetch_official_feeds()
+    print(f"  official_blog: {len(official)} 件")
+
+    print("[collect] Step 1b: arXiv 取得...")
+    academic_cfg = sources.get("academic_papers", {}).get("arxiv", {}) or {}
+    arxiv_cats = academic_cfg.get("categories") or None
+    arxiv_kw_cfg = academic_cfg.get("keywords") or []
+    arxiv_keywords = [k.get("term") for k in arxiv_kw_cfg if isinstance(k, dict) and k.get("term")]
+    arxiv_items = fetch_arxiv(categories=arxiv_cats, keywords=arxiv_keywords or None)
+    print(f"  arxiv: {len(arxiv_items)} 件")
+
+    fetched_items = official + arxiv_items
+
+    # ── Step 2: 24h フィルタ + 段階的遡り ──────────────────────────────
+    now_utc = datetime.now(timezone.utc)
+    window_label, window_hours, items_in_window = select_window_with_fallback(
+        fetched_items, now=now_utc, min_items=3
+    )
+    print(f"[collect] Step 2: window={window_label} ({len(items_in_window)} 件)")
+
+    # ── Step 3: 前回レポートとの差分（既出 URL 除外） ─────────────────
+    prev_urls = collect_previous_urls(REPORTS_DIR, lookback_days=14)
+    items_diff = dedupe_against_previous(items_in_window, prev_urls)
+    print(f"[collect] Step 3: 前回レポ差分後 {len(items_diff)} 件 (除外 {len(items_in_window) - len(items_diff)} 件)")
+
+    # ── Step 4: prompt_log から動的キーワード抽出 ─────────────────────
+    supabase_url = os.environ.get("SUPABASE_URL")
+    supabase_key = os.environ.get("SUPABASE_ANON_KEY")
+    ingest_key = os.environ.get("SUPABASE_INGEST_KEY", "")
+    dynamic_keywords = fetch_dynamic_keywords(supabase_url or "", supabase_key or "", ingest_key)
+    if dynamic_keywords:
+        print(f"[collect] Step 4: prompt_log キーワード: {dynamic_keywords}")
+
+    # ── Step 5: Claude CLI (opus) でレポート Markdown 生成 ──────────────
+    items_for_llm = [it.to_dict() for it in items_diff]
+    target_date = now.date()
+    md_body: str | None = None
+    if items_for_llm:
+        print(f"[collect] Step 5: Claude CLI で要約・示唆生成 (model=opus)...")
+        md_body = compose_report_markdown(
+            items=items_for_llm,
+            dynamic_keywords=dynamic_keywords,
+            window_label=window_label,
+            n_items=len(items_for_llm),
+            target_date=now,
+        )
+    if md_body is None:
+        # LLM 失敗 or アイテムなし → スケルトンのレポートを出す
+        md_body = _fallback_skeleton_markdown(
+            now=now,
+            window_label=window_label,
+            items=items_for_llm,
+        )
+
+    # ── Step 6: 補助として既存 DDG キーワード + X 検索を実行（コンテキスト用） ─
+    #   主要レポートは LLM が生成済み。補助情報は別セクションとして JSON に残す。
+    collections = []
+    keywords_cfg = sources.get("keywords", [])
+    if keywords_cfg:
+        print(f"  [補助] キーワード検索: {len(keywords_cfg)} 件")
+        collections.extend(search_keywords(keywords_cfg, preferences))
 
     x_accounts = sources.get("x_accounts", [])
     if x_accounts:
-        print(f"  X アカウント検索: {len(x_accounts)} 件")
+        print(f"  [補助] X アカウント検索: {len(x_accounts)} 件")
         collections.extend(search_x_accounts(x_accounts, preferences))
 
-    # 生データ保存
+    # ── Step 7: 保存 ────────────────────────────────────────────────
     data = {
         "collected_at": date_str,
         "timestamp": timestamp,
+        "window_label": window_label,
+        "window_hours": window_hours,
+        "items": items_for_llm,  # フィルタ後・差分後のアイテム
+        "items_count_total_fetched": len(fetched_items),
+        "items_count_in_window": len(items_in_window),
+        "items_count_after_dedupe": len(items_diff),
+        "dynamic_keywords": dynamic_keywords,
+        "collections": collections,  # 補助 DDG/X 検索（既存スキーマ維持）
         "total_sources": len(collections),
         "total_results": sum(len(c.get("results", [])) for c in collections),
-        "collections": collections,
     }
 
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     json_path = REPORTS_DIR / f"{timestamp}.json"
     with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        json.dump(data, f, ensure_ascii=False, indent=2, default=str)
     print(f"  JSON 保存: {json_path}")
 
     md_path = REPORTS_DIR / f"{timestamp}.md"
     with open(md_path, "w", encoding="utf-8") as f:
-        f.write(generate_markdown(data))
+        f.write(md_body)
     print(f"  Markdown 保存: {md_path}")
 
     # Supabase に保存（ダッシュボード表示用）
