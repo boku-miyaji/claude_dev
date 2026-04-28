@@ -224,3 +224,5 @@
 {"ts":"2026-04-28T12:06:17+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"rikyu MVP 現状把握","model":"default","background":false}
 {"ts":"2026-04-28T12:10:37+09:00","event":"agent_dispatch","dept":"general-purpose","desc":"Batch failure 5件 トリアージ","model":"default","background":false}
 {"ts":"2026-04-28T12:11:51+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"各層 README.md 作成","model":"default","background":false}
+{"ts":"2026-04-28T12:48:12+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"P0 Today.tsx habit timezone 修正","model":"default","background":false}
+{"ts":"2026-04-28T12:54:22+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"part-recommender-demoのDBレイヤー方針","model":"default","background":false}
