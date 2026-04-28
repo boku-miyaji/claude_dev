@@ -123,7 +123,7 @@ def should_include_as_exploration() -> bool:
 
 def search_keywords(keywords: list, preferences: dict) -> list:
     """キーワード検索を実行"""
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
 
     results = []
     for kw_config in keywords:
@@ -175,7 +175,7 @@ def search_keywords(keywords: list, preferences: dict) -> list:
 
 def search_x_accounts(accounts: list, preferences: dict) -> list:
     """X アカウントの最新投稿を検索（DuckDuckGo 経由）"""
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
 
     results = []
     for account in accounts:
