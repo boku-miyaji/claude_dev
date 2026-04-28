@@ -22,24 +22,19 @@ from dateutil import parser as dateparser
 logger = logging.getLogger(__name__)
 
 # 各社公式ブログの RSS / Atom フィード一覧。
-# sources.yaml の web_sources に対応する RSS が公開されているものをハードコード。
-# RSS が無いソースはここに含めない（HTML スクレイピングはハルシ温床なので避ける）。
+# 2026-04-28 に curl で 200 返すことを確認したものだけ含める。
+# RSS が無いソース（Anthropic / Meta）は HTML スクレイピングで対応するため別経路で扱う。
+# HTML スクレイピングはハルシ温床なので、本モジュールでは扱わない。
 OFFICIAL_FEEDS: list[dict] = [
     {
-        "name": "Anthropic News",
-        "url": "https://www.anthropic.com/news/rss.xml",
-        "source_type": "official_blog",
-        "vendor": "Anthropic",
-    },
-    {
-        "name": "OpenAI Blog",
-        "url": "https://openai.com/blog/rss.xml",
+        "name": "OpenAI News",
+        "url": "https://openai.com/news/rss.xml",
         "source_type": "official_blog",
         "vendor": "OpenAI",
     },
     {
-        "name": "Google AI Blog",
-        "url": "https://blog.google/technology/ai/rss/",
+        "name": "Google Blog",
+        "url": "https://blog.google/rss/",
         "source_type": "official_blog",
         "vendor": "Google",
     },
@@ -50,17 +45,13 @@ OFFICIAL_FEEDS: list[dict] = [
         "vendor": "DeepMind",
     },
     {
-        "name": "Meta AI",
-        "url": "https://ai.meta.com/blog/rss/",
-        "source_type": "official_blog",
-        "vendor": "Meta",
-    },
-    {
         "name": "Hugging Face Blog",
         "url": "https://huggingface.co/blog/feed.xml",
         "source_type": "official_blog",
         "vendor": "HuggingFace",
     },
+    # TODO(別タスク): Anthropic / Meta は公式 RSS が無いため、HTML スクレイピング or
+    # Atom 提供の代替経路を別モジュール (e.g., sources_html.py) で対応する。
 ]
 
 # arXiv のカテゴリ。sources.yaml の academic_papers.arxiv.categories と同期させる。
