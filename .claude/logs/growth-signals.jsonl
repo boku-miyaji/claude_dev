@@ -1408,3 +1408,6 @@
 {"ts":"2026-04-28T09:50:13+09:00","signal":"raw_prompt","prompt":"add-scripts-for-kicad-sch-generationはやめておこう。\nboku.miyaji@example.comのコミットが上がっているのはよくない。acesincも上がっているのはよくない。全部 yumzzz.my6223@gmail.com, yuta.miyaji.xyz@gmail.comにしたい。\n"}
 {"ts":"2026-04-28T09:52:04+09:00","signal":"raw_prompt","prompt":"CEO向けブリーフィング (04/28)を生成してもらったが、これは情報収集部ではないの？\n"}
 {"ts":"2026-04-28T09:52:04+09:00","signal":"raw_prompt","prompt":"CEO向けブリーフィング (04/28)を生成してもらったが、これは情報収集部ではないの？\n"}
+{"ts":"2026-04-28T09:55:55+09:00","signal":"raw_prompt","prompt":"1, けしていい。関係ない。バックアップもいらない。\n2, yuta.miyaji.xyz@gmail.comは業務委託用のアカウントです。\n3, 一旦大丈夫\n"}
+{"ts":"2026-04-28T09:55:55+09:00","signal":"raw_prompt","prompt":"1, けしていい。関係ない。バックアップもいらない。\n2, yuta.miyaji.xyz@gmail.comは業務委託用のアカウントです。\n3, 一旦大丈夫\n"}
+{"ts":"2026-04-28T09:57:22+09:00","signal":"raw_prompt","prompt":"A, Bお願い。\n"}
