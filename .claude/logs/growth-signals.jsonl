@@ -1313,3 +1313,5 @@
 {"ts":"2026-04-28T08:54:26+09:00","signal":"raw_prompt","prompt":"newsがずっとこうしんされていないがなぜ？\n"}
 {"ts":"2026-04-28T08:54:26+09:00","signal":"raw_prompt","prompt":"newsがずっとこうしんされていないがなぜ？\n"}
 {"ts":"2026-04-28T09:03:12+09:00","signal":"raw_prompt","prompt":"Azure AI searchはたてます。\nその上で、posgreのほうがいい？簡易検索くらいはしたくなるかもしれない？ azure SQLのメリットがあまりわからない。純正くらい？ postgreもazure serviceだよね？それならほとんど差分ない？使い勝手とか、運用性とかは？\n"}
+{"ts":"2026-04-28T09:03:12+09:00","signal":"raw_prompt","prompt":"Azure AI searchはたてます。\nその上で、posgreのほうがいい？簡易検索くらいはしたくなるかもしれない？ azure SQLのメリットがあまりわからない。純正くらい？ postgreもazure serviceだよね？それならほとんど差分ない？使い勝手とか、運用性とかは？\n"}
+{"ts":"2026-04-28T09:14:27+09:00","signal":"raw_prompt","prompt":"B2でいこうか\n"}
