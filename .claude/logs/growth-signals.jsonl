@@ -1312,3 +1312,4 @@
 {"ts":"2026-04-28T08:51:51+09:00","signal":"raw_prompt","prompt":"pythonではなく、typescriptのほうがいいとかある？\n A1'-2でいい。\nmonorepoでいい\n"}
 {"ts":"2026-04-28T08:54:26+09:00","signal":"raw_prompt","prompt":"newsがずっとこうしんされていないがなぜ？\n"}
 {"ts":"2026-04-28T08:54:26+09:00","signal":"raw_prompt","prompt":"newsがずっとこうしんされていないがなぜ？\n"}
+{"ts":"2026-04-28T09:03:12+09:00","signal":"raw_prompt","prompt":"Azure AI searchはたてます。\nその上で、posgreのほうがいい？簡易検索くらいはしたくなるかもしれない？ azure SQLのメリットがあまりわからない。純正くらい？ postgreもazure serviceだよね？それならほとんど差分ない？使い勝手とか、運用性とかは？\n"}
