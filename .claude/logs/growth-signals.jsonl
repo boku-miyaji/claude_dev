@@ -1411,3 +1411,10 @@
 {"ts":"2026-04-28T09:55:55+09:00","signal":"raw_prompt","prompt":"1, けしていい。関係ない。バックアップもいらない。\n2, yuta.miyaji.xyz@gmail.comは業務委託用のアカウントです。\n3, 一旦大丈夫\n"}
 {"ts":"2026-04-28T09:55:55+09:00","signal":"raw_prompt","prompt":"1, けしていい。関係ない。バックアップもいらない。\n2, yuta.miyaji.xyz@gmail.comは業務委託用のアカウントです。\n3, 一旦大丈夫\n"}
 {"ts":"2026-04-28T09:57:22+09:00","signal":"raw_prompt","prompt":"A, Bお願い。\n"}
+{"ts":"2026-04-28T09:57:22+09:00","signal":"raw_prompt","prompt":"A, Bお願い。\n"}
+{"ts":"2026-04-28T10:31:45+09:00","signal":"raw_prompt","prompt":"1, 両方。ちゃんと整理したい。フォルダー構成もちゃんとしたい。mainのやつがそもそもよくない。追加開発できるようになっていない。\n2. no\n3, feat, taskの２つのブランチは別文脈。gnn系のFBも入れて 回路図生成の精度を上げようとしたのがtaskのほう。そのなかのFB loopのひとつにdemoで見せているfeatの部分も取り入れたい。そういったアルゴリズムを統合して、最新のパイ�"}
+{"ts":"2026-04-28T10:31:45+09:00","signal":"raw_prompt","prompt":"1, 両方。ちゃんと整理したい。フォルダー構成もちゃんとしたい。mainのやつがそもそもよくない。追加開発できるようになっていない。\n2. no\n3, feat, taskの２つのブランチは別文脈。gnn系のFBも入れて 回路図生成の精度を上げようとしたのがtaskのほう。そのなかのFB loopのひとつにdemoで見せているfeatの部分も取り入れたい。そういったアルゴリズムを統合して、最新のパイ�"}
+{"ts":"2026-04-28T11:20:43+09:00","signal":"raw_prompt","prompt":"sprint更新して。\n2,3,4もやる\n"}
+{"ts":"2026-04-28T11:20:43+09:00","signal":"raw_prompt","prompt":"sprint更新して。\n2,3,4もやる\n"}
+{"ts":"2026-04-28T11:27:48+09:00","signal":"raw_prompt","prompt":"sandbox directory作って欲しい。mainのfront, backendもsandboxiだと思う。最初の実験で作っただけです。\nQ1, B\nQ2, A\nQ3, A\n"}
+{"ts":"2026-04-28T11:27:48+09:00","signal":"raw_prompt","prompt":"sandbox directory作って欲しい。mainのfront, backendもsandboxiだと思う。最初の実験で作っただけです。\nQ1, B\nQ2, A\nQ3, A\n"}
