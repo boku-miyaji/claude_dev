@@ -1418,3 +1418,4 @@
 {"ts":"2026-04-28T11:20:43+09:00","signal":"raw_prompt","prompt":"sprint更新して。\n2,3,4もやる\n"}
 {"ts":"2026-04-28T11:27:48+09:00","signal":"raw_prompt","prompt":"sandbox directory作って欲しい。mainのfront, backendもsandboxiだと思う。最初の実験で作っただけです。\nQ1, B\nQ2, A\nQ3, A\n"}
 {"ts":"2026-04-28T11:27:48+09:00","signal":"raw_prompt","prompt":"sandbox directory作って欲しい。mainのfront, backendもsandboxiだと思う。最初の実験で作っただけです。\nQ1, B\nQ2, A\nQ3, A\n"}
+{"ts":"2026-04-28T11:32:55+09:00","signal":"raw_prompt","prompt":"ok\ngnn_verification, experimentsもsandbox配下に入れたい。もう一回構成考えて。\n"}
