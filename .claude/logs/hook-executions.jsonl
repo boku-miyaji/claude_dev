@@ -26406,3 +26406,5 @@
 {"ts":"2026-04-28T12:13:36+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-28T12:14:19+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-28T12:14:27+09:00","hook":"tool-collector","tool":"TodoWrite","status":"ok"}
+{"ts":"2026-04-28T12:21:49+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-28T12:21:59+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
