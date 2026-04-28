@@ -26129,3 +26129,4 @@
 {"ts":"2026-04-28T11:38:02+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-28T11:38:12+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-28T11:38:15+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-28T11:40:21+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
