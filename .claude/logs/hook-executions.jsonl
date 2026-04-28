@@ -26017,3 +26017,7 @@
 {"ts":"2026-04-28T09:40:21+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-28T09:40:25+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
 {"ts":"2026-04-28T09:40:25+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-28T09:40:27+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-28T09:40:27+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-28T09:40:43+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-28T09:40:49+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
