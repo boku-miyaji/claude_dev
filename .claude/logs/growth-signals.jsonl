@@ -1419,3 +1419,5 @@
 {"ts":"2026-04-28T11:27:48+09:00","signal":"raw_prompt","prompt":"sandbox directory作って欲しい。mainのfront, backendもsandboxiだと思う。最初の実験で作っただけです。\nQ1, B\nQ2, A\nQ3, A\n"}
 {"ts":"2026-04-28T11:27:48+09:00","signal":"raw_prompt","prompt":"sandbox directory作って欲しい。mainのfront, backendもsandboxiだと思う。最初の実験で作っただけです。\nQ1, B\nQ2, A\nQ3, A\n"}
 {"ts":"2026-04-28T11:32:55+09:00","signal":"raw_prompt","prompt":"ok\ngnn_verification, experimentsもsandbox配下に入れたい。もう一回構成考えて。\n"}
+{"ts":"2026-04-28T11:32:55+09:00","signal":"raw_prompt","prompt":"ok\ngnn_verification, experimentsもsandbox配下に入れたい。もう一回構成考えて。\n"}
+{"ts":"2026-04-28T11:37:16+09:00","signal":"raw_prompt","prompt":"私はそんなプロンプトを叩いていない。情報収集してとお願いしました。なぜそんな勘違いをした？内部でプロンプトが勝手に生成されたのを私の指示だと思った？\nブリーフィングいらなくない？リサーチ部は内部のことを調べる部署じゃなかったっけ？情報収集部は外部の情報。\n"}
