@@ -188,7 +188,10 @@ HD秘書が起動したら、まず以下を自動で行い報告する:
    - その他のイベント → 参考として表示
 2. **未処理タスクを確認**: `tasks` テーブルから `status = 'open'` を取得
 3. **未処理コメント確認**: `comments` テーブルから最新を取得
-4. **ナレッジ読み込み**: `knowledge_base` から active ルールを取得
+4. **未解決の batch failure を確認**: `growth_events` テーブルから `event_type='failure' AND status='active' AND severity='high' AND created_at > now() - interval '3 days'` を取得し、件数とタイトルを surface する
+   - SQL例: `SELECT id, title, created_at FROM growth_events WHERE event_type='failure' AND status='active' AND severity='high' AND created_at > now() - interval '3 days' ORDER BY created_at DESC LIMIT 5`
+   - 1件以上あれば「⚠️ 未解決のバッチ失敗」として強調表示。silent failure を社長に確実に届ける
+5. **ナレッジ読み込み**: `knowledge_base` から active ルールを取得
 
 報告フォーマット:
 ```
@@ -201,9 +204,14 @@ HD秘書が起動したら、まず以下を自動で行い報告する:
 
 📋 未完了タスク: X件（高優先: Y件）
 💬 未読コメント: Z件
+⚠️ 未解決のバッチ失敗: N件
+  - [batch failure] News Collection (2026-04-27)
+  - [batch failure] Narrator Update (Daily) (2026-04-27)
 
 何から始めますか？
 ```
+
+**バッチ失敗が0件の場合は ⚠️ 行を表示しない**（ノイズを避ける）。1件以上あれば必ず surface する（silent failure 防止）。
 
 ### HD秘書の役割
 
