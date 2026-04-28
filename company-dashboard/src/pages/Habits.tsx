@@ -2,11 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Card, PageHeader, Modal, toast } from '@/components/ui'
 import { HABIT_CATEGORIES, HABIT_ICONS, type HabitCategory, type HabitFrequency } from '@/types/habits'
 import { useDataStore } from '@/stores/data'
+import { toJstDateStr, jstTodayStr } from '@/lib/date'
 
 /* ─── helpers ─── */
 
+/** JST `YYYY-MM-DD` for the given Date — wraps the shared util so day-grid
+ *  generation stays anchored to JST regardless of host TZ. */
 function formatDate(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return toJstDateStr(d)
 }
 
 function getDaysInRange(start: Date, count: number): string[] {
@@ -250,7 +253,7 @@ export function Habits() {
   const [formTarget, setFormTarget] = useState(1)
   const [saving, setSaving] = useState(false)
 
-  const todayStr = useMemo(() => formatDate(new Date()), [])
+  const todayStr = useMemo(() => jstTodayStr(), [])
 
   useEffect(() => {
     fetchHabits()

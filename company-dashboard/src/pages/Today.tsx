@@ -20,6 +20,7 @@ import { useAuthStore } from '@/stores/auth'
 import { getTimeMode, getGreeting, formatToday, getDiaryPrompt } from '@/lib/timeMode'
 import type { TimeMode } from '@/lib/timeMode'
 import type { DiaryEntry } from '@/types/diary'
+import { toJstDateStr, jstTodayStr } from '@/lib/date'
 
 // Analysis questions for diary input — src/lib/diaryPrompts.ts に良問いライブラリとして集約済み
 // 価値観・幸せ・失敗パターン・行動・人間関係・意思決定・内面・ポジティブ の 7軸構造
@@ -229,10 +230,7 @@ export function Today() {
   const [newHabitTitle, setNewHabitTitle] = useState('')
   const [showAddHabit, setShowAddHabit] = useState(false)
 
-  const todayStr = useMemo(() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  }, [])
+  const todayStr = useMemo(() => jstTodayStr(), [])
 
   useEffect(() => {
     fetchDiary({ days: 1 })
@@ -261,11 +259,11 @@ export function Today() {
 
   /* ── Computed data ── */
 
-  const fragments = useMemo(() => diaryEntries.filter((e) => e.created_at.substring(0, 10) === todayStr), [diaryEntries, todayStr])
+  const fragments = useMemo(() => diaryEntries.filter((e) => toJstDateStr(e.created_at) === todayStr), [diaryEntries, todayStr])
 
   // Tasks: today's actionable items (requests are excluded — they live in the Tasks page)
   const allOpenTasks = useMemo(() => tasks.filter((t) => (t.status === 'open' || t.status === 'in_progress') && t.type !== 'request'), [tasks])
-  const completedToday = useMemo(() => tasks.filter((t) => t.status === 'done' && t.type !== 'request' && t.completed_at?.substring(0, 10) === todayStr), [tasks, todayStr])
+  const completedToday = useMemo(() => tasks.filter((t) => t.status === 'done' && t.type !== 'request' && t.completed_at && toJstDateStr(t.completed_at) === todayStr), [tasks, todayStr])
 
   // ── Deadline aggregator ──
   // A task "has a deadline" when either deadline_at or due_date is set.
@@ -284,7 +282,7 @@ export function Today() {
     const dueThisWeek: typeof allOpenTasks = []
 
     for (const t of allOpenTasks) {
-      const deadlineDate = t.deadline_at ? t.deadline_at.substring(0, 10) : t.due_date
+      const deadlineDate = t.deadline_at ? toJstDateStr(t.deadline_at) : t.due_date
       if (!deadlineDate) continue
       if (deadlineDate < todayStr) overdue.push(t)
       else if (deadlineDate === todayStr) dueToday.push(t)
@@ -355,18 +353,22 @@ export function Today() {
 
   const todayHabits = useMemo(() => {
     return habits.map((habit) => {
-      const todayCount = habitLogs.filter((l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr).length
+      const todayCount = habitLogs.filter((l) => l.habit_id === habit.id && toJstDateStr(l.completed_at) === todayStr).length
       const doneToday = todayCount > 0
       if (habit.frequency === 'weekly') {
-        const periodCount = habitLogs.filter(
-          (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) >= weekStartStr && l.completed_at.substring(0, 10) <= todayStr,
-        ).length
+        const periodCount = habitLogs.filter((l) => {
+          if (l.habit_id !== habit.id) return false
+          const day = toJstDateStr(l.completed_at)
+          return day >= weekStartStr && day <= todayStr
+        }).length
         return { ...habit, todayCount, periodCount, completed: periodCount >= habit.target_count, doneToday }
       }
       if (habit.frequency === 'monthly') {
-        const periodCount = habitLogs.filter(
-          (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) >= monthStartStr && l.completed_at.substring(0, 10) <= todayStr,
-        ).length
+        const periodCount = habitLogs.filter((l) => {
+          if (l.habit_id !== habit.id) return false
+          const day = toJstDateStr(l.completed_at)
+          return day >= monthStartStr && day <= todayStr
+        }).length
         return { ...habit, todayCount, periodCount, completed: periodCount >= habit.target_count, doneToday }
       }
       return { ...habit, todayCount, periodCount: todayCount, completed: todayCount >= habit.target_count, doneToday }
@@ -499,7 +501,7 @@ export function Today() {
           ),
           ...highDoneHabits.map(async (h) => {
             const alreadyLogged = habitLogs.some((l) =>
-              l.habit_id === h.habit_id && l.completed_at.substring(0, 10) === todayStr
+              l.habit_id === h.habit_id && toJstDateStr(l.completed_at) === todayStr
             )
             if (alreadyLogged) return
             await supabase.from('habit_logs').insert({

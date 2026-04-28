@@ -1,13 +1,13 @@
 {
-  "saved_at": "2026-04-27T19:14:44+09:00",
-  "today": "2026-04-27",
-  "work_dir": "/workspace/aces-rikyu-sales-proposals-poc/server/app/system-spec",
-  "git_last_commit": "fa4a6620f042b9b45ecaf63fecaca80d8c07edff chore: auto-save session changes",
+  "saved_at": "2026-04-28T12:47:28+09:00",
+  "today": "2026-04-28",
+  "work_dir": "/workspace",
+  "git_last_commit": "64ddd17f9a5929ddd2ccc2ad71d541c52fb146f1 fix(intelligence): silent degradation 検知のため verify step を追加",
   "active_tasks": [],
   "note": "Context Compaction により古い会話が圧縮されました。以下の情報を確認してください。",
   "reminders": [
     "タスク状態は Supabase tasks テーブルで確認",
-    "直近の決定事項は secretary/notes/2026-04-27-decisions.md で確認",
+    "直近の決定事項は secretary/notes/2026-04-28-decisions.md で確認",
     "パイプライン進捗があれば secretary/notes/ の最新ファイルで確認",
     "active_tasks フィールドに処理中タスクが記録されています（Supabase接続時のみ）"
   ]

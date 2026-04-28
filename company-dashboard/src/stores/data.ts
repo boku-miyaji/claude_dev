@@ -7,6 +7,7 @@ import type { Dream } from '@/types/dreams'
 import type { Goal } from '@/types/goals'
 import type { Habit, HabitLog } from '@/types/habits'
 import type { Idea } from '@/types/ideas'
+import { toJstDateStr } from '@/lib/date'
 
 /** Cache TTL in milliseconds (5 minutes) */
 const CACHE_TTL = 5 * 60 * 1000
@@ -517,13 +518,13 @@ export const useDataStore = create<DataStore>((set, get) => ({
   toggleHabitLog: async (habit, todayStr) => {
     const state = get()
     const todayLogged = state.habitLogs.some(
-      (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr,
+      (l) => l.habit_id === habit.id && toJstDateStr(l.completed_at) === todayStr,
     )
 
     if (todayLogged) {
       // Uncomplete: remove today's log
       const todayLog = state.habitLogs.find(
-        (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr,
+        (l) => l.habit_id === habit.id && toJstDateStr(l.completed_at) === todayStr,
       )
       if (todayLog) {
         await supabase.from('habit_logs').delete().eq('id', todayLog.id)
