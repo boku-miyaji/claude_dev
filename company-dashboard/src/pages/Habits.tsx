@@ -65,7 +65,7 @@ function calcStreak(
   // Build day → completed habit ids map
   const dayMap = new Map<string, Set<number>>()
   for (const log of habitLogs) {
-    const day = log.completed_at.substring(0, 10)
+    const day = toJstDateStr(log.completed_at)
     if (!dayMap.has(day)) dayMap.set(day, new Set())
     dayMap.get(day)!.add(log.habit_id)
   }
@@ -123,7 +123,7 @@ function calcHabitStreak(
   todayStr: string,
 ): number {
   const logs = habitLogs.filter((l) => l.habit_id === habitId)
-  const logDays = new Set(logs.map((l) => l.completed_at.substring(0, 10)))
+  const logDays = new Set(logs.map((l) => toJstDateStr(l.completed_at)))
   const days = getDaysInRange(new Date(todayStr + 'T00:00:00'), 120)
   let streak = 0
 
@@ -268,9 +268,11 @@ export function Habits() {
   /** Get completion count for a habit in the current period (day/week/month) */
   const getPeriodCount = useCallback((habitId: number, frequency: string): number => {
     const periodStart = getPeriodStart(frequency, todayStr)
-    return habitLogs.filter(
-      (l) => l.habit_id === habitId && l.completed_at.substring(0, 10) >= periodStart && l.completed_at.substring(0, 10) <= todayStr,
-    ).length
+    return habitLogs.filter((l) => {
+      if (l.habit_id !== habitId) return false
+      const day = toJstDateStr(l.completed_at)
+      return day >= periodStart && day <= todayStr
+    }).length
   }, [habitLogs, todayStr])
 
   /** Toggle today's habit completion */
@@ -278,7 +280,7 @@ export function Habits() {
     const habit = habits.find((h) => h.id === habitId)
     if (!habit) return
     const wasDoneToday = habitLogs.some(
-      (l) => l.habit_id === habitId && l.completed_at.substring(0, 10) === todayStr,
+      (l) => l.habit_id === habitId && toJstDateStr(l.completed_at) === todayStr,
     )
     await toggleHabitLog(habit, todayStr)
     if (!wasDoneToday) {
@@ -313,7 +315,7 @@ export function Habits() {
     const applicable = habits.filter((h) => isHabitApplicable(h.frequency, todayStr))
     const completedIds = new Set(
       habitLogs
-        .filter((l) => l.completed_at.substring(0, 10) === todayStr)
+        .filter((l) => toJstDateStr(l.completed_at) === todayStr)
         .map((l) => l.habit_id),
     )
     const done = applicable.filter((h) => completedIds.has(h.id)).length
@@ -337,14 +339,14 @@ export function Habits() {
       for (const day of days) {
         totalApplicable += dailyHabits.length
         const doneIds = new Set(
-          habitLogs.filter((l) => l.completed_at.substring(0, 10) === day).map((l) => l.habit_id),
+          habitLogs.filter((l) => toJstDateStr(l.completed_at) === day).map((l) => l.habit_id),
         )
         totalDone += dailyHabits.filter((h) => doneIds.has(h.id)).length
       }
       // Weekly habits: 1 per week (done if any day in range has a log)
       const weeklyHabits = habits.filter((h) => h.frequency === 'weekly')
       const allDoneIds = new Set(
-        habitLogs.filter((l) => days.includes(l.completed_at.substring(0, 10))).map((l) => l.habit_id),
+        habitLogs.filter((l) => days.includes(toJstDateStr(l.completed_at))).map((l) => l.habit_id),
       )
       totalApplicable += weeklyHabits.length
       totalDone += weeklyHabits.filter((h) => allDoneIds.has(h.id)).length
@@ -367,7 +369,7 @@ export function Habits() {
         if (!isHabitApplicable(h.frequency, day)) continue
         applicable++
         const count = habitLogs.filter(
-          (l) => l.habit_id === h.id && l.completed_at.substring(0, 10) === day,
+          (l) => l.habit_id === h.id && toJstDateStr(l.completed_at) === day,
         ).length
         if (count > 0) done++
       }
@@ -385,7 +387,7 @@ export function Habits() {
     const days = getDaysInRange(new Date(), 30)
     return [...days].reverse().map((day) => {
       const count = habitLogs.filter(
-        (l) => l.habit_id === habitId && l.completed_at.substring(0, 10) === day,
+        (l) => l.habit_id === habitId && toJstDateStr(l.completed_at) === day,
       ).length
       return { day, done: count > 0 }
     })
@@ -405,7 +407,7 @@ export function Habits() {
         if (!isHabitApplicable(frequency, day)) continue
         applicable++
         const count = habitLogs.filter(
-          (l) => l.habit_id === habitId && l.completed_at.substring(0, 10) === day,
+          (l) => l.habit_id === habitId && toJstDateStr(l.completed_at) === day,
         ).length
         if (count > 0) done++
       }
@@ -578,7 +580,7 @@ export function Habits() {
               const periodCount = getPeriodCount(habit.id, habit.frequency)
               const completed = periodCount >= habit.target_count
               const doneToday = habitLogs.some(
-                (l) => l.habit_id === habit.id && l.completed_at.substring(0, 10) === todayStr,
+                (l) => l.habit_id === habit.id && toJstDateStr(l.completed_at) === todayStr,
               )
               const streak = habitStreaks.get(habit.id) ?? 0
               const isExpanded = expandedHabitId === habit.id

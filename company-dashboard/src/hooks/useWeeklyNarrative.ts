@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { aiCompletion } from '@/lib/edgeAi'
+import { toJstDateStr } from '@/lib/date'
 
 export interface WeeklyNarrativeRecord {
   id: number
@@ -210,7 +211,7 @@ export function useWeeklyNarrative(): UseWeeklyNarrativeReturn {
       let habitRate = 0
       if (activeHabits.length > 0) {
         const uniqueDays = new Set(
-          (weekHabitLogs as { completed_at: string }[]).map((l) => l.completed_at.substring(0, 10)),
+          (weekHabitLogs as { completed_at: string }[]).map((l) => toJstDateStr(l.completed_at)),
         ).size
         const totalPossible = activeHabits.length * 7
         const totalCompleted = weekHabitLogs.length
