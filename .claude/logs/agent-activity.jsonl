@@ -232,3 +232,4 @@
 {"ts":"2026-04-29T21:05:27+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集（社長依頼）","model":"default","background":false}
 {"ts":"2026-04-29T21:24:51+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"TARGET_ARCHITECTURE.md 設計合意書作成","model":"default","background":false}
 {"ts":"2026-04-29T21:33:59+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"既存 docs を v2 に更新","model":"default","background":false}
+{"ts":"2026-04-29T22:00:01+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"Mac配列キーボードのレビュー調査","model":"default","background":false}
