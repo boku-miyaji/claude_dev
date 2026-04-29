@@ -26892,3 +26892,7 @@
 {"ts":"2026-04-29T21:11:39+09:00","hook":"tool-collector","tool":"TodoWrite","status":"ok"}
 {"ts":"2026-04-29T21:11:46+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
 {"ts":"2026-04-29T21:12:03+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
+{"ts":"2026-04-29T21:12:24+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-29T21:12:37+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-29T21:12:43+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-29T21:12:58+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
