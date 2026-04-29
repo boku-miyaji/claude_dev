@@ -1597,3 +1597,5 @@
 {"ts":"2026-04-29T22:56:02+09:00","signal":"raw_prompt","prompt":"ERCなぜ動かない？devcontainer再構築すれば動く？このコンテナでは他の作業もするので、kicad専用のにしたくない。一時的とか、このプロジェクトのみこのコンテナ使うとかにしたい\n"}
 {"ts":"2026-04-29T22:56:02+09:00","signal":"raw_prompt","prompt":"ERCなぜ動かない？devcontainer再構築すれば動く？このコンテナでは他の作業もするので、kicad専用のにしたくない。一時的とか、このプロジェクトのみこのコンテナ使うとかにしたい\n"}
 {"ts":"2026-04-29T22:59:48+09:00","signal":"raw_prompt","prompt":"toolってLLMが自動実行するもの追加できるっけ？azureopenaiのLLMに渡すものです。MCP以外のものもある？function以外のもの\n"}
+{"ts":"2026-04-29T22:59:48+09:00","signal":"raw_prompt","prompt":"toolってLLMが自動実行するもの追加できるっけ？azureopenaiのLLMに渡すものです。MCP以外のものもある？function以外のもの\n"}
+{"ts":"2026-04-29T23:03:07+09:00","signal":"raw_prompt","prompt":"よし、azureに構築していこう。\n都度私と確認しながら、一緒に実装を進めたい。インフラ構築も\n"}
