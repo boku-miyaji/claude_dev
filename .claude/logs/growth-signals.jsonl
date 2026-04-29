@@ -1644,3 +1644,7 @@
 {"ts":"2026-04-30T00:33:15+09:00","signal":"raw_prompt","prompt":"分割方をもっと深掘りたい。他にもない？\n"}
 {"ts":"2026-04-30T00:41:52+09:00","signal":"raw_prompt","prompt":"最新の人気のものは入っている？日本のレビューとかで\n"}
 {"ts":"2026-04-30T00:48:23+09:00","signal":"raw_prompt","prompt":"手動インストール。\n"}
+{"ts":"2026-04-30T00:48:23+09:00","signal":"raw_prompt","prompt":"手動インストール。\n"}
+{"ts":"2026-04-30T00:56:03+09:00","signal":"raw_prompt","prompt":"magic trackpadのマルチタッチを代替できる機能があればそっちがいいかも。\n持ち運びができるものがいい。 waffree USはなし。 もう一回最新のものも含めて最強の一台・相棒を提案して\n"}
+{"ts":"2026-04-30T00:56:28+09:00","signal":"raw_prompt","prompt":"------\nDockerfile-with-features:115\n--------------------\n 114 |     # `set -eux` で早期失敗、`/usr/local/bin/kicad-cli version` を build sanity check として末尾に置く。\n 115 | >>> RUN set -eux; \\\n 116 | >>>     apt-get update && apt-get install -y --no-install-recommends \\\n 117 | >>>         ca-certificates wget libfuse2 \\\n 118 | >>>         && rm -rf /var/lib/apt/lists/*; \\\n 119 | >>>     cd /tmp; \\\n 120 | >>>     wget -q --show-progress -O kicad.AppImage.tar \"${KICAD_TAR_URL}\";\n"}
+{"ts":"2026-04-30T00:57:40+09:00","signal":"raw_prompt","prompt":"Error Code: 53003\nRequest Id: 5ad04f03-dec1-4f7a-bb5c-492743041c00\nCorrelation Id: 05e866a1-3928-40b4-9895-f973bd6ed4ff\nTimestamp: 2026-04-29T15:57:29.467Z\nアプリ名: Microsoft Azure CLI\nアプリ ID: 04b07795-8ddb-461a-bbee-02f9e1bf7b46\nIP アドレス: 175.177.46.33\nデバイスの識別子: 使用できません\nデバイスのプラットフォーム: macOS\nデバイスの状態: Unregistered\n"}
