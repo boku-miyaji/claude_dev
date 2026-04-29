@@ -1636,3 +1636,9 @@
 {"ts":"2026-04-30T00:14:56+09:00","signal":"raw_prompt","prompt":"MAFを使うとなっている？既存のコードは使う？ そのまま流用できるのはアジェンダ生成のpipelineくらいじゃなかったっけ？MAFは遅すぎるしうごかなかったんじゃなかったっけ？\n"}
 {"ts":"2026-04-30T00:20:34+09:00","signal":"raw_prompt","prompt":"C, Bでお願い。\n"}
 {"ts":"2026-04-30T00:25:25+09:00","signal":"raw_prompt","prompt":"Aではtrackpadの３本指の操作とかできないのでは？\nBはデカすぎる。持ち運びできるやつがいい。\n"}
+{"ts":"2026-04-30T00:20:34+09:00","signal":"raw_prompt","prompt":"C, Bでお願い。\n"}
+{"ts":"2026-04-30T00:25:25+09:00","signal":"raw_prompt","prompt":"Aではtrackpadの３本指の操作とかできないのでは？\nBはデカすぎる。持ち運びできるやつがいい。\n"}
+{"ts":"2026-04-30T00:27:02+09:00","signal":"raw_prompt","prompt":"claude_dev/polaris-circuit-diagram/と一緒。\n5.255 python3 set to manually installed.\n5.255 Some packages could not be installed. This may mean that you have\n5.255 requested an impossible situation or if you are using the unstable\n5.255 distribution that some required packages have not yet been created\n5.255 or been moved out of Incoming.\n5.255 The following information may help to resolve the situation:\n5.255 \n5.255 The following packages have unmet dependencies:\n5.316  python3-dev : Depends\n"}
+{"ts":"2026-04-30T00:27:02+09:00","signal":"raw_prompt","prompt":"claude_dev/polaris-circuit-diagram/と一緒。\n5.255 python3 set to manually installed.\n5.255 Some packages could not be installed. This may mean that you have\n5.255 requested an impossible situation or if you are using the unstable\n5.255 distribution that some required packages have not yet been created\n5.255 or been moved out of Incoming.\n5.255 The following information may help to resolve the situation:\n5.255 \n5.255 The following packages have unmet dependencies:\n5.316  python3-dev : Depends\n"}
+{"ts":"2026-04-30T00:33:15+09:00","signal":"raw_prompt","prompt":"分割方をもっと深掘りたい。他にもない？\n"}
+{"ts":"2026-04-30T00:33:15+09:00","signal":"raw_prompt","prompt":"分割方をもっと深掘りたい。他にもない？\n"}

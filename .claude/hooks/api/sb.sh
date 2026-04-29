@@ -6,6 +6,7 @@
 #   sb.sh get <table> ["<query-string>"]     REST GET（anon key）
 #   sb.sh get-auth <table> ["<qs>"]          REST GET（anon + x-ingest-key、RLS通過）
 #   sb.sh post <table> <json>                REST POST（anon + x-ingest-key）
+#   sb.sh upsert <table> <on_conflict> <json> REST POST upsert（merge-duplicates）
 #   sb.sh patch <table> "<qs>" <json>        REST PATCH（anon + x-ingest-key）
 #   sb.sh delete <table> "<qs>"              REST DELETE（anon + x-ingest-key）
 #   sb.sh fn <function-name> <json>          Edge Function 呼び出し（anon key）
@@ -15,6 +16,7 @@
 #   sb.sh query "SELECT id, title FROM tasks WHERE status='open' LIMIT 5"
 #   sb.sh get tasks "?status=eq.open&select=id,title&limit=5"
 #   sb.sh post tasks '{"title":"新規タスク","status":"open"}'
+#   sb.sh upsert artifacts file_path @body.json
 #   sb.sh patch tasks "?id=eq.xxx" '{"status":"done"}'
 #   sb.sh fn ai-agent '{"prompt":"hello"}'
 
@@ -33,7 +35,7 @@ source "$ENV_FILE"
 : "${SUPABASE_URL:?SUPABASE_URL not set in $ENV_FILE}"
 
 usage() {
-  sed -n '2,18p' "$0" | sed 's/^# //; s/^#//'
+  sed -n '2,20p' "$0" | sed 's/^# //; s/^#//'
 }
 
 cmd="${1:-help}"
@@ -80,6 +82,20 @@ case "$cmd" in
       -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
       -H "Content-Type: application/json" \
       -H "Prefer: return=representation" \
+      -d "$body"
+    ;;
+
+  upsert)
+    : "${SUPABASE_ANON_KEY:?}"; : "${SUPABASE_INGEST_KEY:?}"
+    table="${1:?table required}"
+    conflict="${2:?on_conflict column required (e.g. file_path)}"
+    body="${3:?json body required (literal or @file)}"
+    curl -sS -X POST "${SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflict}" \
+      -H "apikey: ${SUPABASE_ANON_KEY}" \
+      -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+      -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
+      -H "Content-Type: application/json" \
+      -H "Prefer: return=representation,resolution=merge-duplicates" \
       -d "$body"
     ;;
 
