@@ -250,14 +250,28 @@ def collect_previous_urls(reports_dir: Path, lookback_days: int = 30) -> set[str
             continue
 
         # 新スキーマ: items[*].url。旧スキーマ: collections[*].results[*].url
-        for it in data.get("items", []) or []:
-            u = (it.get("url") or "").rstrip("/")
-            if u:
-                urls.add(u)
-        for coll in data.get("collections", []) or []:
-            for r in coll.get("results", []) or []:
-                u = (r.get("url") or "").rstrip("/")
+        # 旧旧スキーマ: items が dict（{"category": [...]}）になっているケースもある
+        # ため、list でも dict でも壊れないように防御する。
+        items = data.get("items") or []
+        if isinstance(items, dict):
+            items = [v for vs in items.values() if isinstance(vs, list) for v in vs]
+        if isinstance(items, list):
+            for it in items:
+                if not isinstance(it, dict):
+                    continue
+                u = (it.get("url") or "").rstrip("/")
                 if u:
                     urls.add(u)
+        collections = data.get("collections") or []
+        if isinstance(collections, list):
+            for coll in collections:
+                if not isinstance(coll, dict):
+                    continue
+                for r in coll.get("results") or []:
+                    if not isinstance(r, dict):
+                        continue
+                    u = (r.get("url") or "").rstrip("/")
+                    if u:
+                        urls.add(u)
 
     return urls

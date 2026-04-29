@@ -47,14 +47,15 @@ jobs:
       - name: Verify rows were inserted (fail if zero)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -e
           # 直近15分以内に INSERT された件数を確認
+          # RLS バイパスのため service_role key を使う（anon key だと content-range が空になり誤検知）
           FIFTEEN_MIN_AGO=$(date -u -d '15 minutes ago' -Iseconds 2>/dev/null || date -u -v-15M +%Y-%m-%dT%H:%M:%SZ)
           COUNT=$(curl -sS -I "${SUPABASE_URL}/rest/v1/news_items?select=id&collected_at=gte.${FIFTEEN_MIN_AGO}" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Prefer: count=exact" 2>/dev/null | grep -i '^content-range' | sed 's/.*\///' | tr -d '\r\n ')
           echo "Rows inserted in last 15 min: ${COUNT:-unknown}"
           if [ -z "${COUNT}" ] || [ "${COUNT}" = "0" ]; then
@@ -65,16 +66,17 @@ jobs:
       - name: Verify arxiv recovery rate (fail if arxiv items < 5)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -e
           # arxiv は毎日数百本投稿される。収集の下限を 5 件に設定。
           # 2026-04-19 に取りこぼし事象（max_results=8 ハードコード + キーワード無視）
           # が発生したため、回収率の床を個別に監視する。
+          # RLS バイパスのため service_role key を使う（同上）
           FIFTEEN_MIN_AGO=$(date -u -d '15 minutes ago' -Iseconds 2>/dev/null || date -u -v-15M +%Y-%m-%dT%H:%M:%SZ)
           ARXIV_COUNT=$(curl -sS -I "${SUPABASE_URL}/rest/v1/news_items?select=id&source_type=eq.arxiv&collected_at=gte.${FIFTEEN_MIN_AGO}" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Prefer: count=exact" 2>/dev/null | grep -i '^content-range' | sed 's/.*\///' | tr -d '\r\n ')
           echo "arxiv rows inserted in last 15 min: ${ARXIV_COUNT:-unknown}"
           if [ -z "${ARXIV_COUNT}" ] || [ "${ARXIV_COUNT}" -lt 5 ]; then
