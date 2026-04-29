@@ -238,3 +238,5 @@
 {"ts":"2026-04-29T22:32:04+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"Day 1 後半: Agent 本体 + プロンプト初版","model":"default","background":false}
 {"ts":"2026-04-29T23:06:42+09:00","event":"agent_dispatch","dept":"運営改善部","desc":"polaris-circuit-diagram 専用 devcontainer","model":"default","background":false}
 {"ts":"2026-04-29T23:10:33+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Day 2: Runner + ERC（mock 化対応）","model":"default","background":false}
+{"ts":"2026-04-29T23:35:40+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"rikyu MCP server 化前提の system-spec 設計","model":"default","background":false}
+{"ts":"2026-04-29T23:38:26+09:00","event":"agent_dispatch","dept":"AI開発部","desc":"Day 3: retry_loop + escalate","model":"default","background":false}
