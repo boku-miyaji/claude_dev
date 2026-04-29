@@ -1653,3 +1653,4 @@
 {"ts":"2026-04-30T00:57:40+09:00","signal":"raw_prompt","prompt":"Error Code: 53003\nRequest Id: 5ad04f03-dec1-4f7a-bb5c-492743041c00\nCorrelation Id: 05e866a1-3928-40b4-9895-f973bd6ed4ff\nTimestamp: 2026-04-29T15:57:29.467Z\nアプリ名: Microsoft Azure CLI\nアプリ ID: 04b07795-8ddb-461a-bbee-02f9e1bf7b46\nIP アドレス: 175.177.46.33\nデバイスの識別子: 使用できません\nデバイスのプラットフォーム: macOS\nデバイスの状態: Unregistered\n"}
 {"ts":"2026-04-30T01:02:12+09:00","signal":"raw_prompt","prompt":"ACES管理対象PCを持っています。\n"}
 {"ts":"2026-04-30T01:02:12+09:00","signal":"raw_prompt","prompt":"ACES管理対象PCを持っています。\n"}
+{"ts":"2026-04-30T01:13:28+09:00","signal":"raw_prompt","prompt":"ZSA Voyagerはれびゅーそんなにいい？いい記事があまり見つからない。日本で。ちゃんとレビューも加味して。無理して１台にこだわらない。\n"}
