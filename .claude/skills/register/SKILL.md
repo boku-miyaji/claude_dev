@@ -65,29 +65,65 @@ description: >
 
 ### Step 4: Supabase に登録
 
-```bash
-source .claude/hooks/supabase.env
+**必ずこの手順に従う。** プレースホルダ任せの組み立て（`"content": "..."` を LLM が直接埋める等）は禁止。
+過去に `content` が NULL のまま登録された事故・`content_hash` に `$HASH` リテラルが入った事故が発生したため、
+ファイル本文とハッシュは `jq --rawfile` と `sha256sum` で必ず bash 側に確実に埋め込む。
 
-# ファイル内容のハッシュ
+```bash
+# 入力（呼び出し側で決める）
+FILE_PATH="..."        # 絶対パス（例: /workspace/.company/.../2026-04-29-1200.md）
+FILE_PATH_REL="..."    # DB保存用の相対パス（例: .company/departments/intelligence/reports/2026-04-29-1200.md）
+TITLE="..."            # Step 3 で決めたタイトル
+FILE_TYPE="md"         # 拡張子
+COMPANY_ID="null"      # 文字列 "null" or "rikyu" 等の company_id
+
+# 1) ハッシュ計算（必ず bash で）
 HASH=$(sha256sum "$FILE_PATH" | cut -c1-16)
 
-# 登録
-curl -4 -s "${SUPABASE_URL}/rest/v1/artifacts?on_conflict=file_path" \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-  -H "Content-Type: application/json" \
-  -H "Prefer: return=minimal,resolution=merge-duplicates" \
-  -H "x-ingest-key: ${SUPABASE_INGEST_KEY}" \
-  -d '{
-    "title": "...",
-    "file_path": "...",
-    "file_type": "md",
-    "content": "...",
-    "content_hash": "...",
-    "last_synced_at": "now()",
-    "company_id": "...",
-    "status": "active"
-  }'
+# 2) JSON ボディ生成（jq --rawfile で本文を確実に埋め込む）
+jq -n \
+  --arg title   "$TITLE" \
+  --arg path    "$FILE_PATH_REL" \
+  --arg ftype   "$FILE_TYPE" \
+  --rawfile content "$FILE_PATH" \
+  --arg hash    "$HASH" \
+  --arg company "$COMPANY_ID" \
+  '{
+    title: $title,
+    file_path: $path,
+    file_type: $ftype,
+    content: $content,
+    content_hash: $hash,
+    last_synced_at: "now()",
+    company_id: (if $company == "null" then null else $company end),
+    status: "active"
+  }' > /tmp/register-body.json
+
+# 3) upsert（file_path で衝突解決）
+/workspace/.claude/hooks/api/sb.sh upsert artifacts file_path "@/tmp/register-body.json"
+```
+
+**禁止事項:**
+
+- ❌ `curl` を直接書かない（`sb.sh upsert` を使う）
+- ❌ `"content": "..."` のプレースホルダで LLM に本文を直接埋めさせない（content NULL 事故の温床）
+- ❌ `"content_hash": "$HASH"` のように JSON リテラル内でシェル変数を書かない（リテラル文字列として保存される事故あり）
+- ❌ HTML/PDF などバイナリ/巨大ファイルで `--rawfile` を使う場合は事前にサイズ確認（>5MB は警告）
+
+**バイナリ系ファイル（pdf/pptx）の扱い:**
+
+`--rawfile` は UTF-8 として読むため、PDF/PPTX 等のバイナリは content に入れず、`content` を省略して `file_path` のみ登録する:
+
+```bash
+jq -n --arg title "$TITLE" --arg path "$FILE_PATH_REL" --arg ftype "$FILE_TYPE" \
+      --arg hash "$HASH" --arg company "$COMPANY_ID" \
+  '{
+    title: $title, file_path: $path, file_type: $ftype,
+    content_hash: $hash, last_synced_at: "now()",
+    company_id: (if $company == "null" then null else $company end),
+    status: "active"
+  }' > /tmp/register-body.json
+/workspace/.claude/hooks/api/sb.sh upsert artifacts file_path "@/tmp/register-body.json"
 ```
 
 ### Step 5: 確認メッセージ
