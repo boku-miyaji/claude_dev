@@ -1599,3 +1599,5 @@
 {"ts":"2026-04-29T22:59:48+09:00","signal":"raw_prompt","prompt":"toolってLLMが自動実行するもの追加できるっけ？azureopenaiのLLMに渡すものです。MCP以外のものもある？function以外のもの\n"}
 {"ts":"2026-04-29T22:59:48+09:00","signal":"raw_prompt","prompt":"toolってLLMが自動実行するもの追加できるっけ？azureopenaiのLLMに渡すものです。MCP以外のものもある？function以外のもの\n"}
 {"ts":"2026-04-29T23:03:07+09:00","signal":"raw_prompt","prompt":"よし、azureに構築していこう。\n都度私と確認しながら、一緒に実装を進めたい。インフラ構築も\n"}
+{"ts":"2026-04-29T23:03:07+09:00","signal":"raw_prompt","prompt":"よし、azureに構築していこう。\n都度私と確認しながら、一緒に実装を進めたい。インフラ構築も\n"}
+{"ts":"2026-04-29T23:09:11+09:00","signal":"raw_prompt","prompt":"hosted MCPはセキュリティ的には？とあるそしきないだけでつかいたいとか権限とかは？\n"}
