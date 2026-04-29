@@ -1602,3 +1602,4 @@
 {"ts":"2026-04-29T23:03:07+09:00","signal":"raw_prompt","prompt":"よし、azureに構築していこう。\n都度私と確認しながら、一緒に実装を進めたい。インフラ構築も\n"}
 {"ts":"2026-04-29T23:09:11+09:00","signal":"raw_prompt","prompt":"hosted MCPはセキュリティ的には？とあるそしきないだけでつかいたいとか権限とかは？\n"}
 {"ts":"2026-04-29T23:09:11+09:00","signal":"raw_prompt","prompt":"hosted MCPはセキュリティ的には？とあるそしきないだけでつかいたいとか権限とかは？\n"}
+{"ts":"2026-04-29T23:13:05+09:00","signal":"raw_prompt","prompt":"Q1, acess subscription, RG: aces_project_rikyu_sales_proposals, azurecliまだ。\nQ2, 最初はportalで行こうか。並行してbicepでうごくようにしたい。\nQ3, mvp用のディレクトリを作って、その中に各のディレクトリを作成して\n"}
