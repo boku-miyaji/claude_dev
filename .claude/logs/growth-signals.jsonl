@@ -1678,3 +1678,5 @@
 {"ts":"2026-04-30T02:44:48+09:00","signal":"raw_prompt","prompt":"Cornix LP在庫なくない？\n"}
 {"ts":"2026-04-30T02:44:48+09:00","signal":"raw_prompt","prompt":"Cornix LP在庫なくない？\n"}
 {"ts":"2026-04-30T02:46:14+09:00","signal":"raw_prompt","prompt":"aliexpressで売っているのは偽物の可能性ある？\n"}
+{"ts":"2026-04-30T02:46:14+09:00","signal":"raw_prompt","prompt":"aliexpressで売っているのは偽物の可能性ある？\n"}
+{"ts":"2026-04-30T02:56:42+09:00","signal":"raw_prompt","prompt":"==> Installing azure-cli dependency: llvm\nWarning: Your Xcode (14.3.1) is outdated.\nPlease update to Xcode 15.2 (or delete it).\nXcode can be updated from the App Store.\n\n\n\nThis is a Tier 2 configuration:\n https://docs.brew.sh/Support-Tiers#tier-2\nYou can report issues with Tier 2 configurations to Homebrew/* repositories!\nRead the above document before opening any issues or PRs.\n\nWarning: A newer Command Line Tools release is available.\nUpdate them from Software Update in System Settings.\n\nIf t\n"}
