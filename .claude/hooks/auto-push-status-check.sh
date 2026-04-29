@@ -37,14 +37,32 @@ if command -v jq >/dev/null 2>&1; then
   TIME=$(jq -r '.time // empty' "$STATUS_FILE" 2>/dev/null)
   UNPUSHED=$(jq -r '.unpushed_count // 0' "$STATUS_FILE" 2>/dev/null)
   ERROR=$(jq -r '.error // empty' "$STATUS_FILE" 2>/dev/null)
+  BRANCH=$(jq -r '.branch // "main"' "$STATUS_FILE" 2>/dev/null)
 else
   STATUS=$(grep -o '"status":"[^"]*"' "$STATUS_FILE" | head -1 | cut -d'"' -f4)
   TIME=$(grep -o '"time":"[^"]*"' "$STATUS_FILE" | head -1 | cut -d'"' -f4)
   UNPUSHED=$(grep -o '"unpushed_count":[0-9]*' "$STATUS_FILE" | head -1 | cut -d':' -f2)
   ERROR=""
+  BRANCH=$(grep -o '"branch":"[^"]*"' "$STATUS_FILE" | head -1 | cut -d'"' -f4)
 fi
 
 [ "$STATUS" = "failed" ] || exit 0
+
+# === Self-heal: 既に push 済なら警告を出さずファイルごと片付ける ===
+# 別経路（Mac 側 push、別セッションの auto-push 成功、手動 push 等）で sync 済みのケースを検知する。
+# cwd が git repo で、記録された branch がローカルに存在する場合のみ判定する。
+# 確認できない場合は安全側に倒して従来通り警告する。
+if [ -n "${BRANCH:-}" ] && git rev-parse --git-dir >/dev/null 2>&1 \
+   && git rev-parse --verify "$BRANCH" >/dev/null 2>&1; then
+  # remote 状態を最新化（5秒以内、失敗・ネットワーク不在は許容）
+  timeout 5 git fetch --quiet origin "$BRANCH" 2>/dev/null || true
+  UNPUSHED_NOW=$(git rev-list --count "${BRANCH}@{u}..${BRANCH}" 2>/dev/null || echo "")
+  if [ "$UNPUSHED_NOW" = "0" ]; then
+    rm -f "$STATUS_FILE"
+    exit 0
+  fi
+fi
+# === Self-heal ここまで ===
 
 echo ""
 echo "⚠️  auto-push が失敗したまま残っています"
