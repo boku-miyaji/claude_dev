@@ -27662,3 +27662,8 @@
 {"ts":"2026-04-30T01:21:07+09:00","hook":"tool-collector","tool":"ToolSearch","status":"ok"}
 {"ts":"2026-04-30T01:21:59+09:00","hook":"tool-collector","tool":"WebFetch","status":"ok"}
 {"ts":"2026-04-30T01:22:01+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-30T01:22:17+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-30T01:22:29+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
+{"ts":"2026-04-30T01:22:35+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
+{"ts":"2026-04-30T01:22:52+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-30T01:30:26+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
