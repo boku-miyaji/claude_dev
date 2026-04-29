@@ -51,13 +51,6 @@
     "remote-control": 41
   },
   "promptQueueUseCount": 6,
-  "cachedStatsigGates": {
-    "tengu_prompt_suggestion": true,
-    "tengu_year_end_2025_campaign_promo": false,
-    "tengu_vscode_review_upsell": false,
-    "tengu_streaming_tool_execution2": false,
-    "tengu_vscode_onboarding": false
-  },
   "cachedDynamicConfigs": {
     "tengu_1p_event_batch_config": {
       "scheduledDelayMillis": 5000,
@@ -485,6 +478,13 @@
     "tengu_moth_copse": false
   },
   "unpinOpus47LaunchEffort": true,
+  "cachedStatsigGates": {
+    "tengu_prompt_suggestion": true,
+    "tengu_year_end_2025_campaign_promo": false,
+    "tengu_vscode_review_upsell": false,
+    "tengu_streaming_tool_execution2": false,
+    "tengu_vscode_onboarding": false
+  },
   "userID": "490a85b216033891ec6e134c7811c5eb5890af627dd866d91b05ddcd725c39b7",
   "firstStartTime": "2025-07-10T13:14:53.002Z",
   "projects": {
@@ -665,7 +665,7 @@
     "lastShownTime": 1767439030982
   },
   "opusProMigrationComplete": true,
-  "cachedExtraUsageDisabledReason": "org_level_disabled",
+  "cachedExtraUsageDisabledReason": null,
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 12,
