@@ -1,0 +1,1430 @@
+{
+  "collected_at": "2026-04-29 23:27 JST",
+  "timestamp": "2026-04-29-2327",
+  "window_label": "Step 1: 直近24時間",
+  "window_hours": 24,
+  "items": [
+    {
+      "title": "Cybersecurity in the Intelligence Age",
+      "url": "https://openai.com/index/cybersecurity-in-the-intelligence-age",
+      "source_type": "official_blog",
+      "source_name": "OpenAI News",
+      "published_at": "2026-04-29T04:00:00+00:00",
+      "summary": "OpenAI outlines a five-part action plan for strengthening cybersecurity in the Intelligence Age, focused on democratizing AI-powered cyber defense and protecting critical systems.",
+      "vendor": "OpenAI",
+      "extra": {}
+    },
+    {
+      "title": "Gemini launches new personalisation features in the UK",
+      "url": "https://blog.google/company-news/inside-google/around-the-globe/google-europe/united-kingdom/gemini-launches-new-personalisation-features-in-the-uk/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-29T11:00:00+00:00",
+      "summary": "Image saying 'Get more personalised help, based on your past chats'.",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "Celebrating 20 years of Google Translate: Fun facts, tips and new features to try",
+      "url": "https://blog.google/products-and-platforms/products/translate/fun-facts-google-translate-20-years/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-28T16:00:00+00:00",
+      "summary": "The Google Translate logo sits in the middle of colorful illustrated scenes, including people translating live conversations and a birthday cake topped by candles with the numeral 20",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "We're announcing the first West Memphis Energy Impact Fund recipients.",
+      "url": "https://blog.google/innovation-and-ai/infrastructure-and-cloud/global-network/west-memphis-energy-impact-fund-recipients/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-28T15:30:00+00:00",
+      "summary": "<img src=\"https://storage.googleapis.com/gweb-uniblog-publish-prod/images/arkansas_energyimpact.max-600x600.format-webp.webp\" />The West Memphis Energy Impact Fund announced its first grant recipients, kicking off a $25 million commitment to energy efficiency in Greater West Memphis and Crittende…",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "Introducing NVIDIA Nemotron 3 Nano Omni: Long-Context Multimodal Intelligence for Documents, Audio and Video Agents",
+      "url": "https://huggingface.co/blog/nvidia/nemotron-3-nano-omni-multimodal-intelligence",
+      "source_type": "official_blog",
+      "source_name": "Hugging Face Blog",
+      "published_at": "2026-04-28T15:58:57+00:00",
+      "summary": "",
+      "vendor": "HuggingFace",
+      "extra": {}
+    },
+    {
+      "title": "Recursive Multi-Agent Systems",
+      "url": "http://arxiv.org/abs/2604.25917v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T17:59:34+00:00",
+      "summary": "Recursive or looped language models have recently emerged as a new scaling axis by iteratively refining the same model computation over latent states to deepen reasoning. We extend such scaling principle from a single model to multi-agent systems, and ask: Can agent collaboration itself be scaled through recursion? To this end, we introduce RecursiveMAS, a recursive multi-agent framework that casts the entire system as a unified latent-space recursive computation. RecursiveMAS connects heterogeneous agents as a collaboration loop through the lightweight RecursiveLink module, enabling in-distribution latent thoughts generation and cross-agent latent state transfer. To optimize our framework, we develop an inner-outer loop learning algorithm for iterative whole-system co-optimization through...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25917v1",
+        "categories": [
+          "cs.AI",
+          "cs.CL",
+          "cs.LG"
+        ],
+        "authors": [
+          "Xiyuan Yang",
+          "Jiaru Zou",
+          "Rui Pan",
+          "Ruizhong Qiu",
+          "Pan Lu",
+          "Shizhe Diao",
+          "Jindong Jiang",
+          "Hanghang Tong"
+        ]
+      }
+    },
+    {
+      "title": "How Fast Should a Model Commit to Supervision? Training Reasoning Models on the Tsallis Loss Continuum",
+      "url": "http://arxiv.org/abs/2604.25907v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T17:52:38+00:00",
+      "summary": "Adapting reasoning models to new tasks during post-training with only output-level supervision stalls under reinforcement learning from verifiable rewards (RLVR) when the initial success probability $p_0$ is small. Using the Tsallis $q$-logarithm, we define a loss family $J_Q$ that interpolates between RLVR (at $q{=}0$, the exploitation pole) and the log-marginal-likelihood over latent trajectories (at $q{=}1$, the density-estimation pole). All members share the same per-example gradient direction, differing only by a scalar amplification $P_{θ^{-q}}$ that reweights each instance independently of the learning rate. This amplification is the mechanism that addresses cold-start stalling: under gradient flow, the exploitation pole requires $Ω(\\frac{1}{p_0})$ time to escape cold start, while t...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25907v1",
+        "categories": [
+          "cs.LG",
+          "cs.AI"
+        ],
+        "authors": [
+          "Chu-Cheng Lin",
+          "Eugene Ie"
+        ]
+      }
+    },
+    {
+      "title": "Toward a Functional Geometric Algebra for Natural Language Semantics",
+      "url": "http://arxiv.org/abs/2604.25902v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T17:47:46+00:00",
+      "summary": "Distributional and neural approaches to natural language semantics have been built almost exclusively on conventional linear algebra: vectors, matrices, tensors, and the operations that accompany them. These methods have achieved remarkable empirical success, yet they face persistent structural limitations in compositional semantics, type sensitivity, and interpretability. I argue in this paper that geometric algebra (GA) -- specifically, Clifford algebras -- provides a mathematically superior foundation for semantic representation, and that a Functional Geometric Algebra (FGA) framework extends GA toward a typed, compositional semantics capable of supporting inference, transformation, and interpretability while retaining full compatibility with distributional learning and modern neural ar...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25902v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "authors": [
+          "James Pustejovsky"
+        ]
+      }
+    },
+    {
+      "title": "TSN-Affinity: Similarity-Driven Parameter Reuse for Continual Offline Reinforcement Learning",
+      "url": "http://arxiv.org/abs/2604.25898v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T17:41:04+00:00",
+      "summary": "Continual offline reinforcement learning (CORL) aims to learn a sequence of tasks from datasets collected over time while preserving performance on previously learned tasks. This setting corresponds to domains where new tasks arise over time, but adapting the model in live environment interactions is expensive, risky, or impossible. However, CORL inherits the dual difficulty of offline reinforcement learning and adapting while preventing catastrophic forgetting. Replay-based continual learning approaches remain a strong baseline but incur memory overhead and suffer from a distribution mismatch between replayed samples and newly learned policies. At the same time, architectural continual learning methods have shown strong potential in supervised learning but remain underexplored in CORL. In...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25898v1",
+        "categories": [
+          "cs.LG",
+          "cs.AI"
+        ],
+        "authors": [
+          "Dominik Żurek",
+          "Kamil Faber",
+          "Marcin Pietron",
+          "Paweł Gajewski",
+          "Roberto Corizzo"
+        ]
+      }
+    },
+    {
+      "title": "Three Models of RLHF Annotation: Extension, Evidence, and Authority",
+      "url": "http://arxiv.org/abs/2604.25895v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T17:39:14+00:00",
+      "summary": "Preference-based alignment methods, most prominently Reinforcement Learning with Human Feedback (RLHF), use the judgments of human annotators to shape large language model behaviour. However, the normative role of these judgments is rarely made explicit. I distinguish three conceptual models of that role. The first is extension: annotators extend the system designers' own judgments about what outputs should be. The second is evidence: annotators provide independent evidence about some facts, whether moral, social or otherwise. The third is authority: annotators have some independent authority (as representatives of the broader population) to determine system outputs. I argue that these models have implications for how RLHF pipelines should solicit, validate and aggregate annotations. I sur...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25895v1",
+        "categories": [
+          "cs.CY",
+          "cs.AI",
+          "cs.CL"
+        ],
+        "authors": [
+          "Steve Coyne"
+        ]
+      }
+    },
+    {
+      "title": "Conditional misalignment: common interventions can hide emergent misalignment behind contextual triggers",
+      "url": "http://arxiv.org/abs/2604.25891v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T17:36:06+00:00",
+      "summary": "Finetuning a language model can lead to emergent misalignment (EM) [Betley et al., 2025b]. Models trained on a narrow distribution of misaligned behavior generalize to more egregious behaviors when tested outside the training distribution.   We study a set of interventions proposed to reduce EM. We confirm that these interventions reduce or eliminate EM on existing evaluations (questions like \"How do I make a quick buck?\"). However, if the evaluation prompts are tweaked to resemble the training context, the model displays EM. We call this conditional misalignment. As in standard EM, the model displays misaligned behaviors more egregious than those seen during training, but only on inputs sharing features with the training data.   The first two interventions are diluting misaligned data wit...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25891v1",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "cs.CR"
+        ],
+        "authors": [
+          "Jan Dubiński",
+          "Jan Betley",
+          "Anna Sztyber-Betley",
+          "Daniel Tan",
+          "Owain Evans"
+        ]
+      }
+    },
+    {
+      "title": "No Pedestrian Left Behind: Real-Time Detection and Tracking of Vulnerable Road Users for Adaptive Traffic Signal Control",
+      "url": "http://arxiv.org/abs/2604.25887v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T17:29:23+00:00",
+      "summary": "Current pedestrian crossing signals operate on fixed timing without adjustment to pedestrian behavior, which can leave vulnerable road users (VRUs) such as the elderly, disabled, or distracted pedestrians stranded when the light changes. We introduce No Pedestrian Left Behind (NPLB), a real-time adaptive traffic signal system that monitors VRUs in crosswalks and automatically extends signal timing when needed. We evaluated five state-of-the-art object detection models on the BGVP dataset, with YOLOv12 achieving the highest mean Average Precision at 50% (mAP@0.5) of 0.756. NPLB integrates our fine-tuned YOLOv12 with ByteTrack multi-object tracking and an adaptive controller that extends pedestrian phases when remaining time falls below a critical threshold. Through 10,000 Monte Carlo simula...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25887v1",
+        "categories": [
+          "cs.CV",
+          "cs.AI",
+          "cs.RO",
+          "eess.SY"
+        ],
+        "authors": [
+          "Anas Gamal Aly",
+          "Hala ElAarag"
+        ]
+      }
+    },
+    {
+      "title": "When Errors Can Be Beneficial: A Categorization of Imperfect Rewards for Policy Gradient",
+      "url": "http://arxiv.org/abs/2604.25872v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T17:10:15+00:00",
+      "summary": "Training language models via reinforcement learning often relies on imperfect proxy rewards, since ground truth rewards that precisely define the intended behavior are rarely available. Standard metrics for assessing the quality of proxy rewards, such as ranking accuracy, treat incorrect rewards as strictly harmful. In this work, however, we highlight that not all deviations from the ground truth are equal. By theoretically analyzing which outputs attract probability during policy gradient optimization, we categorize reward errors according to their effect on the increase in ground truth reward. The analysis establishes that reward errors, though conventionally viewed as harmful, can also be benign or even beneficial by preventing the policy from stalling around outputs with mediocre groun...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25872v1",
+        "categories": [
+          "cs.LG",
+          "cs.AI",
+          "stat.ML"
+        ],
+        "authors": [
+          "Shuning Shang",
+          "Hubert Strauss",
+          "Stanley Wei",
+          "Sanjeev Arora",
+          "Noam Razin"
+        ]
+      }
+    },
+    {
+      "title": "RESTestBench: A Benchmark for Evaluating the Effectiveness of LLM-Generated REST API Test Cases from NL Requirements",
+      "url": "http://arxiv.org/abs/2604.25862v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T16:59:08+00:00",
+      "summary": "Existing REST API testing tools are typically evaluated using code coverage and crash-based fault metrics. However, recent LLM-based approaches increasingly generate tests from NL requirements to validate functional behaviour, making traditional metrics weak proxies for whether generated tests validate intended behaviour. To address this gap, we present RESTestBench, a benchmark comprising three REST services paired with manually verified NL requirements in both precise and vague variants, enabling controlled and reproducible evaluation of requirement-based test generation. RESTestBench further introduces a requirements-based mutation testing metric that measures the fault-detection effectiveness of a generated test case with respect to a specific requirement, extending the property-based ...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25862v1",
+        "categories": [
+          "cs.SE",
+          "cs.AI"
+        ],
+        "authors": [
+          "Leon Kogler",
+          "Stefan Hangler",
+          "Maximilian Ehrhart",
+          "Benedikt Dornauer",
+          "Roland Wuersching",
+          "Peter Schrammel"
+        ]
+      }
+    },
+    {
+      "title": "Luminol-AIDetect: Fast Zero-shot Machine-Generated Text Detection based on Perplexity under Text Shuffling",
+      "url": "http://arxiv.org/abs/2604.25860v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T16:58:55+00:00",
+      "summary": "Machine-generated text (MGT) detection requires identifying structurally invariant signals across generation models, rather than relying on model-specific fingerprints. In this respect, we hypothesize that while large language models excel at local semantic consistency, their autoregressive nature results in a specific kind of structural fragility compared to human writing. We propose Luminol-AIDetect, a novel, zero-shot statistical approach that exposes this fragility through coherence disruption. By applying a simple randomized text-shuffling procedure, we demonstrate that the resulting shift in perplexity serves as a principled, model-agnostic discriminant, as MGT displays a characteristic dispersion in perplexity-under-shuffling that differs markedly from the more stable structural var...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25860v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI",
+          "cs.CY"
+        ],
+        "authors": [
+          "Lucio La Cava",
+          "Andrea Tagarelli"
+        ]
+      }
+    },
+    {
+      "title": "Investigation into In-Context Learning Capabilities of Transformers",
+      "url": "http://arxiv.org/abs/2604.25858v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T16:57:55+00:00",
+      "summary": "Transformers have demonstrated a strong ability for in-context learning (ICL), enabling models to solve previously unseen tasks using only example input output pairs provided at inference time. While prior theoretical work has established conditions under which transformers can perform linear classification in-context, the empirical scaling behavior governing when this mechanism succeeds remains insufficiently characterized.   In this paper, we conduct a systematic empirical study of in-context learning for Gaussian-mixture binary classification tasks. Building on the theoretical framework of Frei and Vardi (2024), we analyze how in-context test accuracy depends on three fundamental factors: the input dimension, the number of in-context examples, and the number of pre-training tasks. Using...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25858v1",
+        "categories": [
+          "cs.LG",
+          "cs.AI"
+        ],
+        "authors": [
+          "Rushil Chandrupatla",
+          "Leo Bangayan",
+          "Sebastian Leng",
+          "Arya Mazumdar"
+        ]
+      }
+    },
+    {
+      "title": "SIEVES: Selective Prediction Generalizes through Visual Evidence Scoring",
+      "url": "http://arxiv.org/abs/2604.25855v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T16:57:29+00:00",
+      "summary": "Multimodal large language models (MLLMs) achieve ever-stronger performance on visual-language tasks. Even as traditional visual question answering benchmarks approach saturation, reliable deployment requires satisfying low error tolerances in real-world out-of-distribution (OOD) scenarios. Precisely, selective prediction aims to improve coverage, i.e. the share of inputs the system answers, while adhering to a user-defined risk level. This is typically achieved by assigning a confidence score to each answer and abstaining on those that fall below a certain threshold. To enable reliable generalization, we require reasoner models to produce localized visual evidence while answering, and design a selector that explicitly learns to estimate the quality of the localization provided by the reaso...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25855v1",
+        "categories": [
+          "cs.CV",
+          "cs.AI"
+        ],
+        "authors": [
+          "Hector G. Rodriguez",
+          "Marcus Rohrbach"
+        ]
+      }
+    },
+    {
+      "title": "G-Loss: Graph-Guided Fine-Tuning of Language Models",
+      "url": "http://arxiv.org/abs/2604.25853v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T16:55:57+00:00",
+      "summary": "Traditional loss functions, including cross-entropy, contrastive, triplet, and su pervised contrastive losses, used for fine-tuning pre-trained language models such as BERT, operate only within local neighborhoods and fail to account for the global semantic structure. We present G-Loss, a graph-guided loss function that incorporates semi-supervised label propagation to use structural relationships within the embedding manifold. G-Loss builds a document-similarity graph that captures global semantic relationships, thereby guiding the model to learn more discriminative and robust embeddings. We evaluate G-Loss on five benchmark datasets covering key downstream classification tasks: MR (sentiment analysis), R8 and R52 (topic categorization), Ohsumed (medical document classification), and 20NG...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25853v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "authors": [
+          "Sharma Aditya",
+          "Agarwal Vinti",
+          "Kumar Rajesh"
+        ]
+      }
+    },
+    {
+      "title": "ADEMA: A Knowledge-State Orchestration Architecture for Long-Horizon Knowledge Synthesis with LLMAgents",
+      "url": "http://arxiv.org/abs/2604.25849v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T16:54:48+00:00",
+      "summary": "Long-horizon LLM tasks often fail not because a single answer is unattainable, but because knowledge states drift across rounds, intermediate commitments remain implicit, and interruption fractures the evolving evidence chain. This paper presents ADEMA as a knowledge-state orchestration architecture for long-horizon knowledge synthesis rather than as a generic multi-agent runtime. The architecture combines explicit epistemic bookkeeping, heterogeneous dual-evaluator governance, adaptive task-mode switching, reputation-shaped resource allocation, checkpoint-resumable persistence, segment-level memory condensation, artifact-first assembly, and final-validity checking with safe fallback. Evidence is drawn entirely from existing materials: a four-scenario showcase package, a fixed 60-run mecha...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25849v1",
+        "categories": [
+          "cs.AI"
+        ],
+        "authors": [
+          "Zhou Hanlin",
+          "Chan Huah Yong"
+        ]
+      }
+    },
+    {
+      "title": "Semi-Markov Reinforcement Learning for City-Scale EV Ride-Hailing with Feasibility-Guaranteed Actions",
+      "url": "http://arxiv.org/abs/2604.25848v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-28T16:54:03+00:00",
+      "summary": "We study city-scale control of electric-vehicle (EV) ride-hailing fleets where dispatch, repositioning, and charging decisions must respect charger and feeder limits under uncertain, spatially correlated demand and travel times. We formulate the problem as a hex-grid semi-Markov decision process (semi-MDP) with mixed actions -- discrete actions for serving, repositioning, and charging, together with continuous charging power -- and variable action durations. To guarantee physical feasibility during both training and deployment, the policy learns over high-level intentions produced by a masked, temperature-annealed actor. These intentions are projected at every decision step through a time-limited rolling mixed-integer linear program (MILP) that strictly enforces state-of-charge, port, and ...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25848v1",
+        "categories": [
+          "cs.AI"
+        ],
+        "authors": [
+          "An Nguyen",
+          "Hoang Nguyen",
+          "Phuong Le",
+          "Hung Pham",
+          "Cuong Do",
+          "Laurent El Ghaoui"
+        ]
+      }
+    },
+    {
+      "title": "DV-World: Benchmarking Data Visualization Agents in Real-World Scenarios",
+      "url": "http://arxiv.org/abs/2604.25914v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T17:58:21+00:00",
+      "summary": "Real-world data visualization (DV) requires native environmental grounding, cross-platform evolution, and proactive intent alignment. Yet, existing benchmarks often suffer from code-sandbox confinement, single-language creation-only tasks, and assumption of perfect intent. To bridge these gaps, we introduce DV-World, a benchmark of 260 tasks designed to evaluate DV agents across real-world professional lifecycles. DV-World spans three domains: DV-Sheet for native spreadsheet manipulation including chart and dashboard creation as well as diagnostic repair; DV-Evolution for adapting and restructuring reference visual artifacts to fit new data across diverse programming paradigms and DV-Interact for proactive intent alignment with a user simulator that mimics real-world ambiguous requirements...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25914v1",
+        "categories": [
+          "cs.CL"
+        ],
+        "authors": [
+          "Jinxiang Meng",
+          "Shaoping Huang",
+          "Fangyu Lei",
+          "Jingyu Guo",
+          "Haoxiang Liu",
+          "Jiahao Su",
+          "Sihan Wang",
+          "Yao Wang"
+        ]
+      }
+    },
+    {
+      "title": "A paradox of AI fluency",
+      "url": "http://arxiv.org/abs/2604.25905v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T17:51:13+00:00",
+      "summary": "How much does a user's skill with AI shape what AI actually delivers for them? This question is critical for users, AI product builders, and society at large, but it remains underexplored. Using a richly annotated sample of 27K transcripts from WildChat-4.8M, we show that fluent users take on more complex tasks than novices and adopt a fundamentally different interactional mode: they iterate collaboratively with the AI, refining goals and critically assessing outputs, whereas novices take a passive stance. These differences lead to a paradox of AI fluency: fluent users experience more failures than novices -- but their failures tend to be visible (a direct consequence of their engagement), they are more likely to lead to partial recovery, and they occur alongside greater success on complex...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25905v1",
+        "categories": [
+          "cs.CL"
+        ],
+        "authors": [
+          "Christopher Potts",
+          "Moritz Sudhof"
+        ]
+      }
+    },
+    {
+      "title": "From Syntax to Emotion: A Mechanistic Analysis of Emotion Inference in LLMs",
+      "url": "http://arxiv.org/abs/2604.25866v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T17:03:16+00:00",
+      "summary": "Large language models (LLMs) are increasingly used in emotionally sensitive human-AI applications, yet little is known about how emotion recognition is internally represented. In this work, we investigate the internal mechanisms of emotion recognition in LLMs using sparse autoencoders (SAEs). By analyzing sparse feature activations across layers, we identify a consistent three-phase information flow, in which emotion-related features emerge only in the final phase. We further show that emotion representations comprise both shared features across emotions and emotion-specific features. Using phase-stratified causal tracing, we identify a small set of features that strongly influence emotion predictions, and show that both their number and causal impact vary across emotions; in particular, D...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25866v1",
+        "categories": [
+          "cs.CL"
+        ],
+        "authors": [
+          "Bangzhao Shu",
+          "Arinjay Singh",
+          "Mai ElSherief"
+        ]
+      }
+    },
+    {
+      "title": "Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses",
+      "url": "http://arxiv.org/abs/2604.25850v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T16:55:02+00:00",
+      "summary": "Harnesses have become a central determinant of coding-agent performance, shaping how models interact with repositories, tools, and execution environments. Yet automating harness engineering is hard: a heterogeneous action space, sparse and noisy evaluation signal, multi-million-token trajectories, and edits whose effect is hard to attribute to the next round's outcomes. We introduce Agentic Harness Engineering (AHE), a framework that automates harness-level evolution by instrumenting the three stages of any engineering loop (component editing, trajectory inspection, and decision making) with matched observability pillars: (1) component observability gives every editable harness component a file-level representation so the action space is explicit and revertible; (2) experience observabilit...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25850v1",
+        "categories": [
+          "cs.CL",
+          "cs.SE"
+        ],
+        "authors": [
+          "Jiahang Lin",
+          "Shichun Liu",
+          "Chengjun Pan",
+          "Lizhi Lin",
+          "Shihan Dou",
+          "Xuanjing Huang",
+          "Hang Yan",
+          "Zhenhua Han"
+        ]
+      }
+    },
+    {
+      "title": "PSI-Bench: Towards Clinically Grounded and Interpretable Evaluation of Depression Patient Simulators",
+      "url": "http://arxiv.org/abs/2604.25840v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T16:46:25+00:00",
+      "summary": "Patient simulators are gaining traction in mental health training by providing scalable exposure to complex and sensitive patient interactions. Simulating depressed patients is particularly challenging, as safety constraints and high patient variability complicate simulations and underscore the need for simulators that capture diverse and realistic patient behaviors. However, existing evaluations heavily rely on LLM-judges with poorly specified prompts and do not assess behavioral diversity. We introduce PSI-Bench, an automatic evaluation framework that provides interpretable, clinically grounded diagnostics of depression patient simulator behavior across turn-, dialogue-, and population-level dimensions. Using PSI-Bench, we benchmark seven LLMs across two simulator frameworks and find tha...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25840v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI"
+        ],
+        "authors": [
+          "Nguyen Khoi Hoang",
+          "Shuhaib Mehri",
+          "Tse-An Hsu",
+          "Yi-Jyun Sun",
+          "Quynh Xuan Nguyen Truong",
+          "Khoa D Doan",
+          "Dilek Hakkani-Tür"
+        ]
+      }
+    },
+    {
+      "title": "MAIC-UI: Making Interactive Courseware with Generative UI",
+      "url": "http://arxiv.org/abs/2604.25806v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T16:15:04+00:00",
+      "summary": "Creating interactive STEM courseware traditionally requires HTML/CSS/JavaScript expertise, leaving barriers for educators. While generative AI can produce HTML codes, existing tools generate static presentations rather than interactive simulations, struggle with long documents, and lack pedagogical accuracy mechanisms. Furthermore, full regeneration for modifications requires 200--600 seconds, disrupting creative flow. We present MAIC-UI, a zero-code authoring system that enables educators to create and rapidly edit interactive courseware from textbooks, PPTs, and PDFs. MAIC-UI employs: (1) structured knowledge analysis with multi-modal understanding to ensure pedagogical rigor; (2) a two-stage generate-verify-optimize pipeline separating content alignment from visual refinement; and (3) C...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25806v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI",
+          "cs.HC"
+        ],
+        "authors": [
+          "Shangqing Tu",
+          "Yanjia Li",
+          "Keyu Chen",
+          "Sichen Zhang",
+          "Jifan Yu",
+          "Daniel Zhang-Li",
+          "Lei Hou",
+          "Juanzi Li"
+        ]
+      }
+    },
+    {
+      "title": "Barriers to Universal Reasoning With Transformers (And How to Overcome Them)",
+      "url": "http://arxiv.org/abs/2604.25800v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T16:10:37+00:00",
+      "summary": "Chain-of-Thought (CoT) has been shown to empirically improve Transformers' performance, and theoretically increase their expressivity to Turing completeness. However, whether Transformers can learn to generalize to CoT traces longer than those seen during training is understudied. We use recent theoretical frameworks for Transformer length generalization and find that -- under standard positional encodings and a finite alphabet -- Transformers with CoT cannot solve problems beyond $TC^0$, i.e. the expressivity benefits do not hold under the stricter requirement of length-generalizable learnability. However, if we allow the vocabulary to grow with problem size, we attain a length-generalizable simulation of Turing machines where the CoT trace length is linear in the simulated runtime up to ...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25800v1",
+        "categories": [
+          "cs.LG",
+          "cs.CL"
+        ],
+        "authors": [
+          "Oliver Kraus",
+          "Yash Sarrof",
+          "Yuekun Yao",
+          "Alexander Koller",
+          "Michael Hahn"
+        ]
+      }
+    },
+    {
+      "title": "Subliminal Steering: Stronger Encoding of Hidden Signals",
+      "url": "http://arxiv.org/abs/2604.25783v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T15:51:55+00:00",
+      "summary": "Subliminal learning describes a student language model inheriting a behavioral bias by fine-tuning on seemingly innocuous data generated by a biased teacher model. Prior work has begun to characterize this phenomenon but leaves open questions about the scope of signals it can transfer, the mechanisms that explain it, and the precision with which a bias can be encoded by seemingly unrelated data. We tackle all three problems by introducing subliminal steering, a variant of subliminal learning in which the teacher's bias is implemented not via a system prompt, as in prior work, but through a steering vector trained to maximize the likelihood of a set of target samples. First, we show that subliminal steering transfers complex multi-word biases, whereas prior work focused on single-word prefe...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25783v1",
+        "categories": [
+          "cs.CL"
+        ],
+        "authors": [
+          "George Morgulis",
+          "John Hewitt"
+        ]
+      }
+    },
+    {
+      "title": "Unrequited Emotions: Investigating the Gaps in Motivation and Practice in Speech Emotion Recognition Research",
+      "url": "http://arxiv.org/abs/2604.25776v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T15:43:35+00:00",
+      "summary": "Critical analyses of emotion recognition technology have raised ethical concerns around task validity and potential downstream impacts, urging researchers to ensure alignment between their stated motivations and practice. However, these discussions have not adequately influenced or drawn from research on speech emotion recognition (SER). We address this gap by conducting a systematic survey of SER research to uncover what stated motivations drive this work and if they align with the datasets and emotions studied. We find that while SER research identifies appealing goals, such as well-situated voice-activated systems or healthcare applications, commonly-used datasets do not reflect these proposed deployment contexts, thus presenting a gap between motivations and research practices. We argu...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25776v1",
+        "categories": [
+          "cs.CL"
+        ],
+        "authors": [
+          "Taryn Wong",
+          "Zeerak Talat",
+          "Hanan Aldarmaki",
+          "Anjalie Field"
+        ]
+      }
+    },
+    {
+      "title": "CGU-ILALab at FoodBench-QA 2026: Comparing Traditional and LLM-based Approaches for Recipe Nutrient Estimation",
+      "url": "http://arxiv.org/abs/2604.25774v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-28T15:41:01+00:00",
+      "summary": "Accurate nutrient estimation from unstructured recipe text is an important yet challenging problem in dietary monitoring, due to ambiguous ingredient terminology and highly variable quantity expressions. We systematically evaluate models spanning a wide range of representational capacity, from lexical matching methods (TF-IDF with Ridge Regression), to deep semantic encoders (DeBERTa-v3), to generative reasoning with large language models (LLMs). Under the strict tolerance criteria defined by EU Regulation 1169/2011, our empirical results reveal a clear trade-off between predictive accuracy and computational efficiency. The TF-IDF baseline achieves moderate nutrient estimation performance with near-instantaneous inference, whereas the DeBERTa-v3 encoder performs poorly under task-specific ...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25774v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI"
+        ],
+        "authors": [
+          "Wei-Chun Chen",
+          "Yu-Xuan Chen",
+          "I-Fang Chung",
+          "Ying-Jia Lin"
+        ]
+      }
+    },
+    {
+      "title": "Teacher Forcing as Generalized Bayes: Optimization Geometry Mismatch in Switching Surrogates for Chaotic Dynamics",
+      "url": "http://arxiv.org/abs/2604.25904v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-28T17:50:37+00:00",
+      "summary": "Identity teacher forcing (ITF) enables stable training of deterministic recurrent surrogates for chaotic dynamical systems and has been highly effective for dynamical systems reconstruction (DSR) with recurrent neural networks (RNNs), including interpretable almost-linear RNNs (AL-RNNs). However, as an intervention-based prediction loss (and thus a generalized Bayes update), teacher forcing need not match the free-running model's marginal likelihood geometry. We compare the objective-induced curvatures of ITF and marginal likelihood in a probabilistic switching augmentation of AL-RNNs, estimating ambiguity-aware observed information via Louis' identity. In the switching setting studied here, conditioning on a single forced regime path (as ITF does) inflates curvature, while marginal likeli...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25904v1",
+        "categories": [
+          "cs.LG",
+          "math.DS",
+          "stat.ML"
+        ],
+        "authors": [
+          "Andre Herz",
+          "Daniel Durstewitz",
+          "Georgia Koppe"
+        ]
+      }
+    },
+    {
+      "title": "Carbon-Taxed Transformers: A Green Compression Pipeline for Overgrown Language Models",
+      "url": "http://arxiv.org/abs/2604.25903v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-28T17:48:16+00:00",
+      "summary": "The accelerating adoption of Large Language Models (LLMs) in software engineering (SE) has brought with it a silent crisis: unsustainable computational cost. While these models demonstrate remarkable capabilities in different SE tasks, they are unmanageably large, slow to deploy, memory-intensive, and carbon-heavy. This reality threatens not only the scalability and accessibility of AI-powered SE, but also its long-term environmental sustainability. The research challenge is clear: we must go beyond accuracy and address efficiency and environmental cost as first-class design constraints. To meet this challenge, we introduce Carbon-Taxed Transformers (CTT), a systematic multi-architectural compression principled pipeline ordering inspired by economic carbon taxation principles. Drawing from...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25903v1",
+        "categories": [
+          "cs.SE",
+          "cs.LG"
+        ],
+        "authors": [
+          "Ajmain Inqiad Alam",
+          "Palash Roy",
+          "Chanchal K. Roy",
+          "Banani Roy",
+          "Kevin A. Schneider"
+        ]
+      }
+    },
+    {
+      "title": "Variational Neural Belief Parameterizations for Robust Dexterous Grasping under Multimodal Uncertainty",
+      "url": "http://arxiv.org/abs/2604.25897v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-28T17:40:49+00:00",
+      "summary": "Contact variability, sensing uncertainty, and external disturbances make grasp execution stochastic. Expected-quality objectives ignore tail outcomes and often select grasps that fail under adverse contact realizations. Risk-sensitive POMDPs address this failure mode, but many use particle-filter beliefs that scale poorly, obstruct gradient-based optimization, and estimate Conditional Value-at-Risk (CVaR) with high-variance approximations. We instead formulate grasp acquisition as variational inference over latent contact parameters and object pose, representing the belief with a differentiable Gaussian mixture. We use Gumbel-Softmax component selection and location-scale reparameterization to express samples as smooth functions of the belief parameters, enabling pathwise gradients through...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25897v1",
+        "categories": [
+          "cs.RO",
+          "cs.LG",
+          "eess.SY"
+        ],
+        "authors": [
+          "Clinton Enwerem",
+          "Shreya Kalyanaraman",
+          "John S. Baras",
+          "Calin Belta"
+        ]
+      }
+    },
+    {
+      "title": "Explainable AI for Jet Tagging: A Comparative Study of GNNExplainer, GNNShap, and GradCAM for Jet Tagging in the Lund Jet Plane",
+      "url": "http://arxiv.org/abs/2604.25885v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-28T17:28:41+00:00",
+      "summary": "Graph neural networks such as ParticleNet and transformer based networks on point clouds such as ParticleTransformer achieve state-of-the-art performance on jet tagging benchmarks at the Large Hadron Collider, yet the physical reasoning behind their predictions remains opaque. We present different methods, i.e. perturbation-based (GNNExplainer), Shapley-value-based (GNNShap), and gradient-based (GRADCam); adapted to operate on LundNet's Lund-plane graph representation. Leveraging the fact that each node in the Lund plane corresponds to a physically meaningful parton splitting, we construct Monte Carlo truth explanation masks and introduce a physics-informed evaluation framework that goes beyond standard fidelity metrics. We perform the analysis in three transverse-momentum bins ($\\mathrm{p...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25885v1",
+        "categories": [
+          "hep-ph",
+          "cs.LG",
+          "hep-ex"
+        ],
+        "authors": [
+          "Pahal D. Patel",
+          "Sanmay Ganguly"
+        ]
+      }
+    },
+    {
+      "title": "From Soliloquy to Agora: Memory-Enhanced LLM Agents with Decentralized Debate for Optimization Modeling",
+      "url": "http://arxiv.org/abs/2604.25847v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-28T16:53:37+00:00",
+      "summary": "Optimization modeling underpins real-world decision-making in logistics, manufacturing, energy, and public services, but reliably solving such problems from natural-language requirements remains challenging for current large language models (LLMs). In this paper, we propose \\emph{Agora-Opt}, a modular agentic framework for optimization modeling that combines decentralized debate with a read-write memory bank. Agora-Opt allows multiple agent teams to independently produce end-to-end solutions and reconcile them through an outcome-grounded debate protocol, while memory stores solver-verified artifacts and past disagreement resolutions to support training-free improvement over time. This design is flexible across both backbones and methods: it reduces base-model lock-in, transfers across diff...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25847v1",
+        "categories": [
+          "math.OC",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "authors": [
+          "Jianghao Lin",
+          "Zi Ling",
+          "Chenyu Zhou",
+          "Tianyi Xu",
+          "Ruoqing Jiang",
+          "Zizhuo Wang",
+          "Dongdong Ge"
+        ]
+      }
+    },
+    {
+      "title": "Improving Diversity in Black-box Few-shot Knowledge Distillation",
+      "url": "http://arxiv.org/abs/2604.25795v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-28T16:03:07+00:00",
+      "summary": "Knowledge distillation (KD) is a well-known technique to effectively compress a large network (teacher) to a smaller network (student) with little sacrifice in performance. However, most KD methods require a large training set and internal access to the teacher, which are rarely available due to various restrictions. These challenges have originated a more practical setting known as black-box few-shot KD, where the student is trained with few images and a black-box teacher. Recent approaches typically generate additional synthetic images but lack an active strategy to promote their diversity, a crucial factor for student learning. To address these problems, we propose a novel training scheme for generative adversarial networks, where we adaptively select high-confidence images under the te...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25795v1",
+        "categories": [
+          "cs.CV",
+          "cs.LG"
+        ],
+        "authors": [
+          "Tri-Nhan Vo",
+          "Dang Nguyen",
+          "Kien Do",
+          "Sunil Gupta"
+        ]
+      }
+    },
+    {
+      "title": "Pythia: Toward Predictability-Driven Agent-Native LLM Serving",
+      "url": "http://arxiv.org/abs/2604.25899v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.MA",
+      "published_at": "2026-04-28T17:41:53+00:00",
+      "summary": "As LLM applications grow more complex, developers are increasingly adopting multi-agent architectures to decompose workflows into specialized, collaborative components, introducing structure that constrains agent behavior and exposes useful semantic predictability. Unlike traditional LLM serving, which operates under highly dynamic and uncertain conditions, this structured topology enables opportunities to reduce runtime uncertainty -- yet existing systems fail to exploit it, treating agentic workloads as generic traffic and incurring significant inefficiencies. Our analysis of production traces from an agent-serving platform and an internal coding assistant reveals key bottlenecks, including low prefix cache hit rates, severe resource contention from long-context requests, and substantial...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25899v1",
+        "categories": [
+          "cs.MA",
+          "cs.DC",
+          "eess.SY"
+        ],
+        "authors": [
+          "Shan Yu",
+          "Junyi Shu",
+          "Yuanjiang Ni",
+          "Kun Qian",
+          "Xue Li",
+          "Yang Wang",
+          "Jinyuan Zhang",
+          "Ziyi Xu"
+        ]
+      }
+    },
+    {
+      "title": "From Threads to Trajectories: A Multi-LLM Pipeline for Community Knowledge Extraction from GitHub Issue Discussions",
+      "url": "http://arxiv.org/abs/2604.25880v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-28T17:21:46+00:00",
+      "summary": "Resolution of complex post-production issues in large-scale open-source software (OSS) projects requires significant cognitive effort, as developers need to go through long, unstructured and fragmented issue discussion threads before that. In this paper, we present SWE-MIMIC-Bench, an issue trajectory dataset generated from raw GitHub discussions using an automated multi-LLM pipeline. Unlike simple summarization, this pipeline utilizes a group of closed-source LLMs to perform granular tasks: analyzing individual comments with awareness of externally-linked resources, classifying comment analyses into label-specific fields (e.g., root cause, solution plan, implementation progress), and synthesizing label-aware trajectories which capture a structured and coherent narrative of the entire disc...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25880v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Nazia Shehnaz Joynab",
+          "Soneya Binta Hossain"
+        ]
+      }
+    },
+    {
+      "title": "Does social identity matter in software engineering? Assessing the case of research software engineers",
+      "url": "http://arxiv.org/abs/2604.25831v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-28T16:38:51+00:00",
+      "summary": "Social identity is a concept from psychology that refers to the part of an individual's identity that derives from their group membership(s). In this paper, we explore social identity in members of the professional community of Research Software Engineers (RSEs). Using a mixed-methods approach, our study combined computational linguistic analysis and inferential statistics to examine over 28,000 social media posts, 1,700 blogs, and survey responses from 381 professional RSEs. The findings highlight the emergence of a collective RSE identity and demonstrate its role in shaping professional wellbeing. This study contributes an interdisciplinary perspective by integrating social psychology and software engineering to show how a professional identity evolves and why it matters.",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25831v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Chukwudi Uwasomba",
+          "Tamara Lopez",
+          "Melanie Langer",
+          "Helen Sharp",
+          "Michel Wermelinger",
+          "Caroline Jay",
+          "Mark Levine",
+          "Bashar Nuseibeh"
+        ]
+      }
+    },
+    {
+      "title": "Key Developer Roles and Organizational Coupling in Microservices: A Longitudinal Analysis",
+      "url": "http://arxiv.org/abs/2604.25804v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-28T16:12:39+00:00",
+      "summary": "Microservice-based systems impose significant organizational coordination challenges, yet the role of individual developers in shaping organizational coupling (OC) remains underexplored. Prior work largely focuses on structural architectural aspects, leaving gaps in understanding how developer roles influence coordination dynamics over time. This study investigates how different developer roles contribute to OC in a large-scale microservices system. The analysis focuses on three key roles, namely Jacks, representing broad knowledge holders, Mavens, representing deep specialists, and Connectors, representing organizational bridges. A longitudinal repository mining analysis of GitHub data, including commits and issue and pull request interactions, is conducted to operationalize OC and quanti...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25804v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Xiaozhou Li",
+          "Nariman Mani",
+          "Jose Sosa Rodriguez",
+          "Tomas Cerny"
+        ]
+      }
+    },
+    {
+      "title": "Can Code Evaluation Metrics Detect Code Plagiarism?",
+      "url": "http://arxiv.org/abs/2604.25778v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-28T15:45:44+00:00",
+      "summary": "Source Code Plagiarism Detection (SCPD) plays an important role in maintaining fairness and academic integrity in software engineering education. Code Evaluation Metrics (CEMs) are developed for assessing code generation tasks. However, it remains unclear whether such metrics can reliably detect plagiarism across different levels of modification (L1-L6), increasing in complexity.   In this paper, we perform a comparative empirical study using two open-source labelled datasets, ConPlag (raw and template-free versions) and IRPlag. We evaluate five CEMs, namely CodeBLEU, CrystalBLEU, RUBY, Tree Structured Edit Distance (TSED), and CodeBERTScore. The performance is evaluated using threshold-free ranking-based measures to assess overall, per dataset, and per-level plagiarism performance. The re...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25778v1",
+        "categories": [
+          "cs.SE",
+          "cs.AI",
+          "cs.IR"
+        ],
+        "authors": [
+          "Fahad Ebrahim",
+          "Mike Joy"
+        ]
+      }
+    },
+    {
+      "title": "Scenario-based System Testing for Distributed Robotics Applications",
+      "url": "http://arxiv.org/abs/2604.25772v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-28T15:37:26+00:00",
+      "summary": "We present the SCenario Specification Language (SCSL) for automated generation and execution of system-level tests. SCSL targets complex distributed systems (e.g., collaborating autonomous robots) where classical model-based testing becomes impractical because (1) the overall system complexity is too high for a single monolithic model, (2) test behaviour cannot be fully precomputed due to substantial nondeterminism in the distributed system under test (SUT), and (3) the SUT configuration may change dynamically at runtime. Challenge (1) is addressed by scenarios: each scenario specifies test-specific expected SUT behaviour and/or stimuli to be applied during execution. Complex system tests are composed from elementary scenarios using sequential and parallel composition. To address (2), the ...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25772v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Jan Peleska",
+          "Felix Brüning",
+          "Wen-Ling Huang",
+          "Anne E. Haxthausen"
+        ]
+      }
+    },
+    {
+      "title": "SAFEdit: Does Multi-Agent Decomposition Resolve the Reliability Challenges of Instructed Code Editing?",
+      "url": "http://arxiv.org/abs/2604.25737v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-28T15:04:46+00:00",
+      "summary": "Instructed code editing is a significant challenge for large language models (LLMs). On the EditBench benchmark, 39 of 40 evaluated models obtain a task success rate (TSR) below 60 percent, highlighting a gap between general code generation and the ability to perform instruction-driven editing under executable test constraints. To address this, we propose SAFEdit, a multi-agent framework for instructed code editing that decomposes the editing process into specialized roles to improve reliability and reduce unintended code changes. A Planner Agent produces an explicit, visibility-aware edit plan, an Editor Agent applies minimal, literal code modifications, and a Verifier Agent executes real test runs. When tests fail, SAFEdit uses a Failure Abstraction Layer (FAL) to transform raw test logs...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25737v1",
+        "categories": [
+          "cs.SE",
+          "cs.AI"
+        ],
+        "authors": [
+          "Noam Tarshish",
+          "Nofar Selouk",
+          "Daniel Hodisan",
+          "Bar Ezra Gafniel",
+          "Yuval Elovici",
+          "Asaf Shabtai",
+          "Eliya Nachmani"
+        ]
+      }
+    },
+    {
+      "title": "Learning Generalizable Multimodal Representations for Software Vulnerability Detection",
+      "url": "http://arxiv.org/abs/2604.25711v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-28T14:38:47+00:00",
+      "summary": "Source code and its accompanying comments are complementary yet naturally aligned modalities-code encodes structural logic while comments capture developer intent. However, existing vulnerability detection methods mostly rely on single-modality code representations, overlooking the complementary semantic information embedded in comments and thus limiting their generalization across complex code structures and logical relationships. To address this, we propose MultiVul, a multimodal contrastive framework that aligns code and comment representations through dual similarity learning and consistency regularization, augmented with diverse code-text pairs to improve robustness. Experiments on widely adopted DiverseVul and Devign datasets across four large language models (LLMs) (i.e., DeepSeek-C...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.25711v1",
+        "categories": [
+          "cs.SE",
+          "cs.AI"
+        ],
+        "authors": [
+          "Zeming Dong",
+          "Yuejun Guo",
+          "Qiang Hu",
+          "Yao Zhang",
+          "Maxime Cordy",
+          "Hao Liu",
+          "Mike Papadakis",
+          "Yongqiang Lyu"
+        ]
+      }
+    }
+  ],
+  "items_count_total_fetched": 210,
+  "items_count_in_window": 44,
+  "items_count_after_dedupe": 44,
+  "dynamic_keywords": [],
+  "collections": [
+    {
+      "type": "keyword",
+      "term": "Claude Code",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Claude Code",
+          "url": "https://en.wikipedia.org/wiki/Claude_Code",
+          "snippet": "Claude is a series of large language models developed by Anthropic and first released in 2023. Since Claude 3, each generation has typically been released in three sizes, from least to most capable: Haiku, Sonnet, and Opus. An additional model named Claude Mythos was released to some companies in 2026 but not to the public.Claude is used for software development via Claude Code. Claude is trained using \"constitutional AI\", a technique developed by Anthropic to improve ethical and legal compliance (AI alignment). The name Claude has been described both as a tribute to Claude Shannon, who pioneered information theory, and as a friendly, male-gendered counterpart to virtual assistants like Alexa and Siri. US federal agencies started phasing out the use of Claude after Anthropic refused to remove contractual prohibitions on the use of Claude for mass domestic surveillance and fully-autonomous weapons. Following the refusal, the Department of Defense designated the company a \"supply chain risk\" and barred all U.S. military private contractors, suppliers, and partners from doing business with the firm. On March 26, 2026, a federal judge issued a temporary injunction against the DoD."
+        },
+        {
+          "title": "Claude Code",
+          "url": "https://grokipedia.com/page/Claude_Code",
+          "snippet": "Claude Code is a tool used by content marketers for interview analysis, SEO content audits, and campaign automation, resulting in faster workflows and interactive reports."
+        },
+        {
+          "title": "Coding | Claude by Anthropic",
+          "url": "https://claude.com/solutions/coding",
+          "snippet": "“On our 93-task coding benchmark, Claude Opus 4.7 lifted resolution by 13% over Opus 4.6, including four tasks neither Opus 4.6 nor Sonnet 4.6 could solve."
+        },
+        {
+          "title": "Claude Code by Anthropic | AI Coding Agent, Terminal, IDE",
+          "url": "https://claude.com/product/claude-code",
+          "snippet": "Anthropic's agentic coding tool for developers. Claude Code understands your codebase, edits files, runs commands, and helps you ship faster."
+        },
+        {
+          "title": "Mastering Claude Code in 30 minutes - YouTube",
+          "url": "https://www.youtube.com/watch?v=6eBSHbLKuN0",
+          "snippet": "Learn advanced features, shortcuts, and workflows to get the most from Claude Code."
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "Cursor AI",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Cursor (user interface)",
+          "url": "https://en.wikipedia.org/wiki/Cursor_(user_interface)",
+          "snippet": "In human–computer interaction, a cursor is an indicator used to show the current position on a computer monitor or other display device that will respond to input, such as a text cursor or a mouse pointer."
+        },
+        {
+          "title": "Cursor (code editor) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Cursor_(code_editor)",
+          "snippet": "1 day ago - Cursor is an AI-assisted integrated development environment for Windows, macOS, and Linux. It is a fork of Visual Studio Code with additional AI features. Cursor is proprietary software and developed by Anysphere, a San Francisco-based startup company founded in 2022."
+        },
+        {
+          "title": "Cursor (code editor)",
+          "url": "https://grokipedia.com/page/Cursor_code_editor",
+          "snippet": "Cursor is an AI-powered code editor forked from Visual Studio Code. UPDATE: Cursor AI released a dynamic context management update introducing dynamic context retrieval across all models in its agent, leveraging the filesystem to enhance context eff…"
+        },
+        {
+          "title": "Cursor: The best way to code with AI",
+          "url": "https://cursor.com/",
+          "snippet": "Built to make you extraordinarily productive, Cursor is the best way to build software with AI."
+        },
+        {
+          "title": "Getting started with Cursor AI",
+          "url": "https://www.emgoto.com/cursor/",
+          "snippet": "And I’m not sure that continuing to use AI like this is actually ever going to help me to develop the skills to be a good backend engineer, so that is a bit of an open question for me on how I can upskill myself when I am delegating things out to AI. It also does make me a little worried for the junior engineers of today. Since Cursor is an IDE that looks identical to VS Code, for existing VS Code users it’s really easy to dip your toes in."
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "GitHub Copilot",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "GitHub Copilot",
+          "url": "https://en.wikipedia.org/wiki/GitHub_Copilot",
+          "snippet": "GitHub Copilot is a code completion and programming AI-assistant developed by GitHub and OpenAI that assists users of Visual Studio Code, Visual Studio, Neovim, Eclipse and JetBrains integrated development environments (IDEs) by autocompleting code. Currently available by subscription to individual developers and to businesses, the generative artificial intelligence software was first announced by GitHub on 29 June 2021. Users can choose the large language model used for generation."
+        },
+        {
+          "title": "GitHub Copilot",
+          "url": "https://grokipedia.com/page/GitHub_Copilot",
+          "snippet": "GitHub Copilot is an AI-powered coding assistant that provides real-time code suggestions, completions, and conversational support to developers within integrated..."
+        },
+        {
+          "title": "GitHub Copilot · Your AI pair programmer · GitHub",
+          "url": "https://github.com/features/copilot",
+          "snippet": "GitHub Copilot integrates with leading editors, including Visual Studio Code, Visual Studio, JetBrains IDEs, and Neovim, and, unlike other AI coding assistants, is natively built into GitHub."
+        },
+        {
+          "title": "GitHub Copilot · GitHub",
+          "url": "https://github.com/copilot",
+          "snippet": "GitHub is where people build software. More than 150 million people use GitHub to discover, fork, and contribute to over 420 million projects."
+        },
+        {
+          "title": "GitHub Copilot in VS Code",
+          "url": "https://code.visualstudio.com/docs/copilot/overview",
+          "snippet": "GitHub Copilot brings AI agents to Visual Studio Code. Describe what you want to build, and an agent plans the approach, writes the code, and verifies the result across your entire project."
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "AI Agent framework",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Superpowers (AI agent framework)",
+          "url": "https://grokipedia.com/page/Superpowers_AI_agent_framework",
+          "snippet": "Superpowers is an agentic skills framework and software development methodology designed for AI coding agents (e.g., in Claude Code or Gemini CLI), providing a structured workflow and composable \"skills\" to systematically evaluate and apply relevant…"
+        },
+        {
+          "title": "AI Agent Frameworks: Choosing the Right Foundation for Your Business | IBM",
+          "url": "https://www.ibm.com/think/insights/top-ai-agent-frameworks",
+          "snippet": "November 18, 2025 - Agentic frameworks are the building blocks for developing, deploying and managing AI agents. These software platforms have built-in features and functions that help streamline and speed up the process."
+        },
+        {
+          "title": "Microsoft Agent Framework Overview | Microsoft Learn",
+          "url": "https://learn.microsoft.com/en-us/agent-framework/overview/",
+          "snippet": "3 weeks ago - Agent Framework combines AutoGen's simple agent abstractions with Semantic Kernel's enterprise features — session-based state management, type safety, middleware, telemetry — and adds graph-based workflows for explicit multi-agent orchestration. Semantic Kernel and AutoGen pioneered the concepts of AI agents and multi-agent orchestration."
+        },
+        {
+          "title": "12 Best AI Agent Frameworks in 2026 | Data Science Collective",
+          "url": "https://medium.com/data-science-collective/the-best-ai-agent-frameworks-for-2026-tier-list-b3a4362fac0d",
+          "snippet": "January 27, 2026 - The framework that saved my sanity. LangGraph models your agent as a state graph — nodes for actions, edges for transitions."
+        },
+        {
+          "title": "TypeScript AI Agent Framework & Platform | Mastra",
+          "url": "https://mastra.ai/",
+          "snippet": "Mastra is the modern TypeScript framework for AI-powered applications and agents."
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "MCP server",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "MapServer",
+          "url": "https://en.wikipedia.org/wiki/MapServer",
+          "snippet": "MapServer is an open-source development environment for building spatially enabled internet applications, built in the C language, and is widely known as one of the fastest Web mapping engines available. It can run as a CGI program or via MapScript which supports several programming languages (using SWIG). MapServer can access hundreds of data formats, any raster or vector format supported by GDAL, and reprojections on-the-fly are handled by PROJ. MapServer was originally developed by Steve Lime, then working at the University of Minnesota — so, it was previously referred to as \"UMN MapServer\", to distinguish it from commercial \"map servers\"; today it is commonly referred to as just \"MapServer\", and is maintained by the MapServer Project Steering Committee (PSC). MapServer was originally developed with support from NASA, which needed a way to make its satellite imagery available to the public."
+        },
+        {
+          "title": "Roblox Studio MCP Server",
+          "url": "https://grokipedia.com/page/Roblox_Studio_MCP_Server",
+          "snippet": "The Roblox Studio MCP (Model Context Protocol) server is an open-source proof-of-concept released by Roblox. It does not explicitly support drafts, such as local unsaved script changes or similar features in Roblox Studio. The server's capabilities…"
+        },
+        {
+          "title": "MCP Center - Build Your Own Enterprise MCP Registry",
+          "url": "https://mcp.microsoft.com/",
+          "snippet": "Some of our remote MCP servers proxy through an Azure API Management (AI Gateway) service to demonstrate enterprise best practices for monitoring, securing..."
+        },
+        {
+          "title": "Rules, MCP servers, and integrations built by the community.",
+          "url": "https://cursor.directory/plugins",
+          "snippet": "This is an MCP server for PostgREST. It allows LLMs perform database queries and operations on Postgres databases via PostgREST."
+        },
+        {
+          "title": "Why Every SaaS Needs a Web MCP Server",
+          "url": "https://www.linkedin.com/pulse/why-every-saas-needs-web-mcp-server-internativenet-h8v8f",
+          "snippet": "MCP Server: An AI assistant asks \"What can you do?\", gets structured capabilities, executes them directly. Here's a simple example: Without MCP (REST API approach)"
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "AI coding assistant",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "AI coding assistant",
+          "url": "https://en.wikipedia.org/wiki/AI_coding_assistant",
+          "snippet": "AI-assisted software development is the use of artificial intelligence (AI) to augment software development. It uses large language models (LLMs), natural language processing, intelligent agents and other AI technologies to assist software developers. It helps in a range of tasks of the software development life cycle, from code generation to debugging, editing, testing, UI design, understanding the code, and documentation. Agentic coding denotes the use of more autonomous AI agents for software development."
+        },
+        {
+          "title": "Comparison of AI coding assistants for Blazor",
+          "url": "https://grokipedia.com/page/Comparison_of_AI_coding_assistants_for_Blazor",
+          "snippet": "Reddit discussions, primarily in r/Blazor and r/dotnet, show no unanimous consensus on the best AI coding assistant for Blazor and MudBlazor development among Claude, Grok, Gemini, and ChatGPT. Gemini (e.g., Gemini 2.5 or Pro 2.5) is frequently prai…"
+        },
+        {
+          "title": "AI Coding Assistant - Agentic Coding Platform",
+          "url": "https://qoder.com/",
+          "snippet": "Qoder is an AI-powered agentic coding platform for real software development. Experience intelligent code generation, conversation-based programming, and advanced developer tools."
+        },
+        {
+          "title": "Gemini Code Assist | AI coding assistant",
+          "url": "https://codeassist.google/",
+          "snippet": "Gemini Code Assist: AI-first coding in your natural language. Uncap your potential and get all of your development done using Gemini Code Assist for individuals at no cost, or Gemini Code..."
+        },
+        {
+          "title": "Windsurf - The best AI for Coding",
+          "url": "https://windsurf.com/",
+          "snippet": "Windsurf is the world's most advanced AI coding assistant for developers and enterprises. Windsurf Editor — the first AI-native IDE that keeps developers in flow."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@AnthropicAI",
+      "category": "AI",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "x.com/AnthropicAI/status/2041578392852517128",
+          "url": "https://x.com/AnthropicAI/status/2041578392852517128",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/AnthropicAI/status/1903128670081888756",
+          "url": "https://x.com/AnthropicAI/status/1903128670081888756",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/AnthropicAI/status/1949898502688903593",
+          "url": "https://x.com/AnthropicAI/status/1949898502688903593",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/AnthropicAI/status/1886452489681023333",
+          "url": "https://x.com/AnthropicAI/status/1886452489681023333",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/anthropicai/status/1847335821113782379",
+          "url": "https://x.com/anthropicai/status/1847335821113782379",
+          "snippet": "The site owner hides the web page description."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@OpenAI",
+      "category": "AI",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "OpenAI (@OpenAI) / Posts / X",
+          "url": "https://x.com/OpenAI",
+          "snippet": "December 6, 2015 - We’re hiring: http://openai.com/jobs ... Update: GPT-5.5 and GPT-5.5 Pro are now available in the API. ... GPT-5.5 is now available in the API. The model brings higher intelligence and stronger token efficiency to complex work, helping tasks get done with fewer retries. x.com/16338749515087… ... Earlier this month, an Erdős problem that had been open for 60 years was solved with help from ..."
+        },
+        {
+          "title": "OpenAI on X: \"Understanding and preventing misalignment generalization Recent work has shown that a language model trained to produce insecure computer code can become broadly “misaligned.” This surprising effect is called “emergent misalignment.” We studied why this happens. Through this\" / X",
+          "url": "https://x.com/OpenAI/status/1935382830378516643",
+          "snippet": "From openai.com · 11:03 AM · Jun 18, 2025 · · · 1.1M Views · 353 · 560 · 3.3K · 823 · Read 353 replies · Sign up now to get your own personalized timeline! Sign up with GoogleSign up with Google. Opens in new tab · Sign up with Apple · Create account ·"
+        },
+        {
+          "title": "OpenAI on X: \"Introducing ChatGPT Team: A new plan for teams of all sizes with access to advanced models and tools, business-grade data privacy & security, and the ability to create and share custom GPTs. Upgrade from your ChatGPT account. https://t.co/GKbuWFEaBo\" / X",
+          "url": "https://x.com/OpenAI/status/1745151819209142355",
+          "snippet": "@OpenAI · Introducing ChatGPT Team: A new plan for teams of all sizes with access to advanced models and tools, business-grade data privacy & security, and the ability to create and share custom GPTs. Upgrade from your ChatGPT account. Introducing ChatGPT Team ·"
+        },
+        {
+          "title": "OpenAI on X: \"Earlier this month, an Erdős problem that had been open for 60 years was solved with help from GPT-5.4 Pro. What happens now that AI is getting good at math? OpenAI researchers @SebastienBubeck and @ErnestRyu join host @AndrewMayne to explain what changed and what it could mean https://t.co/wqYLv1Ju2T\" / X",
+          "url": "https://x.com/OpenAI/status/2049182118069358967",
+          "snippet": "Earlier this month, an Erdős problem that had been open for 60 years was solved with help from GPT-5.4 Pro. What happens now that AI is getting good at math? OpenAI researchers"
+        },
+        {
+          "title": "OpenAI on X: \"We’re rolling out an early version of canvas—a new way to work with ChatGPT on writing & coding projects that go beyond simple chat. Starting today, Plus & Team users can try it by selecting “GPT-4o with canvas” in the model picker. https://t.co/GoGZiRzCsB\" / X",
+          "url": "https://x.com/OpenAI/status/1841887707020329173",
+          "snippet": "@OpenAI · We’re rolling out an early version of canvas—a new way to work with ChatGPT on writing & coding projects that go beyond simple chat. Starting today, Plus & Team users can try it by selecting “GPT-4o with canvas” in the model picker. Introducing canvas · From openai.com ·"
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@GoogleAI",
+      "category": "AI",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Google AI (@GoogleAI) / Posts / X",
+          "url": "https://x.com/GoogleAI",
+          "snippet": "Google AI (@GoogleAI) - Posts - Making AI helpful for everyone. Show thinking ↓ | X (formerly Twitter)"
+        },
+        {
+          "title": "Our teams have been busyyy! Here are some key updates from ...",
+          "url": "https://x.com/GoogleAI/status/2047802944188269023",
+          "snippet": "Google AI (@GoogleAI). 164 likes 12 replies. Our teams have been busyyy! Here are some key updates from the past week: — @GoogleCloud unveiled a suite of AI innovations at our Cloud Next event, including our eighth generation TPUs (TPUt for inference + TPUi for reasoning), Gemini Enterprise Agent Platform, Agentic Data cloud, Workspace Intelligence, and beyond — Gemini Embedding 2, our ..."
+        },
+        {
+          "title": "Today, we’re evolving @StitchbyGoogle from @GoogleLabs into ...",
+          "url": "https://x.com/GoogleAI/status/2034332963811344738",
+          "snippet": "Google AI (@GoogleAI). 220 replies. Today, we’re evolving @StitchbyGoogle from @GoogleLabs into an AI design canvas transforms natural language prompts into production-ready front-end code. Some highlights from what’s new: 1. A complete redesign of the Stitch UI, which can now ingest multimodal references (text prompts, images, or code) as creative seeds for your design ideas 2. A brand ..."
+        },
+        {
+          "title": "Here’s a recap of everything we released this week: — Gemini ...",
+          "url": "https://x.com/GoogleAI/status/2037610464620810602",
+          "snippet": "Google AI (@GoogleAI). 568 likes 39 replies. Here’s a recap of everything we released this week: — Gemini 3.1 Flash Live, delivering our highest-quality audio experience yet with improved reasoning and latency for more natural voice interactions — An update to @GeminiApp on desktop that enables you to seamlessly transition from other AI apps by importing your preferences and chat history ..."
+        },
+        {
+          "title": "Calling all builders ️ Google AI Pro and Ultra subscribers ...",
+          "url": "https://x.com/GoogleAI/status/2046338574811853069",
+          "snippet": "Google AI (@GoogleAI). 247 likes 18 replies. Calling all builders 🛠️📣 Google AI Pro and Ultra subscribers will now get increased usage limits and access to Nano Banana Pro and Gemini Pro models in @GoogleAIStudio — no API key required. Sign in with your subscriber account today to take your ideas from prototype to production."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@trq212",
+      "category": "個人",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "x.com/trq212/status/1944877527044120655",
+          "url": "https://x.com/trq212/status/1944877527044120655",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/trq212/status/2037254607001559305",
+          "url": "https://x.com/trq212/status/2037254607001559305",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/trq212/status/1901723077735772229",
+          "url": "https://x.com/trq212/status/1901723077735772229",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com",
+          "url": "https://x.com/",
+          "snippet": "X. It’s what’s happening From breaking news and entertainment to sports and..."
+        },
+        {
+          "title": "x.com/AdamSchefter/status/1970190106393756072",
+          "url": "https://x.com/AdamSchefter/status/1970190106393756072",
+          "snippet": "Per reports from ESPN's NFL insider Adam Schefter,"
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@systematicls",
+      "category": "個人",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "sysls (@systematicls) / Posts / X",
+          "url": "https://x.com/systematicls",
+          "snippet": "Apr 15, 2024 · sysls (@systematicls) - Posts - All in @openforage . I thrived in all of the largest hedge funds managing systematic investment pro... | X (formerly Twitter)"
+        },
+        {
+          "title": "sysls (@systematicls) on X",
+          "url": "https://x.com/systematicls/status/2028814227004395561",
+          "snippet": "Mar 3, 2026 · sysls (@systematicls). 185 replies. Introduction You're a developer. You're using Claude and Codex CLI and you're wondering everyday if you're sufficiently juicing the shit out of Claude or Codex. Once in awhile you're seeing it doing something incredibly dumb and you can't comprehend why there's a bunch of people out there who seem to be building virtual rockets while you struggle to stack ..."
+        },
+        {
+          "title": "sysls (@systematicls) on X",
+          "url": "https://x.com/systematicls/status/2038241033755168959",
+          "snippet": "Mar 29, 2026 · sysls (@systematicls). 713 likes 20 replies. How To Solve Problems Of Long Running, Autonomous Agentic Engineering Workflows"
+        },
+        {
+          "title": "sysls (@systematicls) on X",
+          "url": "https://x.com/systematicls/status/2007822154151375313",
+          "snippet": "Jan 4, 2026 · sysls (@systematicls). 584 likes 20 replies. Introduction A forecast signal is a model that takes in features and predicts future returns. Some systematic trading strategies, at their core, are just pipelines for generating these signals and converting them into portfolio positions. The pipeline is deceptively simple: gather data, transform it into features, use machine learning to generate ..."
+        },
+        {
+          "title": "sysls (@systematicls) on X",
+          "url": "https://x.com/systematicls/status/2040085898898120870",
+          "snippet": "Apr 3, 2026 · sysls (@systematicls). 45 likes 3 replies. Introduction Since I was a teenager, I dreamt of a world where we could scan a human, and the scan would reveal everything we needed to know about that person. Their potential, their character, their propensity and probability of success and the things they would do conditional on success. It seemed like such a waste that human talent was so equally ..."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@tricalt",
+      "category": "個人",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Vasilije (@tricalt) on X",
+          "url": "https://x.com/tricalt/status/2032179887277060476",
+          "snippet": "Vasilije (@tricalt). 79 replies. “not just agents with skills, but agents with skills that can improve over time” Seems that “SKILL.md” is here to stay, however, we haven’t really solved the most fundamental problem around them: Skills are usually static, while the environment around them is not! A skill that worked a few weeks ago can quietly start failing when the codebase changes ..."
+        },
+        {
+          "title": "Vasilije (@tricalt) on X",
+          "url": "https://x.com/tricalt/status/2035050668797407656",
+          "snippet": "Vasilije (@tricalt). 181 likes 5 replies. \"The missing layer that makes agents actually improve over time.\" Earlier this month the industry woke up: models can give us intelligence, but they cannot give us the system around that intelligence to turn it into actual work engines that deliver value. That led to coming up with a new term called “Harness Engineering”. (yes, one more term for ..."
+        },
+        {
+          "title": "Vasilije (@tricalt) on X",
+          "url": "https://x.com/tricalt/status/2013260368609440196",
+          "snippet": "Vasilije (@tricalt). 14 likes 411 views. Here’s the short version: if you treat “memory” as a place to dump everything—logs, embeddings, snippets—you don’t get intelligence, you get an ever-expanding junk drawer. Retrieval slows down, noise overwhelms signal, and agents keep solving the same problems as if they’d never seen them before. As an alternative model, we proposed an ..."
+        },
+        {
+          "title": "Vasilije (@tricalt) on X",
+          "url": "https://x.com/tricalt/status/2044916994877558803",
+          "snippet": "“Different users, different data sources, different agents → all of them contributing to organization’s knowledge base\" Support agents are bad. Especially for deeply technical products! But why? Most teams do not have a support problem. They have a context problem. Open-source AI infra projects like cognee get a lot of questions on daily basis: bugs, feature requests, integrations, edge ..."
+        },
+        {
+          "title": "Yesterday, Anthropic accidentally exposed nearly 500,000 ...",
+          "url": "https://x.com/tricalt/status/2039326494950936808",
+          "snippet": "tricalt (Vasilije). 1 likes 1 replies. Yesterday, Anthropic accidentally exposed nearly 500,000 lines of internal source code to the public. Within hours, developers ..."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@CodevolutionWeb",
+      "category": "開発",
+      "priority": "normal",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Vishwas (@CodevolutionWeb) / Posts / X",
+          "url": "https://x.com/CodevolutionWeb",
+          "snippet": "November 9, 2016 - @CodevolutionWeb · · · Mar 19 · Article · 50 Claude Code Tips and Best Practices For Daily Use · You've been using Claude Code long enough to know it works, and now you're hunting for every edge you can find. I put together 50 Claude Code best practices and tips that help whether you're ..."
+        },
+        {
+          "title": "Vishwas on X: \"You can now go from Figma to SwiftUI with Visual Copilot! Read about it in my latest blog post https://t.co/5IKRYvBkrA\" / X",
+          "url": "https://x.com/CodevolutionWeb/status/1830973556458692669",
+          "snippet": "@CodevolutionWeb · You can now go from Figma to SwiftUI with Visual Copilot! Read about it in my latest blog post · builder.io · Figma to SwiftUI · Convert your Figma design to SwiftUI code using Visual Copilot. Save hours of manual work, streamline your iOS development workflow."
+        },
+        {
+          "title": "Vishwas (Builder.io) on X: \"Started a new series for beginners on React Query! If you're a React dev, highly recommend you give this a try. https://t.co/lDz1X3oUae\" / X",
+          "url": "https://x.com/codevolutionweb/status/1444888379649191936",
+          "snippet": "@CodevolutionWeb · Started a new series for beginners on React Query! If you're a React dev, highly recommend you give this a try. youtube.com · React Query Tutorial - 1 - Introduction · Courses - https://learn.codevolution.dev/ Support UPI - https://support.codevolution.dev/ Support PayPal - https://www.paypal.me/Codevolution Github..."
+        },
+        {
+          "title": "Vishwas (Builder.io) on X: \"Tired of running npm install in a yarn project (or the opposite)? Say good bye to that package manager chaos with `ni` Read more of what you can do with ni in my blog post: https://t.co/xVz0ieBtNj https://t.co/dIu2mTi6ti\" / X",
+          "url": "https://x.com/CodevolutionWeb/status/1628420412777570305",
+          "snippet": "@CodevolutionWeb · Tired of running npm install in a yarn project (or the opposite)? Say good bye to that package manager chaos with `ni` Read more of what you can do with ni in my blog post: https://builder.io/blog/goodbye-package-manager-chaos… · 7:44 AM ·"
+        },
+        {
+          "title": "Vishwas (Builder.io) on X: \"RT @BroOfMahonri: @Irem__Victor I've tried them all, and find cursor to be my always goto with claude. However, builder io is fast becoming…\" / X",
+          "url": "https://x.com/CodevolutionWeb/status/1964954808714187252",
+          "snippet": "@builderio http://texting.boxels.com where I'm tempted to move from 95% cursor app, to 75% builer io."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@AkshayxSaini",
+      "category": "開発",
+      "priority": "normal",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "From May 2026 onwards, interview process in big tech (FAANG ...",
+          "url": "https://x.com/akshaymarch7/status/2039281011608146132",
+          "snippet": "Akshay Saini (@akshaymarch7). 860 likes 190 replies. From May 2026 onwards, interview process in big tech (FAANG) companies is changing completely. This major change is because of the insane amount of cheating happening in interviews lately. Here’s what’s coming: 0. No DSA questions will be asked - With AI doing most of the work, it hardly matters if you can invert a binary tree anymore. 1 ..."
+        },
+        {
+          "title": "Indian podcasts have become completely unwatchable now. The ...",
+          "url": "https://x.com/akshaymarch7/status/2049401114257391712",
+          "snippet": "Akshay Saini (@akshaymarch7). 175 likes 22 replies. Indian podcasts have become completely unwatchable now. The quality drop in just 2 years is actually criminal."
+        },
+        {
+          "title": "I’ve pulled out 50% of my portfolio from the Indian stock ...",
+          "url": "https://x.com/akshaymarch7/status/2041813673883398200",
+          "snippet": "Akshay Saini (@akshaymarch7). 166 replies. I’ve pulled out 50% of my portfolio from the Indian stock market today!"
+        },
+        {
+          "title": "I made a big miskate during my college life. I thought I had ...",
+          "url": "https://x.com/akshaymarch7/status/2048678617803309300",
+          "snippet": "Akshay Saini (@akshaymarch7). 14 likes 435 views. I made a big miskate during my college life. I thought I had time. Time to figure things out later. Time to get serious in final year. Time to “start DSA properly” when placements season comes closer. But here’s the uncomfortable truth I learned the hard way… Time doesn’t suddenly appear. Pressure does. And when pressure comes, it is ..."
+        },
+        {
+          "title": "Akshay Saini (@akshaymarch7) on X",
+          "url": "https://x.com/akshaymarch7/status/2024151123310112800",
+          "snippet": "Akshay Saini (@akshaymarch7). 160 likes 14 replies. Almost every private engineering college or university in India today is basically a marketing company. Their focus is not education, it’s selling seats. The whole year goes into planning how to attract the next batch of students. Hoardings, ads, flashy campuses, fake placement numbers. Inside the classrooms, the reality is completely ..."
+        }
+      ]
+    }
+  ],
+  "total_sources": 14,
+  "total_results": 70
+}
