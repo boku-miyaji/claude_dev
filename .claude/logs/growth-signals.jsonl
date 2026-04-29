@@ -1603,3 +1603,15 @@
 {"ts":"2026-04-29T23:09:11+09:00","signal":"raw_prompt","prompt":"hosted MCPはセキュリティ的には？とあるそしきないだけでつかいたいとか権限とかは？\n"}
 {"ts":"2026-04-29T23:09:11+09:00","signal":"raw_prompt","prompt":"hosted MCPはセキュリティ的には？とあるそしきないだけでつかいたいとか権限とかは？\n"}
 {"ts":"2026-04-29T23:13:05+09:00","signal":"raw_prompt","prompt":"Q1, acess subscription, RG: aces_project_rikyu_sales_proposals, azurecliまだ。\nQ2, 最初はportalで行こうか。並行してbicepでうごくようにしたい。\nQ3, mvp用のディレクトリを作って、その中に各のディレクトリを作成して\n"}
+{"ts":"2026-04-29T23:13:05+09:00","signal":"raw_prompt","prompt":"Q1, acess subscription, RG: aces_project_rikyu_sales_proposals, azurecliまだ。\nQ2, 最初はportalで行こうか。並行してbicepでうごくようにしたい。\nQ3, mvp用のディレクトリを作って、その中に各のディレクトリを作成して\n"}
+{"ts":"2026-04-29T23:16:28+09:00","signal":"raw_prompt","prompt":"function 経由で行かないといけない。 @aces-rikyu-sales-proposals-poc/  system-specの設計でMCPサーバー化を前提にした設計をして欲しい。アルゴリズムのところら辺かな。\n"}
+{"ts":"2026-04-29T23:16:28+09:00","signal":"raw_prompt","prompt":"function 経由で行かないといけない。 @aces-rikyu-sales-proposals-poc/  system-specの設計でMCPサーバー化を前提にした設計をして欲しい。アルゴリズムのところら辺かな。\n"}
+{"ts":"2026-04-29T23:24:18+09:00","signal":"raw_prompt","prompt":"docsではなく、system-spec　配下のものをみて設計したい。\n"}
+{"ts":"2026-04-29T23:25:31+09:00","signal":"raw_prompt","prompt":"stepA　OK\nazure cli はubuntuでもいける？\n"}
+{"ts":"2026-04-29T23:27:59+09:00","signal":"raw_prompt","prompt":"claudeの設定とかがこのコンテナでは引き継がれない？ディレクトリが違うから\n"}
+{"ts":"2026-04-29T23:28:07+09:00","signal":"raw_prompt","prompt":"claudeの設定とかがこの新しいコンテナでは引き継がれない？ディレクトリが違うから\n"}
+{"ts":"2026-04-29T23:24:18+09:00","signal":"raw_prompt","prompt":"docsではなく、system-spec　配下のものをみて設計したい。\n"}
+{"ts":"2026-04-29T23:25:31+09:00","signal":"raw_prompt","prompt":"stepA　OK\nazure cli はubuntuでもいける？\n"}
+{"ts":"2026-04-29T23:27:59+09:00","signal":"raw_prompt","prompt":"claudeの設定とかがこのコンテナでは引き継がれない？ディレクトリが違うから\n"}
+{"ts":"2026-04-29T23:28:07+09:00","signal":"raw_prompt","prompt":"claudeの設定とかがこの新しいコンテナでは引き継がれない？ディレクトリが違うから\n"}
+{"ts":"2026-04-29T23:31:04+09:00","signal":"raw_prompt","prompt":"このdevcontainerに標準でいれれる？\n"}

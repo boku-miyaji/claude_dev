@@ -7,6 +7,11 @@
     }
   },
   "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "installBicep": true
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -16,7 +21,9 @@
         "ms-python.python",
         "ms-python.isort",
         "ms-python.black-formatter",
-        "anthropic.claude-code"
+        "anthropic.claude-code",
+        "ms-azuretools.vscode-bicep",
+        "ms-vscode.azurecli"
       ],
       "settings": {
         "editor.formatOnSave": true,
