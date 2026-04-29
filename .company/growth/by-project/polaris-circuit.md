@@ -1,9 +1,11 @@
 # growth_events — `polaris-circuit`
 
-Total: **28**
+Total: **30**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-29 | `decision` | active | [polaris-circuit: gemini-3-pro-previewでパイプライン検証開始](../2026/04/20260429-decision-polaris-circuit-gemini-3-pro-previewでパイプライン検証開始.md) |
+| 2026-04-28 | `decision` | active | [polaris-circuit の散らかった開発を整理して検証再開](../2026/04/20260428-decision-polaris-circuit-の散らかった開発を整理して検証再開.md) |
 | 2026-04-28 | `decision` | active | [polaris-circuit: 散らかった開発の整理着手](../2026/04/20260428-decision-polaris-circuit-散らかった開発の整理着手.md) |
 | 2026-04-28 | `decision` | active | [polaris-circuit 検証再開とブランチ整理](../2026/04/20260428-decision-polaris-circuit-検証再開とブランチ整理.md) |
 | 2026-04-17 | `decision` | active | [DIVE流用の回路デモをPoCとして構築](../2026/04/20260417-decision-dive流用の回路デモをpocとして構築.md) |

@@ -1,9 +1,12 @@
 # growth_events — `rikyu`
 
-Total: **51**
+Total: **54**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-29 | `decision` | active | [りそな案件: ACES Meet連携はFY26手動着手](../2026/04/20260429-decision-りそな案件-aces-meet連携はfy26手動着手.md) |
+| 2026-04-29 | `decision` | active | [りそな案件: 7軸評価フレームワークと5つの勝ち筋ループの統合整理](../2026/04/20260429-decision-りそな案件-7軸評価フレームワークと5つの勝ち筋ループの統合整理.md) |
+| 2026-04-28 | `decision` | active | [rikyu を Azure monorepo + Container Apps で進める](../2026/04/20260428-decision-rikyu-を-azure-monorepo-container-apps-で進める.md) |
 | 2026-04-28 | `decision` | active | [rikyu: Azure AI Search + PostgreSQL採用](../2026/04/20260428-decision-rikyu-azure-ai-search-postgresql採用.md) |
 | 2026-04-28 | `decision` | active | [rikyu: monorepo構成 + Container Apps採用](../2026/04/20260428-decision-rikyu-monorepo構成-container-apps採用.md) |
 | 2026-04-28 | `decision` | active | [rikyu インフラを Azure monorepo 構成で進める](../2026/04/20260428-decision-rikyu-インフラを-azure-monorepo-構成で進める.md) |

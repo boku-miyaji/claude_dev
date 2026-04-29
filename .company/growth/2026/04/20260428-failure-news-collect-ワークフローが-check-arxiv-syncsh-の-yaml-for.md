@@ -3,7 +3,7 @@
 - **type**: `failure`
 - **date**: 2026-04-28
 - **category**: devops / **severity**: high
-- **status**: active
+- **status**: resolved
 - **source**: manual
 - **tags**: claude-dev, github-actions, batch, yaml, silent-failure, news-collect, intelligence, manual-record
 
@@ -14,5 +14,8 @@
 
 ## root_cause
 (1) check-arxiv-sync.sh が YAML format に regex 依存。(2) auto-save が yaml ファイルを reformat する副作用。(3) growth_events に記録された batch failure が /company ブリーフィングで surface されていない（記録→表示が切れている）
+
+## countermeasure
+(1) commit 44389e6c: scripts/intelligence/check-arxiv-sync.sh を PyYAML safe_load 化し flow/block 両方の YAML format に対応。(2) commit 14a9f6a6: /company ブリーフィングで growth_events.failure (severity=high, 3日以内) を surface するよう SKILL.md を更新。記録↔表示の断絶を解消。次回 schedule run (UTC 06:00 / 22:00) で動作検証。
 
 <!-- id: 8e7abbc6-5587-4082-b7a5-a23c29b046a3 -->

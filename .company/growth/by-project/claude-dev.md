@@ -1,15 +1,20 @@
 # growth_events — `claude-dev`
 
-Total: **261**
+Total: **266**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-28 | `countermeasure` | active | [auto-push を current branch push に変更](../2026/04/20260428-countermeasure-auto-push-を-current-branch-push-に変更.md) |
+| 2026-04-28 | `failure` | active | [[batch failure] Intelligence Collection (2026-04-28)](../2026/04/20260428-failure-batch-failure-intelligence-collection-2026-04-28.md) |
+| 2026-04-28 | `failure` | active | [[batch failure] News Collection (2026-04-28)](../2026/04/20260428-failure-batch-failure-news-collection-2026-04-28.md) |
+| 2026-04-28 | `countermeasure` | active | [情報収集部 collect.py を 公式RSS+arXiv API+24h縛り+前回差分+Claude CLI(opus)構成にリファクタ](../2026/04/20260428-countermeasure-情報収集部-collectpy-を-公式rssarxiv-api24h縛り前回差分claude-cl.md) |
+| 2026-04-28 | `failure` | active | [/company が情報収集部 agent に渡すプロンプトを Claude judgement で再構築し、リサーチ部規約を混入させた](../2026/04/20260428-failure-company-が情報収集部-agent-に渡すプロンプトを-claude-judgement-で再.md) |
 | 2026-04-28 | `failure` | active | [情報収集部の出力が古く新規性ゼロ](../2026/04/20260428-failure-情報収集部の出力が古く新規性ゼロ.md) |
 | 2026-04-28 | `countermeasure` | active | [YAML 検証スクリプトは regex でなく PyYAML safe_load で読む（format に依存しない）](../2026/04/20260428-countermeasure-yaml-検証スクリプトは-regex-でなく-pyyaml-safe-load-で読むformat.md) |
-| 2026-04-28 | `failure` | active | [news-collect ワークフローが check-arxiv-sync.sh の YAML format 想定不一致で 5日間 silent failure](../2026/04/20260428-failure-news-collect-ワークフローが-check-arxiv-syncsh-の-yaml-for.md) |
+| 2026-04-28 | `failure` | resolved | [news-collect ワークフローが check-arxiv-sync.sh の YAML format 想定不一致で 5日間 silent failure](../2026/04/20260428-failure-news-collect-ワークフローが-check-arxiv-syncsh-の-yaml-for.md) |
+| 2026-04-27 | `failure` | resolved | [巨大ファイルがauto-saveでpush rejectされた](../2026/04/20260427-failure-巨大ファイルがauto-saveでpush-rejectされた.md) |
 | 2026-04-27 | `countermeasure` | active | [auto-pushに巨大ファイル/build artifactsガードを追加](../2026/04/20260427-countermeasure-auto-pushに巨大ファイルbuild-artifactsガードを追加.md) |
-| 2026-04-27 | `failure` | active | [巨大ファイルがauto-saveでpush rejectされた](../2026/04/20260427-failure-巨大ファイルがauto-saveでpush-rejectされた.md) |
-| 2026-04-27 | `failure` | active | [[batch failure] News Collection (2026-04-26)](../2026/04/20260427-failure-batch-failure-news-collection-2026-04-26.md) |
+| 2026-04-27 | `failure` | resolved | [[batch failure] News Collection (2026-04-26)](../2026/04/20260427-failure-batch-failure-news-collection-2026-04-26.md) |
 | 2026-04-27 | `failure` | active | [[batch failure] Morning Quote (Daily) (2026-04-26)](../2026/04/20260427-failure-batch-failure-morning-quote-daily-2026-04-26.md) |
 | 2026-04-27 | `failure` | active | [[batch failure] Narrator Update (Daily) (2026-04-27)](../2026/04/20260427-failure-batch-failure-narrator-update-daily-2026-04-27.md) |
 | 2026-04-27 | `failure` | active | [[batch failure] Intelligence Collection (2026-04-27)](../2026/04/20260427-failure-batch-failure-intelligence-collection-2026-04-27.md) |
