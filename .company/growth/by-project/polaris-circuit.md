@@ -1,9 +1,17 @@
 # growth_events — `polaris-circuit`
 
-Total: **30**
+Total: **38**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-30 | `failure` | active | [Docker build失敗 (kicad-cli/python3)](../2026/04/20260430-failure-docker-build失敗-kicad-clipython3.md) |
+| 2026-04-30 | `failure` | active | [polaris-circuit Dockerfile ビルド失敗](../2026/04/20260430-failure-polaris-circuit-dockerfile-ビルド失敗.md) |
+| 2026-04-30 | `failure` | active | [KiCad 8でDockerビルド失敗・Dockerfile警告](../2026/04/20260430-failure-kicad-8でdockerビルド失敗dockerfile警告.md) |
+| 2026-04-30 | `failure` | active | [Dockerfile kicad-cli インストール失敗](../2026/04/20260430-failure-dockerfile-kicad-cli-インストール失敗.md) |
+| 2026-04-30 | `failure` | active | [Dockerfile apt-get install で依存解決失敗](../2026/04/20260430-failure-dockerfile-apt-get-install-で依存解決失敗.md) |
+| 2026-04-30 | `failure` | active | [Dockerfile-with-features build失敗](../2026/04/20260430-failure-dockerfile-with-features-build失敗.md) |
+| 2026-04-30 | `failure` | active | [Dockerfile-with-features apt-get install 失敗](../2026/04/20260430-failure-dockerfile-with-features-apt-get-install-失敗.md) |
+| 2026-04-29 | `decision` | active | [polaris-circuit: Gemini 3 Pro Preview でパイプライン検証開始](../2026/04/20260429-decision-polaris-circuit-gemini-3-pro-preview-でパイプライン検証開始.md) |
 | 2026-04-29 | `decision` | active | [polaris-circuit: gemini-3-pro-previewでパイプライン検証開始](../2026/04/20260429-decision-polaris-circuit-gemini-3-pro-previewでパイプライン検証開始.md) |
 | 2026-04-28 | `decision` | active | [polaris-circuit の散らかった開発を整理して検証再開](../2026/04/20260428-decision-polaris-circuit-の散らかった開発を整理して検証再開.md) |
 | 2026-04-28 | `decision` | active | [polaris-circuit: 散らかった開発の整理着手](../2026/04/20260428-decision-polaris-circuit-散らかった開発の整理着手.md) |

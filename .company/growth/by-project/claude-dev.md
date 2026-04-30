@@ -1,12 +1,25 @@
 # growth_events — `claude-dev`
 
-Total: **266**
+Total: **279**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-30 | `decision` | active | [作業環境投資 (椅子・キーボード相棒選定)](../2026/04/20260430-decision-作業環境投資-椅子キーボード相棒選定.md) |
+| 2026-04-30 | `decision` | active | [「社長」呼称を恒久的に廃止](../2026/04/20260430-decision-社長呼称を恒久的に廃止.md) |
+| 2026-04-30 | `failure` | active | [auto-pushアラート再発 (SSH/DNS解決失敗)](../2026/04/20260430-failure-auto-pushアラート再発-sshdns解決失敗.md) |
+| 2026-04-30 | `countermeasure` | active | [「社長」呼称を廃止、二人称は『あなた』](../2026/04/20260430-countermeasure-社長呼称を廃止二人称はあなた.md) |
+| 2026-04-30 | `failure` | active | [auto-push が SSH 名前解決失敗で20件未push](../2026/04/20260430-failure-auto-push-が-ssh-名前解決失敗で20件未push.md) |
+| 2026-04-30 | `decision` | active | [Zenn記事「LLM時代のエンジニアリング論」企画](../2026/04/20260430-decision-zenn記事llm時代のエンジニアリング論企画.md) |
+| 2026-04-30 | `decision` | active | [「社長」呼称を全面廃止](../2026/04/20260430-decision-社長呼称を全面廃止.md) |
+| 2026-04-30 | `failure` | active | [Azure CLI macOSインストール失敗](../2026/04/20260430-failure-azure-cli-macosインストール失敗.md) |
+| 2026-04-30 | `decision` | active | [Zenn記事「LLM時代のエンジニア論」執筆方針](../2026/04/20260430-decision-zenn記事llm時代のエンジニア論執筆方針.md) |
+| 2026-04-30 | `failure` | active | [Azure CLI インストール経路が機能しない](../2026/04/20260430-failure-azure-cli-インストール経路が機能しない.md) |
+| 2026-04-29 | `failure` | active | [[batch failure] Intelligence Collection (2026-04-29)](../2026/04/20260429-failure-batch-failure-intelligence-collection-2026-04-29.md) |
+| 2026-04-29 | `failure` | active | [[batch failure] News Collection (2026-04-29)](../2026/04/20260429-failure-batch-failure-news-collection-2026-04-29.md) |
+| 2026-04-29 | `countermeasure` | active | [Intelligence/News Collection バッチの連続失敗を修正](../2026/04/20260429-countermeasure-intelligencenews-collection-バッチの連続失敗を修正.md) |
 | 2026-04-28 | `countermeasure` | active | [auto-push を current branch push に変更](../2026/04/20260428-countermeasure-auto-push-を-current-branch-push-に変更.md) |
-| 2026-04-28 | `failure` | active | [[batch failure] Intelligence Collection (2026-04-28)](../2026/04/20260428-failure-batch-failure-intelligence-collection-2026-04-28.md) |
-| 2026-04-28 | `failure` | active | [[batch failure] News Collection (2026-04-28)](../2026/04/20260428-failure-batch-failure-news-collection-2026-04-28.md) |
+| 2026-04-28 | `failure` | resolved | [[batch failure] Intelligence Collection (2026-04-28)](../2026/04/20260428-failure-batch-failure-intelligence-collection-2026-04-28.md) |
+| 2026-04-28 | `failure` | resolved | [[batch failure] News Collection (2026-04-28)](../2026/04/20260428-failure-batch-failure-news-collection-2026-04-28.md) |
 | 2026-04-28 | `countermeasure` | active | [情報収集部 collect.py を 公式RSS+arXiv API+24h縛り+前回差分+Claude CLI(opus)構成にリファクタ](../2026/04/20260428-countermeasure-情報収集部-collectpy-を-公式rssarxiv-api24h縛り前回差分claude-cl.md) |
 | 2026-04-28 | `failure` | active | [/company が情報収集部 agent に渡すプロンプトを Claude judgement で再構築し、リサーチ部規約を混入させた](../2026/04/20260428-failure-company-が情報収集部-agent-に渡すプロンプトを-claude-judgement-で再.md) |
 | 2026-04-28 | `failure` | active | [情報収集部の出力が古く新規性ゼロ](../2026/04/20260428-failure-情報収集部の出力が古く新規性ゼロ.md) |
@@ -17,8 +30,8 @@ Total: **266**
 | 2026-04-27 | `failure` | resolved | [[batch failure] News Collection (2026-04-26)](../2026/04/20260427-failure-batch-failure-news-collection-2026-04-26.md) |
 | 2026-04-27 | `failure` | active | [[batch failure] Morning Quote (Daily) (2026-04-26)](../2026/04/20260427-failure-batch-failure-morning-quote-daily-2026-04-26.md) |
 | 2026-04-27 | `failure` | active | [[batch failure] Narrator Update (Daily) (2026-04-27)](../2026/04/20260427-failure-batch-failure-narrator-update-daily-2026-04-27.md) |
-| 2026-04-27 | `failure` | active | [[batch failure] Intelligence Collection (2026-04-27)](../2026/04/20260427-failure-batch-failure-intelligence-collection-2026-04-27.md) |
-| 2026-04-27 | `failure` | active | [[batch failure] News Collection (2026-04-27)](../2026/04/20260427-failure-batch-failure-news-collection-2026-04-27.md) |
+| 2026-04-27 | `failure` | resolved | [[batch failure] Intelligence Collection (2026-04-27)](../2026/04/20260427-failure-batch-failure-intelligence-collection-2026-04-27.md) |
+| 2026-04-27 | `failure` | resolved | [[batch failure] News Collection (2026-04-27)](../2026/04/20260427-failure-batch-failure-news-collection-2026-04-27.md) |
 | 2026-04-27 | `failure` | active | [Edge Function /calendars が OAuth スコープ不足で 403](../2026/04/20260427-failure-edge-function-calendars-が-oauth-スコープ不足で-403.md) |
 | 2026-04-27 | `countermeasure` | active | [auto-push.sh に build/cache 水際ブロック + .gitignore 必須項目をルール化](../2026/04/20260427-countermeasure-auto-pushsh-に-buildcache-水際ブロック-gitignore-必須項目をルール.md) |
 | 2026-04-27 | `failure` | active | [auto-save が node_modules / .next を tracked → push 100MB reject](../2026/04/20260427-failure-auto-save-が-node-modules-next-を-tracked-push-100mb.md) |

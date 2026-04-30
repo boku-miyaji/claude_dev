@@ -2,15 +2,18 @@
 
 - **type**: `decision`
 - **date**: 2026-04-29
-- **category**: quality / **severity**: medium
+- **category**: tooling / **severity**: low
 - **status**: active
-- **source**: detector
-- **tags**: focus-you, ui, auto-detected, daily-batch, llm-classified
+- **source**: daily-digest
+- **tags**: focus-you, ui, auto-detected, daily-digest
 
 ## what_happened
-manualタブで再生成したコンテンツに対して編集できる機能を追加し、編集履歴をログとして蓄積する方針を決定した。
+manualタブの再生成結果について、生成後の編集を可能にし、編集履歴をログとして残す方針を決定・実装。
+
+## countermeasure
+編集UI＋履歴ログの追加
 
 ## result
-再生成結果の編集UIと、編集差分のログ保存を実装する方針。誰がいつどう変えたかを後追いできるようにする。
+再生成結果の手直し運用が可能に
 
-<!-- id: fe0a09ec-8793-46ea-a838-9c15d63dc3e5 -->
+<!-- id: f02be225-a8b8-4442-aca7-c280299afb34 -->

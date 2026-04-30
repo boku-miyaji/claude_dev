@@ -1,9 +1,15 @@
 # growth_events — `rikyu`
 
-Total: **54**
+Total: **60**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-30 | `decision` | active | [Azure pg flexible server構成の再検討](../2026/04/20260430-decision-azure-pg-flexible-server構成の再検討.md) |
+| 2026-04-30 | `decision` | active | [Azure PostgreSQL Flexible Server 構成見直し](../2026/04/20260430-decision-azure-postgresql-flexible-server-構成見直し.md) |
+| 2026-04-30 | `decision` | active | [Azure PostgreSQL からMS製/NoSQL検討へ転換](../2026/04/20260430-decision-azure-postgresql-からms製nosql検討へ転換.md) |
+| 2026-04-30 | `decision` | active | [Azure DB は PostgreSQL Flexible Server を再検討（コスト高）](../2026/04/20260430-decision-azure-db-は-postgresql-flexible-server-を再検討コスト高.md) |
+| 2026-04-30 | `failure` | active | [Azure CLI認証エラー53003](../2026/04/20260430-failure-azure-cli認証エラー53003.md) |
+| 2026-04-29 | `decision` | active | [りそな案件: 7軸評価フレームと5勝ち筋ルートの統合整理](../2026/04/20260429-decision-りそな案件-7軸評価フレームと5勝ち筋ルートの統合整理.md) |
 | 2026-04-29 | `decision` | active | [りそな案件: ACES Meet連携はFY26手動着手](../2026/04/20260429-decision-りそな案件-aces-meet連携はfy26手動着手.md) |
 | 2026-04-29 | `decision` | active | [りそな案件: 7軸評価フレームワークと5つの勝ち筋ループの統合整理](../2026/04/20260429-decision-りそな案件-7軸評価フレームワークと5つの勝ち筋ループの統合整理.md) |
 | 2026-04-28 | `decision` | active | [rikyu を Azure monorepo + Container Apps で進める](../2026/04/20260428-decision-rikyu-を-azure-monorepo-container-apps-で進める.md) |

@@ -3,7 +3,7 @@
 - **type**: `failure`
 - **date**: 2026-04-27
 - **category**: devops / **severity**: high
-- **status**: active
+- **status**: resolved
 - **source**: manual
 - **tags**: claude-dev, github-actions, batch, silent-failure, manual-record
 

@@ -3,40 +3,40 @@
 > Supabase `growth_events` テーブルの読み取り専用ミラー。
 > 毎日 `scripts/growth/export-mirror.sh` で再生成される。**手編集しない**（次回上書きされる）。
 
-- 総レコード数: **520**
+- 総レコード数: **549**
 
 ## PJ別
 
 - [agent-harness](by-project/agent-harness.md) — 29件
-- [claude-dev](by-project/claude-dev.md) — 266件
-- [focus-you](by-project/focus-you.md) — 141件
-- [polaris-circuit](by-project/polaris-circuit.md) — 30件
-- [rikyu](by-project/rikyu.md) — 54件
+- [claude-dev](by-project/claude-dev.md) — 279件
+- [focus-you](by-project/focus-you.md) — 143件
+- [polaris-circuit](by-project/polaris-circuit.md) — 38件
+- [rikyu](by-project/rikyu.md) — 60件
 
 ## 最近の20件
 
 | date | type | project | title |
 |---|---|---|---|
-| 2026-04-29 | `decision` | focus-you | manualタブ再生成結果の編集機能と編集履歴ログ追加 |
-| 2026-04-29 | `decision` | polaris-circuit | polaris-circuit: gemini-3-pro-previewでパイプライン検証開始 |
-| 2026-04-29 | `decision` | rikyu | りそな案件: ACES Meet連携はFY26手動着手 |
-| 2026-04-29 | `decision` | rikyu | りそな案件: 7軸評価フレームワークと5つの勝ち筋ループの統合整理 |
-| 2026-04-28 | `countermeasure` | claude-dev | auto-push を current branch push に変更 |
-| 2026-04-28 | `decision` | rikyu | rikyu を Azure monorepo + Container Apps で進める |
-| 2026-04-28 | `decision` | polaris-circuit | polaris-circuit の散らかった開発を整理して検証再開 |
-| 2026-04-28 | `failure` | claude-dev | [batch failure] Intelligence Collection (2026-04-28) |
-| 2026-04-28 | `failure` | claude-dev | [batch failure] News Collection (2026-04-28) |
-| 2026-04-28 | `countermeasure` | claude-dev | 情報収集部 collect.py を 公式RSS+arXiv API+24h縛り+前回差分+Claude CLI(opus)構成にリファクタ |
-| 2026-04-28 | `failure` | claude-dev | /company が情報収集部 agent に渡すプロンプトを Claude judgement で再構築し、リサーチ部規約を混入させた |
-| 2026-04-28 | `decision` | polaris-circuit | polaris-circuit: 散らかった開発の整理着手 |
-| 2026-04-28 | `failure` | claude-dev | 情報収集部の出力が古く新規性ゼロ |
-| 2026-04-28 | `failure` | focus-you | focus-you: 日記からの自動チェックが反映されない |
-| 2026-04-28 | `decision` | rikyu | rikyu: Azure AI Search + PostgreSQL採用 |
-| 2026-04-28 | `decision` | rikyu | rikyu: monorepo構成 + Container Apps採用 |
-| 2026-04-28 | `decision` | polaris-circuit | polaris-circuit 検証再開とブランチ整理 |
-| 2026-04-28 | `decision` | rikyu | rikyu インフラを Azure monorepo 構成で進める |
-| 2026-04-28 | `failure` | focus-you | focus-you 観葉植物水やり habit のチェック不能 |
-| 2026-04-28 | `decision` | rikyu | rikyu アーキテクチャ: monorepo + FE/BE 分離 + TS統一 |
+| 2026-04-30 | `decision` | claude-dev | 作業環境投資 (椅子・キーボード相棒選定) |
+| 2026-04-30 | `decision` | claude-dev | 「社長」呼称を恒久的に廃止 |
+| 2026-04-30 | `decision` | rikyu | Azure pg flexible server構成の再検討 |
+| 2026-04-30 | `failure` | claude-dev | auto-pushアラート再発 (SSH/DNS解決失敗) |
+| 2026-04-30 | `failure` | polaris-circuit | Docker build失敗 (kicad-cli/python3) |
+| 2026-04-30 | `countermeasure` | claude-dev | 「社長」呼称を廃止、二人称は『あなた』 |
+| 2026-04-30 | `decision` | rikyu | Azure PostgreSQL Flexible Server 構成見直し |
+| 2026-04-30 | `failure` | polaris-circuit | polaris-circuit Dockerfile ビルド失敗 |
+| 2026-04-30 | `failure` | claude-dev | auto-push が SSH 名前解決失敗で20件未push |
+| 2026-04-30 | `decision` | claude-dev | Zenn記事「LLM時代のエンジニアリング論」企画 |
+| 2026-04-30 | `decision` | claude-dev | 「社長」呼称を全面廃止 |
+| 2026-04-30 | `failure` | claude-dev | Azure CLI macOSインストール失敗 |
+| 2026-04-30 | `failure` | polaris-circuit | KiCad 8でDockerビルド失敗・Dockerfile警告 |
+| 2026-04-30 | `decision` | claude-dev | Zenn記事「LLM時代のエンジニア論」執筆方針 |
+| 2026-04-30 | `failure` | focus-you | ブリーフィングのカレンダー予定が実態と乖離 |
+| 2026-04-30 | `failure` | claude-dev | Azure CLI インストール経路が機能しない |
+| 2026-04-30 | `failure` | polaris-circuit | Dockerfile kicad-cli インストール失敗 |
+| 2026-04-30 | `decision` | rikyu | Azure PostgreSQL からMS製/NoSQL検討へ転換 |
+| 2026-04-30 | `decision` | rikyu | Azure DB は PostgreSQL Flexible Server を再検討（コスト高） |
+| 2026-04-30 | `failure` | rikyu | Azure CLI認証エラー53003 |
 
 ## 運用ルール
 - マスター: Supabase `growth_events`
