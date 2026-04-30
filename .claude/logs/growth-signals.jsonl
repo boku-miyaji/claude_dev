@@ -1838,3 +1838,4 @@
 {"ts":"2026-04-30T13:39:41+09:00","signal":"raw_prompt","prompt":"log analytics workspaceがない。\n"}
 {"ts":"2026-04-30T13:39:41+09:00","signal":"raw_prompt","prompt":"log analytics workspaceがない。\n"}
 {"ts":"2026-04-30T13:46:48+09:00","signal":"raw_prompt","prompt":"下記はどの画面から？\n重要: 「Resource Mode」で Workspace-based を選んでください。\n"}
+{"ts":"2026-04-30T13:46:48+09:00","signal":"raw_prompt","prompt":"下記はどの画面から？\n重要: 「Resource Mode」で Workspace-based を選んでください。\n"}
