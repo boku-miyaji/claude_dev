@@ -29,7 +29,7 @@
   user_id uuid primary key references auth.users(id) on delete cascade,
   ```
   **PRIMARY KEY が user_id**。1ユーザー = 1 Google アカウント = 1 refresh_token しか保存できない。複数 Google アカウントの並存は構造的に不可能。
-- 現在保存されている refresh_token は acesinc のもの（過去の sync 件数で推定）。yumzzz / yuta.miyaji.xyz の予定が取れていたのは、**acesinc アカウントが他カレンダーへの読み権限を Google 側 calendar-sharing で持っているから**。Auto Memory にある「acesinc/xyz/primary/gangsters の4カレンダー全取得」は、3アカウント並列 OAuth ではなく、**1アカウントから sharing 経由で複数カレンダーを横読みする構造**。
+- 現在保存されている refresh_token は **yumzzz.my6223@gmail.com のもの**（`auth.users` 突合で確認済み、本書初版で acesinc と推定したのは誤り）。acesinc / yuta.miyaji.xyz の予定が取れていたのは、**yumzzz アカウントが Google 側 calendar-sharing で他2カレンダーへの読み権限を持っているから**。Auto Memory にある「acesinc/xyz/primary/gangsters の4カレンダー全取得」は、3アカウント並列 OAuth ではなく、**yumzzz 1アカウントから sharing 経由で複数カレンダーを横読みする構造**。
 
 **直近の関連変更:**
 - 2026-04-27 23:32 JST: commit `3a72b970` で `calendar.calendarlist.readonly` scope を追加。コミットメッセージに「Existing users need to re-authenticate. **google_tokens row was deleted to force the re-auth flow.**」と明記。
