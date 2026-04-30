@@ -21,24 +21,43 @@ interface Invoice { id: string; client_name: string; amount: number; invoice_dat
 interface Expense { id: string; description: string; amount: number; expense_date: string; category: string; is_recurring?: boolean; recurring_status?: string; recurring_interval?: string; service_name?: string; is_deductible?: boolean }
 interface Project { id: string; name: string; client_name: string; status: string; contract_type: string; default_rate?: number; budget?: number; start_date?: string; end_date?: string }
 interface WishlistItem { id: string; title: string; amount: number; status: string; category?: string; priority?: string; url?: string; description?: string; purchased_at?: string }
-interface TaxPayment { id: string; tax_type: string; due_date: string; amount: number; status: string }
+interface TaxPayment { id: string; tax_type: string; due_date: string; amount: number; status: string; notes?: string }
 
 // ============================================================
 // Tax Calculator
 // ============================================================
 
 interface TaxResult {
-  revenue: number; expense: number; income: number; taxableBase: number; taxableIncome: number
-  incomeTax: number; reconstructionTax: number; residentTax: number; businessTax: number
+  revenue: number; expense: number; income: number
+  salaryIncome: number; salaryDeduction: number; salaryTaxable: number; socialInsurance: number; withheldTax: number
+  taxableBase: number; taxableIncome: number
+  incomeTax: number; reconstructionTax: number; additionalIncomeTax: number
+  residentTax: number; businessTax: number
   totalTax: number; takeHome: number
 }
 
-function calcTax(revenue: number, expense: number): TaxResult {
+function calcSalaryDeduction(salary: number): number {
+  if (salary <= 0) return 0
+  if (salary <= 1625000) return Math.min(salary, 550000)
+  if (salary <= 1800000) return Math.floor(salary * 0.4 - 100000)
+  if (salary <= 3600000) return Math.floor(salary * 0.3 + 80000)
+  if (salary <= 6600000) return Math.floor(salary * 0.2 + 440000)
+  if (salary <= 8500000) return Math.floor(salary * 0.1 + 1100000)
+  return 1950000
+}
+
+function calcTax(
+  revenue: number, expense: number,
+  salaryIncome = 0, socialInsurance = 0, isBusinessTaxable = false, withheldTax = 0
+): TaxResult {
   const income = revenue - expense
   const blueDeduction = 650000
   const basicDeduction = 480000
-  const taxableBase = Math.max(0, income - blueDeduction)
-  const taxableIncome = Math.max(0, taxableBase - basicDeduction)
+  const businessTaxableBase = Math.max(0, income - blueDeduction)
+  const salaryDeduction = calcSalaryDeduction(salaryIncome)
+  const salaryTaxable = Math.max(0, salaryIncome - salaryDeduction)
+  const taxableBase = businessTaxableBase + salaryTaxable
+  const taxableIncome = Math.max(0, taxableBase - basicDeduction - socialInsurance)
   const brackets: [number, number, number][] = [
     [1950000, 0.05, 0], [3300000, 0.10, 97500], [6950000, 0.20, 427500],
     [9000000, 0.23, 636000], [18000000, 0.33, 1536000], [40000000, 0.40, 2796000], [Infinity, 0.45, 4796000]
@@ -48,11 +67,18 @@ function calcTax(revenue: number, expense: number): TaxResult {
     if (taxableIncome <= limit) { incomeTax = Math.floor(taxableIncome * rate - deduction); break }
   }
   const reconstructionTax = Math.floor(incomeTax * 0.021)
+  const additionalIncomeTax = Math.max(0, incomeTax + reconstructionTax - withheldTax)
   const residentTax = Math.floor(taxableIncome * 0.10) + 5000
-  const businessTax = income > 2900000 ? Math.floor((income - 2900000) * 0.05) : 0
-  const totalTax = incomeTax + reconstructionTax + residentTax + businessTax
+  const businessTax = isBusinessTaxable && income > 2900000 ? Math.floor((income - 2900000) * 0.05) : 0
+  const totalTax = additionalIncomeTax + residentTax + businessTax
   const takeHome = revenue - expense - totalTax
-  return { revenue, expense, income, taxableBase, taxableIncome, incomeTax, reconstructionTax, residentTax, businessTax, totalTax, takeHome }
+  return {
+    revenue, expense, income,
+    salaryIncome, salaryDeduction, salaryTaxable, socialInsurance, withheldTax,
+    taxableBase, taxableIncome,
+    incomeTax, reconstructionTax, additionalIncomeTax,
+    residentTax, businessTax, totalTax, takeHome
+  }
 }
 
 // ============================================================
@@ -779,9 +805,19 @@ function FinTax() {
   const [payments, setPayments] = useState<TaxPayment[]>([])
   const [simRev, setSimRev] = useState(0)
   const [simExp, setSimExp] = useState(0)
+  const [simSalary, setSimSalary] = useState(() => Number(localStorage.getItem('finTax.simSalary') || 0))
+  const [simSocial, setSimSocial] = useState(() => Number(localStorage.getItem('finTax.simSocial') || 0))
+  const [simWithheld, setSimWithheld] = useState(() => Number(localStorage.getItem('finTax.simWithheld') || 0))
+  const [isBizTaxable, setIsBizTaxable] = useState(() => localStorage.getItem('finTax.isBizTaxable') === 'true')
   const [showDetail, setShowDetail] = useState(false)
   const [showAssumptions, setShowAssumptions] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => { localStorage.setItem('finTax.simSalary', String(simSalary)) }, [simSalary])
+  useEffect(() => { localStorage.setItem('finTax.simSocial', String(simSocial)) }, [simSocial])
+  useEffect(() => { localStorage.setItem('finTax.simWithheld', String(simWithheld)) }, [simWithheld])
+  useEffect(() => { localStorage.setItem('finTax.isBizTaxable', String(isBizTaxable)) }, [isBizTaxable])
 
   useEffect(() => {
     Promise.all([
@@ -806,31 +842,49 @@ function FinTax() {
 
   if (!loaded) return <div className="skeleton-card" style={{ height: 200 }} />
 
-  const t = calcTax(simRev, simExp)
+  const t = calcTax(simRev, simExp, simSalary, simSocial, isBizTaxable, simWithheld)
   const now = new Date()
   const ny = year + 1
-  const estimatedPer = Math.round((t.incomeTax + t.reconstructionTax) / 3)
-  const schedule = [
-    { label: '所得税 確定申告', sub: `${year}年度分`, due: `${ny}-03-15`, amount: t.incomeTax + t.reconstructionTax, type: 'income_tax' },
+  const calcSchedule: { label: string; sub: string; due: string; amount: number; type: string }[] = [
+    { label: '所得税 確定申告', sub: `${year}年度分${simWithheld > 0 ? '（源泉徴収済差引後）' : ''}`, due: `${ny}-03-15`, amount: t.additionalIncomeTax, type: 'income_tax' },
     { label: '住民税 1期', sub: `${year}年度分`, due: `${ny}-06-30`, amount: Math.ceil(t.residentTax / 4), type: 'resident_tax' },
-    { label: '予定納税 1期', sub: `${ny}年度前払い`, due: `${ny}-07-31`, amount: estimatedPer, type: 'estimated_tax' },
     { label: '個人事業税 1期', sub: `${year}年度分`, due: `${ny}-08-31`, amount: Math.ceil(t.businessTax / 2), type: 'business_tax' },
     { label: '住民税 2期', sub: `${year}年度分`, due: `${ny}-08-31`, amount: Math.ceil(t.residentTax / 4), type: 'resident_tax' },
     { label: '住民税 3期', sub: `${year}年度分`, due: `${ny}-10-31`, amount: Math.ceil(t.residentTax / 4), type: 'resident_tax' },
-    { label: '予定納税 2期', sub: `${ny}年度前払い`, due: `${ny}-11-30`, amount: estimatedPer, type: 'estimated_tax' },
     { label: '個人事業税 2期', sub: `${year}年度分`, due: `${ny}-11-30`, amount: Math.floor(t.businessTax / 2), type: 'business_tax' },
     { label: '住民税 4期', sub: `${year}年度分`, due: `${ny + 1}-01-31`, amount: Math.floor(t.residentTax / 4), type: 'resident_tax' },
-  ].filter(s => s.amount > 0)
+  ]
+  const dbSchedule = payments
+    .filter(p => p.tax_type === 'health_insurance' || p.tax_type === 'national_pension')
+    .map(p => {
+      const m = new Date(p.due_date).getMonth() + 1
+      const isHealth = p.tax_type === 'health_insurance'
+      return {
+        label: isHealth ? '任意継続健保' : '国民年金',
+        sub: isHealth ? `${m}月分` : `${year}年度`,
+        due: p.due_date,
+        amount: p.amount,
+        type: p.tax_type,
+      }
+    })
+  const schedule = [...calcSchedule, ...dbSchedule]
+    .filter(s => s.amount > 0)
+    .sort((a, b) => a.due.localeCompare(b.due))
 
   const paidMap: Record<string, TaxPayment> = {}
   payments.forEach(p => { if (p.status === 'paid') paidMap[`${p.tax_type}_${p.due_date}`] = p })
 
   const schedTotal = schedule.reduce((s, p) => s + p.amount, 0)
+  const schedUnpaid = schedule.reduce((s, p) => s + (paidMap[`${p.type}_${p.due}`] ? 0 : p.amount), 0)
   let schedPaid = 0
 
-  const typeColors: Record<string, string> = { income_tax: '#ef4444', resident_tax: '#f59e0b', business_tax: '#8b5cf6', estimated_tax: '#3b82f6' }
-  const monthlyReserve = Math.ceil(t.totalTax / 12)
-  const effRate = t.revenue > 0 ? (t.totalTax / t.revenue * 100).toFixed(1) : '0'
+  const typeColors: Record<string, string> = {
+    income_tax: '#ef4444', resident_tax: '#f59e0b', business_tax: '#8b5cf6', estimated_tax: '#3b82f6',
+    health_insurance: '#06b6d4', national_pension: '#14b8a6'
+  }
+  const monthsRemaining = Math.max(1, 12 - now.getMonth())
+  const monthlyReserve = Math.ceil(schedUnpaid / monthsRemaining)
+  const effRate = t.revenue > 0 ? (schedTotal / t.revenue * 100).toFixed(1) : '0'
 
   return (
     <div>
@@ -846,9 +900,11 @@ function FinTax() {
             ['申告区分', '個人事業主・青色申告（e-Tax）'],
             ['青色申告特別控除', '65万円'],
             ['基礎控除', '48万円'],
+            ['給与所得控除', '給与収入帯ごとに自動計算（55万〜195万）'],
+            ['社会保険料控除', '入力された国保 + 国民年金 + 厚生年金等を全額控除'],
             ['所得税率', '累進課税 5%〜45%'],
             ['住民税', '課税所得 × 10% + 均等割 5,000円'],
-            ['個人事業税', '（事業所得 - 290万円）× 5%（準委任契約のみなら非課税の可能性あり）'],
+            ['個人事業税', 'プログラマー/SE（自由職業）なら法定70業種に該当せず非課税。請負業/コンサル業認定時のみトグルON →（事業所得 - 290万円）× 5%'],
             ['年間売上の予測', `請求書データ ${monthsWithData}ヶ月分から12ヶ月に按分（${fmtYen(actualRevQ)} ÷ ${monthsWithData} × 12）`],
             ['注意', 'あくまで概算です。正確な税額は税理士にご確認ください'],
           ].map(([k, v]) => (
@@ -882,6 +938,37 @@ function FinTax() {
         ))}
       </div>
 
+      {/* 詳細入力（給与・社会保険料・事業税） */}
+      <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 12px', fontSize: 12, color: 'var(--text3)', cursor: 'pointer', marginBottom: 12 }} onClick={() => setShowAdvanced(v => !v)}>
+        詳細条件（給与/社会保険料/事業税） {showAdvanced ? '▾' : '▸'}
+      </button>
+      {showAdvanced && (
+        <div style={{ marginBottom: 20, padding: 16, borderRadius: 8, background: 'var(--bg2)', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+            <label style={{ fontSize: 12, color: 'var(--text2)', minWidth: 200 }}>給与収入（事業外・年額）</label>
+            <input type="number" value={simSalary} onChange={e => setSimSalary(parseInt(e.target.value) || 0)} style={{ width: 160, padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontFamily: 'var(--font)', background: 'var(--surface2)', color: 'var(--text)' }} />
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>正社員時代の給与額面（1月分など）</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+            <label style={{ fontSize: 12, color: 'var(--text2)', minWidth: 200 }}>給与の源泉徴収済所得税</label>
+            <input type="number" value={simWithheld} onChange={e => setSimWithheld(parseInt(e.target.value) || 0)} style={{ width: 160, padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontFamily: 'var(--font)', background: 'var(--surface2)', color: 'var(--text)' }} />
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>確定申告で精算（追加納付額から差引）</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+            <label style={{ fontSize: 12, color: 'var(--text2)', minWidth: 200 }}>社会保険料控除（年額）</label>
+            <input type="number" value={simSocial} onChange={e => setSimSocial(parseInt(e.target.value) || 0)} style={{ width: 160, padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 6, fontSize: 14, fontFamily: 'var(--font)', background: 'var(--surface2)', color: 'var(--text)' }} />
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>国保 + 国民年金 + 厚生年金等の合算</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <label style={{ fontSize: 12, color: 'var(--text2)', minWidth: 200 }}>個人事業税の課税</label>
+            <button onClick={() => setIsBizTaxable(v => !v)} style={{ padding: '5px 14px', borderRadius: 6, border: '1px solid var(--border)', background: isBizTaxable ? '#8b5cf6' : 'var(--surface2)', color: isBizTaxable ? '#fff' : 'var(--text2)', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+              {isBizTaxable ? '課税ON（請負業/コンサル業）' : '不課税（プログラマー/SE）'}
+            </button>
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>時給制・実働ベースなら不課税で申告可</span>
+          </div>
+        </div>
+      )}
+
       {/* Reserve card */}
       <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, padding: 24, marginBottom: 28 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -890,10 +977,10 @@ function FinTax() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 16, marginBottom: 20 }}>
           {[
-            { l: '毎月の積立目安', v: `${fmtYen(monthlyReserve)}/月`, c: '#f59e0b', sub: `税金合計 ${fmtYen(t.totalTax)} ÷ 12` },
-            { l: 'ここまでの積立目標', v: fmtYen(monthlyReserve * monthsWithData), c: '#3b82f6', sub: `売上実績 ${monthsWithData}ヶ月分` },
-            { l: '月の手取り目安', v: fmtYen(Math.floor(t.takeHome / 12)), c: '#22c55e', sub: '売上 - 経費 - 税金' },
-            { l: '実効税率', v: `${effRate}%`, c: '#ef4444', sub: '税金合計 ÷ 売上' },
+            { l: '毎月の積立目安', v: `${fmtYen(monthlyReserve)}/月`, c: '#f59e0b', sub: `未払い ${fmtYen(schedUnpaid)} ÷ 残${monthsRemaining}ヶ月` },
+            { l: '現金確保すべき総額', v: fmtYen(schedUnpaid), c: '#3b82f6', sub: '社保＋税金（未払い分）' },
+            { l: '事業手取り目安', v: fmtYen(Math.floor(t.takeHome / 12)) + '/月', c: '#22c55e', sub: '売上 - 経費 - 税金' },
+            { l: '実効税率', v: `${effRate}%`, c: '#ef4444', sub: '社保＋税金 ÷ 売上' },
           ].map(d => (
             <div key={d.l} style={{ padding: '14px 16px', borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 10, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.3px', marginBottom: 6 }}>{d.l}</div>
@@ -912,11 +999,11 @@ function FinTax() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 20 }}>
         {[
           { label: '課税所得', val: fmtYen(t.taxableIncome), color: 'var(--text)' },
-          { label: '所得税+復興税', val: fmtYen(t.incomeTax + t.reconstructionTax), color: '#ef4444' },
+          { label: '所得税 追加納付', val: fmtYen(t.additionalIncomeTax), color: '#ef4444' },
           { label: '住民税', val: fmtYen(t.residentTax), color: '#f59e0b' },
           { label: '事業税', val: fmtYen(t.businessTax), color: '#8b5cf6' },
-          { label: '税金合計', val: fmtYen(t.totalTax), color: '#ef4444' },
-          { label: '手取り', val: fmtYen(t.takeHome), color: '#22c55e' },
+          { label: 'スケジュール合計', val: fmtYen(schedTotal), color: '#ef4444' },
+          { label: '事業手取り', val: fmtYen(t.takeHome), color: '#22c55e' },
         ].map(k => (
           <div key={k.label} style={{ padding: 14, borderRadius: 8, background: 'var(--surface2)', border: '1px solid var(--border)' }}>
             <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 4 }}>{k.label}</div>
@@ -946,15 +1033,25 @@ function FinTax() {
             ['経費', `- ${fmtYen(t.expense)}`, ''],
             ['事業所得', fmtYen(t.income), ''],
             ['青色申告特別控除', '- ¥650,000', ''],
+            ...(t.salaryIncome > 0 ? [
+              ['給与収入', fmtYen(t.salaryIncome), ''] as [string, string, string],
+              ['給与所得控除', `- ${fmtYen(t.salaryDeduction)}`, ''] as [string, string, string],
+              ['給与所得', fmtYen(t.salaryTaxable), ''] as [string, string, string],
+            ] : []),
             ['基礎控除', '- ¥480,000', ''],
+            ...(t.socialInsurance > 0 ? [['社会保険料控除', `- ${fmtYen(t.socialInsurance)}`, ''] as [string, string, string]] : []),
             ['課税所得', fmtYen(t.taxableIncome), 'font-weight:600'],
             ['所得税', fmtYen(t.incomeTax), ''],
             ['復興特別所得税', fmtYen(t.reconstructionTax), ''],
+            ...(t.withheldTax > 0 ? [['給与で源泉徴収済', `- ${fmtYen(t.withheldTax)}`, ''] as [string, string, string]] : []),
+            ['所得税 追加納付', fmtYen(t.additionalIncomeTax), 'font-weight:600'],
             ['住民税', fmtYen(t.residentTax), ''],
             ['個人事業税', fmtYen(t.businessTax), ''],
-            ['税金合計', fmtYen(t.totalTax), 'color:#ef4444;font-weight:600'],
+            ['税金合計（所得税+住民税+事業税）', fmtYen(t.totalTax), 'color:#ef4444;font-weight:600'],
+            ['国保・年金（スケジュール内）', fmtYen(schedTotal - t.totalTax), ''],
+            ['スケジュール総額', fmtYen(schedTotal), 'color:#ef4444;font-weight:600'],
             ['実効税率', `${effRate}%`, 'color:var(--text3)'],
-            ['手取り', fmtYen(t.takeHome), 'color:#22c55e;font-weight:600'],
+            ['事業手取り', fmtYen(t.takeHome), 'color:#22c55e;font-weight:600'],
           ].map(([k, v]) => (
             <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
               <span style={{ color: 'var(--text2)' }}>{k}</span>
