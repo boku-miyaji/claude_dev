@@ -234,8 +234,11 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
   const allEvents: Record<string, unknown>[] = [];
   const dbRows: Record<string, unknown>[] = [];
   const failedCalendars: { calendarId: string; error: string }[] = [];
+  // calendar_id ごとの集計（watermark / freshness 用）
+  const perCalStats: Record<string, { fetched: number; saved: number; status: string; error: string | null }> = {};
 
   for (const calId of calendarIds) {
+    perCalStats[calId] = { fetched: 0, saved: 0, status: "success", error: null };
     try {
       let pageToken = "";
       // Safety cap: 10 pages * 250 = 2500 events per calendar per request.
@@ -254,12 +257,19 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
         if (!res.ok) {
           const errText = await res.text().catch(() => "");
           console.error(`[google-calendar-proxy] fetch failed for ${calId}: ${res.status} ${errText}`);
-          failedCalendars.push({ calendarId: calId, error: `HTTP ${res.status}: ${errText.slice(0, 200)}` });
+          const errMsg = `HTTP ${res.status}: ${errText.slice(0, 200)}`;
+          failedCalendars.push({ calendarId: calId, error: errMsg });
+          perCalStats[calId].status = "error";
+          perCalStats[calId].error = errMsg;
           break;
         }
         const data = await res.json();
         for (const ev of data.items || []) {
-          if (ev.status === "cancelled") continue;
+          // cancelled イベント:
+          //   - 削除された予定 (Google 側で消した) は status='cancelled' で返る
+          //   - DB に同期して UI 側でフィルタする方針。物理削除はしない (履歴保持)
+          //   - cancelled は start/end が無いことがあるので空文字許容
+          const isCancelled = ev.status === "cancelled";
           const startTime = ev.start?.dateTime || ev.start?.date || "";
           const endTime = ev.end?.dateTime || ev.end?.date || "";
           const allDay = !ev.start?.dateTime;
@@ -280,12 +290,14 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
             hangoutLink: ev.hangoutLink || null,
             description: ev.description || null,
           };
-          allEvents.push(eventRow);
+          // UI 用 response は active のみ。cancelled はクライアントに返さない。
+          if (!isCancelled) allEvents.push(eventRow);
 
+          // DB には cancelled も含めて upsert する (削除を反映するため)
           dbRows.push({
             id: ev.id,
             calendar_id: calId,
-            summary: eventRow.summary,
+            summary: ev.summary || "(No title)",
             start_time: startTime,
             end_time: endTime,
             all_day: allDay,
@@ -296,6 +308,7 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
             calendar_type: calendarType,
             synced_at: new Date().toISOString(),
           });
+          perCalStats[calId].fetched++;
         }
         pageToken = data.nextPageToken || "";
         if (!pageToken) break;
@@ -304,19 +317,46 @@ async function handleGetEvents(req: Request, userId: string): Promise<Response> 
       const msg = e instanceof Error ? e.message : String(e);
       console.error(`[google-calendar-proxy] exception for ${calId}: ${msg}`);
       failedCalendars.push({ calendarId: calId, error: msg });
+      perCalStats[calId].status = "error";
+      perCalStats[calId].error = msg.slice(0, 200);
     }
   }
 
   allEvents.sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
 
   // 非同期で calendar_events テーブルに upsert（応答をブロックしない）
-  if (dbRows.length > 0) {
+  // + calendar_sync_state watermark を更新
+  if (dbRows.length > 0 || calendarIds.length > 0) {
     const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    sb.from("calendar_events")
-      .upsert(dbRows, { onConflict: "id,calendar_id" })
-      .then(({ error }) => {
-        if (error) console.error("calendar_events upsert failed:", error.message);
-      });
+    if (dbRows.length > 0) {
+      sb.from("calendar_events")
+        .upsert(dbRows, { onConflict: "id,calendar_id" })
+        .then(({ error }) => {
+          if (error) console.error("calendar_events upsert failed:", error.message);
+          // saved_count を per-cal に分配 (chunkSize 単位ではないがざっくり全件成功とみなす)
+          if (!error) {
+            for (const calId of calendarIds) {
+              perCalStats[calId].saved = perCalStats[calId].fetched;
+            }
+          }
+          // watermark を upsert（events 同期と並列に走る。失敗しても events は止めない）
+          const nowIso = new Date().toISOString();
+          const watermarkRows = calendarIds.map((calId) => ({
+            user_id: userId,
+            calendar_id: calId,
+            last_synced_at: nowIso,
+            last_sync_status: perCalStats[calId].status,
+            last_error: perCalStats[calId].error,
+            fetched_count: perCalStats[calId].fetched,
+            saved_count: perCalStats[calId].saved,
+          }));
+          sb.from("calendar_sync_state")
+            .upsert(watermarkRows, { onConflict: "user_id,calendar_id" })
+            .then(({ error: wErr }) => {
+              if (wErr) console.error("calendar_sync_state upsert failed:", wErr.message);
+            });
+        });
+    }
   }
 
   return new Response(JSON.stringify({
@@ -598,35 +638,61 @@ Deno.serve(async (req: Request) => {
         const accessToken = await getAccessToken(user_id);
         const dbRows: Record<string, unknown>[] = [];
         let totalFetched = 0;
+        let totalCancelled = 0;
+        // calendar_id ごとの集計 (watermark 用)
+        const perCalStats: Record<string, { fetched: number; cancelled: number; status: string; error: string | null }> = {};
+
         for (const calId of calendar_ids) {
-          let pageToken = "";
-          for (let page = 0; page < 10; page++) {
-            const params = new URLSearchParams({
-              timeMin: time_min, timeMax: time_max, timeZone: "Asia/Tokyo",
-              singleEvents: "true", maxResults: "250", orderBy: "startTime",
-            });
-            if (pageToken) params.set("pageToken", pageToken);
-            const res = await calendarFetch(accessToken, `/calendars/${encodeURIComponent(calId)}/events?${params}`);
-            if (!res.ok) break;
-            const data = await res.json();
-            for (const ev of data.items || []) {
-              if (ev.status === "cancelled") continue;
-              const startTime = ev.start?.dateTime || ev.start?.date || "";
-              const endTime = ev.end?.dateTime || ev.end?.date || "";
-              const allDay = !ev.start?.dateTime;
-              const summary = ev.summary || "(No title)";
-              const calendarType: string = calId === "primary" ? "primary" : "secondary";
-              dbRows.push({
-                id: ev.id, calendar_id: calId, summary, start_time: startTime, end_time: endTime,
-                all_day: allDay, location: ev.location || null, description: ev.description || null,
-                status: ev.status,
-                response_status: (ev.attendees || []).find((a: { self?: boolean; responseStatus?: string }) => a.self)?.responseStatus || null,
-                calendar_type: calendarType, synced_at: new Date().toISOString(),
+          perCalStats[calId] = { fetched: 0, cancelled: 0, status: "success", error: null };
+          try {
+            let pageToken = "";
+            for (let page = 0; page < 10; page++) {
+              const params = new URLSearchParams({
+                timeMin: time_min, timeMax: time_max, timeZone: "Asia/Tokyo",
+                singleEvents: "true", maxResults: "250", orderBy: "startTime",
               });
-              totalFetched++;
+              // showDeleted=true を付けると cancelled も返る (Google Calendar API)
+              params.set("showDeleted", "true");
+              if (pageToken) params.set("pageToken", pageToken);
+              const res = await calendarFetch(accessToken, `/calendars/${encodeURIComponent(calId)}/events?${params}`);
+              if (!res.ok) {
+                const errText = await res.text().catch(() => "");
+                console.error(`[backfill] fetch failed for ${calId}: ${res.status} ${errText}`);
+                perCalStats[calId].status = "error";
+                perCalStats[calId].error = `HTTP ${res.status}: ${errText.slice(0, 200)}`;
+                break;
+              }
+              const data = await res.json();
+              for (const ev of data.items || []) {
+                // cancelled イベントも DB に upsert する (削除反映のため)
+                const isCancelled = ev.status === "cancelled";
+                const startTime = ev.start?.dateTime || ev.start?.date || "";
+                const endTime = ev.end?.dateTime || ev.end?.date || "";
+                const allDay = !ev.start?.dateTime;
+                const summary = ev.summary || "(No title)";
+                const calendarType: string = calId === "primary" ? "primary" : "secondary";
+                dbRows.push({
+                  id: ev.id, calendar_id: calId, summary, start_time: startTime, end_time: endTime,
+                  all_day: allDay, location: ev.location || null, description: ev.description || null,
+                  status: ev.status,
+                  response_status: (ev.attendees || []).find((a: { self?: boolean; responseStatus?: string }) => a.self)?.responseStatus || null,
+                  calendar_type: calendarType, synced_at: new Date().toISOString(),
+                });
+                totalFetched++;
+                perCalStats[calId].fetched++;
+                if (isCancelled) {
+                  totalCancelled++;
+                  perCalStats[calId].cancelled++;
+                }
+              }
+              pageToken = data.nextPageToken || "";
+              if (!pageToken) break;
             }
-            pageToken = data.nextPageToken || "";
-            if (!pageToken) break;
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            console.error(`[backfill] exception for ${calId}: ${msg}`);
+            perCalStats[calId].status = "error";
+            perCalStats[calId].error = msg.slice(0, 200);
           }
         }
 
@@ -643,7 +709,28 @@ Deno.serve(async (req: Request) => {
             saved += chunk.length;
           }
         }
-        return new Response(JSON.stringify({ fetched: totalFetched, saved }), {
+
+        // watermark upsert (failedCalendars トラッキング含む)
+        const nowIso = new Date().toISOString();
+        const watermarkRows = calendar_ids.map((calId) => ({
+          user_id,
+          calendar_id: calId,
+          last_synced_at: nowIso,
+          last_sync_status: perCalStats[calId].status,
+          last_error: perCalStats[calId].error,
+          fetched_count: perCalStats[calId].fetched,
+          saved_count: perCalStats[calId].fetched, // chunk 全成功なら fetched=saved とみなす
+        }));
+        const { error: wErr } = await sb.from("calendar_sync_state")
+          .upsert(watermarkRows, { onConflict: "user_id,calendar_id" });
+        if (wErr) console.error("calendar_sync_state upsert failed:", wErr.message);
+
+        return new Response(JSON.stringify({
+          fetched: totalFetched,
+          saved,
+          cancelled: totalCancelled,
+          per_calendar: perCalStats,
+        }), {
           headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
         });
       } catch (e) {

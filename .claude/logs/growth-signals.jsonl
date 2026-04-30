@@ -1847,3 +1847,5 @@
 {"ts":"2026-04-30T14:25:23+09:00","signal":"raw_prompt","prompt":"これは他のテナントとも被ったらダメなの？\naces-rikyu-dev-sbもだめでした。rikyu-dev-sbusにしたい。他のも今まで通りの命名規則でいきたい\n"}
 {"ts":"2026-04-30T14:44:14+09:00","signal":"raw_prompt","prompt":"yumzzz.my6223@gmail.com単一Oauthではだめ？どういう意味？\n"}
 {"ts":"2026-04-30T14:46:34+09:00","signal":"raw_prompt","prompt":"ホスト\ntee: /etc/modprobe.d/disable-algif.conf: No such file or directory\ninstall algif_aead /bin/false\n\na, cもやって\n"}
+{"ts":"2026-04-30T14:44:14+09:00","signal":"raw_prompt","prompt":"yumzzz.my6223@gmail.com単一Oauthではだめ？どういう意味？\n"}
+{"ts":"2026-04-30T14:46:34+09:00","signal":"raw_prompt","prompt":"ホスト\ntee: /etc/modprobe.d/disable-algif.conf: No such file or directory\ninstall algif_aead /bin/false\n\na, cもやって\n"}
