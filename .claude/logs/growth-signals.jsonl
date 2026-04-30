@@ -1734,3 +1734,6 @@
 {"ts":"2026-04-30T09:53:01+09:00","signal":"raw_prompt","prompt":"=> => naming to docker.io/library/vsc-polaris-circuit-diagram-3569968a8d  0.0s\n => => unpacking to docker.io/library/vsc-polaris-circuit-diagram-3569968  0.0s\n[7065 ms] Start: Run: docker inspect --type image vsc-polaris-circuit-diagram-3569968a8dc97c8c0bca350f52a48db2227d8bfeb3b3c6b005257c2e15272e13\n[7103 ms] Start: Run: docker build -f /tmp/devcontainercli-yutamiyaji/updateUID.Dockerfile-0.74.0 -t vsc-polaris-circuit-diagram-3569968a8dc97c8c0bca350f52a48db2227d8bfeb3b3c6b005257c2e15272e13-uid \n"}
 {"ts":"2026-04-30T09:54:32+09:00","signal":"raw_prompt","prompt":"RG, tenantそれぞれどのように分けるべき？別テナントにすべきとか別RGにすべきとかの使い方。\n"}
 {"ts":"2026-04-30T10:16:20+09:00","signal":"raw_prompt","prompt":"pg versionは１８が最新だけど、１８でいい？\nワークロードの種類は？運用？dev/test?\nパフォーマンスレベルは？P4?\n\n見積もりで80ドル/月となっているが高すぎない？\npq フレキシブルサーバーになんでなったんだっけ？\n"}
+{"ts":"2026-04-30T10:16:20+09:00","signal":"raw_prompt","prompt":"pg versionは１８が最新だけど、１８でいい？\nワークロードの種類は？運用？dev/test?\nパフォーマンスレベルは？P4?\n\n見積もりで80ドル/月となっているが高すぎない？\npq フレキシブルサーバーになんでなったんだっけ？\n"}
+{"ts":"2026-04-30T10:25:36+09:00","signal":"raw_prompt","prompt":"高いです。\nmicrosoft製でもよくない？\nno-sqlなにがだまなの？検索しずらい？\n"}
+{"ts":"2026-04-30T10:29:01+09:00","signal":"raw_prompt","prompt":"/company 私のことを社長と呼ぶのはやめて欲しい。\n"}
