@@ -1834,3 +1834,5 @@
 {"ts":"2026-04-30T13:22:48+09:00","signal":"raw_prompt","prompt":"起動できました。\n"}
 {"ts":"2026-04-30T13:22:48+09:00","signal":"raw_prompt","prompt":"起動できました。\n"}
 {"ts":"2026-04-30T13:33:00+09:00","signal":"raw_prompt","prompt":"タグはいれなかった。他はやりました。デプロイ完了しました\n"}
+{"ts":"2026-04-30T13:33:00+09:00","signal":"raw_prompt","prompt":"タグはいれなかった。他はやりました。デプロイ完了しました\n"}
+{"ts":"2026-04-30T13:39:41+09:00","signal":"raw_prompt","prompt":"log analytics workspaceがない。\n"}
