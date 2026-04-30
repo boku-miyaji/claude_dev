@@ -28128,3 +28128,6 @@
 {"ts":"2026-04-30T13:05:30+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-30T13:05:33+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
 {"ts":"2026-04-30T13:05:44+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
+{"ts":"2026-04-30T13:08:16+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-30T13:08:21+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-30T13:08:52+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
