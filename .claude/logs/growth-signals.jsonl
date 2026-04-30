@@ -1797,3 +1797,9 @@
 {"ts":"2026-04-30T11:19:56+09:00","signal":"raw_prompt","prompt":"不確実性が高い時には、要件自体がかなり変わりうるので、そこに対して対応するためにはマイクロマネジメントでタスクを振って対応では遅すぎるし、メンバーに今までのコンテキストがたまらない。それぞれのメンバーが考えながら動くことで、紆余曲折あったときに過去の考え、コンテキストが役立って、成長し、だんだんその人に任せられる範囲が増えていく。�\n"}
 {"ts":"2026-04-30T11:46:13+09:00","signal":"raw_prompt","prompt":"rikyuのsystem-specに従って、下記の各図を作成したい。\nhttps://learn.microsoft.com/ja-jp/azure/well-architected/architect-role/design-diagrams?source=recommendations\n"}
 {"ts":"2026-04-30T11:46:39+09:00","signal":"raw_prompt","prompt":"b1sに変更した。\nデプロイ完了した。\n"}
+{"ts":"2026-04-30T11:46:13+09:00","signal":"raw_prompt","prompt":"rikyuのsystem-specに従って、下記の各図を作成したい。\nhttps://learn.microsoft.com/ja-jp/azure/well-architected/architect-role/design-diagrams?source=recommendations\n"}
+{"ts":"2026-04-30T11:46:39+09:00","signal":"raw_prompt","prompt":"b1sに変更した。\nデプロイ完了した。\n"}
+{"ts":"2026-04-30T11:55:47+09:00","signal":"raw_prompt","prompt":"進めてください。\n確認すべきところがあれば、都度壁打ちして進めたい。\nまた、既存のものは本当にある？図として整理されている？また一対一対応されている？ページの分割変えた方がいいとかある？\n"}
+{"ts":"2026-04-30T11:55:47+09:00","signal":"raw_prompt","prompt":"進めてください。\n確認すべきところがあれば、都度壁打ちして進めたい。\nまた、既存のものは本当にある？図として整理されている？また一対一対応されている？ページの分割変えた方がいいとかある？\n"}
+{"ts":"2026-04-30T11:58:37+09:00","signal":"raw_prompt","prompt":".envに必要な情報書くので、postgresql のDBに自動で作成とかして欲しい。DDLとは？\n"}
+{"ts":"2026-04-30T12:02:41+09:00","signal":"raw_prompt","prompt":"リスク最小で進めたい。\nCは全部やる。\n完全に消す。\n"}
