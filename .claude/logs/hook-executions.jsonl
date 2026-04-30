@@ -27937,3 +27937,7 @@
 {"ts":"2026-04-30T11:01:06+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
 {"ts":"2026-04-30T11:01:16+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-30T11:01:17+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-30T11:03:03+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-30T11:03:07+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-04-30T11:03:21+09:00","hook":"tool-collector","tool":"Agent:調査部","status":"ok"}
+{"ts":"2026-04-30T11:03:25+09:00","hook":"tool-collector","tool":"Read","status":"ok"}
