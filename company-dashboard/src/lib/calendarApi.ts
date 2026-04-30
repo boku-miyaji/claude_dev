@@ -251,7 +251,11 @@ export async function fetchCalendarEvents(options: FetchEventsOptions): Promise<
 
   // calendar_type は Edge Function 側で計算済み (primary / secondary / work / private 等)。
   // 未指定なら 'primary' を default にして UI が壊れないようにする。
-  const events: CalendarEvent[] = data.events.map((ev) => ({
+  // cancelled は Edge Function 側で除外しているはずだが、古いデプロイや DB 直読み経路への
+  // 防御として client 側でも除外する (2層防御)。
+  const events: CalendarEvent[] = data.events
+    .filter((ev) => ev.status !== 'cancelled')
+    .map((ev) => ({
     id: ev.id,
     calendar_id: ev.calendar_id,
     calendar_type: (ev.calendar_type || 'primary') as CalendarType,

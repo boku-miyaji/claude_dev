@@ -51,6 +51,13 @@
     "remote-control": 41
   },
   "promptQueueUseCount": 6,
+  "cachedStatsigGates": {
+    "tengu_prompt_suggestion": true,
+    "tengu_year_end_2025_campaign_promo": false,
+    "tengu_vscode_review_upsell": false,
+    "tengu_streaming_tool_execution2": false,
+    "tengu_vscode_onboarding": false
+  },
   "cachedDynamicConfigs": {
     "tengu_1p_event_batch_config": {
       "scheduledDelayMillis": 5000,
@@ -479,13 +486,6 @@
     "tengu_classifier_disabled_surfaces": ""
   },
   "unpinOpus47LaunchEffort": true,
-  "cachedStatsigGates": {
-    "tengu_prompt_suggestion": true,
-    "tengu_year_end_2025_campaign_promo": false,
-    "tengu_vscode_review_upsell": false,
-    "tengu_streaming_tool_execution2": false,
-    "tengu_vscode_onboarding": false
-  },
   "userID": "490a85b216033891ec6e134c7811c5eb5890af627dd866d91b05ddcd725c39b7",
   "firstStartTime": "2025-07-10T13:14:53.002Z",
   "projects": {
@@ -659,7 +659,7 @@
         "currency": "USD"
       },
       "remaining_passes": 0,
-      "timestamp": 1777424844030
+      "timestamp": 1777512543949
     }
   },
   "feedbackSurveyState": {
@@ -675,7 +675,7 @@
   "groveConfigCache": {
     "0e3bd740-e45a-41f7-9a8e-dea96899ee97": {
       "grove_enabled": true,
-      "timestamp": 1777424844457
+      "timestamp": 1777512548713
     }
   },
   "overageCreditGrantCache": {
@@ -719,8 +719,8 @@
   "passesLastSeenRemaining": 3,
   "skillUsage": {
     "company": {
-      "usageCount": 109,
-      "lastUsedAt": 1777508700557
+      "usageCount": 110,
+      "lastUsedAt": 1777512540908
     },
     "register": {
       "usageCount": 15,

@@ -518,7 +518,9 @@ async function collectData(
     .join('\n')
 
   // --- 4. Calendar ---
+  // cancelled は分析ノイズになるので除外 (Edge Function 側で DB に保存されるようになったため)
   const calRes = await supabase.from('calendar_events').select('title, start_time, end_time, is_all_day')
+    .neq('status', 'cancelled')
     .order('start_time', { ascending: false }).limit(50)
   const events = (calRes.data ?? []) as unknown as { title: string; start_time: string; end_time: string; is_all_day: number }[]
   const calText = events.slice(0, 20)
