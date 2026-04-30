@@ -247,3 +247,4 @@
 {"ts":"2026-04-30T01:05:14+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"Day 4: _test3_common.sh 統合 + run_test3_*.sh env var","model":"default","background":false}
 {"ts":"2026-04-30T09:36:47+09:00","event":"agent_dispatch","dept":"調査部","desc":"Calendar sync + News batch 根本調査","model":"default","background":false}
 {"ts":"2026-04-30T09:55:03+09:00","event":"agent_dispatch","dept":"リサーチ部","desc":"10万円以下作業椅子リサーチ","model":"default","background":false}
+{"ts":"2026-04-30T10:59:21+09:00","event":"agent_dispatch","dept":"調査部","desc":"Calendar sync RCA","model":"default","background":false}
