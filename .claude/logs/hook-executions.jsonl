@@ -28214,3 +28214,6 @@
 {"ts":"2026-04-30T14:50:43+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-30T14:50:48+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-04-30T14:50:52+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-30T14:51:14+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-30T14:51:35+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-04-30T14:51:54+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
