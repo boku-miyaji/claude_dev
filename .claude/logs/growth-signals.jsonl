@@ -1839,3 +1839,6 @@
 {"ts":"2026-04-30T13:39:41+09:00","signal":"raw_prompt","prompt":"log analytics workspaceがない。\n"}
 {"ts":"2026-04-30T13:46:48+09:00","signal":"raw_prompt","prompt":"下記はどの画面から？\n重要: 「Resource Mode」で Workspace-based を選んでください。\n"}
 {"ts":"2026-04-30T13:46:48+09:00","signal":"raw_prompt","prompt":"下記はどの画面から？\n重要: 「Resource Mode」で Workspace-based を選んでください。\n"}
+{"ts":"2026-04-30T13:51:20+09:00","signal":"raw_prompt","prompt":"polarisのdevcontainer内に引き継ぎたいので引き継ぎ資料を作って。それを読ませて向こうで始めてもらう\n"}
+{"ts":"2026-04-30T13:51:20+09:00","signal":"raw_prompt","prompt":"polarisのdevcontainer内に引き継ぎたいので引き継ぎ資料を作って。それを読ませて向こうで始めてもらう\n"}
+{"ts":"2026-04-30T13:58:47+09:00","signal":"raw_prompt","prompt":"名前空間が既に存在します。別の名前を入力してください。とでる。ないのに\n"}
