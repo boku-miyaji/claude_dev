@@ -1,9 +1,10 @@
 # growth_events — `polaris-circuit`
 
-Total: **38**
+Total: **39**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-04-30 | `decision` | active | [polaris-circuit のDB方針を再検討](../2026/04/20260430-decision-polaris-circuit-のdb方針を再検討.md) |
 | 2026-04-30 | `failure` | active | [Docker build失敗 (kicad-cli/python3)](../2026/04/20260430-failure-docker-build失敗-kicad-clipython3.md) |
 | 2026-04-30 | `failure` | active | [polaris-circuit Dockerfile ビルド失敗](../2026/04/20260430-failure-polaris-circuit-dockerfile-ビルド失敗.md) |
 | 2026-04-30 | `failure` | active | [KiCad 8でDockerビルド失敗・Dockerfile警告](../2026/04/20260430-failure-kicad-8でdockerビルド失敗dockerfile警告.md) |

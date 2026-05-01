@@ -1,11 +1,16 @@
 # growth_events — `claude-dev`
 
-Total: **279**
+Total: **284**
 
 | date | type | status | title |
 |---|---|---|---|
-| 2026-04-30 | `decision` | active | [作業環境投資 (椅子・キーボード相棒選定)](../2026/04/20260430-decision-作業環境投資-椅子キーボード相棒選定.md) |
+| 2026-05-01 | `countermeasure` | active | [Docker multi-stage + uv で venv path 不一致による startup 失敗](../2026/05/20260501-countermeasure-docker-multi-stage-uv-で-venv-path-不一致による-startup-失.md) |
 | 2026-04-30 | `decision` | active | [「社長」呼称を恒久的に廃止](../2026/04/20260430-decision-社長呼称を恒久的に廃止.md) |
+| 2026-04-30 | `failure` | active | [auto-push が SSH名前解決失敗で20件未push](../2026/04/20260430-failure-auto-push-が-ssh名前解決失敗で20件未push.md) |
+| 2026-04-30 | `failure` | active | [[batch failure] Intelligence Collection (2026-04-30)](../2026/04/20260430-failure-batch-failure-intelligence-collection-2026-04-30.md) |
+| 2026-04-30 | `failure` | active | [[batch failure] News Collection (2026-04-30)](../2026/04/20260430-failure-batch-failure-news-collection-2026-04-30.md) |
+| 2026-04-30 | `decision` | active | [作業環境投資 (椅子・キーボード相棒選定)](../2026/04/20260430-decision-作業環境投資-椅子キーボード相棒選定.md) |
+| 2026-04-30 | `decision` | active | [「社長」呼称を恒久的に廃止](../2026/04/20260430-decision-社長呼称を恒久的に廃止-a5f6009c.md) |
 | 2026-04-30 | `failure` | active | [auto-pushアラート再発 (SSH/DNS解決失敗)](../2026/04/20260430-failure-auto-pushアラート再発-sshdns解決失敗.md) |
 | 2026-04-30 | `countermeasure` | active | [「社長」呼称を廃止、二人称は『あなた』](../2026/04/20260430-countermeasure-社長呼称を廃止二人称はあなた.md) |
 | 2026-04-30 | `failure` | active | [auto-push が SSH 名前解決失敗で20件未push](../2026/04/20260430-failure-auto-push-が-ssh-名前解決失敗で20件未push.md) |

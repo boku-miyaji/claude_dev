@@ -1,9 +1,16 @@
 # growth_events — `rikyu`
 
-Total: **60**
+Total: **67**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-05-01 | `milestone` | active | [rikyu MVP デプロイセッション完了](../2026/05/20260501-milestone-rikyu-mvp-デプロイセッション完了.md) |
+| 2026-05-01 | `failure` | active | [Azure ロール割り当て権限不足で停滞](../2026/05/20260501-failure-azure-ロール割り当て権限不足で停滞.md) |
+| 2026-05-01 | `failure` | resolved | [Service Bus 名 rikyu-dev-sbus も他テナント衝突、aces- プレフィックス追加で確定](../2026/05/20260501-failure-service-bus-名-rikyu-dev-sbus-も他テナント衝突aces-プレフィックス追.md) |
+| 2026-05-01 | `milestone` | resolved | [rikyu MVP API + Worker のコア実装完了 (FastAPI + 17 endpoint, 2 job handler, 9 tests passing)](../2026/05/20260501-milestone-rikyu-mvp-api-worker-のコア実装完了-fastapi-17-endpoint-2.md) |
+| 2026-05-01 | `decision` | active | [rikyu MVP の CI/CD は SP なしで build & push のみ自動化、deploy は local az CLI で社長実行](../2026/05/20260501-decision-rikyu-mvp-の-cicd-は-sp-なしで-build-push-のみ自動化deploy-は.md) |
+| 2026-04-30 | `decision` | active | [Azure OpenAI は既存 Foundry (Australia East) を再利用、East US 2 新設は Phase 1 中盤で再判断](../2026/04/20260430-decision-azure-openai-は既存-foundry-australia-east-を再利用east-u.md) |
+| 2026-04-30 | `decision` | active | [rikyu MVP の Secret 管理は Container Apps Secrets でスタート、Phase 1 中盤で Key Vault 化](../2026/04/20260430-decision-rikyu-mvp-の-secret-管理は-container-apps-secrets-でスター.md) |
 | 2026-04-30 | `decision` | active | [Azure pg flexible server構成の再検討](../2026/04/20260430-decision-azure-pg-flexible-server構成の再検討.md) |
 | 2026-04-30 | `decision` | active | [Azure PostgreSQL Flexible Server 構成見直し](../2026/04/20260430-decision-azure-postgresql-flexible-server-構成見直し.md) |
 | 2026-04-30 | `decision` | active | [Azure PostgreSQL からMS製/NoSQL検討へ転換](../2026/04/20260430-decision-azure-postgresql-からms製nosql検討へ転換.md) |
