@@ -2006,3 +2006,7 @@
 {"ts":"2026-05-01T18:32:45+09:00","signal":"raw_prompt","prompt":"portalでできました。\nACR webhookでauto deployできる？\n"}
 {"ts":"2026-05-01T18:32:45+09:00","signal":"raw_prompt","prompt":"portalでできました。\nACR webhookでauto deployできる？\n"}
 {"ts":"2026-05-01T20:02:58+09:00","signal":"raw_prompt","prompt":"同業。だいたいAIに携わるエンジニア全般。\nエポソードはいれる。\n\n３つじゃないので３つとは言わない。タイトルは変えたい。\nLLMが進化しても消えない部分を描きたい。\n\n制約・反論とか硬すぎる。論文ではないので\n"}
+{"ts":"2026-05-01T20:02:58+09:00","signal":"raw_prompt","prompt":"同業。だいたいAIに携わるエンジニア全般。\nエポソードはいれる。\n\n３つじゃないので３つとは言わない。タイトルは変えたい。\nLLMが進化しても消えない部分を描きたい。\n\n制約・反論とか硬すぎる。論文ではないので\n"}
+{"ts":"2026-05-01T20:05:56+09:00","signal":"raw_prompt","prompt":"Portalで進めます。\nSESSION_2026-05-01_DEPLOYMENT.mdを読んで続きをして欲しい。\n"}
+{"ts":"2026-05-01T20:05:56+09:00","signal":"raw_prompt","prompt":"Portalで進めます。\nSESSION_2026-05-01_DEPLOYMENT.mdを読んで続きをして欲しい。\n"}
+{"ts":"2026-05-01T20:18:57+09:00","signal":"raw_prompt","prompt":"読者は同業AIエンジニア → 言葉選びを内輪寄りに\nそんなにうちわにしなくてもいい。\n\nLLMが進化してもというのをタイトルに入れるとやりすぎな気がする。LLM時代のーとかにしたい\n"}

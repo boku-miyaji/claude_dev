@@ -670,7 +670,7 @@
   "cachedExtraUsageDisabledReason": "org_level_disabled",
   "showSpinnerTree": false,
   "sonnet1m45MigrationComplete": true,
-  "migrationVersion": 13,
+  "migrationVersion": 12,
   "passesUpsellSeenCount": 3,
   "effortCalloutV2Dismissed": true,
   "groveConfigCache": {
