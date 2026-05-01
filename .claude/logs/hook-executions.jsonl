@@ -28372,3 +28372,8 @@
 {"ts":"2026-05-01T00:26:43+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-05-01T00:26:49+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-05-01T00:26:59+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-05-01T10:47:34+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-05-01T10:49:58+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-05-01T10:50:03+09:00","hook":"tool-collector","tool":"Skill:register","status":"ok"}
+{"ts":"2026-05-01T10:50:04+09:00","hook":"skill-usage-log","skill":"register","status":"ok"}
+{"ts":"2026-05-01T10:50:29+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
