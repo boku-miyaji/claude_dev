@@ -280,30 +280,53 @@ function FinOverview() {
 // Invoices Tab
 // ============================================================
 
-function InvoiceForm({ onSave, onClose }: { onSave: () => void; onClose: () => void }) {
-  const [clientName, setClientName] = useState('')
-  const [amount, setAmount] = useState('')
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().substring(0, 10))
-  const [status, setStatus] = useState('sent')
+function InvoiceForm({ existing, onSave, onClose, onDelete }: { existing: Invoice | null; onSave: () => void; onClose: () => void; onDelete: (id: string) => Promise<void> }) {
+  const [clientName, setClientName] = useState(existing?.client_name || '')
+  const [amount, setAmount] = useState(existing ? String(existing.amount) : '')
+  const [invoiceDate, setInvoiceDate] = useState(existing?.invoice_date || new Date().toISOString().substring(0, 10))
+  const [dueDate, setDueDate] = useState(existing?.due_date || '')
+  const [paidDate, setPaidDate] = useState(existing?.paid_date || '')
+  const [status, setStatus] = useState(existing?.status || 'sent')
+  const [notes, setNotes] = useState(existing?.notes || '')
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const save = async () => {
     if (!clientName.trim() || !amount) return
     setSaving(true)
-    const { error } = await supabase.from('invoices').insert({ client_name: clientName.trim(), amount: parseInt(amount), invoice_date: invoiceDate, status })
+    const payload: Partial<Invoice> = {
+      client_name: clientName.trim(),
+      amount: parseInt(amount),
+      invoice_date: invoiceDate,
+      due_date: dueDate || undefined,
+      paid_date: paidDate || undefined,
+      status,
+      notes: notes.trim() || undefined,
+    }
+    const { error } = existing
+      ? await supabase.from('invoices').update(payload).eq('id', existing.id)
+      : await supabase.from('invoices').insert(payload)
     setSaving(false)
     if (error) { toast(`保存に失敗: ${error.message}`); return }
-    toast('追加しました')
+    toast(existing ? '更新しました' : '追加しました')
     onSave()
     onClose()
   }
 
+  const remove = async () => {
+    if (!existing || !confirm('この請求書を削除しますか？')) return
+    setDeleting(true)
+    await onDelete(existing.id)
+    setDeleting(false)
+  }
+
   return (
-    <Modal open onClose={onClose} title="請求書を追加"
+    <Modal open onClose={onClose} title={existing ? '請求書を編集' : '請求書を追加'}
       footer={
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-primary" disabled={saving || !clientName.trim() || !amount} onClick={save}>{saving ? '保存中...' : '追加'}</button>
+        <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+          <button className="btn btn-primary" disabled={saving || !clientName.trim() || !amount} onClick={save}>{saving ? '保存中...' : existing ? '更新' : '追加'}</button>
           <button className="btn btn-ghost" onClick={onClose}>キャンセル</button>
+          {existing && <button className="btn" style={{ color: 'var(--red)', marginLeft: 'auto' }} disabled={deleting} onClick={remove}>{deleting ? '削除中...' : '削除'}</button>}
         </div>
       }
     >
@@ -312,7 +335,10 @@ function InvoiceForm({ onSave, onClose }: { onSave: () => void; onClose: () => v
           { label: '請求先', el: <input className="input" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="クライアント名" autoFocus /> },
           { label: '金額（税込）', el: <input className="input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" /> },
           { label: '請求日', el: <input className="input" type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} /> },
+          { label: '支払期限', el: <input className="input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} /> },
+          { label: '入金日', el: <input className="input" type="date" value={paidDate} onChange={e => setPaidDate(e.target.value)} /> },
           { label: 'ステータス', el: <select className="input" value={status} onChange={e => setStatus(e.target.value)}><option value="sent">送付済み</option><option value="paid">入金済み</option><option value="overdue">支払遅延</option><option value="draft">下書き</option><option value="cancelled">キャンセル</option></select> },
+          { label: 'メモ', el: <textarea className="input" value={notes} onChange={e => setNotes(e.target.value)} style={{ minHeight: 60 }} placeholder="備考（任意）" /> },
         ].map(({ label, el }) => (
           <div key={label}>
             <label style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 4, display: 'block' }}>{label}</label>
@@ -328,6 +354,7 @@ function FinInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [editItem, setEditItem] = useState<Invoice | null>(null)
 
   const load = async () => {
     const res = await supabase.from('invoices').select('*').order('invoice_date', { ascending: false })
@@ -337,11 +364,18 @@ function FinInvoices() {
 
   useEffect(() => { load() }, [])
 
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('invoices').delete().eq('id', id)
+    if (error) { toast(`削除に失敗: ${error.message}`); return }
+    toast('削除しました')
+    setShowForm(false); setEditItem(null); load()
+  }
+
   if (loading) return <div className="skeleton-card" style={{ height: 150 }} />
 
   return (
     <div>
-      <button className="btn btn-p btn-sm" style={{ marginBottom: 16 }} onClick={() => setShowForm(true)}>+ 請求書追加</button>
+      <button className="btn btn-p btn-sm" style={{ marginBottom: 16 }} onClick={() => { setEditItem(null); setShowForm(true) }}>+ 請求書追加</button>
 
       {invoices.length === 0 ? (
         <div style={{ color: 'var(--text3)', padding: '40px 0', textAlign: 'center' }}>請求書が未登録です。/invoice コマンドでPDFをアップロードしてください。</div>
@@ -349,24 +383,27 @@ function FinInvoices() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr>
-              {['日付', '請求先', '金額', '入金日', 'ステータス'].map(h => <th key={h} style={{ textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text3)', fontWeight: 500 }}>{h}</th>)}
+              {['日付', '請求先', '金額', '入金日', 'ステータス', ''].map(h => <th key={h} style={{ textAlign: 'left', padding: '8px 12px', borderBottom: '1px solid var(--border)', color: 'var(--text3)', fontWeight: 500 }}>{h}</th>)}
             </tr>
           </thead>
           <tbody>
             {invoices.map(inv => (
-              <tr key={inv.id} style={{ borderBottom: '1px solid var(--border)' }}>
+              <tr key={inv.id} style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => { setEditItem(inv); setShowForm(true) }}>
                 <td style={{ padding: '8px 12px' }}>{fmtDate(inv.invoice_date)}</td>
                 <td style={{ padding: '8px 12px' }}>{inv.client_name}</td>
                 <td style={{ padding: '8px 12px', fontWeight: 600 }}>{fmtYen(inv.amount)}</td>
                 <td style={{ padding: '8px 12px', color: 'var(--text3)' }}>{inv.paid_date ? fmtDate(inv.paid_date) : '-'}</td>
                 <td style={{ padding: '8px 12px', color: 'var(--text3)', fontSize: 11 }}>{inv.status || '-'}</td>
+                <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                  <button className="btn btn-g btn-sm" style={{ fontSize: 10, padding: '2px 8px' }} onClick={e => { e.stopPropagation(); setEditItem(inv); setShowForm(true) }}>編集</button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
 
-      {showForm && <InvoiceForm onSave={load} onClose={() => setShowForm(false)} />}
+      {showForm && <InvoiceForm existing={editItem} onSave={load} onClose={() => { setShowForm(false); setEditItem(null) }} onDelete={handleDelete} />}
     </div>
   )
 }
