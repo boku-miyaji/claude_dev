@@ -28377,3 +28377,5 @@
 {"ts":"2026-05-01T10:50:03+09:00","hook":"tool-collector","tool":"Skill:register","status":"ok"}
 {"ts":"2026-05-01T10:50:04+09:00","hook":"skill-usage-log","skill":"register","status":"ok"}
 {"ts":"2026-05-01T10:50:29+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-05-01T11:51:43+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-05-01T11:51:55+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
