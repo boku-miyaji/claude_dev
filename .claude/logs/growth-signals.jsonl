@@ -2045,3 +2045,5 @@
 {"ts":"2026-05-01T22:19:00+09:00","signal":"raw_prompt","prompt":"記事として分けた方がいいとかある？\n論点がぶれていれば複数の記事にしてもいい。長すぎるとか。\n"}
 {"ts":"2026-05-01T22:25:39+09:00","signal":"raw_prompt","prompt":"1, ok\n2, ok\n3, C\n4, ok\n"}
 {"ts":"2026-05-01T22:26:31+09:00","signal":"raw_prompt","prompt":"1こでいこうか\n"}
+{"ts":"2026-05-01T22:25:39+09:00","signal":"raw_prompt","prompt":"1, ok\n2, ok\n3, C\n4, ok\n"}
+{"ts":"2026-05-01T22:26:31+09:00","signal":"raw_prompt","prompt":"1こでいこうか\n"}
