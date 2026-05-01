@@ -1,0 +1,1899 @@
+{
+  "collected_at": "2026-05-01 13:10 JST",
+  "timestamp": "2026-05-01-1310",
+  "window_label": "Step 1: 直近24時間",
+  "window_hours": 24,
+  "items": [
+    {
+      "title": "Your car with Google built-in is about to get smarter, thanks to Gemini",
+      "url": "https://blog.google/products-and-platforms/platforms/android/cars-with-google-built-in-gemini-tips-2026/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-30T16:00:00+00:00",
+      "summary": "Gemini navigation on a car screen",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "Check out the new ways to explore Route 66 on Google Maps.",
+      "url": "https://blog.google/products-and-platforms/products/maps/route-66/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-30T14:00:00+00:00",
+      "summary": "<img src=\"https://storage.googleapis.com/gweb-uniblog-publish-prod/images/Route_66_Doodle.max-600x600.format-webp.webp\" />In celebration of Route 66’s 100th anniversary, Google Maps is rolling out two new ways to help you explore it, virtually or IRL.",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "Preferred Sources is now available in all languages.",
+      "url": "https://blog.google/products-and-platforms/products/search/preferred-sources-language-expansion/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-30T13:00:00+00:00",
+      "summary": "<img src=\"https://storage.googleapis.com/gweb-uniblog-publish-prod/images/HeroImage_Template-v1_gADFpm0.max-600x600.format-webp.webp\" />Preferred Sources is now rolling out globally in all supported languages, giving users more control over the news they see on Search.",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "Adapt your Shopping campaigns to modern Search with AI Max.",
+      "url": "https://blog.google/products/ads-commerce/ai-max-for-shopping/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-30T13:00:00+00:00",
+      "summary": "<img src=\"https://storage.googleapis.com/gweb-uniblog-publish-prod/images/Shopping_x_AI_Max_Road_to_GML_M.max-600x600.format-webp.webp\" />Built for the next generation of Search, AI Max for Shopping campaigns helps retailers reach shoppers the moment discovery begins.",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "Meet travelers in the moments that matter with Search Campaigns for Travel.",
+      "url": "https://blog.google/products/ads-commerce/ai-max-for-travel/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-30T13:00:00+00:00",
+      "summary": "<img src=\"https://storage.googleapis.com/gweb-uniblog-publish-prod/images/AI_Max_Travel_Hero_-_Bidding_2x.max-600x600.format-webp.webp\" />Upgrade to AI Max to simplify your workflow and access our most advanced tools.",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "AI Max Turns 1 with new ways to steer performance and expansion to more advertisers",
+      "url": "https://blog.google/products/ads-commerce/ai-max-new-features/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-30T13:00:00+00:00",
+      "summary": "\"The Road to Google Marketing Live\" surrounded by various shopping items",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "Alphabet is one of TIME’s 100 most influential companies of 2026.",
+      "url": "https://blog.google/company-news/inside-google/time-100-companies/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-30T11:00:00+00:00",
+      "summary": "<img src=\"https://storage.googleapis.com/gweb-uniblog-publish-prod/images/TIM260511-T100Companies-Cover-G.max-600x600.format-webp_Ea7aH5d.webp\" />Sundar Pichai is on the cover of Time magazine for its 100 most influential companies issue for 2026.",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "How we’re protecting energy affordability in Oklahoma",
+      "url": "https://blog.google/innovation-and-ai/infrastructure-and-cloud/global-network/oklahoma-energy-affordability-agreement/",
+      "source_type": "official_blog",
+      "source_name": "Google Blog",
+      "published_at": "2026-04-30T11:00:00+00:00",
+      "summary": "Google G over the state of Oklahoma",
+      "vendor": "Google",
+      "extra": {}
+    },
+    {
+      "title": "Enabling a new model for healthcare with AI co-clinician",
+      "url": "https://deepmind.google/blog/ai-co-clinician/",
+      "source_type": "official_blog",
+      "source_name": "Google DeepMind",
+      "published_at": "2026-04-30T12:14:15+00:00",
+      "summary": "Researching the path to AI-augmented care and development of an AI co-clinician.",
+      "vendor": "DeepMind",
+      "extra": {}
+    },
+    {
+      "title": "Computing Equilibrium beyond Unilateral Deviation",
+      "url": "http://arxiv.org/abs/2604.28186v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:59:07+00:00",
+      "summary": "Most familiar equilibrium concepts, such as Nash and correlated equilibrium, guarantee only that no single player can improve their utility by deviating unilaterally. They offer no guarantees against profitable coordinated deviations by coalitions. Although the literature proposes solution concepts that provide stability against multilateral deviations (\\emph{e.g.}, strong Nash and coalition-proof equilibrium), these generally fail to exist. In this paper, we study an alternative solution concept that minimizes coalitional deviation incentives, rather than requiring them to vanish, and is therefore guaranteed to exist. Specifically, we focus on minimizing the average gain of a deviating coalition, and extend the framework to weighted-average and maximum-within-coalition gains. In contrast,...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28186v1",
+        "categories": [
+          "cs.GT",
+          "cs.AI",
+          "cs.CC",
+          "cs.LG",
+          "econ.TH"
+        ],
+        "authors": [
+          "Mingyang Liu",
+          "Gabriele Farina",
+          "Asuman Ozdaglar"
+        ]
+      }
+    },
+    {
+      "title": "Synthetic Computers at Scale for Long-Horizon Productivity Simulation",
+      "url": "http://arxiv.org/abs/2604.28181v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:58:02+00:00",
+      "summary": "Realistic long-horizon productivity work is strongly conditioned on user-specific computer environments, where much of the work context is stored and organized through directory structures and content-rich artifacts. To scale synthetic data creation for such productivity scenarios, we introduce Synthetic Computers at Scale, a scalable methodology for creating such environments with realistic folder hierarchies and content-rich artifacts (e.g., documents, spreadsheets, and presentations). Conditioned on each synthetic computer, we run long-horizon simulations: one agent creates productivity objectives that are specific to the computer's user and require multiple professional deliverables and about a month of human work; another agent then acts as that user and keeps working across the compu...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28181v1",
+        "categories": [
+          "cs.AI",
+          "cs.CL",
+          "cs.LG"
+        ],
+        "authors": [
+          "Tao Ge",
+          "Baolin Peng",
+          "Hao Cheng",
+          "Jianfeng Gao"
+        ]
+      }
+    },
+    {
+      "title": "LLM as Clinical Graph Structure Refiner: Enhancing Representation Learning in EEG Seizure Diagnosis",
+      "url": "http://arxiv.org/abs/2604.28178v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:57:12+00:00",
+      "summary": "Electroencephalogram (EEG) signals are vital for automated seizure detection, but their inherent noise makes robust representation learning challenging. Existing graph construction methods, whether correlation-based or learning-based, often generate redundant or irrelevant edges due to the noisy nature of EEG data. This significantly impairs the quality of graph representation and limits downstream task performance. Motivated by the remarkable reasoning and contextual understanding capabilities of large language models (LLMs), we explore the idea of using LLMs as graph edge refiners. Specifically, we propose a two-stage framework: we first verify that LLM-based edge refinement can effectively identify and remove redundant connections, leading to significant improvements in seizure detectio...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28178v1",
+        "categories": [
+          "cs.AI"
+        ],
+        "authors": [
+          "Lincan Li",
+          "Zheng Chen",
+          "Yushun Dong"
+        ]
+      }
+    },
+    {
+      "title": "PhyCo: Learning Controllable Physical Priors for Generative Motion",
+      "url": "http://arxiv.org/abs/2604.28169v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:53:03+00:00",
+      "summary": "Modern video diffusion models excel at appearance synthesis but still struggle with physical consistency: objects drift, collisions lack realistic rebound, and material responses seldom match their underlying properties. We present PhyCo, a framework that introduces continuous, interpretable, and physically grounded control into video generation. Our approach integrates three key components: (i) a large-scale dataset of over 100K photorealistic simulation videos where friction, restitution, deformation, and force are systematically varied across diverse scenarios; (ii) physics-supervised fine-tuning of a pretrained diffusion model using a ControlNet conditioned on pixel-aligned physical property maps; and (iii) VLM-guided reward optimization, where a fine-tuned vision-language model evalua...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28169v1",
+        "categories": [
+          "cs.CV",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "authors": [
+          "Sriram Narayanan",
+          "Ziyu Jiang",
+          "Srinivasa Narasimhan",
+          "Manmohan Chandraker"
+        ]
+      }
+    },
+    {
+      "title": "Intern-Atlas: A Methodological Evolution Graph as Research Infrastructure for AI Scientists",
+      "url": "http://arxiv.org/abs/2604.28158v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:44:55+00:00",
+      "summary": "Existing research infrastructure is fundamentally document-centric, providing citation links between papers but lacking explicit representations of methodological evolution. In particular, it does not capture the structured relationships that explain how and why research methods emerge, adapt, and build upon one another. With the rise of AI-driven research agents as a new class of consumers of scientific knowledge, this limitation becomes increasingly consequential, as such agents cannot reliably reconstruct method evolution topologies from unstructured text. We introduce Intern-Atlas, a methodological evolution graph that automatically identifies method-level entities, infers lineage relationships among methodologies, and captures the bottlenecks that drive transitions between successive ...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28158v1",
+        "categories": [
+          "cs.AI"
+        ],
+        "authors": [
+          "Yujun Wu",
+          "Dongxu Zhang",
+          "Xinchen Li",
+          "Jinhang Xu",
+          "Yiling Duan",
+          "Yumou Liu",
+          "Jiabao Pan",
+          "Xuanhe Zhou"
+        ]
+      }
+    },
+    {
+      "title": "FlexiTac: A Low-Cost, Open-Source, Scalable Tactile Sensing Solution for Robotic Systems",
+      "url": "http://arxiv.org/abs/2604.28156v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:43:07+00:00",
+      "summary": "We present FlexiTac, a low-cost, open-source, and scalable piezoresistive tactile sensing solution designed for robotic end-effectors. FlexiTac is a practical \"plug-in\" module consisting of (i) thin, flexible tactile sensor pads that provide dense tactile signals and (ii) a compact multi-channel readout board that streams synchronized measurements for real-time control and large-scale data collection. FlexiTac pads adopt a sealed three-layer laminate stack (FPC-Velostat-FPC) with electrode patterns directly integrated into flexible printed circuits, substantially improving fabrication throughput and repeatability while maintaining mechanical compliance for deployment on both rigid and soft grippers. The readout electronics use widely available, low-cost components and stream tactile signal...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28156v1",
+        "categories": [
+          "cs.RO",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "authors": [
+          "Binghao Huang",
+          "Yunzhu Li"
+        ]
+      }
+    },
+    {
+      "title": "Claw-Eval-Live: A Live Agent Benchmark for Evolving Real-World Workflows",
+      "url": "http://arxiv.org/abs/2604.28139v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:23:19+00:00",
+      "summary": "LLM agents are expected to complete end-to-end units of work across software tools, business services, and local workspaces. Yet many agent benchmarks freeze a curated task set at release time and grade mainly the final response, making it difficult to evaluate agents against evolving workflow demand or verify whether a task was executed. We introduce Claw-Eval-Live, a live benchmark for workflow agents that separates a refreshable signal layer, updated across releases from public workflow-demand signals, from a reproducible, time-stamped release snapshot. Each release is constructed from public workflow-demand signals, with ClawHub Top-500 skills used in the current release, and materialized as controlled tasks with fixed fixtures, services, workspaces, and graders. For grading, Claw-Eval...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28139v1",
+        "categories": [
+          "cs.SE",
+          "cs.AI"
+        ],
+        "authors": [
+          "Chenxin Li",
+          "Zhengyang Tang",
+          "Huangxin Lin",
+          "Yunlong Lin",
+          "Shijue Huang",
+          "Shengyuan Liu",
+          "Bowen Ye",
+          "Rang Li"
+        ]
+      }
+    },
+    {
+      "title": "Crab: A Semantics-Aware Checkpoint/Restore Runtime for Agent Sandboxes",
+      "url": "http://arxiv.org/abs/2604.28138v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:20:19+00:00",
+      "summary": "Autonomous agents act through sandboxed containers and microVMs whose state spans filesystems, processes, and runtime artifacts. Checkpoint and restore (C/R) of this state is needed for fault tolerance, spot execution, RL rollout branching, and safe rollback-yet existing approaches fall into two extremes: application-level recovery preserves chat history but misses OS-side effects, while full per-turn checkpointing is correct but too expensive under dense co-location. The root cause is an agent-OS semantic gap: agent frameworks see tool calls but not their OS effects; the OS sees state changes but lacks turn-level context to judge recovery relevance. This gap hides massive sparsity: over 75% of agent turns produce no recovery-relevant state, so most checkpoints are unnecessary. Crab (Check...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28138v1",
+        "categories": [
+          "cs.OS",
+          "cs.AI"
+        ],
+        "authors": [
+          "Tianyuan Wu",
+          "Chaokun Chang",
+          "Lunxi Cao",
+          "Wei Gao",
+          "Wei Wang"
+        ]
+      }
+    },
+    {
+      "title": "Latent Adversarial Detection: Adaptive Probing of LLM Activations for Multi-Turn Attack Detection",
+      "url": "http://arxiv.org/abs/2604.28129v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:16:33+00:00",
+      "summary": "Multi-turn prompt injection follows a known attack path -- trust-building, pivoting, escalation but text-level defenses miss covert attacks where individual turns appear benign. We show this attack path leaves an activation-level signature in the model's residual stream: each phase shift moves the activation, producing a total path length far exceeding benign conversations. We call this adversarial restlessness. Five scalar trajectory features capturing this signal lift conversation-level detection from 76.2% to 93.8% on synthetic held-out data. The signal replicates across four model families (24B-70B); probes are model-specific and do not transfer across architectures. Generalization is source-dependent: leave-one-source-out evaluation shows each of synthetic, LMSYS-Chat-1M, and SafeDial...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28129v1",
+        "categories": [
+          "cs.CR",
+          "cs.AI"
+        ],
+        "authors": [
+          "Prashant Kulkarni"
+        ]
+      }
+    },
+    {
+      "title": "Normativity and Productivism: Ableist Intelligence? A Degrowth Analysis of AI Sign Language Translation Tools for Deaf People",
+      "url": "http://arxiv.org/abs/2604.28125v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:14:08+00:00",
+      "summary": "Sign languages, of any geographical or accentual variation, understandably face continuous scrutiny under the ever present popularity of verbal dictation and audism. Through this, many potential problems arise with the current lack of accessible communication for those who rely on such sign languages for essential conversation. Such AI systems regularly take the form of recognition and interpretation models, designed to provide seamless and accurate translation. In reality these systems are built from biased data and created without any input from deaf communities. Such models are widely used and accepted by their hearing counterparts who remain ignorant to the inherent culture, semantics and colloquial language present in gestural language systems.   This phenomenon is best analysed under...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28125v1",
+        "categories": [
+          "cs.AI",
+          "cs.CY",
+          "cs.HC"
+        ],
+        "authors": [
+          "Nina Seron-Abouelfadil",
+          "Poppy Fynes"
+        ]
+      }
+    },
+    {
+      "title": "PRISM: Pre-alignment via Black-box On-policy Distillation for Multimodal Reinforcement Learning",
+      "url": "http://arxiv.org/abs/2604.28123v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:12:53+00:00",
+      "summary": "The standard post-training recipe for large multimodal models (LMMs) applies supervised fine-tuning (SFT) on curated demonstrations followed by reinforcement learning with verifiable rewards (RLVR). However, SFT introduces distributional drift that neither preserves the model's original capabilities nor faithfully matches the supervision distribution. This problem is further amplified in multimodal reasoning, where perception errors and reasoning failures follow distinct drift patterns that compound during subsequent RL. We introduce PRISM, a three-stage pipeline that mitigates this drift by inserting an explicit distribution-alignment stage between SFT and RLVR. Building on the principle of on-policy distillation (OPD), PRISM casts alignment as a black-box, response-level adversarial game...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28123v1",
+        "categories": [
+          "cs.CV",
+          "cs.AI",
+          "cs.CL"
+        ],
+        "authors": [
+          "Sudong Wang",
+          "Weiquan Huang",
+          "Xiaomin Yu",
+          "Zuhao Yang",
+          "Hehai Lin",
+          "Keming Wu",
+          "Chaojun Xiao",
+          "Chen Chen"
+        ]
+      }
+    },
+    {
+      "title": "Do Sparse Autoencoders Capture Concept Manifolds?",
+      "url": "http://arxiv.org/abs/2604.28119v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:08:07+00:00",
+      "summary": "Sparse autoencoders (SAEs) are widely used to extract interpretable features from neural network representations, often under the implicit assumption that concepts correspond to independent linear directions. However, a growing body of evidence suggests that many concepts are instead organized along low-dimensional manifolds encoding continuous geometric relationships. This raises three basic questions: what does it mean for an SAE to capture a manifold, when do existing SAE architectures do so, and how? We develop a theoretical framework that answers these questions and show that SAEs can capture manifolds in two fundamentally different ways: globally, by allocating a compact group of atoms whose linear span contains the entire manifold, or locally, by distributing it across features that...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28119v1",
+        "categories": [
+          "cs.LG",
+          "cs.AI"
+        ],
+        "authors": [
+          "Usha Bhalla",
+          "Thomas Fel",
+          "Can Rager",
+          "Sheridan Feucht",
+          "Tal Haklay",
+          "Daniel Wurgaft",
+          "Siddharth Boppana",
+          "Matthew Kowal"
+        ]
+      }
+    },
+    {
+      "title": "DEFault++: Automated Fault Detection, Categorization, and Diagnosis for Transformer Architectures",
+      "url": "http://arxiv.org/abs/2604.28118v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:07:11+00:00",
+      "summary": "Transformer models are widely deployed in critical AI applications, yet faults in their attention mechanisms, projections, and other internal components often degrade behavior silently without raising runtime errors. Existing fault diagnosis techniques often target generic deep neural networks and cannot identify which transformer component is responsible for an observed symptom. In this article, we present DEFault++, a hierarchical learning-based diagnostic technique that operates at three level of abstraction: it detects whether a fault is present, classifies it into one of 12 transformer-specific fault categories (covering both attention-internal mechanisms and surrounding architectural components), and identifies the underlying root cause from up to 45 mechanisms. To facilitate both tr...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28118v1",
+        "categories": [
+          "cs.SE",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "authors": [
+          "Sigma Jahan",
+          "Saurabh Singh Rajput",
+          "Tushar Sharma",
+          "Mohammad Masudur Rahman"
+        ]
+      }
+    },
+    {
+      "title": "Splitting Argumentation Frameworks with Collective Attacks and Supports",
+      "url": "http://arxiv.org/abs/2604.28112v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T17:01:06+00:00",
+      "summary": "This work proposes novel splitting techniques for argumentation formalisms that incorporate supports between defeasible elements. We base our studies on bipolar set-based argumentation frameworks (BSAFs) which generalize argumentation frameworks with collective attacks (SETAFs), as well as bipolar argumentation frameworks (BAFs), by incorporating both collective attacks and supports. Notably, BSAFs establish a crucial link to structured argumentation as they naturally capture general (potentially non-flat) assumption-based argumentation. The increase in expressiveness calls for diverse forms of splitting. We consider splits over collective attacks (thereby generalizing the recently proposed splitting techniques for SETAFs), splits over collective supports, as well as splits over both colle...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28112v1",
+        "categories": [
+          "cs.AI",
+          "cs.LO"
+        ],
+        "authors": [
+          "Matti Berthold",
+          "Lydia Blümel",
+          "Giovanni Buraglio",
+          "Anna Rapberger"
+        ]
+      }
+    },
+    {
+      "title": "Mapping the Methodological Space of Classroom Interaction Research: Scale, Duration, and Modality in an Age of AI",
+      "url": "http://arxiv.org/abs/2604.28098v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.AI",
+      "published_at": "2026-04-30T16:42:38+00:00",
+      "summary": "Research on classroom interaction has long been divided between large-scale observation and in-depth ethnographic work. We propose a framework mapping this methodological space along three dimensions--scale, duration, and modality--where a study's position shapes what it reveals and obscures. We illustrate it through contrasting studies of dialogic teaching--Howe et al. (2019) and Snell and Lefstein (2018)--and an interview with the lead researchers, organized around three questions: what can be operationalized, what mechanisms become visible, and what translates to practice. We then examine how AI is expanding this space and how the framework can guide research and tool design.",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28098v1",
+        "categories": [
+          "cs.AI",
+          "cs.CL",
+          "cs.CY"
+        ],
+        "authors": [
+          "Dorottya Demszky",
+          "Edith Bouton",
+          "Alison Twiner",
+          "Sara Hennessy",
+          "Richard Correnti"
+        ]
+      }
+    },
+    {
+      "title": "Exploration Hacking: Can LLMs Learn to Resist RL Training?",
+      "url": "http://arxiv.org/abs/2604.28182v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T17:58:39+00:00",
+      "summary": "Reinforcement learning (RL) has become essential to the post-training of large language models (LLMs) for reasoning, agentic capabilities and alignment. Successful RL relies on sufficient exploration of diverse actions by the model during training, which creates a potential failure mode: a model could strategically alter its exploration during training to influence the subsequent training outcome. In this paper we study this behavior, called exploration hacking. First, we create model organisms of selective RL resistance by fine-tuning LLMs to follow specific underperformance strategies; these models can successfully resist our RL-based capability elicitation in agentic biosecurity and AI R&D environments while maintaining performance on related tasks. We then use our model organisms to ev...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28182v1",
+        "categories": [
+          "cs.LG",
+          "cs.CL"
+        ],
+        "authors": [
+          "Eyon Jang",
+          "Damon Falck",
+          "Joschka Braun",
+          "Nathalie Kirch",
+          "Achu Menon",
+          "Perusha Moodley",
+          "Scott Emmons",
+          "Roland S. Zimmermann"
+        ]
+      }
+    },
+    {
+      "title": "On the Proper Treatment of Units in Surprisal Theory",
+      "url": "http://arxiv.org/abs/2604.28147v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T17:33:58+00:00",
+      "summary": "Surprisal theory links human processing effort to the predictability of an upcoming linguistic unit, but empirical work often leaves the notion of a unit underspecified. In practice, experimental stimuli are segmented into linguistically motivated units (e.g., words), while pretrained language models assign probability mass to a fixed token alphabet that typically does not align with those units. As a result, surprisal-based predictors depend implicitly on ad hoc procedures that conflate two distinct modeling choices: the definition of the unit of analysis and the choice of regions of interest over which predictions are evaluated. In this paper, we disentangle these choices and give a unified framework for reasoning about surprisal over arbitrary unit inventories. We argue that surprisal-b...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28147v1",
+        "categories": [
+          "cs.CL"
+        ],
+        "authors": [
+          "Samuel Kiegeland",
+          "Vésteinn Snæbjarnarson",
+          "Tim Vieira",
+          "Ryan Cotterell"
+        ]
+      }
+    },
+    {
+      "title": "TopBench: A Benchmark for Implicit Prediction and Reasoning over Tabular Question Answering",
+      "url": "http://arxiv.org/abs/2604.28076v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T16:22:51+00:00",
+      "summary": "Large Language Models (LLMs) have advanced Table Question Answering, where most queries can be answered by extracting information or simple aggregation. However, a common class of real-world queries is implicitly predictive, requiring the inference of unobserved answers from historical patterns rather than mere retrieval. These queries introduce two challenges: recognizing latent intent and reliable predictive reasoning over massive tables. To assess LLMs in such Tabular questiOn answering with implicit Prediction tasks, we introduce TopBench, a benchmark consisting of 779 samples across four sub-tasks, ranging from single-point prediction to decision making, treatment effect analysis, and complex filtering, requiring models to generate outputs spanning reasoning text and structured tables...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28076v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI",
+          "cs.LG"
+        ],
+        "authors": [
+          "An-Yang Ji",
+          "Jun-Peng Jiang",
+          "De-Chuan Zhan",
+          "Han-Jia Ye"
+        ]
+      }
+    },
+    {
+      "title": "Repetition over Diversity: High-Signal Data Filtering for Sample-Efficient German Language Modeling",
+      "url": "http://arxiv.org/abs/2604.28075v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T16:21:28+00:00",
+      "summary": "Recent research has shown that filtering massive English web corpora into high-quality subsets significantly improves training efficiency. However, for high-resource non-English languages like German, French, or Japanese, aggressive filtering creates a strategic dilemma: should practitioners prioritize diversity by training once on large amounts of lightly filtered web data, or prioritize quality by strictly filtering for a high-quality core and repeating it over multiple epochs? We investigate this trade-off for German by constructing hierarchical quality filters applied to 500M web documents, comparing multi-epoch training on the filtered subsets against single-pass training on a diverse corpus. Our experiments across multiple model scales and token budgets show that repeating high-quali...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28075v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI"
+        ],
+        "authors": [
+          "Ansar Aynetdinov",
+          "Patrick Haller",
+          "Alan Akbik"
+        ]
+      }
+    },
+    {
+      "title": "Measuring research data reuse in scholarly publications using generative artificial intelligence: Open Science Indicator development and preliminary results",
+      "url": "http://arxiv.org/abs/2604.28061v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T16:07:43+00:00",
+      "summary": "Numerous metascience studies and other initiatives have begun to monitor the prevalence of open science practices when it is more important to understand the 'downstream' effects or impacts of open science. PLOS and DataSeer have developed a new LLM-based indicator to measure an important effect of open science: the reuse of research data. Our results show a data reuse rate of 43%, which is higher than established bibliometric techniques. We show that data reuse can be measured at scale using LLMs and generative artificial intelligence. The positive effects of research data sharing and reuse may currently be underestimated.",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28061v1",
+        "categories": [
+          "cs.DL",
+          "cs.CL"
+        ],
+        "authors": [
+          "Lauren Cadwallader",
+          "Iain Hrynaszkiewicz",
+          "parth sarin",
+          "Tim Vines"
+        ]
+      }
+    },
+    {
+      "title": "Stable Behavior, Limited Variation: Persona Validity in LLM Agents for Urban Sentiment Perception",
+      "url": "http://arxiv.org/abs/2604.28048v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T15:59:11+00:00",
+      "summary": "Large Language Models (LLMs) are increasingly used as proxies for human perception in urban analysis, yet it remains unclear whether persona prompting produces meaningful and reproducible behavioral diversity. We investigate whether distinct personas influence urban sentiment judgments generated by multimodal LLMs. Using a factorial set of personas spanning gender, economic status, political orientation, and personality, we instantiate multiple agents per persona to evaluate urban scene images from the PerceptSent dataset and assess both within-persona consistency and cross-persona variation. Results show strong convergence among agents sharing a persona, indicating stable and reproducible behavior. However, cross-persona differentiation is limited: economic status and personality induce s...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28048v1",
+        "categories": [
+          "cs.CL",
+          "cs.SI"
+        ],
+        "authors": [
+          "Neemias B da Silva",
+          "Rodrigo Minetto",
+          "Daniel Silver",
+          "Thiago H Silva"
+        ]
+      }
+    },
+    {
+      "title": "Ease of dependency distance minimization in star-like structures",
+      "url": "http://arxiv.org/abs/2604.28034v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T15:47:44+00:00",
+      "summary": "The syntactic structure of a sentence can be represented as a tree where edges indicate syntactic dependencies between words. When that structure is a star, it has been demonstrated that the head should be placed in the middle of the linear arrangement according to the principle of syntactic dependency distance minimization. However, hubs of stars tend to be put at one of the ends, against that principle. Here we address two questions: (1) How difficult is it to minimize dependency distance? (2) Why anti dependency distance minimization effects have been found in star structures but not in path structures? The ease of optimization is determined by the shape of the optimization landscape. It was demonstrated that the landscape of star structures is quasiconvex (Ferrer-i-Cancho 2015, Languag...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28034v1",
+        "categories": [
+          "cs.CL",
+          "physics.soc-ph"
+        ],
+        "authors": [
+          "Emília Garcia-Casademont",
+          "Ramon Ferrer-i-Cancho"
+        ]
+      }
+    },
+    {
+      "title": "Models Recall What They Violate: Constraint Adherence in Multi-Turn LLM Ideation",
+      "url": "http://arxiv.org/abs/2604.28031v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T15:46:33+00:00",
+      "summary": "When researchers iteratively refine ideas with large language models, do the models preserve fidelity to the original objective? We introduce DriftBench, a benchmark for evaluating constraint adherence in multi-turn LLM-assisted scientific ideation. Across 2,146 scored benchmark runs spanning seven models from five providers (including two open-weight), four interaction conditions, and 38 research briefs from 24 scientific domains, we find that iterative pressure reliably increases structural complexity and often reduces adherence to original constraints. A restatement probe reveals a dissociation between declarative recall and behavioral adherence, as models accurately restate constraints they simultaneously violate. The knows-but-violates (KBV) rate, measuring constraint non-compliance d...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28031v1",
+        "categories": [
+          "cs.CL"
+        ],
+        "authors": [
+          "Garvin Kruthof"
+        ]
+      }
+    },
+    {
+      "title": "Reliable Answers for Recurring Questions: Boosting Text-to-SQL Accuracy with Template Constrained Decoding",
+      "url": "http://arxiv.org/abs/2604.28028v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T15:44:34+00:00",
+      "summary": "Large language models (LLMs) have revolutionized Text-to-SQL generation, allowing users to query structured data using natural language with growing ease. Yet, real-world deployment remains challenging, especially in complex or unseen schemas, due to inconsistent accuracy and the risk of generating invalid SQL. We introduce Template Constrained Decoding (TeCoD), a system that addresses these limitations by harnessing the recurrence of query patterns in labeled workloads. TeCoD converts historical NL-SQL pairs into reusable templates and introduces a robust template selection module that uses a fine-tuned natural language inference model to match or reject queries efficiently. Once the template is selected, TeCoD enforces it during SQL generation through grammar-constrained decoding, implem...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28028v1",
+        "categories": [
+          "cs.CL",
+          "cs.AI",
+          "cs.DB",
+          "cs.IR"
+        ],
+        "authors": [
+          "Smit Jivani",
+          "Sarvam Maheshwari",
+          "Sunita Sarawagi"
+        ]
+      }
+    },
+    {
+      "title": "Universal statistical laws governing culinary design",
+      "url": "http://arxiv.org/abs/2604.28021v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T15:40:42+00:00",
+      "summary": "Cooking is a cultural expression of human creativity that transcends geography and time through the orchestration of ingredients and techniques, much like languages do through words and syntax. Yet, beneath the apparent diversity of culinary traditions, whether recipes obey statistical laws comparable to those of other symbolic systems remains unknown. Here we analyze a large corpus of traditional recipes spanning global cuisines, annotated using a state-of-the-art named entity recognition algorithm into ingredients, cooking techniques, utensils, and other culinary attributes. We find that ingredient usage exhibits Zipf-like rank-frequency scaling, that culinary diversity grows sublinearly with corpus size in accordance with Heaps' law, and that recipe complexity follows Menzerath-Altmann-...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28021v1",
+        "categories": [
+          "physics.soc-ph",
+          "cs.CL"
+        ],
+        "authors": [
+          "Ganesh Bagler",
+          "Gopal Krishna Tewari",
+          "Aditya Raj Yadav",
+          "Akshat Singh",
+          "Pranay Bansal",
+          "Ujjval Dargar",
+          "Mansi Goel",
+          "Madhvi Kumari Sinha"
+        ]
+      }
+    },
+    {
+      "title": "Latent-GRPO: Group Relative Policy Optimization for Latent Reasoning",
+      "url": "http://arxiv.org/abs/2604.27998v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T15:23:40+00:00",
+      "summary": "Latent reasoning offers a more efficient alternative to explicit reasoning by compressing intermediate reasoning into continuous representations and substantially shortening reasoning chains. However, existing latent reasoning methods mainly focus on supervised learning, and reinforcement learning in latent space remains highly unstable. We study this problem through the lens of Group Relative Policy Optimization (GRPO), and show that directly adapting GRPO to latent reasoning is fundamentally non-trivial: latent reasoning changes both the probability density and the sampling mechanism, causing three coupled bottlenecks: absence of intrinsic latent manifolds, where unconstrained exploration pushes rollouts off the valid latent manifold; exploration-optimization misalignment, where trajecto...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27998v1",
+        "categories": [
+          "cs.LG",
+          "cs.CL"
+        ],
+        "authors": [
+          "Jingcheng Deng",
+          "Zihao Wei",
+          "Liang Pang",
+          "Junhong Wu",
+          "Shicheng Xu",
+          "Zenghao Duan",
+          "Huawei Shen"
+        ]
+      }
+    },
+    {
+      "title": "MM-StanceDet: Retrieval-Augmented Multi-modal Multi-agent Stance Detection",
+      "url": "http://arxiv.org/abs/2604.27934v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.CL",
+      "published_at": "2026-04-30T14:34:18+00:00",
+      "summary": "Multimodal Stance Detection (MSD) is crucial for understanding public discourse, yet effectively fusing text and image, especially with conflicting signals, remains challenging. Existing methods often face difficulties with contextual grounding, cross-modal interpretation ambiguity, and single-pass reasoning fragility. To address these, we propose Retrieval-Augmented Multi-modal Multi-agent Stance Detection (MM-StanceDet), a novel multi-agent framework integrating Retrieval Augmentation for contextual grounding, specialized Multimodal Analysis agents for nuanced interpretation, a Reasoning-Enhanced Debate stage for exploring perspectives, and Self-Reflection for robust adjudication. Extensive experiments on five datasets demonstrate MM-StanceDet significantly outperforms state-of-the-art b...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27934v1",
+        "categories": [
+          "cs.AI",
+          "cs.CL"
+        ],
+        "authors": [
+          "Weihai Lu",
+          "Zhejun Zhao",
+          "Yanshu Li",
+          "Huan He"
+        ]
+      }
+    },
+    {
+      "title": "An adaptive wavelet-based PINN for problems with localized high-magnitude source",
+      "url": "http://arxiv.org/abs/2604.28180v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-30T17:57:22+00:00",
+      "summary": "In recent years, physics-informed neural networks (PINNs) have gained significant attention for solving differential equations, although they suffer from two fundamental limitations, namely, spectral bias inherent in neural networks and loss imbalance arising from multiscale phenomena. This paper proposes an adaptive wavelet-based PINN (AW-PINN) to address the extreme loss imbalance characteristic of problems with localized high-magnitude source terms. Such problems frequently arise in various physical applications, such as thermal processing, electro-magnetics, impact mechanics, and fluid dynamics involving localized forcing. The proposed framework dynamically adjusts the wavelet basis function based on residual and supervised loss. This adaptive nature makes AW-PINN handle problems with ...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28180v1",
+        "categories": [
+          "cs.LG"
+        ],
+        "authors": [
+          "Himanshu Pandey",
+          "Ratikanta Behera"
+        ]
+      }
+    },
+    {
+      "title": "Defending Quantum Classifiers against Adversarial Perturbations through Quantum Autoencoders",
+      "url": "http://arxiv.org/abs/2604.28176v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-30T17:56:40+00:00",
+      "summary": "Machine learning models can learn from data samples to carry out various tasks efficiently. When data samples are adversarially manipulated, such as by insertion of carefully crafted noise, it can cause the model to make mistakes. Quantum machine learning models are also vulnerable to such adversarial attacks, especially in image classification using variational quantum classifiers. While there are promising defenses against these adversarial perturbations, such as training with adversarial samples, they face practical limitations. For example, they are not applicable in scenarios where training with adversarial samples is either not possible or can overfit the models on one type of attack. In this paper, we propose an adversarial training-free defense framework that utilizes a quantum aut...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28176v1",
+        "categories": [
+          "quant-ph",
+          "cs.LG"
+        ],
+        "authors": [
+          "Emma Andrews",
+          "Sahan Sanjaya",
+          "Prabhat Mishra"
+        ]
+      }
+    },
+    {
+      "title": "Strait: Perceiving Priority and Interference in ML Inference Serving",
+      "url": "http://arxiv.org/abs/2604.28175v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-30T17:55:28+00:00",
+      "summary": "Machine learning (ML) inference serving systems host deep neural network (DNN) models and schedule incoming inference requests across deployed GPUs. However, limited support for task prioritization and insufficient latency estimation under concurrent execution may restrict their applicability in on-premises scenarios. We present \\emph{Strait}, a serving system designed to enhance deadline satisfaction for dual-priority inference traffic under high GPU utilization. To improve latency estimation, Strait models potential contention during data transfer and accounts for kernel execution interference through an adaptive prediction model. By drawing on these predictions, it performs priority-aware scheduling to deliver differentiated handling. Evaluation results under intense workloads suggest t...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28175v1",
+        "categories": [
+          "cs.LG"
+        ],
+        "authors": [
+          "Haidong Zhao",
+          "Nikolaos Georgantas"
+        ]
+      }
+    },
+    {
+      "title": "Mapping the Phase Diagram of the Vicsek Model with Machine Learning",
+      "url": "http://arxiv.org/abs/2604.28167v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-30T17:52:23+00:00",
+      "summary": "In this study, we use machine learning to classify and interpolate the phase structure of the Vicsek flocking model across the three-dimensional parameter space $(η,ρ,v_0)$. We construct a dataset of simulated parameter points and characterize each point using long-time dynamical observables. These observables are then used as inputs to a K-Means clustering procedure, which assigns each point to a disorder, order, or coexistence phase. Using these clustered labels, we train a neural-network classifier to learn the mapping from model parameters to phase behavior, achieving a classification accuracy of 0.92. The resulting phase map resolves a narrow coexistence region separating the ordered and disordered phases and extends the inferred phase boundaries beyond the originally sampled simulati...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28167v1",
+        "categories": [
+          "cond-mat.soft",
+          "cs.LG"
+        ],
+        "authors": [
+          "Grace T. Bai",
+          "Brandon B. Le"
+        ]
+      }
+    },
+    {
+      "title": "Sequential Inference for Gaussian Processes: A Signal Processing Perspective",
+      "url": "http://arxiv.org/abs/2604.28163v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-30T17:48:09+00:00",
+      "summary": "The proliferation of capable and efficient machine learning (ML) models marks one of the strongest methodological shifts in signal processing (SP) in its nearly 100-year history. ML models support the development of SP systems that represent complex, nonlinear relationships with high predictive accuracy. Adapting these models often requires sequential inference, which differs both theoretically and methodologically from the usual paradigm of ML, where data are often assumed independent and identically distributed. Gaussian processes (GPs) are a flexible yet principled framework for modeling random functions, and they have become increasingly relevant to SP as statistical and ML methods assume a more prominent role. We provide a self-contained, tutorial-style overview of GPs, with a particu...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28163v1",
+        "categories": [
+          "eess.SP",
+          "cs.LG",
+          "stat.CO",
+          "stat.ML"
+        ],
+        "authors": [
+          "Daniel Waxman",
+          "Fernando Llorente",
+          "Petar M. Djurić"
+        ]
+      }
+    },
+    {
+      "title": "Explainable Load Forecasting with Covariate-Informed Time Series Foundation Models",
+      "url": "http://arxiv.org/abs/2604.28149v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-30T17:36:24+00:00",
+      "summary": "Time Series Foundation Models (TSFMs) have recently emerged as general-purpose forecasting models and show considerable potential for applications in energy systems. However, applications in critical infrastructure like power grids require transparency to ensure trust and reliability and cannot rely on pure black-box models. To enhance the transparency of TSFMs, we propose an efficient algorithm for computing Shapley Additive Explanations (SHAP) tailored to these models. The proposed approach leverages the flexibility of TSFMs with respect to input context length and provided covariates. This property enables efficient temporal and covariate masking (selectively withholding inputs), allowing for a scalable explanation of model predictions using SHAP. We evaluate two TSFMs - Chronos-2 and T...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28149v1",
+        "categories": [
+          "cs.LG"
+        ],
+        "authors": [
+          "Matthias Hertel",
+          "Alexandra Nikoltchovska",
+          "Sebastian Pütz",
+          "Ralf Mikut",
+          "Benjamin Schäfer",
+          "Veit Hagenmeyer"
+        ]
+      }
+    },
+    {
+      "title": "Global Optimality for Constrained Exploration via Penalty Regularization",
+      "url": "http://arxiv.org/abs/2604.28144v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-30T17:31:46+00:00",
+      "summary": "Efficient exploration is a central problem in reinforcement learning and is often formalized as maximizing the entropy of the state-action occupancy measure. While unconstrained maximum-entropy exploration is relatively well understood, real-world exploration is often constrained by safety, resource, or imitation requirements. This constrained setting is particularly challenging because entropy maximization lacks additive structure, rendering Bellman-equation-based methods inapplicable. Moreover, scalable approaches require policy parameterization, inducing non-convexity in both the objective and the constraints. To our knowledge, the only prior model-free policy-gradient approach for this setting under general policy parameterization is due to Ying et al. (2025). Unfortunately, their guar...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28144v1",
+        "categories": [
+          "cs.LG",
+          "math.OC"
+        ],
+        "authors": [
+          "Florian Wolf",
+          "Ilyas Fatkhullin",
+          "Niao He"
+        ]
+      }
+    },
+    {
+      "title": "Efficient Multivector Retrieval with Token-Aware Clustering and Hierarchical Indexing",
+      "url": "http://arxiv.org/abs/2604.28142v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-30T17:30:15+00:00",
+      "summary": "Multivector retrieval models achieve state-of-the-art effectiveness through fine-grained token-level representations, but their deployment incurs substantial computational and memory costs. Current solutions, based on the well-known k-means clustering algorithm, group similar vectors together to enable both effective compression and efficient retrieval. However, standard k-means scales poorly with the number of clusters and dataset size, and favours frequent tokens during training while underrepresenting rare, discriminative ones. In this work, we introduce TACHIOM, a multivector retrieval system that exploits token-level structure to significantly accelerate both clustering and retrieval. By accounting for tokens' distribution during centroid allocation, TACHIOM easily scales to millions ...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28142v1",
+        "categories": [
+          "cs.IR",
+          "cs.LG"
+        ],
+        "authors": [
+          "Silvio Martinico",
+          "Franco Maria Nardini",
+          "Cosimo Rulli",
+          "Rossano Venturini"
+        ]
+      }
+    },
+    {
+      "title": "Beyond Gaussian Bottlenecks: Topologically Aligned Encoding of Vision-Transformer Feature Spaces",
+      "url": "http://arxiv.org/abs/2604.28122v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.LG",
+      "published_at": "2026-04-30T17:12:31+00:00",
+      "summary": "Modern visual world modeling systems increasingly rely on high-capacity architectures and large-scale data to produce plausible motion, yet they often fail to preserve underlying 3D geometry or physically consistent camera dynamics. A key limitation lies not only in model capacity, but in the latent representations used to encode geometric structure. We propose S$^2$VAE, a geometry-first latent learning framework that focuses on compressing and representing the latent 3D state of a scene, including camera motion, depth, and point-level structure, rather than modeling appearance alone. Building on representations from a Visual Geometry Grounded Transformer (VGGT), we introduce a novel type of variational autoencoder using a product of Power Spherical latent distributions, explicitly enforci...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28122v1",
+        "categories": [
+          "cs.CV",
+          "cs.LG"
+        ],
+        "authors": [
+          "Andrew Bond",
+          "Ilkin Umut Melanlioglu",
+          "Erkut Erdem",
+          "Aykut Erdem"
+        ]
+      }
+    },
+    {
+      "title": "Framework for Collaborative Operation of Autonomous Delivery Vehicles Within a Marshaling Yard",
+      "url": "http://arxiv.org/abs/2604.28057v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.MA",
+      "published_at": "2026-04-30T16:02:59+00:00",
+      "summary": "As autonomous vehicles slowly deploy into urban roads for limited use cases with significant edge case issues, closed facilities like marshaling yards provide a ripe case for combining lower-level vehicle autonomy with fixed infrastructure to create full autonomy without similar edge case concerns. Within a delivery marshaling yard, electric fleet vehicles complete a set of sequential tasks (charging, inspection, cleaning, and loading) before exiting the yard with their new load of deliveries. Hybrid automation of the vehicles and infrastructure can allow these vehicles to reach full autonomy and navigate the facility without the need of a driver, allowing for quicker movement between tasks increasing vehicle throughput. However, isolated autonomous operations based on static rules are pro...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28057v1",
+        "categories": [
+          "cs.RO",
+          "cs.MA"
+        ],
+        "authors": [
+          "James O'Hara",
+          "Karl Wunderlich",
+          "Gregory Stevens"
+        ]
+      }
+    },
+    {
+      "title": "Language Models Refine Mechanical Linkage Designs Through Symbolic Reflection and Modular Optimisation",
+      "url": "http://arxiv.org/abs/2604.27962v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.MA",
+      "published_at": "2026-04-30T14:56:13+00:00",
+      "summary": "Designing mechanical linkages involves combinatorial topology selection and continuous parameter fitting. We show that language models can systematically improve linkage designs through symbolic representations. Language model agents explore discrete topologies while numerical optimisers fit continuous parameters. A symbolic lifting operator translates simulator trajectories into qualitative descriptors, motion labels, temporal predicates, and structural diagnostics that models interpret across iterative design cycles. Across six engineering-relevant motion targets and three open-source models (Llama 3.3 70B, Qwen3 4B, Qwen3 MoE 30B-A3B), the modular architecture reduces geometric error by up to 68% and improves structural validity by up to 134% over monolithic baselines. Critically, 78.6%...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27962v1",
+        "categories": [
+          "cs.AI",
+          "cs.CE",
+          "cs.MA"
+        ],
+        "authors": [
+          "João Pedro Gandarela",
+          "Thiago Rios",
+          "Stefan Menzel",
+          "André Freitas"
+        ]
+      }
+    },
+    {
+      "title": "Can We Volunteer Out of the Peer Review Crisis?",
+      "url": "http://arxiv.org/abs/2604.27900v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.MA",
+      "published_at": "2026-04-30T14:10:33+00:00",
+      "summary": "The volume of scientific manuscripts is growing faster than the capacity to evaluate them, yet the institutions that govern peer review have remained largely unchanged. The result is a widening mismatch: reviewer scarcity, noisier assessments, and declining confidence in editorial decisions. Every scientist wants better reviews, but review quality depends on the total burden, which no single author can shift. To isolate this tension, we provide a game-theoretic thought experiment: a voluntary lottery in which authors accept a chance of random pre-review rejection, reducing reviewer burden and improving the quality of surviving evaluations. We show that a Nash equilibrium emerges in which authors voluntarily enter the lottery. Scientists who care about the literature they read, not just the...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27900v1",
+        "categories": [
+          "cs.GT",
+          "cs.MA"
+        ],
+        "authors": [
+          "Theo Tang",
+          "Toby Handfield",
+          "Julian Garcia"
+        ]
+      }
+    },
+    {
+      "title": "ObjectGraph: From Document Injection to Knowledge Traversal -- A Native File Format for the Agentic Era",
+      "url": "http://arxiv.org/abs/2604.27820v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.MA",
+      "published_at": "2026-04-30T13:03:54+00:00",
+      "summary": "Every document format in existence was designed for a human reader moving linearly through text. Autonomous LLM agents do not read - they retrieve. This fundamental mismatch forces agents to inject entire documents into their context window, wasting tokens on irrelevant content, compounding state across multi-turn loops, and broadcasting information indiscriminately across agent roles. We argue this is not a prompt engineering problem, not a retrieval problem, and not a compression problem: it is a format problem.   We introduce OBJECTGRAPH (.og), a file format that reconceives the document as a typed, directed knowledge graph to be traversed rather than a string to be injected. OBJECTGRAPH is a strict superset of Markdown - every .md file is a valid .og file - requires no infrastructure b...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27820v1",
+        "categories": [
+          "cs.AI",
+          "cs.DB",
+          "cs.IR",
+          "cs.MA"
+        ],
+        "authors": [
+          "Mohit Dubey",
+          "Open Gigantic"
+        ]
+      }
+    },
+    {
+      "title": "Autonomous Traffic Signal Optimization Using Digital Twin and Agentic AI for Real-Time Decision-Making",
+      "url": "http://arxiv.org/abs/2604.27753v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.MA",
+      "published_at": "2026-04-30T11:43:06+00:00",
+      "summary": "This article outlines a new framework of traffic light optimization through a digital twin of the transport infrastructure, managed by agentic AI to ensure real-time autonomous decisions. The framework relies on physical sensors and edge computing to measure real-time traffic information and simulate traffic flow in a constantly updated digital twin. The traffic light is automatically controlled through the digital twin according to traffic congestion, travel delay and traffic patterns. This approach is implemented as a three-layer system: perception, conceptualization and action. The perception layer receives data on physical systems; the conceptualization layer uses LangChain to process the data; and the action layer links to the Model Context Protocol (MCP) and traffic management APIs t...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27753v1",
+        "categories": [
+          "cs.AI",
+          "cs.ET",
+          "cs.MA"
+        ],
+        "authors": [
+          "Salman Jan",
+          "Toqeer Ali Syed",
+          "Shahid Kamal",
+          "Qamar Wali",
+          "Ali Akarma"
+        ]
+      }
+    },
+    {
+      "title": "RoadMapper: A Multi-Agent System for Roadmap Generation of Solving Complex Research Problems",
+      "url": "http://arxiv.org/abs/2604.27616v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.MA",
+      "published_at": "2026-04-30T09:08:14+00:00",
+      "summary": "People commonly leverage structured content to accelerate knowledge acquisition and research problem solving. Among these, roadmaps guide researchers through hierarchical subtasks to solve complex research problems step by step. Despite progress in structured content generation, the roadmap generation task has remained unexplored. To bridge this gap, we introduce RoadMap, a novel benchmark designed to evaluate the ability of large language models (LLMs) to construct high-quality roadmaps for solving complex research problems. Based on this, we identify three limitations of LLMs: (1) lack of professional knowledge, (2) unreasonable task decomposition, and (3) disordered logical relationships. To address these challenges, we propose RoadMapper, an LLM-based multi-agent system that decomposes...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27616v1",
+        "categories": [
+          "cs.CL",
+          "cs.MA"
+        ],
+        "authors": [
+          "Jiacheng Liu",
+          "Zichen Tang",
+          "Zhongjun Yang",
+          "Xinyi Hu",
+          "Xueyuan Lin",
+          "Linwei Jia",
+          "Ruofei Bai",
+          "Rongjin Li"
+        ]
+      }
+    },
+    {
+      "title": "Unsafe and Unused? A History of Utility Code in Mature Open Source Projects",
+      "url": "http://arxiv.org/abs/2604.28146v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T17:32:29+00:00",
+      "summary": "Filenames are a concise means of conveying information about source code to fellow developers. One such convention is util. Commonly understood to stand for \"utility\", filenames with the letters util are often an indication that the file contains code that may be broadly useful or reusable. Some projects use this convention heavily, for example, the Apache Tomcat server contains 925 files with util in the path name, which is 17.9% of all source code files in the tree. While the intent of the name may be to prevent duplicate code and reduce workload, what actually happens to util code over time? Do projects move away from util code as they mature? Are util files being used by fellow colleagues, or maintained and used by their author? The goal of our work is to help developers avoid creating...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28146v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Brandon Keller",
+          "Kaitlin Yandik",
+          "Angela Ngo",
+          "Andy Meneely"
+        ]
+      }
+    },
+    {
+      "title": "I hope we don't do to trust what advertising has done to love",
+      "url": "http://arxiv.org/abs/2604.28113v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T17:04:13+00:00",
+      "summary": "Advertising uses love to sell stuff, like nylons. It also uses the word \"love\" in trivialising ways -- do you \"love\" your oven? When I hear about trust in the context of AI, especially agentic, I hope we don't do to trust what advertising has done to love.   But what is trust? Can we discuss it in actionable and measurable ways in the context of AI? Thus I suggest a number of \"trust pillars\", hoping to start a communal conversation, across computing and beyond, to civil society. I also suggest that agentic systems may be a blessing in disguise, as we may be able to turn their explicit interfaces into \"trust vectors\".",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28113v1",
+        "categories": [
+          "cs.CY",
+          "cs.AR",
+          "cs.SE"
+        ],
+        "authors": [
+          "Jade Alglave"
+        ]
+      }
+    },
+    {
+      "title": "Beyond Code, We Are People: A Systematic Mapping of 25 Years of Literature on Soft Skills in Agile Development Teams",
+      "url": "http://arxiv.org/abs/2604.28101v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T16:47:48+00:00",
+      "summary": "Software development is a sociotechnical and human-centered endeavor in which human factors directly influence quality, productivity, and innovation capacity. In this context, career development in computing goes beyond technical mastery, requiring competencies that enable professionals to deal with continuous change and collaborative demands. Among these, non-technical skills (soft skills) stand out, encompassing social, emotional, and communicational dimensions essential to team effectiveness and the success of software projects. Despite their recognized importance, there is still a need for a systematic mapping of the most relevant soft skills over the past 25 years, a period marked by the adoption of agile approaches in industry. This gap limits the integration of human and technical a...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28101v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Israely Lima",
+          "Lucas Moura Lourenço",
+          "Márcio Ribeiro",
+          "Ivan Machado",
+          "Carla Ilane Bezerra"
+        ]
+      }
+    },
+    {
+      "title": "A Pattern Language for Resilient Visual Agents",
+      "url": "http://arxiv.org/abs/2604.28001v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T15:24:26+00:00",
+      "summary": "Integrating multimodal foundation models into enterprise ecosystems presents a fundamental software architecture challenge. Architects must balance competing quality attributes: the high latency and non-determinism of vision language action (VLA) models versus the strict determinism and real-time performance required by enterprise control loops. In this study, we propose an architectural pattern language for visual agents that separates fast, deterministic reflexes from slow, probabilistic supervision. It consists of four architectural design patterns: (1) Hybrid Affordance Integration, (2) Adaptive Visual Anchoring, (3) Visual Hierarchy Synthesis, and (4) Semantic Scene Graph.",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28001v1",
+        "categories": [
+          "cs.AI",
+          "cs.SE"
+        ],
+        "authors": [
+          "Habtom Kahsay Gidey",
+          "Alexander Lenz",
+          "Alois Knoll"
+        ]
+      }
+    },
+    {
+      "title": "From Mirage to Grounding: Towards Reliable Multimodal Circuit-to-Verilog Code Generation",
+      "url": "http://arxiv.org/abs/2604.27969v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T15:01:27+00:00",
+      "summary": "Multimodal large language models (MLLMs) are increasingly used to translate visual artifacts into code, from UI mockups into HTML to scientific plots into Python scripts. A circuit diagram can be viewed as a visual domain-specific language for hardware: it encodes timing, topology, and bit level semantics that are invisible to casual inspection yet safety critical once fabricated in silicon. Translating such diagrams into register-transfer-level(RTL) code therefore represents an extreme reliability test for vision-to-code generation. We reveal a phenomenon we call Mirage: replacing a circuit diagram with a blank image leaves Pass@k unchanged or even higher, because models bypass the visual input and instead exploit identifier semantics in the module header to retrieve canonical RTL templat...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27969v1",
+        "categories": [
+          "cs.SE",
+          "cs.AI"
+        ],
+        "authors": [
+          "Guang Yang",
+          "Xing Hu",
+          "Xiang Chen",
+          "Xin Xi"
+        ]
+      }
+    },
+    {
+      "title": "An Empirical Evaluation of Code Smell Detection in Angular Applications",
+      "url": "http://arxiv.org/abs/2604.27893v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T14:08:25+00:00",
+      "summary": "Angular is one of the most widely adopted frameworks for developing large-scale, dynamic web applications. As projects increase in scope and complexity, developers face growing challenges in managing architecture and maintaining clean, modular code. These challenges often lead to design flaws, commonly referred to as code smells. While React-specific smells have been cataloged in prior studies, limited knowledge exists regarding Angular-specific smells and how they manifest. This study investigates Angular code smells through a grey literature review, consolidating community knowledge and technical discussions. From the collected sources, 11 distinct Angular code smells were identified, 6 of which also occur in React-based systems, suggesting that some issues are cross-framework. Each smel...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27893v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Maykon Nunes",
+          "Emanuel Coutinho",
+          "Carla Bezerra",
+          "Ivan Machado"
+        ]
+      }
+    },
+    {
+      "title": "Requirements Debt in AI-Enabled Perception Systems Development: An Industrial RE4AI Perspective",
+      "url": "http://arxiv.org/abs/2604.27825v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T13:11:35+00:00",
+      "summary": "AI integration in automotive perception systems shifts requirements from static specifications to continuously evolving entities shaped by data, models, and operating contexts. When such changes are not consistently documented, validated, and traced, they accumulate as Requirements Debt (ReD), an underexplored but critical subtype of technical debt. This study conceptualises and empirically investigates how evolving functional and non-functional requirements create and propagate ReD across the AI-enabled automotive perception system lifecycle. We conducted 16 semi-structured interviews with experts from 13 international automotive companies and 3 European research institutes, and analysed the data using thematic analysis. As one of the first empirical studies connecting technical debt theo...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27825v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Hina Saeeda",
+          "Soniya Abraham"
+        ]
+      }
+    },
+    {
+      "title": "Feature-Centric Methodology for Analyzing Cross-Chain NFT Migration Compatibility",
+      "url": "http://arxiv.org/abs/2604.27805v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T12:48:26+00:00",
+      "summary": "Cross-chain NFT migration refers to the process of transferring digital assets along with their associated functionalities and guarantees between distinct blockchain platforms. However, architectural divergences among these platforms introduce critical challenges, often resulting in features that fail to behave as intended. While protocol-level mechanisms can coordinate data transfer, they are insufficient to resolve deeper compatibility issues arising from fundamental differences in state organization, transaction execution, and ownership representation. Thus, the critical challenge lies in predicting which NFT features can be preserved, which require redesign, and which are fundamentally incompatible, prior to undertaking costly migration attempts. To address this challenge, we first der...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27805v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Mohd Sameen Chishti",
+          "Damilare Peter Oyinloye",
+          "Jingyue Li"
+        ]
+      }
+    },
+    {
+      "title": "Test Before You Deploy: Governing Updates in the LLM Supply Chain",
+      "url": "http://arxiv.org/abs/2604.27789v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T12:32:13+00:00",
+      "summary": "Large Language Models (LLMs) are increasingly used as core dependencies in software systems. However, the hosted LLM services evolve continuously through provider-side updates without explicit version changes. These silent updates can introduce behavioral drift, causing regressions in functionality, formatting, safety constraints, or other application-specific requirements. Existing approaches focus primarily on regression testing or versioning but do not provide deployer-side mechanisms for governing compatibility during opaque model evolution. This paper proposes a deployment-side governance framework based on three components: clearly defined rules for how the model is allowed to behave (production contracts), focused testing organized by deployment risk categories (risk-category-based ...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27789v1",
+        "categories": [
+          "cs.SE",
+          "cs.AI"
+        ],
+        "authors": [
+          "Mohd Sameen Chishti",
+          "Damilare Peter Oyinloye",
+          "Jingyue Li"
+        ]
+      }
+    },
+    {
+      "title": "The Grand Software Supply Chain of AI Systems",
+      "url": "http://arxiv.org/abs/2604.27781v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T12:21:24+00:00",
+      "summary": "AI systems rest on software with low integrity mechanisms, leaving AI systems exposed across every stage from data acquisition to final inference. This paper makes the AI supply chain a first-class object of analysis, decomposing it across four architectural layers: data acquisition, model training, model inference, and a cross-cutting substrate. Within these layers, we identify four structural gaps that traditional supply chain mechanisms do not address: verifiability, versioning, observability, and traceability.Current AI systems fall short on all of them: they carry undeclared behavioral couplings that no resolver enforces; they cannot be reverted back to known working assemblies; they degrade silently rather than surfacing breaking changes; and their lineage can hardly be approximated....",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27781v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Carmine Cesarano",
+          "Martin Monperrus"
+        ]
+      }
+    },
+    {
+      "title": "Multifaceted Hero Developers and Bug-Fixing Outcomes Across Severity",
+      "url": "http://arxiv.org/abs/2604.27754v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T11:43:38+00:00",
+      "summary": "Open-source projects often rely on a small group of highly active contributors known as hero developers. Prior work shows that hero developers are common in many OSS and enterprise projects, yet who qualifies as a hero depends heavily on the chosen contribution metric. Code-based metrics identify implementation-focused developers, whereas discussion-based metrics highlight coordination and communication; these metrics capture distinct facets of contribution. We conducted a measurement-sensitive study of multifaceted heroism across 77 Apache Software Foundation projects using three technical measures (commit count, distinct files touched, churn) and two social measures (issue-comment count, number of distinct issues commented on). We examined hero prevalence, overlap among hero sets, and se...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27754v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Amit Kumar",
+          "Mahen Gandhi",
+          "Meher Bhardwaj",
+          "Hrishikesh Ethari",
+          "Sonali Agarwal"
+        ]
+      }
+    },
+    {
+      "title": "LLM-as-a-Judge for Human-AI Co-Creation: A Reliability-Aware Evaluation Framework for Coding",
+      "url": "http://arxiv.org/abs/2604.27727v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T11:20:22+00:00",
+      "summary": "LLMs are increasingly employed both as judges for evaluating open-ended outputs and as co-creation partners in AI-assisted programming; yet rigorous evaluation in human-AI co-creation settings remains underdeveloped as judgments must be reliable, comparable across models, and interpretable over multi-turn interaction. To address this gap, a rubric-driven LLM-as-a-Judge framework is presented for contest-style human-AI co-creation in coding and software engineering (SE). The framework is built around schema-constrained judge outputs, validation and repair mechanisms, grouped and split by user and problem to prevent trajectory leakage, and participant-level NONBLIND context. Multiple LLM judges are assessed through a multi-metric protocol covering discrimination (ROC-AUC, PR-AUC), thresholde...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27727v1",
+        "categories": [
+          "cs.SE"
+        ],
+        "authors": [
+          "Md Faizul Ibne Amin",
+          "Yutaka Watanobe",
+          "Daniel M. Muepu",
+          "Haruto Suzuki",
+          "Kenta Nanaumi",
+          "Md Mostafizer Rahman"
+        ]
+      }
+    },
+    {
+      "title": "How Code Representation Shapes False-Positive Dynamics in Cross-Language LLM Vulnerability Detection",
+      "url": "http://arxiv.org/abs/2604.27714v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:cat:cs.SE",
+      "published_at": "2026-04-30T11:01:03+00:00",
+      "summary": "How code representation format shapes false positive behaviour in cross-language LLM vulnerability detection remains poorly understood. We systematically vary training intensity and code representation format, comparing raw source text with pruned Abstract Syntax Trees at both training time and inference time, across two 8B-parameter LLMs (Qwen3-8B and Llama 3.1-8B-Instruct) fine-tuned on C/C++ data from the NIST Juliet Test Suite (v1.3) and evaluated on Java (OWASP Benchmark v1.2) and Python (BenchmarkPython v0.1).   Cross-language FPR reflects the joint effect of training-time and inference-time representation, not either alone. Text fine-tuning drives FPR upward monotonically (Qwen3-8B: 0.763 zero-shot, 0.866 pilot, 1.000 full-scale) while F1 remains stable (0.637-0.688), masking the co...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27714v1",
+        "categories": [
+          "cs.CR",
+          "cs.SE"
+        ],
+        "authors": [
+          "Maofei Chen",
+          "Laifu Wang",
+          "Yue Qin",
+          "Yuan Wang",
+          "Bo Wu",
+          "Dongxin Liu"
+        ]
+      }
+    },
+    {
+      "title": "Collaborative Agent Reasoning Engineering (CARE): A Three-Party Design Methodology for Systematically Engineering AI Agents with Subject Matter Experts, Developers, and Helper Agents",
+      "url": "http://arxiv.org/abs/2604.28043v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:all:\"LLM agent\"",
+      "published_at": "2026-04-30T15:54:47+00:00",
+      "summary": "We present Collaborative Agent Reasoning Engineering (CARE), a disciplined methodology for engineering Large Language Model (LLM) agents in scientific domains. Unlike ad-hoc trial-and-error approaches, CARE specifies behavior, grounding, tool orchestration, and verification through reusable artifacts and systematic, stage-gated phases. The methodology employs a three-party workflow involving Subject-Matter Experts (SMEs), developers, and LLM-based helper agents. These helper agents function as facilitation infrastructure, transforming informal domain intent into structured, reviewable specifications for human approval at defined gates. CARE addresses the \"jagged technological frontier\", characterized by uneven LLM performance, by bridging the gap between novice and expert analysts regardin...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.28043v1",
+        "categories": [
+          "cs.AI"
+        ],
+        "authors": [
+          "Rahul Ramachandran",
+          "Nidhi Jha",
+          "Muthukumaran Ramasubramanian"
+        ]
+      }
+    },
+    {
+      "title": "Exploring Interaction Paradigms for LLM Agents in Scientific Visualization",
+      "url": "http://arxiv.org/abs/2604.27996v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:all:\"LLM agent\"",
+      "published_at": "2026-04-30T15:22:28+00:00",
+      "summary": "This paper examines how different types of large language model (LLM) agents perform on scientific visualization (SciVis) tasks, where users generate visualization workflows from natural-language instructions. We compare three primary interaction paradigms, including domain-specific agents with structured tool use, computer-use agents, and general-purpose coding agents, by evaluating eight representative agents across 15 benchmark tasks and measuring visualization quality, efficiency, robustness, and computational cost. We further analyze interaction modalities, including code scripts and model context protocol (MCP) or API calls for structured tool use, as well as command-line interfaces (CLI) and graphical user interfaces (GUI) for more general interaction, while additionally studying th...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27996v1",
+        "categories": [
+          "cs.AI",
+          "cs.GR",
+          "cs.HC"
+        ],
+        "authors": [
+          "Jackson Vonderhorst",
+          "Kuangshi Ai",
+          "Haichao Miao",
+          "Shusen Liu",
+          "Chaoli Wang"
+        ]
+      }
+    },
+    {
+      "title": "Modeling Clinical Concern Trajectories in Language Model Agents",
+      "url": "http://arxiv.org/abs/2604.27872v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:all:\"LLM agent\"",
+      "published_at": "2026-04-30T13:53:09+00:00",
+      "summary": "Large language model (LLM) agents deployed in clinical settings often exhibit abrupt, threshold-driven behavior, offering little visibility into accumulating risk prior to escalation. In real-world care, however, clinicians act on gradually rising concern rather than instantaneous triggers. We study whether explicit state dynamics can expose such pre-escalation signals without delegating clinical authority to the agent. We introduce a lightweight agent architecture in which a memoryless clinical risk encoder is integrated over time using first- and second-order dynamics to produce a continuous escalation pressure signal. Across synthetic ward scenarios, stateless agents exhibit sharp escalation cliffs, while second-order dynamics produce smooth, anticipatory concern trajectories despite si...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27872v1",
+        "categories": [
+          "cs.AI"
+        ],
+        "authors": [
+          "Sukesh Subaharan",
+          "Venkatesan VS",
+          "Murugadasan P",
+          "Sivakumar D",
+          "Gautham N",
+          "Ganeshkumar M"
+        ]
+      }
+    },
+    {
+      "title": "HAVEN: Hybrid Automated Verification ENgine for UVM Testbench Synthesis with LLMs",
+      "url": "http://arxiv.org/abs/2604.27643v1",
+      "source_type": "arxiv",
+      "source_name": "arxiv:all:\"LLM agent\"",
+      "published_at": "2026-04-30T09:35:32+00:00",
+      "summary": "Integrated Circuit (IC) verification consumes nearly 70% of the IC development cycle, and recent research leverages Large Language Models (LLMs) to automatically generate testbenches and reduce verification overhead. However, LLMs have difficulty generating testbenches correctly. Unlike high-level programming languages, Hardware Description Languages (HDLs) are extremely rare in LLMs training data, leading LLMs to produce incorrect code. To overcome challenges when using LLMs to generate Universal Verification Methodology (UVM) testbenches and sequences, wepropose HAVEN (Hybrid Automated Verification ENgine) to prevent LLMs from writing HDL directly. For UVM testbench generation, HAVEN utilizes LLM agents to analyze design specifications to produce a structured architectural plan. The HAVE...",
+      "vendor": "arXiv",
+      "extra": {
+        "arxiv_id": "2604.27643v1",
+        "categories": [
+          "cs.AR",
+          "cs.AI"
+        ],
+        "authors": [
+          "Chang-Chih Meng",
+          "Yu-Ren Lu",
+          "Guan-Yu Lin",
+          "Tsung Tai Yeh",
+          "Kai-Chiang Wu",
+          "I-Chen Wu"
+        ]
+      }
+    }
+  ],
+  "items_count_total_fetched": 216,
+  "items_count_in_window": 68,
+  "items_count_after_dedupe": 68,
+  "dynamic_keywords": [],
+  "collections": [
+    {
+      "type": "keyword",
+      "term": "Claude Code",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Claude Code",
+          "url": "https://en.wikipedia.org/wiki/Claude_Code",
+          "snippet": "Claude is a series of large language models developed by Anthropic and first released in 2023. Since Claude 3, each generation has typically been released in three sizes, from least to most capable: Haiku, Sonnet, and Opus. An additional model named Claude Mythos was released to some companies in 2026 but not to the public.Claude is used for software development via Claude Code. Claude is trained using \"constitutional AI\", a technique developed by Anthropic to improve ethical and legal compliance (AI alignment). The name Claude has been described both as a tribute to Claude Shannon, who pioneered information theory, and as a friendly, male-gendered counterpart to virtual assistants like Alexa and Siri. US federal agencies started phasing out the use of Claude after Anthropic refused to remove contractual prohibitions on the use of Claude for mass domestic surveillance and fully-autonomous weapons. Following the refusal, the Department of Defense designated the company a \"supply chain risk\" and barred all U.S. military private contractors, suppliers, and partners from doing business with the firm. On March 26, 2026, a federal judge issued a temporary injunction against the DoD."
+        },
+        {
+          "title": "Claude Code",
+          "url": "https://grokipedia.com/page/Claude_Code",
+          "snippet": "Claude Code is a tool used by content marketers for interview analysis, SEO content audits, and campaign automation, resulting in faster workflows and interactive reports."
+        },
+        {
+          "title": "Claude Code overview - Claude Code Docs",
+          "url": "https://code.claude.com/docs/en/overview",
+          "snippet": "1 day ago - Claude Code is an agentic coding tool that reads your codebase, edits files, runs commands, and integrates with your development tools. Available in your terminal, IDE, desktop app, and browser."
+        },
+        {
+          "title": "Claude Code | Anthropic's agentic coding system",
+          "url": "https://www.anthropic.com/product/claude-code",
+          "snippet": "1 day ago - It creates and edits files across a codebase, taking on ambitious work like building new features or executing multi-file refactors at a scale, saving days of work. ... Developers don't need to memorize commands for git, Kubernetes, or other CLI tools. They describe what they want and Claude ..."
+        },
+        {
+          "title": "GitHub - anthropics/claude-code: Claude Code is an agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster by executing routine tasks, explaining complex code, and handling git workflows - all through natural language commands. · GitHub",
+          "url": "https://github.com/anthropics/claude-code",
+          "snippet": "Claude Code is an agentic coding tool that lives in your terminal, understands your codebase, and helps you code faster by executing routine tasks, explaining complex code, and handling git workflows -- all through natural language commands."
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "Cursor AI",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Cursor (user interface)",
+          "url": "https://en.wikipedia.org/wiki/Cursor_(user_interface)",
+          "snippet": "In human–computer interaction, a cursor is an indicator used to show the current position on a computer monitor or other display device that will respond to input, such as a text cursor or a mouse pointer."
+        },
+        {
+          "title": "Cursor (code editor)",
+          "url": "https://grokipedia.com/page/Cursor_code_editor",
+          "snippet": "Cursor is an AI-powered code editor forked from Visual Studio Code. UPDATE: Cursor AI released a dynamic context management update introducing dynamic context retrieval across all models in its agent, leveraging the filesystem to enhance context eff…"
+        },
+        {
+          "title": "Cursor: The best way to code with AI",
+          "url": "https://cursor.com/",
+          "snippet": "“The best LLM applications have an autonomy slider: you control how much independence to give the AI. In Cursor, you can do Tab completion, Cmd+K for targeted edits..."
+        },
+        {
+          "title": "cursor.ai/docs",
+          "url": "https://cursor.ai/docs",
+          "snippet": "Cursor Editor Documentation."
+        },
+        {
+          "title": "My take on Cursor AI after using it at least 5 times a day | Medium",
+          "url": "https://ghumare64.medium.com/my-take-on-cursor-ai-after-using-it-at-least-5-times-a-day-f9d3ff94b84a",
+          "snippet": "Cursor AI’s best feature is how well it understands your code. Other tools might only look at one file, but Cursor AI understands your whole project. It does this through three main features"
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "GitHub Copilot",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "GitHub Copilot",
+          "url": "https://en.wikipedia.org/wiki/GitHub_Copilot",
+          "snippet": "GitHub Copilot is a code completion and programming AI-assistant developed by GitHub and OpenAI that assists users of Visual Studio Code, Visual Studio, Neovim, Eclipse and JetBrains integrated development environments (IDEs) by autocompleting code. Currently available by subscription to individual developers and to businesses, the generative artificial intelligence software was first announced by GitHub on 29 June 2021. Users can choose the large language model used for generation."
+        },
+        {
+          "title": "GitHub Copilot",
+          "url": "https://grokipedia.com/page/GitHub_Copilot",
+          "snippet": "GitHub Copilot is an AI-powered coding assistant that provides real-time code suggestions, completions, and conversational support to developers within integrated..."
+        },
+        {
+          "title": "GitHub Copilot · Your AI pair programmer",
+          "url": "https://github.com/features/copilot",
+          "snippet": "1 day ago - Backed by the leaders in AI, GitHub Copilot provides contextualized assistance throughout the software development lifecycle, from inline suggestions and chat assistance in the IDE to code explanations and answers to docs in GitHub and more."
+        },
+        {
+          "title": "GitHub Copilot documentation - GitHub Docs",
+          "url": "https://docs.github.com/en/copilot",
+          "snippet": "3 days ago - You can use GitHub Copilot to enhance your productivity and assist as you work on code."
+        },
+        {
+          "title": "What is GitHub Copilot? - GitHub Docs",
+          "url": "https://docs.github.com/en/copilot/get-started/what-is-github-copilot",
+          "snippet": "2 days ago - Learn what Copilot is and what you can do with it. ... GitHub Copilot is an AI coding assistant that helps you write code faster and with less effort."
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "AI Agent framework",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Superpowers (AI agent framework)",
+          "url": "https://grokipedia.com/page/Superpowers_AI_agent_framework",
+          "snippet": "Superpowers is an agentic skills framework and software development methodology designed for AI coding agents (e.g., in Claude Code or Gemini CLI), providing a structured workflow and composable \"skills\" to systematically evaluate and apply relevant…"
+        },
+        {
+          "title": "LangGraph: Agent Orchestration Framework for Reliable AI Agents",
+          "url": "https://www.langchain.com/langgraph",
+          "snippet": "Balance agent control with agency. Design agents that reliably handle complex tasks with LangGraph, an agent runtime and low-level orchestration framework."
+        },
+        {
+          "title": "GitHub - microsoft/autogen: A programming framework for agentic AI",
+          "url": "https://github.com/microsoft/autogen",
+          "snippet": "AutoGen Maintenance Mode. AutoGen is a framework for creating multi-agent AI applications that can act autonomously or work alongside humans. Caution."
+        },
+        {
+          "title": "Swarms AI - Enterprise Multi-Agent Framework",
+          "url": "https://www.swarms.ai/",
+          "snippet": "Build, deploy, and scale autonomous AI agent swarms with unprecedented control, reliability, and efficiency. Swarms supports Python, Rust, and cloud-native deployments..."
+        },
+        {
+          "title": "Create Your Own AI Agents With Agno - A Full Feature AI... - YouTube",
+          "url": "https://www.youtube.com/watch?v=v25O_zBU4DQ",
+          "snippet": "AI agents are transforming how we work—automating tasks, analyzing data, and can even act as a reliable personal assistant. In this tutorial, I will walk you..."
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "MCP server",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "MapServer",
+          "url": "https://en.wikipedia.org/wiki/MapServer",
+          "snippet": "MapServer is an open-source development environment for building spatially enabled internet applications, built in the C language, and is widely known as one of the fastest Web mapping engines available. It can run as a CGI program or via MapScript which supports several programming languages (using SWIG). MapServer can access hundreds of data formats, any raster or vector format supported by GDAL, and reprojections on-the-fly are handled by PROJ. MapServer was originally developed by Steve Lime, then working at the University of Minnesota — so, it was previously referred to as \"UMN MapServer\", to distinguish it from commercial \"map servers\"; today it is commonly referred to as just \"MapServer\", and is maintained by the MapServer Project Steering Committee (PSC). MapServer was originally developed with support from NASA, which needed a way to make its satellite imagery available to the public."
+        },
+        {
+          "title": "Roblox Studio MCP Server",
+          "url": "https://grokipedia.com/page/Roblox_Studio_MCP_Server",
+          "snippet": "The Roblox Studio MCP (Model Context Protocol) server is an open-source proof-of-concept released by Roblox. It does not explicitly support drafts, such as local unsaved script changes or similar features in Roblox Studio. The server's capabilities…"
+        },
+        {
+          "title": "Model Context Protocol servers - GitHub",
+          "url": "https://github.com/modelcontextprotocol/servers",
+          "snippet": "If you are looking for a list of MCP servers, you can browse published servers on the MCP Registry. The repository served by this README is dedicated to housing just the small number of reference servers maintained by the MCP steering group."
+        },
+        {
+          "title": "10 Microsoft MCP Servers to Accelerate Your Development ...",
+          "url": "https://developer.microsoft.com/blog/10-microsoft-mcp-servers-to-accelerate-your-development-workflow",
+          "snippet": "Jul 16, 2025 · MCP servers give your AI assistant real-time access to external tools and data sources, turning it from a code generator into a productivity powerhouse that can interact with your entire development ecosystem."
+        },
+        {
+          "title": "Awesome MCP Servers",
+          "url": "https://mcpservers.org/",
+          "snippet": "The first artist-owned MCP server for AI Agent use. Discover, narrate, and stream Matthew Hartley's debut album The Time Is Now: A Journey in Chapters from any AI client."
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "term": "AI coding assistant",
+      "category": "AI tools",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "AI coding assistant",
+          "url": "https://en.wikipedia.org/wiki/AI_coding_assistant",
+          "snippet": "AI-assisted software development is the use of artificial intelligence (AI) to augment software development. It uses large language models (LLMs), natural language processing, intelligent agents and other AI technologies to assist software developers. It helps in a range of tasks of the software development life cycle, from code generation to debugging, editing, testing, UI design, understanding the code, and documentation. Agentic coding denotes the use of more autonomous AI agents for software development."
+        },
+        {
+          "title": "Comparison of AI coding assistants for Blazor",
+          "url": "https://grokipedia.com/page/Comparison_of_AI_coding_assistants_for_Blazor",
+          "snippet": "Reddit discussions, primarily in r/Blazor and r/dotnet, show no unanimous consensus on the best AI coding assistant for Blazor and MudBlazor development among Claude, Grok, Gemini, and ChatGPT. Gemini (e.g., Gemini 2.5 or Pro 2.5) is frequently prai…"
+        },
+        {
+          "title": "Gemini Code Assist | AI coding assistant",
+          "url": "https://codeassist.google/",
+          "snippet": "Gemini Code Assist: AI-first coding in your natural language. Uncap your potential and get all of your development done using Gemini Code Assist for individuals at no cost, or Gemini Code..."
+        },
+        {
+          "title": "Windsurf - The best AI for Coding",
+          "url": "https://windsurf.com/",
+          "snippet": "Windsurf is the world's most advanced AI coding assistant for developers and enterprises. Windsurf Editor — the first AI-native IDE that keeps developers in flow."
+        },
+        {
+          "title": "CodeGPT - AI Coding Assistant with Your Own API Key",
+          "url": "https://www.codegpt.co/",
+          "snippet": "Our AI Coding Assistant is built to give you full visibility, model flexibility, and cost control—empowering your business with open, transparent access to frontier technology."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@AnthropicAI",
+      "category": "AI",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "x.com/AnthropicAI/status/2041578392852517128",
+          "url": "https://x.com/AnthropicAI/status/2041578392852517128",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/AnthropicAI/status/1903128670081888756",
+          "url": "https://x.com/AnthropicAI/status/1903128670081888756",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/AnthropicAI/status/1949898502688903593",
+          "url": "https://x.com/AnthropicAI/status/1949898502688903593",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/AnthropicAI/status/1886452489681023333",
+          "url": "https://x.com/AnthropicAI/status/1886452489681023333",
+          "snippet": "The site owner hides the web page description."
+        },
+        {
+          "title": "x.com/AnthropicAI/status/1857108263042502701?mx=2",
+          "url": "https://x.com/AnthropicAI/status/1857108263042502701?mx=2",
+          "snippet": "The site owner hides the web page description."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@OpenAI",
+      "category": "AI",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "OpenAI (@OpenAI) / Posts / X - Twitter",
+          "url": "https://x.com/OpenAI",
+          "snippet": "Each week, we’ll select 2–3 favorites to win free tickets to OpenAI DevDay 2026. Codex will help us find the best submissions and our team will select the winners."
+        },
+        {
+          "title": "A word from @OpenAI and Microsoft Office of the CISO: AI ...",
+          "url": "https://x.com/msftsecurity/status/2047088059003412879",
+          "snippet": "OpenAI will provide Microsoft with access to its most cyber capable models through Trusted Access for Cyber, and Microsoft is committed to bringing the full strength of its cybersecurity defense team to help OpenAI protect their models and infrastructure and defend our joint customers."
+        },
+        {
+          "title": "OpenAI’s new GPT-5.4 (xhigh) lands equal first in the ...",
+          "url": "https://x.com/ArtificialAnlys/status/2029950497516573183",
+          "snippet": "GPT-5.4 is the first general reasoning model release from OpenAI since GPT-5.2. GPT-5.4 comes with slightly higher per-token pricing ($2.50/$15 vs $1.75/$14 per 1M input/output tokens for GPT-5.2) and a significantly expanded context window of 1.05M tokens, up from 400K for GPT-5.2."
+        },
+        {
+          "title": "Microsoft will no longer pay revenue to OpenAI and said its ...",
+          "url": "https://x.com/SawyerMerritt/status/2048755924580413493",
+          "snippet": "OpenAI can now serve all its products to customers across any cloud provider. • Microsoft continues to participate directly in OpenAI’s growth as a major shareholder."
+        },
+        {
+          "title": "OpenAI Newsroom (@OpenAINewsroom) / Posts / X - Twitter",
+          "url": "https://x.com/OpenAINewsroom",
+          "snippet": "\"OpenAI released its last model only last month, with a previous release in December and, before that, November. The company has continued to churn out new models at a crisp pace, a trend that company staff said should be expected to continue for the foreseeable future.\""
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@GoogleAI",
+      "category": "AI",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "x.com",
+          "url": "https://x.com/",
+          "snippet": "X. It’s what’s happening From breaking news and entertainment to sports and..."
+        },
+        {
+          "title": "x.com/AMK_Mapping_",
+          "url": "https://x.com/AMK_Mapping_",
+          "snippet": "from AMK_Mapping."
+        },
+        {
+          "title": "x.com/elonmusk",
+          "url": "https://x.com/elonmusk",
+          "snippet": "From Elon Musk."
+        },
+        {
+          "title": "x.com/?lang=en-gb",
+          "url": "https://x.com/?lang=en-gb",
+          "snippet": "Saved from twitter.com."
+        },
+        {
+          "title": "x.com/DriftProtocol",
+          "url": "https://x.com/DriftProtocol",
+          "snippet": "LST Spotlight: James from dSOL (Drift)."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@trq212",
+      "category": "個人",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Thariq (@trq212) / Posts / X",
+          "url": "https://x.com/trq212",
+          "snippet": "August 11, 2011 - Click to Follow trq212 · Thariq · @trq212 · Claude Code · @anthropicai. prev YC W20, mit media lab. towards machines of loving grace · SF via Torontothariq.io · Joined August 2011 · 1,797 Following · 211.1K Followers · Pinned · Thariq · @trq212 · ·"
+        },
+        {
+          "title": "Niels Rogge on X: \"Btw, this is all from @trq212's workshop at @aiDotEngineer, which I also attended :) https://t.co/1vY2BzvnkP\" / X",
+          "url": "https://x.com/NielsRogge/status/2008246748603703721",
+          "snippet": "Btw, this is all from · @trq212's workshop at · @aiDotEngineer, which I also attended :) 1:38 PM · Jan 5, 2026 · 2 · 2 · 23 · 34 · Sign up now to get your own personalized timeline! Sign up with GoogleSign up with Google. Opens in new tab · Sign up with Apple ·"
+        },
+        {
+          "title": "Thariq on X: \"We just released Claude Code channels, which allows you to control your Claude Code session through select MCPs, starting with Telegram and Discord. Use this to message Claude Code directly from your phone. https://t.co/sl3BP2BEzS\" / X",
+          "url": "https://x.com/trq212/status/2034761016320696565",
+          "snippet": "@trq212 · We just released Claude Code channels, which allows you to control your Claude Code session through select MCPs, starting with Telegram and Discord. Use this to message Claude Code directly from your phone. 5:36 PM · Mar 19, 2026 · 1.6K · 4.2K ·"
+        },
+        {
+          "title": "Thariq on X: \"Lessons from Building Claude Code: How We Use Skills \" / X",
+          "url": "https://x.com/trq212/status/2033949937936085378",
+          "snippet": "@trq212 · Lessons from Building Claude Code: How We Use Skills · 344 · 2.5K · 15K · 6M · Skills have become one of the most used extension points in Claude Code. They’re flexible, easy to make, and simple to distribute. But this flexibility also makes it hard to know what works best."
+        },
+        {
+          "title": "Thariq on X: \"First attempt at Super Mario Galaxy-like movement. There's something very cool about hopping from planet to planet, but the first person is a bit jittery. I think this idea comes down to very precise camera behaviors, and maybe is too difficult a control scheme for mobile as https://t.co/dmdoHoXxvF\" / X",
+          "url": "https://x.com/trq212/status/1902145112089751769",
+          "snippet": "@trq212 · First attempt at Super Mario Galaxy-like movement. There's something very cool about hopping from planet to planet, but the first person is a bit jittery. I think this idea comes down to very precise camera behaviors, and maybe is too difficult a control scheme for mobile as well."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@systematicls",
+      "category": "個人",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "sysls (@systematicls) / Posts / X",
+          "url": "https://x.com/systematicls",
+          "snippet": "April 15, 2024 - one of my favorite poker stats. there is an EXTREME power law across poker hands. half of all profits come from either AA, KK, QQ, JJ, or AKs."
+        },
+        {
+          "title": "sysls on X: \"Your Firm Wants You Blind So You Can't Compete!\" / X",
+          "url": "https://x.com/systematicls/status/2003486775642321172",
+          "snippet": "The Central Book is the firm trading (charitably) on top of its own pods. It is the logical endpoint of seeing the aggregate: if you know what everyone is doing, why not trade on that information yourself? The firm aggregates signals, positions, or intended trades from across pods and constructs its own portfolio at the firm level."
+        },
+        {
+          "title": "sysls on X: \"Playing POE2 and really liking the currency market, especially as a market practitioner. In general, every game that has a free market allows a patient speculator to profit either from trends or market making; but there is some nuance in every one of them. In POE2, the primary https://t.co/vs0eO7oBK7\" / X",
+          "url": "https://x.com/systematicls/status/1875921840742551981",
+          "snippet": "@systematicls · Playing POE2 and really liking the currency market, especially as a market practitioner. In general, every game that has a free market allows a patient speculator to profit either from trends or market making; but there is some nuance in every one of them."
+        },
+        {
+          "title": "sysls (@systematicls) on X",
+          "url": "https://x.com/systematicls/status/2012577243839840333",
+          "snippet": "one of my favorite poker stats. there is an EXTREME power law across poker hands. half of all profits come from either AA, KK, QQ, JJ, or AKs."
+        },
+        {
+          "title": "sysls on X: \"How To Reason About A Messy Future\" / X",
+          "url": "https://x.com/systematicls/status/2030986094368432326",
+          "snippet": "But with o1, it was the first time these LLMs could credibly produce code from well-structured prompts. It was still messy. They still suffered from the occasional bout of hallucination and confusion."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@tricalt",
+      "category": "個人",
+      "priority": "high",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Vasilije（@tricalt）さん / X",
+          "url": "https://x.com/tricalt",
+          "snippet": "February 18, 2014 - クリックしてtricaltさんをフォロー · Vasilije · @tricalt · https://cognee.ai + Big Data | Vizsla | Pizza oven | Psychology | Data Eng. Community · コミュニティ Berlincognee.ai · 2014年2月からXを利用しています · 1,574 フォロー中 ·"
+        },
+        {
+          "title": "x.com",
+          "url": "https://x.com/tricalt/status/1722216426709365024",
+          "snippet": "クリックしてtricaltさんをフォロー · Vasilije · @tricalt · https://cognee.ai + Big Data | Vizsla | Pizza oven | Psychology | Data Eng. Community · コミュニティ Berlincognee.ai · 2014年2月からXを利用しています · 1,574 フォロー中 ·"
+        },
+        {
+          "title": "Vasilije on X: \"Special guest from cognee is in SF next week ...",
+          "url": "https://x.com/tricalt/status/1925108617327325350",
+          "snippet": "JavaScript is not available · We’ve detected that JavaScript is disabled in this browser. Please enable JavaScript or switch to a supported browser to continue using x.com. You can see a list of supported browsers in our Help Center · Help Center · Terms of Service Privacy Policy Cookie ..."
+        },
+        {
+          "title": "REST | tripleS fromm (@tripleSfromm) / X",
+          "url": "https://x.com/tripleSfromm",
+          "snippet": "February 7, 2024 - 𐙚 Hi WAV, This account will update pictures from Fromm of all tripleS's members 𐙚 retweet to spreat ✮ #tripleS #트리플에"
+        },
+        {
+          "title": "Fromm TripleS (@TripleS_Fromm) / X",
+          "url": "https://x.com/triples_fromm",
+          "snippet": "April 23, 2024 - [] tripleS Mayu shared on her Fromm that she will be withdrawing from university to fully focus on her activities with tripleS."
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@CodevolutionWeb",
+      "category": "開発",
+      "priority": "normal",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "Vishwas (@CodevolutionWeb) / Posts / X",
+          "url": "https://x.com/CodevolutionWeb",
+          "snippet": "November 9, 2016 - @CodevolutionWeb · · · Mar 19 · Article · 50 Claude Code Tips and Best Practices For Daily Use · You've been using Claude Code long enough to know it works, and now you're hunting for every edge you can find. I put together 50 Claude Code best practices and tips that help whether you're ..."
+        },
+        {
+          "title": "Vishwas on X: \"You can now go from Figma to SwiftUI with Visual Copilot! Read about it in my latest blog post https://t.co/5IKRYvBkrA\" / X",
+          "url": "https://x.com/CodevolutionWeb/status/1830973556458692669",
+          "snippet": "@CodevolutionWeb · You can now go from Figma to SwiftUI with Visual Copilot! Read about it in my latest blog post · builder.io · Figma to SwiftUI · Convert your Figma design to SwiftUI code using Visual Copilot. Save hours of manual work, streamline your iOS development workflow."
+        },
+        {
+          "title": "Vishwas (Builder.io) on X: \"Started a new series for beginners on React Query! If you're a React dev, highly recommend you give this a try. https://t.co/lDz1X3oUae\" / X",
+          "url": "https://x.com/codevolutionweb/status/1444888379649191936",
+          "snippet": "@CodevolutionWeb · Started a new series for beginners on React Query! If you're a React dev, highly recommend you give this a try. youtube.com · React Query Tutorial - 1 - Introduction · Courses - https://learn.codevolution.dev/ Support UPI - https://support.codevolution.dev/ Support PayPal - https://www.paypal.me/Codevolution Github..."
+        },
+        {
+          "title": "Vishwas (Builder.io) on X: \"RT @BroOfMahonri: @Irem__Victor I've tried them all, and find cursor to be my always goto with claude. However, builder io is fast becoming…\" / X",
+          "url": "https://x.com/CodevolutionWeb/status/1964954808714187252",
+          "snippet": "@builderio http://texting.boxels.com where I'm tempted to move from 95% cursor app, to 75% builer io."
+        },
+        {
+          "title": "Vishwas (Builder.io) on X: \"Tired of running npm install in a yarn project (or the opposite)? Say good bye to that package manager chaos with `ni` Read more of what you can do with ni in my blog post: https://t.co/xVz0ieBtNj https://t.co/dIu2mTi6ti\" / X",
+          "url": "https://x.com/CodevolutionWeb/status/1628420412777570305",
+          "snippet": "@CodevolutionWeb · Tired of running npm install in a yarn project (or the opposite)? Say good bye to that package manager chaos with `ni` Read more of what you can do with ni in my blog post: https://builder.io/blog/goodbye-package-manager-chaos… · 7:44 AM ·"
+        }
+      ]
+    },
+    {
+      "type": "x_account",
+      "handle": "@AkshayxSaini",
+      "category": "開発",
+      "priority": "normal",
+      "score": 1.0,
+      "is_exploration": false,
+      "results": [
+        {
+          "title": "LK Akshay Kumar on X: \"Couldn't have asked for a better start!! This movie is very close to my heart and the response from the audience is closer! Witnessing the tears, smiles, claps, whistles and hugs is all that we worked for and I can strongly say it's all paying off. Reading all your messages and https://t.co/HUfAxBMnmw\" / X",
+          "url": "https://x.com/lk_akshaykumar/status/2006314684283326902?lang=en",
+          "snippet": "Couldn't have asked for a better start!! This movie is very close to my heart and the response from the audience is closer! Witnessing the tears, smiles, claps, whistles and hugs is all that we worked for and I can strongly say it's all paying off."
+        },
+        {
+          "title": "Akshay Kumar Fans Group on X: \"HINDI SCAN : The Journey From Rajiv Bhatia to \"@AkshayKumar\". With assiduity and Luck He Became \"AKSHAY\" https://t.co/K05zgrtdeg\" / X",
+          "url": "https://x.com/akfansgroup/status/771941946059259905",
+          "snippet": "HINDI SCAN : The Journey From Rajiv Bhatia to \" @AkshayKumar\". With assiduity and Luck He Became \"AKSHAY\" Akshay Kumar · 1:24 AM · Sep 3, 2016 · 26 · 60 · Sign up now to get your own personalized timeline! Sign up with GoogleSign up with Google. Opens in new tab ·"
+        },
+        {
+          "title": "Akshay Saini on X: \"This is where it all started around 5 years back! 😅\" / X",
+          "url": "https://x.com/akshaymarch7/status/1835117964905058586",
+          "snippet": "Appreciation post I was watching an old throttling video from 5 years ago by @akshaymarch7 and realized how much he’s grown since then. It’s amazing to see his confidence boost over time. He seemed a bit shy at the end, but it's great to see how far he’s come."
+        },
+        {
+          "title": "Akshay Saini (@akshay_saini) / X",
+          "url": "https://x.com/akshay_saini",
+          "snippet": "September 1, 2009 - We’ve detected that JavaScript is disabled in this browser. Please enable JavaScript or switch to a supported browser to continue using x.com. You can see a list of supported browsers in our Help Center · By signing up, you agree to the Terms of Service and Privacy Policy, including Cookie Use"
+        },
+        {
+          "title": "Akshay Saini (@akshayakss) / X",
+          "url": "https://x.com/akshayakss?lang=en",
+          "snippet": "March 25, 2010 - We’ve detected that JavaScript is disabled in this browser. Please enable JavaScript or switch to a supported browser to continue using x.com. You can see a list of supported browsers in our Help Center · By signing up, you agree to the Terms of Service and Privacy Policy, including Cookie Use"
+        }
+      ]
+    }
+  ],
+  "total_sources": 14,
+  "total_results": 70
+}
