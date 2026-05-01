@@ -1,0 +1,100 @@
+name: Calendar Sync (Every 30min)
+
+# Periodic calendar sync via /backfill. Removes browser-dependency SPOF.
+# See: .company/departments/sys-dev/2026-04-30-calendar-sync-p1-design.md
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      time_min_days_ago:
+        description: 'Days back (default 14)'
+        required: false
+        default: '14'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: calendar-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Resolve time range
+        id: range
+        env:
+          INPUT_DAYS: ${{ inputs.time_min_days_ago }}
+        run: |
+          # INPUT_DAYS is sanitized: only used in date -d arithmetic, validated as integer
+          DAYS="${INPUT_DAYS:-14}"
+          if ! [[ "$DAYS" =~ ^[0-9]+$ ]]; then
+            echo "::error::time_min_days_ago must be a non-negative integer, got: $DAYS"
+            exit 1
+          fi
+          TIME_MIN=$(TZ=Asia/Tokyo date -d "today -${DAYS} days" +%Y-%m-%dT00:00:00+09:00)
+          TIME_MAX=$(TZ=Asia/Tokyo date -d "today +60 days" +%Y-%m-%dT00:00:00+09:00)
+          echo "TIME_MIN=$TIME_MIN" >> "$GITHUB_OUTPUT"
+          echo "TIME_MAX=$TIME_MAX" >> "$GITHUB_OUTPUT"
+
+      - name: Call backfill endpoint
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          BACKFILL_SECRET: ${{ secrets.BACKFILL_SECRET }}
+          FOCUS_YOU_USER_ID: ${{ secrets.FOCUS_YOU_USER_ID }}
+          CAL_ACESINC: ${{ secrets.CAL_ACESINC }}
+          CAL_YUMZZZ: ${{ secrets.CAL_YUMZZZ }}
+          CAL_XYZ: ${{ secrets.CAL_XYZ }}
+          TIME_MIN: ${{ steps.range.outputs.TIME_MIN }}
+          TIME_MAX: ${{ steps.range.outputs.TIME_MAX }}
+        run: |
+          for name in SUPABASE_URL BACKFILL_SECRET FOCUS_YOU_USER_ID CAL_ACESINC CAL_YUMZZZ CAL_XYZ; do
+            eval "v=\${$name}"
+            if [ -z "$v" ]; then
+              echo "::error::secret $name is not set"
+              exit 1
+            fi
+          done
+
+          PAYLOAD=$(jq -n \
+            --arg uid "$FOCUS_YOU_USER_ID" \
+            --arg tmin "$TIME_MIN" \
+            --arg tmax "$TIME_MAX" \
+            --arg c1 "$CAL_ACESINC" \
+            --arg c2 "$CAL_YUMZZZ" \
+            --arg c3 "$CAL_XYZ" \
+            '{user_id:$uid, time_min:$tmin, time_max:$tmax, calendar_ids:[$c1,$c2,$c3]}')
+
+          HTTP_CODE=$(curl -s -o /tmp/backfill.json -w '%{http_code}' \
+            -X POST "${SUPABASE_URL}/functions/v1/google-calendar-proxy/backfill" \
+            -H "x-backfill-secret: ${BACKFILL_SECRET}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          cat /tmp/backfill.json
+          echo
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::backfill failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          FETCHED=$(jq -r '.fetched // 0' /tmp/backfill.json)
+          SAVED=$(jq -r '.saved // 0' /tmp/backfill.json)
+          CANCELLED=$(jq -r '.cancelled // 0' /tmp/backfill.json)
+          echo "::notice::backfill OK fetched=$FETCHED saved=$SAVED cancelled=$CANCELLED"
+          {
+            echo "## Calendar Sync Result"
+            echo ""
+            echo "- fetched: $FETCHED"
+            echo "- saved: $SAVED"
+            echo "- cancelled: $CANCELLED"
+            echo ""
+            echo "### Per calendar"
+            jq -r '.per_calendar // {} | to_entries[] | "- \(.key): fetched=\(.value.fetched), cancelled=\(.value.cancelled), status=\(.value.status)"' /tmp/backfill.json
+          } >> "$GITHUB_STEP_SUMMARY"

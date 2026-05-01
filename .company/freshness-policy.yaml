@@ -372,6 +372,32 @@ data_sources:
       4. HowItWorks Improvement Proposals タブの更新提案を社長に提示
       5. research/tech/harness-engineering-claude-code-2026.md を更新
 
+  # ── 優先度1.7: Calendar 同期（ブリーフィング起点。stale=ブリーフィングが嘘をつく） ──
+
+  calendar_sync:
+    priority: 1.7
+    max_age_days: 0  # 時間粒度で見るため check_query 内で判定
+    auto_update: false
+    blocking: false
+    check_method: supabase_query
+    check_query: >
+      SELECT calendar_id, last_synced_at,
+             ROUND(EXTRACT(EPOCH FROM (now() - last_synced_at))/60) AS minutes_stale,
+             last_sync_status
+      FROM calendar_sync_state
+      WHERE user_id = '9096d5b4-1b51-40cb-ac2f-168731d764a2'
+      ORDER BY last_synced_at ASC
+    stale_condition: |
+      いずれかの calendar_id で last_synced_at が 2 時間 (120分) 以上前
+      OR last_sync_status='error'
+    update_action: |
+      1. ブリーフィング冒頭に警告: 「⚠️ Calendar 同期遅延: {calendar_id} が {minutes_stale}分 stale」
+      2. 4 時間 (240分) 以上 stale なら GitHub Actions の calendar-sync.yml が連続失敗の可能性:
+         gh run list -w calendar-sync.yml -L 5
+      3. 即時復旧: gh workflow run calendar-sync.yml -f time_min_days_ago=14
+      4. 24 時間以上 stale で sync_state が空 = workflow secrets 未設定。設定手順は
+         .company/departments/sys-dev/2026-04-30-calendar-sync-p1-design.md を参照。
+
 execution_rules:
   # ブリーフィング表示順: priority 昇順
   # auto_update=true のものは確認なしで実行
