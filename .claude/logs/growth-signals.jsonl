@@ -2023,3 +2023,6 @@
 {"ts":"2026-05-01T21:04:15+09:00","signal":"raw_prompt","prompt":"説明責任を取れればいくらでもLLMを使っていい。\n"}
 {"ts":"2026-05-01T21:07:45+09:00","signal":"raw_prompt","prompt":"1, C\n2, ok\n3, cp, serveerはpoc_demoとして残して欲しい。\n4, system-specはSoTの設計書なので残して欲しい。mvpからでも見れるように\n5, phase2\n"}
 {"ts":"2026-05-01T21:08:37+09:00","signal":"raw_prompt","prompt":"全部説明できる必要があるのかな？濃淡がありそう。説明できないといけないところと動いていればいいところない？\n"}
+{"ts":"2026-05-01T21:07:45+09:00","signal":"raw_prompt","prompt":"1, C\n2, ok\n3, cp, serveerはpoc_demoとして残して欲しい。\n4, system-specはSoTの設計書なので残して欲しい。mvpからでも見れるように\n5, phase2\n"}
+{"ts":"2026-05-01T21:08:37+09:00","signal":"raw_prompt","prompt":"全部説明できる必要があるのかな？濃淡がありそう。説明できないといけないところと動いていればいいところない？\n"}
+{"ts":"2026-05-01T21:18:34+09:00","signal":"raw_prompt","prompt":"LLMの実力にもよらない？LLMが自分より賢いのか賢くないのか、LLMの説明を信じていいのか、信じていけないのか。\n"}
