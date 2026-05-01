@@ -1990,3 +1990,5 @@
 {"ts":"2026-05-01T17:55:29+09:00","signal":"raw_prompt","prompt":"ACESのPCじゃないとできない操作があるみたい。どういう操作が制限される？それでも意味がある？これは別のPCです。\n"}
 {"ts":"2026-05-01T17:55:29+09:00","signal":"raw_prompt","prompt":"ACESのPCじゃないとできない操作があるみたい。どういう操作が制限される？それでも意味がある？これは別のPCです。\n"}
 {"ts":"2026-05-01T18:15:33+09:00","signal":"raw_prompt","prompt":"このPCには.env.localがあります。それで十分では？DATABASE_URL と MOCK_JWT_SECRETかいてます。\n"}
+{"ts":"2026-05-01T18:15:33+09:00","signal":"raw_prompt","prompt":"このPCには.env.localがあります。それで十分では？DATABASE_URL と MOCK_JWT_SECRETかいてます。\n"}
+{"ts":"2026-05-01T18:17:42+09:00","signal":"raw_prompt","prompt":"それでいきたい。\nデプロイはportalからできない？\n"}
