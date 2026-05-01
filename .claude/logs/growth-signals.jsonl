@@ -2020,3 +2020,6 @@
 {"ts":"2026-05-01T21:01:42+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/scratch/zenn/llm-era-engineer-work.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\n責任感とかも大事かも。\nあと説明責任。説明できるかどうか。つまり理解しているかどうか。これは大事\n"}
 {"ts":"2026-05-01T21:01:42+09:00","signal":"raw_prompt","prompt":"<ide_opened_file>The user opened the file /workspace/scratch/zenn/llm-era-engineer-work.md in the IDE. This may or may not be related to the current task.</ide_opened_file>\n責任感とかも大事かも。\nあと説明責任。説明できるかどうか。つまり理解しているかどうか。これは大事\n"}
 {"ts":"2026-05-01T21:04:15+09:00","signal":"raw_prompt","prompt":"説明責任を取れればいくらでもLLMを使っていい。\n"}
+{"ts":"2026-05-01T21:04:15+09:00","signal":"raw_prompt","prompt":"説明責任を取れればいくらでもLLMを使っていい。\n"}
+{"ts":"2026-05-01T21:07:45+09:00","signal":"raw_prompt","prompt":"1, C\n2, ok\n3, cp, serveerはpoc_demoとして残して欲しい。\n4, system-specはSoTの設計書なので残して欲しい。mvpからでも見れるように\n5, phase2\n"}
+{"ts":"2026-05-01T21:08:37+09:00","signal":"raw_prompt","prompt":"全部説明できる必要があるのかな？濃淡がありそう。説明できないといけないところと動いていればいいところない？\n"}
