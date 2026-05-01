@@ -98,7 +98,9 @@
       "Skill(pptx-aces-rikyu)",
       "Skill(pptx-aces-rikyu:*)",
       "mcp__claude_ai_Figma__whoami",
-      "mcp__claude_ai_Figma__create_new_file"
+      "mcp__claude_ai_Figma__create_new_file",
+      "Bash(command -v az)",
+      "Bash(command -v uv)"
     ],
     "additionalDirectories": [
       "/workspace/.company-polaris/secretary",
