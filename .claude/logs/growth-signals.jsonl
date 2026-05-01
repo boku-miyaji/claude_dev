@@ -1956,3 +1956,11 @@
 {"ts":"2026-04-30T23:54:52+09:00","signal":"raw_prompt","prompt":"ロールの割り当て追加できない。\n"}
 {"ts":"2026-04-30T23:54:52+09:00","signal":"raw_prompt","prompt":"ロールの割り当て追加できない。\n"}
 {"ts":"2026-05-01T00:03:57+09:00","signal":"raw_prompt","prompt":"どれ？\nコンテナーから設定したらエラーが出て無理だった。イメージがないからだと思う\n"}
+{"ts":"2026-05-01T00:03:57+09:00","signal":"raw_prompt","prompt":"どれ？\nコンテナーから設定したらエラーが出て無理だった。イメージがないからだと思う\n"}
+{"ts":"2026-05-01T00:08:14+09:00","signal":"raw_prompt","prompt":"(AuthorizationFailed) The client 'yuta.miyaji@acesinc.co.jp' with object id 'f4eaa36a-0264-4aa3-af7a-d48db1efad57' does not have authorization to perform action 'Microsoft.Authorization/roleAssignments/write' over scope '/subscriptions/e97d29c6-58c1-4f75-adc4-62105a0f7ce0/resourceGroups/aces_project_rikyu_sales_proposals/providers/Microsoft.Authorization/roleAssignments/03ef445e-6b2e-4d9a-bb33-3bd4a9d8e757' or the scope is invalid. If access was recently granted, please refresh your credentials.\n"}
+{"ts":"2026-05-01T00:08:14+09:00","signal":"raw_prompt","prompt":"(AuthorizationFailed) The client 'yuta.miyaji@acesinc.co.jp' with object id 'f4eaa36a-0264-4aa3-af7a-d48db1efad57' does not have authorization to perform action 'Microsoft.Authorization/roleAssignments/write' over scope '/subscriptions/e97d29c6-58c1-4f75-adc4-62105a0f7ce0/resourceGroups/aces_project_rikyu_sales_proposals/providers/Microsoft.Authorization/roleAssignments/03ef445e-6b2e-4d9a-bb33-3bd4a9d8e757' or the scope is invalid. If access was recently granted, please refresh your credentials.\n"}
+{"ts":"2026-05-01T00:12:57+09:00","signal":"raw_prompt","prompt":"さきに諸々実装を進めてください。私の作業は明日しますので\n"}
+{"ts":"2026-05-01T00:13:10+09:00","signal":"raw_prompt","prompt":"さきに諸々実装を進めてください。私の作業は明日しますので\n"}
+{"ts":"2026-05-01T00:12:57+09:00","signal":"raw_prompt","prompt":"さきに諸々実装を進めてください。私の作業は明日しますので\n"}
+{"ts":"2026-05-01T00:13:10+09:00","signal":"raw_prompt","prompt":"さきに諸々実装を進めてください。私の作業は明日しますので\n"}
+{"ts":"2026-05-01T09:58:13+09:00","signal":"raw_prompt","prompt":"下記を言われましたがどう？\n緑系はPLA-CF MATCHA GREEN 藍紫はPLA-CF IRIS PURPLEで制作します。おそらく買えるマットフィラメントに近しい色はないので、ご了承願います。\n"}
