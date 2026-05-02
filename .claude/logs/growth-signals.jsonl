@@ -2124,3 +2124,5 @@
 {"ts":"2026-05-02T22:46:02+09:00","signal":"raw_prompt","prompt":"mock認証とは？何でログインできる？\n"}
 {"ts":"2026-05-02T22:46:02+09:00","signal":"raw_prompt","prompt":"mock認証とは？何でログインできる？\n"}
 {"ts":"2026-05-02T22:49:19+09:00","signal":"raw_prompt","prompt":"loginできない。\nServer misconfiguration: MOCK_JWT_SECRET missing\n"}
+{"ts":"2026-05-02T22:49:19+09:00","signal":"raw_prompt","prompt":"loginできない。\nServer misconfiguration: MOCK_JWT_SECRET missing\n"}
+{"ts":"2026-05-02T22:51:26+09:00","signal":"raw_prompt","prompt":"Manifest: Line: 1, column: 1, Syntax error.Understand this error\n\nb25b9c326ace72d7.js:1  POST https://rikyu-dev-web.whitecliff-40949cf1.eastus2.azurecontainerapps.io/api/login 500 (Internal Server Error)\n\n環境変数変更しました\n"}
