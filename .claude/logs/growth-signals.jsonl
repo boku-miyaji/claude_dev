@@ -2130,3 +2130,5 @@
 {"ts":"2026-05-02T22:53:15+09:00","signal":"raw_prompt","prompt":"2026-05-02T13:53:01.55092  Connecting to the container 'rikyu-dev-web'...\n2026-05-02T13:53:01.57276  Successfully Connected to container: 'rikyu-dev-web' [Revision: 'rikyu-dev-web--0000004', Replica: 'rikyu-dev-web--0000004-86b6d778b-2jtd6']\n2026-05-02T13:49:17.4435027Z stderr F 2026/05/02 13:49:17 Listening on :80...\n"}
 {"ts":"2026-05-02T22:53:15+09:00","signal":"raw_prompt","prompt":"2026-05-02T13:53:01.55092  Connecting to the container 'rikyu-dev-web'...\n2026-05-02T13:53:01.57276  Successfully Connected to container: 'rikyu-dev-web' [Revision: 'rikyu-dev-web--0000004', Replica: 'rikyu-dev-web--0000004-86b6d778b-2jtd6']\n2026-05-02T13:49:17.4435027Z stderr F 2026/05/02 13:49:17 Listening on :80...\n"}
 {"ts":"2026-05-02T22:55:12+09:00","signal":"raw_prompt","prompt":"認証・IDは？\n"}
+{"ts":"2026-05-02T22:55:12+09:00","signal":"raw_prompt","prompt":"認証・IDは？\n"}
+{"ts":"2026-05-02T22:58:12+09:00","signal":"raw_prompt","prompt":"loginしたあとに画面が真っ白になります。\n"}
