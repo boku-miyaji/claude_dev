@@ -2098,3 +2098,17 @@
 {"ts":"2026-05-02T21:41:19+09:00","signal":"raw_prompt","prompt":"8000プロセスを削除して\n"}
 {"ts":"2026-05-02T21:41:19+09:00","signal":"raw_prompt","prompt":"8000プロセスを削除して\n"}
 {"ts":"2026-05-02T21:47:46+09:00","signal":"raw_prompt","prompt":"何の動作確認をしたらいいの？新規顧客をいれてもアジェンダ生成されないが。\n\nこの画面の設計意図とかいらない。\n"}
+{"ts":"2026-05-02T21:47:46+09:00","signal":"raw_prompt","prompt":"何の動作確認をしたらいいの？新規顧客をいれてもアジェンダ生成されないが。\n\nこの画面の設計意図とかいらない。\n"}
+{"ts":"2026-05-02T21:51:13+09:00","signal":"raw_prompt","prompt":"localでゃうごいています。\nこの画面の設計意図とか前提データの選択とかもデモようなのでいらない。\n"}
+{"ts":"2026-05-02T21:51:13+09:00","signal":"raw_prompt","prompt":"localでゃうごいています。\nこの画面の設計意図とか前提データの選択とかもデモようなのでいらない。\n"}
+{"ts":"2026-05-02T21:56:54+09:00","signal":"raw_prompt","prompt":"phase切り替えモーダルとは？\nアノテーションとは？\n"}
+{"ts":"2026-05-02T21:56:54+09:00","signal":"raw_prompt","prompt":"phase切り替えモーダルとは？\nアノテーションとは？\n"}
+{"ts":"2026-05-02T22:07:00+09:00","signal":"raw_prompt","prompt":"アノテーション機能は消そう。\nphaseはMVPでいれるやつだよね？それなら残す\n"}
+{"ts":"2026-05-02T22:07:00+09:00","signal":"raw_prompt","prompt":"アノテーション機能は消そう。\nphaseはMVPでいれるやつだよね？それなら残す\n"}
+{"ts":"2026-05-02T22:11:53+09:00","signal":"raw_prompt","prompt":"デプロイして確認したい\n"}
+{"ts":"2026-05-02T22:11:53+09:00","signal":"raw_prompt","prompt":"デプロイして確認したい\n"}
+{"ts":"2026-05-02T22:15:46+09:00","signal":"raw_prompt","prompt":"webもcontainer appsに作るのではなかったっけ？deployのメモmarkdownを見てください。\n"}
+{"ts":"2026-05-02T22:15:46+09:00","signal":"raw_prompt","prompt":"webもcontainer appsに作るのではなかったっけ？deployのメモmarkdownを見てください。\n"}
+{"ts":"2026-05-02T22:20:28+09:00","signal":"raw_prompt","prompt":"お願いします。\nportalは私がやるので指示して\n"}
+{"ts":"2026-05-02T22:20:28+09:00","signal":"raw_prompt","prompt":"お願いします。\nportalは私がやるので指示して\n"}
+{"ts":"2026-05-02T22:36:17+09:00","signal":"raw_prompt","prompt":"envはdevじゃないの？\n"}
