@@ -2138,3 +2138,7 @@
 {"ts":"2026-05-02T23:04:51+09:00","signal":"raw_prompt","prompt":"何も変えずに作成できない？\n"}
 {"ts":"2026-05-02T23:04:51+09:00","signal":"raw_prompt","prompt":"何も変えずに作成できない？\n"}
 {"ts":"2026-05-02T23:07:16+09:00","signal":"raw_prompt","prompt":"7b25527がないと言われた\n"}
+{"ts":"2026-05-02T23:07:16+09:00","signal":"raw_prompt","prompt":"7b25527がないと言われた\n"}
+{"ts":"2026-05-02T23:12:51+09:00","signal":"raw_prompt","prompt":"まだ真っ白。\nmanifest.json:1 Manifest: Line: 1, column: 1, Syntax error.\nエラーもこれだけ\n"}
+{"ts":"2026-05-02T23:12:51+09:00","signal":"raw_prompt","prompt":"まだ真っ白。\nmanifest.json:1 Manifest: Line: 1, column: 1, Syntax error.\nエラーもこれだけ\n"}
+{"ts":"2026-05-03T05:33:56+09:00","signal":"raw_prompt","prompt":"表示されました。次に進みたい\n"}
