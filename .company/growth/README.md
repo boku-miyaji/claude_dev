@@ -3,41 +3,41 @@
 > Supabase `growth_events` テーブルの読み取り専用ミラー。
 > 毎日 `scripts/growth/export-mirror.sh` で再生成される。**手編集しない**（次回上書きされる）。
 
-- 総レコード数: **563**
+- 総レコード数: **584**
 
 ## PJ別
 
 - [agent-harness](by-project/agent-harness.md) — 29件
-- [claude-dev](by-project/claude-dev.md) — 284件
-- [focus-you](by-project/focus-you.md) — 143件
+- [claude-dev](by-project/claude-dev.md) — 292件
+- [focus-you](by-project/focus-you.md) — 146件
 - [polaris-circuit](by-project/polaris-circuit.md) — 39件
-- [rikyu](by-project/rikyu.md) — 67件
+- [rikyu](by-project/rikyu.md) — 77件
 - [unclassified](by-project/unclassified.md) — 1件
 
 ## 最近の20件
 
 | date | type | project | title |
 |---|---|---|---|
+| 2026-05-02 | `countermeasure` | claude-dev | Zenn記事の文体・構造を全面校正 |
+| 2026-05-02 | `failure` | focus-you | focus-you請求書が修正不可+入金日欄なし |
+| 2026-05-02 | `decision` | claude-dev | LLM活用の境界=説明責任 |
+| 2026-05-02 | `decision` | rikyu | rikyu UI設計はDDLに合わせる(案A採用) |
+| 2026-05-02 | `decision` | rikyu | rikyu MVP Secret管理はContainer Apps Secretsで |
+| 2026-05-02 | `decision` | claude-dev | 説明責任の濃淡を許容する（全部説明できなくてよい） |
+| 2026-05-02 | `failure` | focus-you | focus-you 請求書が修正不可・入金日入力欄なし |
+| 2026-05-02 | `decision` | claude-dev | Zenn記事の中核主張: 説明責任を取れればLLMをいくら使ってもよい |
+| 2026-05-02 | `decision` | rikyu | rikyu W1 は案A採用・7軸統一・Vertical Slice 戦略 |
+| 2026-05-02 | `decision` | rikyu | rikyu MVP デプロイは Azure Portal 経由で進める |
+| 2026-05-01 | `decision` | rikyu | rikyu MVP CI/CD は SP なし build/push のみ |
+| 2026-05-01 | `countermeasure` | rikyu | Docker multi-stage uv の venv path 不一致対策 |
 | 2026-05-01 | `milestone` | rikyu | rikyu MVP デプロイセッション完了 |
-| 2026-05-01 | `failure` | rikyu | Azure ロール割り当て権限不足で停滞 |
-| 2026-05-01 | `failure` | rikyu | Service Bus 名 rikyu-dev-sbus も他テナント衝突、aces- プレフィックス追加で確定 |
-| 2026-05-01 | `countermeasure` | claude-dev | Docker multi-stage + uv で venv path 不一致による startup 失敗 |
-| 2026-05-01 | `milestone` | rikyu | rikyu MVP API + Worker のコア実装完了 (FastAPI + 17 endpoint, 2 job handler, 9 tests passing) |
-| 2026-05-01 | `decision` | rikyu | rikyu MVP の CI/CD は SP なしで build & push のみ自動化、deploy は local az CLI で社長実行 |
-| 2026-04-30 | `decision` | polaris-circuit | polaris-circuit のDB方針を再検討 |
-| 2026-04-30 | `decision` | claude-dev | 「社長」呼称を恒久的に廃止 |
-| 2026-04-30 | `failure` | claude-dev | auto-push が SSH名前解決失敗で20件未push |
-| 2026-04-30 | `failure` | claude-dev | [batch failure] Intelligence Collection (2026-04-30) |
-| 2026-04-30 | `failure` | claude-dev | [batch failure] News Collection (2026-04-30) |
-| 2026-04-30 | `decision` | rikyu | Azure OpenAI は既存 Foundry (Australia East) を再利用、East US 2 新設は Phase 1 中盤で再判断 |
-| 2026-04-30 | `decision` | rikyu | rikyu MVP の Secret 管理は Container Apps Secrets でスタート、Phase 1 中盤で Key Vault 化 |
-| 2026-04-30 | `decision` | - | CVE-2026-31431 (Copy Fail) 対応方針: マネージド依存 + 開発環境 algif_aead 無効化 |
-| 2026-04-30 | `decision` | claude-dev | 作業環境投資 (椅子・キーボード相棒選定) |
-| 2026-04-30 | `decision` | claude-dev | 「社長」呼称を恒久的に廃止 |
-| 2026-04-30 | `decision` | rikyu | Azure pg flexible server構成の再検討 |
-| 2026-04-30 | `failure` | claude-dev | auto-pushアラート再発 (SSH/DNS解決失敗) |
-| 2026-04-30 | `failure` | polaris-circuit | Docker build失敗 (kicad-cli/python3) |
-| 2026-04-30 | `countermeasure` | claude-dev | 「社長」呼称を廃止、二人称は『あなた』 |
+| 2026-05-01 | `failure` | claude-dev | [batch failure] Intelligence Collection (2026-05-01) |
+| 2026-05-01 | `failure` | claude-dev | [batch failure] News Collection (2026-05-01) |
+| 2026-05-01 | `failure` | claude-dev | [batch failure] Calendar Sync (Every 30min) (2026-05-01) |
+| 2026-05-01 | `milestone` | rikyu | rikyu MVP 5/1 end-to-end 動作完了 — meeting → agenda更新提案 / proposal_story 生成まで全部繋がった |
+| 2026-05-01 | `decision` | focus-you | タイピング成長記録をfocus-youに登録 |
+| 2026-05-01 | `decision` | claude-dev | 自作キーボードを大西配列+42key+LP化 |
+| 2026-05-01 | `decision` | rikyu | rikyu MVP は .env.local で開発継続 |
 
 ## 運用ルール
 - マスター: Supabase `growth_events`

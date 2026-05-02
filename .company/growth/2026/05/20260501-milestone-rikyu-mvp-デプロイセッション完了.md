@@ -2,15 +2,15 @@
 
 - **type**: `milestone`
 - **date**: 2026-05-01
-- **category**: devops / **severity**: medium
+- **category**: architecture / **severity**: high
 - **status**: active
-- **source**: detector
-- **tags**: rikyu, deployment, auto-detected, daily-batch, llm-classified
+- **source**: daily-digest
+- **tags**: rikyu, backend, ci-cd, auto-detected, daily-digest
 
 ## what_happened
-mvp/docs/SESSION_2026-05-01_DEPLOY.md の手順に沿ってデプロイ作業を実施し完了。シードデータ投入の有無や次ステップ（step1-3 含む）の確認を経て、後続タスクに着手する状態に。
+rikyu MVP の API/Worker（FastAPI 17 endpoints）コア実装を完了し、Azure 環境へのデプロイセッションを実施。Azure ロール権限・Service Bus 命名衝突など複数の障害を踏みつつデプロイまで到達した。
 
 ## result
-次フェーズの実装着手が可能な状態になった
+rikyu MVP の最初のデプロイ完了。CI/CD は SP なしで build/push のみ自動化、deploy は手動という方針で着地。
 
-<!-- id: b37e85e7-fecf-454e-8688-a476330a407e -->
+<!-- id: 71c26638-926f-48ec-bbe2-8a407020aede -->

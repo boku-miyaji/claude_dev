@@ -1,9 +1,12 @@
 # growth_events — `focus-you`
 
-Total: **143**
+Total: **146**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-05-02 | `failure` | active | [focus-you請求書が修正不可+入金日欄なし](../2026/05/20260502-failure-focus-you請求書が修正不可入金日欄なし.md) |
+| 2026-05-02 | `failure` | active | [focus-you 請求書が修正不可・入金日入力欄なし](../2026/05/20260502-failure-focus-you-請求書が修正不可入金日入力欄なし.md) |
+| 2026-05-01 | `decision` | active | [タイピング成長記録をfocus-youに登録](../2026/05/20260501-decision-タイピング成長記録をfocus-youに登録.md) |
 | 2026-04-30 | `failure` | active | [ブリーフィングのカレンダー予定が実態と乖離](../2026/04/20260430-failure-ブリーフィングのカレンダー予定が実態と乖離.md) |
 | 2026-04-29 | `decision` | active | [manualタブ再生成結果の編集機能と編集履歴ログ追加](../2026/04/20260429-decision-manualタブ再生成結果の編集機能と編集履歴ログ追加.md) |
 | 2026-04-29 | `decision` | active | [manualタブ再生成結果の編集機能と編集履歴ログ追加](../2026/04/20260429-decision-manualタブ再生成結果の編集機能と編集履歴ログ追加-fe0a09ec.md) |

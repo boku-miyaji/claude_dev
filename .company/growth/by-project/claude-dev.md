@@ -1,12 +1,20 @@
 # growth_events — `claude-dev`
 
-Total: **284**
+Total: **292**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-05-02 | `countermeasure` | active | [Zenn記事の文体・構造を全面校正](../2026/05/20260502-countermeasure-zenn記事の文体構造を全面校正.md) |
+| 2026-05-02 | `decision` | active | [LLM活用の境界=説明責任](../2026/05/20260502-decision-llm活用の境界説明責任.md) |
+| 2026-05-02 | `decision` | active | [説明責任の濃淡を許容する（全部説明できなくてよい）](../2026/05/20260502-decision-説明責任の濃淡を許容する全部説明できなくてよい.md) |
+| 2026-05-02 | `decision` | active | [Zenn記事の中核主張: 説明責任を取れればLLMをいくら使ってもよい](../2026/05/20260502-decision-zenn記事の中核主張-説明責任を取れればllmをいくら使ってもよい.md) |
+| 2026-05-01 | `failure` | active | [[batch failure] Intelligence Collection (2026-05-01)](../2026/05/20260501-failure-batch-failure-intelligence-collection-2026-05-01.md) |
+| 2026-05-01 | `failure` | active | [[batch failure] News Collection (2026-05-01)](../2026/05/20260501-failure-batch-failure-news-collection-2026-05-01.md) |
+| 2026-05-01 | `failure` | active | [[batch failure] Calendar Sync (Every 30min) (2026-05-01)](../2026/05/20260501-failure-batch-failure-calendar-sync-every-30min-2026-05-01.md) |
+| 2026-05-01 | `decision` | active | [自作キーボードを大西配列+42key+LP化](../2026/05/20260501-decision-自作キーボードを大西配列42keylp化.md) |
 | 2026-05-01 | `countermeasure` | active | [Docker multi-stage + uv で venv path 不一致による startup 失敗](../2026/05/20260501-countermeasure-docker-multi-stage-uv-で-venv-path-不一致による-startup-失.md) |
-| 2026-04-30 | `decision` | active | [「社長」呼称を恒久的に廃止](../2026/04/20260430-decision-社長呼称を恒久的に廃止.md) |
 | 2026-04-30 | `failure` | active | [auto-push が SSH名前解決失敗で20件未push](../2026/04/20260430-failure-auto-push-が-ssh名前解決失敗で20件未push.md) |
+| 2026-04-30 | `decision` | active | [「社長」呼称を恒久的に廃止](../2026/04/20260430-decision-社長呼称を恒久的に廃止.md) |
 | 2026-04-30 | `failure` | active | [[batch failure] Intelligence Collection (2026-04-30)](../2026/04/20260430-failure-batch-failure-intelligence-collection-2026-04-30.md) |
 | 2026-04-30 | `failure` | active | [[batch failure] News Collection (2026-04-30)](../2026/04/20260430-failure-batch-failure-news-collection-2026-04-30.md) |
 | 2026-04-30 | `decision` | active | [作業環境投資 (椅子・キーボード相棒選定)](../2026/04/20260430-decision-作業環境投資-椅子キーボード相棒選定.md) |
