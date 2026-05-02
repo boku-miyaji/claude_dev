@@ -2114,3 +2114,6 @@
 {"ts":"2026-05-02T22:36:17+09:00","signal":"raw_prompt","prompt":"envはdevじゃないの？\n"}
 {"ts":"2026-05-02T22:36:17+09:00","signal":"raw_prompt","prompt":"envはdevじゃないの？\n"}
 {"ts":"2026-05-02T22:40:38+09:00","signal":"raw_prompt","prompt":"step3までやりました。\nazは使えないのでは？このdevcontainerで使える？\n"}
+{"ts":"2026-05-02T22:40:38+09:00","signal":"raw_prompt","prompt":"step3までやりました。\nazは使えないのでは？このdevcontainerで使える？\n"}
+{"ts":"2026-05-02T22:41:46+09:00","signal":"raw_prompt","prompt":"RG=\"aces_project_rikyu_sales_proposals\"\n\n# 最新 image に切替\naz containerapp update \\\n  -n rikyu-dev-web -g \"$RG\" \\\n  --image rikyudevacr.azurecr.io/rikyu-web:latest \\\n  --output table\n\n# 動作確認 URL\nWEB_URL=$(az containerapp show -n rikyu-dev-web -g \"$RG\" \\\n  --query 'properties.configuration.ingress.fqdn' -o tsv)\necho \"Web: https://$WEB_URL\"\n"}
+{"ts":"2026-05-02T22:42:09+09:00","signal":"raw_prompt","prompt":"az使わずにportalでもできるんだっけ？\n"}
