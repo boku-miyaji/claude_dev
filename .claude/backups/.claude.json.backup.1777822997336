@@ -52,6 +52,13 @@
     "git-worktrees": 53
   },
   "promptQueueUseCount": 6,
+  "cachedStatsigGates": {
+    "tengu_prompt_suggestion": true,
+    "tengu_year_end_2025_campaign_promo": false,
+    "tengu_vscode_review_upsell": false,
+    "tengu_streaming_tool_execution2": false,
+    "tengu_vscode_onboarding": false
+  },
   "cachedDynamicConfigs": {
     "tengu_1p_event_batch_config": {
       "scheduledDelayMillis": 5000,
@@ -483,13 +490,6 @@
     "tengu_attribution_header": true
   },
   "unpinOpus47LaunchEffort": true,
-  "cachedStatsigGates": {
-    "tengu_prompt_suggestion": true,
-    "tengu_year_end_2025_campaign_promo": false,
-    "tengu_vscode_review_upsell": false,
-    "tengu_streaming_tool_execution2": false,
-    "tengu_vscode_onboarding": false
-  },
   "userID": "490a85b216033891ec6e134c7811c5eb5890af627dd866d91b05ddcd725c39b7",
   "firstStartTime": "2025-07-10T13:14:53.002Z",
   "projects": {
@@ -727,8 +727,8 @@
       "lastUsedAt": 1777512540908
     },
     "register": {
-      "usageCount": 17,
-      "lastUsedAt": 1777822997335
+      "usageCount": 16,
+      "lastUsedAt": 1777600203283
     },
     "pptx-aces-rikyu": {
       "usageCount": 1,

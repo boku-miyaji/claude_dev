@@ -29219,3 +29219,9 @@
 {"ts":"2026-05-04T00:17:32+09:00","hook":"tool-collector","tool":"Edit","status":"ok"}
 {"ts":"2026-05-04T00:17:39+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
 {"ts":"2026-05-04T00:18:00+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-05-04T00:40:04+09:00","hook":"tool-collector","tool":"TodoWrite","status":"ok"}
+{"ts":"2026-05-04T00:42:51+09:00","hook":"tool-collector","tool":"Write","status":"ok"}
+{"ts":"2026-05-04T00:43:13+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
+{"ts":"2026-05-04T00:43:17+09:00","hook":"tool-collector","tool":"Skill:register","status":"ok"}
+{"ts":"2026-05-04T00:43:18+09:00","hook":"skill-usage-log","skill":"register","status":"ok"}
+{"ts":"2026-05-04T00:43:37+09:00","hook":"tool-collector","tool":"Bash","status":"ok"}
