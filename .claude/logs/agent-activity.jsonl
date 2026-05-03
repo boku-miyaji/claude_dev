@@ -252,3 +252,5 @@
 {"ts":"2026-04-30T11:48:46+09:00","event":"agent_dispatch","dept":"Explore","desc":"Audit existing diagrams in rikyu system-spec","model":"default","background":false}
 {"ts":"2026-04-30T13:04:48+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"P1 calendar sync design","model":"default","background":true}
 {"ts":"2026-04-30T14:46:52+09:00","event":"agent_dispatch","dept":"システム開発部","desc":"P1 calendar sync implementation","model":"default","background":true}
+{"ts":"2026-05-04T00:57:52+09:00","event":"agent_dispatch","dept":"情報収集部","desc":"情報収集（社長依頼）","model":"default","background":false}
+{"ts":"2026-05-04T00:58:16+09:00","event":"agent_dispatch","dept":"調査部","desc":"Calendar/Batch failure 根本原因調査","model":"default","background":false}
