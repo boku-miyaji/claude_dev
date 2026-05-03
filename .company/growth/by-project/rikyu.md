@@ -1,16 +1,18 @@
 # growth_events — `rikyu`
 
-Total: **77**
+Total: **79**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-05-02 | `decision` | active | [rikyu W1 は案A採用・7軸統一 vertical slice 戦略](../2026/05/20260502-decision-rikyu-w1-は案a採用7軸統一-vertical-slice-戦略.md) |
+| 2026-05-02 | `decision` | active | [rikyu MVP デプロイは Azure Portal 経由で進める](../2026/05/20260502-decision-rikyu-mvp-デプロイは-azure-portal-経由で進める.md) |
 | 2026-05-02 | `decision` | active | [rikyu UI設計はDDLに合わせる(案A採用)](../2026/05/20260502-decision-rikyu-ui設計はddlに合わせる案a採用.md) |
 | 2026-05-02 | `decision` | active | [rikyu MVP Secret管理はContainer Apps Secretsで](../2026/05/20260502-decision-rikyu-mvp-secret管理はcontainer-apps-secretsで.md) |
 | 2026-05-02 | `decision` | active | [rikyu W1 は案A採用・7軸統一・Vertical Slice 戦略](../2026/05/20260502-decision-rikyu-w1-は案a採用7軸統一vertical-slice-戦略.md) |
-| 2026-05-02 | `decision` | active | [rikyu MVP デプロイは Azure Portal 経由で進める](../2026/05/20260502-decision-rikyu-mvp-デプロイは-azure-portal-経由で進める.md) |
+| 2026-05-02 | `decision` | active | [rikyu MVP デプロイは Azure Portal 経由で進める](../2026/05/20260502-decision-rikyu-mvp-デプロイは-azure-portal-経由で進める-42770b62.md) |
 | 2026-05-01 | `decision` | active | [rikyu MVP CI/CD は SP なし build/push のみ](../2026/05/20260501-decision-rikyu-mvp-cicd-は-sp-なし-buildpush-のみ.md) |
-| 2026-05-01 | `countermeasure` | active | [Docker multi-stage uv の venv path 不一致対策](../2026/05/20260501-countermeasure-docker-multi-stage-uv-の-venv-path-不一致対策.md) |
 | 2026-05-01 | `milestone` | active | [rikyu MVP デプロイセッション完了](../2026/05/20260501-milestone-rikyu-mvp-デプロイセッション完了.md) |
+| 2026-05-01 | `countermeasure` | active | [Docker multi-stage uv の venv path 不一致対策](../2026/05/20260501-countermeasure-docker-multi-stage-uv-の-venv-path-不一致対策.md) |
 | 2026-05-01 | `milestone` | resolved | [rikyu MVP 5/1 end-to-end 動作完了 — meeting → agenda更新提案 / proposal_story 生成まで全部繋がった](../2026/05/20260501-milestone-rikyu-mvp-51-end-to-end-動作完了-meeting-agenda更新提案-pr.md) |
 | 2026-05-01 | `decision` | active | [rikyu MVP は .env.local で開発継続](../2026/05/20260501-decision-rikyu-mvp-は-envlocal-で開発継続.md) |
 | 2026-05-01 | `failure` | active | [Azure RBAC ロール割り当て権限不足](../2026/05/20260501-failure-azure-rbac-ロール割り当て権限不足.md) |

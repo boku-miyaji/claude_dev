@@ -4,13 +4,19 @@
 - **date**: 2026-05-02
 - **category**: devops / **severity**: medium
 - **status**: active
-- **source**: detector
-- **tags**: rikyu, azure, deployment, auto-detected, daily-batch, llm-classified
+- **source**: daily-digest
+- **tags**: rikyu, devops, ci-cd, operations, auto-detected, daily-digest
 
 ## what_happened
-devcontainer から Azure CLI が叩けない問題を確認後、ACES PC 制限の調査を経て、.env.local（DATABASE_URL/MOCK_JWT_SECRET）が揃っているこの PC で Portal 経由でデプロイする方針に決定。ACR webhook での auto deploy も検討。
+rikyu MVP のデプロイ作業について、CI/CDによる自動化ではなく Azure Portal の GUI 操作で進める方針を決定。SP なしで build/push のみとする以前の方針と整合し、当面は手動デプロイで MVP を回す。
+
+## root_cause
+Azure RBAC ロール割り当て権限不足の失敗があり、SP発行・自動化の優先度を下げた
+
+## countermeasure
+Portal 経由の手動デプロイを採用し、CI/CD は build/push までに限定
 
 ## result
-Portal でのデプロイに成功。SESSION_2026-05-01_DEPLOYMENT.md に記録し継続作業へ。
+MVP フェーズの進行を妨げない暫定運用を確立
 
-<!-- id: 42770b62-41d8-4f76-b358-91481a2a4894 -->
+<!-- id: 77a8b255-a652-4962-83d1-292079e77714 -->

@@ -1,9 +1,13 @@
 # growth_events — `claude-dev`
 
-Total: **292**
+Total: **296**
 
 | date | type | status | title |
 |---|---|---|---|
+| 2026-05-02 | `decision` | active | [Zenn記事は説明責任の濃淡を許容（LLM活用の境界）](../2026/05/20260502-decision-zenn記事は説明責任の濃淡を許容llm活用の境界.md) |
+| 2026-05-02 | `failure` | active | [[batch failure] Intelligence Collection (2026-05-02)](../2026/05/20260502-failure-batch-failure-intelligence-collection-2026-05-02.md) |
+| 2026-05-02 | `failure` | active | [[batch failure] News Collection (2026-05-02)](../2026/05/20260502-failure-batch-failure-news-collection-2026-05-02.md) |
+| 2026-05-02 | `failure` | active | [[batch failure] Calendar Sync (Every 30min) (2026-05-02)](../2026/05/20260502-failure-batch-failure-calendar-sync-every-30min-2026-05-02.md) |
 | 2026-05-02 | `countermeasure` | active | [Zenn記事の文体・構造を全面校正](../2026/05/20260502-countermeasure-zenn記事の文体構造を全面校正.md) |
 | 2026-05-02 | `decision` | active | [LLM活用の境界=説明責任](../2026/05/20260502-decision-llm活用の境界説明責任.md) |
 | 2026-05-02 | `decision` | active | [説明責任の濃淡を許容する（全部説明できなくてよい）](../2026/05/20260502-decision-説明責任の濃淡を許容する全部説明できなくてよい.md) |
